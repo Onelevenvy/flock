@@ -43,10 +43,6 @@ import {
 import React from "react";
 import { useQuery } from "react-query";
 import { TeamOut } from "@/client/models/TeamOut";
-import { UploadOut } from "@/client/models/UploadOut";
-import { ModelsOut } from "@/client/models/ModelsOut";
-import { SkillsOut } from "@/client/models/SkillsOut";
-import { TeamsOut } from "@/client/models/TeamsOut";
 import NextLink from "next/link";
 
 interface StatCardProps {
