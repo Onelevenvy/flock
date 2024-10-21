@@ -1,5 +1,6 @@
-import { UploadsService } from "@/client/services/UploadsService";
 import { useQuery } from "react-query";
+
+import { UploadsService } from "@/client/services/UploadsService";
 
 export function useUploadsQuery() {
   return useQuery(

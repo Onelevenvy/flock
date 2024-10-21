@@ -4,21 +4,18 @@ import {
   FaStop,
   FaTools,
   FaCommentDots,
-} from "react-icons/fa";
-
+ FaDatabase } from "react-icons/fa";
+import { FaBookAtlas } from "react-icons/fa6";
 import { TfiGithub } from "react-icons/tfi";
+
+import AnswerNodeProperties from "./Answer/AnswerNodeProperties";
 import EndNodeProperties from "./End/EndNodeProperties";
 import LLMNodeProperties from "./LLM/LLMNodeProperties";
-
+import PluginNodeProperties from "./Plugin/PluginNodeProperties";
+import RetrievalProperties from "./Retrieval/RetrievalNodeProperties";
+import RetrievalToolNodeProperties from "./RetrievalTool/RetrievalToolNodeProperties";
 import StartNodeProperties from "./Start/StartNodeProperties";
 import ToolNodeProperties from "./Tool/ToolNodeProperties";
-import PluginNodeProperties from "./Plugin/PluginNodeProperties";
-import AnswerNodeProperties from "./Answer/AnswerNodeProperties";
-import { FaBookAtlas } from "react-icons/fa6";
-import RetrievalProperties from "./Retrieval/RetrievalNodeProperties";
-
-import { FaDatabase } from "react-icons/fa";
-import RetrievalToolNodeProperties from "./RetrievalTool/RetrievalToolNodeProperties";
 
 interface NodeConfigItem {
   display: string;

@@ -12,6 +12,7 @@ const isLoggedIn = () => {
   if (typeof window !== "undefined" && window.localStorage) {
     return window.localStorage.getItem("access_token") !== null;
   }
+
   return false;
 };
 
@@ -33,6 +34,7 @@ const useAuth = () => {
     const response = await LoginService.loginAccessToken({
       formData: data,
     });
+
     localStorage.setItem("access_token", response.access_token);
     navigate.push("./");
   };

@@ -18,4 +18,5 @@ const config: Config = {
   },
   plugins: [Form, Typography],
 };
+
 export default config;

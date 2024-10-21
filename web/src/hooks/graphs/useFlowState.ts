@@ -2,11 +2,11 @@ import { useCallback, useState } from "react";
 import {
   type Connection,
   type Edge,
-  Node,
   addEdge,
   applyEdgeChanges,
   applyNodeChanges,
 } from "reactflow";
+
 import type { CustomNode } from "../../components/WorkFlow/types";
 
 export function useFlowState(initialNodes: CustomNode[], initialEdges: Edge[]) {
@@ -35,12 +35,15 @@ export function useFlowState(initialNodes: CustomNode[], initialEdges: Edge[]) {
               const isNameExists = nds.some(
                 (n) => n.id !== nodeId && n.data.label === value,
               );
+
               if (isNameExists) {
                 setNameError("Node name already exists");
+
                 return node;
               }
               setNameError(null);
             }
+
             return {
               ...node,
               data: {
@@ -49,6 +52,7 @@ export function useFlowState(initialNodes: CustomNode[], initialEdges: Edge[]) {
               },
             };
           }
+
           return node;
         }),
       );

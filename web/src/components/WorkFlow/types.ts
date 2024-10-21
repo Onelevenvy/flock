@@ -1,10 +1,10 @@
-import type { GraphsOut } from "@/client";
 import {
   type DefaultEdgeOptions,
-  Edge,
   type Node,
   type NodeTypes,
 } from "reactflow";
+
+import type { GraphsOut } from "@/client";
 
 export interface NodeData {
   label: string;

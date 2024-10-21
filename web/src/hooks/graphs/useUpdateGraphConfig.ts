@@ -1,14 +1,16 @@
+import { useCallback } from "react";
+import { type Edge } from "reactflow";
+import { v4 } from "uuid";
+
 import type { GraphUpdate } from "@/client/models/GraphUpdate";
 import useCustomToast from "@/hooks/useCustomToast";
-import { useCallback } from "react";
-import { type Edge, Node } from "reactflow";
-import { v4 } from "uuid";
+
+import { useGraphMutation } from "./useGraphMutation";
 import {
   type NodeType,
   nodeConfig,
 } from "../../components/WorkFlow/Nodes/nodeConfig";
 import type { CustomNode } from "../../components/WorkFlow/types";
-import { useGraphMutation } from "./useGraphMutation";
 
 export function useGraphConfig(
   teamId: number,
@@ -26,6 +28,7 @@ export function useGraphConfig(
       const sourceNode = nodes.find(
         (node) => node.id === edge.source && node.type === "start"
       );
+
       return sourceNode !== undefined;
     });
 
@@ -94,6 +97,7 @@ export function useGraphConfig(
         "No graph found for this team",
         "error"
       );
+
       return;
     }
 
@@ -106,6 +110,7 @@ export function useGraphConfig(
       config: config,
       updated_at: currentDate,
     };
+
     console.log(updateData);
     mutation.mutate(updateData);
   }, [graphId, graphName, graphDescription, saveConfig, mutation, showToast]);

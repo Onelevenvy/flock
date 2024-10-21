@@ -1,8 +1,9 @@
+import { useMutation } from "react-query";
+
 import type { ApiError } from "@/client";
 import type { GraphUpdate } from "@/client/models/GraphUpdate";
 import { GraphsService } from "@/client/services/GraphsService";
 import useCustomToast from "@/hooks/useCustomToast";
-import { useMutation } from "react-query";
 
 export function useGraphMutation(teamId: number, graphId: number | undefined) {
   const showToast = useCustomToast();
@@ -11,6 +12,7 @@ export function useGraphMutation(teamId: number, graphId: number | undefined) {
     if (!graphId) {
       throw new Error("No graph found for this team");
     }
+
     return await GraphsService.updateGraph({
       teamId,
       id: graphId,
@@ -24,6 +26,7 @@ export function useGraphMutation(teamId: number, graphId: number | undefined) {
     },
     onError: (err: ApiError) => {
       const errDetail = err.body?.detail || "An error occurred";
+
       showToast("Something went wrong.", `${errDetail}`, "error");
     },
   });

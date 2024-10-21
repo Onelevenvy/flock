@@ -1,5 +1,6 @@
-import { ModelService } from "@/client/services/ModelService";
 import { useQuery } from "react-query";
+
+import { ModelService } from "@/client/services/ModelService";
 
 export function useModelQuery() {
   return useQuery("model", () => ModelService.readModels(), {

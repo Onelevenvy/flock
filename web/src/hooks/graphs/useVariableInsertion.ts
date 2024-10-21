@@ -1,4 +1,5 @@
 import { useState, useRef, useCallback } from "react";
+
 import { VariableReference } from "../../components/WorkFlow/FlowVis/variableSystem";
 
 interface UseVariableInsertionProps<
@@ -27,6 +28,7 @@ export const useVariableInsertion = <
   const insertVariable = useCallback(
     (variable: string) => {
       const input = inputRef.current;
+
       if (input) {
         const start = input.selectionStart || 0;
         const end = input.selectionEnd || 0;
@@ -34,6 +36,7 @@ export const useVariableInsertion = <
         const before = text.substring(0, start);
         const after = text.substring(end);
         const newValue = before + `{${variable}}` + after;
+
         onValueChange(newValue);
         setShowVariables(false);
         input.focus();

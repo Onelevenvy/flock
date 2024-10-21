@@ -1,5 +1,6 @@
-import { ToolsService } from "@/client/services/ToolsService";
 import { useQuery } from "react-query";
+
+import { ToolsService } from "@/client/services/ToolsService";
 
 export function useSkillsQuery() {
   return useQuery("skills", () => ToolsService.readSkills({}), {
