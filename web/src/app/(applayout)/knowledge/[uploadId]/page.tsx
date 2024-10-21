@@ -1,5 +1,4 @@
 "use client";
-import React, { useState, useEffect } from "react";
 import {
   Box,
   VStack,
@@ -21,17 +20,19 @@ import {
   Progress,
   Icon,
 } from "@chakra-ui/react";
-import { useParams } from "next/navigation";
-import { useQuery, useMutation, useQueryClient } from "react-query";
-import { UploadsService, type ApiError } from "@/client";
-import useCustomToast from "@/hooks/useCustomToast";
-import CustomButton from "@/components/Common/CustomButton";
-import { VscTriangleRight } from "react-icons/vsc";
-import { MdBuild } from "react-icons/md";
 import Link from "next/link";
+import { useParams } from "next/navigation";
+import React, { useState, useEffect } from "react";
+import { AiOutlineFileSearch } from "react-icons/ai";
 import { FaVectorSquare, FaMix } from "react-icons/fa6";
 import { GiArrowScope } from "react-icons/gi";
-import { AiOutlineFileSearch } from "react-icons/ai";
+import { MdBuild } from "react-icons/md";
+import { VscTriangleRight } from "react-icons/vsc";
+import { useQuery, useMutation, useQueryClient } from "react-query";
+
+import { UploadsService, type ApiError } from "@/client";
+import CustomButton from "@/components/Common/CustomButton";
+import useCustomToast from "@/hooks/useCustomToast";
 const SearchTypeInfo = [
   {
     type: "vector",
@@ -80,6 +81,7 @@ function KnowledgeTest() {
     {
       onError: (err: ApiError) => {
         const errDetail = err.body?.detail;
+
         showToast("Error fetching upload", `${errDetail}`, "error");
       },
     }
@@ -136,6 +138,7 @@ function KnowledgeTest() {
   const handleSearch = () => {
     if (!query.trim()) {
       showToast("Error", "Please enter a query before searching", "error");
+
       return;
     }
     searchMutation.mutate({ query, searchType, topK, scoreThreshold });

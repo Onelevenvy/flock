@@ -11,6 +11,7 @@ import { useTranslation } from "react-i18next";
 const AppearancePage = () => {
   const { colorMode, toggleColorMode } = useColorMode();
   const { t } = useTranslation();
+
   return (
     <>
       <Container maxW="full">
@@ -32,4 +33,5 @@ const AppearancePage = () => {
     </>
   );
 };
+
 export default AppearancePage;

@@ -1,12 +1,13 @@
 "use client";
+import { Box, Center, Flex, useColorModeValue } from "@chakra-ui/react";
+import { useState } from "react";
+import { LuChevronLeft, LuChevronRight } from "react-icons/lu";
+
 import PaneStateControl from "@/components/Common/PaneStateControl";
 import ChatBotList from "@/components/Playground/ChatBotList";
 import ChatHistoryList from "@/components/Playground/ChatHistoryList";
 import ChatMain from "@/components/Playground/ChatMain";
 import useChatTeamIdStore from "@/stores/chatTeamIDStore";
-import { Box, Center, Flex, useColorModeValue } from "@chakra-ui/react";
-import { useState } from "react";
-import { LuChevronLeft, LuChevronRight } from "react-icons/lu";
 
 const ChatPlayground = () => {
   const [isChatBotListOpen, setIsChatBotListOpen] = useState(true);

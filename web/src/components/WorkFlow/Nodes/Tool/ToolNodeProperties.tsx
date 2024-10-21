@@ -1,4 +1,3 @@
-import { useSkillsQuery } from "@/hooks/useSkillsQuery";
 import { DeleteIcon } from "@chakra-ui/icons";
 import {
   Box,
@@ -10,8 +9,11 @@ import {
 } from "@chakra-ui/react";
 import type React from "react";
 import { useState } from "react";
-import ToolsList from "./ToolsListModal";
+
 import ToolsIcon from "@/components/Icons/Tools";
+import { useSkillsQuery } from "@/hooks/useSkillsQuery";
+
+import ToolsList from "./ToolsListModal";
 
 interface ToolNodePropertiesProps {
   node: any;
@@ -27,6 +29,7 @@ const ToolNodeProperties: React.FC<ToolNodePropertiesProps> = ({
 
   const addTool = (tool: string) => {
     const currentTools = node.data.tools || [];
+
     if (!currentTools.includes(tool)) {
       onNodeDataChange(node.id, "tools", [...currentTools, tool]);
     }
@@ -34,6 +37,7 @@ const ToolNodeProperties: React.FC<ToolNodePropertiesProps> = ({
 
   const removeTool = (tool: string) => {
     const currentTools = node.data.tools || [];
+
     onNodeDataChange(
       node.id,
       "tools",

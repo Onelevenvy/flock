@@ -1,13 +1,13 @@
 "use client";
+import { CheckCircleIcon, XCircleIcon } from "lucide-react";
 import type { ReactNode } from "react";
 import React, { useEffect, useState } from "react";
 import { createRoot } from "react-dom/client";
-
-import classNames from "@/utils/classnames";
-import { CheckCircleIcon, XCircleIcon } from "lucide-react";
 import { BsExclamationTriangleFill } from "react-icons/bs";
 import { HiInformationCircle } from "react-icons/hi";
 import { createContext, useContext } from "use-context-selector";
+
+import classNames from "@/utils/classnames";
 
 export type IToastProps = {
   type?: "success" | "error" | "warning" | "info";
@@ -145,6 +145,7 @@ Toast.notify = ({
   className,
 }: Pick<IToastProps, "type" | "message" | "duration" | "className">) => {
   const defaultDuring = type === "success" || type === "info" ? 3000 : 6000;
+
   if (typeof window === "object") {
     const holder = document.createElement("div");
     const root = createRoot(holder);

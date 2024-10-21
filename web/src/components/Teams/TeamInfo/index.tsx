@@ -1,9 +1,11 @@
-import type { TeamOut } from "@/client";
 import { Box, Tag, TagLabel, Text } from "@chakra-ui/react";
 import { useTranslation } from "react-i18next";
 
+import type { TeamOut } from "@/client";
+
 function TeamInforCard({ teamData }: { teamData: TeamOut }) {
   const { t } = useTranslation();
+
   return (
     <Box
       key={teamData.id}

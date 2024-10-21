@@ -1,12 +1,13 @@
 "use client";
 
+import { Container, FormControl, Select } from "@chakra-ui/react";
+import React, { type ChangeEvent } from "react";
+import { useMutation, useQueryClient } from "react-query";
+
 import type { ApiError } from "@/client";
 import { UsersService } from "@/client/services/UsersService";
 import useAuth from "@/hooks/useAuth";
 import useCustomToast from "@/hooks/useCustomToast";
-import { Container, FormControl, Select } from "@chakra-ui/react";
-import React, { type ChangeEvent } from "react";
-import { useMutation, useQueryClient } from "react-query";
 
 export default function LanguagePage() {
   const queryClient = useQueryClient();
@@ -23,6 +24,7 @@ export default function LanguagePage() {
       },
       onError: (err: ApiError) => {
         const errDetail = err.body?.detail;
+
         showToast("Something went wrong.", `${errDetail}`, "error");
       },
       onSettled: () => {
@@ -34,6 +36,7 @@ export default function LanguagePage() {
 
   const onChangeLanguage = (event: ChangeEvent<HTMLSelectElement>) => {
     const selectedLanguage = event.target.value;
+
     mutation.mutate(selectedLanguage);
   };
 

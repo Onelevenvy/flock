@@ -1,8 +1,3 @@
-import type { ModelProviderUpdate } from "@/client";
-import type { ApiError } from "@/client/core/ApiError";
-import { ProviderService } from "@/client/services/ProviderService";
-import { useModelProviderContext } from "@/contexts/modelprovider";
-import useCustomToast from "@/hooks/useCustomToast";
 import { ViewIcon, ViewOffIcon } from "@chakra-ui/icons";
 import {
   Button,
@@ -24,6 +19,12 @@ import {
 import { useState } from "react";
 import { type SubmitHandler, useForm } from "react-hook-form";
 import { useMutation, useQueryClient } from "react-query";
+
+import type { ModelProviderUpdate } from "@/client";
+import type { ApiError } from "@/client/core/ApiError";
+import { ProviderService } from "@/client/services/ProviderService";
+import { useModelProviderContext } from "@/contexts/modelprovider";
+import useCustomToast from "@/hooks/useCustomToast";
 
 interface ProviderUpdateProps {
   isModalOpen: boolean;
@@ -67,6 +68,7 @@ export default function ProviderUpdate({
     },
     onError: (err: ApiError) => {
       const errDetail = err.body?.detail;
+
       showToast("Something went wrong.", `${errDetail}`, "error");
     },
     onSettled: () => {
@@ -85,6 +87,7 @@ export default function ProviderUpdate({
   };
   const [show, setShow] = useState(false);
   const handleClick = () => setShow(!show);
+
   return (
     <Modal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)}>
       <ModalOverlay />

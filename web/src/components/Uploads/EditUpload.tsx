@@ -10,14 +10,13 @@ import { useState, useEffect } from "react";
 import { type SubmitHandler, useForm } from "react-hook-form";
 import { useMutation, useQueryClient } from "react-query";
 
+import UploadForm, { UploadFormData } from "./UploadForm";
 import {
   type ApiError,
-  type Body_uploads_update_upload,
   type UploadOut,
   UploadsService,
 } from "../../client";
 import useCustomToast from "../../hooks/useCustomToast";
-import UploadForm, { UploadFormData } from "./UploadForm";
 
 interface EditUploadProps {
   upload: UploadOut;
@@ -67,6 +66,7 @@ const EditUpload = ({ upload, isOpen, onClose }: EditUploadProps) => {
       },
       onError: (err: ApiError) => {
         const errDetail = err.body?.detail;
+
         showToast("Something went wrong.", `${errDetail}`, "error");
       },
     }

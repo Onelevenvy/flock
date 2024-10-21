@@ -2,6 +2,10 @@
 
 import { Box, Flex, Text } from "@chakra-ui/react";
 import { useEffect, useRef, useState } from "react";
+import { useTranslation } from "react-i18next";
+import { BsBoxFill, BsSun, BsSunFill } from "react-icons/bs";
+import { LuLanguages } from "react-icons/lu";
+import { MdLanguage } from "react-icons/md";
 import {
   RiAccountBoxFill,
   RiAccountBoxLine,
@@ -13,6 +17,7 @@ import {
 } from "react-icons/ri";
 
 import useAuth from "@/hooks/useAuth";
+
 import AppearancePage from "./AcountPage/Appearance";
 import ChangePasswordPage from "./AcountPage/ChangePassword";
 import LanguagePage from "./LanguagePage";
@@ -20,10 +25,6 @@ import MembersPage from "./MembersPage";
 import ModelProviderPage from "./ModelProviderPage";
 import UserInfoPage from "./UserInfoPage";
 
-import { useTranslation } from "react-i18next";
-import { BsBoxFill, BsSun, BsSunFill } from "react-icons/bs";
-import { LuLanguages } from "react-icons/lu";
-import { MdLanguage } from "react-icons/md";
 
 type IAccountSettingProps = {
   activeTab?: string;
@@ -100,13 +101,17 @@ export default function AccountSetting({
   ];
   const scrollRef = useRef<HTMLDivElement>(null);
   const [scrolled, setScrolled] = useState(false);
+
   useEffect(() => {
     const targetElement = scrollRef.current;
     const scrollHandle = (e: Event) => {
       const userScrolled = (e.target as HTMLDivElement).scrollTop > 0;
+
       setScrolled(userScrolled);
     };
+
     targetElement?.addEventListener("scroll", scrollHandle);
+
     return () => {
       targetElement?.removeEventListener("scroll", scrollHandle);
     };

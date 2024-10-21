@@ -1,4 +1,3 @@
-import React, { useEffect, useCallback } from "react";
 import {
   Button,
   FormControl,
@@ -14,12 +13,14 @@ import {
   RadioGroup,
   Stack,
 } from "@chakra-ui/react";
+import React, { useEffect, useCallback } from "react";
 import { Controller, UseFormReturn, useWatch } from "react-hook-form";
-import FileUpload from "../Common/FileUpload";
+
 import {
   Body_uploads_create_upload,
   Body_uploads_update_upload,
 } from "../../client";
+import FileUpload from "../Common/FileUpload";
 
 // 创建一个新的类型，包含两种上传类型的所有字段
 type UploadFormData = Body_uploads_create_upload & Body_uploads_update_upload;
@@ -61,6 +62,7 @@ const UploadForm: React.FC<UploadFormProps> = ({
 
   useEffect(() => {
     let fileName = "";
+
     if (fileType === "file" && watchFile && watchFile.length > 0) {
       fileName = watchFile[0].name;
     } else if (fileType === "web" && watchWebUrl) {

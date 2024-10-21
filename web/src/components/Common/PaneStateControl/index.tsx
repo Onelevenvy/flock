@@ -1,5 +1,4 @@
 import { Box } from "@chakra-ui/react";
-import { LuChevronLeft } from "react-icons/lu";
 
 interface PaneStateControlProps {
   selectedColor: string;

@@ -1,6 +1,4 @@
 "use client";
-import { type ApiError, TeamsService } from "@/client";
-import useCustomToast from "@/hooks/useCustomToast";
 import {
   Box,
   Breadcrumb,
@@ -9,14 +7,17 @@ import {
   Flex,
   Spinner,
 } from "@chakra-ui/react";
+import Link from "next/link";
+import { useParams } from "next/navigation";
+import { useRef } from "react";
 import { useQuery } from "react-query";
+
+import { type ApiError, TeamsService } from "@/client";
 import Flow from "@/components/ReactFlow/Flow";
 import DebugPreview from "@/components/Teams/DebugPreview";
 import NormalTeamSettings from "@/components/Teams/NormalTeamSettings";
 import WorkflowTeamSettings from "@/components/Teams/WorkflowTeamSettings";
-import Link from "next/link";
-import { useParams } from "next/navigation";
-import { useRef } from "react";
+import useCustomToast from "@/hooks/useCustomToast";
 
 function Team() {
   const showToast = useCustomToast();
@@ -33,6 +34,7 @@ function Team() {
 
   if (isError) {
     const errDetail = (error as ApiError).body?.detail;
+
     showToast("Something went wrong.", `${errDetail}`, "error");
   }
   const formRef = useRef<HTMLFormElement>(null);
@@ -41,6 +43,7 @@ function Team() {
       formRef.current.requestSubmit();
     }
   };
+
   return (
     <>
       {isLoading ? (

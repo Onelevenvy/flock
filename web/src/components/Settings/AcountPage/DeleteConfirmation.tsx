@@ -11,7 +11,7 @@ import React from "react";
 import { useForm } from "react-hook-form";
 import { useMutation, useQueryClient } from "react-query";
 
-import { type ApiError, type UserOut, UsersService } from "../../../client";
+import { type ApiError, UsersService } from "../../../client";
 import useAuth from "../../../hooks/useAuth";
 import useCustomToast from "../../../hooks/useCustomToast";
 
@@ -47,6 +47,7 @@ const DeleteConfirmation = ({ isOpen, onClose }: DeleteProps) => {
     },
     onError: (err: ApiError) => {
       const errDetail = err.body?.detail;
+
       showToast("Something went wrong.", `${errDetail}`, "error");
     },
     onSettled: () => {

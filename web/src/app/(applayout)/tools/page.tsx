@@ -1,6 +1,4 @@
 "use client";
-import { type ApiError, SkillOut, ToolsService } from "@/client";
-import ActionsMenu from "@/components/Common/ActionsMenu";
 import {
   Text,
   Box,
@@ -14,22 +12,27 @@ import {
   TagRightIcon,
   useColorModeValue,
 } from "@chakra-ui/react";
-
-import useCustomToast from "@/hooks/useCustomToast";
 import React, { useState, useEffect } from "react";
+import { useTranslation } from "react-i18next";
+import { MdSettings } from "react-icons/md";
 import {
   RiApps2Fill,
   RiArchiveDrawerFill,
   RiBarChartFill,
 } from "react-icons/ri";
 
+import { type ApiError, SkillOut, ToolsService } from "@/client";
+import ActionsMenu from "@/components/Common/ActionsMenu";
 import TabSlider from "@/components/Common/TabSlider";
+import ToolsIcon from "@/components/Icons/Tools";
+import CredentialsPanel from "@/components/Tools/CredentialsPanel";
+import useCustomToast from "@/hooks/useCustomToast";
 import { useSkillsQuery } from "@/hooks/useSkillsQuery";
 import { useTabSearchParams } from "@/hooks/useTabSearchparams";
-import { useTranslation } from "react-i18next";
-import ToolsIcon from "@/components/Icons/Tools";
-import { MdSettings } from "react-icons/md";
-import CredentialsPanel from "@/components/Tools/CredentialsPanel";
+
+
+
+
 
 function Skills() {
   const showToast = useCustomToast();
@@ -46,6 +49,7 @@ function Skills() {
 
   if (isError) {
     const errDetail = (error as ApiError).body?.detail;
+
     showToast("Something went wrong.", `${errDetail}`, "error");
   }
   const rowTint = useColorModeValue("blackAlpha.50", "whiteAlpha.50");
@@ -91,6 +95,7 @@ function Skills() {
           id: selectedSkill.id,
           requestBody: updatedCredentials
         });
+
         showToast("Success", "Credentials updated successfully", "success");
         
         setSkills(prevSkills => prevSkills?.map(skill => 

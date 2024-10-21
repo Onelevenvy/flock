@@ -1,6 +1,7 @@
-import type { ModelProviderWithModelsListOut } from "@/client/models/ModelProviderWithModelsListOut";
 import type React from "react";
 import { createContext, useContext } from "react";
+
+import type { ModelProviderWithModelsListOut } from "@/client/models/ModelProviderWithModelsListOut";
 const ModelContext = createContext<ModelProviderWithModelsListOut | null>(null);
 
 export const ModelProvider = ({

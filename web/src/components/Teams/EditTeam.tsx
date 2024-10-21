@@ -1,4 +1,3 @@
-import IconPicker from "@/components/Icons/TqxIcon";
 import {
   Box,
   Button,
@@ -19,6 +18,9 @@ import {
 import { Controller, type SubmitHandler, useForm } from "react-hook-form";
 import { useTranslation } from "react-i18next";
 import { useMutation, useQueryClient } from "react-query";
+
+import IconPicker from "@/components/Icons/TqxIcon";
+
 import {
   type ApiError,
   type TeamOut,
@@ -61,6 +63,7 @@ const EditTeam = ({ team, isOpen, onClose }: EditTeamProps) => {
     },
     onError: (err: ApiError) => {
       const errDetail = err.body?.detail;
+
       showToast("Something went wrong.", `${errDetail}`, "error");
     },
     onSettled: () => {

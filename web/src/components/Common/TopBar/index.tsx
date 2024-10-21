@@ -1,4 +1,5 @@
 import { Box } from "@chakra-ui/react";
+
 import { FlockLogo } from "./Logo";
 import UserMenu from "./UserMenu";
 

@@ -1,9 +1,11 @@
+import { Box, Flex, SimpleGrid, Spinner } from "@chakra-ui/react";
+import { useQuery } from "react-query";
+
 import type { ApiError } from "@/client/core/ApiError";
 import { ProviderService } from "@/client/services/ProviderService";
 import { ModelProvider } from "@/contexts/modelprovider";
 import useCustomToast from "@/hooks/useCustomToast";
-import { Box, Container, Flex, SimpleGrid, Spinner } from "@chakra-ui/react";
-import { useQuery } from "react-query";
+
 import ModelProviderCard from "./ProviderCard";
 
 export default function ModelProviderPage() {
@@ -18,6 +20,7 @@ export default function ModelProviderPage() {
 
   if (isError) {
     const errDetail = (error as ApiError).body?.detail;
+
     showToast("Something went wrong.", `${errDetail}`, "error");
   }
 

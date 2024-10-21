@@ -27,6 +27,7 @@ const LimitConnectionHandle = ({
           ? edge.target === nodeId
           : edge.source === nodeId,
       );
+
       return connectedEdges.length < connectionLimit;
     }
   }, [nodeInternals, edges, nodeId, connectionLimit, props.type]);

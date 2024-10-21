@@ -1,9 +1,10 @@
+import { Box, Text, VStack, HStack } from "@chakra-ui/react";
 import React from "react";
+import { ImFolderOpen } from "react-icons/im";
 import { Handle, type NodeProps, Position } from "reactflow";
+
 import { BaseNode } from "../Base/BaseNode";
 import { nodeConfig } from "../nodeConfig";
-import { Box, Text, VStack, HStack } from "@chakra-ui/react";
-import { ImFolderOpen } from "react-icons/im";
 
 const RetrievalNode: React.FC<NodeProps> = (props) => {
   const { icon: Icon, colorScheme } = nodeConfig.retrieval;

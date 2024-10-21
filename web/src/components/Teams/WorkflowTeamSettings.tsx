@@ -1,10 +1,12 @@
-import { type ApiError, GraphsService } from "@/client";
-import useCustomToast from "@/hooks/useCustomToast";
-import { Box, Flex, Spinner, useColorModeValue } from "@chakra-ui/react";
+import { Box, Flex, Spinner } from "@chakra-ui/react";
 import { useEffect, useState } from "react";
 import { useQuery, useQueryClient } from "react-query";
-import TqxWorkflow from "../WorkFlow";
 import { v4 } from "uuid";
+
+import { type ApiError, GraphsService } from "@/client";
+import useCustomToast from "@/hooks/useCustomToast";
+
+import TqxWorkflow from "../WorkFlow";
 interface WorkflowSettingProps {
   teamId: number;
 }
@@ -116,6 +118,7 @@ function WorkflowTeamSettings({ teamId }: WorkflowSettingProps) {
 
   if (isError) {
     const errDetail = (error as ApiError).body?.detail;
+
     showToast("Something went wrong.", `${errDetail}`, "error");
   }
 

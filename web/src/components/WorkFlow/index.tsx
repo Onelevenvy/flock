@@ -1,8 +1,10 @@
 "use client";
 
-import type { GraphsOut } from "@/client";
 import { Box } from "@chakra-ui/react";
 import { ReactFlowProvider } from "reactflow";
+
+import type { GraphsOut } from "@/client";
+
 import FlowVisualizer from "./FlowVis/FlowVisualizer";
 import { nodeTypes } from "./Nodes";
 

@@ -1,12 +1,4 @@
 "use client";
-import { type ApiError, TeamsService } from "@/client";
-import ActionsMenu from "@/components/Common/ActionsMenu";
-import Navbar from "@/components/Common/Navbar";
-import TabSlider from "@/components/Common/TabSlider";
-import { tqxIconLibrary } from "@/components/Icons/TqxIcon";
-import useCustomToast from "@/hooks/useCustomToast";
-import { useTabSearchParams } from "@/hooks/useTabSearchparams";
-import useChatTeamIdStore from "@/stores/chatTeamIDStore";
 import {
   Box,
   Flex,
@@ -27,6 +19,15 @@ import { PiChatCircleDots } from "react-icons/pi";
 import { RiApps2Line, RiBookLine } from "react-icons/ri";
 import { useQuery } from "react-query";
 
+import { type ApiError, TeamsService } from "@/client";
+import ActionsMenu from "@/components/Common/ActionsMenu";
+import Navbar from "@/components/Common/Navbar";
+import TabSlider from "@/components/Common/TabSlider";
+import { tqxIconLibrary } from "@/components/Icons/TqxIcon";
+import useCustomToast from "@/hooks/useCustomToast";
+import { useTabSearchParams } from "@/hooks/useTabSearchparams";
+import useChatTeamIdStore from "@/stores/chatTeamIDStore";
+
 function Teams() {
   const showToast = useCustomToast();
   const { t } = useTranslation();
@@ -42,6 +43,7 @@ function Teams() {
 
   if (isError) {
     const errDetail = (error as ApiError).body?.detail;
+
     showToast("Something went wrong.", `${errDetail}`, "error");
   }
 

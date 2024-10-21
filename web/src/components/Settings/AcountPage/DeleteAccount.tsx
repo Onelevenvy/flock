@@ -32,4 +32,5 @@ const DeleteAccount = () => {
     </>
   );
 };
+
 export default DeleteAccount;

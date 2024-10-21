@@ -1,8 +1,4 @@
 "use client";
-import { type ApiError, UploadsService } from "@/client";
-import ActionsMenu from "@/components/Common/ActionsMenu";
-import Navbar from "@/components/Common/Navbar";
-import useCustomToast from "@/hooks/useCustomToast";
 import {
   Badge,
   Box,
@@ -12,13 +8,8 @@ import {
   Spinner,
   useColorModeValue,
 } from "@chakra-ui/react";
-import React from "react";
-import { RiListUnordered } from "react-icons/ri";
-import { useQuery } from "react-query";
 import { useRouter } from "next/navigation";
-
-import TabSlider from "@/components/Common/TabSlider";
-import { useTabSearchParams } from "@/hooks/useTabSearchparams";
+import React from "react";
 import { useTranslation } from "react-i18next";
 import {
   FaFileExcel,
@@ -28,8 +19,16 @@ import {
   FaFileWord,
   FaFileCode,
 } from "react-icons/fa";
-import { PiFileHtmlFill } from "react-icons/pi";
+import { RiListUnordered } from "react-icons/ri";
 import { TbWorldWww } from "react-icons/tb";
+import { useQuery } from "react-query";
+
+import { type ApiError, UploadsService } from "@/client";
+import ActionsMenu from "@/components/Common/ActionsMenu";
+import Navbar from "@/components/Common/Navbar";
+import TabSlider from "@/components/Common/TabSlider";
+import useCustomToast from "@/hooks/useCustomToast";
+import { useTabSearchParams } from "@/hooks/useTabSearchparams";
 
 function Uploads() {
   const showToast = useCustomToast();
@@ -43,6 +42,7 @@ function Uploads() {
 
   if (isError) {
     const errDetail = (error as ApiError).body?.detail;
+
     showToast("Something went wrong.", `${errDetail}`, "error");
   }
   const rowTint = useColorModeValue("blackAlpha.50", "whiteAlpha.50");

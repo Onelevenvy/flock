@@ -1,4 +1,3 @@
-import React from "react";
 import {
   FormControl,
   FormErrorMessage,
@@ -9,7 +8,9 @@ import {
   Select,
   Text,
 } from "@chakra-ui/react";
+import React from "react";
 import { Node } from "reactflow";
+
 import { VariableReference } from "../../FlowVis/variableSystem";
 import { nodeConfig, NodeType } from "../nodeConfig";
 

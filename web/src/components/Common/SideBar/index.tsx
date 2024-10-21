@@ -7,8 +7,8 @@ import {
   VStack,
   useColorModeValue,
 } from "@chakra-ui/react";
-
 import { FaGithubSquare } from "react-icons/fa";
+
 import SidebarItems from "./SidebarItems";
 
 const Sidebar = () => {

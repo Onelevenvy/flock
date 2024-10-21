@@ -1,3 +1,4 @@
+import { ChevronDownIcon } from "@chakra-ui/icons";
 import {
   Avatar,
   Box,
@@ -11,16 +12,13 @@ import {
   Text,
   useDisclosure,
 } from "@chakra-ui/react";
-
+import { type BoxProps, forwardRef } from "@chakra-ui/react";
 import Link from "next/link";
-import { useQueryClient } from "react-query";
-import type { UserOut } from "../../../client";
-import useAuth from "../../../hooks/useAuth";
+import { useTranslation } from "react-i18next";
 
 import AccountSetting from "@/components/Settings";
-import { ChevronDownIcon } from "@chakra-ui/icons";
-import { type BoxProps, forwardRef } from "@chakra-ui/react";
-import { useTranslation } from "react-i18next";
+
+import useAuth from "../../../hooks/useAuth";
 import CustomModalWrapper from "../CustomModal";
 const UserMenu = () => {
   const { logout, currentUser } = useAuth();

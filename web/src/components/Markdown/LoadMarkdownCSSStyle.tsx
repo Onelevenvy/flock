@@ -1,6 +1,5 @@
 import { useColorMode } from "@chakra-ui/react"; // 假设你使用的是 @chakra-ui/react 来处理 colorMode
 import "highlight.js/styles/github-dark.css"; // 导入 GitHub Dark 主题的 CSS 文件
-import { useEffect } from "react";
 const LoadMarkdownCSSStyle = () => {
   const { colorMode } = useColorMode();
 

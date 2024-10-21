@@ -1,4 +1,4 @@
-import { Icon, type IconProps, createIcon } from "@chakra-ui/icons";
+import { Icon, type IconProps } from "@chakra-ui/icons";
 
 const OllamaIconLong = (props: IconProps) => (
   <Icon viewBox="0 0 82 24" {...props}>

@@ -1,12 +1,28 @@
 "use client";
+import {
+  Box,
+  Button,
+  CloseButton,
+  Kbd,
+  useToast,
+  Menu,
+  MenuButton,
+  MenuItem,
+  MenuList,
+  Text,
+  useColorModeValue,
+  IconButton,
+} from "@chakra-ui/react";
 import type React from "react";
 import {
   type KeyboardEvent,
   useCallback,
   useMemo,
   useState,
-  useEffect,
 } from "react";
+import { FaPlus } from "react-icons/fa";
+import { MdBuild, MdOutlineHelp } from "react-icons/md";
+import { VscTriangleRight } from "react-icons/vsc";
 import ReactFlow, {
   Background,
   Controls,
@@ -21,38 +37,24 @@ import ReactFlow, {
   useViewport,
   EdgeLabelRenderer,
 } from "reactflow";
-import { FaPlus } from "react-icons/fa";
+
 import { useContextMenu } from "@/hooks/graphs/useContextMenu";
 import { useFlowState } from "@/hooks/graphs/useFlowState";
 import { useGraphConfig } from "@/hooks/graphs/useUpdateGraphConfig";
+
+import NodePalette from "./NodePalette";
 import { getAvailableVariables } from "./variableSystem";
-import {
-  Box,
-  Button,
-  CloseButton,
-  Kbd,
-  useToast,
-  Menu,
-  MenuButton,
-  MenuItem,
-  MenuList,
-  Text,
-  useColorModeValue,
-  IconButton,
-  VStack,
-} from "@chakra-ui/react";
-import { MdBuild, MdOutlineHelp } from "react-icons/md";
-import { VscTriangleRight } from "react-icons/vsc";
+
 import "reactflow/dist/style.css";
 import DebugPreview from "../../Teams/DebugPreview";
-import NodePalette from "./NodePalette";
 import BaseProperties from "../Nodes/Base/BaseNodeProperties";
 import { type NodeType, nodeConfig } from "../Nodes/nodeConfig";
 import type { CustomNode, FlowVisualizerProps } from "../types";
 import { calculateEdgeCenter } from "./utils";
 import SharedNodeMenu from "./SharedNodeMenu";
+
 import useWorkflowStore from "@/stores/workflowStore";
-import { Node as FlowNode } from "reactflow";
+
 
 const FlowVisualizer: React.FC<FlowVisualizerProps> = ({
   nodeTypes,
@@ -163,11 +165,13 @@ const FlowVisualizer: React.FC<FlowVisualizerProps> = ({
 
       const sourceType = sourceNode.type as NodeType;
       const targetType = targetNode.type as NodeType;
+
       // Prevent multiple connections from start node
       if (sourceType === "start") {
         const existingStartConnections = edges.filter(
           (edge) => edge.source === connection.source
         );
+
         if (existingStartConnections.length > 0) return false;
       }
       const sourceAllowedConnections =
@@ -196,7 +200,9 @@ const FlowVisualizer: React.FC<FlowVisualizerProps> = ({
         (edge) =>
           edge.source === connection.source && edge.target === connection.target
       );
+
       if (existingEdge) return false;
+
       // 允许所有其他连接
       return true;
     },
@@ -209,6 +215,7 @@ const FlowVisualizer: React.FC<FlowVisualizerProps> = ({
         eds.map((e) => {
           if (e.id === edge.id) {
             const newType = e.type === "default" ? "smoothstep" : "default";
+
             return {
               ...e,
               type: newType,
@@ -220,6 +227,7 @@ const FlowVisualizer: React.FC<FlowVisualizerProps> = ({
               },
             };
           }
+
           return e;
         })
       );
@@ -239,6 +247,7 @@ const FlowVisualizer: React.FC<FlowVisualizerProps> = ({
     (event: KeyboardEvent) => {
       if (event.key === "e" || event.key === "E") {
         const selectedEdges = edges.filter((e) => e.selected);
+
         selectedEdges.forEach(toggleEdgeType);
       }
     },
@@ -255,10 +264,12 @@ const FlowVisualizer: React.FC<FlowVisualizerProps> = ({
       const existingNames = nodes.map((node) => node.data.label);
       let counter = 1;
       let newName = baseLabel;
+
       while (existingNames.includes(newName)) {
         counter++;
         newName = `${baseLabel}${counter}`;
       }
+
       return newName;
     },
     [nodes]
@@ -268,6 +279,7 @@ const FlowVisualizer: React.FC<FlowVisualizerProps> = ({
     (event: React.DragEvent) => {
       event.preventDefault();
       const data = event.dataTransfer.getData("application/reactflow");
+
       if (!data) return;
 
       const { tool, type } = JSON.parse(data); // 解析工具数据和类型
@@ -282,6 +294,7 @@ const FlowVisualizer: React.FC<FlowVisualizerProps> = ({
         const nodeType = type === "retrievaltool" ? "tool" : type;
         const baseLabel = `${nodeConfig[type].display}`;
         const uniqueName = generateUniqueName(baseLabel);
+
         newNode = {
           id: `${type}-${nodes.length + 1}`,
           type: type,
@@ -320,6 +333,7 @@ const FlowVisualizer: React.FC<FlowVisualizerProps> = ({
   const deleteNode = useCallback(() => {
     if (contextMenu.nodeId) {
       const nodeToDelete = nodes.find((node) => node.id === contextMenu.nodeId);
+
       if (
         nodeToDelete &&
         (nodeToDelete.type === "start" || nodeToDelete.type === "end")
@@ -332,6 +346,7 @@ const FlowVisualizer: React.FC<FlowVisualizerProps> = ({
           isClosable: true,
         });
         closeContextMenu();
+
         return;
       }
       setNodes((nds) => nds.filter((node) => node.id !== contextMenu.nodeId));
@@ -409,6 +424,7 @@ const FlowVisualizer: React.FC<FlowVisualizerProps> = ({
 
       const sourceNode = nodes.find((node) => node.id === edge.source);
       const targetNode = nodes.find((node) => node.id === edge.target);
+
       if (sourceNode && targetNode) {
         const centerPoint = calculateEdgeCenter(sourceNode, targetNode);
 
@@ -437,6 +453,7 @@ const FlowVisualizer: React.FC<FlowVisualizerProps> = ({
 
       const sourceNode = nodes.find((node) => node.id === selectedEdge.source);
       const targetNode = nodes.find((node) => node.id === selectedEdge.target);
+
       if (!sourceNode || !targetNode) return;
 
       const nodeSpacing = 300; // 节点之间的固定距离
@@ -461,6 +478,7 @@ const FlowVisualizer: React.FC<FlowVisualizerProps> = ({
         };
       } else {
         const newNodeId = `${nodeType}-${nodes.length + 1}`;
+
         newNode = {
           id: newNodeId,
           type: nodeType as NodeType,

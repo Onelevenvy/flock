@@ -9,11 +9,14 @@ import {
   Input,
 } from "@chakra-ui/react";
 import type React from "react";
-import { ToolsService } from "@/client/services/ToolsService";
-import { useSkillsQuery } from "@/hooks/useSkillsQuery";
 import { useState, useCallback } from "react";
-import { VariableReference } from "../../FlowVis/variableSystem";
+
+import { ToolsService } from "@/client/services/ToolsService";
 import { useVariableInsertion } from "@/hooks/graphs/useVariableInsertion";
+import { useSkillsQuery } from "@/hooks/useSkillsQuery";
+
+import { VariableReference } from "../../FlowVis/variableSystem";
+
 
 interface PluginNodePropertiesProps {
   node: any;
@@ -64,6 +67,7 @@ const PluginNodeProperties: React.FC<PluginNodePropertiesProps> = ({
         toolName: node.data.toolName,
         requestBody: node.data.args,
       });
+
       console.log("Invoke Result:", response);
     } catch (err) {
       console.error("Error invoking tool", err);

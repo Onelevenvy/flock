@@ -1,7 +1,3 @@
-import { type ApiError, TeamsService } from "@/client";
-import useCustomToast from "@/hooks/useCustomToast";
-import useChatMessageStore from "@/stores/chatMessageStore";
-import useChatTeamIdStore from "@/stores/chatTeamIDStore"; // 引入 Zustand store
 import {
   Box,
   Divider,
@@ -15,6 +11,12 @@ import React, { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { FaRobot } from "react-icons/fa";
 import { useQuery } from "react-query";
+
+import { type ApiError, TeamsService } from "@/client";
+import useCustomToast from "@/hooks/useCustomToast";
+import useChatMessageStore from "@/stores/chatMessageStore";
+import useChatTeamIdStore from "@/stores/chatTeamIDStore"; // 引入 Zustand store
+
 import { tqxIconLibrary } from "../Icons/TqxIcon";
 
 const ChatBotList = () => {
@@ -33,8 +35,10 @@ const ChatBotList = () => {
   } = useQuery("teams", () => TeamsService.readTeams({}));
   const { teamId, setTeamId } = useChatTeamIdStore(); // 使用 Zustand store
   const [selectedTeamId, setSelectedTeamId] = useState(teamId);
+
   if (isError) {
     const errDetail = (error as ApiError).body?.detail;
+
     showToast("Something went wrong.", `${errDetail}`, "error");
   }
   const { setMessages } = useChatMessageStore();

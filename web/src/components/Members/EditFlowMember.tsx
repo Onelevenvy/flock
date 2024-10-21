@@ -1,5 +1,3 @@
-import { useSkillsQuery } from "@/hooks/useSkillsQuery";
-import { useUploadsQuery } from "@/hooks/useUploadsQuery";
 import { ViewIcon, ViewOffIcon } from "@chakra-ui/icons";
 import {
   Button,
@@ -34,15 +32,17 @@ import {
 } from "chakra-react-select";
 import { useState } from "react";
 import { Controller, type SubmitHandler, useForm } from "react-hook-form";
-import { useMutation, useQuery, useQueryClient } from "react-query";
+import { useMutation, useQueryClient } from "react-query";
+
+import { useSkillsQuery } from "@/hooks/useSkillsQuery";
+import { useUploadsQuery } from "@/hooks/useUploadsQuery";
+
 import {
   type ApiError,
   type MemberOut,
   type MemberUpdate,
   MembersService,
-  ToolsService,
   type TeamUpdate,
-  UploadsService,
 } from "../../client";
 import useCustomToast from "../../hooks/useCustomToast";
 
@@ -176,6 +176,7 @@ export function EditFlowMember({
   if (isErrorSkills || isErrorUploads) {
     const error = errorSkills || errorUploads;
     const errDetail = (error as ApiError).body?.detail;
+
     showToast("Something went wrong.", `${errDetail}`, "error");
   }
 
@@ -221,6 +222,7 @@ export function EditFlowMember({
     },
     onError: (err: ApiError) => {
       const errDetail = err.body?.detail;
+
       showToast("Something went wrong.", `${errDetail}`, "error");
     },
     onSettled: () => {

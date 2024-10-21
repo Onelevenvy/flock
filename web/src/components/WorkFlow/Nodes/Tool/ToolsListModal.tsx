@@ -1,5 +1,3 @@
-import type { SkillOut } from "@/client";
-import ToolsIcon from "@/components/Icons/Tools";
 import { SearchIcon } from "@chakra-ui/icons";
 import {
   Button,
@@ -18,6 +16,9 @@ import {
 } from "@chakra-ui/react";
 import type React from "react";
 import { useMemo, useState } from "react";
+
+import type { SkillOut } from "@/client";
+import ToolsIcon from "@/components/Icons/Tools";
 
 interface ToolsListProps {
   skills: SkillOut[];

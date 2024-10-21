@@ -18,12 +18,7 @@ import {
   VStack,
   useDisclosure,
 } from "@chakra-ui/react";
-import { VscSend } from "react-icons/vsc";
-
-import type { ChatResponse, InterruptDecision } from "../../client";
-
 import { useEffect, useRef, useState } from "react";
-
 import {
   FaBook,
   FaCheck,
@@ -33,10 +28,14 @@ import {
   FaTools,
   FaUser,
 } from "react-icons/fa";
-
 import { GrFormNextLink } from "react-icons/gr";
-import Markdown from "../Markdown/Markdown";
+import { VscSend } from "react-icons/vsc";
+
+
 import useWorkflowStore from "@/stores/workflowStore";
+
+import type { ChatResponse, InterruptDecision } from "../../client";
+import Markdown from "../Markdown/Markdown";
 
 interface MessageBoxProps {
   message: ChatResponse;
@@ -75,6 +74,7 @@ const MessageBox = ({ message, onResume, isPlayground }: MessageBoxProps) => {
 
   const tqxIcon = () => {
     const hw = 6;
+
     if (type === "human") {
       return <Icon as={FaUser} w={hw} h={hw} />;
     }
@@ -87,6 +87,7 @@ const MessageBox = ({ message, onResume, isPlayground }: MessageBoxProps) => {
     if (type === "interrupt") {
       return <Icon as={FaHandPaper} w={hw} h={hw} />;
     }
+
     return <Icon as={FaBook} w={hw} h={hw} />; // 如果 type 不是 'human', 'tools', 'ai'，则不显示任何图标
   };
 
@@ -258,6 +259,7 @@ const MessageBox = ({ message, onResume, isPlayground }: MessageBoxProps) => {
                           </AccordionItem>
                         ));
                       }
+
                       // 处理其他情况，例如数字, string 等
                       return (
                         <AccordionItem>

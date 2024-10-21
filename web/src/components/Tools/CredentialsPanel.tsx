@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import { ViewIcon, ViewOffIcon, QuestionIcon } from "@chakra-ui/icons";
 import {
   Box,
   VStack,
@@ -14,8 +14,9 @@ import {
   CloseButton,
   HStack,
 } from "@chakra-ui/react";
+import React, { useState, useEffect } from "react";
+
 import { SkillOut } from "@/client";
-import { ViewIcon, ViewOffIcon, QuestionIcon } from "@chakra-ui/icons";
 import CustomButton from "@/components/Common/CustomButton";
 
 interface CredentialsPanelProps {

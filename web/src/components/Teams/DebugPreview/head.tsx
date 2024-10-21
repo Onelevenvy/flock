@@ -1,4 +1,3 @@
-import ChatHistoryList from "@/components/Playground/ChatHistoryList";
 import {
   Box,
   Button,
@@ -15,10 +14,11 @@ import {
   Text,
   useColorModeValue,
 } from "@chakra-ui/react";
-import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { LuHistory } from "react-icons/lu";
 import { MdBuild } from "react-icons/md";
+
+import ChatHistoryList from "@/components/Playground/ChatHistoryList";
 
 function DebugPreviewHead({
   teamId,

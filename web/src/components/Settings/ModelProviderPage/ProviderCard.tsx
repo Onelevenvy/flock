@@ -1,6 +1,3 @@
-import ModelProviderIconLong from "@/components/Icons/Providers";
-import ModelProviderIcon from "@/components/Icons/models";
-import { useModelProviderContext } from "@/contexts/modelprovider";
 import {
   Box,
   Button,
@@ -20,6 +17,11 @@ import {
   MdOutlineKeyboardDoubleArrowDown,
   MdOutlineKeyboardDoubleArrowUp,
 } from "react-icons/md";
+
+import ModelProviderIcon from "@/components/Icons/models";
+import ModelProviderIconLong from "@/components/Icons/Providers";
+import { useModelProviderContext } from "@/contexts/modelprovider";
+
 import ProviderUpdate from "./ProviderUpdate";
 
 interface ModelCardProps {
@@ -35,6 +37,7 @@ const ModelProviderCard: React.FC<ModelCardProps> = ({ providerName }) => {
 
   const allCategories = useMemo(() => {
     const categories = new Set<string>();
+
     providerInfo?.models.forEach((model) => {
       model.categories.forEach((category) => {
         if (category !== "chat") {
@@ -42,6 +45,7 @@ const ModelProviderCard: React.FC<ModelCardProps> = ({ providerName }) => {
         }
       });
     });
+
     return Array.from(categories);
   }, [providerInfo?.models]);
 

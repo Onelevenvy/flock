@@ -1,4 +1,3 @@
-import { useUploadsQuery } from "@/hooks/useUploadsQuery";
 import { DeleteIcon } from "@chakra-ui/icons";
 import {
   Box,
@@ -10,9 +9,11 @@ import {
 } from "@chakra-ui/react";
 import type React from "react";
 import { useState } from "react";
-import KBListModal from "./KBListModal";
-import { FaDatabase } from "react-icons/fa";
 import { GiArchiveResearch } from "react-icons/gi";
+
+import { useUploadsQuery } from "@/hooks/useUploadsQuery";
+
+import KBListModal from "./KBListModal";
 
 interface KBInfo {
   name: string;
@@ -34,6 +35,7 @@ const RetrievalToolNodeProperties: React.FC<
 
   const addKB = (kb: KBInfo) => {
     const currentKBs = node.data.tools || [];
+
     if (
       !currentKBs.some(
         (k: string | KBInfo) => (typeof k === "string" ? k : k.name) === kb.name
@@ -45,6 +47,7 @@ const RetrievalToolNodeProperties: React.FC<
 
   const removeKB = (kbName: string) => {
     const currentKBs = node.data.tools || [];
+
     onNodeDataChange(
       node.id,
       "tools",
@@ -63,6 +66,7 @@ const RetrievalToolNodeProperties: React.FC<
         <Text fontWeight="bold">Knowledge Bases:</Text>
         {node.data.tools?.map((kb: string | KBInfo) => {
           const kbName = typeof kb === "string" ? kb : kb.name;
+
           return (
             <HStack key={kbName} justifyContent="space-between">
               <Box bg="#f2f4f7" borderRadius="md" w="full" p="1" m="0.5">

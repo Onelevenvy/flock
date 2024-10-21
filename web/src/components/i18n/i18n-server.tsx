@@ -1,7 +1,9 @@
 "use client";
 
-import useAuth from "@/hooks/useAuth";
 import type React from "react";
+
+import useAuth from "@/hooks/useAuth";
+
 import I18N from "./i18n";
 import { ToastProvider } from "./toast";
 

@@ -1,10 +1,11 @@
 import React from "react";
 import { Handle, type NodeProps, Position } from "reactflow";
+
+import ToolsIcon from "@/components/Icons/Tools";
+import { useSkillsQuery } from "@/hooks/useSkillsQuery"; // 新增导入
+
 import { BaseNode } from "../Base/BaseNode";
 import { nodeConfig } from "../nodeConfig";
-import { useSkillsQuery } from "@/hooks/useSkillsQuery"; // 新增导入
-import ToolsIcon from "@/components/Icons/Tools";
-import { Box } from "@chakra-ui/react";
 
 const PluginNode: React.FC<NodeProps> = (props) => {
   const { data: skills } = useSkillsQuery(); // 获取工具信息

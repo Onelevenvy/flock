@@ -1,4 +1,3 @@
-import useChatMessageStore from "@/stores/chatMessageStore";
 import {
   Box,
   Button,
@@ -14,6 +13,9 @@ import { useRouter } from "next/navigation";
 import React, { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useMutation, useQuery, useQueryClient } from "react-query";
+
+import useChatMessageStore from "@/stores/chatMessageStore";
+
 import { type ApiError, MembersService, ThreadsService } from "../../client";
 import useCustomToast from "../../hooks/useCustomToast";
 
@@ -29,6 +31,7 @@ const ChatHistoryList = ({ teamId, isPlayground }: ChatHistoryProps) => {
   const showToast = useCustomToast();
   const rowTint = useColorModeValue("blackAlpha.50", "whiteAlpha.50");
   const [localTeamId, setLocalTeamId] = useState(teamId);
+
   useEffect(() => {
     setLocalTeamId(teamId);
   }, [teamId]);
@@ -68,6 +71,7 @@ const ChatHistoryList = ({ teamId, isPlayground }: ChatHistoryProps) => {
   const deleteThreadMutation = useMutation(deleteThread, {
     onError: (err: ApiError) => {
       const errDetail = err.body?.detail;
+
       // showToast("Unable to delete thread.", `${errDetail}`, "error");
       console.log("error", errDetail);
     },
@@ -116,6 +120,7 @@ const ChatHistoryList = ({ teamId, isPlayground }: ChatHistoryProps) => {
   }
   const [showMenu, setShowMenu] = useState(false);
   const { t } = useTranslation();
+
   return (
     <>
       {isLoading && membersLoading ? (

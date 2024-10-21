@@ -49,6 +49,7 @@ const ChangePasswordPage = () => {
     },
     onError: (err: ApiError) => {
       const errDetail = err.body?.detail;
+
       showToast("Something went wrong.", `${errDetail}`, "error");
     },
   });
@@ -152,4 +153,5 @@ const ChangePasswordPage = () => {
     </>
   );
 };
+
 export default ChangePasswordPage;

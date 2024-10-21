@@ -11,7 +11,6 @@ import {
   Text,
 } from "@chakra-ui/react";
 import type React from "react";
-import { useState } from "react";
 import { GrNewWindow } from "react-icons/gr";
 import { RiImageAddLine } from "react-icons/ri";
 import { VscSend } from "react-icons/vsc";
@@ -36,8 +35,10 @@ const MessageInput: React.FC<MessageInputProps> = ({
 }) => {
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
+
     if (file) {
       const reader = new FileReader();
+
       reader.onloadend = () => {
         setImageData!(reader.result as string);
       };
@@ -49,6 +50,7 @@ const MessageInput: React.FC<MessageInputProps> = ({
   const removeImage = () => {
     setImageData!(null);
     const fileInput = document.getElementById("file-input") as HTMLInputElement;
+
     if (fileInput) {
       fileInput.value = "";
     }

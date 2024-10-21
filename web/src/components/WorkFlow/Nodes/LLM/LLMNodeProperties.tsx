@@ -1,6 +1,3 @@
-import ModelSelect from "@/components/Common/ModelProvider";
-import { useModelQuery } from "@/hooks/useModelQuery";
-import { useVariableInsertion } from "@/hooks/graphs/useVariableInsertion";
 import {
   Box,
   Input,
@@ -13,8 +10,13 @@ import {
   Textarea,
 } from "@chakra-ui/react";
 import type React from "react";
-import { useEffect, useState, useRef, useCallback } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { useForm } from "react-hook-form";
+
+import ModelSelect from "@/components/Common/ModelProvider";
+import { useVariableInsertion } from "@/hooks/graphs/useVariableInsertion";
+import { useModelQuery } from "@/hooks/useModelQuery";
+
 import { VariableReference } from "../../FlowVis/variableSystem";
 
 interface LLMNodePropertiesProps {
@@ -77,6 +79,7 @@ const LLMNodeProperties: React.FC<LLMNodePropertiesProps> = ({
       const selectedModel = models?.data.find(
         (model) => model.ai_model_name === modelName
       );
+
       if (selectedModel) {
         const apiKey = selectedModel.provider.api_key || "";
         const baseUrl = selectedModel.provider.base_url || "";
@@ -138,6 +141,7 @@ const LLMNodeProperties: React.FC<LLMNodePropertiesProps> = ({
             setTemperatureInput(e.target.value);
             const numValue =
               e.target.value === "" ? 0 : Number.parseFloat(e.target.value);
+
             onNodeDataChange(node.id, "temperature", numValue);
           }}
           step={0.1}

@@ -1,8 +1,3 @@
-import useChatMessageStore from "@/stores/chatMessageStore";
-import useChatTeamIdStore from "@/stores/chatTeamIDStore";
-import useWorkflowStore from "@/stores/workflowStore";
-import { useFlowState } from "@/hooks/graphs/useFlowState";
-import { useEffect } from "react";
 
 import { Box, Button } from "@chakra-ui/react";
 import { fetchEventSource } from "@microsoft/fetch-event-source";
@@ -16,6 +11,12 @@ import {
   useQuery,
   useQueryClient,
 } from "react-query";
+
+import { useFlowState } from "@/hooks/graphs/useFlowState";
+import useChatMessageStore from "@/stores/chatMessageStore";
+import useChatTeamIdStore from "@/stores/chatTeamIDStore";
+import useWorkflowStore from "@/stores/workflowStore";
+
 import {
   type ApiError,
   type ChatResponse,
@@ -48,13 +49,16 @@ const getUrl = (config: OpenAPIConfig, options: ApiRequestOptions): string => {
       if (options.path?.hasOwnProperty(group)) {
         return encoder(String(options.path[group]));
       }
+
       return substring;
     });
 
   const url = `${config.BASE}${path}`;
+
   if (options.query) {
     return `${url}${getQueryString(options.query)}`;
   }
+
   return url;
 };
 
@@ -104,6 +108,7 @@ const ChatMain = ({ isPlayground }: { isPlayground?: boolean }) => {
       refetchOnWindowFocus: false,
       onError: (err: ApiError) => {
         const errDetail = err.body?.detail;
+
         showToast("Something went wrong.", `${errDetail}`, "error");
         // if fail, then remove it from search params and delete existing messages
         if (isPlayground) {
@@ -131,6 +136,7 @@ const ChatMain = ({ isPlayground }: { isPlayground?: boolean }) => {
       teamId: teamId,
       requestBody: data,
     });
+
     return thread.id;
   };
   const createThreadMutation = useMutation(createThread, {
@@ -144,6 +150,7 @@ const ChatMain = ({ isPlayground }: { isPlayground?: boolean }) => {
     },
     onError: (err: ApiError) => {
       const errDetail = err.body?.detail;
+
       showToast("Unable to create thread", `${errDetail}`, "error");
     },
     onSettled: () => {
@@ -153,12 +160,14 @@ const ChatMain = ({ isPlayground }: { isPlayground?: boolean }) => {
 
   const updateThread = async (data: ThreadUpdate): Promise<string> => {
     if (!threadId) throw new Error("Thread ID is not available");
+
     return new Promise((resolve, reject) => {
       const cancelablePromise = ThreadsService.updateThread({
         teamId: teamId,
         id: threadId,
         requestBody: data,
       });
+
       cancelablePromise.then((thread) => resolve(thread.id)).catch(reject);
       cancelUpdateRef.current = () => cancelablePromise.cancel();
     });
@@ -183,6 +192,7 @@ const ChatMain = ({ isPlayground }: { isPlayground?: boolean }) => {
       const messageIndex = prevMessages.findIndex(
         (msg) => msg.id === response.id
       );
+
       if (messageIndex !== -1) {
         return prevMessages.map((msg, index) =>
           index === messageIndex
@@ -194,6 +204,7 @@ const ChatMain = ({ isPlayground }: { isPlayground?: boolean }) => {
             : msg
         );
       }
+
       return [...prevMessages, response];
     });
 
@@ -220,6 +231,7 @@ const ChatMain = ({ isPlayground }: { isPlayground?: boolean }) => {
 
   const stream = async (id: number, threadId: string, data: TeamChat) => {
     const controller = new AbortController();
+
     abortControllerRef.current = controller;
     const signal = controller.signal;
 
@@ -247,6 +259,7 @@ const ChatMain = ({ isPlayground }: { isPlayground?: boolean }) => {
       signal,
       onmessage(message) {
         const response: ChatResponse = JSON.parse(message.data);
+
         processMessage(response);
       },
     });
@@ -286,6 +299,7 @@ const ChatMain = ({ isPlayground }: { isPlayground?: boolean }) => {
     // Create a new thread or update current thread with most recent user query
     const query = data.messages;
     let currentThreadId: string | null = threadId;
+
     if (!threadId) {
       currentThreadId = await createThreadMutation.mutateAsync({
         query: query[0].content,
@@ -297,6 +311,7 @@ const ChatMain = ({ isPlayground }: { isPlayground?: boolean }) => {
         });
       } catch (error) {
         console.error("Failed to update thread:", error);
+
         // showToast("Failed to update thread", "", "error");
         return;
       }
@@ -353,6 +368,7 @@ const ChatMain = ({ isPlayground }: { isPlayground?: boolean }) => {
     const path = isPlayground
       ? `/playground?teamId=${teamId}`
       : `/teams/${teamId}`;
+
     navigate.push(path);
     setMessages([]);
   }, [isPlayground, teamId, navigate, setMessages]);

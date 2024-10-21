@@ -1,6 +1,3 @@
-import { useModelQuery } from "@/hooks/useModelQuery";
-import { useSkillsQuery } from "@/hooks/useSkillsQuery";
-import { useUploadsQuery } from "@/hooks/useUploadsQuery";
 import {
   Box,
   Button,
@@ -29,6 +26,11 @@ import { type Ref, forwardRef, useState } from "react";
 import { Controller, type SubmitHandler, useForm } from "react-hook-form";
 import { useTranslation } from "react-i18next";
 import { useMutation, useQueryClient } from "react-query";
+
+import { useModelQuery } from "@/hooks/useModelQuery";
+import { useSkillsQuery } from "@/hooks/useSkillsQuery";
+import { useUploadsQuery } from "@/hooks/useUploadsQuery";
+
 import {
   type ApiError,
   type MemberOut,
@@ -161,6 +163,7 @@ const EditTeamMember = forwardRef<HTMLFormElement, EditTeamMemberProps>(
     if (isErrorSkills || isErrorUploads || isErrorModel) {
       const error = errorSkills || errorUploads || errorModel;
       const errDetail = (error as ApiError).body?.detail;
+
       showToast("Something went wrong.", `${errDetail}`, "error");
     }
 
@@ -206,6 +209,7 @@ const EditTeamMember = forwardRef<HTMLFormElement, EditTeamMemberProps>(
       },
       onError: (err: ApiError) => {
         const errDetail = err.body?.detail;
+
         showToast("Something went wrong.", `${errDetail}`, "error");
       },
       onSettled: () => {
@@ -250,6 +254,7 @@ const EditTeamMember = forwardRef<HTMLFormElement, EditTeamMemberProps>(
       const selectedModel = models?.data.find(
         (model) => model.ai_model_name === modelName,
       );
+
       setValue("model", modelName);
       setValue("openai_api_key", selectedModel?.provider.api_key);
       setValue("provider", selectedModel?.provider.provider_name);
@@ -445,6 +450,7 @@ const EditTeamMember = forwardRef<HTMLFormElement, EditTeamMemberProps>(
         </Box>
       );
     }
+
     return (
       <Modal isOpen={isOpen} onClose={onClose} isCentered>
         <ModalOverlay>

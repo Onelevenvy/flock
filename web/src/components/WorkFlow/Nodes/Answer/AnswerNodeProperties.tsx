@@ -1,4 +1,3 @@
-import { useVariableInsertion } from "@/hooks/graphs/useVariableInsertion";
 import {
   Box,
   Text,
@@ -11,6 +10,9 @@ import {
 } from "@chakra-ui/react";
 import type React from "react";
 import { useCallback, useState, useEffect } from "react";
+
+import { useVariableInsertion } from "@/hooks/graphs/useVariableInsertion";
+
 import { VariableReference } from "../../FlowVis/variableSystem";
 
 interface AnswerPropertiesProps {

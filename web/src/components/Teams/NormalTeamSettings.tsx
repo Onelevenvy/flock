@@ -1,9 +1,11 @@
-import { type ApiError, MembersService, type TeamOut } from "@/client";
-import useCustomToast from "@/hooks/useCustomToast";
 import { Box, Flex, Spinner, useDisclosure } from "@chakra-ui/react";
 import { useParams } from "next/navigation";
 import { useRef } from "react";
 import { useQuery } from "react-query";
+
+import { type ApiError, MembersService, type TeamOut } from "@/client";
+import useCustomToast from "@/hooks/useCustomToast";
+
 import EditTeamMember from "../Members";
 import DebugPreview from "./DebugPreview";
 import TeamInforCard from "./TeamInfo";
@@ -26,8 +28,10 @@ export default function NormalTeamSettings({
   );
 
   const member = members?.data || [];
+
   if (isError) {
     const errDetail = (error as ApiError).body?.detail;
+
     showToast("Something went wrong.", `${errDetail}`, "error");
   }
   const formRef = useRef<HTMLFormElement>(null);

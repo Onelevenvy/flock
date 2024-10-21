@@ -18,6 +18,7 @@ import { type SubmitHandler, useForm } from "react-hook-form";
 import { useMutation, useQueryClient } from "react-query";
 
 import { emailPattern } from "@/utils";
+
 import { type UserCreate, UsersService } from "../../client";
 import type { ApiError } from "../../client/core/ApiError";
 import useCustomToast from "../../hooks/useCustomToast";
@@ -65,6 +66,7 @@ const AddUser = ({ isOpen, onClose }: AddUserProps) => {
     },
     onError: (err: ApiError) => {
       const errDetail = err.body?.detail;
+
       showToast("Something went wrong.", `${errDetail}`, "error");
     },
     onSettled: () => {

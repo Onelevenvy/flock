@@ -8,14 +8,14 @@ import {
   Input,
   Text,
 } from "@chakra-ui/react";
+import { useRouter } from "next/navigation";
+import { useEffect } from "react";
+import { type SubmitHandler, useForm } from "react-hook-form";
 
 import { LoginService } from "@/client";
 import { isLoggedIn } from "@/hooks/useAuth";
 import useCustomToast from "@/hooks/useCustomToast";
 import { emailPattern } from "@/utils";
-import { useRouter } from "next/navigation";
-import { useEffect } from "react";
-import { type SubmitHandler, useForm } from "react-hook-form";
 
 interface FormData {
   email: string;

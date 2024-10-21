@@ -1,5 +1,3 @@
-import { useVariableInsertion } from "@/hooks/graphs/useVariableInsertion";
-import { useUploadsQuery } from "@/hooks/useUploadsQuery";
 import {
   Box,
   Text,
@@ -10,10 +8,13 @@ import {
   Button,
   Input,
   Select,
-  HStack,
 } from "@chakra-ui/react";
 import type React from "react";
 import { useCallback, useState, useEffect } from "react";
+
+import { useVariableInsertion } from "@/hooks/graphs/useVariableInsertion";
+import { useUploadsQuery } from "@/hooks/useUploadsQuery";
+
 import { VariableReference } from "../../FlowVis/variableSystem";
 
 interface RetrievalPropertiesProps {
@@ -52,6 +53,7 @@ const RetrievalProperties: React.FC<RetrievalPropertiesProps> = ({
   const handleRagMethodChange = useCallback(
     (event: React.ChangeEvent<HTMLSelectElement>) => {
       const value = event.target.value;
+
       setRagMethod(value);
       onNodeDataChange(node.id, "rag_method", value);
     },
@@ -61,6 +63,7 @@ const RetrievalProperties: React.FC<RetrievalPropertiesProps> = ({
   const handleDatabaseChange = useCallback(
     (event: React.ChangeEvent<HTMLSelectElement>) => {
       const value = event.target.value;
+
       setSelectedDatabase(value);
 
       // Find the selected upload to get usr_id and uploadid (kb_id)

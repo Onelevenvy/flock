@@ -63,6 +63,7 @@ const EditUser = ({ user, isOpen, onClose }: EditUserProps) => {
     },
     onError: (err: ApiError) => {
       const errDetail = err.body?.detail;
+
       showToast("Something went wrong.", `${errDetail}`, "error");
     },
     onSettled: () => {

@@ -23,12 +23,14 @@ import { Controller, type SubmitHandler, useForm } from "react-hook-form";
 import { useTranslation } from "react-i18next";
 import { GiTeamIdea } from "react-icons/gi";
 import { RiChatVoiceLine, RiTeamFill } from "react-icons/ri";
+import { SiKashflow, SiVisualstudiocode } from "react-icons/si";
 import { TbDatabaseSearch } from "react-icons/tb";
 import { useMutation, useQueryClient } from "react-query";
+
+import IconPicker from "@/components/Icons/TqxIcon";
+
 import { type ApiError, type TeamCreate, TeamsService } from "../../client";
 import useCustomToast from "../../hooks/useCustomToast";
-import { SiKashflow, SiVisualstudiocode } from "react-icons/si";
-import IconPicker from "@/components/Icons/TqxIcon";
 
 interface AddTeamProps {
   isOpen: boolean;
@@ -67,6 +69,7 @@ const AddTeam = ({ isOpen, onClose }: AddTeamProps) => {
     },
     onError: (err: ApiError) => {
       const errDetail = err.body?.detail;
+
       showToast("Something went wrong.", `${errDetail}`, "error");
     },
     onSettled: () => {

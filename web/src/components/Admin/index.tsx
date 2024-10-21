@@ -4,7 +4,6 @@ import {
   Box,
   Container,
   Flex,
-  Heading,
   Spinner,
   Table,
   TableContainer,
@@ -14,15 +13,15 @@ import {
   Thead,
   Tr,
 } from "@chakra-ui/react";
+import React from "react";
+import { useQuery } from "react-query";
 
-import { useQuery, useQueryClient } from "react-query";
-
-import { type ApiError, type UserOut, UsersService } from "@/client";
+import { type ApiError, UsersService } from "@/client";
 import ActionsMenu from "@/components/Common/ActionsMenu";
 import Navbar from "@/components/Common/Navbar";
 import useAuth from "@/hooks/useAuth";
 import useCustomToast from "@/hooks/useCustomToast";
-import React from "react";
+
 
 function Admin() {
   const showToast = useCustomToast();
@@ -36,6 +35,7 @@ function Admin() {
 
   if (isError) {
     const errDetail = (error as ApiError).body?.detail;
+
     showToast("Something went wrong.", `${errDetail}`, "error");
   }
 

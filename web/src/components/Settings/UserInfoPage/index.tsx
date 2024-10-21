@@ -7,7 +7,6 @@ import {
   FormControl,
   FormErrorMessage,
   FormLabel,
-  Heading,
   Input,
   Text,
   useColorModeValue,
@@ -22,7 +21,6 @@ import {
   type UserUpdateMe,
   UsersService,
 } from "../../../client";
-
 import useAuth from "../../../hooks/useAuth";
 import useCustomToast from "../../../hooks/useCustomToast";
 import { emailPattern } from "../../../utils";
@@ -62,6 +60,7 @@ const UserInfoPage = () => {
     },
     onError: (err: ApiError) => {
       const errDetail = err.body?.detail;
+
       showToast("Something went wrong.", `${errDetail}`, "error");
     },
     onSettled: () => {

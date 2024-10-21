@@ -16,7 +16,6 @@ import { Controller, type SubmitHandler, useForm } from "react-hook-form";
 import { useMutation, useQueryClient } from "react-query";
 
 // import SkillEditor, { skillPlaceholder } from "./SkillEditor"
-import { RxReset } from "react-icons/rx";
 import { type ApiError, type SkillCreate, ToolsService } from "../../client";
 import useCustomToast from "../../hooks/useCustomToast";
 
@@ -59,6 +58,7 @@ const AddSkill = ({ isOpen, onClose }: AddSkillProps) => {
     },
     onError: (err: ApiError) => {
       const errDetail = err.body?.detail;
+
       showToast("Something went wrong.", `${errDetail}`, "error");
     },
     onSettled: () => {

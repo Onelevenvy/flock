@@ -10,6 +10,7 @@ const CopyButton = ({ id }: { id: string }) => {
     try {
       setCopied(true);
       const text = document.getElementById(id)?.innerText || "";
+
       await navigator.clipboard.writeText(text);
       toast({
         title: "Copied to clipboard!",

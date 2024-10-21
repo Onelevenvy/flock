@@ -1,7 +1,5 @@
 "use client";
-import type { ModelsOut } from "@/client/models/ModelsOut";
 import { ChevronDownIcon } from "@chakra-ui/icons";
-import { FaEye } from "react-icons/fa";
 import {
   Box,
   Button,
@@ -15,6 +13,10 @@ import {
 } from "@chakra-ui/react";
 import React, { useState, useCallback } from "react";
 import { type Control, Controller, FieldValues, Path } from "react-hook-form";
+import { FaEye } from "react-icons/fa";
+
+import type { ModelsOut } from "@/client/models/ModelsOut";
+
 import ModelProviderIcon from "../../Icons/models";
 
 interface ModelSelectProps<T extends FieldValues> {
@@ -41,10 +43,12 @@ function ModelSelect<T extends FieldValues>({
   const groupedModels = filteredModels?.reduce(
     (acc, model) => {
       const providerName = model.provider.provider_name;
+
       if (!acc[providerName]) {
         acc[providerName] = [];
       }
       acc[providerName].push(model);
+
       return acc;
     },
     {} as Record<string, typeof filteredModels>
@@ -58,6 +62,7 @@ function ModelSelect<T extends FieldValues>({
       const selectedModelData = models?.data.find(
         (model) => model.ai_model_name === modelName
       );
+
       if (selectedModelData) {
         setSelectedModelProvider(selectedModelData.provider.provider_name);
       }
@@ -76,6 +81,7 @@ function ModelSelect<T extends FieldValues>({
             control={control}
             render={({ field }) => {
               updateSelectedProvider(field.value);
+
               return (
                 <Menu autoSelect={false}>
                   <MenuButton

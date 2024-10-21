@@ -1,10 +1,11 @@
 import { Box, HStack, IconButton, Text, VStack } from "@chakra-ui/react";
 import React from "react";
+import { GiArchiveResearch } from "react-icons/gi";
 import { Handle, type NodeProps, Position } from "reactflow";
+
 import { BaseNode } from "../Base/BaseNode";
 import { nodeConfig } from "../nodeConfig";
-import { FaDatabase } from "react-icons/fa";
-import { GiArchiveResearch } from "react-icons/gi";
+
 
 interface KBInfo {
   name: string;
@@ -30,6 +31,7 @@ const RetrievalToolNode: React.FC<NodeProps> = (props) => {
         {knowledgeBases.length > 0 ? (
           knowledgeBases.map((kb: string | KBInfo, index: number) => {
             const kbName = typeof kb === 'string' ? kb : kb.name;
+
             return (
               <HStack key={index} justifyContent="center" justifyItems={"center"}>
                 <Box bg="#f2f4f7" borderRadius="md" w="full" p="1">

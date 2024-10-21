@@ -42,6 +42,7 @@ export const FileUpload = ({
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
+
     if (file) {
       onChange(file);
       if (onFileSelect) {

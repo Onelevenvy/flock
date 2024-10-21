@@ -13,6 +13,7 @@ import ReactFlow, {
   type Node,
   type NodeChange,
 } from "reactflow";
+
 import "reactflow/dist/style.css";
 import {
   type ApiError,
@@ -21,10 +22,10 @@ import {
   type MembersOut,
   MembersService,
 } from "../../client";
-import useCustomToast from "../../hooks/useCustomToast";
 import ConnectionLine from "./Edges/ConnectionLine";
 import defaultEdgeOptions from "./Edges/DefaultEdge";
 import { nodeTypes } from "./Nodes";
+import useCustomToast from "../../hooks/useCustomToast";
 
 interface FlowComponentProps {
   initialNodes: Node[];
@@ -59,6 +60,7 @@ const FlowComponent = ({ initialNodes, initialEdges }: FlowComponentProps) => {
   const createMemberMutation = useMutation(createMember, {
     onError: (err: ApiError) => {
       const errDetail = err.body?.detail;
+
       showToast("Something went wrong.", `${errDetail}`, "error");
     },
   });
@@ -77,6 +79,7 @@ const FlowComponent = ({ initialNodes, initialEdges }: FlowComponentProps) => {
   const deleteMemberMutation = useMutation(deleteMember, {
     onError: (err: ApiError) => {
       const errDetail = err.body?.detail;
+
       showToast("Something went wrong.", `${errDetail}`, "error");
     },
   });
@@ -93,6 +96,7 @@ const FlowComponent = ({ initialNodes, initialEdges }: FlowComponentProps) => {
 
   const updateMember = async (data: EditMemberDataProps) => {
     const { id, requestBody } = data;
+
     await MembersService.updateMember({
       id,
       teamId: Number.parseInt(teamId),
@@ -102,6 +106,7 @@ const FlowComponent = ({ initialNodes, initialEdges }: FlowComponentProps) => {
   const updateMemberMutation = useMutation(updateMember, {
     onError: (err: ApiError) => {
       const errDetail = err.body?.detail;
+
       // suppress error due to update and delete node triggering together
       // TODO: Fix this by using onDelete handler in xyflow v12. See https://github.com/xyflow/xyflow/discussions/3035
       console.error(errDetail);
@@ -194,6 +199,7 @@ const FlowComponent = ({ initialNodes, initialEdges }: FlowComponentProps) => {
           },
           origin: [0.5, 0],
         };
+
         setNodes((nds) => nds.concat(newNode));
         setEdges((eds) =>
           eds.concat({
@@ -251,10 +257,12 @@ const FlowComponent = ({ initialNodes, initialEdges }: FlowComponentProps) => {
         }
 
         prev.push(change);
+
         return prev;
       }
 
       prev.push(change);
+
       return prev;
     }, [] as NodeChange[]);
 
@@ -315,6 +323,7 @@ const importTeamMembers = (membersOut: MembersOut) => {
       data: { teamId: member.belongs_to, member: member },
       position: { x: member.position_x, y: member.position_y },
     };
+
     nodes.push(node);
 
     if (!member.source) continue;
@@ -324,6 +333,7 @@ const importTeamMembers = (membersOut: MembersOut) => {
       source: `${member.source}`,
       target: `${member.id}`,
     };
+
     edges.push(edge);
   }
 
@@ -344,6 +354,7 @@ export default function Fflow() {
 
   if (isError) {
     const errDetail = (error as ApiError).body?.detail;
+
     showToast("Something went wrong.", `${errDetail}`, "error");
   }
 

@@ -1,4 +1,5 @@
 import { Icon, type IconProps, createIcon } from "@chakra-ui/icons";
+
 import { SiliconFlowIcon, ZhipuAIIcon } from "../models";
 
 const OpenWeather = createIcon({

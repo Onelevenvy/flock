@@ -1,4 +1,3 @@
-import EditTeamMember from "@/components/Members";
 import {
   Box,
   Icon,
@@ -12,6 +11,9 @@ import { FiEdit2 } from "react-icons/fi";
 import { GrUserWorker } from "react-icons/gr";
 import type { NodeProps } from "reactflow";
 import { Position } from "reactflow";
+
+import EditTeamMember from "@/components/Members";
+
 import type { MemberOut } from "../../../client";
 import LimitConnectionHandle from "../Handles/LimitConnectionHandle";
 

@@ -15,8 +15,8 @@ import {
 import { Controller, type SubmitHandler, useForm } from "react-hook-form";
 
 // import SkillEditor, { skillPlaceholder } from "./SkillEditor"
-import { RxReset } from "react-icons/rx";
 import { useMutation, useQueryClient } from "react-query";
+
 import {
   type ApiError,
   type SkillOut,
@@ -61,6 +61,7 @@ const EditSkill = ({ skill, isOpen, onClose }: EditSkillProps) => {
     },
     onError: (err: ApiError) => {
       const errDetail = err.body?.detail;
+
       showToast("Something went wrong.", `${errDetail}`, "error");
     },
     onSettled: () => {

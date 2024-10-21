@@ -1,11 +1,5 @@
 "use client";
 import {
-  type ApiError,
-  ModelOut,
-  ProviderService,
-  ModelProviderOut,
-} from "@/client";
-import {
   Text,
   Box,
   Flex,
@@ -17,14 +11,19 @@ import {
   TagLabel,
   useColorModeValue,
 } from "@chakra-ui/react";
-
-import useCustomToast from "@/hooks/useCustomToast";
 import React, { useState, useEffect } from "react";
+import { useTranslation } from "react-i18next";
 import { RiApps2Fill } from "react-icons/ri";
 
+import {
+  type ApiError,
+  ModelOut,
+  ProviderService,
+  ModelProviderOut,
+} from "@/client";
 import TabSlider from "@/components/Common/TabSlider";
-import { useTranslation } from "react-i18next";
 import ModelProviderIcon from "@/components/Icons/models";
+import useCustomToast from "@/hooks/useCustomToast";
 
 function ModelPage() {
   const showToast = useCustomToast();
@@ -44,6 +43,7 @@ function ModelPage() {
             provider: provider as ModelProviderOut,
           }))
         );
+
         setModels(allModels);
         setIsLoading(false);
       } catch (err) {
@@ -57,6 +57,7 @@ function ModelPage() {
 
   if (error) {
     const errDetail = error.body?.detail;
+
     showToast("Something went wrong.", `${errDetail}`, "error");
   }
 

@@ -1,9 +1,4 @@
 "use client";
-import useAuth from "@/hooks/useAuth";
-import { useModelQuery } from "@/hooks/useModelQuery";
-import { useSkillsQuery } from "@/hooks/useSkillsQuery";
-import { useUploadsQuery } from "@/hooks/useUploadsQuery";
-import { TeamsService } from "@/client/services/TeamsService";
 import {
   Box,
   Container,
@@ -28,9 +23,10 @@ import {
   Card,
   CardHeader,
   CardBody,
-  Divider,
   Button,
 } from "@chakra-ui/react";
+import NextLink from "next/link";
+import React from "react";
 import {
   FiUsers,
   FiFileText,
@@ -40,10 +36,16 @@ import {
   FiBox,
   FiGithub,
 } from "react-icons/fi";
-import React from "react";
 import { useQuery } from "react-query";
+
 import { TeamOut } from "@/client/models/TeamOut";
-import NextLink from "next/link";
+import { TeamsService } from "@/client/services/TeamsService";
+import useAuth from "@/hooks/useAuth";
+import { useModelQuery } from "@/hooks/useModelQuery";
+import { useSkillsQuery } from "@/hooks/useSkillsQuery";
+import { useUploadsQuery } from "@/hooks/useUploadsQuery";
+
+
 
 interface StatCardProps {
   icon: React.ElementType;

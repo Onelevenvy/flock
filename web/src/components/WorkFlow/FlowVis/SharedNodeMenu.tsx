@@ -1,4 +1,3 @@
-import React from "react";
 import {
   Box,
   Tab,
@@ -11,9 +10,13 @@ import {
   HStack,
   IconButton,
 } from "@chakra-ui/react";
-import { nodeConfig, type NodeType } from "../Nodes/nodeConfig";
+import React from "react";
+
+
 import { useSkillsQuery } from "@/hooks/useSkillsQuery";
+
 import ToolsIcon from "../../Icons/Tools";
+import { nodeConfig, type NodeType } from "../Nodes/nodeConfig";
 
 interface SharedNodeMenuProps {
   onNodeSelect: (nodeType: NodeType | string, tool?: any) => void;
@@ -31,6 +34,7 @@ const SharedNodeMenu: React.FC<SharedNodeMenuProps> = ({
     (event: React.MouseEvent | React.DragEvent) => {
       if (isDraggable && event.type === "dragstart") {
         const dragEvent = event as React.DragEvent;
+
         dragEvent.dataTransfer.setData(
           "application/reactflow",
           JSON.stringify({

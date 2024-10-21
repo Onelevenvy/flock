@@ -14,15 +14,15 @@ import {
   Link,
   useBoolean,
 } from "@chakra-ui/react";
+import { useRouter } from "next/navigation";
+import React from "react";
+import { type SubmitHandler, useForm } from "react-hook-form";
 
-import Logo from "@/assets/images/logo.svg";
 import type { ApiError } from "@/client";
 import type { Body_login_login_access_token as AccessToken } from "@/client/models/Body_login_login_access_token";
 import useAuth from "@/hooks/useAuth";
 import { emailPattern } from "@/utils";
-import { useRouter } from "next/navigation";
-import React from "react";
-import { type SubmitHandler, useForm } from "react-hook-form";
+
 
 function Login() {
   const [show, setShow] = useBoolean();
@@ -47,6 +47,7 @@ function Login() {
       router.push("./dashboard");
     } catch (err) {
       const errDetail = (err as ApiError).body.detail;
+
       setError(errDetail);
     }
   };

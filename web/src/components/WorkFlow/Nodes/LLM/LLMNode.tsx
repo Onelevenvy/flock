@@ -1,7 +1,9 @@
-import ModelProviderIcon from "@/components/Icons/models";
 import { Box, Text, VStack } from "@chakra-ui/react";
 import React, { useEffect, useState, useMemo } from "react";
 import { Handle, type NodeProps, Position } from "reactflow";
+
+import ModelProviderIcon from "@/components/Icons/models";
+
 import { BaseNode } from "../Base/BaseNode";
 import { nodeConfig } from "../nodeConfig";
 

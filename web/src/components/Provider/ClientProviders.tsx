@@ -1,7 +1,8 @@
 "use client";
 
-import { OpenAPI } from "@/client";
 import { useEffect } from "react";
+
+import { OpenAPI } from "@/client";
 
 const ClientProvider = ({ children }: { children: React.ReactNode }) => {
   useEffect(() => {

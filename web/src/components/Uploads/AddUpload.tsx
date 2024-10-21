@@ -6,17 +6,17 @@ import {
   ModalHeader,
   ModalOverlay,
 } from "@chakra-ui/react";
+import { useState } from "react";
 import { type SubmitHandler, useForm } from "react-hook-form";
 import { useMutation, useQueryClient } from "react-query";
-import { useState } from "react";
 
+import UploadForm, { UploadFormData } from "./UploadForm";
 import {
   type ApiError,
   type Body_uploads_create_upload,
   UploadsService,
 } from "../../client";
 import useCustomToast from "../../hooks/useCustomToast";
-import UploadForm, { UploadFormData } from "./UploadForm";
 
 interface AddUploadProps {
   isOpen: boolean;
@@ -52,6 +52,7 @@ const AddUpload = ({ isOpen, onClose }: AddUploadProps) => {
       },
       onError: (err: ApiError) => {
         const errDetail = err.body?.detail;
+
         showToast("Something went wrong.", `${errDetail}`, "error");
       },
     }

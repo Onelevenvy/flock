@@ -1,6 +1,3 @@
-import { useModelQuery } from "@/hooks/useModelQuery";
-import { useSkillsQuery } from "@/hooks/useSkillsQuery";
-import { useUploadsQuery } from "@/hooks/useUploadsQuery";
 import {
   Box,
   Checkbox,
@@ -18,16 +15,18 @@ import {
 import { Select as MultiSelect, chakraComponents } from "chakra-react-select";
 import { type Ref, forwardRef, useState } from "react";
 import { Controller, type SubmitHandler, useForm } from "react-hook-form";
-import { useMutation, useQuery, useQueryClient } from "react-query";
+import { useMutation, useQueryClient } from "react-query";
+
+import { useModelQuery } from "@/hooks/useModelQuery";
+import { useSkillsQuery } from "@/hooks/useSkillsQuery";
+import { useUploadsQuery } from "@/hooks/useUploadsQuery";
+
 import {
   type ApiError,
   type MemberOut,
   type MemberUpdate,
   MembersService,
-  ModelService,
-  ToolsService,
   type TeamUpdate,
-  UploadsService,
 } from "../../client";
 import useCustomToast from "../../hooks/useCustomToast";
 import ModelSelect from "../Common/ModelProvider";
@@ -73,6 +72,7 @@ const EditNormalMember = forwardRef<HTMLFormElement, EditAgentProps>(
     if (isErrorSkills || isErrorUploads || isErrorModel) {
       const error = errorSkills || errorUploads || errorModel;
       const errDetail = (error as ApiError).body?.detail;
+
       showToast("Something went wrong.", `${errDetail}`, "error");
     }
 
@@ -117,6 +117,7 @@ const EditNormalMember = forwardRef<HTMLFormElement, EditAgentProps>(
       },
       onError: (err: ApiError) => {
         const errDetail = err.body?.detail;
+
         showToast("Something went wrong.", `${errDetail}`, "error");
       },
       onSettled: () => {
@@ -152,6 +153,7 @@ const EditNormalMember = forwardRef<HTMLFormElement, EditAgentProps>(
       const selectedModel = models?.data.find(
         (model) => model.ai_model_name === modelName
       );
+
       setValue("model", modelName);
       setValue("openai_api_key", selectedModel?.provider.api_key);
       setValue("provider", selectedModel?.provider.provider_name);

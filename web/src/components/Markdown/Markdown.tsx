@@ -1,10 +1,10 @@
 import { Box, Flex, Text, useColorModeValue } from "@chakra-ui/react";
 import "highlight.js/styles/atom-one-dark.css";
 import { Terminal } from "lucide-react";
-import dynamic from "next/dynamic";
 import ReactMarkdown from "react-markdown";
 import rehypeHighlight from "rehype-highlight";
 import { v4 } from "uuid";
+
 import CopyButton from "./CopyButton";
 
 // const DynamicLoadMarkdownCSSStyle = dynamic(
@@ -17,6 +17,7 @@ import CopyButton from "./CopyButton";
 const Markdown = ({ content }: { content: any }) => {
   const textColor = useColorModeValue("ui.dark", "ui.white");
   const secBgColor = useColorModeValue("ui.secondary", "ui.darkSlate");
+
   return (
     <>
       {/* <DynamicLoadMarkdownCSSStyle /> */}
@@ -31,8 +32,10 @@ const Markdown = ({ content }: { content: any }) => {
             ),
             code: ({ node, className, children, ...props }) => {
               const match = /language-(\w+)/.exec(className || "");
+
               if (match?.length) {
                 const id = v4();
+
                 return (
                   <Box
                     borderWidth="1px"
@@ -75,6 +78,7 @@ const Markdown = ({ content }: { content: any }) => {
                   </Box>
                 );
               }
+
               return (
                 <Box
                   as="code"

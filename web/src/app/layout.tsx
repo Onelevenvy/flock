@@ -1,8 +1,10 @@
-import { ChakraUIProviders } from "@/components/Provider/ChakraUIProvider";
-import QueryClientProviderWrapper from "@/components/Provider/QueryClientProvider";
-import I18nServer from "@/components/i18n/i18n-server";
 import type { Viewport } from "next";
 import { StrictMode } from "react";
+
+import I18nServer from "@/components/i18n/i18n-server";
+import { ChakraUIProviders } from "@/components/Provider/ChakraUIProvider";
+import QueryClientProviderWrapper from "@/components/Provider/QueryClientProvider";
+
 import ClientProvider from "../components/Provider/ClientProviders";
 
 export const viewport: Viewport = {
