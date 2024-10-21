@@ -1,5 +1,6 @@
 from .state import TeamState
 
+
 def InputNode(state: TeamState):
     if "node_outputs" not in state:
         state["node_outputs"] = {}

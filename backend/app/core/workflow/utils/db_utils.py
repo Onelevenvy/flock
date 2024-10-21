@@ -1,8 +1,9 @@
 from contextlib import contextmanager
 from typing import Callable, TypeVar
-from app.core.database import get_session
 
 from sqlmodel import Session
+
+from app.core.database import get_session
 
 T = TypeVar("T")
 

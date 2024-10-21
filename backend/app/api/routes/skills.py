@@ -1,11 +1,12 @@
 from typing import Any
-from app.core.tools.tool_invoker import ToolInvokeResponse, invoke_tool
+
 from fastapi import APIRouter, HTTPException
 from pydantic import ValidationError
 from sqlmodel import col, func, or_, select
-from fastapi import APIRouter, HTTPException
+
 from app.api.deps import CurrentUser, SessionDep
 from app.core.tools.api_tool import ToolDefinition
+from app.core.tools.tool_invoker import ToolInvokeResponse, invoke_tool
 from app.models import (
     Message,
     Skill,
@@ -15,7 +16,6 @@ from app.models import (
     SkillUpdate,
     ToolDefinitionValidate,
 )
-
 
 router = APIRouter()
 

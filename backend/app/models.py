@@ -556,6 +556,7 @@ class ModelProvider(ModelProviderBase, table=True):
         back_populates="provider", cascade_delete="all, delete-orphan"
     )
 
+
 class ModelCategory(str, Enum):
     LLM = "llm"
     CHAT = "chat"
@@ -564,21 +565,28 @@ class ModelCategory(str, Enum):
     SPEECH_TO_TEXT = "speech-to-text"
     TEXT_TO_SPEECH = "text-to-speech"
 
+
 class ModelCapability(str, Enum):
     VISION = "vision"
+
 
 class ModelsBase(SQLModel):
     ai_model_name: str = PydanticField(pattern=r"^[a-zA-Z0-9/_:.-]{1,64}$", unique=True)
     provider_id: int
     categories: list[ModelCategory] = Field(sa_column=Column(ARRAY(String)))
-    capabilities: list[ModelCapability] = Field(sa_column=Column(ARRAY(String)), default=[])
+    capabilities: list[ModelCapability] = Field(
+        sa_column=Column(ARRAY(String)), default=[]
+    )
+
 
 class Models(ModelsBase, table=True):
     id: int | None = Field(default=None, primary_key=True)
     ai_model_name: str = Field(max_length=128)
     provider_id: int = Field(foreign_key="modelprovider.id")
     categories: list[ModelCategory] = Field(sa_column=Column(ARRAY(String)))
-    capabilities: list[ModelCapability] = Field(sa_column=Column(ARRAY(String)), default=[])
+    capabilities: list[ModelCapability] = Field(
+        sa_column=Column(ARRAY(String)), default=[]
+    )
     # Relationship with ModelProvider
     provider: ModelProvider = Relationship(back_populates="models")
 

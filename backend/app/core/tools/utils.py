@@ -1,6 +1,7 @@
-from sqlmodel import select, Session
-from app.models import Skill
+from sqlmodel import select
+
 from app.core.database import get_session
+from app.models import Skill
 
 
 def get_tool_credentials(tool_name: str) -> dict:

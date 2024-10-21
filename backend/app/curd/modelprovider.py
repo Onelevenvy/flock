@@ -84,10 +84,10 @@ def get_model_provider_with_models(
     if result:
         models_out = [
             ModelOutIdWithAndName(
-                id=model.id, 
+                id=model.id,
                 ai_model_name=model.ai_model_name,
                 categories=model.categories,
-                capabilities=model.capabilities
+                capabilities=model.capabilities,
             )
             for model in result.models
         ]
@@ -125,10 +125,10 @@ def get_model_provider_list_with_models(
     for result in results:
         models_out = [
             ModelOutIdWithAndName(
-                id=model.id, 
+                id=model.id,
                 ai_model_name=model.ai_model_name,
                 categories=model.categories,
-                capabilities=model.capabilities
+                capabilities=model.capabilities,
             )
             for model in result.models
         ]

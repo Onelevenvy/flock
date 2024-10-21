@@ -1,15 +1,18 @@
+import logging
 import os
 import shutil
 import uuid
 from datetime import datetime
 from tempfile import NamedTemporaryFile
-from typing import IO, Annotated, Any, List, Dict
+from typing import IO, Annotated, Any, Dict
 
+import aiofiles
+from celery.result import AsyncResult
 from fastapi import APIRouter, Depends, File, Form, Header, HTTPException, UploadFile
 from sqlalchemy import ColumnElement
 from sqlmodel import and_, func, select
 from starlette import status
-import logging
+
 from app.api.deps import CurrentUser, SessionDep
 from app.core.config import settings
 from app.models import (
@@ -21,10 +24,7 @@ from app.models import (
     UploadStatus,
     UploadUpdate,
 )
-from app.tasks.tasks import add_upload, edit_upload, remove_upload, perform_search
-import aiofiles
-from app.core.rag.qdrant import QdrantStore
-from celery.result import AsyncResult
+from app.tasks.tasks import add_upload, edit_upload, perform_search, remove_upload
 
 router = APIRouter()
 
@@ -116,17 +116,17 @@ def read_uploads(
 
 
 def get_file_type(filename: str) -> str:
-    extension = filename.split('.')[-1].lower()
+    extension = filename.split(".")[-1].lower()
     file_types = {
-        'pdf': 'pdf',
-        'docx': 'docx',
-        'pptx': 'pptx',
-        'xlsx': 'xlsx',
-        'txt': 'txt',
-        'html': 'html',
-        'md': 'md'
+        "pdf": "pdf",
+        "docx": "docx",
+        "pptx": "pptx",
+        "xlsx": "xlsx",
+        "txt": "txt",
+        "html": "html",
+        "md": "md",
     }
-    return file_types.get(extension, 'unknown')
+    return file_types.get(extension, "unknown")
 
 
 @router.post("/", response_model=UploadOut)
@@ -146,13 +146,19 @@ async def create_upload(
 
     try:
         if file_type not in ["file", "web"]:
-            raise HTTPException(status_code=400, detail=f"Invalid file type: {file_type}")
+            raise HTTPException(
+                status_code=400, detail=f"Invalid file type: {file_type}"
+            )
 
         if file_type == "web" and not web_url:
-            raise HTTPException(status_code=400, detail="Web URL is required for web uploads")
-        
+            raise HTTPException(
+                status_code=400, detail="Web URL is required for web uploads"
+            )
+
         if file_type == "file" and not file:
-            raise HTTPException(status_code=400, detail="File is required for file uploads")
+            raise HTTPException(
+                status_code=400, detail="File is required for file uploads"
+            )
 
         try:
             chunk_size = int(chunk_size)
@@ -164,10 +170,10 @@ async def create_upload(
 
         if file_type == "file":
             actual_file_type = get_file_type(file.filename)
-            if actual_file_type == 'unknown':
+            if actual_file_type == "unknown":
                 raise HTTPException(status_code=400, detail="Unsupported file type")
         else:
-            actual_file_type = 'web'
+            actual_file_type = "web"
 
         upload = Upload.model_validate(
             UploadCreate(
@@ -176,7 +182,7 @@ async def create_upload(
                 file_type=actual_file_type,
                 web_url=web_url,
                 chunk_size=chunk_size,
-                chunk_overlap=chunk_overlap
+                chunk_overlap=chunk_overlap,
             ),
             update={"owner_id": current_user.id, "status": UploadStatus.IN_PROGRESS},
         )
@@ -184,27 +190,35 @@ async def create_upload(
         session.commit()
 
         if current_user.id is None or upload.id is None:
-            raise HTTPException(status_code=500, detail="Failed to retrieve user and upload ID")
+            raise HTTPException(
+                status_code=500, detail="Failed to retrieve user and upload ID"
+            )
 
         if file_type == "web":
             # 处理网页上传
-            add_upload.delay(web_url, upload.id, current_user.id, chunk_size, chunk_overlap)
+            add_upload.delay(
+                web_url, upload.id, current_user.id, chunk_size, chunk_overlap
+            )
         else:
             # 处理文件上传
             if not file or not file.filename:
                 raise HTTPException(status_code=400, detail="File is required")
-            
+
             file_path = await save_upload_file(file)
-            add_upload.delay(file_path, upload.id, current_user.id, chunk_size, chunk_overlap)
-        
+            add_upload.delay(
+                file_path, upload.id, current_user.id, chunk_size, chunk_overlap
+            )
+
         logger.info(f"Upload created successfully: id={upload.id}")
         return upload
     except Exception as e:
         logger.error(f"Error processing upload: {str(e)}")
-        if 'upload' in locals():
+        if "upload" in locals():
             session.delete(upload)
             session.commit()
-        raise HTTPException(status_code=500, detail=f"Failed to process upload: {str(e)}")
+        raise HTTPException(
+            status_code=500, detail=f"Failed to process upload: {str(e)}"
+        )
 
 
 async def save_upload_file(file: UploadFile) -> str:
@@ -360,7 +374,7 @@ async def search_upload(
         search_params["query"],
         search_type,
         search_params.get("top_k", 5),
-        search_params.get("score_threshold", 0.5)
+        search_params.get("score_threshold", 0.5),
     )
 
     return {"task_id": task.id}

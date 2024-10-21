@@ -1,5 +1,4 @@
-from typing import Dict, Any
-
+from typing import Any, Dict
 
 ZHIPUAI_CREDENTIALS = {
     "ZHIPUAI_API_KEY": {

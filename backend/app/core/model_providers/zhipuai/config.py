@@ -1,5 +1,6 @@
 from langchain_openai import ChatOpenAI
-from app.models import ModelCategory, ModelCapability
+
+from app.models import ModelCapability, ModelCategory
 
 PROVIDER_CONFIG = {
     "provider_name": "zhipuai",

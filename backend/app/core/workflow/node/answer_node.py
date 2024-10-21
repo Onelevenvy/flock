@@ -1,12 +1,12 @@
+from langchain_core.messages import AIMessage
+from langchain_core.runnables import RunnableConfig
+
 from app.core.workflow.node.state import (
     ReturnTeamState,
     TeamState,
     parse_variables,
     update_node_outputs,
 )
-
-from langchain_core.messages import AIMessage
-from langchain_core.runnables import RunnableConfig
 
 
 class AnswerNode:

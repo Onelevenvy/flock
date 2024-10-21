@@ -1,9 +1,11 @@
 import json
-from zhipuai import ZhipuAI
+from typing import Any, Dict, List, Literal
+
 from langchain.pydantic_v1 import BaseModel, Field
 from langchain.tools import StructuredTool
+from zhipuai import ZhipuAI
+
 from app.core.tools.utils import get_credential_value
-from typing import Literal, Dict, Any, List
 
 ASSISTANT_IDS = {
     "data_analysis": "65a265419d72d299a9230616",

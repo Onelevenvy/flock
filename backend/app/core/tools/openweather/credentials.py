@@ -1,4 +1,4 @@
-from typing import Dict, Any
+from typing import Any, Dict
 
 OPENWEATHER_CREDENTIALS = {
     "OPEN_WEATHER_API_KEY": {

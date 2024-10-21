@@ -1,8 +1,10 @@
 import logging
+
 from app.core.rag.qdrant import QdrantStore
 
 logging.basicConfig(level=logging.DEBUG)
 logger = logging.getLogger(__name__)
+
 
 def test_delete_operation(user_id: int, upload_id: int):
     qdrant_store = QdrantStore()
@@ -12,7 +14,9 @@ def test_delete_operation(user_id: int, upload_id: int):
     initial_count = check_document_count(qdrant_store, user_id, upload_id)
 
     # 2. 执行删除操作
-    logger.info(f"Attempting to delete documents for user_id: {user_id}, upload_id: {upload_id}")
+    logger.info(
+        f"Attempting to delete documents for user_id: {user_id}, upload_id: {upload_id}"
+    )
     deletion_result = qdrant_store.delete(upload_id, user_id)
     logger.info(f"Deletion result: {deletion_result}")
 
@@ -28,7 +32,10 @@ def test_delete_operation(user_id: int, upload_id: int):
     else:
         logger.error("Unexpected result: document count increased after deletion")
 
-def check_document_count(qdrant_store: QdrantStore, user_id: int, upload_id: int) -> int:
+
+def check_document_count(
+    qdrant_store: QdrantStore, user_id: int, upload_id: int
+) -> int:
     filter_condition = {
         "must": [
             {"key": "metadata.user_id", "match": {"value": user_id}},
@@ -36,12 +43,14 @@ def check_document_count(qdrant_store: QdrantStore, user_id: int, upload_id: int
         ]
     }
     count_result = qdrant_store.client.count(
-        collection_name=qdrant_store.collection_name,
-        count_filter=filter_condition
+        collection_name=qdrant_store.collection_name, count_filter=filter_condition
     )
     count = count_result.count
-    logger.info(f"Document count for user_id: {user_id}, upload_id: {upload_id}: {count}")
+    logger.info(
+        f"Document count for user_id: {user_id}, upload_id: {upload_id}: {count}"
+    )
     return count
+
 
 def inspect_documents(qdrant_store: QdrantStore, user_id: int, upload_id: int):
     logger.info(f"Inspecting documents for user_id: {user_id}, upload_id: {upload_id}")
@@ -56,12 +65,13 @@ def inspect_documents(qdrant_store: QdrantStore, user_id: int, upload_id: int):
         scroll_filter=filter_condition,
         limit=10,
         with_payload=True,
-        with_vectors=False
+        with_vectors=False,
     )
     for point in search_results[0]:
         logger.info(f"Point ID: {point.id}")
         logger.info(f"Payload: {point.payload}")
         logger.info("---")
+
 
 if __name__ == "__main__":
     user_id = 1  # 替换为实际的用户ID

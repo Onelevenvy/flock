@@ -56,6 +56,9 @@ psycopg-pool = "^3.2.2"
 langchain-ollama = "0.1.1"
 langgraph-checkpoint-postgres = "^1.0.3"
 aiofiles = "^24.1.0"
+autoflake = "^2.3.1"
+black = "^24.10.0"
+isort = "^5.13.2"
 
 [tool.poetry.group.dev.dependencies]
 pytest = "^7.4.3"

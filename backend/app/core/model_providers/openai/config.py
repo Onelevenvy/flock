@@ -1,5 +1,6 @@
 from langchain_openai import ChatOpenAI
-from app.models import ModelCategory, ModelCapability
+
+from app.models import ModelCategory
 
 PROVIDER_CONFIG = {
     "provider_name": "openai",
@@ -47,7 +48,10 @@ SUPPORTED_MODELS = [
     },
 ]
 
-def init_model(model: str, temperature: float, openai_api_key: str, openai_api_base: str, **kwargs):
+
+def init_model(
+    model: str, temperature: float, openai_api_key: str, openai_api_base: str, **kwargs
+):
     model_info = next((m for m in SUPPORTED_MODELS if m["name"] == model), None)
     if model_info and ModelCategory.CHAT in model_info["categories"]:
         return ChatOpenAI(
@@ -55,7 +59,7 @@ def init_model(model: str, temperature: float, openai_api_key: str, openai_api_b
             temperature=temperature,
             openai_api_key=openai_api_key,
             openai_api_base=openai_api_base,
-            **kwargs
+            **kwargs,
         )
     else:
         raise ValueError(f"Model {model} is not supported as a chat model.")

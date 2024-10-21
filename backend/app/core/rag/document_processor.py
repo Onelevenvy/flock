@@ -1,18 +1,18 @@
-from typing import List
 import logging
-from langchain_core.documents import Document
+from typing import List
+
 from langchain_community.document_loaders import (
     PyMuPDFLoader,
-    UnstructuredWordDocumentLoader,
-    UnstructuredPowerPointLoader,
-    UnstructuredExcelLoader,
     TextLoader,
+    UnstructuredExcelLoader,
     UnstructuredHTMLLoader,
     UnstructuredMarkdownLoader,
+    UnstructuredPowerPointLoader,
+    UnstructuredWordDocumentLoader,
     WebBaseLoader,
 )
+from langchain_core.documents import Document
 from langchain_text_splitters import RecursiveCharacterTextSplitter
-import bs4
 
 logger = logging.getLogger(__name__)
 

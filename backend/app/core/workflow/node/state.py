@@ -1,10 +1,12 @@
+import re
 from typing import Annotated, Any, Dict
+
 from langchain_core.messages import AnyMessage
 from langchain_core.tools import BaseTool
 from langgraph.graph import add_messages
 from pydantic import BaseModel, Field
 from typing_extensions import NotRequired, TypedDict
-import re
+
 from app.core.rag.qdrant import QdrantStore
 from app.core.tools import managed_tools
 from app.core.tools.api_tool import dynamic_api_tool
@@ -146,7 +148,8 @@ class ReturnTeamState(TypedDict):
     team: NotRequired[GraphTeam]
     next: NotRequired[str | None]  # Returning None is valid for sequential graphs only
     task: NotRequired[list[AnyMessage]]
-    node_outputs: Annotated[Dict[str, Any], update_node_outputs]  
+    node_outputs: Annotated[Dict[str, Any], update_node_outputs]
+
 
 def parse_variables(text: str, node_outputs: Dict) -> str:
     def replace_variable(match):

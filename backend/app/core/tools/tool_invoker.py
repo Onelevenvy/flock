@@ -1,19 +1,25 @@
-  # 导入自定义响应模型
-from app.core.workflow.build_workflow import get_tool
-from langgraph.prebuilt import ToolNode
-from langchain_core.messages import AIMessage
+# 导入自定义响应模型
 import uuid
-from pydantic import BaseModel
 from typing import List, Optional
+
+from langchain_core.messages import AIMessage
+from langgraph.prebuilt import ToolNode
+from pydantic import BaseModel
+
+from app.core.workflow.build_workflow import get_tool
+
 
 class ToolMessages(BaseModel):
     content: str
     name: str
     tool_call_id: str
 
+
 class ToolInvokeResponse(BaseModel):
     messages: List[ToolMessages]
     error: Optional[str] = None  # 可选的错误信息
+
+
 def invoke_tool(tool_name: str, args: dict) -> ToolInvokeResponse:
     """
     Invoke a tool by name with the provided arguments.
@@ -34,11 +40,10 @@ def invoke_tool(tool_name: str, args: dict) -> ToolInvokeResponse:
     )
 
     try:
-       
+
         tool_node = ToolNode(tools=[get_tool(tool_name)])  # 确保 get_tool 函数可用
         result = tool_node.invoke({"messages": [message_with_tool_call]})
 
-       
         messages = [
             ToolMessages(
                 content=msg.content,

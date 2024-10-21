@@ -1,18 +1,19 @@
 import logging
+import math
+import re
+from collections import Counter
 from typing import Callable, List
+
 from langchain_core.documents import Document
 from langchain_qdrant import QdrantVectorStore
 from qdrant_client import QdrantClient
 from qdrant_client.http import models as rest
+from qdrant_client.http.models import PayloadSelectorExclude, UpdateResult
 from qdrant_client.models import Distance, VectorParams
-from qdrant_client.http.models import UpdateResult, PayloadSelectorExclude
 
 from app.core.config import settings
-from app.core.rag.embeddings import get_embedding_model
 from app.core.rag.document_processor import load_and_split_document
-import re
-import math
-from collections import Counter
+from app.core.rag.embeddings import get_embedding_model
 
 logger = logging.getLogger(__name__)
 
@@ -281,7 +282,14 @@ class QdrantStore:
         logger.debug(f"Collection info: {collection_info}")
         return collection_info
 
-    def vector_search(self, user_id: int, upload_ids: List[int], query: str, top_k: int = 5, score_threshold: float = 0.5):
+    def vector_search(
+        self,
+        user_id: int,
+        upload_ids: List[int],
+        query: str,
+        top_k: int = 5,
+        score_threshold: float = 0.5,
+    ):
         query_vector = self.embedding_model.embed_query(query)
         filter_condition = {
             "must": [
@@ -294,11 +302,18 @@ class QdrantStore:
             query_vector=query_vector,
             query_filter=filter_condition,
             limit=top_k,
-            score_threshold=score_threshold
+            score_threshold=score_threshold,
         )
         return [self._convert_to_document(result) for result in search_results]
 
-    def fulltext_search(self, user_id: int, upload_ids: List[int], query: str, top_k: int = 5, score_threshold: float = 0.5):
+    def fulltext_search(
+        self,
+        user_id: int,
+        upload_ids: List[int],
+        query: str,
+        top_k: int = 5,
+        score_threshold: float = 0.5,
+    ):
         filter_condition = {
             "must": [
                 {"key": "metadata.user_id", "match": {"value": user_id}},
@@ -313,51 +328,83 @@ class QdrantStore:
             query_filter=rest.Filter(**filter_condition),
             limit=1000,  # 增加限制以获取更多潜在匹配
             with_payload=PayloadSelectorExclude(exclude=["metadata"]),  # 只获取文本内容
-            with_vectors=False
+            with_vectors=False,
         )
-        
+
         # 改进的相关性评分
-        query_terms = Counter(re.findall(r'\w+', query.lower()))
+        query_terms = Counter(re.findall(r"\w+", query.lower()))
         filtered_results = []
         for result in search_results:
             content = result.payload.get("page_content", "").lower()
-            content_terms = Counter(re.findall(r'\w+', content))
-            
+            content_terms = Counter(re.findall(r"\w+", content))
+
             # 计算改进的 TF-IDF 相似度分数
             score = 0
             for term, query_count in query_terms.items():
                 if term in content_terms:
                     tf = content_terms[term] / len(content_terms)
-                    idf = math.log(len(search_results) / (sum(1 for r in search_results if term in r.payload.get("page_content", "").lower()) + 1))
+                    idf = math.log(
+                        len(search_results)
+                        / (
+                            sum(
+                                1
+                                for r in search_results
+                                if term in r.payload.get("page_content", "").lower()
+                            )
+                            + 1
+                        )
+                    )
                     score += (tf * idf) * query_count
 
             if score > 0:
                 filtered_results.append((result, score))
-        
+
         # 归一化分数
         if filtered_results:
             max_score = max(score for _, score in filtered_results)
-            filtered_results = [(result, score / max_score) for result, score in filtered_results]
-        
+            filtered_results = [
+                (result, score / max_score) for result, score in filtered_results
+            ]
+
         # 应用 score threshold
-        filtered_results = [(result, score) for result, score in filtered_results if score >= score_threshold]
-        
+        filtered_results = [
+            (result, score)
+            for result, score in filtered_results
+            if score >= score_threshold
+        ]
+
         # 按分数排序并选择前 top_k 个结果
         filtered_results.sort(key=lambda x: x[1], reverse=True)
         top_results = filtered_results[:top_k]
-        
-        return [self._convert_to_document(result, score) for result, score in top_results]
+
+        return [
+            self._convert_to_document(result, score) for result, score in top_results
+        ]
 
     def _convert_to_document(self, result, score=None):
         return Document(
             page_content=result.payload.get("page_content", ""),
-            metadata={"score": score if score is not None else result.score, **result.payload.get("metadata", {})}
+            metadata={
+                "score": score if score is not None else result.score,
+                **result.payload.get("metadata", {}),
+            },
         )
 
-    def hybrid_search(self, user_id: int, upload_ids: List[int], query: str, top_k: int = 5, score_threshold: float = 0.5):
-        vector_results = self.vector_search(user_id, upload_ids, query, top_k, score_threshold)
-        fulltext_results = self.fulltext_search(user_id, upload_ids, query, top_k, score_threshold)
-        
+    def hybrid_search(
+        self,
+        user_id: int,
+        upload_ids: List[int],
+        query: str,
+        top_k: int = 5,
+        score_threshold: float = 0.5,
+    ):
+        vector_results = self.vector_search(
+            user_id, upload_ids, query, top_k, score_threshold
+        )
+        fulltext_results = self.fulltext_search(
+            user_id, upload_ids, query, top_k, score_threshold
+        )
+
         # 合并结果并按分数排序
         combined_results = vector_results + fulltext_results
         combined_results.sort(key=lambda x: x.metadata["score"], reverse=True)

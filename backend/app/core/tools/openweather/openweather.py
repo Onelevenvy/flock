@@ -1,9 +1,10 @@
 import json
+
 import requests
 from langchain.pydantic_v1 import BaseModel, Field
 from langchain.tools import StructuredTool
+
 from app.core.tools.utils import get_credential_value
-from app.core.workflow.utils.db_utils import db_operation
 
 
 class WeatherSearchInput(BaseModel):

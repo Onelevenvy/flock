@@ -6,11 +6,11 @@ from langchain_community.embeddings import HuggingFaceEmbeddings
 from langchain_core.embeddings import Embeddings
 from langchain_core.pydantic_v1 import BaseModel, Extra
 from langchain_openai import OpenAIEmbeddings
+from sqlmodel import select
 
 from app.core.config import settings
-from app.models import ModelProvider
-from sqlmodel import select
 from app.core.workflow.utils.db_utils import db_operation
+from app.models import ModelProvider
 
 logger = logging.getLogger(__name__)
 
