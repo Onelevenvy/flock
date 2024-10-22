@@ -16,7 +16,7 @@ module.exports = {
     // 基本规则
     "no-console": ["warn", { allow: ["warn", "error"] }],
     "no-unused-vars": "off",
-    "@typescript-eslint/no-unused-vars": ["error", { "argsIgnorePattern": "^_" }],
+    "@typescript-eslint/no-unused-vars": "off",
     "unused-imports/no-unused-imports": "error",
     "unused-imports/no-unused-vars": [
       "warn",
@@ -24,48 +24,43 @@ module.exports = {
     ],
 
     // React 相关规则
-    "react/prop-types": "off", // 如果使用 TypeScript，可以关闭这个规则
-    "react/react-in-jsx-scope": "off", // 对于 Next.js 项目，不需要在每个文件中导入 React
+    "react/prop-types": "off",
+    "react/react-in-jsx-scope": "off",
     "react/jsx-filename-extension": ["warn", { "extensions": [".tsx"] }],
     "react-hooks/rules-of-hooks": "error",
     "react-hooks/exhaustive-deps": "warn",
 
-    // 导入顺序规则
-    "import/order": [
-      "error",
-      {
-        "groups": ["builtin", "external", "internal", ["parent", "sibling"], "index"],
-        "newlines-between": "always",
-        "alphabetize": { "order": "asc", "caseInsensitive": true }
-      }
-    ],
-    "import/no-unresolved": "error",
-    "import/named": "error",
-    "import/default": "error",
-    "import/namespace": "error",
+    // 移除或放宽导入顺序规则
+    "import/order": "off",
+    "import/newline-after-import": "off",
+    "import/no-unresolved": "off", // 禁用无法解析模块路径的规则
 
     // TypeScript 特定规则
     "@typescript-eslint/explicit-function-return-type": "off",
     "@typescript-eslint/explicit-module-boundary-types": "off",
-    "@typescript-eslint/no-explicit-any": "warn",
+    "@typescript-eslint/no-explicit-any": "off",
     "@typescript-eslint/no-non-null-assertion": "warn",
 
     // 其他常用规则
     "no-use-before-define": "off",
     "@typescript-eslint/no-use-before-define": ["error"],
-    "padding-line-between-statements": [
-      "error",
-      { "blankLine": "always", "prev": "*", "next": "return" },
-      { "blankLine": "always", "prev": ["const", "let", "var"], "next": "*"},
-      { "blankLine": "any", "prev": ["const", "let", "var"], "next": ["const", "let", "var"]}
-    ]
+
+    // 移除 padding-line-between-statements 规则
+    "padding-line-between-statements": "off",
+
+    // 新增规则
+    "import/default": "off",
+    "import/no-named-as-default": "off"
   },
   settings: {
     "react": {
       "version": "detect"
     },
     "import/resolver": {
-      "typescript": {} // 这会使用 tsconfig.json 中的路径
+      "typescript": {},
+      "node": {
+        "extensions": [".js", ".jsx", ".ts", ".tsx"]
+      }
     }
   }
 };

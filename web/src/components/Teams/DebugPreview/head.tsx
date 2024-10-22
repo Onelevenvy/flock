@@ -1,24 +1,9 @@
-import {
-  Box,
-  Button,
-  Icon,
-  IconButton,
-  Popover,
-  PopoverArrow,
-  PopoverBody,
-  PopoverCloseButton,
-  PopoverContent,
-  PopoverFooter,
-  PopoverHeader,
-  PopoverTrigger,
-  Text,
-  useColorModeValue,
-} from "@chakra-ui/react";
-import { useTranslation } from "react-i18next";
-import { LuHistory } from "react-icons/lu";
-import { MdBuild } from "react-icons/md";
+import { Box, Flex, useDisclosure } from "@chakra-ui/react";
+import { VscTriangleRight } from "react-icons/vsc";
+import { MdBuild, MdVpnKey } from "react-icons/md";
 
-import ChatHistoryList from "@/components/Playground/ChatHistoryList";
+import CustomButton from "@/components/Common/CustomButton";
+import ApiKeyManager from "../Apikey/ApiKeyManager";
 
 function DebugPreviewHead({
   teamId,
@@ -29,65 +14,37 @@ function DebugPreviewHead({
   triggerSubmit: () => void;
   useDeployButton: boolean;
 }) {
-  const bgColor = useColorModeValue("ui.bgMain", "ui.bgMainDark");
-  const buttonColor = useColorModeValue("ui.main", "ui.main");
-  const { t } = useTranslation();
+  const { isOpen, onOpen, onClose } = useDisclosure();
 
   return (
-    <Box
-      display={"flex"}
-      flexDirection={"row"}
-      justifyContent={"space-between"}
-      alignItems={"center"}
-    >
-      <Text ml="5" fontSize={"xl"} fontWeight={"bold"}>
-        {t("team.teamsetting.debugoverview")}
-      </Text>
-      <Box display={"flex"} flexDirection={"row"} mr="5" alignItems={"center"}>
-        <Popover preventOverflow={false} isLazy={true}>
-          <PopoverTrigger>
-            <IconButton
-              aria-label="history"
-              icon={<Icon as={LuHistory} h="6" w="6" color={buttonColor} />}
-              h="10"
-              w="10"
-              bg={bgColor}
-              as={"button"}
-            />
-          </PopoverTrigger>
-          <PopoverContent
-          // zIndex="9999"
-          >
-            <PopoverArrow />
-            <PopoverCloseButton />
-            <PopoverHeader> {t("team.teamsetting.chathistory")}</PopoverHeader>
-            <PopoverBody
-              maxH="50vh"
-              overflowY="auto"
-              //  zIndex="9999"
-            >
-              <Box
-              // zIndex="1001"
-              >
-                <ChatHistoryList teamId={teamId} isPlayground={false} />
-              </Box>
-            </PopoverBody>
-            <PopoverFooter />
-          </PopoverContent>
-        </Popover>
+    <Box>
+      <Flex justifyContent="flex-end" alignItems="center" px={4}>
+        <CustomButton
+          text="Debug"
+          variant="white"
+          rightIcon={<VscTriangleRight color="#155aef" size="12px" />}
+          onClick={() => {
+            /* 处理 Debug 按钮点击 */
+          }}
+          mr={2}
+        />
+        <CustomButton
+          text="API Keys"
+          variant="white"
+          rightIcon={<MdVpnKey color="#155aef" size="12px" />}
+          onClick={onOpen}
+          mr={2}
+        />
         {useDeployButton && (
-          <Button
-            ml={"5"}
-            bg={buttonColor}
-            borderRadius={"md"}
+          <CustomButton
+            text="Deploy"
+            variant="blue"
+            rightIcon={<MdBuild color="white" size="12px" />}
             onClick={triggerSubmit}
-            _hover={{ backgroundColor: "#1c86ee" }}
-            rightIcon={<MdBuild color={"white"} />}
-          >
-            <Text color={"white"}>{t("team.teamsetting.savedeploy")}</Text>
-          </Button>
+          />
         )}
-      </Box>
+      </Flex>
+      <ApiKeyManager teamId={teamId.toString()} isOpen={isOpen} onClose={onClose} />
     </Box>
   );
 }

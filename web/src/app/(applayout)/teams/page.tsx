@@ -12,7 +12,7 @@ import {
   useColorModeValue,
 } from "@chakra-ui/react";
 import { useRouter } from "next/navigation";
-import React, { useMemo } from "react";
+import { useMemo } from "react";
 import { useTranslation } from "react-i18next";
 import { GoGitMerge, GoGitPullRequestDraft } from "react-icons/go";
 import { PiChatCircleDots } from "react-icons/pi";

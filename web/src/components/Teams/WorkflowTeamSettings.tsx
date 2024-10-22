@@ -7,6 +7,7 @@ import { type ApiError, GraphsService } from "@/client";
 import useCustomToast from "@/hooks/useCustomToast";
 
 import TqxWorkflow from "../WorkFlow";
+
 interface WorkflowSettingProps {
   teamId: number;
 }
@@ -26,7 +27,7 @@ function WorkflowTeamSettings({ teamId }: WorkflowSettingProps) {
     () => GraphsService.readGraphs({ teamId: currentTeamId }),
     {
       keepPreviousData: true,
-    },
+    }
   );
 
   const createDefaultGraph = async (teamId: number) => {
@@ -123,8 +124,8 @@ function WorkflowTeamSettings({ teamId }: WorkflowSettingProps) {
   }
 
   return (
-    <Flex width="full" height="full">
-      <Box width={"100%"} transition="width 0.3s">
+    <Flex width="full" height="full" flexDirection="column">
+      <Box width={"100%"} transition="width 0.3s" flex={1}>
         {isLoading ? (
           <Flex justify="center" align="center" height="100%" width="100%">
             <Spinner size="xl" color="ui.main" />

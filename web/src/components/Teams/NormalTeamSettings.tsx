@@ -9,6 +9,7 @@ import useCustomToast from "@/hooks/useCustomToast";
 import EditTeamMember from "../Members";
 import DebugPreview from "./DebugPreview";
 import TeamInforCard from "./TeamInfo";
+import ApiKeyManager from "./Apikey/ApiKeyManager";
 
 export default function NormalTeamSettings({
   teamData,
@@ -16,6 +17,7 @@ export default function NormalTeamSettings({
   teamData: TeamOut;
 }) {
   const editMemberModal = useDisclosure();
+  const apiKeyModal = useDisclosure(); // 新增
   const { teamId } = useParams() as { teamId: string };
   const showToast = useCustomToast();
   const {
@@ -31,7 +33,6 @@ export default function NormalTeamSettings({
 
   if (isError) {
     const errDetail = (error as ApiError).body?.detail;
-
     showToast("Something went wrong.", `${errDetail}`, "error");
   }
   const formRef = useRef<HTMLFormElement>(null);
@@ -88,6 +89,13 @@ export default function NormalTeamSettings({
                     ref={formRef}
                   />
                 ))}
+              </Box>
+              <Box mt={4}>
+                <ApiKeyManager 
+                  teamId={teamId} 
+                  isOpen={apiKeyModal.isOpen} 
+                  onClose={apiKeyModal.onClose}
+                />
               </Box>
             </Box>
 
