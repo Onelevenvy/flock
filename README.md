@@ -15,10 +15,32 @@ A chatbot, RAG, agent, and multi-agent application project based on LangChain, L
 
 ![alt text](assets/image.png)
 
-### work flow
+### Work Flow
 
 ![image](https://github.com/user-attachments/assets/a4e33565-7acf-45d9-8e82-5a740cd88344)
 ![image](https://github.com/user-attachments/assets/4d5874f1-aeb0-47c5-b907-21878a2fa4d9)
+
+### Node Types and Functions
+
+Flock's workflow system consists of various node types, each serving a specific purpose:
+
+1. Input Node: Processes initial input and converts it into a format the workflow can handle.
+2. LLM Node: Utilizes large language models for text generation and processing.
+3. Retrieval Node: Fetches relevant information from knowledge bases.
+4. Tool Node: Executes specific tasks or operations, extending workflow functionality.
+5. Retrieval Tool Node: Combines retrieval capabilities with tool functionality.
+6. Answer Node: Generates final answers or outputs, integrating results from previous nodes.
+7. Subgraph Node: Encapsulates a complete sub-workflow, allowing for modular design.
+8. Start and End Nodes: Mark the beginning and end of the workflow.
+
+Future planned nodes include:
+- Intent Recognition Node
+- Conditional Branch Node (If-Else)
+- File Upload Node
+- Code Execution Node
+- Parameter Extraction Node
+
+These nodes can be combined to create powerful and flexible workflows suitable for various complex business needs and application scenarios.
 
 ### AGent Chat
 
@@ -26,7 +48,7 @@ A chatbot, RAG, agent, and multi-agent application project based on LangChain, L
 
 ### Image
 
-![a](https://github.com/user-attachments/assets/836fac80-ab49-4f6b-973c-25ba173149eb)
+![image](https://github.com/user-attachments/assets/836fac80-ab49-4f6b-973c-25ba173149eb)
 
 ### Knowledge Retrieval
 

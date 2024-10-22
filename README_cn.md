@@ -18,11 +18,33 @@
 ![image](https://github.com/user-attachments/assets/a4e33565-7acf-45d9-8e82-5a740cd88344)
 ![image](https://github.com/user-attachments/assets/4d5874f1-aeb0-47c5-b907-21878a2fa4d9)
 
+### 节点类型和功能
+
+Flock的工作流系统由各种类型的节点组成，每种节点都有特定的用途：
+
+1. 输入节点：处理初始输入并将其转换为工作流可处理的格式。
+2. LLM节点：利用大型语言模型进行文本生成和处理。
+3. 检索节点：从知识库中获取相关信息。
+4. 工具节点：执行特定的任务或操作，扩展工作流功能。
+5. 检索工具节点：结合检索能力和工具功能。
+6. 回答节点：生成最终答案或输出，整合前序节点的结果。
+7. 子图节点：封装完整的子工作流，允许模块化设计。
+8. 开始和结束节点：标记工作流的开始和结束。
+
+未来计划添加的节点包括：
+- 意图识别节点
+- 条件分支节点（If-Else）
+- 文件上传节点
+- 代码执行节点
+- 参数提取节点
+
+这些节点可以组合创建强大而灵活的工作流，适用于各种复杂的业务需求和应用场景。
+
 ### Agent Chat
 
 ![image](https://github.com/user-attachments/assets/4097b087-0309-4aab-8be9-a06fdc9d4964)
 ### 图像
-![a](https://github.com/user-attachments/assets/ff6d6c92-dca8-4811-83ef-786272c46dfb)
+![image](https://github.com/user-attachments/assets/ff6d6c92-dca8-4811-83ef-786272c46dfb)
 ### 知识检索
 <p>
   <img src="https://github.com/user-attachments/assets/ec53f7de-10cb-4001-897a-2695da9cf6bf" alt="image" style="width: 49%; display: inline-block;">
@@ -90,7 +112,7 @@ git clone https://github.com/Onelevenvy/flock.git
 cp .env.example .env
 ```
 
-##### 1.3 生成密钥
+##### 1.3 ��成密钥
 
 .env 文件中的一些环境变量默认值为 changethis。
 您必须将它们更改为密钥，要生成密钥，可以运行以下命令：
