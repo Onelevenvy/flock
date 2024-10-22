@@ -3,7 +3,7 @@ from enum import Enum
 from typing import Any
 from uuid import UUID, uuid4
 
-from pydantic import BaseModel
+from pydantic import BaseModel, model_validator
 from pydantic import Field as PydanticField
 from sqlalchemy import ARRAY, JSON, Column, DateTime
 from sqlalchemy import Enum as SQLEnum
@@ -12,7 +12,7 @@ from sqlalchemy.dialects.postgresql import JSONB
 from sqlmodel import Field, Relationship, SQLModel
 
 from app.core.graph.messages import ChatResponse
-
+from zoneinfo import ZoneInfo
 
 class Message(SQLModel):
     message: str
@@ -144,6 +144,19 @@ class TeamChat(BaseModel):
     interrupt: Interrupt | None = None
 
 
+class TeamChatPublic(BaseModel):
+    message: ChatMessage | None = None
+    interrupt: Interrupt | None = None
+    @model_validator(mode="after")
+    def check_either_field(cls: Any, values: Any) -> Any:
+        message, interrupt = values.message, values.interrupt
+        if not message and not interrupt:
+            raise ValueError('Either "message" or "interrupt" must be provided.')
+        return values
+
+
+
+
 class Team(TeamBase, table=True):
     id: int | None = Field(default=None, primary_key=True)
     name: str = Field(regex=r"^[a-zA-Z0-9_-]{1,64}$", unique=True)
@@ -159,7 +172,9 @@ class Team(TeamBase, table=True):
     graphs: list["Graph"] = Relationship(
         back_populates="team", sa_relationship_kwargs={"cascade": "delete"}
     )
-
+    apikeys: list["ApiKey"] = Relationship(
+        back_populates="team", sa_relationship_kwargs={"cascade": "delete"}
+    )
 
 # Properties to return via API, id is always required
 class TeamOut(TeamBase):
@@ -689,4 +704,31 @@ class GraphOut(GraphBase):
 
 class GraphsOut(SQLModel):
     data: list[GraphOut]
+    count: int
+
+
+# ==============Api Keys=====================
+class ApiKeyBase(SQLModel):
+    description: str | None = "Default API Key Description"
+class ApiKeyCreate(ApiKeyBase):
+    pass
+class ApiKey(ApiKeyBase, table=True):
+    id: int | None = Field(default=None, primary_key=True)
+    hashed_key: str
+    short_key: str
+    team_id: int | None = Field(default=None, foreign_key="team.id", nullable=False)
+    team: Team | None = Relationship(back_populates="apikeys")
+    created_at: datetime | None = Field(
+        default_factory=lambda: datetime.now(ZoneInfo("UTC"))
+    )
+class ApiKeyOut(ApiKeyBase):
+    id: int | None = Field(default=None, primary_key=True)
+    key: str
+    created_at: datetime
+class ApiKeyOutPublic(ApiKeyBase):
+    id: int
+    short_key: str
+    created_at: datetime
+class ApiKeysOutPublic(SQLModel):
+    data: list[ApiKeyOutPublic]
     count: int
