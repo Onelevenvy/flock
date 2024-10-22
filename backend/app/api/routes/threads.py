@@ -5,7 +5,7 @@ from uuid import UUID
 from fastapi import APIRouter, HTTPException
 from sqlmodel import col, func, select
 
-from app.api.deps import CurrentUser, SessionDep
+from app.api.deps import CurrentUser, SessionDep, CurrentTeam
 from app.core.graph.checkpoint.utils import (
     convert_checkpoint_tuple_to_messages,
     get_checkpoint_tuples,
@@ -217,3 +217,38 @@ def delete_thread(
     session.delete(thread)
     session.commit()
     return Message(message="Thread deleted successfully")
+
+
+
+@router.get("/public/{thread_id}", response_model=ThreadRead)
+async def read_thread_public(
+    session: SessionDep,
+    thread_id: UUID,
+    team: CurrentTeam,
+) -> Any:
+    """
+    Get thread and its last checkpoint by ID
+    """
+    statement = (
+        select(Thread)
+        .join(Team)
+        .where(
+            Thread.id == thread_id,
+            Thread.team_id == team.id,
+        )
+    )
+    thread = session.exec(statement).first()
+    if not thread:
+        raise HTTPException(status_code=404, detail="Thread not found")
+    checkpoint_tuple = await get_checkpoint_tuples(str(thread.id))
+    if checkpoint_tuple:
+        messages = convert_checkpoint_tuple_to_messages(checkpoint_tuple)
+    else:
+        messages = []
+    return ThreadRead(
+        id=thread.id,
+        query=thread.query,
+        messages=messages,
+        updated_at=thread.updated_at,
+    )
+
