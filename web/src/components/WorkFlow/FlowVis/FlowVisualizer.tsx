@@ -10,12 +10,12 @@ import {
   MenuItem,
   MenuList,
   IconButton,
-  useDisclosure,
+
 } from "@chakra-ui/react";
 import type React from "react";
 import { type KeyboardEvent, useCallback, useMemo, useState } from "react";
 import { FaPlus } from "react-icons/fa";
-import { MdBuild, MdOutlineHelp, MdVpnKey } from "react-icons/md";
+import { MdBuild, MdOutlineHelp } from "react-icons/md";
 import { VscTriangleRight } from "react-icons/vsc";
 import ReactFlow, {
   Background,
@@ -49,7 +49,7 @@ import SharedNodeMenu from "./SharedNodeMenu";
 
 import useWorkflowStore from "@/stores/workflowStore";
 import CustomButton from "@/components/Common/CustomButton";
-import ApiKeyManager from "@/components/Teams/Apikey/ApiKeyManager";
+import ApiKeyButton from "@/components/Teams/Apikey/ApiKeyManageButton";
 
 const FlowVisualizer: React.FC<FlowVisualizerProps> = ({
   nodeTypes,
@@ -75,7 +75,7 @@ const FlowVisualizer: React.FC<FlowVisualizerProps> = ({
   );
 
   const { contextMenu, onNodeContextMenu, closeContextMenu } = useContextMenu();
- 
+
   const reactFlowInstance = useReactFlow();
   const toast = useToast();
   const [selectedEdge, setSelectedEdge] = useState<Edge | null>(null);
@@ -182,7 +182,7 @@ const FlowVisualizer: React.FC<FlowVisualizerProps> = ({
       ) {
         return false;
       }
-      // 检查目标节点是否允许从指定的 handle 连入
+      // 检查目标节点是否允许从指���的 handle 连入
       if (
         connection.targetHandle &&
         !targetAllowedConnections.targets.includes(connection.targetHandle)
@@ -452,7 +452,7 @@ const FlowVisualizer: React.FC<FlowVisualizerProps> = ({
 
       const nodeSpacing = 300; // 节点之间的固定距离
 
-      // 计���新节点的位置（在源节点和目标节点之间）
+      // 计新节点的位置（在源节点和目标节点之间）
       const newNodeX = (sourceNode.position.x + targetNode.position.x) / 2;
       const newNodeY = (sourceNode.position.y + targetNode.position.y) / 2;
 
@@ -570,12 +570,6 @@ const FlowVisualizer: React.FC<FlowVisualizerProps> = ({
       },
     }));
   }, [edges, activeNodeName]);
-
-  const {
-    isOpen: isApiKeyOpen,
-    onOpen: onApiKeyOpen,
-    onClose: onApiKeyClose,
-  } = useDisclosure();
 
   return (
     <Box
@@ -695,13 +689,7 @@ const FlowVisualizer: React.FC<FlowVisualizerProps> = ({
           onClick={() => setShowDebugPreview(true)}
           mr={2}
         />
-        <CustomButton
-          text="API Keys"
-          variant="white"
-          rightIcon={<MdVpnKey color="#155aef" size="12px" />}
-          onClick={onApiKeyOpen}
-          mr={2}
-        />
+        <ApiKeyButton teamId={teamId.toString()} />
         <CustomButton
           text="Deploy"
           variant="blue"
@@ -777,11 +765,6 @@ const FlowVisualizer: React.FC<FlowVisualizerProps> = ({
           <SharedNodeMenu onNodeSelect={addNodeToEdge} isDraggable={false} />
         </Box>
       )}
-      <ApiKeyManager
-        teamId={teamId.toString()}
-        isOpen={isApiKeyOpen}
-        onClose={onApiKeyClose}
-      />
     </Box>
   );
 };

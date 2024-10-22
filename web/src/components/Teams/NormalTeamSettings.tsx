@@ -9,7 +9,8 @@ import useCustomToast from "@/hooks/useCustomToast";
 import EditTeamMember from "../Members";
 import DebugPreview from "./DebugPreview";
 import TeamInforCard from "./TeamInfo";
-import ApiKeyManager from "./Apikey/ApiKeyManager";
+
+import ApiKeyButton from "./Apikey/ApiKeyManageButton";
 
 export default function NormalTeamSettings({
   teamData,
@@ -17,7 +18,7 @@ export default function NormalTeamSettings({
   teamData: TeamOut;
 }) {
   const editMemberModal = useDisclosure();
-  const apiKeyModal = useDisclosure(); // 新增
+
   const { teamId } = useParams() as { teamId: string };
   const showToast = useCustomToast();
   const {
@@ -26,7 +27,7 @@ export default function NormalTeamSettings({
     isError,
     error,
   } = useQuery(`teams/${teamId}/members`, () =>
-    MembersService.readMembers({ teamId: Number.parseInt(teamId) }),
+    MembersService.readMembers({ teamId: Number.parseInt(teamId) })
   );
 
   const member = members?.data || [];
@@ -91,11 +92,7 @@ export default function NormalTeamSettings({
                 ))}
               </Box>
               <Box mt={4}>
-                <ApiKeyManager 
-                  teamId={teamId} 
-                  isOpen={apiKeyModal.isOpen} 
-                  onClose={apiKeyModal.onClose}
-                />
+                <ApiKeyButton teamId={teamId} />
               </Box>
             </Box>
 
