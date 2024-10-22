@@ -26,7 +26,7 @@ A chatbot, RAG, agent, and multi-agent application project based on LangChain, L
 
 ### Image
 
-![a](https://github.com/user-attachments/assets/836fac80-ab49-4f6b-973c-25ba173149eb)
+![image](https://github.com/user-attachments/assets/836fac80-ab49-4f6b-973c-25ba173149eb)
 
 ### Knowledge Retrieval
 
