@@ -5,15 +5,19 @@ import { MdBuild } from "react-icons/md";
 import CustomButton from "@/components/Common/CustomButton";
 import ApiKeyButton from "../Apikey/ApiKeyManageButton";
 
+interface DebugPreviewHeadProps {
+  teamId: number;
+  triggerSubmit: () => void;
+  useDeployButton: boolean;
+  useApiKeyButton: boolean;
+}
+
 function DebugPreviewHead({
   teamId,
   triggerSubmit,
   useDeployButton,
-}: {
-  teamId: number;
-  triggerSubmit: () => void;
-  useDeployButton: boolean;
-}) {
+  useApiKeyButton,
+}: DebugPreviewHeadProps) {
   return (
     <Box>
       <Flex justifyContent="flex-end" alignItems="center" px={4}>
@@ -26,7 +30,7 @@ function DebugPreviewHead({
           }}
           mr={2}
         />
-        <ApiKeyButton teamId={teamId.toString()} />
+        {useApiKeyButton && <ApiKeyButton teamId={teamId.toString()} />}
         {useDeployButton && (
           <CustomButton
             text="Deploy"

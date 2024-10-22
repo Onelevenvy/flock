@@ -10,7 +10,6 @@ import {
   MenuItem,
   MenuList,
   IconButton,
-
 } from "@chakra-ui/react";
 import type React from "react";
 import { type KeyboardEvent, useCallback, useMemo, useState } from "react";
@@ -182,7 +181,7 @@ const FlowVisualizer: React.FC<FlowVisualizerProps> = ({
       ) {
         return false;
       }
-      // 检查目标节点是否允许从指���的 handle 连入
+      // 检查目标节点是否允许从指的 handle 连入
       if (
         connection.targetHandle &&
         !targetAllowedConnections.targets.includes(connection.targetHandle)
@@ -750,6 +749,7 @@ const FlowVisualizer: React.FC<FlowVisualizerProps> = ({
             teamId={teamId}
             triggerSubmit={() => {}}
             useDeployButton={false}
+            useApiKeyButton={false}
           />
         </Box>
       )}

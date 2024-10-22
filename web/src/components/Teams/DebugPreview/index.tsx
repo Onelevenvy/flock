@@ -4,15 +4,19 @@ import ChatMain from "@/components/Playground/ChatMain";
 
 import DebugPreviewHead from "./head";
 
+interface DebugPreviewProps {
+  teamId: number;
+  triggerSubmit: () => void;
+  useDeployButton: boolean;
+  useApiKeyButton: boolean;
+}
+
 function DebugPreview({
   teamId,
   triggerSubmit,
   useDeployButton,
-}: {
-  teamId: number;
-  triggerSubmit: () => void;
-  useDeployButton: boolean;
-}) {
+  useApiKeyButton,
+}: DebugPreviewProps) {
   return (
     <Box
       w="full"
@@ -28,6 +32,7 @@ function DebugPreview({
           teamId={teamId}
           triggerSubmit={triggerSubmit}
           useDeployButton={useDeployButton}
+          useApiKeyButton={useApiKeyButton}
         />
       </Box>
       <Box

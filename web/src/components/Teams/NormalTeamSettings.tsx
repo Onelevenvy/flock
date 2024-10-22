@@ -106,6 +106,7 @@ export default function NormalTeamSettings({
                 teamId={Number.parseInt(teamId)}
                 triggerSubmit={triggerSubmit}
                 useDeployButton={true}
+                useApiKeyButton={true}
               />
             </Box>
           </Box>
