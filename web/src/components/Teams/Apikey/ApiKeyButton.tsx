@@ -19,11 +19,7 @@ const ApiKeyButton: React.FC<ApiKeyButtonProps> = ({ teamId, ...rest }) => {
         onClick={onOpen}
         {...rest}
       />
-      <ApiKeyManager
-        teamId={teamId}
-        isOpen={isOpen}
-        onClose={onClose}
-      />
+      <ApiKeyManager teamId={teamId} isOpen={isOpen} onClose={onClose} />
     </>
   );
 };

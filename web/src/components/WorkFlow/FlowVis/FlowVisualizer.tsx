@@ -680,15 +680,21 @@ const FlowVisualizer: React.FC<FlowVisualizerProps> = ({
         )}
       </Box>
 
-      <Box position={"absolute"} right={"20px"} top={"8px"}>
+      <Box
+        position={"absolute"}
+        right={"20px"}
+        top={"8px"}
+        display="flex"
+        alignItems="center"
+      >
         <CustomButton
           text="Debug"
           variant="white"
           rightIcon={<VscDebugAlt color="#155aef" size="12px" />}
           onClick={() => setShowDebugPreview(true)}
-          mr={2}
+          mr={4}
         />
-        <ApiKeyButton teamId={teamId.toString()} />
+        <ApiKeyButton teamId={teamId.toString()} mr={4} />
         <CustomButton
           text="Deploy"
           variant="blue"
@@ -751,6 +757,7 @@ const FlowVisualizer: React.FC<FlowVisualizerProps> = ({
               useDeployButton={false}
               useApiKeyButton={false}
               isWorkflow={true}
+              showHistoryButton={true}
             />
           </Box>
         </Box>

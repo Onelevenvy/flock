@@ -9,7 +9,8 @@ interface DebugPreviewProps {
   triggerSubmit: () => void;
   useDeployButton: boolean;
   useApiKeyButton: boolean;
-  isWorkflow?: boolean;  // 添加这个可选属性
+  isWorkflow?: boolean;
+  showHistoryButton?: boolean;
 }
 
 function DebugPreview({
@@ -17,7 +18,8 @@ function DebugPreview({
   triggerSubmit,
   useDeployButton,
   useApiKeyButton,
-  isWorkflow = false,  // 设置默认值
+  isWorkflow = false,
+  showHistoryButton = false,
 }: DebugPreviewProps) {
   return (
     <Box
@@ -36,6 +38,7 @@ function DebugPreview({
           useDeployButton={useDeployButton}
           useApiKeyButton={useApiKeyButton}
           isWorkflow={isWorkflow}
+          showHistoryButton={showHistoryButton}
         />
       </Box>
       <Box

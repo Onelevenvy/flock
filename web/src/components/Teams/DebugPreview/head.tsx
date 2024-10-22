@@ -26,6 +26,7 @@ interface DebugPreviewHeadProps {
   useDeployButton: boolean;
   useApiKeyButton: boolean;
   isWorkflow?: boolean;
+  showHistoryButton?: boolean;
 }
 
 function DebugPreviewHead({
@@ -34,6 +35,7 @@ function DebugPreviewHead({
   useDeployButton,
   useApiKeyButton,
   isWorkflow = false,
+  showHistoryButton = false,
 }: DebugPreviewHeadProps) {
   const bgColor = useColorModeValue("ui.bgMain", "ui.bgMainDark");
   const buttonColor = useColorModeValue("ui.main", "ui.main");
@@ -50,16 +52,17 @@ function DebugPreviewHead({
         {t("team.teamsetting.debugoverview")}
       </Text>
       <Box display={"flex"} flexDirection={"row"} mr="5" alignItems={"center"}>
-        {!isWorkflow && (
+        {(showHistoryButton || !isWorkflow) && (
           <Popover preventOverflow={false} isLazy={true}>
             <PopoverTrigger>
               <IconButton
                 aria-label="history"
                 icon={<Icon as={LuHistory} h="6" w="6" color={buttonColor} />}
-                h="10"
-                w="10"
+                h="8"
+                w="8"
                 bg={bgColor}
                 as={"button"}
+                mr={isWorkflow ? "6" : "2"}
               />
             </PopoverTrigger>
             <PopoverContent>
@@ -74,14 +77,13 @@ function DebugPreviewHead({
             </PopoverContent>
           </Popover>
         )}
-        {useApiKeyButton && <ApiKeyButton teamId={teamId.toString()} />}
+        {useApiKeyButton && <ApiKeyButton teamId={teamId.toString()} mr={2} />}
         {useDeployButton && (
           <CustomButton
             text={t("team.teamsetting.savedeploy")}
             variant="blue"
             rightIcon={<MdBuild color={"white"} />}
             onClick={triggerSubmit}
-            ml={5}
           />
         )}
       </Box>

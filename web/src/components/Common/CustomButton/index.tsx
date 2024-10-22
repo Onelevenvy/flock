@@ -1,30 +1,45 @@
-import { Button, Text, ButtonProps } from "@chakra-ui/react";
+import { Button, Text, ButtonProps, ResponsiveValue } from "@chakra-ui/react";
 
-interface CustomButtonProps extends ButtonProps {
+interface CustomButtonProps extends Omit<ButtonProps, "variant"> {
   text: string;
-  variant: 'blue' | 'white';
+  variant: ResponsiveValue<string>;
   leftIcon?: React.ReactElement;
   rightIcon?: React.ReactElement;
 }
 
-const CustomButton: React.FC<CustomButtonProps> = ({ 
-  text, 
-  variant, 
-  leftIcon, 
-  rightIcon, 
+const CustomButton: React.FC<CustomButtonProps> = ({
+  text,
+  variant,
+  leftIcon,
+  rightIcon,
   onClick,
-  ...rest 
+  ...rest
 }) => {
-  const isBlue = variant === 'blue';
+  const getButtonStyle = (v: string) => {
+    switch (v) {
+      case "blue":
+        return {
+          bg: "#155aef",
+          color: "white",
+          border: "none",
+          _hover: { backgroundColor: "#1c86ee" },
+        };
+      case "white":
+      default:
+        return {
+          bg: "white",
+          color: "#155aef",
+          border: "1px solid #d1d5db",
+          _hover: { backgroundColor: "#eff4ff" },
+        };
+    }
+  };
 
   return (
     <Button
-      bg={isBlue ? "#155aef" : "white"}
-      color={isBlue ? "white" : "#155aef"}
+      {...getButtonStyle(variant as string)}
       borderRadius="lg"
-      border={isBlue ? "none" : "1px solid #d1d5db"}
       onClick={onClick}
-      _hover={{ backgroundColor: isBlue ? "#1c86ee" : "#eff4ff" }}
       leftIcon={leftIcon}
       rightIcon={rightIcon}
       size="sm"
