@@ -8,7 +8,7 @@
     "start": "next start",
     "generate-client": "openapi --input ./openapi.json --useOptions --useUnionTypes --output ./src/client --client axios --exportSchemas true",
     "lint": "eslint . --ext .js,.jsx,.ts,.tsx",
-    "lint:fix": "eslint . --ext .ts,.tsx --fix"
+    "lint:fix": "eslint . --ext .tsx --fix"
   },
   "dependencies": {
     "@chakra-ui/icons": "2.1.1",

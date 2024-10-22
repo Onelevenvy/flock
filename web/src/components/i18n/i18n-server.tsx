@@ -13,7 +13,7 @@ export type II18NServerProps = {
 
 const I18NServer = ({ children }: II18NServerProps) => {
   const { currentUser } = useAuth();
-  const locale = currentUser?.language!;
+  const locale =  currentUser?.language ?? 'en-US';
 
   return (
     <I18N {...{ locale }}>

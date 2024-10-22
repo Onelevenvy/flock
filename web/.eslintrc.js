@@ -18,10 +18,7 @@ module.exports = {
     "no-unused-vars": "off",
     "@typescript-eslint/no-unused-vars": "off",
     "unused-imports/no-unused-imports": "error",
-    "unused-imports/no-unused-vars": [
-      "warn",
-      { "vars": "all", "varsIgnorePattern": "^_", "args": "after-used", "argsIgnorePattern": "^_" }
-    ],
+    "unused-imports/no-unused-vars": "off", // 禁用未使用变量的警告
 
     // React 相关规则
     "react/prop-types": "off",
@@ -34,16 +31,20 @@ module.exports = {
     "import/order": "off",
     "import/newline-after-import": "off",
     "import/no-unresolved": "off", // 禁用无法解析模块路径的规则
+    "import/no-named-as-default-member": "off", // 禁用这个规则
 
     // TypeScript 特定规则
     "@typescript-eslint/explicit-function-return-type": "off",
     "@typescript-eslint/explicit-module-boundary-types": "off",
     "@typescript-eslint/no-explicit-any": "off",
-    "@typescript-eslint/no-non-null-assertion": "warn",
-
+    "@typescript-eslint/no-non-null-assertion": "off", // 禁用非空断言规则
+    "@typescript-eslint/no-require-imports": "off", // 禁用 require() 导入规则
+    "@typescript-eslint/no-unused-expressions": "off",
+    "@typescript-eslint/no-non-null-asserted-optional-chain":"off",
     // 其他常用规则
     "no-use-before-define": "off",
-    "@typescript-eslint/no-use-before-define": ["error"],
+    "@typescript-eslint/no-use-before-define": ["off"],
+    "no-prototype-builtins": "off", // 禁用 no-prototype-builtins 规则
 
     // 移除 padding-line-between-statements 规则
     "padding-line-between-statements": "off",

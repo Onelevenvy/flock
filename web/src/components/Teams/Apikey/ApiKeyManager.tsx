@@ -15,6 +15,7 @@ import {
   ModalHeader,
   ModalCloseButton,
   ModalBody,
+  Flex,
 } from "@chakra-ui/react";
 import { DeleteIcon } from "@chakra-ui/icons";
 import { useMutation, useQuery, useQueryClient } from "react-query";
@@ -73,26 +74,30 @@ const ApiKeyManager: React.FC<ApiKeyManagerProps> = ({
   };
 
   return (
-    <Modal isOpen={isOpen} onClose={onClose} size="xl">
+    <Modal isOpen={isOpen} onClose={onClose} size="2xl">
       <ModalOverlay />
       <ModalContent>
         <ModalHeader>API Key Management</ModalHeader>
         <ModalCloseButton />
         <ModalBody>
           <VStack spacing={4} align="stretch">
-            <Text>Manage your API keys for authentication with the API.</Text>
-            <CustomButton
-              text="Create New API Key"
-              variant="blue"
-              onClick={handleAddApiKey}
-            />
+            <Flex justifyContent="space-between" alignItems="center">
+              <Text>Manage your API keys for authentication with the API.</Text>
+              <CustomButton
+                text="Create New API Key"
+                variant="blue"
+                onClick={handleAddApiKey}
+                h={"10"}
+                w="36"
+              />
+            </Flex>
             <Table variant="simple">
               <Thead>
                 <Tr>
-                  <Th>Description</Th>
-                  <Th>Key</Th>
-                  <Th>Created At</Th>
-                  <Th>Actions</Th>
+                  <Th width="20%">Description</Th>
+                  <Th width="30%">Key</Th>
+                  <Th width="40%">Created At</Th>
+                  <Th width="10%">Actions</Th>
                 </Tr>
               </Thead>
               <Tbody>
@@ -100,7 +105,7 @@ const ApiKeyManager: React.FC<ApiKeyManagerProps> = ({
                   apiKeys?.data.map((apiKey) => (
                     <Tr key={apiKey.id}>
                       <Td>{apiKey.description}</Td>
-                      <Td>{apiKey.short_key}</Td>
+                      <Td><code>{apiKey.short_key}</code></Td>
                       <Td>{new Date(apiKey.created_at).toLocaleString()}</Td>
                       <Td>
                         <IconButton
