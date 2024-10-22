@@ -154,4 +154,30 @@ export class ThreadsService {
         });
     }
 
+    /**
+     * Read Thread Public
+     * Get thread and its last checkpoint by ID
+     * @returns ThreadRead Successful Response
+     * @throws ApiError
+     */
+    public static readThreadPublic({
+        threadId,
+        teamId,
+    }: {
+        threadId: string,
+        teamId: number,
+    }): CancelablePromise<ThreadRead> {
+        return __request(OpenAPI, {
+            method: 'GET',
+            url: '/api/v1/teams/{team_id}/threads/public/{thread_id}',
+            path: {
+                'thread_id': threadId,
+                'team_id': teamId,
+            },
+            errors: {
+                422: `Validation Error`,
+            },
+        });
+    }
+
 }

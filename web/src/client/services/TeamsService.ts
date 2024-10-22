@@ -3,6 +3,7 @@
 /* tslint:disable */
 /* eslint-disable */
 import type { TeamChat } from '../models/TeamChat';
+import type { TeamChatPublic } from '../models/TeamChatPublic';
 import type { TeamCreate } from '../models/TeamCreate';
 import type { TeamOut } from '../models/TeamOut';
 import type { TeamsOut } from '../models/TeamsOut';
@@ -155,6 +156,52 @@ export class TeamsService {
             url: '/api/v1/teams/{id}/stream/{thread_id}',
             path: {
                 'id': id,
+                'thread_id': threadId,
+            },
+            body: requestBody,
+            mediaType: 'application/json',
+            errors: {
+                422: `Validation Error`,
+            },
+        });
+    }
+
+    /**
+     * Public Stream
+     * Stream a response from a team using a given message or an interrupt decision. Requires an API key for authentication.
+     * This endpoint allows streaming responses from a team based on a provided message or interrupt details. The request must include an API key for authorization.
+     * Parameters:
+     * - `team_id` (int): The ID of the team to which the message is being sent. Must be a valid team ID.
+     * - `thread_id` (str): The ID of the thread where the message will be posted. If the thread ID does not exist, a new thread will be created.
+     * Request Body (JSON):
+     * - The request body should be a JSON object containing either the `message` or `interrupt` field:
+     * - `message` (object, optional): The message to be sent to the team.
+     * - `type` (str): Must be `"human"`.
+     * - `content` (str): The content of the message to be sent.
+     * - `interrupt` (object, optional): Approve/reject tool or reply to an ask-human tool.
+     * - `decision` (str): Can be `'approved'`, `'rejected'`, or `'replied'`.
+     * - `tool_message` (str or null, optional): If `decision` is `'rejected'` or `'replied'`, provide a message explaining the reason for rejection or the reply.
+     * Authorization:
+     * - API key must be provided in the request header as `x-api-key`.
+     * Responses:
+     * - `200 OK`: Returns a streaming response in `text/event-stream` format containing the team's response.
+     * @returns any Successful Response
+     * @throws ApiError
+     */
+    public static publicStream({
+        teamId,
+        threadId,
+        requestBody,
+    }: {
+        teamId: number,
+        threadId: string,
+        requestBody: TeamChatPublic,
+    }): CancelablePromise<any> {
+        return __request(OpenAPI, {
+            method: 'POST',
+            url: '/api/v1/teams/{team_id}/stream-public/{thread_id}',
+            path: {
+                'team_id': teamId,
                 'thread_id': threadId,
             },
             body: requestBody,

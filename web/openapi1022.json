@@ -1719,7 +1719,7 @@
               "schema": {
                 "type": "object",
                 "additionalProperties": {
-                  "type": "string"
+                  "type": "object"
                 },
                 "title": "Credentials"
               }
@@ -4078,6 +4078,26 @@
         ],
         "title": "Message"
       },
+      "ModelCapability": {
+        "type": "string",
+        "enum": [
+          "vision"
+        ],
+        "const": "vision",
+        "title": "ModelCapability"
+      },
+      "ModelCategory": {
+        "type": "string",
+        "enum": [
+          "llm",
+          "chat",
+          "text-embedding",
+          "rerank",
+          "speech-to-text",
+          "text-to-speech"
+        ],
+        "title": "ModelCategory"
+      },
       "ModelOut": {
         "properties": {
           "id": {
@@ -4088,6 +4108,20 @@
             "type": "string",
             "title": "Ai Model Name"
           },
+          "categories": {
+            "items": {
+              "$ref": "#/components/schemas/ModelCategory"
+            },
+            "type": "array",
+            "title": "Categories"
+          },
+          "capabilities": {
+            "items": {
+              "$ref": "#/components/schemas/ModelCapability"
+            },
+            "type": "array",
+            "title": "Capabilities"
+          },
           "provider": {
             "$ref": "#/components/schemas/ModelProviderOut"
           }
@@ -4096,6 +4130,8 @@
         "required": [
           "id",
           "ai_model_name",
+          "categories",
+          "capabilities",
           "provider"
         ],
         "title": "ModelOut"
@@ -4109,12 +4145,28 @@
           "ai_model_name": {
             "type": "string",
             "title": "Ai Model Name"
+          },
+          "categories": {
+            "items": {
+              "$ref": "#/components/schemas/ModelCategory"
+            },
+            "type": "array",
+            "title": "Categories"
+          },
+          "capabilities": {
+            "items": {
+              "$ref": "#/components/schemas/ModelCapability"
+            },
+            "type": "array",
+            "title": "Capabilities"
           }
         },
         "type": "object",
         "required": [
           "id",
-          "ai_model_name"
+          "ai_model_name",
+          "categories",
+          "capabilities"
         ],
         "title": "ModelOutIdWithAndName"
       },
@@ -4455,6 +4507,21 @@
             "type": "integer",
             "title": "Provider Id"
           },
+          "categories": {
+            "items": {
+              "$ref": "#/components/schemas/ModelCategory"
+            },
+            "type": "array",
+            "title": "Categories"
+          },
+          "capabilities": {
+            "items": {
+              "$ref": "#/components/schemas/ModelCapability"
+            },
+            "type": "array",
+            "title": "Capabilities",
+            "default": []
+          },
           "id": {
             "anyOf": [
               {
@@ -4470,7 +4537,8 @@
         "type": "object",
         "required": [
           "ai_model_name",
-          "provider_id"
+          "provider_id",
+          "categories"
         ],
         "title": "Models"
       },
@@ -4485,12 +4553,28 @@
           "provider_id": {
             "type": "integer",
             "title": "Provider Id"
+          },
+          "categories": {
+            "items": {
+              "$ref": "#/components/schemas/ModelCategory"
+            },
+            "type": "array",
+            "title": "Categories"
+          },
+          "capabilities": {
+            "items": {
+              "$ref": "#/components/schemas/ModelCapability"
+            },
+            "type": "array",
+            "title": "Capabilities",
+            "default": []
           }
         },
         "type": "object",
         "required": [
           "ai_model_name",
-          "provider_id"
+          "provider_id",
+          "categories"
         ],
         "title": "ModelsBase"
       },
