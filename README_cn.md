@@ -22,7 +22,7 @@
 
 ![image](https://github.com/user-attachments/assets/4097b087-0309-4aab-8be9-a06fdc9d4964)
 ### 图像
-![a](https://github.com/user-attachments/assets/ff6d6c92-dca8-4811-83ef-786272c46dfb)
+![image](https://github.com/user-attachments/assets/ff6d6c92-dca8-4811-83ef-786272c46dfb)
 ### 知识检索
 <p>
   <img src="https://github.com/user-attachments/assets/ec53f7de-10cb-4001-897a-2695da9cf6bf" alt="image" style="width: 49%; display: inline-block;">
