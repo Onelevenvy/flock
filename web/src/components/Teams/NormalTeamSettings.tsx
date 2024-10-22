@@ -10,8 +10,6 @@ import EditTeamMember from "../Members";
 import DebugPreview from "./DebugPreview";
 import TeamInforCard from "./TeamInfo";
 
-import ApiKeyButton from "./Apikey/ApiKeyManageButton";
-
 export default function NormalTeamSettings({
   teamData,
 }: {
@@ -90,9 +88,6 @@ export default function NormalTeamSettings({
                     ref={formRef}
                   />
                 ))}
-              </Box>
-              <Box mt={4}>
-                <ApiKeyButton teamId={teamId} />
               </Box>
             </Box>
 

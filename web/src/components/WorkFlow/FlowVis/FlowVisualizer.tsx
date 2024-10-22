@@ -15,7 +15,7 @@ import type React from "react";
 import { type KeyboardEvent, useCallback, useMemo, useState } from "react";
 import { FaPlus } from "react-icons/fa";
 import { MdBuild, MdOutlineHelp } from "react-icons/md";
-import { VscHistory, VscDebugAlt } from "react-icons/vsc";
+import { VscDebugAlt } from "react-icons/vsc";
 import ReactFlow, {
   Background,
   Controls,
@@ -682,16 +682,6 @@ const FlowVisualizer: React.FC<FlowVisualizerProps> = ({
 
       <Box position={"absolute"} right={"20px"} top={"8px"}>
         <CustomButton
-          text=""
-          variant="white"
-          leftIcon={<VscHistory color="#155aef" size="16px" />}
-          onClick={() => {
-            /* 处理 History 按钮点击 */
-          }}
-          mr={2}
-          aria-label="History"
-        />
-        <CustomButton
           text="Debug"
           variant="white"
           rightIcon={<VscDebugAlt color="#155aef" size="12px" />}
@@ -737,16 +727,15 @@ const FlowVisualizer: React.FC<FlowVisualizerProps> = ({
       )}
       {showDebugPreview && (
         <Box
-          position="relative"
-          w="350"
-          minW={"350"}
-          maxW={"350"}
+          position="absolute"
+          right="20px"
+          top="60px"
+          w="350px"
+          h="calc(100% - 80px)"
           bg={"white"}
-          p={4}
           borderRadius={"lg"}
           boxShadow="md"
-          my={1}
-          mr={2}
+          overflow="hidden"
         >
           <CloseButton
             onClick={() => setShowDebugPreview(false)}
@@ -755,12 +744,15 @@ const FlowVisualizer: React.FC<FlowVisualizerProps> = ({
             top={2}
             size={"md"}
           />
-          <DebugPreview
-            teamId={teamId}
-            triggerSubmit={() => {}}
-            useDeployButton={false}
-            useApiKeyButton={false}
-          />
+          <Box h="full" overflow="hidden">
+            <DebugPreview
+              teamId={teamId}
+              triggerSubmit={() => {}}
+              useDeployButton={false}
+              useApiKeyButton={false}
+              isWorkflow={true}
+            />
+          </Box>
         </Box>
       )}
       {showNodeMenu && (
