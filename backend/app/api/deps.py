@@ -3,7 +3,7 @@ from typing import Annotated
 
 import jwt
 from fastapi import Depends, HTTPException, status
-from fastapi.security import OAuth2PasswordBearer
+from fastapi.security import APIKeyHeader, OAuth2PasswordBearer
 from jwt.exceptions import InvalidTokenError
 from pydantic import ValidationError
 from sqlmodel import Session
@@ -11,7 +11,7 @@ from sqlmodel import Session
 from app.core import security
 from app.core.config import settings
 from app.core.db import engine
-from app.models import TokenPayload, User
+from app.models import Team, TokenPayload, User
 
 reusable_oauth2 = OAuth2PasswordBearer(
     tokenUrl=f"{settings.API_V1_STR}/login/access-token"
@@ -55,3 +55,28 @@ def get_current_active_superuser(current_user: CurrentUser) -> User:
             status_code=400, detail="The user doesn't have enough privileges"
         )
     return current_user
+
+
+header_scheme = APIKeyHeader(name="x-api-key")
+
+
+def get_current_team_from_key(
+    session: SessionDep,
+    team_id: int,
+    key: str = Depends(header_scheme),
+) -> Team:
+    """Return team if apikey belongs to it"""
+    team = session.get(Team, team_id)
+    if not team:
+        raise HTTPException(status_code=404, detail="Team not found")
+    verified = False
+    for apikey in team.apikeys:
+        if security.verify_password(key, apikey.hashed_key):
+            verified = True
+            break
+    if not verified:
+        raise HTTPException(status_code=401, detail="Invalid API key")
+    return team
+
+
+CurrentTeam = Annotated[Team, Depends(get_current_team_from_key)]

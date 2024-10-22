@@ -12,6 +12,7 @@ from app.api.routes import (
     uploads,
     users,
     utils,
+    apikeys,
 )
 
 api_router = APIRouter()
@@ -34,4 +35,7 @@ api_router.include_router(provider.router, prefix="/provider", tags=["provider"]
 api_router.include_router(providermodel.router, prefix="/model", tags=["model"])
 api_router.include_router(
     graphs.router, prefix="/teams/{team_id}/graphs", tags=["graphs"]
+)
+api_router.include_router(
+    apikeys.router, prefix="/teams/{team_id}/api-keys", tags=["api-keys"]
 )
