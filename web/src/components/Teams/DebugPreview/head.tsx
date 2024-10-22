@@ -1,5 +1,5 @@
 import { Box, Flex } from "@chakra-ui/react";
-import { VscTriangleRight } from "react-icons/vsc";
+import { VscHistory } from "react-icons/vsc";
 import { MdBuild } from "react-icons/md";
 
 import CustomButton from "@/components/Common/CustomButton";
@@ -22,13 +22,14 @@ function DebugPreviewHead({
     <Box>
       <Flex justifyContent="flex-end" alignItems="center" px={4}>
         <CustomButton
-          text="Debug"
+          text=""
           variant="white"
-          rightIcon={<VscTriangleRight color="#155aef" size="12px" />}
+          leftIcon={<VscHistory color="#155aef" size="16px" />}
           onClick={() => {
-            /* 处理 Debug 按钮点击 */
+            /* 处理 History 按钮点击 */
           }}
           mr={2}
+          aria-label="History"
         />
         {useApiKeyButton && <ApiKeyButton teamId={teamId.toString()} />}
         {useDeployButton && (

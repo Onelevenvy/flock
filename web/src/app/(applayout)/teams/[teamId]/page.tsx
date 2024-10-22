@@ -102,6 +102,7 @@ function Team() {
                       teamId={Number.parseInt(teamId)}
                       triggerSubmit={triggerSubmit}
                       useDeployButton={true}
+                      useApiKeyButton={true}
                     />
                   </Box>
                 </Box>

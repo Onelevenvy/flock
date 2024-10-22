@@ -15,7 +15,7 @@ import type React from "react";
 import { type KeyboardEvent, useCallback, useMemo, useState } from "react";
 import { FaPlus } from "react-icons/fa";
 import { MdBuild, MdOutlineHelp } from "react-icons/md";
-import { VscTriangleRight } from "react-icons/vsc";
+import { VscHistory, VscDebugAlt } from "react-icons/vsc";
 import ReactFlow, {
   Background,
   Controls,
@@ -682,9 +682,19 @@ const FlowVisualizer: React.FC<FlowVisualizerProps> = ({
 
       <Box position={"absolute"} right={"20px"} top={"8px"}>
         <CustomButton
+          text=""
+          variant="white"
+          leftIcon={<VscHistory color="#155aef" size="16px" />}
+          onClick={() => {
+            /* 处理 History 按钮点击 */
+          }}
+          mr={2}
+          aria-label="History"
+        />
+        <CustomButton
           text="Debug"
           variant="white"
-          rightIcon={<VscTriangleRight color="#155aef" size="12px" />}
+          rightIcon={<VscDebugAlt color="#155aef" size="12px" />}
           onClick={() => setShowDebugPreview(true)}
           mr={2}
         />
