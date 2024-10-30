@@ -18,7 +18,7 @@ import {
   VStack,
   useDisclosure,
 } from "@chakra-ui/react";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, useLayoutEffect } from "react";
 import {
   FaBook,
   FaCheck,
@@ -30,7 +30,6 @@ import {
 } from "react-icons/fa";
 import { GrFormNextLink } from "react-icons/gr";
 import { VscSend } from "react-icons/vsc";
-
 
 import useWorkflowStore from "@/stores/workflowStore";
 
@@ -44,8 +43,16 @@ interface MessageBoxProps {
 }
 
 const MessageBox = ({ message, onResume, isPlayground }: MessageBoxProps) => {
-  const { type, name, next, content, imgdata, tool_calls, tool_output, documents } =
-    message;
+  const {
+    type,
+    name,
+    next,
+    content,
+    imgdata,
+    tool_calls,
+    tool_output,
+    documents,
+  } = message;
   const [decision, setDecision] = useState<InterruptDecision | null>(null);
   const [toolMessage, setToolMessage] = useState<string | null>(null);
   const { isOpen: showClipboardIcon, onOpen, onClose } = useDisclosure();
@@ -57,13 +64,34 @@ const MessageBox = ({ message, onResume, isPlayground }: MessageBoxProps) => {
   };
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const contentRef = useRef<HTMLDivElement>(null);
 
-  // 自动滚动到底部
-  useEffect(() => {
-    if (messagesEndRef.current) {
-      messagesEndRef.current.scrollIntoView({ behavior: "smooth" });
+  useLayoutEffect(() => {
+    const scrollToBottom = () => {
+      if (contentRef.current) {
+        const parentElement = contentRef.current.parentElement;
+        if (parentElement) {
+          parentElement.scrollTop = parentElement.scrollHeight;
+        }
+      }
+    };
+
+    scrollToBottom();
+
+    const observer = new MutationObserver(scrollToBottom);
+
+    if (contentRef.current) {
+      observer.observe(contentRef.current, {
+        childList: true,
+        subtree: true,
+        characterData: true,
+      });
     }
-  }, [content, tool_calls, tool_output, documents]); // 依赖 content 确保每次 content 变更时触发滚动
+
+    return () => {
+      observer.disconnect();
+    };
+  }, [content, tool_calls, tool_output, documents]);
 
   const [timestamp, setTimestamp] = useState<string>("");
 
@@ -105,7 +133,27 @@ const MessageBox = ({ message, onResume, isPlayground }: MessageBoxProps) => {
   }
 
   return (
-    <VStack spacing={0} my={4} onMouseEnter={onOpen} onMouseLeave={onClose}>
+    <VStack
+      spacing={0}
+      my={4}
+      onMouseEnter={onOpen}
+      onMouseLeave={onClose}
+      ref={contentRef}
+      sx={{
+        "&::-webkit-scrollbar": {
+          width: "4px",
+        },
+        "&::-webkit-scrollbar-track": {
+          width: "6px",
+        },
+        "&::-webkit-scrollbar-thumb": {
+          background: "gray.200",
+          borderRadius: "24px",
+        },
+        scrollBehavior: "auto",
+        overscrollBehavior: "contain",
+      }}
+    >
       <Box
         w="full"
         ml={isPlayground ? "10" : "0"}

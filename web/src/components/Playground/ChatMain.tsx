@@ -1,4 +1,3 @@
-
 import { Box, Button } from "@chakra-ui/react";
 import { fetchEventSource } from "@microsoft/fetch-event-source";
 import { useRouter, useSearchParams } from "next/navigation";
@@ -399,16 +398,29 @@ const ChatMain = ({ isPlayground }: { isPlayground?: boolean }) => {
       maxW="full"
       display="flex"
       flexDirection="column"
-      position={"relative"}
+      position="relative"
     >
       <Box
         p={2}
-        overflowY={"auto"}
+        overflowY="auto"
         overflowX="hidden"
         h="full"
         maxH="full"
         w="full"
         maxW="full"
+        sx={{
+          scrollBehavior: 'auto',
+          '&::-webkit-scrollbar': {
+            width: '4px',
+          },
+          '&::-webkit-scrollbar-track': {
+            width: '6px',
+          },
+          '&::-webkit-scrollbar-thumb': {
+            background: 'gray.200',
+            borderRadius: '24px',
+          },
+        }}
       >
         {messages.map((message, index) => (
           <MessageBox
