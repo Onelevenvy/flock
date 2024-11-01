@@ -92,7 +92,7 @@ function Login() {
           <Text as="span" color="blue.300" fontWeight="bold">
             F
           </Text>
-          lexible{" "}
+          ast{" "}
           <Text as="span" color="blue.300" fontWeight="bold">
             L
           </Text>
@@ -100,24 +100,25 @@ function Login() {
           <Text as="span" color="blue.300" fontWeight="bold">
             O
           </Text>
-          rchestrating{" "}
+          rchestration for{" "}
           <Text as="span" color="blue.300" fontWeight="bold">
             C
           </Text>
-          ollaborative-agent{" "}
+          hatbots &{" "}
           <Text as="span" color="blue.300" fontWeight="bold">
             K
           </Text>
-          its
+          nowledge Agents
         </Text>
         <Text fontSize="2xl" color="white" lineHeight="1.8" opacity={0.9}>
-          一个灵活的 AI 应用开发平台
+          低代码 AI 应用开发平台
         </Text>
         <Text fontSize="xl" color="white" mt={4} lineHeight="1.6" opacity={0.8}>
-          提供项目管理、数据处理、标注、训练与推理的全流程支持
+          快速构建ChatBot、RAG和Muti-Agent应用
           <br />
-          基于工作流的可视化编排
-          <br />让 AI 的应用更加简单高效
+          基于 LangGraph 和 Langchain 的可视化workflow
+          <br />
+          让LLM应用开发更简单高效
         </Text>
       </Box>
 
