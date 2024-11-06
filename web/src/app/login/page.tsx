@@ -109,7 +109,7 @@ function Login() {
           <Text as="span" color="blue.300" fontWeight="bold">
             K
           </Text>
-          nits
+          its
         </Text>
         <Text fontSize="2xl" color="white" lineHeight="1.8" opacity={0.9}>
           低代码 AI 应用开发平台
