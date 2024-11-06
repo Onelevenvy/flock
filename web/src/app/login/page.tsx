@@ -89,10 +89,11 @@ function Login() {
           opacity={0.9}
           mb={8}
         >
+          {/* Flexible Low-code Orchestrating Collaborative-agent Kits */}
           <Text as="span" color="blue.300" fontWeight="bold">
             F
           </Text>
-          ast{" "}
+          exible{" "}
           <Text as="span" color="blue.300" fontWeight="bold">
             L
           </Text>
@@ -100,15 +101,15 @@ function Login() {
           <Text as="span" color="blue.300" fontWeight="bold">
             O
           </Text>
-          rchestration for{" "}
+          rchestrating{" "}
           <Text as="span" color="blue.300" fontWeight="bold">
             C
           </Text>
-          hatbots &{" "}
+          ollaborative-agent &{" "}
           <Text as="span" color="blue.300" fontWeight="bold">
             K
           </Text>
-          nowledge Agents
+          nits
         </Text>
         <Text fontSize="2xl" color="white" lineHeight="1.8" opacity={0.9}>
           低代码 AI 应用开发平台
