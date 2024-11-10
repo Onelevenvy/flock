@@ -427,15 +427,29 @@ def _add_conditional_edges(graph_builder, conditional_edges):
 
 
 def _add_crewai_node(graph_builder, node_id, node_type, node_data):
-    graph_builder.add_node(
-        node_id,
-        CrewAINode(
-            node_id=node_id,
-            agents_config=node_data["agents"],
-            tasks_config=node_data["tasks"],
-            process_type=node_data.get("process_type", "sequential"),
-            llm_config=node_data.get("llm_config", {}),
-            manager_config=node_data.get("manager_config", {}),
-            config=node_data.get("config", {})
-        ).work
+    """Add a CrewAI node to the graph"""
+    # 确保必要的配置存在
+    if not node_data.get("agents"):
+        raise ValueError("CrewAI node requires agents configuration")
+    if not node_data.get("tasks"):
+        raise ValueError("CrewAI node requires tasks configuration")
+
+    process_type = node_data.get("process_type", "sequential")
+    
+    # 创建 CrewAI 节点
+    crewai_node = CrewAINode(
+        node_id=node_id,
+        agents_config=node_data["agents"],
+        tasks_config=node_data["tasks"],
+        process_type=process_type,
+        llm_config=node_data.get("llm_config", {}),  # Default LLM 配置
+        manager_config=node_data.get("manager_config", {}),  # Manager Agent 配置
+        config=node_data.get("config", {})
     )
+
+    # 添加节点到图中
+    graph_builder.add_node(node_id, crewai_node.work)
+
+    # 如果是 hierarchical 模式，确保有 manager 配置
+    if process_type == "hierarchical" and not node_data.get("manager_config", {}).get("agent"):
+        raise ValueError("Hierarchical process requires manager agent configuration")

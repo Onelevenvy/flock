@@ -37,6 +37,7 @@ import {
 import useCustomToast from "../../hooks/useCustomToast";
 import MessageInput from "../MessageInput";
 import MessageBox from "./MessageBox";
+import { v4 } from "uuid";
 
 const getUrl = (config: OpenAPIConfig, options: ApiRequestOptions): string => {
   const encoder = config.ENCODE_PATH || encodeURI;
@@ -287,7 +288,8 @@ const ChatMain = ({ isPlayground }: { isPlayground?: boolean }) => {
       ...prev,
       {
         type: "ai",
-        id: self.crypto.randomUUID(),
+        // id: self.crypto.randomUUID(),
+        id: v4(),
         content: t("chat.chatMain.interruptinfo"),
         name: "system",
       },
@@ -325,7 +327,8 @@ const ChatMain = ({ isPlayground }: { isPlayground?: boolean }) => {
       ...prev,
       {
         type: "human",
-        id: self.crypto.randomUUID(),
+        // id: self.crypto.randomUUID(),
+        id: v4(),
         content: data.messages[0].content,
         img: imageData,
         name: "user",

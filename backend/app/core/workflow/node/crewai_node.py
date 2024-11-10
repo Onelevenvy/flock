@@ -6,6 +6,10 @@ from crewai import Agent, Crew, Task, Process, LLM
 from crewai_tools import SerperDevTool, ScrapeWebsiteTool
 
 class CrewAINode:
+    DEFAULT_MANAGER_BACKSTORY = """You are a seasoned manager with a knack for getting the best out of your team.
+You are also known for your ability to delegate work to the right people, and to ask the right questions to get the best out of your team.
+Even though you don't perform tasks by yourself, you have a lot of experience in the field, which allows you to properly evaluate the work of your team members."""
+
     def __init__(
         self, 
         node_id: str,
@@ -22,40 +26,31 @@ class CrewAINode:
         self.process_type = process_type
         self.config = config
         
-        # Initialize LLMs
+        # Initialize Default LLM for all agents
         self.llm = LLM(
             model=llm_config.get("model", "gpt-4"),
             base_url=llm_config.get("base_url", ""),
             api_key=llm_config.get("api_key", ""),
         ) if llm_config else None
 
-        # Initialize manager for hierarchical process
-        self.manager_llm = None
+        # Initialize manager agent for hierarchical process
         self.manager_agent = None
         if process_type == "hierarchical":
-            if manager_config.get("agent"):
-                # Create custom manager agent
-                manager_agent_config = manager_config["agent"]
-                self.manager_agent = Agent(
-                    role=manager_agent_config["role"],
-                    goal=manager_agent_config["goal"],
-                    backstory=manager_agent_config["backstory"],
-                    llm=LLM(
-                        model=manager_agent_config.get("model", "gpt-4"),
-                        base_url=manager_agent_config.get("base_url", ""),
-                        api_key=manager_agent_config.get("api_key", ""),
-                    ) if manager_agent_config.get("model") else self.llm,
-                    verbose=True
-                )
-            elif manager_config.get("llm"):
-                # Only set manager_llm, let CrewAI create default manager agent
-                self.manager_llm = LLM(
-                    model=manager_config["llm"].get("model", "gpt-4"),
-                    base_url=manager_config["llm"].get("base_url", ""),
-                    api_key=manager_config["llm"].get("api_key", ""),
-                )
-            else:
-                raise ValueError("Hierarchical process requires either manager_agent or manager_llm configuration")
+            manager_agent_config = manager_config.get("agent", {
+                "role": "Crew Manager",
+                "goal": "Manage the team to complete the task in the best way possible.",
+                "backstory": self.DEFAULT_MANAGER_BACKSTORY,
+                "allow_delegation": True,
+            })
+            
+            self.manager_agent = Agent(
+                role=manager_agent_config["role"],
+                goal=manager_agent_config["goal"],
+                backstory=manager_agent_config["backstory"],
+                allow_delegation=True,
+                verbose=True,
+                llm=self.llm  # 使用默认 LLM
+            )
 
     def _create_agent(self, agent_config: Dict[str, Any]) -> Agent:
         """Create an agent from configuration"""
@@ -65,10 +60,6 @@ class CrewAINode:
         if agent_config.get("use_scraper", False):
             tools.append(ScrapeWebsiteTool())
             
-        # Add custom tools if specified
-        custom_tools = agent_config.get("custom_tools", [])
-        tools.extend(custom_tools)
-        
         return Agent(
             role=agent_config["role"],
             goal=agent_config["goal"],
@@ -76,7 +67,7 @@ class CrewAINode:
             allow_delegation=agent_config.get("allow_delegation", False),
             tools=tools,
             verbose=True,
-            llm=self.llm
+            llm=self.llm  # 使用默认 LLM
         )
 
     def _create_task(self, task_config: Dict[str, Any], agents: Dict[str, Agent]) -> Task:
@@ -135,7 +126,7 @@ class CrewAINode:
             tasks=tasks,
             process=Process.sequential if self.process_type == "sequential" else Process.hierarchical,
             verbose=True,
-            manager_llm=self.manager_llm if self.process_type == "hierarchical" else None
+            manager_agent=self.manager_agent if self.process_type == "hierarchical" else None
         )
 
         # Run the crew

@@ -48,11 +48,6 @@ export interface CrewAINodeData extends NodeData {
   };
   manager_config: {
     agent?: AgentConfig;
-    llm?: {
-      model?: string;
-      base_url?: string;
-      api_key?: string;
-    };
   };
 }
 

@@ -10,9 +10,11 @@ import {
   Text,
   VStack,
   useDisclosure,
+  useToast,
 } from "@chakra-ui/react";
-import React, { useState } from "react";
+import React, { useState, useMemo } from "react";
 import { FaEdit, FaPlus, FaTrash } from "react-icons/fa";
+import crypto from "crypto";
 
 import ModelSelect from "@/components/Common/ModelProvider";
 import { useModelQuery } from "@/hooks/useModelQuery";
@@ -20,6 +22,8 @@ import { AgentConfig, CrewAINodeData, TaskConfig } from "../../types";
 import { VariableReference } from "../../FlowVis/variableSystem";
 import AgentModal from "./AgentModal";
 import TaskModal from "./TaskModal";
+import { DEFAULT_MANAGER } from "./constants";
+import { v4 } from "uuid";
 
 interface CrewAINodePropertiesProps {
   node: any;
@@ -34,6 +38,7 @@ const CrewAINodeProperties: React.FC<CrewAINodePropertiesProps> = ({
 }) => {
   const data = node.data as CrewAINodeData;
   const { data: models } = useModelQuery();
+  const toast = useToast();
 
   // Modal controls
   const {
@@ -51,9 +56,29 @@ const CrewAINodeProperties: React.FC<CrewAINodePropertiesProps> = ({
   // Edit states
   const [editingAgent, setEditingAgent] = useState<AgentConfig | undefined>();
   const [editingTask, setEditingTask] = useState<TaskConfig | undefined>();
+  const [useCustomManager, setUseCustomManager] = useState(
+    !!data.manager_config?.agent
+  );
+
+  // 检查是否已经存在Manager Agent
+  const hasManagerAgent = useMemo(() => {
+    return data.agents?.some((agent) => agent.role === "Team Manager");
+  }, [data.agents]);
 
   // Handlers for agents
   const handleAddAgent = (agent: AgentConfig) => {
+    // 如果是Manager Agent，确保只能有一个
+    if (agent.role === "Team Manager" && hasManagerAgent && !editingAgent) {
+      toast({
+        title: "Error",
+        description: "Only one Manager Agent is allowed",
+        status: "error",
+        duration: 3000,
+        isClosable: true,
+      });
+      return;
+    }
+
     const updatedAgents = [...(data.agents || [])];
     const existingIndex = updatedAgents.findIndex((a) => a.id === agent.id);
 
@@ -68,16 +93,35 @@ const CrewAINodeProperties: React.FC<CrewAINodePropertiesProps> = ({
     setEditingAgent(undefined);
   };
 
-  const handleEditAgent = (agent: AgentConfig) => {
-    setEditingAgent(agent);
-    onAgentModalOpen();
+  // Handler for manager agent configuration
+  const handleManagerAgentConfig = (agent: AgentConfig) => {
+    // 确保manager agent的必要属性
+    const managerAgent = {
+      ...agent,
+      role: "Team Manager",
+      allow_delegation: true,
+      use_search: false,
+      use_scraper: false,
+    };
+
+    onNodeDataChange(node.id, "manager_config", {
+      agent: managerAgent,
+    });
+    setUseCustomManager(true);
   };
 
   const handleDeleteAgent = (agentId: string) => {
+    const agent = data.agents.find((a) => a.id === agentId);
+    if (agent?.role === "Team Manager") {
+      // 如果删除的是Manager Agent，清除manager_config
+      onNodeDataChange(node.id, "manager_config", {});
+      setUseCustomManager(false);
+    }
+
     const updatedAgents = data.agents.filter((a) => a.id !== agentId);
     onNodeDataChange(node.id, "agents", updatedAgents);
 
-    // Also remove tasks associated with this agent
+    // 删除关联的tasks
     const updatedTasks = data.tasks.filter((t) => t.agent_id !== agentId);
     onNodeDataChange(node.id, "tasks", updatedTasks);
   };
@@ -113,6 +157,23 @@ const CrewAINodeProperties: React.FC<CrewAINodePropertiesProps> = ({
   // Handler for process type
   const handleProcessTypeChange = (value: "sequential" | "hierarchical") => {
     onNodeDataChange(node.id, "process_type", value);
+    if (value === "sequential") {
+      onNodeDataChange(node.id, "manager_config", {});
+      setUseCustomManager(false);
+    } else {
+      if (!useCustomManager) {
+        onNodeDataChange(node.id, "manager_config", {
+          agent: {
+            // id: self.crypto.randomUUID(),
+            id: v4(),
+            role: DEFAULT_MANAGER.role,
+            goal: DEFAULT_MANAGER.goal,
+            backstory: DEFAULT_MANAGER.backstory,
+            allow_delegation: true,
+          },
+        });
+      }
+    }
   };
 
   // Handler for LLM selection
@@ -145,6 +206,37 @@ const CrewAINodeProperties: React.FC<CrewAINodePropertiesProps> = ({
     }
   };
 
+  // 验证是否可以添加新的task
+  const canAddTask = useMemo(() => {
+    if (data.process_type === "sequential") {
+      return data.agents?.length > 0;
+    } else {
+      // hierarchical 模式下需要确保有 manager_config.agent
+      return (
+        data.agents?.length > 0 &&
+        (useCustomManager ? !!data.manager_config?.agent : true)
+      );
+    }
+  }, [data.agents, data.process_type, data.manager_config, useCustomManager]);
+
+  // 添加 handleEditAgent 函数
+  const handleEditAgent = (agent: AgentConfig) => {
+    // 如果是Manager Agent，确保只能有一个
+    if (agent.role === "Team Manager" && !editingAgent) {
+      toast({
+        title: "Error",
+        description: "Cannot add another Manager Agent",
+        status: "error",
+        duration: 3000,
+        isClosable: true,
+      });
+      return;
+    }
+
+    setEditingAgent(agent);
+    onAgentModalOpen();
+  };
+
   return (
     <VStack spacing={4} align="stretch">
       <FormControl>
@@ -161,7 +253,7 @@ const CrewAINodeProperties: React.FC<CrewAINodePropertiesProps> = ({
       </FormControl>
 
       <FormControl>
-        <FormLabel>Default LLM</FormLabel>
+        <FormLabel>Default LLM (For All Agents)</FormLabel>
         {/* <ModelSelect
           models={models}
           value={data.llm_config?.model}
@@ -171,12 +263,40 @@ const CrewAINodeProperties: React.FC<CrewAINodePropertiesProps> = ({
 
       {data.process_type === "hierarchical" && (
         <FormControl>
-          <FormLabel>Manager LLM</FormLabel>
-          {/* <ModelSelect
-            models={models}
-            value={data.manager_config?.llm?.model}
-            onModelSelect={handleManagerLLMSelect}
-          /> */}
+          <FormLabel>Manager Configuration</FormLabel>
+          <RadioGroup
+            value={useCustomManager ? "custom" : "default"}
+            onChange={(value) => {
+              setUseCustomManager(value === "custom");
+              if (value === "default") {
+                onNodeDataChange(node.id, "manager_config", {
+                  agent: {
+                    // id: self.crypto.randomUUID(),
+                    id: v4(),
+                    ...DEFAULT_MANAGER,
+                    allow_delegation: true,
+                  },
+                });
+              }
+            }}
+          >
+            <HStack spacing={4}>
+              <Radio value="default">Default Manager Agent</Radio>
+              <Radio value="custom">Custom Manager Agent</Radio>
+            </HStack>
+          </RadioGroup>
+
+          {useCustomManager && (
+            <Box p={4} borderWidth="1px" borderRadius="md" mt={2}>
+              <AgentModal
+                isOpen={true}
+                onClose={() => setUseCustomManager(false)}
+                onSubmit={handleManagerAgentConfig}
+                initialData={data.manager_config?.agent}
+                isManager={true}
+              />
+            </Box>
+          )}
         </FormControl>
       )}
 
@@ -196,7 +316,13 @@ const CrewAINodeProperties: React.FC<CrewAINodePropertiesProps> = ({
         </HStack>
         <VStack align="stretch" spacing={2}>
           {data.agents?.map((agent) => (
-            <HStack key={agent.id} justify="space-between" p={2} bg="gray.50" borderRadius="md">
+            <HStack
+              key={agent.id}
+              justify="space-between"
+              p={2}
+              bg="gray.50"
+              borderRadius="md"
+            >
               <VStack align="start" spacing={0}>
                 <Text fontWeight="bold">{agent.role}</Text>
                 <Text fontSize="sm" color="gray.600">
@@ -233,20 +359,29 @@ const CrewAINodeProperties: React.FC<CrewAINodePropertiesProps> = ({
               setEditingTask(undefined);
               onTaskModalOpen();
             }}
-            isDisabled={!data.agents?.length}
+            isDisabled={!canAddTask}
+            title={
+              !canAddTask
+                ? "Add agents and configure manager (for hierarchical) first"
+                : "Add new task"
+            }
           >
             Add Task
           </Button>
         </HStack>
         <VStack align="stretch" spacing={2}>
           {data.tasks?.map((task, index) => (
-            <HStack key={index} justify="space-between" p={2} bg="gray.50" borderRadius="md">
+            <HStack
+              key={index}
+              justify="space-between"
+              p={2}
+              bg="gray.50"
+              borderRadius="md"
+            >
               <VStack align="start" spacing={0}>
-                <Text fontWeight="bold">
-                  {task.description}
-                </Text>
+                <Text fontWeight="bold">{task.description}</Text>
                 <Text fontSize="sm" color="gray.600">
-                  Agent: {data.agents.find(a => a.id === task.agent_id)?.role}
+                  Agent: {data.agents.find((a) => a.id === task.agent_id)?.role}
                 </Text>
               </VStack>
               <HStack>
@@ -276,6 +411,7 @@ const CrewAINodeProperties: React.FC<CrewAINodePropertiesProps> = ({
           onClose={onAgentModalClose}
           onSubmit={handleAddAgent}
           initialData={editingAgent}
+          isManager={false}
         />
       )}
 
@@ -292,4 +428,4 @@ const CrewAINodeProperties: React.FC<CrewAINodePropertiesProps> = ({
   );
 };
 
-export default CrewAINodeProperties; 
+export default CrewAINodeProperties;
