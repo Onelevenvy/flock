@@ -21,6 +21,7 @@ from .node.llm_node import LLMNode
 from .node.retrieval_node import RetrievalNode
 from .node.state import TeamState
 from .node.subgraph_node import SubgraphNode
+from .node.crewai_node import CrewAINode
 
 
 def create_subgraph(subgraph_config: Dict[str, Any]) -> CompiledGraph:
@@ -129,7 +130,9 @@ def initialize_graph(
             node_type = node["type"]
             node_data = node["data"]
 
-            if node_type == "subgraph":
+            if node_type == "crewai":
+                _add_crewai_node(graph_builder, node_id, node_type, node_data)
+            elif node_type == "subgraph":
                 subgraph = create_subgraph(node_data)
                 graph_builder.add_node(node_id, subgraph)
             elif node_type == "answer":
@@ -421,3 +424,18 @@ def _add_conditional_edges(graph_builder, conditional_edges):
             edges_dict["call_human"] = next(iter(conditions["call_human"].values()))
         if edges_dict != {"default": END}:
             graph_builder.add_conditional_edges(llm_id, should_continue, edges_dict)
+
+
+def _add_crewai_node(graph_builder, node_id, node_type, node_data):
+    graph_builder.add_node(
+        node_id,
+        CrewAINode(
+            node_id=node_id,
+            agents_config=node_data["agents"],
+            tasks_config=node_data["tasks"],
+            process_type=node_data.get("process_type", "sequential"),
+            llm_config=node_data.get("llm_config", {}),
+            manager_config=node_data.get("manager_config", {}),
+            config=node_data.get("config", {})
+        ).work
+    )
