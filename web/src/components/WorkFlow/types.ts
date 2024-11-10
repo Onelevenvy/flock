@@ -16,8 +16,48 @@ export interface NodeData {
   [key: string]: any;
 }
 
+export interface AgentConfig {
+  id: string;
+  role: string;
+  goal: string;
+  backstory: string;
+  use_search?: boolean;
+  use_scraper?: boolean;
+  allow_delegation?: boolean;
+  model?: string;
+  base_url?: string;
+  api_key?: string;
+}
+
+export interface TaskConfig {
+  description: string;
+  agent_id: string;
+  expected_output?: string;
+  output_json?: any;
+  context?: string[];
+}
+
+export interface CrewAINodeData extends NodeData {
+  agents: AgentConfig[];
+  tasks: TaskConfig[];
+  process_type: "sequential" | "hierarchical";
+  llm_config: {
+    model?: string;
+    base_url?: string;
+    api_key?: string;
+  };
+  manager_config: {
+    agent?: AgentConfig;
+    llm?: {
+      model?: string;
+      base_url?: string;
+      api_key?: string;
+    };
+  };
+}
+
 export interface CustomNode extends Node {
-  data: NodeData;
+  data: NodeData | CrewAINodeData;
 }
 
 export interface FlowVisualizerProps {

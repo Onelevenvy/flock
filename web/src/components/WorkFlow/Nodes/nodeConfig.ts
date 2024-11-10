@@ -4,7 +4,7 @@ import {
   FaStop,
   FaTools,
   FaCommentDots,
- FaDatabase } from "react-icons/fa";
+  FaDatabase } from "react-icons/fa";
 import { FaBookAtlas } from "react-icons/fa6";
 import { TfiGithub } from "react-icons/tfi";
 
@@ -16,6 +16,8 @@ import RetrievalProperties from "./Retrieval/RetrievalNodeProperties";
 import RetrievalToolNodeProperties from "./RetrievalTool/RetrievalToolNodeProperties";
 import StartNodeProperties from "./Start/StartNodeProperties";
 import ToolNodeProperties from "./Tool/ToolNodeProperties";
+import CrewAINodeProperties from "./CrewAI/CrewAINodeProperties";
+
 
 interface NodeConfigItem {
   display: string;
@@ -153,6 +155,25 @@ export const nodeConfig: Record<string, NodeConfigItem> = {
     inputVariables: [],
     outputVariables: ["output"],
   },
+  crewai: {
+    display: "CrewAI",
+    icon: FaRobot,
+    colorScheme: "purple",
+    properties: CrewAINodeProperties,
+    allowedConnections: {
+      sources: ["left", "right"],
+      targets: ["left", "right"]
+    },
+    initialData: {
+      agents: [],
+      tasks: [],
+      process_type: "sequential",
+      llm_config: {},
+      manager_config: {}
+    },
+    inputVariables: [],
+    outputVariables: ["result"]
+  }
 };
 
 export type NodeType = keyof typeof nodeConfig;
