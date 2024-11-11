@@ -434,32 +434,41 @@ def _add_crewai_node(graph_builder, node_id, node_type, node_data):
         raise ValueError("CrewAI node requires agents configuration")
     if not node_data.get("tasks"):
         raise ValueError("CrewAI node requires tasks configuration")
-    
+
     llm_config = node_data.get("llm_config", {})
     if not llm_config.get("model"):
         raise ValueError("CrewAI node requires llm model configuration")
 
     # 获取所有模型配置
     all_models = get_all_models_helper()
-    model_info = next(
-        (
-            {
+    model_info = None
+    # model_info = next(
+    #     (
+    #         {
+    #             "ai_model_name": model.ai_model_name,
+    #             "provider_name": model.provider.provider_name,
+    #             "base_url": model.provider.base_url,
+    #             "api_key": model.provider.api_key,
+    #         }
+    #         for model in all_models
+    #         if model.ai_model_name == llm_config["model"]
+    #     ),
+    #     None,
+    # )
+    for model in all_models.data:
+        if model.ai_model_name == llm_config["model"]:
+            model_info = {
                 "ai_model_name": model.ai_model_name,
                 "provider_name": model.provider.provider_name,
                 "base_url": model.provider.base_url,
                 "api_key": model.provider.api_key,
             }
-            for model in all_models
-            if model.ai_model_name == llm_config["model"]
-        ),
-        None,
-    )
-
+            break
     if not model_info:
         raise ValueError(f"Model {llm_config['model']} not found")
 
     process_type = node_data.get("process_type", "sequential")
-    
+
     # 创建 CrewAI 节点
     crewai_node = CrewAINode(
         node_id=node_id,
@@ -471,12 +480,14 @@ def _add_crewai_node(graph_builder, node_id, node_type, node_data):
         openai_api_key=model_info["api_key"],
         openai_api_base=model_info["base_url"],
         manager_config=node_data.get("manager_config", {}),
-        config=node_data.get("config", {})
+        config=node_data.get("config", {}),
     )
 
     # 添加节点到图中
     graph_builder.add_node(node_id, crewai_node.work)
 
     # 如果是 hierarchical 模式，确保有 manager 配置
-    if process_type == "hierarchical" and not node_data.get("manager_config", {}).get("agent"):
+    if process_type == "hierarchical" and not node_data.get("manager_config", {}).get(
+        "agent"
+    ):
         raise ValueError("Hierarchical process requires manager agent configuration")
