@@ -81,6 +81,16 @@ They are all excellent open-source projects, thanks🙇‍.
 
 Project tech stack: LangChain + LangGraph + React + Next.js + Chakra UI + PostgreSQL
 
+> [!NOTE]
+>
+> ### 🤖 Model System
+>
+> Flock supports various model providers and makes it easy to add new ones. Check out our [Models Guide](Add_New_Model_Providers_Guide.md) to learn about supported models and how to add support for new providers.
+
+> ### 🛠️ Tools System
+>
+> Flock comes with various built-in tools and supports easy integration of custom tools. Check out our [Tools Guide](Add_New_Tools_Guide.md) to learn about available tools and how to add your own.
+
 ### 💡RoadMap
 
 1 APP
@@ -101,17 +111,6 @@ Project tech stack: LangChain + LangGraph + React + Next.js + Chakra UI + Postgr
 - [x] Ollama
 - [x] Qwen
 - [ ] Xinference
-
-> [!NOTE]
->
-> ### 🤖 Model System
->
-> Flock supports various model providers and makes it easy to add new ones. Check out our [Models Guide](Add_New_Model_Providers_Guide.md) to learn about supported models and how to add support for new providers.
-> [!NOTE]
->
-> ### 🛠️ Tools System
->
-> Flock comes with various built-in tools and supports easy integration of custom tools. Check out our [Tools Guide](Add_New_Tools_Guide.md) to learn about available tools and how to add your own.
 
 3 Ohters
 

@@ -78,6 +78,16 @@ Flock 旨在成为一个开源的大语言模型（LLM）应用开发平台。�
 
 项目技术栈：LangChain + LangGraph + React + Next.js + Chakra UI + PostgreSQL
 
+> [!NOTE]
+>
+> ### 🤖 模型系统
+>
+> Flock 支持多种模型提供商，并且可以轻松添加新的提供商。查看我们的[模型指南](Add_New_Model_Providers_Guide.md)了解支持的模型以及如何添加新的提供商支持。
+
+> ### 🛠️ 工具系统
+>
+> Flock 内置了多种工具，并支持轻松集成自定义工具。查看我们的[工具指南](Add_New_Tools_Guide.md)了解可用工具和如何添加自己的工具。
+
 ### 💡 路线图
 
 1 应用
@@ -99,27 +109,11 @@ Flock 旨在成为一个开源的大语言模型（LLM）应用开发平台。�
 - [x] Qwen
 - [ ] Xinference
 
-> [!NOTE]
->
-> ### 🤖 模型系统
->
-> Flock 支持多种模型提供商，并且可以轻松添加新的提供商。查看我们的[模型指南](Add_New_Model_Providers_Guide.md)了解支持的模型以及如何添加新的提供商支持。
-
-> [!NOTE]
->
-> ### 🛠️ 工具系统
->
-> Flock 内置了多种工具，并支持轻松集成自定义工具。查看我们的[工具指南](Add_New_Tools_Guide.md)了解可用工具和如何添加自己的工具。
-
 3 其他
 
 - [x] Tools Calling
 - [x] I18n
 - [ ] Langchain Templates
-
-### 🛠️ 工具系统
-
-Flock 内置了多种工具，并支持轻松集成自定义工具。查看我们的[工具指南](Add_New_Tools_Guide.md)了解可用工具和如何添加自己的工具。
 
 ### 🏘️ 亮点
 
