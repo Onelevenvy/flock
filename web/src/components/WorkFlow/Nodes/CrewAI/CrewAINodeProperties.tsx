@@ -13,7 +13,7 @@ import {
   useToast,
 } from "@chakra-ui/react";
 import React, { useState, useMemo } from "react";
-import { FaEdit, FaPlus, FaTrash } from "react-icons/fa";
+import { FaEdit, FaPlus, FaTrash, FaRobot, FaListAlt } from "react-icons/fa";
 import crypto from "crypto";
 import { useForm, type Control, type FieldValues } from "react-hook-form";
 import { v4 as uuidv4 } from 'uuid';
@@ -243,7 +243,7 @@ const CrewAINodeProperties: React.FC<CrewAINodePropertiesProps> = ({
       </FormControl>
 
       <FormControl>
-        <FormLabel>Default LLM (For All Agents)</FormLabel>
+        <FormLabel>Select Model</FormLabel>
         <ModelSelect
           models={models}
           control={control}
@@ -282,60 +282,92 @@ const CrewAINodeProperties: React.FC<CrewAINodePropertiesProps> = ({
       )}
 
       <Box>
-        <HStack justify="space-between" mb={2}>
-          <Text fontWeight="bold">Agents</Text>
+        <HStack justify="space-between" align="center" mb={3}>
+          <HStack spacing={2}>
+            <FaRobot size="14px" color="#4A5568" />
+            <Text fontSize="md" fontWeight="600" color="gray.700">
+              Agents
+            </Text>
+            <Text fontSize="xs" color="gray.500">
+              ({data.agents?.length || 0})
+            </Text>
+          </HStack>
           <Button
-            leftIcon={<FaPlus />}
-            size="sm"
+            size="xs"
+            variant="ghost"
+            leftIcon={<FaPlus size="10px" />}
             onClick={() => {
               setEditingAgent(undefined);
               onAgentModalOpen();
             }}
+            colorScheme="blue"
           >
-            Add Agent
+            Add
           </Button>
         </HStack>
         <VStack align="stretch" spacing={2}>
-          {data.agents?.map((agent) => (
-            <HStack
+          {data.agents?.map((agent, index) => (
+            <Box
               key={agent.id}
-              justify="space-between"
               p={2}
               bg="gray.50"
               borderRadius="md"
+              borderLeft="3px solid"
+              borderLeftColor="blue.400"
+              transition="all 0.2s"
+              _hover={{
+                bg: "gray.100",
+                borderLeftColor: "blue.500",
+              }}
             >
-              <VStack align="start" spacing={0}>
-                <Text fontWeight="bold">{agent.role}</Text>
-                <Text fontSize="sm" color="gray.600">
-                  {agent.goal}
-                </Text>
-              </VStack>
-              <HStack>
-                <IconButton
-                  aria-label="Edit agent"
-                  icon={<FaEdit />}
-                  size="sm"
-                  onClick={() => handleEditAgent(agent)}
-                />
-                <IconButton
-                  aria-label="Delete agent"
-                  icon={<FaTrash />}
-                  size="sm"
-                  colorScheme="red"
-                  onClick={() => handleDeleteAgent(agent.id)}
-                />
+              <HStack justify="space-between" align="start">
+                <VStack align="start" spacing={0.5} flex={1}>
+                  <Text fontSize="sm" fontWeight="500" color="gray.700" noOfLines={1}>
+                    {agent.name}
+                  </Text>
+                  <Text fontSize="xs" color="gray.500" noOfLines={1}>
+                    {agent.role}
+                  </Text>
+                </VStack>
+                <HStack spacing={1}>
+                  <IconButton
+                    aria-label="Edit agent"
+                    icon={<FaEdit size="12px" />}
+                    size="xs"
+                    variant="ghost"
+                    colorScheme="blue"
+                    onClick={() => handleEditAgent(agent)}
+                  />
+                  <IconButton
+                    aria-label="Delete agent"
+                    icon={<FaTrash size="12px" />}
+                    size="xs"
+                    variant="ghost"
+                    colorScheme="red"
+                    onClick={() => handleDeleteAgent(agent.id)}
+                  />
+                </HStack>
               </HStack>
-            </HStack>
+            </Box>
           ))}
         </VStack>
       </Box>
 
       <Box>
-        <HStack justify="space-between" mb={2}>
-          <Text fontWeight="bold">Tasks</Text>
+        <HStack justify="space-between" align="center" mb={3}>
+          <HStack spacing={2}>
+            <FaListAlt size="14px" color="#4A5568" />
+            <Text fontSize="md" fontWeight="600" color="gray.700">
+              Tasks
+            </Text>
+            <Text fontSize="xs" color="gray.500">
+              ({data.tasks?.length || 0})
+            </Text>
+          </HStack>
           <Button
-            leftIcon={<FaPlus />}
-            size="sm"
+            size="xs"
+            variant="ghost"
+            leftIcon={<FaPlus size="10px" />}
             onClick={() => {
               setEditingTask(undefined);
               onTaskModalOpen();
@@ -346,41 +378,55 @@ const CrewAINodeProperties: React.FC<CrewAINodePropertiesProps> = ({
                 ? "Add agents and configure manager (for hierarchical) first"
                 : "Add new task"
             }
+            colorScheme="blue"
           >
-            Add Task
+            Add
           </Button>
         </HStack>
         <VStack align="stretch" spacing={2}>
           {data.tasks?.map((task, index) => (
-            <HStack
+            <Box
               key={index}
-              justify="space-between"
               p={2}
               bg="gray.50"
               borderRadius="md"
+              borderLeft="3px solid"
+              borderLeftColor="green.400"
+              transition="all 0.2s"
+              _hover={{
+                bg: "gray.100",
+                borderLeftColor: "green.500",
+              }}
             >
-              <VStack align="start" spacing={0}>
-                <Text fontWeight="bold">{task.description}</Text>
-                <Text fontSize="sm" color="gray.600">
-                  Agent: {data.agents.find((a) => a.id === task.agent_id)?.role}
-                </Text>
-              </VStack>
-              <HStack>
-                <IconButton
-                  aria-label="Edit task"
-                  icon={<FaEdit />}
-                  size="sm"
-                  onClick={() => handleEditTask(task)}
-                />
-                <IconButton
-                  aria-label="Delete task"
-                  icon={<FaTrash />}
-                  size="sm"
-                  colorScheme="red"
-                  onClick={() => handleDeleteTask(index)}
-                />
+              <HStack justify="space-between" align="start">
+                <VStack align="start" spacing={0.5} flex={1}>
+                  <Text fontSize="sm" fontWeight="500" color="gray.700" noOfLines={1}>
+                    {task.name}
+                  </Text>
+                  <Text fontSize="xs" color="gray.500" noOfLines={1}>
+                    {task.description}
+                  </Text>
+                </VStack>
+                <HStack spacing={1}>
+                  <IconButton
+                    aria-label="Edit task"
+                    icon={<FaEdit size="12px" />}
+                    size="xs"
+                    variant="ghost"
+                    colorScheme="blue"
+                    onClick={() => handleEditTask(task)}
+                  />
+                  <IconButton
+                    aria-label="Delete task"
+                    icon={<FaTrash size="12px" />}
+                    size="xs"
+                    variant="ghost"
+                    colorScheme="red"
+                    onClick={() => handleDeleteTask(index)}
+                  />
+                </HStack>
               </HStack>
-            </HStack>
+            </Box>
           ))}
         </VStack>
       </Box>

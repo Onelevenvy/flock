@@ -94,7 +94,7 @@ const TaskModal: React.FC<TaskModalProps> = ({
                 <Select {...register("agent_id")} placeholder="Select agent">
                   {agents.map((agent) => (
                     <option key={agent.id} value={agent.id}>
-                      {agent.role}
+                      {agent.name}
                     </option>
                   ))}
                 </Select>
