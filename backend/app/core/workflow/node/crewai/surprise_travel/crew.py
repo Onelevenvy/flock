@@ -42,12 +42,12 @@ class SurpriseTravelCrew:
     tasks_config = "config/tasks.yaml"
 
     process: str = "sequential"
-    manager_llm: str = LLM(
-        model="openai/gpt-4o-mini", base_url="https://fake.url", api_key="fake_key"
-    )
-    llm: str = LLM(
-        model="openai/gpt-4o-mini", base_url="https://fake.url", api_key="fake_key"
-    )
+    # manager_llm: str = LLM(
+    #     model="openai/gpt-4o-mini", base_url="https://fake.url", api_key="fake_key"
+    # )
+    # llm: str = LLM(
+    #     model="openai/gpt-4o-mini", base_url="https://fake.url", api_key="fake_key"
+    # )
 
     @agent
     def personalized_activity_planner(self) -> Agent:

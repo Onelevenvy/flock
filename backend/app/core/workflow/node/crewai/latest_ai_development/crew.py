@@ -13,12 +13,12 @@ class LatestAiDevelopmentCrew:
     """LatestAiDevelopment crew"""
 
     process: str = "sequential"
-    manager_llm: str = LLM(
-        model="openai/gpt-4o-mini", base_url="https://fake.url", api_key="fake_key"
-    )
-    llm: str = LLM(
-        model="openai/gpt-4o-mini", base_url="https://fake.url", api_key="fake_key"
-    )
+    # manager_llm: str = LLM(
+    #     model="openai/gpt-4o-mini", base_url="https://fake.url", api_key="fake_key"
+    # )
+    # llm: str = LLM(
+    #     model="openai/gpt-4o-mini", base_url="https://fake.url", api_key="fake_key"
+    # )
 
     @agent
     def researcher(self) -> Agent:
