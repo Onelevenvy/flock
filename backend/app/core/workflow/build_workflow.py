@@ -397,6 +397,11 @@ def _add_edge(graph_builder, edge, nodes, conditional_edges):
             graph_builder.add_edge(edge["source"], END)
         else:
             graph_builder.add_edge(edge["source"], edge["target"])
+    elif source_node["type"] == "crewai":
+        if target_node["type"] == "end":
+            graph_builder.add_edge(edge["source"], END)
+        else:
+            graph_builder.add_edge(edge["source"], edge["target"])
     elif source_node["type"] == "subgraph":
         graph_builder.add_edge(edge["source"], edge["target"])
     elif target_node["type"] == "subgraph":
@@ -458,13 +463,13 @@ def _add_crewai_node(graph_builder, node_id, node_type, node_data):
 def get_model_info(model_name: str) -> Dict[str, str]:
     """
     Get model information from all available models.
-    
+
     Args:
         model_name: Name of the AI model
-        
+
     Returns:
         Dict containing model information including provider name, base url, and api key
-        
+
     Raises:
         ValueError: If the specified model is not supported
     """

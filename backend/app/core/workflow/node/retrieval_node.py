@@ -48,7 +48,7 @@ class RetrievalNode:
             )
 
         # 更新 node_outputs
-        new_output = {self.node_id: {"result": result.content}}
+        new_output = {self.node_id: {"response": result.content}}
         state["node_outputs"] = update_node_outputs(state["node_outputs"], new_output)
         return_state: ReturnTeamState = {
             "history": state.get("history", []) + [result],

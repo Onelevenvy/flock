@@ -7,6 +7,7 @@ from crewai_tools import SerperDevTool, ScrapeWebsiteTool
 from app.core.model_providers.model_provider_manager import model_provider_manager
 
 
+
 class CrewAINode:
     DEFAULT_MANAGER_BACKSTORY = """You are a seasoned manager with a knack for getting the best out of your team.
 You are also known for your ability to delegate work to the right people, and to ask the right questions to get the best out of your team.
@@ -65,7 +66,7 @@ Even though you don't perform tasks by yourself, you have a lot of experience in
         """Create an agent from configuration"""
         tools = []
         if agent_config.get("use_search", False):
-            tools.append(SerperDevTool())
+            tools.append(SerperDevTool(n_results=2))
         if agent_config.get("use_scraper", False):
             tools.append(ScrapeWebsiteTool())
 
@@ -124,18 +125,18 @@ Even though you don't perform tasks by yourself, you have a lot of experience in
 
         # Run the crew
         result = crew.kickoff()
-
+        raw_result_str = result.raw
         # Update node_outputs
-        new_output = {self.node_id: {"result": result}}
+        new_output = {self.node_id: {"response": raw_result_str}}
         state["node_outputs"] = update_node_outputs(state["node_outputs"], new_output)
 
         # Create AI message from result
-        ai_message = AIMessage(content=str(result))
+        crewai_res_message = AIMessage(content=str(raw_result_str))
 
         return_state: ReturnTeamState = {
-            "history": state.get("history", []) + [ai_message],
-            "messages": [ai_message],
-            "all_messages": state.get("all_messages", []) + [ai_message],
+            "history": state.get("history", []) + [crewai_res_message],
+            "messages": [crewai_res_message],
+            "all_messages": state.get("all_messages", []) + [crewai_res_message],
             "node_outputs": state["node_outputs"],
         }
         return return_state

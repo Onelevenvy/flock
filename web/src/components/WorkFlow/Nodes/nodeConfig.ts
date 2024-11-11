@@ -4,7 +4,8 @@ import {
   FaStop,
   FaTools,
   FaCommentDots,
-  FaDatabase } from "react-icons/fa";
+  FaDatabase,
+} from "react-icons/fa";
 import { FaBookAtlas } from "react-icons/fa6";
 import { TfiGithub } from "react-icons/tfi";
 
@@ -17,7 +18,6 @@ import RetrievalToolNodeProperties from "./RetrievalTool/RetrievalToolNodeProper
 import StartNodeProperties from "./Start/StartNodeProperties";
 import ToolNodeProperties from "./Tool/ToolNodeProperties";
 import CrewAINodeProperties from "./CrewAI/CrewAINodeProperties";
-
 
 interface NodeConfigItem {
   display: string;
@@ -88,7 +88,7 @@ export const nodeConfig: Record<string, NodeConfigItem> = {
       tools: ["Open Weather"],
     },
     inputVariables: [],
-    outputVariables: ["output"],
+    outputVariables: ["response"],
   },
   plugin: {
     display: "Plugin",
@@ -104,7 +104,7 @@ export const nodeConfig: Record<string, NodeConfigItem> = {
       targets: ["left"],
     },
     inputVariables: [],
-    outputVariables: ["output"],
+    outputVariables: ["response"],
   },
   answer: {
     display: "Answer",
@@ -119,7 +119,7 @@ export const nodeConfig: Record<string, NodeConfigItem> = {
       targets: ["left", "right"],
     },
     inputVariables: [],
-    outputVariables: ["output"],
+    outputVariables: ["response"],
   },
   retrieval: {
     display: "Knowledge Retrieval",
@@ -138,7 +138,7 @@ export const nodeConfig: Record<string, NodeConfigItem> = {
       targets: ["left", "right"],
     },
     inputVariables: [],
-    outputVariables: ["result"],
+    outputVariables: ["response"],
   },
   toolretrieval: {
     display: "Retrieval As Tools",
@@ -153,7 +153,7 @@ export const nodeConfig: Record<string, NodeConfigItem> = {
       tools: [],
     },
     inputVariables: [],
-    outputVariables: ["output"],
+    outputVariables: ["response"],
   },
   crewai: {
     display: "CrewAI",
@@ -162,18 +162,18 @@ export const nodeConfig: Record<string, NodeConfigItem> = {
     properties: CrewAINodeProperties,
     allowedConnections: {
       sources: ["left", "right"],
-      targets: ["left", "right"]
+      targets: ["left", "right"],
     },
     initialData: {
       agents: [],
       tasks: [],
       process_type: "sequential",
       llm_config: {},
-      manager_config: {}
+      manager_config: {},
     },
     inputVariables: [],
-    outputVariables: ["result"]
-  }
+    outputVariables: ["response"],
+  },
 };
 
 export type NodeType = keyof typeof nodeConfig;
