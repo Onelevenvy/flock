@@ -16,7 +16,7 @@ import React, { useState, useMemo } from "react";
 import { FaEdit, FaPlus, FaTrash, FaRobot, FaListAlt } from "react-icons/fa";
 import crypto from "crypto";
 import { useForm, type Control, type FieldValues } from "react-hook-form";
-import { v4 as uuidv4 } from 'uuid';
+import { v4 as uuidv4 } from "uuid";
 
 import ModelSelect from "@/components/Common/ModelProvider";
 import { useModelQuery } from "@/hooks/useModelQuery";
@@ -43,7 +43,7 @@ const CrewAINodeProperties: React.FC<CrewAINodePropertiesProps> = ({
   const { control } = useForm({
     defaultValues: {
       model: data.llm_config?.model || "",
-    }
+    },
   });
 
   // Modal controls
@@ -173,7 +173,7 @@ const CrewAINodeProperties: React.FC<CrewAINodePropertiesProps> = ({
             id: uuidv4(),
             ...DEFAULT_MANAGER,
             allow_delegation: true,
-          }
+          },
         });
       }
     }
@@ -219,18 +219,18 @@ const CrewAINodeProperties: React.FC<CrewAINodePropertiesProps> = ({
 
   // 获取现有 Agent 名称列表
   const existingAgentNames = useMemo(() => {
-    return data.agents?.map(agent => agent.name) || [];
+    return data.agents?.map((agent) => agent.name) || [];
   }, [data.agents]);
 
   // 获取现有任务名称列表
   const existingTaskNames = useMemo(() => {
-    return data.tasks?.map(task => task.name) || [];
+    return data.tasks?.map((task) => task.name) || [];
   }, [data.tasks]);
 
   return (
     <VStack spacing={4} align="stretch">
       <FormControl>
-        <FormLabel>Process Type</FormLabel>
+        <FormLabel>Agents Type</FormLabel>
         <RadioGroup
           value={data.process_type}
           onChange={handleProcessTypeChange}
@@ -267,7 +267,7 @@ const CrewAINodeProperties: React.FC<CrewAINodePropertiesProps> = ({
                       id: uuidv4(),
                       ...DEFAULT_MANAGER,
                       allow_delegation: true,
-                    }
+                    },
                   });
                 }
               }}
@@ -322,7 +322,12 @@ const CrewAINodeProperties: React.FC<CrewAINodePropertiesProps> = ({
             >
               <HStack justify="space-between" align="start">
                 <VStack align="start" spacing={0.5} flex={1}>
-                  <Text fontSize="sm" fontWeight="500" color="gray.700" noOfLines={1}>
+                  <Text
+                    fontSize="sm"
+                    fontWeight="500"
+                    color="gray.700"
+                    noOfLines={1}
+                  >
                     {agent.name}
                   </Text>
                   <Text fontSize="xs" color="gray.500" noOfLines={1}>
@@ -400,7 +405,12 @@ const CrewAINodeProperties: React.FC<CrewAINodePropertiesProps> = ({
             >
               <HStack justify="space-between" align="start">
                 <VStack align="start" spacing={0.5} flex={1}>
-                  <Text fontSize="sm" fontWeight="500" color="gray.700" noOfLines={1}>
+                  <Text
+                    fontSize="sm"
+                    fontWeight="500"
+                    color="gray.700"
+                    noOfLines={1}
+                  >
                     {task.name}
                   </Text>
                   <Text fontSize="xs" color="gray.500" noOfLines={1}>

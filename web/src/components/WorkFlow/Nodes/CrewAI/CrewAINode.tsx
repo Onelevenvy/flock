@@ -16,12 +16,16 @@ const CrewAINode: React.FC<NodeProps> = (props) => {
       <Handle type="target" position={Position.Right} id="right" />
       <Handle type="source" position={Position.Left} id="left" />
       <Handle type="source" position={Position.Right} id="right" />
-      
-      <Tag size="sm" alignSelf="center" colorScheme={data.process_type === "sequential" ? "blue" : "purple"}>
-        {data.process_type}
+
+      <Tag
+        size="sm"
+        alignSelf="center"
+        colorScheme={data.process_type === "sequential" ? "blue" : "purple"}
+      >
+        Agents Type: {data.process_type}
       </Tag>
     </BaseNode>
   );
 };
 
-export default React.memo(CrewAINode); 
+export default React.memo(CrewAINode);
