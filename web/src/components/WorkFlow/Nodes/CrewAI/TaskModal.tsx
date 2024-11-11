@@ -12,6 +12,7 @@ import {
   Textarea,
   Select,
   Button,
+  FormErrorMessage,
 } from "@chakra-ui/react";
 import React from "react";
 import { useForm } from "react-hook-form";
@@ -24,6 +25,7 @@ interface TaskModalProps {
   onSubmit: (task: TaskConfig) => void;
   initialData?: TaskConfig;
   agents: AgentConfig[];
+  existingTaskNames: string[];
 }
 
 const TaskModal: React.FC<TaskModalProps> = ({
@@ -32,14 +34,29 @@ const TaskModal: React.FC<TaskModalProps> = ({
   onSubmit,
   initialData,
   agents,
+  existingTaskNames,
 }) => {
-  const { register, handleSubmit } = useForm<TaskConfig>({
+  const { register, handleSubmit, formState: { errors }, watch } = useForm<TaskConfig>({
     defaultValues: initialData || {
+      name: "",
       description: "",
       agent_id: "",
       expected_output: "",
     },
   });
+
+  const taskName = watch("name");
+
+  const validateUniqueName = (value: string) => {
+    if (!value) return "Task name is required";
+    if (!initialData && existingTaskNames.includes(value)) {
+      return "Task name must be unique";
+    }
+    if (initialData && existingTaskNames.filter(name => name !== initialData.name).includes(value)) {
+      return "Task name must be unique";
+    }
+    return true;
+  };
 
   return (
     <Modal isOpen={isOpen} onClose={onClose} size="xl">
@@ -50,6 +67,20 @@ const TaskModal: React.FC<TaskModalProps> = ({
         <ModalBody>
           <form onSubmit={handleSubmit(onSubmit)}>
             <VStack spacing={4}>
+              <FormControl isRequired isInvalid={!!errors.name}>
+                <FormLabel>Task Name</FormLabel>
+                <Input
+                  {...register("name", {
+                    required: "Task name is required",
+                    validate: validateUniqueName
+                  })}
+                  placeholder="Enter a unique task name"
+                />
+                <FormErrorMessage>
+                  {errors.name && errors.name.message}
+                </FormErrorMessage>
+              </FormControl>
+
               <FormControl isRequired>
                 <FormLabel>Description</FormLabel>
                 <Textarea

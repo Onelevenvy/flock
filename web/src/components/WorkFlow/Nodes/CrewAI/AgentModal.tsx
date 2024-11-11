@@ -13,6 +13,7 @@ import {
   Switch,
   Button,
   Box,
+  FormErrorMessage,
 } from "@chakra-ui/react";
 import React from "react";
 import { useForm } from "react-hook-form";
@@ -27,6 +28,7 @@ interface AgentModalProps {
   onSubmit: (agent: AgentConfig) => void;
   initialData?: AgentConfig;
   isManager?: boolean;
+  existingAgentNames: string[];
 }
 
 const AgentModal: React.FC<AgentModalProps> = ({
@@ -35,11 +37,12 @@ const AgentModal: React.FC<AgentModalProps> = ({
   onSubmit,
   initialData,
   isManager = false,
+  existingAgentNames,
 }) => {
-  const { register, handleSubmit } = useForm<AgentConfig>({
+  const { register, handleSubmit, formState: { errors } } = useForm<AgentConfig>({
     defaultValues: initialData || {
-      //   id: self.crypto.randomUUID(),
       id: v4(),
+      name: "",
       role: isManager ? DEFAULT_MANAGER.role : "",
       goal: isManager ? DEFAULT_MANAGER.goal : "",
       backstory: isManager ? DEFAULT_MANAGER.backstory : "",
@@ -48,6 +51,17 @@ const AgentModal: React.FC<AgentModalProps> = ({
       allow_delegation: isManager,
     },
   });
+
+  const validateUniqueName = (value: string) => {
+    if (!value) return "Agent name is required";
+    if (!initialData && existingAgentNames.includes(value)) {
+      return "Agent name must be unique";
+    }
+    if (initialData && existingAgentNames.filter(name => name !== initialData.name).includes(value)) {
+      return "Agent name must be unique";
+    }
+    return true;
+  };
 
   return (
     <Modal isOpen={isOpen} onClose={onClose} size="xl">
@@ -60,6 +74,20 @@ const AgentModal: React.FC<AgentModalProps> = ({
         <ModalBody>
           <form onSubmit={handleSubmit(onSubmit)}>
             <VStack spacing={4}>
+              <FormControl isRequired isInvalid={!!errors.name}>
+                <FormLabel>Agent Name</FormLabel>
+                <Input 
+                  {...register("name", {
+                    required: "Agent name is required",
+                    validate: validateUniqueName
+                  })}
+                  placeholder="Enter a unique agent name"
+                />
+                <FormErrorMessage>
+                  {errors.name && errors.name.message}
+                </FormErrorMessage>
+              </FormControl>
+
               <FormControl>
                 <FormLabel>Role</FormLabel>
                 <Input 
@@ -109,4 +137,4 @@ const AgentModal: React.FC<AgentModalProps> = ({
   );
 };
 
-export default AgentModal; 
+export default AgentModal;

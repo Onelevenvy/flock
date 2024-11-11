@@ -31,7 +31,7 @@ const CrewAINode: React.FC<NodeProps> = (props) => {
             <VStack align="start" spacing={1}>
               {data.agents.slice(0, 2).map((agent) => (
                 <Text key={agent.id} fontSize="xs" noOfLines={1}>
-                  • {agent.role}
+                  • {agent.name}: {agent.role}
                 </Text>
               ))}
               {data.agents.length > 2 && (
@@ -51,9 +51,9 @@ const CrewAINode: React.FC<NodeProps> = (props) => {
           </HStack>
           {data.tasks.length > 0 && (
             <VStack align="start" spacing={1}>
-              {data.tasks.slice(0, 2).map((task, index) => (
-                <Text key={index} fontSize="xs" noOfLines={1}>
-                  • {task.description}
+              {data.tasks.slice(0, 2).map((task) => (
+                <Text key={task.name} fontSize="xs" noOfLines={1}>
+                  • {task.name}: {task.description}
                 </Text>
               ))}
               {data.tasks.length > 2 && (

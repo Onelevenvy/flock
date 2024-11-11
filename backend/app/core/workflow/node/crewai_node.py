@@ -7,7 +7,6 @@ from crewai_tools import SerperDevTool, ScrapeWebsiteTool
 from app.core.model_providers.model_provider_manager import model_provider_manager
 
 
-
 class CrewAINode:
     DEFAULT_MANAGER_BACKSTORY = """You are a seasoned manager with a knack for getting the best out of your team.
 You are also known for your ability to delegate work to the right people, and to ask the right questions to get the best out of your team.

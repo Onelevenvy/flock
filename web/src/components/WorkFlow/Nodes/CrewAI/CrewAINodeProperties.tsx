@@ -217,6 +217,16 @@ const CrewAINodeProperties: React.FC<CrewAINodePropertiesProps> = ({
     onAgentModalOpen();
   };
 
+  // 获取现有 Agent 名称列表
+  const existingAgentNames = useMemo(() => {
+    return data.agents?.map(agent => agent.name) || [];
+  }, [data.agents]);
+
+  // 获取现有任务名称列表
+  const existingTaskNames = useMemo(() => {
+    return data.tasks?.map(task => task.name) || [];
+  }, [data.tasks]);
+
   return (
     <VStack spacing={4} align="stretch">
       <FormControl>
@@ -383,6 +393,7 @@ const CrewAINodeProperties: React.FC<CrewAINodePropertiesProps> = ({
           onSubmit={handleAddAgent}
           initialData={editingAgent}
           isManager={false}
+          existingAgentNames={existingAgentNames}
         />
       )}
 
@@ -393,6 +404,7 @@ const CrewAINodeProperties: React.FC<CrewAINodePropertiesProps> = ({
           onSubmit={handleAddTask}
           initialData={editingTask}
           agents={data.agents || []}
+          existingTaskNames={existingTaskNames}
         />
       )}
     </VStack>

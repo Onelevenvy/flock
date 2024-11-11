@@ -18,6 +18,7 @@ export interface NodeData {
 
 export interface AgentConfig {
   id: string;
+  name: string;
   role: string;
   goal: string;
   backstory: string;
@@ -30,6 +31,7 @@ export interface AgentConfig {
 }
 
 export interface TaskConfig {
+  name: string;
   description: string;
   agent_id: string;
   expected_output?: string;

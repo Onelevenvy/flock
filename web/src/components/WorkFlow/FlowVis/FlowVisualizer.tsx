@@ -584,142 +584,127 @@ const FlowVisualizer: React.FC<FlowVisualizerProps> = ({
         <NodePalette />
       </Box>
       
-      {/* 主要内容区域 */}
-      <Box flex={1} position="relative" display="flex">
-        {/* Flow 区域 */}
-        <Box flex={1} position="relative">
-          <ReactFlow
-            onNodeClick={onNodeClick}
-            nodes={nodesWithSelection}
-            edges={edgesWithStyles}
-            onNodesChange={onNodesChange}
-            onEdgesChange={onEdgesChange}
-            onConnect={onConnect}
-            isValidConnection={isValidConnection}
-            onEdgeContextMenu={onEdgeContextMenu}
-            onNodeContextMenu={onNodeContextMenu}
-            nodeTypes={memoizedNodeTypes}
-            defaultEdgeOptions={{
-              ...memoizedDefaultEdgeOptions,
-              markerEnd: {
-                type: MarkerType.ArrowClosed,
-                width: 20,
-                height: 20,
-                color: "#2970ff",
-              },
-              style: { strokeWidth: 2 },
-            }}
-            connectionLineType={ConnectionLineType.SmoothStep}
-            onDragOver={onDragOver}
-            onDrop={onDrop}
-            deleteKeyCode={["Backspace", "Delete"]}
-            onEdgeClick={onEdgeClick}
-            onPaneClick={onPaneClick}
-          >
-            <Controls />
-            <Background gap={16} style={{ background: "#f0f2f7" }} />
-            <MiniMap />
-            {/* ... 其他 ReactFlow 子组件 ... */}
-          </ReactFlow>
-          
-          {/* 顶部按钮组 */}
-          <Box
-            position={"absolute"}
-            right={"20px"}
-            top={"8px"}
-            display="flex"
-            alignItems="center"
-          >
-            <CustomButton
-              text="Debug"
-              variant="white"
-              rightIcon={<VscDebugAlt color="#155aef" size="12px" />}
-              onClick={() => setShowDebugPreview(true)}
-              mr={4}
-            />
-            <ApiKeyButton teamId={teamId.toString()} mr={4} />
-            <CustomButton
-              text="Deploy"
-              variant="blue"
-              rightIcon={<MdBuild color="white" size="12px" />}
-              onClick={onSave}
-              isLoading={isSaving}
-              loadingText="Saving..."
+      {/* Flow 区域 */}
+      <Box flex={1} position="relative">
+        <ReactFlow
+          onNodeClick={onNodeClick}
+          nodes={nodesWithSelection}
+          edges={edgesWithStyles}
+          onNodesChange={onNodesChange}
+          onEdgesChange={onEdgesChange}
+          onConnect={onConnect}
+          isValidConnection={isValidConnection}
+          onEdgeContextMenu={onEdgeContextMenu}
+          onNodeContextMenu={onNodeContextMenu}
+          nodeTypes={memoizedNodeTypes}
+          defaultEdgeOptions={{
+            ...memoizedDefaultEdgeOptions,
+            markerEnd: {
+              type: MarkerType.ArrowClosed,
+              width: 20,
+              height: 20,
+              color: "#2970ff",
+            },
+            style: { strokeWidth: 2 },
+          }}
+          connectionLineType={ConnectionLineType.SmoothStep}
+          onDragOver={onDragOver}
+          onDrop={onDrop}
+          deleteKeyCode={["Backspace", "Delete"]}
+          onEdgeClick={onEdgeClick}
+          onPaneClick={onPaneClick}
+        >
+          <Controls />
+          <Background gap={16} style={{ background: "#f0f2f7" }} />
+          <MiniMap />
+        </ReactFlow>
+        
+        {/* 顶部按钮组 */}
+        <Box
+          position={"absolute"}
+          right={"20px"}
+          top={"8px"}
+          display="flex"
+          alignItems="center"
+        >
+          <CustomButton
+            text="Debug"
+            variant="white"
+            rightIcon={<VscDebugAlt color="#155aef" size="12px" />}
+            onClick={() => setShowDebugPreview(true)}
+            mr={4}
+          />
+          <ApiKeyButton teamId={teamId.toString()} mr={4} />
+          <CustomButton
+            text="Deploy"
+            variant="blue"
+            rightIcon={<MdBuild color="white" size="12px" />}
+            onClick={onSave}
+            isLoading={isSaving}
+            loadingText="Saving..."
+          />
+        </Box>
+      </Box>
+
+      {/* 属性面板 */}
+      {selectedNodeId && (
+        <Box
+          w="330px"
+          minW={"330px"}
+          maxW={"330px"}
+          bg={"#fcfcfd"}
+          p={4}
+          borderRadius={"lg"}
+          boxShadow="md"
+          mr={"5px"}
+          my={1}
+          position="relative"
+        >
+          <CloseButton
+            onClick={closePropertiesPanel}
+            position="absolute"
+            right={2}
+            top={2}
+            size={"md"}
+          />
+          {getNodePropertiesComponent(
+            nodes.find((n) => n.id === selectedNodeId) || null
+          )}
+        </Box>
+      )}
+
+      {/* Debug 预览面板 */}
+      {showDebugPreview && (
+        <Box
+          w="350px"
+          h="calc(100% - 2px)"
+          bg={"white"}
+          borderRadius={"lg"}
+          boxShadow="md"
+          overflow="hidden"
+          my={1}
+          position="relative"
+        >
+          <CloseButton
+            onClick={() => setShowDebugPreview(false)}
+            position="absolute"
+            right={2}
+            top={2}
+            size={"md"}
+            zIndex={1}
+          />
+          <Box h="full" overflow="hidden">
+            <DebugPreview
+              teamId={teamId}
+              triggerSubmit={() => {}}
+              useDeployButton={false}
+              useApiKeyButton={false}
+              isWorkflow={true}
+              showHistoryButton={true}
             />
           </Box>
         </Box>
-
-        {/* 右侧面板区域 */}
-        <Box 
-          display="flex" 
-          minW={selectedNodeId && showDebugPreview ? "680px" : 
-                selectedNodeId ? "330px" : 
-                showDebugPreview ? "350px" : "0px"} 
-          transition="min-width 0.3s"
-          ml="auto" // 添加这行，使面板靠右对齐
-        >
-          {/* 属性面板 */}
-          {selectedNodeId && (
-            <Box
-              w="330px"
-              minW={"330px"}
-              maxW={"330px"}
-              bg={"#fcfcfd"}
-              p={4}
-              borderRadius={"lg"}
-              boxShadow="md"
-              mr={showDebugPreview ? "0" : "5px"}
-              my={1}
-              position="relative"
-            >
-              <CloseButton
-                onClick={closePropertiesPanel}
-                position="absolute"
-                right={2}
-                top={2}
-                size={"md"}
-              />
-              {getNodePropertiesComponent(
-                nodes.find((n) => n.id === selectedNodeId) || null
-              )}
-            </Box>
-          )}
-
-          {/* Debug 预览面板 */}
-          {showDebugPreview && (
-            <Box
-              w="350px"
-              h="calc(100% - 2px)"
-              bg={"white"}
-              borderRadius={"lg"}
-              boxShadow="md"
-              overflow="hidden"
-              my={1}
-              ml={1}
-              position="relative"
-            >
-              <CloseButton
-                onClick={() => setShowDebugPreview(false)}
-                position="absolute"
-                right={2}
-                top={2}
-                size={"md"}
-                zIndex={1}
-              />
-              <Box h="full" overflow="hidden">
-                <DebugPreview
-                  teamId={teamId}
-                  triggerSubmit={() => {}}
-                  useDeployButton={false}
-                  useApiKeyButton={false}
-                  isWorkflow={true}
-                  showHistoryButton={true}
-                />
-              </Box>
-            </Box>
-          )}
-        </Box>
-      </Box>
+      )}
 
       {/* ... 其他弹出组件（菜单等）保持不变 ... */}
     </Box>
