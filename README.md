@@ -221,3 +221,6 @@ pnpm dev
 
 # or pnpm build then pnpm start
 ```
+
+### 🛠️ Tools System
+Flock comes with various built-in tools and supports easy integration of custom tools. Check out our [Tools Guide](TOOLS.md) to learn about available tools and how to add your own.
