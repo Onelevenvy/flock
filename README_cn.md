@@ -75,9 +75,10 @@ Flock 旨在成为一个开源的大语言模型（LLM）应用开发平台。�
 
 - [x] 聊天机器人
 - [x] 简单 RAG
-- [x] 层次代理
+- [x] 层次���理
 - [x] 顺序代理
-- [ ] 工作流 ---进行中
+- [x] 工作流
+- [ ] CrewAI 集成 ---进行中
 - [ ] 更多多代理系统
 
 2 模型
@@ -86,7 +87,7 @@ Flock 旨在成为一个开源的大语言模型（LLM）应用开发平台。�
 - [x] ZhipuAI
 - [x] Siliconflow
 - [x] Ollama
-- [ ] Qwen
+- [x] Qwen
 - [ ] Xinference
 
 3 其他
@@ -94,6 +95,9 @@ Flock 旨在成为一个开源的大语言模型（LLM）应用开发平台。�
 - [x] Tools Calling
 - [x] I18n
 - [ ] Langchain Templates
+
+### 🛠️ 工具系统
+Flock 内置了多种工具，并支持轻松集成自定义工具。查看我们的[工具指南](TOOLS.md)了解可用工具和如何添加自己的工具。
 
 ### 🏘️ 亮点
 
@@ -211,6 +215,3 @@ pnpm dev
 
 # 或者 pnpm build 然后 pnpm start
 ```
-
-### 🛠️ 工具系统
-Flock 内置了多种工具��并支持轻松集成自定义工具。查看我们的[工具指南](TOOLS.md)了解可用工具和如何添加自己的工具。

@@ -87,7 +87,8 @@ Project tech stack: LangChain + LangGraph + React + Next.js + Chakra UI + Postgr
 - [x] SimpleRAG
 - [x] Hierarchical Agent
 - [x] Sequential Agent
-- [ ] Work-Flow ---On Progress
+- [x] Work-Flow
+- [ ] CrewAI Integration ---On Progress
 - [ ] More muti-agent
 
 2 Model
@@ -96,7 +97,7 @@ Project tech stack: LangChain + LangGraph + React + Next.js + Chakra UI + Postgr
 - [x] ZhipuAI
 - [x] Siliconflow
 - [x] Ollama
-- [ ] Qwen
+- [x] Qwen
 - [ ] Xinference
 
 3 Ohters
