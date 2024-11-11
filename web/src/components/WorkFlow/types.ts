@@ -42,9 +42,7 @@ export interface CrewAINodeData extends NodeData {
   tasks: TaskConfig[];
   process_type: "sequential" | "hierarchical";
   llm_config: {
-    model?: string;
-    base_url?: string;
-    api_key?: string;
+    model: string;
   };
   manager_config: {
     agent?: AgentConfig;

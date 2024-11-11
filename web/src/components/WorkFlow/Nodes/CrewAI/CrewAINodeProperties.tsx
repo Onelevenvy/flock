@@ -15,6 +15,8 @@ import {
 import React, { useState, useMemo } from "react";
 import { FaEdit, FaPlus, FaTrash } from "react-icons/fa";
 import crypto from "crypto";
+import { useForm, type Control, type FieldValues } from "react-hook-form";
+import { v4 as uuidv4 } from 'uuid';
 
 import ModelSelect from "@/components/Common/ModelProvider";
 import { useModelQuery } from "@/hooks/useModelQuery";
@@ -23,7 +25,6 @@ import { VariableReference } from "../../FlowVis/variableSystem";
 import AgentModal from "./AgentModal";
 import TaskModal from "./TaskModal";
 import { DEFAULT_MANAGER } from "./constants";
-import { v4 } from "uuid";
 
 interface CrewAINodePropertiesProps {
   node: any;
@@ -39,6 +40,11 @@ const CrewAINodeProperties: React.FC<CrewAINodePropertiesProps> = ({
   const data = node.data as CrewAINodeData;
   const { data: models } = useModelQuery();
   const toast = useToast();
+  const { control } = useForm({
+    defaultValues: {
+      model: data.llm_config?.model || "",
+    }
+  });
 
   // Modal controls
   const {
@@ -164,13 +170,10 @@ const CrewAINodeProperties: React.FC<CrewAINodePropertiesProps> = ({
       if (!useCustomManager) {
         onNodeDataChange(node.id, "manager_config", {
           agent: {
-            // id: self.crypto.randomUUID(),
-            id: v4(),
-            role: DEFAULT_MANAGER.role,
-            goal: DEFAULT_MANAGER.goal,
-            backstory: DEFAULT_MANAGER.backstory,
+            id: uuidv4(),
+            ...DEFAULT_MANAGER,
             allow_delegation: true,
-          },
+          }
         });
       }
     }
@@ -178,32 +181,9 @@ const CrewAINodeProperties: React.FC<CrewAINodePropertiesProps> = ({
 
   // Handler for LLM selection
   const handleLLMSelect = (modelName: string) => {
-    const selectedModel = models?.data.find(
-      (model) => model.ai_model_name === modelName
-    );
-    if (selectedModel) {
-      onNodeDataChange(node.id, "llm_config", {
-        model: modelName,
-        base_url: selectedModel.provider.base_url || "",
-        api_key: selectedModel.provider.api_key || "",
-      });
-    }
-  };
-
-  // Handler for manager LLM selection (only for hierarchical process)
-  const handleManagerLLMSelect = (modelName: string) => {
-    const selectedModel = models?.data.find(
-      (model) => model.ai_model_name === modelName
-    );
-    if (selectedModel) {
-      onNodeDataChange(node.id, "manager_config", {
-        llm: {
-          model: modelName,
-          base_url: selectedModel.provider.base_url || "",
-          api_key: selectedModel.provider.api_key || "",
-        },
-      });
-    }
+    onNodeDataChange(node.id, "llm_config", {
+      model: modelName,
+    });
   };
 
   // 验证是否可以添加新的task
@@ -254,50 +234,41 @@ const CrewAINodeProperties: React.FC<CrewAINodePropertiesProps> = ({
 
       <FormControl>
         <FormLabel>Default LLM (For All Agents)</FormLabel>
-        {/* <ModelSelect
+        <ModelSelect
           models={models}
+          control={control}
+          name="model"
           value={data.llm_config?.model}
           onModelSelect={handleLLMSelect}
-        /> */}
+        />
       </FormControl>
 
       {data.process_type === "hierarchical" && (
-        <FormControl>
-          <FormLabel>Manager Configuration</FormLabel>
-          <RadioGroup
-            value={useCustomManager ? "custom" : "default"}
-            onChange={(value) => {
-              setUseCustomManager(value === "custom");
-              if (value === "default") {
-                onNodeDataChange(node.id, "manager_config", {
-                  agent: {
-                    // id: self.crypto.randomUUID(),
-                    id: v4(),
-                    ...DEFAULT_MANAGER,
-                    allow_delegation: true,
-                  },
-                });
-              }
-            }}
-          >
-            <HStack spacing={4}>
-              <Radio value="default">Default Manager Agent</Radio>
-              <Radio value="custom">Custom Manager Agent</Radio>
-            </HStack>
-          </RadioGroup>
-
-          {useCustomManager && (
-            <Box p={4} borderWidth="1px" borderRadius="md" mt={2}>
-              <AgentModal
-                isOpen={true}
-                onClose={() => setUseCustomManager(false)}
-                onSubmit={handleManagerAgentConfig}
-                initialData={data.manager_config?.agent}
-                isManager={true}
-              />
-            </Box>
-          )}
-        </FormControl>
+        <>
+          <FormControl>
+            <FormLabel>Manager Configuration</FormLabel>
+            <RadioGroup
+              value={useCustomManager ? "custom" : "default"}
+              onChange={(value) => {
+                setUseCustomManager(value === "custom");
+                if (value === "default") {
+                  onNodeDataChange(node.id, "manager_config", {
+                    agent: {
+                      id: uuidv4(),
+                      ...DEFAULT_MANAGER,
+                      allow_delegation: true,
+                    }
+                  });
+                }
+              }}
+            >
+              <HStack spacing={4}>
+                <Radio value="default">Default Manager Agent</Radio>
+                <Radio value="custom">Custom Manager Agent</Radio>
+              </HStack>
+            </RadioGroup>
+          </FormControl>
+        </>
       )}
 
       <Box>
