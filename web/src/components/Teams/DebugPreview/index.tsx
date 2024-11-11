@@ -1,4 +1,4 @@
-import { Box } from "@chakra-ui/react";
+import { Box, CloseButton } from "@chakra-ui/react";
 
 import ChatMain from "@/components/Playground/ChatMain";
 
@@ -11,6 +11,7 @@ interface DebugPreviewProps {
   useApiKeyButton: boolean;
   isWorkflow?: boolean;
   showHistoryButton?: boolean;
+  onClose?: () => void;
 }
 
 function DebugPreview({
@@ -20,6 +21,7 @@ function DebugPreview({
   useApiKeyButton,
   isWorkflow = false,
   showHistoryButton = false,
+  onClose,
 }: DebugPreviewProps) {
   return (
     <Box
@@ -29,9 +31,28 @@ function DebugPreview({
       borderRadius={"lg"}
       display={"flex"}
       flexDirection={"column"}
-      overflow={"hidden"}
+      position="relative"
     >
-      <Box py="5" overflow={"hidden"}>
+      {onClose && (
+        <CloseButton
+          onClick={onClose}
+          position="absolute"
+          right={2}
+          top={2}
+          size={"md"}
+          zIndex={2}
+        />
+      )}
+      
+      <Box 
+        py="5" 
+        position="absolute"
+        top={0}
+        left={0}
+        right={0}
+        bg="white"
+        zIndex={1}
+      >
         <DebugPreviewHead
           teamId={teamId}
           triggerSubmit={triggerSubmit}
@@ -41,14 +62,15 @@ function DebugPreview({
           showHistoryButton={showHistoryButton}
         />
       </Box>
+
       <Box
-        display={"flex"}
-        w="full"
-        h="full"
-        maxH={"full"}
-        bg={"white"}
-        mt={"2"}
-        overflowY={"auto"}
+        position="absolute"
+        top="80px"
+        bottom="0"
+        left="0"
+        right="0"
+        overflowY="auto"
+        display="flex"
       >
         <ChatMain isPlayground={false} />
       </Box>
