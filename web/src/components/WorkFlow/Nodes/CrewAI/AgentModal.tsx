@@ -14,13 +14,20 @@ import {
   Button,
   Box,
   FormErrorMessage,
+  HStack,
+  IconButton,
+  Text,
 } from "@chakra-ui/react";
-import React from "react";
+import React, { useState } from "react";
 import { useForm } from "react-hook-form";
+import { DeleteIcon } from "@chakra-ui/icons";
 
 import { AgentConfig } from "../../types";
-import { DEFAULT_MANAGER } from './constants';
+import { DEFAULT_MANAGER } from "./constants";
 import { v4 } from "uuid";
+import { useSkillsQuery } from "@/hooks/useSkillsQuery";
+import ToolsIcon from "@/components/Icons/Tools";
+import ToolsList from "../Tool/ToolsListModal";
 
 interface AgentModalProps {
   isOpen: boolean;
@@ -39,28 +46,60 @@ const AgentModal: React.FC<AgentModalProps> = ({
   isManager = false,
   existingAgentNames,
 }) => {
-  const { register, handleSubmit, formState: { errors } } = useForm<AgentConfig>({
+  const {
+    register,
+    handleSubmit,
+    formState: { errors },
+    watch,
+  } = useForm<AgentConfig>({
     defaultValues: initialData || {
       id: v4(),
       name: "",
       role: isManager ? DEFAULT_MANAGER.role : "",
       goal: isManager ? DEFAULT_MANAGER.goal : "",
       backstory: isManager ? DEFAULT_MANAGER.backstory : "",
-      use_search: false,
-      use_scraper: false,
       allow_delegation: isManager,
+      tools: [],
     },
   });
+
+  const [isToolsListOpen, setIsToolsListOpen] = useState(false);
+  const { data: skills, isLoading, isError } = useSkillsQuery();
+  const [selectedTools, setSelectedTools] = useState<string[]>(
+    initialData?.tools || []
+  );
 
   const validateUniqueName = (value: string) => {
     if (!value) return "Agent name is required";
     if (!initialData && existingAgentNames.includes(value)) {
       return "Agent name must be unique";
     }
-    if (initialData && existingAgentNames.filter(name => name !== initialData.name).includes(value)) {
+    if (
+      initialData &&
+      existingAgentNames
+        .filter((name) => name !== initialData.name)
+        .includes(value)
+    ) {
       return "Agent name must be unique";
     }
     return true;
+  };
+
+  const addTool = (tool: string) => {
+    if (!selectedTools.includes(tool)) {
+      setSelectedTools([...selectedTools, tool]);
+    }
+  };
+
+  const removeTool = (tool: string) => {
+    setSelectedTools(selectedTools.filter((t) => t !== tool));
+  };
+
+  const handleFormSubmit = (data: AgentConfig) => {
+    onSubmit({
+      ...data,
+      tools: selectedTools,
+    });
   };
 
   return (
@@ -68,18 +107,22 @@ const AgentModal: React.FC<AgentModalProps> = ({
       <ModalOverlay />
       <ModalContent>
         <ModalHeader>
-          {isManager ? "Configure Manager Agent" : (initialData ? "Edit Agent" : "Add Agent")}
+          {isManager
+            ? "Configure Manager Agent"
+            : initialData
+              ? "Edit Agent"
+              : "Add Agent"}
         </ModalHeader>
         <ModalCloseButton />
         <ModalBody>
-          <form onSubmit={handleSubmit(onSubmit)}>
+          <form onSubmit={handleSubmit(handleFormSubmit)}>
             <VStack spacing={4}>
               <FormControl isRequired isInvalid={!!errors.name}>
                 <FormLabel>Agent Name</FormLabel>
-                <Input 
+                <Input
                   {...register("name", {
                     required: "Agent name is required",
-                    validate: validateUniqueName
+                    validate: validateUniqueName,
                   })}
                   placeholder="Enter a unique agent name"
                 />
@@ -90,35 +133,33 @@ const AgentModal: React.FC<AgentModalProps> = ({
 
               <FormControl>
                 <FormLabel>Role</FormLabel>
-                <Input 
-                  {...register("role")} 
-                  placeholder={isManager ? "Crew Manager" : "e.g., Research Specialist"}
+                <Input
+                  {...register("role")}
+                  placeholder={
+                    isManager ? "Crew Manager" : "e.g., Research Specialist"
+                  }
                   isReadOnly={isManager}
                 />
               </FormControl>
 
               <FormControl>
                 <FormLabel>Goal</FormLabel>
-                <Input {...register("goal")} placeholder="Agent's primary objective" />
+                <Input
+                  {...register("goal")}
+                  placeholder="Agent's primary objective"
+                />
               </FormControl>
 
               <FormControl>
                 <FormLabel>Backstory</FormLabel>
-                <Textarea {...register("backstory")} placeholder="Agent's background and expertise" />
+                <Textarea
+                  {...register("backstory")}
+                  placeholder="Agent's background and expertise"
+                />
               </FormControl>
 
               {!isManager && (
                 <Box w="100%">
-                  <FormControl display="flex" alignItems="center">
-                    <FormLabel mb="0">Use Search</FormLabel>
-                    <Switch {...register("use_search")} />
-                  </FormControl>
-
-                  <FormControl display="flex" alignItems="center" mt={2}>
-                    <FormLabel mb="0">Use Web Scraper</FormLabel>
-                    <Switch {...register("use_scraper")} />
-                  </FormControl>
-
                   <FormControl display="flex" alignItems="center" mt={2}>
                     <FormLabel mb="0">Allow Delegation</FormLabel>
                     <Switch {...register("allow_delegation")} />
@@ -126,11 +167,53 @@ const AgentModal: React.FC<AgentModalProps> = ({
                 </Box>
               )}
 
+              <FormControl>
+                <FormLabel>Tools</FormLabel>
+                <VStack align="stretch" spacing={2}>
+                  {selectedTools.map((tool) => (
+                    <HStack key={tool} justifyContent="space-between">
+                      <Box bg="#f2f4f7" borderRadius="md" w="full" p="1">
+                        <HStack spacing={"2"}>
+                          <ToolsIcon
+                            tools_name={tool.replace(/ /g, "_")}
+                            ml="2"
+                          />
+                          <Text fontWeight={"bold"}>{tool}</Text>
+                        </HStack>
+                      </Box>
+                      <IconButton
+                        aria-label="Remove tool"
+                        icon={<DeleteIcon />}
+                        size="sm"
+                        onClick={() => removeTool(tool)}
+                      />
+                    </HStack>
+                  ))}
+                  <Button onClick={() => setIsToolsListOpen(true)} mt={2}>
+                    Add Tool
+                  </Button>
+                </VStack>
+              </FormControl>
+
               <Button type="submit" colorScheme="blue" w="100%">
-                {isManager ? "Save Manager Configuration" : (initialData ? "Update" : "Add")} Agent
+                {isManager
+                  ? "Save Manager Configuration"
+                  : initialData
+                    ? "Update"
+                    : "Add"}{" "}
+                Agent
               </Button>
             </VStack>
           </form>
+
+          {isToolsListOpen && (
+            <ToolsList
+              skills={skills?.data || []}
+              onClose={() => setIsToolsListOpen(false)}
+              onAddTool={addTool}
+              selectedTools={selectedTools}
+            />
+          )}
         </ModalBody>
       </ModalContent>
     </Modal>

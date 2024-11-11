@@ -3,8 +3,8 @@ from langchain_core.runnables import RunnableConfig
 from .state import ReturnTeamState, TeamState, update_node_outputs
 from langchain_core.messages import AIMessage
 from crewai import Agent, Crew, Task, Process, LLM
-from crewai_tools import SerperDevTool, ScrapeWebsiteTool
 from app.core.model_providers.model_provider_manager import model_provider_manager
+from app.core.tools.tool_manager import managed_tools
 
 
 class CrewAINode:
@@ -61,13 +61,21 @@ Even though you don't perform tasks by yourself, you have a lot of experience in
                 llm=self.llm,
             )
 
+    def _get_tool_instance(self, tool_name: str):
+        """Get tool instance by name"""
+        for tool_id, tool_info in managed_tools.items():
+            if tool_info.display_name == tool_name:
+                return tool_info.tool
+        return None
+
     def _create_agent(self, agent_config: Dict[str, Any]) -> Agent:
         """Create an agent from configuration"""
         tools = []
-        if agent_config.get("use_search", False):
-            tools.append(SerperDevTool(n_results=2))
-        if agent_config.get("use_scraper", False):
-            tools.append(ScrapeWebsiteTool())
+        # 从配置中获取工具列表
+        for tool_name in agent_config.get("tools", []):
+            tool = self._get_tool_instance(tool_name)
+            if tool:
+                tools.append(tool)
 
         return Agent(
             role=agent_config["role"],

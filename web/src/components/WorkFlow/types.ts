@@ -22,12 +22,8 @@ export interface AgentConfig {
   role: string;
   goal: string;
   backstory: string;
-  use_search?: boolean;
-  use_scraper?: boolean;
+  tools: string[];
   allow_delegation?: boolean;
-  model?: string;
-  base_url?: string;
-  api_key?: string;
 }
 
 export interface TaskConfig {

@@ -89,9 +89,15 @@ const CrewAINodeProperties: React.FC<CrewAINodePropertiesProps> = ({
     const existingIndex = updatedAgents.findIndex((a) => a.id === agent.id);
 
     if (existingIndex >= 0) {
-      updatedAgents[existingIndex] = agent;
+      updatedAgents[existingIndex] = {
+        ...agent,
+        tools: agent.tools || [],
+      };
     } else {
-      updatedAgents.push(agent);
+      updatedAgents.push({
+        ...agent,
+        tools: agent.tools || [],
+      });
     }
 
     onNodeDataChange(node.id, "agents", updatedAgents);
@@ -106,8 +112,7 @@ const CrewAINodeProperties: React.FC<CrewAINodePropertiesProps> = ({
       ...agent,
       role: "Team Manager",
       allow_delegation: true,
-      use_search: false,
-      use_scraper: false,
+      tools: agent.tools || [],
     };
 
     onNodeDataChange(node.id, "manager_config", {
