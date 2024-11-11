@@ -1,9 +1,10 @@
-from typing import Any, Dict, List
+from typing import Any, Dict, List, Optional
 from langchain_core.runnables import RunnableConfig
 from .state import ReturnTeamState, TeamState, update_node_outputs
 from langchain_core.messages import AIMessage
 from crewai import Agent, Crew, Task, Process, LLM
 from crewai_tools import SerperDevTool, ScrapeWebsiteTool
+from app.core.model_providers.model_provider_manager import model_provider_manager
 
 
 class CrewAINode:
@@ -14,11 +15,14 @@ Even though you don't perform tasks by yourself, you have a lot of experience in
     def __init__(
         self,
         node_id: str,
-        agents_config: List[Dict[str, Any]],  # List of agent configurations
-        tasks_config: List[Dict[str, Any]],  # List of task configurations
-        process_type: str = "sequential",  # 'sequential' or 'hierarchical'
-        llm_config: Dict[str, Any] = {},  # LLM configuration
-        manager_config: Dict[str, Any] = {},  # Manager configuration (for hierarchical)
+        provider: str,
+        model: str,
+        agents_config: List[Dict[str, Any]],
+        tasks_config: List[Dict[str, Any]],
+        process_type: str = "sequential",
+        openai_api_key: str = "",
+        openai_api_base: str = "",
+        manager_config: Dict[str, Any] = {},
         config: dict[str, Any] = {},
     ):
         self.node_id = node_id
@@ -27,26 +31,12 @@ Even though you don't perform tasks by yourself, you have a lot of experience in
         self.process_type = process_type
         self.config = config
 
-        # Initialize Default LLM for all agents
-        # self.llm = (
-        #     LLM(
-        #         model=llm_config.get("model", "openai/glm-4-flash"),
-        #         base_url=llm_config.get(
-        #             "base_url", "https://open.bigmodel.cn/api/paas/v4/"
-        #         ),
-        #         api_key=llm_config.get(
-        #             "api_key", "1a65e1fed7ab7a788ee94d73570e9fcf.5FVs3ceE6POvEnSN"
-        #         ),
-        #     )
-        #     if llm_config
-        #     else None
-        # )
-
-        self.llm = LLM(
-            model="openai/glm-4-flash",
-            temperature=0.01,
-            base_url="https://open.bigmodel.cn/api/paas/v4/",
-            api_key="1a65e1fed7ab7a788ee94d73570e9fcf.5FVs3ceE6POvEnSN",
+        # 初始化 LLM
+        self.llm = model_provider_manager.init_crewai_model(
+            provider_name=provider,
+            model=model,
+            openai_api_key=openai_api_key,
+            openai_api_base=openai_api_base,
         )
 
         # Initialize manager agent for hierarchical process
@@ -68,7 +58,7 @@ Even though you don't perform tasks by yourself, you have a lot of experience in
                 backstory=manager_agent_config["backstory"],
                 allow_delegation=True,
                 verbose=True,
-                llm=self.llm,  # 使用默认 LLM
+                llm=self.llm,
             )
 
     def _create_agent(self, agent_config: Dict[str, Any]) -> Agent:
@@ -86,7 +76,7 @@ Even though you don't perform tasks by yourself, you have a lot of experience in
             allow_delegation=agent_config.get("allow_delegation", False),
             tools=tools,
             verbose=True,
-            llm=self.llm,  # 使用默认 LLM
+            llm=self.llm,
         )
 
     def _create_task(
@@ -106,51 +96,15 @@ Even though you don't perform tasks by yourself, you have a lot of experience in
         if "node_outputs" not in state:
             state["node_outputs"] = {}
 
-        # Process input variables
-        processed_agents_config = []
-        for agent_config in self.agents_config:
-            processed_config = {}
-            for key, value in agent_config.items():
-                if (
-                    isinstance(value, str)
-                    and value.startswith("{")
-                    and value.endswith("}")
-                ):
-                    node_id, field = value[1:-1].split(".")
-                    processed_config[key] = (
-                        state["node_outputs"].get(node_id, {}).get(field)
-                    )
-                else:
-                    processed_config[key] = value
-            processed_agents_config.append(processed_config)
-
-        processed_tasks_config = []
-        for task_config in self.tasks_config:
-            processed_config = {}
-            for key, value in task_config.items():
-                if (
-                    isinstance(value, str)
-                    and value.startswith("{")
-                    and value.endswith("}")
-                ):
-                    node_id, field = value[1:-1].split(".")
-                    processed_config[key] = (
-                        state["node_outputs"].get(node_id, {}).get(field)
-                    )
-                else:
-                    processed_config[key] = value
-            processed_tasks_config.append(processed_config)
-
         # Create agents
         agents = {
             agent_config["id"]: self._create_agent(agent_config)
-            for agent_config in processed_agents_config
+            for agent_config in self.agents_config
         }
 
         # Create tasks
         tasks = [
-            self._create_task(task_config, agents)
-            for task_config in processed_tasks_config
+            self._create_task(task_config, agents) for task_config in self.tasks_config
         ]
 
         # Create and run crew
