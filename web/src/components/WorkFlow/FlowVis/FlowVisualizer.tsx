@@ -562,7 +562,7 @@ const FlowVisualizer: React.FC<FlowVisualizerProps> = ({
         strokeWidth: 2, // 加粗线条
         stroke:
           edge.source === activeNodeName || edge.target === activeNodeName
-            ? "#38a169" // 如果边连接到活��节点，使用绿色
+            ? "#38a169" // 如果边连接到活节点，使用绿色
             : edge.type === "default"
               ? "#5e5a6a"
               : "#517359",
@@ -640,6 +640,27 @@ const FlowVisualizer: React.FC<FlowVisualizerProps> = ({
               </div>
             )}
           </EdgeLabelRenderer>
+          <Panel position="top-left">
+            <MdOutlineHelp
+              onMouseEnter={toggleShortcutPanel}
+              onMouseLeave={hideShortcutPanel}
+              cursor="pointer"
+            />
+            {isShortcutPanelVisible && (
+              <Box bg="white" p={2} borderRadius="md" boxShadow="md">
+                Shortcut:
+                <br /> Change edges type:<Kbd>E</Kbd>
+                <br />
+                Delete:<Kbd>Backspace</Kbd> <Kbd>Delete</Kbd>
+                <br />
+                Info:
+                <br /> solid line: Normal edge
+                <br />
+                dashed line: Conditional edge
+              </Box>
+            )}
+          </Panel>
+          <ZoomDisplay />
         </ReactFlow>
         
         {/* 顶部按钮组 */}
@@ -744,6 +765,20 @@ const FlowVisualizer: React.FC<FlowVisualizerProps> = ({
       )}
 
       {/* ... 其他弹出组件（菜单等）保持不变 ... */}
+      {contextMenu.nodeId && (
+        <Menu isOpen={true} onClose={closeContextMenu}>
+          <MenuButton as={Button} style={{ display: "none" }} />
+          <MenuList
+            style={{
+              position: "absolute",
+              left: `${contextMenu.x}px`,
+              top: `${contextMenu.y}px`,
+            }}
+          >
+            <MenuItem onClick={deleteNode}>Delete Node</MenuItem>
+          </MenuList>
+        </Menu>
+      )}
     </Box>
   );
 };
