@@ -8,7 +8,9 @@
 </p>
 
 > [!TIP]
+>
 > ### 🎉 最新更新
+>
 > **CrewAI 节点支持**: 现在您可以在工作流中使用 CrewAI 的强大多代理功能！轻松创建复杂的代理团队并编排复杂的协作任务。
 
 一个基于 LangChain、LangGraph 和其他框架的聊天机器人、RAG、代理和多代理应用项目，开源且能够离线部署。
@@ -18,6 +20,7 @@
 ![alt text](assets/login.jpg)
 
 ### 🤖️ 概览
+
 ![alt text](assets/image.png)
 
 ### 工作流
@@ -27,10 +30,10 @@
 
 ### 节点类型和功能
 
-Flock的工作流系统由各种类型的节点组成，每种节点都有特定的用途：
+Flock 的工作流系统由各种类型的节点组成，每种节点都有特定的用途：
 
 1. 输入节点：处理初始输入并将其转换为工作流可处理的格式。
-2. LLM节点：利用大型语言模型进行文本生成和处理。
+2. LLM 节点：利用大型语言模型进行文本生成和处理。
 3. 检索节点：从知识库中获取相关信息。
 4. 工具节点：执行特定的任务或操作，扩展工作流功能。
 5. 检索工具节点：结合检索能力和工具功能。
@@ -39,6 +42,7 @@ Flock的工作流系统由各种类型的节点组成，每种节点都有特定
 8. 开始和结束节点：标记工作流的开始和结束。
 
 未来计划添加的节点包括：
+
 - 意图识别节点
 - 条件分支节点（If-Else）
 - 文件上传节点
@@ -50,15 +54,20 @@ Flock的工作流系统由各种类型的节点组成，每种节点都有特定
 ### Agent Chat
 
 ![image](https://github.com/user-attachments/assets/4097b087-0309-4aab-8be9-a06fdc9d4964)
+
 ### 图像
+
 ![image](https://github.com/user-attachments/assets/ff6d6c92-dca8-4811-83ef-786272c46dfb)
+
 ### 知识检索
+
 <p>
   <img src="https://github.com/user-attachments/assets/ec53f7de-10cb-4001-897a-2695da9cf6bf" alt="image" style="width: 49%; display: inline-block;">
   <img src="https://github.com/user-attachments/assets/1c7d383d-e6bf-42b8-94ec-9f0c37be19b8" alt="image" style="width: 49%; display: inline-block;">
 </p>
 
 ### Human-in-the-Loop（人工审批或让 LLM 重新思考或寻求人工帮助）
+
 Flock 旨在成为一个开源的大语言模型（LLM）应用开发平台。它是一个基于 LangChain 和 LangGraph 概念的 LLM 应用。目标是创建一套支持聊天机器人、RAG 应用、代理和多代理系统的 LLMOps 解决方案，并具备离线运行能力。
 
 受 [StreetLamb](https://github.com/StreetLamb) 项目及其 [tribe](https://github.com/StreetLamb/tribe) 项目的启发，Flock 采用了许多相同的方法和代码。在此基础上，它引入了一些新的功能和方向。
@@ -75,7 +84,7 @@ Flock 旨在成为一个开源的大语言模型（LLM）应用开发平台。�
 
 - [x] 聊天机器人
 - [x] 简单 RAG
-- [x] 层次���理
+- [x] 层次理
 - [x] 顺序代理
 - [x] 工作流
 - [ ] CrewAI 集成 ---进行中
@@ -90,6 +99,18 @@ Flock 旨在成为一个开源的大语言模型（LLM）应用开发平台。�
 - [x] Qwen
 - [ ] Xinference
 
+> [!NOTE]
+>
+> ### 🤖 模型系统
+>
+> Flock 支持多种模型提供商，并且可以轻松添加新的提供商。查看我们的[模型指南](Add_New_Model_Providers_Guide.md)了解支持的模型以及如何添加新的提供商支持。
+
+> [!NOTE]
+>
+> ### 🛠️ 工具系统
+>
+> Flock 内置了多种工具，并支持轻松集成自定义工具。查看我们的[工具指南](Add_New_Tools_Guide.md)了解可用工具和如何添加自己的工具。
+
 3 其他
 
 - [x] Tools Calling
@@ -97,7 +118,8 @@ Flock 旨在成为一个开源的大语言模型（LLM）应用开发平台。�
 - [ ] Langchain Templates
 
 ### 🛠️ 工具系统
-Flock 内置了多种工具，并支持轻松集成自定义工具。查看我们的[工具指南](TOOLS.md)了解可用工具和如何添加自己的工具。
+
+Flock 内置了多种工具，并支持轻松集成自定义工具。查看我们的[工具指南](Add_New_Tools_Guide.md)了解可用工具和如何添加自己的工具。
 
 ### 🏘️ 亮点
 

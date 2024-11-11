@@ -7,8 +7,10 @@
   <a href="#how-to-get-started">Getting Started</a>
 </p>
 
-> [!TIP] 
+> [!TIP]
+>
 > ### 🎉 What's New
+>
 > **CrewAI Node Support**: Now you can leverage CrewAI's powerful multi-agent capabilities in your workflows! Create sophisticated agent teams and orchestrate complex collaborative tasks with ease.
 
 A chatbot, RAG, agent, and multi-agent application project based on LangChain, LangGraph, and other frameworks, open-source, and capable of offline deployment.
@@ -99,6 +101,17 @@ Project tech stack: LangChain + LangGraph + React + Next.js + Chakra UI + Postgr
 - [x] Ollama
 - [x] Qwen
 - [ ] Xinference
+
+> [!NOTE]
+>
+> ### 🤖 Model System
+>
+> Flock supports various model providers and makes it easy to add new ones. Check out our [Models Guide](Add_New_Model_Providers_Guide.md) to learn about supported models and how to add support for new providers.
+> [!NOTE]
+>
+> ### 🛠️ Tools System
+>
+> Flock comes with various built-in tools and supports easy integration of custom tools. Check out our [Tools Guide](Add_New_Tools_Guide.md) to learn about available tools and how to add your own.
 
 3 Ohters
 
@@ -222,6 +235,3 @@ pnpm dev
 
 # or pnpm build then pnpm start
 ```
-
-### 🛠️ Tools System
-Flock comes with various built-in tools and supports easy integration of custom tools. Check out our [Tools Guide](TOOLS.md) to learn about available tools and how to add your own.
