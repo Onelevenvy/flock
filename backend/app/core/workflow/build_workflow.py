@@ -275,19 +275,7 @@ def _add_llm_node(
     llm_children,
 ):
     model_name = node_data["model"]
-    all_models = get_all_models_helper()
-    model_info = None
-    for model in all_models.data:
-        if model.ai_model_name == model_name:
-            model_info = {
-                "ai_model_name": model.ai_model_name,
-                "provider_name": model.provider.provider_name,
-                "base_url": model.provider.base_url,
-                "api_key": model.provider.api_key,
-            }
-            break
-    if model_info is None:
-        raise ValueError(f"Model {model_name} not supported now.")
+    model_info = get_model_info(model_name)
 
     if is_sequential:
         node_class = LLMNode
@@ -439,33 +427,7 @@ def _add_crewai_node(graph_builder, node_id, node_type, node_data):
     if not llm_config.get("model"):
         raise ValueError("CrewAI node requires llm model configuration")
 
-    # 获取所有模型配置
-    all_models = get_all_models_helper()
-    model_info = None
-    # model_info = next(
-    #     (
-    #         {
-    #             "ai_model_name": model.ai_model_name,
-    #             "provider_name": model.provider.provider_name,
-    #             "base_url": model.provider.base_url,
-    #             "api_key": model.provider.api_key,
-    #         }
-    #         for model in all_models
-    #         if model.ai_model_name == llm_config["model"]
-    #     ),
-    #     None,
-    # )
-    for model in all_models.data:
-        if model.ai_model_name == llm_config["model"]:
-            model_info = {
-                "ai_model_name": model.ai_model_name,
-                "provider_name": model.provider.provider_name,
-                "base_url": model.provider.base_url,
-                "api_key": model.provider.api_key,
-            }
-            break
-    if not model_info:
-        raise ValueError(f"Model {llm_config['model']} not found")
+    model_info = get_model_info(llm_config["model"])
 
     process_type = node_data.get("process_type", "sequential")
 
@@ -491,3 +453,28 @@ def _add_crewai_node(graph_builder, node_id, node_type, node_data):
         "agent"
     ):
         raise ValueError("Hierarchical process requires manager agent configuration")
+
+
+def get_model_info(model_name: str) -> Dict[str, str]:
+    """
+    Get model information from all available models.
+    
+    Args:
+        model_name: Name of the AI model
+        
+    Returns:
+        Dict containing model information including provider name, base url, and api key
+        
+    Raises:
+        ValueError: If the specified model is not supported
+    """
+    all_models = get_all_models_helper()
+    for model in all_models.data:
+        if model.ai_model_name == model_name:
+            return {
+                "ai_model_name": model.ai_model_name,
+                "provider_name": model.provider.provider_name,
+                "base_url": model.provider.base_url,
+                "api_key": model.provider.api_key,
+            }
+    raise ValueError(f"Model {model_name} not supported now.")
