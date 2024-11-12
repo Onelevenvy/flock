@@ -232,19 +232,16 @@ const FlowVisualizer: React.FC<FlowVisualizerProps> = ({
         eds.map((e) => {
           if (e.id === edge.id) {
             const newType = e.type === "default" ? "smoothstep" : "default";
-
             return {
               ...e,
               type: newType,
               animated: newType !== "default",
               style: {
-                strokeWidth: 2,
-                stroke: newType === "default" ? "#5e5a6a" : "#517359",
-                strokeDasharray: newType === "default" ? "none" : "10,5",
+                ...e.style,
+                strokeDasharray: newType === "default" ? undefined : "5,5",
               },
             };
           }
-
           return e;
         })
       );
@@ -264,7 +261,6 @@ const FlowVisualizer: React.FC<FlowVisualizerProps> = ({
     (event: KeyboardEvent) => {
       if (event.key === "e" || event.key === "E") {
         const selectedEdges = edges.filter((e) => e.selected);
-
         selectedEdges.forEach(toggleEdgeType);
       }
     },
@@ -581,12 +577,14 @@ const FlowVisualizer: React.FC<FlowVisualizerProps> = ({
       ...edge,
       style: {
         ...edge.style,
-        strokeDasharray: edge.source === activeNodeName ? "5,5" : 
-          nodes.find(n => n.id === edge.source)?.type === "classifier" ? "5,5" : undefined,
-        strokeWidth: 2, // 加粗线条
+        strokeDasharray: 
+          edge.source === activeNodeName ? "5,5" : 
+          nodes.find(n => n.id === edge.source)?.type === "classifier" ? "5,5" :
+          edge.type === "smoothstep" ? "5,5" : undefined,
+        strokeWidth: 2,
         stroke:
           edge.source === activeNodeName || edge.target === activeNodeName
-            ? "#38a169" // 如果边连接到活节点，使用绿色
+            ? "#38a169"
             : edge.type === "default"
               ? "#5e5a6a"
               : "#517359",
@@ -603,6 +601,8 @@ const FlowVisualizer: React.FC<FlowVisualizerProps> = ({
       border={"1px solid #d1d5db"}
       borderRadius={"lg"}
       boxShadow={"md"}
+      onKeyDown={onKeyDown}
+      tabIndex={0}
     >
       <Box h="full" maxH={"full"}>
         <NodePalette />
