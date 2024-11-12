@@ -186,23 +186,19 @@ def event_to_response(event: StreamEvent) -> ChatResponse | None:
                     name=name,
                     content=output.content,
                 )
-        if name and name.startswith("classifier"):
-            if isinstance(output, dict):
-                if "messages" in output and output["messages"]:
-                    last_message = output["messages"][-1]
-                    if isinstance(last_message, AIMessage):
-                        return ChatResponse(
-                            type="ai",
-                            id=id,
-                            name=name,
-                            content=last_message.content,
-                        )
-            elif isinstance(output, AIMessage):
-                # 这里可能需要额外的逻辑来确定是否应该返回这个消息　　ＴＯＤＯ
-                return ChatResponse(
-                    type="ai",
-                    id=id,
-                    name=name,
-                    content=output.content,
-                )
+        if (
+            name
+            and name.startswith("classifier")
+            and isinstance(output, dict)
+            and "node_outputs" in output
+        ):
+            for _, outputs in output["node_outputs"].items():
+                if "category_name" in outputs:
+                    return ChatResponse(
+                        type="ai",
+                        id=id,
+                        name=name,
+                        content=outputs["category_name"],
+                    )
+
     return None

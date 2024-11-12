@@ -239,6 +239,7 @@ def initialize_graph(
 
         # save graph image
         if save_graph_img:
+            # if True:
             try:
                 img_data = graph.get_graph().draw_mermaid_png()
                 with open(f"save_graph_{time.time()}.png", "wb") as f:

@@ -122,9 +122,6 @@ class ClassifierNode:
         state["node_outputs"] = update_node_outputs(state["node_outputs"], new_output)
 
         return_state: ReturnTeamState = {
-            "history": state.get("history", []) + [result_message],
-            "messages": [result_message],
-            "all_messages": state.get("all_messages", []) + [result_message],
             "node_outputs": state["node_outputs"],
         }
 
