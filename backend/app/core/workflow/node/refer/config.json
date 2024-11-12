@@ -1,0 +1,221 @@
+{
+    "name": "DefaultGraph_6_1731382663747",
+    "description": "自动创建的默认图表",
+    "config": {
+      "id": "cfea59b3-6b17-4a65-8c11-290b96fd9a52",
+      "name": "Flow Visualization",
+      "edges": [
+        {
+          "id": "estart-classifier-4",
+          "type": "default",
+          "source": "start",
+          "target": "classifier-4",
+          "sourceHandle": "right",
+          "targetHandle": "left"
+        },
+        {
+          "id": "eclassifier-4-llm",
+          "type": "default",
+          "source": "classifier-4",
+          "target": "llm",
+          "sourceHandle": "right",
+          "targetHandle": "left"
+        },
+        {
+          "id": "reactflow__edge-classifier-41-llmleft",
+          "type": "default",
+          "source": "classifier-4",
+          "target": "llm",
+          "sourceHandle": "1",
+          "targetHandle": "left"
+        },
+        {
+          "id": "reactflow__edge-classifier-45b3318d6-5f87-4762-a019-dde091cfe7af-llmleft",
+          "type": "smoothstep",
+          "source": "classifier-4",
+          "target": "llm",
+          "sourceHandle": "5b3318d6-5f87-4762-a019-dde091cfe7af",
+          "targetHandle": "left"
+        },
+        {
+          "id": "reactflow__edge-classifier-4ee897e65-7e6a-4c70-9c66-98f82d7d3f7b-llm-4left",
+          "type": "smoothstep",
+          "source": "classifier-4",
+          "target": "llm-4",
+          "sourceHandle": "ee897e65-7e6a-4c70-9c66-98f82d7d3f7b",
+          "targetHandle": "left"
+        },
+        {
+          "id": "reactflow__edge-classifier-43159ff05-837a-442f-9fb8-4b17a908d148-llm-5left",
+          "type": "smoothstep",
+          "source": "classifier-4",
+          "target": "llm-5",
+          "sourceHandle": "3159ff05-837a-442f-9fb8-4b17a908d148",
+          "targetHandle": "left"
+        },
+        {
+          "id": "reactflow__edge-llmright-tool-6left",
+          "type": "smoothstep",
+          "source": "llm",
+          "target": "tool-6",
+          "sourceHandle": "right",
+          "targetHandle": "left"
+        },
+        {
+          "id": "reactflow__edge-tool-6right-llmright",
+          "type": "default",
+          "source": "tool-6",
+          "target": "llm",
+          "sourceHandle": "right",
+          "targetHandle": "right"
+        },
+        {
+          "id": "reactflow__edge-llm-4right-tool-7left",
+          "type": "smoothstep",
+          "source": "llm-4",
+          "target": "tool-7",
+          "sourceHandle": "right",
+          "targetHandle": "left"
+        },
+        {
+          "id": "reactflow__edge-tool-7right-llm-4right",
+          "type": "default",
+          "source": "tool-7",
+          "target": "llm-4",
+          "sourceHandle": "right",
+          "targetHandle": "right"
+        }
+      ],
+      "nodes": [
+        {
+          "id": "start",
+          "data": {
+            "label": "Start"
+          },
+          "type": "start",
+          "position": {
+            "x": -22.432896247126052,
+            "y": 239.29868874137833
+          }
+        },
+        {
+          "id": "classifier-4",
+          "data": {
+            "input": "{start.query}",
+            "label": "Classifier",
+            "model": "glm-4-flash",
+            "categories": [
+              {
+                "category_id": "5b3318d6-5f87-4762-a019-dde091cfe7af",
+                "category_name": "天气相关"
+              },
+              {
+                "category_id": "ee897e65-7e6a-4c70-9c66-98f82d7d3f7b",
+                "category_name": "数学计算"
+              },
+              {
+                "category_id": "3159ff05-837a-442f-9fb8-4b17a908d148",
+                "category_name": "直接回复"
+              }
+            ],
+            "customName": "Classifier"
+          },
+          "type": "classifier",
+          "position": {
+            "x": 299.00053595937027,
+            "y": 196.49946404062973
+          }
+        },
+        {
+          "id": "llm",
+          "data": {
+            "label": "LLM",
+            "model": "glm-4-flash",
+            "temperature": 0.1,
+            "systemMessage": "用户问题：{start.query}，请尽量使用工具获得答案然后回答"
+          },
+          "type": "llm",
+          "position": {
+            "x": 620,
+            "y": 124
+          }
+        },
+        {
+          "id": "llm-4",
+          "data": {
+            "label": "LLM2",
+            "model": "glm-4-flash",
+            "customName": "LLM2",
+            "temperature": 0.2,
+            "systemMessage": "用户问题：{start.query}，请尽量使用工具获得答案然后回答"
+          },
+          "type": "llm",
+          "position": {
+            "x": 611.7946230766499,
+            "y": 236.03276557266457
+          }
+        },
+        {
+          "id": "llm-5",
+          "data": {
+            "label": "LLM3",
+            "model": "glm-4-flash",
+            "customName": "LLM3",
+            "temperature": 0.1,
+            "systemMessage": "直接我回答用户问题，用户问题{start.query}"
+          },
+          "type": "llm",
+          "position": {
+            "x": 688.9288303507637,
+            "y": 460.0901478786037
+          }
+        },
+        {
+          "id": "tool-6",
+          "data": {
+            "label": "Tools",
+            "tools": [
+              "Open Weather"
+            ],
+            "customName": "Tools"
+          },
+          "type": "tool",
+          "position": {
+            "x": 847.4286178790192,
+            "y": 35.782875765664656
+          }
+        },
+        {
+          "id": "tool-7",
+          "data": {
+            "label": "Tools2",
+            "tools": [
+              "Math Calculator"
+            ],
+            "customName": "Tools2"
+          },
+          "type": "tool",
+          "position": {
+            "x": 797.40625,
+            "y": 378
+          }
+        }
+      ],
+      "metadata": {
+        "entry_point": "classifier-4",
+        "end_connections": [],
+        "start_connections": [
+          {
+            "type": "default",
+            "target": "classifier-4"
+          }
+        ]
+      }
+    },
+    "metadata": {},
+    "id": 5,
+    "owner_id": 1,
+    "team_id": 6,
+    "created_at": "2024-11-12 03:37:43.747+00",
+    "updated_at": "2024-11-12 07:23:48.733+00"
+  }

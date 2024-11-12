@@ -65,7 +65,7 @@ class ClassifierNode:
 
         # Initialize LLM with provider info
         llm = model_provider_manager.init_model(
-            provider=self.provider,
+            provider_name=self.provider,
             model=self.model,
             temperature=0.1,
             openai_api_key=self.openai_api_key,
