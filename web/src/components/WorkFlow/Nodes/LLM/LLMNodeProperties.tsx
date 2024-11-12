@@ -18,6 +18,7 @@ import { useVariableInsertion } from "@/hooks/graphs/useVariableInsertion";
 import { useModelQuery } from "@/hooks/useModelQuery";
 
 import { VariableReference } from "../../FlowVis/variableSystem";
+import VariableSelector from "../../Common/VariableSelector";
 
 interface LLMNodePropertiesProps {
   node: any;
@@ -149,43 +150,19 @@ const LLMNodeProperties: React.FC<LLMNodePropertiesProps> = ({
           max={1}
         />
       </Box>
-      <Box>
-        <Text fontWeight="bold">System Prompt:</Text>
-        <Popover
-          isOpen={showVariablesHook}
-          onClose={() => setShowVariablesHook(false)}
-          placement="bottom-start"
-        >
-          <PopoverTrigger>
-            <Textarea
-              ref={inputRefHook}
-              value={systemPromptInput}
-              onChange={(e) => handleSystemPromptChange(e.target.value)}
-              onKeyDown={handleKeyDownHook}
-              placeholder="Write your prompt here. Use '/' to insert variables."
-              style={{
-                whiteSpace: "pre-wrap",
-                minHeight: "100px",
-              }}
-            />
-          </PopoverTrigger>
-          <PopoverContent>
-            <VStack align="stretch">
-              {availableVariables.map((v) => (
-                <Button
-                  key={`${v.nodeId}.${v.variableName}`}
-                  onClick={() =>
-                    insertVariableHook(`${v.nodeId}.${v.variableName}`)
-                  }
-                  size="sm"
-                >
-                  {v.nodeId}.{v.variableName}
-                </Button>
-              ))}
-            </VStack>
-          </PopoverContent>
-        </Popover>
-      </Box>
+      
+      <VariableSelector
+        label="System Prompt"
+        value={systemPromptInput}
+        onChange={handleSystemPromptChange}
+        showVariables={showVariablesHook}
+        setShowVariables={setShowVariablesHook}
+        inputRef={inputRefHook}
+        handleKeyDown={handleKeyDownHook}
+        insertVariable={insertVariableHook}
+        availableVariables={availableVariables}
+        minHeight="100px"
+      />
     </VStack>
   );
 };

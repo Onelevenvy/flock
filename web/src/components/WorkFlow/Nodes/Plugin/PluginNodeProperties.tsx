@@ -3,20 +3,15 @@ import {
   Text,
   VStack,
   Button,
-  Popover,
-  PopoverTrigger,
-  PopoverContent,
-  Input,
 } from "@chakra-ui/react";
 import type React from "react";
-import { useState, useCallback } from "react";
+import { useCallback, useState } from "react";
 
 import { ToolsService } from "@/client/services/ToolsService";
 import { useVariableInsertion } from "@/hooks/graphs/useVariableInsertion";
 import { useSkillsQuery } from "@/hooks/useSkillsQuery";
-
 import { VariableReference } from "../../FlowVis/variableSystem";
-
+import VariableSelector from "../../Common/VariableSelector";
 
 interface PluginNodePropertiesProps {
   node: any;
@@ -45,15 +40,14 @@ const PluginNodeProperties: React.FC<PluginNodePropertiesProps> = ({
     [node.id, node.data.args, onNodeDataChange]
   );
 
-  // 为每个可能的输入参数创建一个 useVariableInsertion hook
   const variableInsertionHooks: {
-    [key: string]: ReturnType<typeof useVariableInsertion<HTMLInputElement>>;
+    [key: string]: ReturnType<typeof useVariableInsertion<HTMLTextAreaElement>>;
   } = {};
 
   if (tool?.input_parameters) {
     Object.keys(tool.input_parameters).forEach((key) => {
       // eslint-disable-next-line react-hooks/rules-of-hooks
-      variableInsertionHooks[key] = useVariableInsertion<HTMLInputElement>({
+      variableInsertionHooks[key] = useVariableInsertion<HTMLTextAreaElement>({
         onValueChange: (value) => handleInputChange(key, value),
         availableVariables,
       });
@@ -67,7 +61,6 @@ const PluginNodeProperties: React.FC<PluginNodePropertiesProps> = ({
         toolName: node.data.toolName,
         requestBody: node.data.args,
       });
-
       console.log("Invoke Result:", response);
     } catch (err) {
       console.error("Error invoking tool", err);
@@ -78,48 +71,21 @@ const PluginNodeProperties: React.FC<PluginNodePropertiesProps> = ({
 
   return (
     <VStack align="stretch" spacing={4}>
-      <Box>
-        <Text fontWeight="bold">Input param:</Text>
-      </Box>
+      <Text fontWeight="bold" mb={2}>Input Parameters:</Text>
       {tool?.input_parameters &&
-        Object.entries(tool.input_parameters).map(([key, value]) => (
-          <Box key={key}>
-            <Text fontWeight="bold">{key}:</Text>
-            <Popover
-              isOpen={variableInsertionHooks[key]?.showVariables}
-              onClose={() =>
-                variableInsertionHooks[key]?.setShowVariables(false)
-              }
-              placement="bottom-start"
-            >
-              <PopoverTrigger>
-                <Input
-                  ref={variableInsertionHooks[key]?.inputRef}
-                  value={node.data.args[key] || ""}
-                  onChange={(e) => handleInputChange(key, e.target.value)}
-                  onKeyDown={variableInsertionHooks[key]?.handleKeyDown}
-                  placeholder={`Enter ${key}. Use '/' to insert variables.`}
-                />
-              </PopoverTrigger>
-              <PopoverContent>
-                <VStack align="stretch">
-                  {availableVariables.map((v) => (
-                    <Button
-                      key={`${v.nodeId}.${v.variableName}`}
-                      onClick={() =>
-                        variableInsertionHooks[key]?.insertVariable(
-                          `${v.nodeId}.${v.variableName}`
-                        )
-                      }
-                      size="sm"
-                    >
-                      {v.nodeId}.{v.variableName}
-                    </Button>
-                  ))}
-                </VStack>
-              </PopoverContent>
-            </Popover>
-          </Box>
+        Object.entries(tool.input_parameters).map(([key]) => (
+          <VariableSelector
+            key={key}
+            label={key}
+            value={node.data.args[key] || ""}
+            onChange={(value) => handleInputChange(key, value)}
+            showVariables={variableInsertionHooks[key]?.showVariables}
+            setShowVariables={variableInsertionHooks[key]?.setShowVariables}
+            inputRef={variableInsertionHooks[key]?.inputRef}
+            handleKeyDown={variableInsertionHooks[key]?.handleKeyDown}
+            insertVariable={variableInsertionHooks[key]?.insertVariable}
+            availableVariables={availableVariables}
+          />
         ))}
       <Button onClick={handleInvoke} isLoading={loading}>
         Run Tool

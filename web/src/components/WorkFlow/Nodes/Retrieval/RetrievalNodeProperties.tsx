@@ -2,11 +2,6 @@ import {
   Box,
   Text,
   VStack,
-  Popover,
-  PopoverTrigger,
-  PopoverContent,
-  Button,
-  Input,
   Select,
 } from "@chakra-ui/react";
 import type React from "react";
@@ -14,8 +9,8 @@ import { useCallback, useState, useEffect } from "react";
 
 import { useVariableInsertion } from "@/hooks/graphs/useVariableInsertion";
 import { useUploadsQuery } from "@/hooks/useUploadsQuery";
-
 import { VariableReference } from "../../FlowVis/variableSystem";
+import VariableSelector from "../../Common/VariableSelector";
 
 interface RetrievalPropertiesProps {
   node: any;
@@ -53,7 +48,6 @@ const RetrievalProperties: React.FC<RetrievalPropertiesProps> = ({
   const handleRagMethodChange = useCallback(
     (event: React.ChangeEvent<HTMLSelectElement>) => {
       const value = event.target.value;
-
       setRagMethod(value);
       onNodeDataChange(node.id, "rag_method", value);
     },
@@ -63,10 +57,8 @@ const RetrievalProperties: React.FC<RetrievalPropertiesProps> = ({
   const handleDatabaseChange = useCallback(
     (event: React.ChangeEvent<HTMLSelectElement>) => {
       const value = event.target.value;
-
       setSelectedDatabase(value);
 
-      // Find the selected upload to get usr_id and uploadid (kb_id)
       const selectedUpload = uploads?.data.find(
         (upload) => upload.name === value
       );
@@ -86,46 +78,25 @@ const RetrievalProperties: React.FC<RetrievalPropertiesProps> = ({
     inputRef,
     handleKeyDown,
     insertVariable,
-  } = useVariableInsertion<HTMLInputElement>({
+  } = useVariableInsertion<HTMLTextAreaElement>({
     onValueChange: (value) => handleQueryChange(value),
     availableVariables,
   });
 
   return (
     <VStack align="stretch" spacing={4}>
-      <Box>
-        <Text fontWeight="bold">Query:</Text>
-        <Popover
-          isOpen={showVariables}
-          onClose={() => setShowVariables(false)}
-          placement="bottom-start"
-        >
-          <PopoverTrigger>
-            <Input
-              ref={inputRef}
-              value={queryInput}
-              onChange={(e) => handleQueryChange(e.target.value)}
-              onKeyDown={handleKeyDown}
-              placeholder="Enter query. Use '/' to insert variables."
-            />
-          </PopoverTrigger>
-          <PopoverContent>
-            <VStack align="stretch">
-              {availableVariables.map((v) => (
-                <Button
-                  key={`${v.nodeId}.${v.variableName}`}
-                  onClick={() =>
-                    insertVariable(`${v.nodeId}.${v.variableName}`)
-                  }
-                  size="sm"
-                >
-                  {v.nodeId}.{v.variableName}
-                </Button>
-              ))}
-            </VStack>
-          </PopoverContent>
-        </Popover>
-      </Box>
+      <VariableSelector
+        label="Query"
+        value={queryInput}
+        onChange={handleQueryChange}
+        placeholder="Enter query. Use '/' to insert variables."
+        showVariables={showVariables}
+        setShowVariables={setShowVariables}
+        inputRef={inputRef}
+        handleKeyDown={handleKeyDown}
+        insertVariable={insertVariable}
+        availableVariables={availableVariables}
+      />
 
       <Box>
         <Text fontWeight="bold">RAG Method:</Text>

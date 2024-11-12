@@ -1,19 +1,10 @@
-import {
-  Box,
-  Text,
-  VStack,
-  Popover,
-  PopoverTrigger,
-  PopoverContent,
-  Button,
-  Textarea,
-} from "@chakra-ui/react";
+import { VStack } from "@chakra-ui/react";
 import type React from "react";
 import { useCallback, useState, useEffect } from "react";
 
 import { useVariableInsertion } from "@/hooks/graphs/useVariableInsertion";
-
 import { VariableReference } from "../../FlowVis/variableSystem";
+import VariableSelector from "../../Common/VariableSelector";
 
 interface AnswerPropertiesProps {
   node: any;
@@ -55,43 +46,18 @@ const AnswerProperties: React.FC<AnswerPropertiesProps> = ({
 
   return (
     <VStack align="stretch" spacing={4}>
-      <Box>
-        <Text fontWeight="bold">Answer:</Text>
-        <Popover
-          isOpen={showVariables}
-          onClose={() => setShowVariables(false)}
-          placement="bottom-start"
-        >
-          <PopoverTrigger>
-            <Textarea
-              ref={inputRef}
-              value={answerInput}
-              onChange={(e) => handleAnswerChange(e.target.value)}
-              onKeyDown={handleKeyDown}
-              placeholder="Write your answer here. Use '/' to insert variables."
-              style={{
-                whiteSpace: "pre-wrap",
-                minHeight: "100px",
-              }}
-            />
-          </PopoverTrigger>
-          <PopoverContent>
-            <VStack align="stretch">
-              {availableVariables.map((v) => (
-                <Button
-                  key={`${v.nodeId}.${v.variableName}`}
-                  onClick={() =>
-                    insertVariable(`${v.nodeId}.${v.variableName}`)
-                  }
-                  size="sm"
-                >
-                  {v.nodeId}.{v.variableName}
-                </Button>
-              ))}
-            </VStack>
-          </PopoverContent>
-        </Popover>
-      </Box>
+      <VariableSelector
+        label="Answer"
+        value={answerInput}
+        onChange={handleAnswerChange}
+        placeholder="Write your answer here. Use '/' to insert variables."
+        showVariables={showVariables}
+        setShowVariables={setShowVariables}
+        inputRef={inputRef}
+        handleKeyDown={handleKeyDown}
+        insertVariable={insertVariable}
+        availableVariables={availableVariables}
+      />
     </VStack>
   );
 };
