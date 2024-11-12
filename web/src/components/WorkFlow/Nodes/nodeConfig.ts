@@ -5,6 +5,7 @@ import {
   FaTools,
   FaCommentDots,
   FaDatabase,
+  FaSitemap,
 } from "react-icons/fa";
 import { FaBookAtlas, FaPeopleGroup } from "react-icons/fa6";
 import { TfiGithub } from "react-icons/tfi";
@@ -18,6 +19,7 @@ import RetrievalToolNodeProperties from "./RetrievalTool/RetrievalToolNodeProper
 import StartNodeProperties from "./Start/StartNodeProperties";
 import ToolNodeProperties from "./Tool/ToolNodeProperties";
 import CrewAINodeProperties from "./CrewAI/CrewAINodeProperties";
+import ClassifierNodeProperties from "./Classifier/ClassifierNodeProperties";
 
 interface NodeConfigItem {
   display: string;
@@ -173,6 +175,23 @@ export const nodeConfig: Record<string, NodeConfigItem> = {
     },
     inputVariables: [],
     outputVariables: ["response"],
+  },
+  classifier: {
+    icon: FaSitemap,
+    display: "Classifier",
+    colorScheme: "purple",
+    properties: ClassifierNodeProperties,
+    allowedConnections: {
+      sources: ["right"],
+      targets: ["left"],
+    },
+    outputVariables: ["class_name"],
+    inputVariables: ["input"],
+    initialData: {
+      categories: [],
+      model: "glm-4-flash",
+      temperature: 0.1,
+    }
   },
 };
 

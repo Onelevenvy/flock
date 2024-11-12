@@ -9,6 +9,7 @@ import RetrievalNode from "./Retrieval/RetrievalNode";
 import RetrievalToolNode from "./RetrievalTool/RetrievalToolNode";
 import StartNode from "./Start/StartNode";
 import ToolNode from "./Tool/ToolNode";
+import ClassifierNode from "./Classifier/ClassifierNode";
 
 export const nodeTypes: NodeTypes = {
   start: StartNode,
@@ -20,4 +21,5 @@ export const nodeTypes: NodeTypes = {
   toolretrieval: RetrievalToolNode,
   plugin: PluginNode,
   crewai: CrewAINode,
+  classifier: ClassifierNode,
 };
