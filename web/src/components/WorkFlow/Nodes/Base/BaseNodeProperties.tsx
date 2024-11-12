@@ -73,7 +73,7 @@ const BaseProperties: React.FC<BasePropertiesProps> = ({
             {availableVariables.map((v) => (
               <option
                 key={`${v.nodeId}.${v.variableName}`}
-                value={`\${${v.nodeId}.${v.variableName}}`}
+                value={`{${v.nodeId}.${v.variableName}}`}
               >
                 {v.nodeId}.{v.variableName}
               </option>
