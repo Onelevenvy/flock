@@ -9,6 +9,7 @@ import {
 } from "@chakra-ui/react";
 import type React from "react";
 import { useState } from "react";
+import { FaTools } from "react-icons/fa";
 
 import ToolsIcon from "@/components/Icons/Tools";
 import { useSkillsQuery } from "@/hooks/useSkillsQuery";
@@ -29,7 +30,6 @@ const ToolNodeProperties: React.FC<ToolNodePropertiesProps> = ({
 
   const addTool = (tool: string) => {
     const currentTools = node.data.tools || [];
-
     if (!currentTools.includes(tool)) {
       onNodeDataChange(node.id, "tools", [...currentTools, tool]);
     }
@@ -37,7 +37,6 @@ const ToolNodeProperties: React.FC<ToolNodePropertiesProps> = ({
 
   const removeTool = (tool: string) => {
     const currentTools = node.data.tools || [];
-
     onNodeDataChange(
       node.id,
       "tools",
@@ -51,27 +50,63 @@ const ToolNodeProperties: React.FC<ToolNodePropertiesProps> = ({
   return (
     <VStack align="stretch" spacing={4}>
       <Box>
-        <Text fontWeight="bold">Tools:</Text>
-        {node.data.tools?.map((tool: string) => (
-          <HStack key={tool} justifyContent="space-between">
-            <Box bg="#f2f4f7" borderRadius="md" w="full" p="1" m="0.5">
-              <HStack spacing={"2"}>
-                <ToolsIcon tools_name={tool.replace(/ /g, "_")} ml="2" />
-                <Text fontWeight={"bold"}>{tool}</Text>
+        <HStack justify="space-between" align="center" mb={3}>
+          <HStack spacing={2}>
+            <FaTools size="14px" color="#4A5568" />
+            <Text fontSize="md" fontWeight="600" color="gray.700">
+              Tools
+            </Text>
+            <Text fontSize="xs" color="gray.500">
+              ({node.data.tools?.length || 0})
+            </Text>
+          </HStack>
+          <Button
+            size="xs"
+            variant="ghost"
+            leftIcon={<FaTools size="12px" />}
+            onClick={() => setIsToolsListOpen(true)}
+            colorScheme="blue"
+          >
+            Add Tool
+          </Button>
+        </HStack>
+
+        <VStack align="stretch" spacing={2}>
+          {node.data.tools?.map((tool: string) => (
+            <Box
+              key={tool}
+              p={2}
+              bg="gray.50"
+              borderRadius="md"
+              borderLeft="3px solid"
+              borderLeftColor="blue.400"
+              transition="all 0.2s"
+              _hover={{
+                bg: "gray.100",
+                borderLeftColor: "blue.500",
+              }}
+            >
+              <HStack justify="space-between" align="center">
+                <HStack spacing={2}>
+                  <ToolsIcon tools_name={tool.replace(/ /g, "_")} />
+                  <Text fontSize="sm" fontWeight="500">
+                    {tool}
+                  </Text>
+                </HStack>
+                <IconButton
+                  aria-label="Remove tool"
+                  icon={<DeleteIcon />}
+                  size="xs"
+                  variant="ghost"
+                  colorScheme="red"
+                  onClick={() => removeTool(tool)}
+                />
               </HStack>
             </Box>
-            <IconButton
-              aria-label="Remove tool"
-              icon={<DeleteIcon />}
-              size="sm"
-              onClick={() => removeTool(tool)}
-            />
-          </HStack>
-        ))}
-        <Button onClick={() => setIsToolsListOpen(true)} mt={2}>
-          Add 
-        </Button>
+          ))}
+        </VStack>
       </Box>
+
       {isToolsListOpen && (
         <ToolsList
           skills={skills?.data || []}

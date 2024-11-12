@@ -6,7 +6,6 @@ import { Handle, type NodeProps, Position } from "reactflow";
 import { BaseNode } from "../Base/BaseNode";
 import { nodeConfig } from "../nodeConfig";
 
-
 interface KBInfo {
   name: string;
   description: string;
@@ -33,23 +32,31 @@ const RetrievalToolNode: React.FC<NodeProps> = (props) => {
             const kbName = typeof kb === 'string' ? kb : kb.name;
 
             return (
-              <HStack key={index} justifyContent="center" justifyItems={"center"}>
-                <Box bg="#f2f4f7" borderRadius="md" w="full" p="1">
-                  <HStack spacing={"2"}>
+              <Box
+                key={index}
+                bg="#f2f4f7"
+                borderRadius="md"
+                p={1}
+                transition="all 0.2s"
+                _hover={{ bg: "#e2e8f0" }}
+              >
+                <HStack spacing={2} px={2}>
                   <IconButton
                     aria-label="db"
-                    icon={<GiArchiveResearch size={"16px"} />}
-                    colorScheme={"pink"}
+                    icon={<GiArchiveResearch size="16px" />}
+                    colorScheme="pink"
                     size="xs"
+                    variant="ghost"
                   />
-                    <Text fontWeight={"bold"}>{kbName}</Text>
-                  </HStack>
-                </Box>
-              </HStack>
+                  <Text fontSize="xs" fontWeight="500">
+                    {kbName}
+                  </Text>
+                </HStack>
+              </Box>
             );
           })
         ) : (
-          <Text fontSize="xs" textAlign="center">
+          <Text fontSize="xs" color="gray.500" textAlign="center">
             No knowledge bases selected
           </Text>
         )}

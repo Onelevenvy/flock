@@ -21,17 +21,24 @@ const ToolNode: React.FC<NodeProps> = (props) => {
       <VStack align="stretch" spacing={1}>
         {tools.length > 0 ? (
           tools.map((tool: string, index: number) => (
-            <HStack key={index} justifyContent="center" justifyItems={"center"}>
-              <Box bg="#f2f4f7" borderRadius="md" w="full" p="1">
-                <HStack spacing={"2"}>
-                  <ToolsIcon tools_name={tool.replace(/ /g, "_")} ml="2" />
-                  <Text fontWeight={"bold"}> {tool}</Text>
-                </HStack>
-              </Box>
-            </HStack>
+            <Box
+              key={index}
+              bg="#f2f4f7"
+              borderRadius="md"
+              p={1}
+              transition="all 0.2s"
+              _hover={{ bg: "#e2e8f0" }}
+            >
+              <HStack spacing={2} px={2}>
+                <ToolsIcon tools_name={tool.replace(/ /g, "_")} />
+                <Text fontSize="xs" fontWeight="500">
+                  {tool}
+                </Text>
+              </HStack>
+            </Box>
           ))
         ) : (
-          <Text fontSize="xs" textAlign="center">
+          <Text fontSize="xs" color="gray.500" textAlign="center">
             No tools selected
           </Text>
         )}

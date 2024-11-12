@@ -63,36 +63,73 @@ const RetrievalToolNodeProperties: React.FC<
   return (
     <VStack align="stretch" spacing={4}>
       <Box>
-        <Text fontWeight="bold">Knowledge Bases:</Text>
-        {node.data.tools?.map((kb: string | KBInfo) => {
-          const kbName = typeof kb === "string" ? kb : kb.name;
+        <HStack justify="space-between" align="center" mb={3}>
+          <HStack spacing={2}>
+            <GiArchiveResearch size="14px" color="#4A5568" />
+            <Text fontSize="md" fontWeight="600" color="gray.700">
+              Knowledge Bases
+            </Text>
+            <Text fontSize="xs" color="gray.500">
+              ({node.data.tools?.length || 0})
+            </Text>
+          </HStack>
+          <Button
+            size="xs"
+            variant="ghost"
+            leftIcon={<GiArchiveResearch size="12px" />}
+            onClick={() => setIsKBListOpen(true)}
+            colorScheme="blue"
+          >
+            Add KB
+          </Button>
+        </HStack>
 
-          return (
-            <HStack key={kbName} justifyContent="space-between">
-              <Box bg="#f2f4f7" borderRadius="md" w="full" p="1" m="0.5">
-                <HStack spacing={"2"}>
-                <IconButton
-                    aria-label="db"
-                    icon={<GiArchiveResearch size={"16px"} />}
-                    colorScheme={"pink"}
+        <VStack align="stretch" spacing={2}>
+          {node.data.tools?.map((kb: string | KBInfo) => {
+            const kbName = typeof kb === 'string' ? kb : kb.name;
+            
+            return (
+              <Box
+                key={kbName}
+                p={2}
+                bg="gray.50"
+                borderRadius="md"
+                borderLeft="3px solid"
+                borderLeftColor="pink.400"
+                transition="all 0.2s"
+                _hover={{
+                  bg: "gray.100",
+                  borderLeftColor: "pink.500",
+                }}
+              >
+                <HStack justify="space-between" align="center">
+                  <HStack spacing={2}>
+                    <IconButton
+                      aria-label="db"
+                      icon={<GiArchiveResearch size="16px" />}
+                      colorScheme="pink"
+                      size="xs"
+                      variant="ghost"
+                    />
+                    <Text fontSize="sm" fontWeight="500">
+                      {kbName}
+                    </Text>
+                  </HStack>
+                  <IconButton
+                    aria-label="Remove knowledge base"
+                    icon={<DeleteIcon />}
                     size="xs"
+                    variant="ghost"
+                    colorScheme="red"
+                    onClick={() => removeKB(kbName)}
                   />
-                  <Text fontWeight={"bold"}>{kbName}</Text>
                 </HStack>
               </Box>
-              <IconButton
-                aria-label="Remove knowledge base"
-                icon={<DeleteIcon />}
-                size="sm"
-                onClick={() => removeKB(kbName)}
-              />
-            </HStack>
-          );
-        })}
-        <Button onClick={() => setIsKBListOpen(true)} mt={2}>
-          Add 
-        </Button>
+            );
+          })}
+        </VStack>
       </Box>
+
       {isKBListOpen && (
         <KBListModal
           uploads={uploads?.data || []}
