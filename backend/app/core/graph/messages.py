@@ -45,13 +45,13 @@ def event_to_response(event: StreamEvent) -> ChatResponse | None:
     kind = event["event"]
     id = event["run_id"]
 
-    node_name = event.get("metadata", {}).get("langgraph_node", "")
-    name = event.get("name", "")
-    print("---------------------------")
+    # node_name = event.get("metadata", {}).get("langgraph_node", "")
+    # name = event.get("name", "")
+    # print("---------------------------")
 
-    print("event kind:", kind)
-    print("name:", name)
-    print("node_name data:", node_name)
+    # print("event kind:", kind)
+    # print("name:", name)
+    # print("node_name data:", node_name)
 
     if kind == "on_chat_model_stream":
         name = event["metadata"]["langgraph_node"]

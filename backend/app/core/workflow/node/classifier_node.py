@@ -96,7 +96,7 @@ class ClassifierNode:
         outputparser = JsonOutputParser()
         chain = prompt | llm | outputparser
         result = await chain.ainvoke(input_json)
-
+        print("classifier result:", result)
         # Find matching category and get its ID
         matched_category = next(
             (
@@ -114,7 +114,9 @@ class ClassifierNode:
         new_output = {
             self.node_id: {
                 "category_id": matched_category["category_id"],  # 更语义化的键名
-                "category_name": matched_category["category_name"]  # 保存分类名称供参考
+                "category_name": matched_category[
+                    "category_name"
+                ],  # 保存分类名称供参考
             }
         }
         state["node_outputs"] = update_node_outputs(state["node_outputs"], new_output)
@@ -123,7 +125,7 @@ class ClassifierNode:
             "history": state.get("history", []) + [result_message],
             "messages": [result_message],
             "all_messages": state.get("all_messages", []) + [result_message],
-            "node_outputs": state["node_outputs"]
+            "node_outputs": state["node_outputs"],
         }
 
         return return_state
