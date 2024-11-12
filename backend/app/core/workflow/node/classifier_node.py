@@ -1,9 +1,10 @@
 from typing import Any, Dict
 from langchain_core.messages import AIMessage
 from langchain_core.runnables import RunnableConfig
-
+from langchain_core.output_parsers import JsonOutputParser
 from .state import ReturnTeamState, TeamState, parse_variables, update_node_outputs
 from app.core.model_providers.model_provider_manager import model_provider_manager
+from langchain_core.prompts import ChatPromptTemplate
 
 CLASSIFIER_SYSTEM_PROMPT = """
 ### Job Description
@@ -22,11 +23,20 @@ DO NOT include anything other than the JSON array in your response.
 ### Example
 Here is the chat example between human and assistant, inside <example></example> XML tags.
 <example>
-User:{"input_text": ["I recently had a great experience with your company. The service was prompt and the staff was very friendly."], "categories": ["Customer Service","Satisfaction","Sales","Product"]}
-Assistant:{"keywords": ["recently", "great experience", "company", "service", "prompt", "staff", "friendly"],"category_name": "Customer Service"}
-User:{"input_text": ["bad service, slow to bring the food"], "categories": ["Food Quality","Experience","Price"]}
-Assistant:{"keywords": ["bad service", "slow", "food", "tip", "terrible", "waitresses"],"category_name": "Experience"}
+User:{{"input_text": ["I recently had a great experience with your company. The service was prompt and the staff was very friendly."], "categories": ["Customer Service","Satisfaction","Sales","Product"]}}
+Assistant:{{"keywords": ["recently", "great experience", "company", "service", "prompt", "staff", "friendly"],"category_name": "Customer Service"}}
+User:{{"input_text": ["bad service, slow to bring the food"], "categories": ["Food Quality","Experience","Price"]}}
+Assistant:{{"keywords": ["bad service", "slow", "food", "tip", "terrible", "waitresses"],"category_name": "Experience"}}
 </example>
+"""
+
+QUESTION_CLASSIFIER_USER_PROMPT = """
+ ### Input
+    {input_text},
+    {categories},
+   ### Assistant Output
+    Please classify the above text into exactly one of the listed categories.
+    Return only the category name, nothing else.
 """
 
 
@@ -76,26 +86,23 @@ class ClassifierNode:
         categories_list = [cat["category_name"] for cat in self.categories]
         input_json = {"input_text": [input_text], "categories": categories_list}
 
-        # Prepare prompt following the reference implementation
-        prompt = f"""{CLASSIFIER_SYSTEM_PROMPT}
+        # Prepare prompt and get classification result
+        prompt = ChatPromptTemplate.from_messages(
+            [
+                ("system", CLASSIFIER_SYSTEM_PROMPT),
+                ("user", QUESTION_CLASSIFIER_USER_PROMPT),
+            ]
+        )
+        outputparser = JsonOutputParser()
+        chain = prompt | llm | outputparser
+        result = await chain.ainvoke(input_json)
 
-                    ### Input
-                    {input_json}
-
-                    ### Assistant Output
-                    Please classify the above text into exactly one of the listed categories.
-                    Return only the category name, nothing else."""
-
-        # Get classification result
-        result = await llm.ainvoke(prompt)
-        result_text = result.content.strip()
-
-        # Find matching category
+        # Find matching category and get its ID
         matched_category = next(
             (
                 cat
                 for cat in self.categories
-                if cat["category_name"].lower() == result_text.lower()
+                if cat["category_name"].lower() == result["category_name"].lower()
             ),
             self.categories[0],  # Default to first category if no match found
         )
@@ -103,16 +110,20 @@ class ClassifierNode:
         # Create response message
         result_message = AIMessage(content=matched_category["category_name"])
 
-        # Update node outputs
-        new_output = {self.node_id: {"class_name": matched_category["category_name"]}}
+        # Update node outputs with both category_name and category_id
+        new_output = {
+            self.node_id: {
+                "category_id": matched_category["category_id"],  # 更语义化的键名
+                "category_name": matched_category["category_name"]  # 保存分类名称供参考
+            }
+        }
         state["node_outputs"] = update_node_outputs(state["node_outputs"], new_output)
 
         return_state: ReturnTeamState = {
             "history": state.get("history", []) + [result_message],
             "messages": [result_message],
             "all_messages": state.get("all_messages", []) + [result_message],
-            "node_outputs": state["node_outputs"],
-            "edge_source_handle": matched_category["category_id"],
+            "node_outputs": state["node_outputs"]
         }
 
         return return_state

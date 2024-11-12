@@ -101,11 +101,10 @@ def should_continue(state: TeamState) -> str:
 
 def should_continue_classifier(state: TeamState) -> str:
     """专门处理分类器节点的条件判断"""
-    # 从分类器节点的输出中获取分类结果
     if "node_outputs" in state:
         for node_id, outputs in state["node_outputs"].items():
-            if "class_name" in outputs:
-                return outputs["class_name"]
+            if "category_id" in outputs:
+                return outputs["category_id"]
     return "default"
 
 
@@ -123,11 +122,6 @@ def _add_classifier_conditional_edges(
     # 构建分类器的条件边字典
     edges_dict = {}
 
-    # 获取分类器的所有类别ID
-    category_ids = [
-        category["category_id"] for category in classifier_node["data"]["categories"]
-    ]
-
     # 获取所有从分类器出发的边
     classifier_edges = [edge for edge in edges if edge["source"] == classifier_node_id]
 
@@ -139,8 +133,7 @@ def _add_classifier_conditional_edges(
         if target_node:
             # 检查边的sourceHandle是否匹配任何category_id
             source_handle = edge.get("sourceHandle")
-            if source_handle in category_ids:
-                # 使用category_id作为key
+            if source_handle:  # 如果有sourceHandle，使用它作为路由键
                 edges_dict[source_handle] = edge["target"]
 
     # 添加默认路径
