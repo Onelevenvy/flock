@@ -1,4 +1,4 @@
-import { Text, Tag } from "@chakra-ui/react";
+import { Tag } from "@chakra-ui/react";
 import React from "react";
 import { Handle, type NodeProps, Position } from "reactflow";
 

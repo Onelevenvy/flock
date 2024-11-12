@@ -46,7 +46,7 @@ const ChatHistoryList = ({ teamId, isPlayground }: ChatHistoryProps) => {
     () => MembersService.readMembers({ teamId: localTeamId }),
     {
       enabled: !!localTeamId, // 确保在 localTeamId 存在时才执行查询
-    },
+    }
   );
 
   const {
@@ -55,7 +55,7 @@ const ChatHistoryList = ({ teamId, isPlayground }: ChatHistoryProps) => {
     isError,
     error,
   } = useQuery(["threads", teamId], () =>
-    ThreadsService.readThreads({ teamId: teamId }),
+    ThreadsService.readThreads({ teamId: teamId })
   );
 
   const deleteThread = async (threadId: string) => {
@@ -66,7 +66,7 @@ const ChatHistoryList = ({ teamId, isPlayground }: ChatHistoryProps) => {
   };
   const selctedColor = useColorModeValue(
     "ui.selctedColor",
-    "ui.selctedColorDark",
+    "ui.selctedColorDark"
   );
   const deleteThreadMutation = useMutation(deleteThread, {
     onError: (err: ApiError) => {

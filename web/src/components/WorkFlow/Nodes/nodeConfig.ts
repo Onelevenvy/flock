@@ -6,7 +6,7 @@ import {
   FaCommentDots,
   FaDatabase,
 } from "react-icons/fa";
-import { FaBookAtlas } from "react-icons/fa6";
+import { FaBookAtlas, FaPeopleGroup } from "react-icons/fa6";
 import { TfiGithub } from "react-icons/tfi";
 
 import AnswerNodeProperties from "./Answer/AnswerNodeProperties";
@@ -157,7 +157,7 @@ export const nodeConfig: Record<string, NodeConfigItem> = {
   },
   crewai: {
     display: "CrewAI",
-    icon: FaRobot,
+    icon: FaPeopleGroup,
     colorScheme: "purple",
     properties: CrewAINodeProperties,
     allowedConnections: {

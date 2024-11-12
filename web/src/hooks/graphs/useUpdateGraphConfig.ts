@@ -111,7 +111,6 @@ export function useGraphConfig(
       updated_at: currentDate,
     };
 
-    console.log(updateData);
     mutation.mutate(updateData);
   }, [graphId, graphName, graphDescription, saveConfig, mutation, showToast]);
 
