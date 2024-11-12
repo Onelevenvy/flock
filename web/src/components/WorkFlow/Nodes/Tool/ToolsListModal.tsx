@@ -13,12 +13,13 @@ import {
   ModalOverlay,
   Text,
   VStack,
+  Box,
 } from "@chakra-ui/react";
 import type React from "react";
 import { useMemo, useState } from "react";
 
-import type { SkillOut } from "@/client";
 import ToolsIcon from "@/components/Icons/Tools";
+import type { SkillOut } from "@/client";
 
 interface ToolsListProps {
   skills: SkillOut[];
@@ -42,44 +43,69 @@ const ToolsList: React.FC<ToolsListProps> = ({
   }, [skills, searchQuery]);
 
   return (
-    <Modal isOpen={true} onClose={onClose}>
+    <Modal isOpen={true} onClose={onClose} size="md">
       <ModalOverlay />
       <ModalContent>
-        <ModalHeader>添加工具</ModalHeader>
+        <ModalHeader>
+          <Text fontSize="lg" fontWeight="600">
+            Add Tool
+          </Text>
+        </ModalHeader>
         <ModalCloseButton />
-        <ModalBody>
+        <ModalBody pb={6}>
           <VStack align="stretch" spacing={4}>
             <InputGroup>
               <InputLeftElement pointerEvents="none">
                 <SearchIcon color="gray.300" />
               </InputLeftElement>
               <Input
-                placeholder="搜索工具..."
+                placeholder="Search tools..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
+                borderColor="gray.200"
+                _hover={{ borderColor: "gray.300" }}
+                _focus={{ borderColor: "blue.500", boxShadow: "none" }}
               />
             </InputGroup>
-            {filteredSkills.map((skill) => (
-              <HStack key={skill.id} justifyContent="space-between">
-                <HStack spacing={"2"}>
-                  <ToolsIcon
-                    tools_name={skill.display_name!.replace(/ /g, "_")}
-                    ml="2"
-                  />
-                  <Text>{skill.display_name}</Text>
-                </HStack>
-
-                <Button
-                  size="sm"
-                  onClick={() => onAddTool(skill.display_name!)}
-                  isDisabled={selectedTools.includes(skill.display_name!)}
+            <VStack align="stretch" spacing={2} maxH="400px" overflowY="auto">
+              {filteredSkills.map((skill) => (
+                <Box
+                  key={skill.id}
+                  p={2}
+                  borderRadius="md"
+                  bg="gray.50"
+                  transition="all 0.2s"
+                  _hover={{ bg: "gray.100" }}
                 >
-                  {selectedTools.includes(skill.display_name!)
-                    ? "已添加"
-                    : "添加"}
-                </Button>
-              </HStack>
-            ))}
+                  <HStack justify="space-between">
+                    <HStack spacing={2}>
+                      <ToolsIcon
+                        tools_name={skill.display_name!.replace(/ /g, "_")}
+                      />
+                      <VStack align="start" spacing={0}>
+                        <Text fontSize="sm" fontWeight="500">
+                          {skill.display_name}
+                        </Text>
+                        <Text fontSize="xs" color="gray.500" noOfLines={1}>
+                          {skill.description}
+                        </Text>
+                      </VStack>
+                    </HStack>
+                    <Button
+                      size="sm"
+                      colorScheme="blue"
+                      variant="ghost"
+                      onClick={() => onAddTool(skill.display_name!)}
+                      isDisabled={selectedTools.includes(skill.display_name!)}
+                    >
+                      {selectedTools.includes(skill.display_name!)
+                        ? "Added"
+                        : "Add"}
+                    </Button>
+                  </HStack>
+                </Box>
+              ))}
+            </VStack>
           </VStack>
         </ModalBody>
       </ModalContent>
