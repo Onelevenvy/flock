@@ -180,7 +180,7 @@ const FlowVisualizer: React.FC<FlowVisualizerProps> = ({
         
         // 验证sourceHandle是否是有效的分类ID
         const categories = (sourceNode.data as ClassifierNodeData).categories;
-        if (!categories.find(c => c.id === connection.sourceHandle)) return false;
+        if (!categories.find(c => c.category_id === connection.sourceHandle)) return false;
         
         // 验证目标节点的连接点
         if (connection.targetHandle && !nodeConfig[targetType].allowedConnections.targets.includes(connection.targetHandle)) {
