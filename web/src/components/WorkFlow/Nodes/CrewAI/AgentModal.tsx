@@ -30,6 +30,9 @@ import { v4 } from "uuid";
 import { useSkillsQuery } from "@/hooks/useSkillsQuery";
 import ToolsIcon from "@/components/Icons/Tools";
 import ToolsList from "../Tool/ToolsListModal";
+import { useVariableInsertion } from "@/hooks/graphs/useVariableInsertion";
+import VariableSelector from "../../Common/VariableSelector";
+import { VariableReference } from "../../FlowVis/variableSystem";
 
 interface AgentModalProps {
   isOpen: boolean;
@@ -38,6 +41,7 @@ interface AgentModalProps {
   initialData?: AgentConfig;
   isManager?: boolean;
   existingAgentNames: string[];
+  availableVariables: VariableReference[];
 }
 
 const AgentModal: React.FC<AgentModalProps> = ({
@@ -47,12 +51,14 @@ const AgentModal: React.FC<AgentModalProps> = ({
   initialData,
   isManager = false,
   existingAgentNames,
+  availableVariables,
 }) => {
   const {
     register,
     handleSubmit,
     formState: { errors },
     watch,
+    setValue,
   } = useForm<AgentConfig>({
     defaultValues: initialData || {
       id: v4(),
@@ -104,6 +110,21 @@ const AgentModal: React.FC<AgentModalProps> = ({
     });
   };
 
+  const roleVariableHook = useVariableInsertion<HTMLTextAreaElement>({
+    onValueChange: (value) => setValue("role", value),
+    availableVariables,
+  });
+
+  const goalVariableHook = useVariableInsertion<HTMLTextAreaElement>({
+    onValueChange: (value) => setValue("goal", value),
+    availableVariables,
+  });
+
+  const backstoryVariableHook = useVariableInsertion<HTMLTextAreaElement>({
+    onValueChange: (value) => setValue("backstory", value),
+    availableVariables,
+  });
+
   return (
     <Modal isOpen={isOpen} onClose={onClose} size="xl">
       <ModalOverlay />
@@ -141,47 +162,47 @@ const AgentModal: React.FC<AgentModalProps> = ({
                 </FormErrorMessage>
               </FormControl>
 
-              <FormControl>
-                <FormLabel fontWeight="500">Role</FormLabel>
-                <Textarea
-                  {...register("role")}
-                  placeholder={
-                    isManager ? "Crew Manager" : "e.g., Research Specialist"
-                  }
-                  isReadOnly={isManager}
-                  borderColor="gray.200"
-                  _hover={{ borderColor: "gray.300" }}
-                  _focus={{ borderColor: "blue.500", boxShadow: "none" }}
-                  minH="80px"
-                  resize="vertical"
-                />
-              </FormControl>
+              <VariableSelector
+                label="Role"
+                value={watch("role") || ""}
+                onChange={(value) => setValue("role", value)}
+                placeholder={isManager ? "Crew Manager" : "e.g., Research Specialist"}
+                showVariables={roleVariableHook.showVariables}
+                setShowVariables={roleVariableHook.setShowVariables}
+                inputRef={roleVariableHook.inputRef}
+                handleKeyDown={roleVariableHook.handleKeyDown}
+                insertVariable={roleVariableHook.insertVariable}
+                availableVariables={availableVariables}
+                minHeight="80px"
+              />
 
-              <FormControl>
-                <FormLabel fontWeight="500">Goal</FormLabel>
-                <Textarea
-                  {...register("goal")}
-                  placeholder="Agent's primary objective"
-                  borderColor="gray.200"
-                  _hover={{ borderColor: "gray.300" }}
-                  _focus={{ borderColor: "blue.500", boxShadow: "none" }}
-                  minH="80px"
-                  resize="vertical"
-                />
-              </FormControl>
+              <VariableSelector
+                label="Goal"
+                value={watch("goal") || ""}
+                onChange={(value) => setValue("goal", value)}
+                placeholder="Agent's primary objective"
+                showVariables={goalVariableHook.showVariables}
+                setShowVariables={goalVariableHook.setShowVariables}
+                inputRef={goalVariableHook.inputRef}
+                handleKeyDown={goalVariableHook.handleKeyDown}
+                insertVariable={goalVariableHook.insertVariable}
+                availableVariables={availableVariables}
+                minHeight="80px"
+              />
 
-              <FormControl>
-                <FormLabel fontWeight="500">Backstory</FormLabel>
-                <Textarea
-                  {...register("backstory")}
-                  placeholder="Agent's background and expertise"
-                  borderColor="gray.200"
-                  _hover={{ borderColor: "gray.300" }}
-                  _focus={{ borderColor: "blue.500", boxShadow: "none" }}
-                  minH="120px"
-                  resize="vertical"
-                />
-              </FormControl>
+              <VariableSelector
+                label="Backstory"
+                value={watch("backstory") || ""}
+                onChange={(value) => setValue("backstory", value)}
+                placeholder="Agent's background and expertise"
+                showVariables={backstoryVariableHook.showVariables}
+                setShowVariables={backstoryVariableHook.setShowVariables}
+                inputRef={backstoryVariableHook.inputRef}
+                handleKeyDown={backstoryVariableHook.handleKeyDown}
+                insertVariable={backstoryVariableHook.insertVariable}
+                availableVariables={availableVariables}
+                minHeight="120px"
+              />
 
               {!isManager && (
                 <FormControl display="flex" alignItems="center">

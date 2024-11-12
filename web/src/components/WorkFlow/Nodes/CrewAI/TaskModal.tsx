@@ -21,6 +21,9 @@ import { useForm } from "react-hook-form";
 import { FaListAlt } from "react-icons/fa";
 
 import { AgentConfig, TaskConfig } from "../../types";
+import { useVariableInsertion } from "@/hooks/graphs/useVariableInsertion";
+import VariableSelector from "../../Common/VariableSelector";
+import { VariableReference } from "../../FlowVis/variableSystem";
 
 interface TaskModalProps {
   isOpen: boolean;
@@ -29,6 +32,7 @@ interface TaskModalProps {
   initialData?: TaskConfig;
   agents: AgentConfig[];
   existingTaskNames: string[];
+  availableVariables: VariableReference[];
 }
 
 const TaskModal: React.FC<TaskModalProps> = ({
@@ -38,8 +42,15 @@ const TaskModal: React.FC<TaskModalProps> = ({
   initialData,
   agents,
   existingTaskNames,
+  availableVariables,
 }) => {
-  const { register, handleSubmit, formState: { errors }, watch } = useForm<TaskConfig>({
+  const { 
+    register, 
+    handleSubmit, 
+    formState: { errors }, 
+    watch,
+    setValue,
+  } = useForm<TaskConfig>({
     defaultValues: initialData || {
       name: "",
       description: "",
@@ -59,6 +70,16 @@ const TaskModal: React.FC<TaskModalProps> = ({
     return true;
   };
 
+  const descriptionVariableHook = useVariableInsertion<HTMLTextAreaElement>({
+    onValueChange: (value) => setValue("description", value),
+    availableVariables,
+  });
+
+  const expectedOutputVariableHook = useVariableInsertion<HTMLTextAreaElement>({
+    onValueChange: (value) => setValue("expected_output", value),
+    availableVariables,
+  });
+
   return (
     <Modal isOpen={isOpen} onClose={onClose} size="xl">
       <ModalOverlay />
@@ -72,7 +93,7 @@ const TaskModal: React.FC<TaskModalProps> = ({
         <ModalCloseButton />
         <ModalBody pb={6}>
           <form onSubmit={handleSubmit(onSubmit)}>
-            <VStack spacing={4}>
+            <VStack spacing={4} align="stretch">
               <FormControl isRequired isInvalid={!!errors.name}>
                 <FormLabel fontWeight="500">Task Name</FormLabel>
                 <Input
@@ -90,18 +111,19 @@ const TaskModal: React.FC<TaskModalProps> = ({
                 </FormErrorMessage>
               </FormControl>
 
-              <FormControl isRequired>
-                <FormLabel fontWeight="500">Description</FormLabel>
-                <Textarea
-                  {...register("description")}
-                  placeholder="Task description"
-                  borderColor="gray.200"
-                  _hover={{ borderColor: "gray.300" }}
-                  _focus={{ borderColor: "blue.500", boxShadow: "none" }}
-                  minH="100px"
-                  resize="vertical"
-                />
-              </FormControl>
+              <VariableSelector
+                label="Description"
+                value={watch("description") || ""}
+                onChange={(value) => setValue("description", value)}
+                placeholder="Task description"
+                showVariables={descriptionVariableHook.showVariables}
+                setShowVariables={descriptionVariableHook.setShowVariables}
+                inputRef={descriptionVariableHook.inputRef}
+                handleKeyDown={descriptionVariableHook.handleKeyDown}
+                insertVariable={descriptionVariableHook.insertVariable}
+                availableVariables={availableVariables}
+                minHeight="100px"
+              />
 
               <FormControl isRequired>
                 <FormLabel fontWeight="500">Assign Agent</FormLabel>
@@ -120,18 +142,19 @@ const TaskModal: React.FC<TaskModalProps> = ({
                 </Select>
               </FormControl>
 
-              <FormControl>
-                <FormLabel fontWeight="500">Expected Output</FormLabel>
-                <Textarea
-                  {...register("expected_output")}
-                  placeholder="Expected output format or description"
-                  borderColor="gray.200"
-                  _hover={{ borderColor: "gray.300" }}
-                  _focus={{ borderColor: "blue.500", boxShadow: "none" }}
-                  minH="100px"
-                  resize="vertical"
-                />
-              </FormControl>
+              <VariableSelector
+                label="Expected Output"
+                value={watch("expected_output") || ""}
+                onChange={(value) => setValue("expected_output", value)}
+                placeholder="Expected output format or description"
+                showVariables={expectedOutputVariableHook.showVariables}
+                setShowVariables={expectedOutputVariableHook.setShowVariables}
+                inputRef={expectedOutputVariableHook.inputRef}
+                handleKeyDown={expectedOutputVariableHook.handleKeyDown}
+                insertVariable={expectedOutputVariableHook.insertVariable}
+                availableVariables={availableVariables}
+                minHeight="100px"
+              />
 
               <Button 
                 type="submit" 
@@ -149,4 +172,4 @@ const TaskModal: React.FC<TaskModalProps> = ({
   );
 };
 
-export default TaskModal; 
+export default TaskModal;

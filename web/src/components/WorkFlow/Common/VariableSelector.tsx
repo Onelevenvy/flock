@@ -36,7 +36,7 @@ const VariableSelector: React.FC<VariableSelectorProps> = ({
   inputRef,
   handleKeyDown,
   insertVariable,
-  availableVariables,
+  availableVariables = [],
   minHeight = "100px",
 }) => {
   return (
@@ -79,39 +79,45 @@ const VariableSelector: React.FC<VariableSelectorProps> = ({
             <Text fontSize="sm" fontWeight="500" color="gray.600" p={2}>
               Available Variables
             </Text>
-            {availableVariables.map((v) => (
-              <Button
-                key={`${v.nodeId}.${v.variableName}`}
-                onClick={() => insertVariable(`${v.nodeId}.${v.variableName}`)}
-                size="sm"
-                variant="ghost"
-                justifyContent="flex-start"
-                px={3}
-                py={2}
-                height="auto"
-                _hover={{
-                  bg: "blue.50",
-                }}
-                leftIcon={
-                  <Box
-                    as="span"
-                    bg="blue.100"
-                    color="blue.700"
-                    px={2}
-                    py={1}
-                    borderRadius="md"
-                    fontSize="xs"
-                    fontWeight="500"
-                  >
-                    {v.nodeId}
-                  </Box>
-                }
-              >
-                <Text fontSize="sm" ml={2}>
-                  {v.variableName}
-                </Text>
-              </Button>
-            ))}
+            {availableVariables?.length > 0 ? (
+              availableVariables.map((v) => (
+                <Button
+                  key={`${v.nodeId}.${v.variableName}`}
+                  onClick={() => insertVariable(`${v.nodeId}.${v.variableName}`)}
+                  size="sm"
+                  variant="ghost"
+                  justifyContent="flex-start"
+                  px={3}
+                  py={2}
+                  height="auto"
+                  _hover={{
+                    bg: "blue.50",
+                  }}
+                  leftIcon={
+                    <Box
+                      as="span"
+                      bg="blue.100"
+                      color="blue.700"
+                      px={2}
+                      py={1}
+                      borderRadius="md"
+                      fontSize="xs"
+                      fontWeight="500"
+                    >
+                      {v.nodeId}
+                    </Box>
+                  }
+                >
+                  <Text fontSize="sm" ml={2}>
+                    {v.variableName}
+                  </Text>
+                </Button>
+              ))
+            ) : (
+              <Text fontSize="sm" color="gray.500" textAlign="center" p={2}>
+                No variables available
+              </Text>
+            )}
           </VStack>
         </PopoverContent>
       </Popover>

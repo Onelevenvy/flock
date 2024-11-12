@@ -20,10 +20,12 @@ import { v4 as uuidv4 } from "uuid";
 import ModelSelect from "@/components/Common/ModelProvider";
 import { useModelQuery } from "@/hooks/useModelQuery";
 import { AgentConfig, CrewAINodeData, TaskConfig } from "../../types";
-import { VariableReference } from "../../FlowVis/variableSystem";
+import { DEFAULT_MANAGER } from "./constants";
 import AgentModal from "./AgentModal";
 import TaskModal from "./TaskModal";
-import { DEFAULT_MANAGER } from "./constants";
+import { VariableReference } from "../../FlowVis/variableSystem";
+import { getAvailableVariables } from "../../FlowVis/variableSystem";
+import { useReactFlow } from "reactflow";
 
 interface CrewAINodePropertiesProps {
   node: any;
@@ -34,7 +36,6 @@ interface CrewAINodePropertiesProps {
 const CrewAINodeProperties: React.FC<CrewAINodePropertiesProps> = ({
   node,
   onNodeDataChange,
-  availableVariables,
 }) => {
   const data = node.data as CrewAINodeData;
   const { data: models } = useModelQuery();
@@ -230,6 +231,14 @@ const CrewAINodeProperties: React.FC<CrewAINodePropertiesProps> = ({
   const existingTaskNames = useMemo(() => {
     return data.tasks?.map((task) => task.name) || [];
   }, [data.tasks]);
+
+  // 获取 ReactFlow 实例以访问所有节点和边
+  const { getNodes, getEdges } = useReactFlow();
+
+  // 获取可用变量
+  const availableVariables = useMemo(() => {
+    return getAvailableVariables(node.id, getNodes(), getEdges());
+  }, [node.id, getNodes, getEdges]);
 
   return (
     <VStack spacing={4} align="stretch">
@@ -454,6 +463,7 @@ const CrewAINodeProperties: React.FC<CrewAINodePropertiesProps> = ({
           initialData={editingAgent}
           isManager={false}
           existingAgentNames={existingAgentNames}
+          availableVariables={availableVariables}
         />
       )}
 
@@ -465,6 +475,7 @@ const CrewAINodeProperties: React.FC<CrewAINodePropertiesProps> = ({
           initialData={editingTask}
           agents={data.agents || []}
           existingTaskNames={existingTaskNames}
+          availableVariables={availableVariables}
         />
       )}
     </VStack>
