@@ -188,9 +188,11 @@ export const nodeConfig: Record<string, NodeConfigItem> = {
     outputVariables: ["class_name"],
     inputVariables: ["input"],
     initialData: {
-      categories: [],
+      categories: [
+        { id: "1", name: "" },
+        { id: "2", name: "" }
+      ],
       model: "glm-4-flash",
-      temperature: 0.1,
     }
   },
 };

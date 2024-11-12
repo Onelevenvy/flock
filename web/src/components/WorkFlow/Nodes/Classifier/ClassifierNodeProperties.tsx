@@ -54,6 +54,7 @@ const ClassifierNodeProperties: React.FC<ClassifierNodePropertiesProps> = ({
 
   const handleRemoveCategory = useCallback((categoryId: string) => {
     const currentCategories = node.data.categories || [];
+    if (currentCategories.length <= 2) return;
     onNodeDataChange(
       node.id,
       "categories",
@@ -98,14 +99,16 @@ const ClassifierNodeProperties: React.FC<ClassifierNodePropertiesProps> = ({
                 <Text fontSize="sm" fontWeight="500" color="gray.600">
                   Category {index + 1}
                 </Text>
-                <IconButton
-                  aria-label="Remove category"
-                  icon={<FaTrash />}
-                  size="xs"
-                  colorScheme="red"
-                  variant="ghost"
-                  onClick={() => handleRemoveCategory(category.id)}
-                />
+                {node.data.categories.length > 2 && (
+                  <IconButton
+                    aria-label="Remove category"
+                    icon={<FaTrash />}
+                    size="xs"
+                    colorScheme="red"
+                    variant="ghost"
+                    onClick={() => handleRemoveCategory(category.id)}
+                  />
+                )}
               </HStack>
               <Input
                 value={category.name}

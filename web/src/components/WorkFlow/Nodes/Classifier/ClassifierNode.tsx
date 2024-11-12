@@ -11,7 +11,12 @@ const ClassifierNode: React.FC<NodeProps<ClassifierNodeData>> = (props) => {
 
   return (
     <BaseNode {...props} icon={<Icon />} colorScheme={colorScheme}>
-      <Handle type="target" position={Position.Left} id="left" />
+      <Handle
+        type="target"
+        position={Position.Left}
+        id="input"
+        style={{ left: -8 }}
+      />
       
       <VStack spacing={1} align="stretch">
         {categories.map((category, index) => (
@@ -23,13 +28,14 @@ const ClassifierNode: React.FC<NodeProps<ClassifierNodeData>> = (props) => {
             borderRadius="md"
           >
             <Text fontSize="xs" fontWeight="500">
-              {category.name}
+              {category.name || `Category ${index + 1}`}
             </Text>
             <Handle
               type="source"
               position={Position.Right}
               id={category.id}
               style={{
+                right: -8,
                 top: "50%",
                 transform: "translateY(-50%)",
               }}
