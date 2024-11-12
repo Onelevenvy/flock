@@ -231,3 +231,7 @@ pnpm dev
 
 # 或者 pnpm build 然后 pnpm start
 ```
+
+## Star History
+
+[![Star History Chart](https://api.star-history.com/svg?repos=Onelevenvy/flock&type=Date)](https://star-history.com/#Onelevenvy/flock&Date)

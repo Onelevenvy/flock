@@ -225,3 +225,7 @@ pnpm dev
 
 # または pnpm build してから pnpm start
 ```
+
+## Star History
+
+[![Star History Chart](https://api.star-history.com/svg?repos=Onelevenvy/flock&type=Date)](https://star-history.com/#Onelevenvy/flock&Date)
