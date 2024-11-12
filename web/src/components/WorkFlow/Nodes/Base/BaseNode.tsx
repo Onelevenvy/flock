@@ -19,28 +19,20 @@ export const BaseNode: React.FC<BaseNodeProps> = ({
     padding="10px"
     borderRadius="lg"
     background="white"
-    minWidth="200px"
-    maxWidth="200px"
+    minWidth="200"
+    maxWidth="200"
     textAlign="center"
     position="relative"
-    boxShadow="0 2px 4px rgba(0,0,0,0.1)"
-    border="1px solid"
-    borderColor="gray.200"
-    transition="all 0.2s"
-    _hover={{
-      boxShadow: "0 4px 6px rgba(0,0,0,0.1)",
-      borderColor: "gray.300",
-    }}
+    boxShadow="md"
   >
-    <HStack spacing={2} mb={2} justify="center">
+    <HStack spacing={2} mb={1}>
       <IconButton
         aria-label={data.label}
         icon={icon}
         colorScheme={colorScheme}
-        size="sm"
-        borderRadius="md"
+        size="xs"
       />
-      <Text fontWeight="600" fontSize="sm" color="gray.700">
+      <Text fontWeight="bold" fontSize="xs">
         {data.label}
       </Text>
     </HStack>
