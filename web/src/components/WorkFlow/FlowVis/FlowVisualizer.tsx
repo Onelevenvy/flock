@@ -42,7 +42,7 @@ import "reactflow/dist/style.css";
 import DebugPreview from "../../Teams/DebugPreview";
 import BaseProperties from "../Nodes/Base/BaseNodeProperties";
 import { type NodeType, nodeConfig } from "../Nodes/nodeConfig";
-import type { CustomNode, FlowVisualizerProps } from "../types";
+import type { ClassifierNodeData, CustomNode, FlowVisualizerProps } from "../types";
 import { calculateEdgeCenter } from "./utils";
 import SharedNodeMenu from "./SharedNodeMenu";
 
@@ -161,18 +161,49 @@ const FlowVisualizer: React.FC<FlowVisualizerProps> = ({
       const sourceType = sourceNode.type as NodeType;
       const targetType = targetNode.type as NodeType;
 
-      // Prevent multiple connections from start node
-      if (sourceType === "start") {
-        const existingStartConnections = edges.filter(
-          (edge) => edge.source === connection.source
-        );
+      // 防止自连接
+      if (connection.source === connection.target) return false;
 
-        if (existingStartConnections.length > 0) return false;
+      // 防止重复连接
+      const existingEdge = edges.find(
+        (edge) =>
+          edge.source === connection.source &&
+          edge.target === connection.target &&
+          edge.sourceHandle === connection.sourceHandle
+      );
+      if (existingEdge) return false;
+
+      // 分类器节点的特殊处理
+      if (sourceType === "classifier") {
+        // 分类器节点的输出连接必须使用分类ID作为handleId
+        if (!connection.sourceHandle) return false;
+        
+        // 验证sourceHandle是否是有效的分类ID
+        const categories = (sourceNode.data as ClassifierNodeData).categories;
+        if (!categories.find(c => c.id === connection.sourceHandle)) return false;
+        
+        // 验证目标节点的连接点
+        if (connection.targetHandle && !nodeConfig[targetType].allowedConnections.targets.includes(connection.targetHandle)) {
+          return false;
+        }
+        return true;
       }
-      const sourceAllowedConnections =
-        nodeConfig[sourceType].allowedConnections;
-      const targetAllowedConnections =
-        nodeConfig[targetType].allowedConnections;
+
+      // 目标节点是分类器的情况
+      if (targetType === "classifier") {
+        // 分类器只允许从左侧连入
+        if (connection.targetHandle !== "input") return false;
+        
+        // 验证源节点的连接点
+        if (connection.sourceHandle && !nodeConfig[sourceType].allowedConnections.sources.includes(connection.sourceHandle)) {
+          return false;
+        }
+        return true;
+      }
+
+      // 其他节点类型的常规验证
+      const sourceAllowedConnections = nodeConfig[sourceType].allowedConnections;
+      const targetAllowedConnections = nodeConfig[targetType].allowedConnections;
 
       // 检查源节点是否允许从指定的 handle 连出
       if (
@@ -181,24 +212,15 @@ const FlowVisualizer: React.FC<FlowVisualizerProps> = ({
       ) {
         return false;
       }
-      // 检查目标节点是否允许从指的 handle 连入
+
+      // 检查目标节点是否允许从指定的 handle 连入
       if (
         connection.targetHandle &&
         !targetAllowedConnections.targets.includes(connection.targetHandle)
       ) {
         return false;
       }
-      // 防止自连接
-      if (connection.source === connection.target) return false;
-      // 防止重复连接
-      const existingEdge = edges.find(
-        (edge) =>
-          edge.source === connection.source && edge.target === connection.target
-      );
 
-      if (existingEdge) return false;
-
-      // 允许所有其他连接
       return true;
     },
     [nodes, edges]
@@ -555,10 +577,12 @@ const FlowVisualizer: React.FC<FlowVisualizerProps> = ({
   }, [setSelectedNodeId]);
 
   const edgesWithStyles = useMemo(() => {
-    return edges?.map((edge) => ({
+    return edges.map((edge) => ({
       ...edge,
       style: {
         ...edge.style,
+        strokeDasharray: edge.source === activeNodeName ? "5,5" : 
+          nodes.find(n => n.id === edge.source)?.type === "classifier" ? "5,5" : undefined,
         strokeWidth: 2, // 加粗线条
         stroke:
           edge.source === activeNodeName || edge.target === activeNodeName
@@ -568,7 +592,7 @@ const FlowVisualizer: React.FC<FlowVisualizerProps> = ({
               : "#517359",
       },
     }));
-  }, [edges, activeNodeName]);
+  }, [edges, activeNodeName, nodes]);
 
   return (
     <Box

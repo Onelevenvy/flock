@@ -44,8 +44,8 @@ const ClassifierNodeProperties: React.FC<ClassifierNodePropertiesProps> = ({
 
   const handleAddCategory = useCallback(() => {
     const newCategory: ClassifierCategory = {
-      id: uuidv4(),
-      name: "",
+      category_id: uuidv4(),
+      category_name: "",
     };
 
     const currentCategories = node.data.categories || [];
@@ -58,14 +58,14 @@ const ClassifierNodeProperties: React.FC<ClassifierNodePropertiesProps> = ({
     onNodeDataChange(
       node.id,
       "categories",
-      currentCategories.filter((c: ClassifierCategory) => c.id !== categoryId)
+      currentCategories.filter((c: ClassifierCategory) => c.category_id !== categoryId)
     );
   }, [node.id, node.data.categories, onNodeDataChange]);
 
   const handleCategoryNameChange = useCallback((categoryId: string, newName: string) => {
     const currentCategories = node.data.categories || [];
-    const updatedCategories = currentCategories.map(category => 
-      category.id === categoryId ? { ...category, name: newName } : category
+    const updatedCategories = currentCategories.map((category: ClassifierCategory) => 
+      category.category_id === categoryId ? { ...category, category_name: newName } : category
     );
     onNodeDataChange(node.id, "categories", updatedCategories);
   }, [node.id, node.data.categories, onNodeDataChange]);
@@ -74,13 +74,13 @@ const ClassifierNodeProperties: React.FC<ClassifierNodePropertiesProps> = ({
     <VStack spacing={4} align="stretch">
       <Box>
         <Text fontWeight="bold">Model:</Text>
-        <ModelSelect
+        <ModelSelect<FormValues>
           control={control}
           name="model"
           bg="#edf2f7"
           value={node.data.model}
           isLoading={isLoadingModel}
-          onChange={(model) => onNodeDataChange(node.id, "model", model)}
+          onChange={(model: string) => onNodeDataChange(node.id, "model", model)}
         />
       </Box>
 
@@ -89,7 +89,7 @@ const ClassifierNodeProperties: React.FC<ClassifierNodePropertiesProps> = ({
         <VStack spacing={4} align="stretch">
           {node.data.categories?.map((category: ClassifierCategory, index: number) => (
             <Box 
-              key={category.id}
+              key={category.category_id}
               borderWidth="1px"
               borderColor="gray.200"
               borderRadius="md"
@@ -106,13 +106,13 @@ const ClassifierNodeProperties: React.FC<ClassifierNodePropertiesProps> = ({
                     size="xs"
                     colorScheme="red"
                     variant="ghost"
-                    onClick={() => handleRemoveCategory(category.id)}
+                    onClick={() => handleRemoveCategory(category.category_id)}
                   />
                 )}
               </HStack>
               <Input
-                value={category.name}
-                onChange={(e) => handleCategoryNameChange(category.id, e.target.value)}
+                value={category.category_name}
+                onChange={(e) => handleCategoryNameChange(category.category_id, e.target.value)}
                 placeholder="Enter category name"
                 size="sm"
                 bg="white"

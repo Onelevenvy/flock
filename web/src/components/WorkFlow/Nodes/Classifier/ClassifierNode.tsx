@@ -21,23 +21,26 @@ const ClassifierNode: React.FC<NodeProps<ClassifierNodeData>> = (props) => {
       <VStack spacing={1} align="stretch">
         {categories.map((category, index) => (
           <Box
-            key={category.id}
+            key={category.category_id}
             position="relative"
             bg="#f2f4f7"
             p={1}
             borderRadius="md"
           >
             <Text fontSize="xs" fontWeight="500">
-              {category.name || `Category ${index + 1}`}
+              {category.category_name || `Category ${index + 1}`}
             </Text>
             <Handle
               type="source"
               position={Position.Right}
-              id={category.id}
+              id={category.category_id}
               style={{
                 right: -8,
                 top: "50%",
                 transform: "translateY(-50%)",
+                background: "#555",
+                width: 8,
+                height: 8,
               }}
             />
           </Box>
@@ -47,4 +50,4 @@ const ClassifierNode: React.FC<NodeProps<ClassifierNodeData>> = (props) => {
   );
 };
 
-export default React.memo(ClassifierNode); 
+export default React.memo(ClassifierNode);

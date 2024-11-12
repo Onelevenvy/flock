@@ -59,13 +59,11 @@ export interface FlowVisualizerProps {
 }
 
 export interface ClassifierCategory {
-  id: string;
-  name: string;
+  category_id: string;
+  category_name: string;
 }
 
 export interface ClassifierNodeData extends NodeData {
   categories: ClassifierCategory[];
   model?: string;
-  temperature?: number;
-  systemPrompt?: string;
 }

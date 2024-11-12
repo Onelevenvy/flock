@@ -189,8 +189,8 @@ export const nodeConfig: Record<string, NodeConfigItem> = {
     inputVariables: ["input"],
     initialData: {
       categories: [
-        { id: "1", name: "" },
-        { id: "2", name: "" }
+        { category_id: "1", category_name: "" },
+        { category_id: "2", category_name: "" }
       ],
       model: "glm-4-flash",
     }
