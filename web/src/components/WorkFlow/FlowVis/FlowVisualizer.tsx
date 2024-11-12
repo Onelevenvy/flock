@@ -235,11 +235,6 @@ const FlowVisualizer: React.FC<FlowVisualizerProps> = ({
             return {
               ...e,
               type: newType,
-              animated: newType !== "default",
-              style: {
-                ...e.style,
-                strokeDasharray: newType === "default" ? undefined : "5,5",
-              },
             };
           }
           return e;
@@ -573,23 +568,30 @@ const FlowVisualizer: React.FC<FlowVisualizerProps> = ({
   }, [setSelectedNodeId]);
 
   const edgesWithStyles = useMemo(() => {
-    return edges.map((edge) => ({
-      ...edge,
-      style: {
-        ...edge.style,
-        strokeDasharray: 
-          edge.source === activeNodeName ? "5,5" : 
-          nodes.find(n => n.id === edge.source)?.type === "classifier" ? "5,5" :
-          edge.type === "smoothstep" ? "5,5" : undefined,
-        strokeWidth: 2,
-        stroke:
-          edge.source === activeNodeName || edge.target === activeNodeName
-            ? "#38a169"
-            : edge.type === "default"
-              ? "#5e5a6a"
-              : "#517359",
-      },
-    }));
+    return edges.map((edge) => {
+      const sourceNode = nodes.find(n => n.id === edge.source);
+      const isClassifierEdge = sourceNode?.type === "classifier";
+      
+      // 分类器节点的边默认为虚线类型
+      if (isClassifierEdge && edge.type === undefined) {
+        edge.type = "smoothstep";
+      }
+
+      return {
+        ...edge,
+        style: {
+          ...edge.style,
+          strokeWidth: 2,
+          strokeDasharray: edge.type === "smoothstep" ? "5,5" : undefined,
+          stroke:
+            edge.source === activeNodeName || edge.target === activeNodeName
+              ? "#38a169"
+              : edge.type === "default"
+                ? "#5e5a6a"
+                : "#517359",
+        },
+      };
+    });
   }, [edges, activeNodeName, nodes]);
 
   return (
