@@ -1,8 +1,8 @@
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List
 from langchain_core.runnables import RunnableConfig
-from .state import ReturnTeamState, TeamState, update_node_outputs
+from .state import ReturnTeamState, TeamState, update_node_outputs, parse_variables
 from langchain_core.messages import AIMessage
-from crewai import Agent, Crew, Task, Process, LLM
+from crewai import Agent, Crew, Task, Process
 from app.core.model_providers.model_provider_manager import model_provider_manager
 from app.core.tools.tool_manager import managed_tools
 
@@ -51,6 +51,20 @@ Even though you don't perform tasks by yourself, you have a lot of experience in
                     "allow_delegation": True,
                 },
             )
+            
+            # Parse variables in manager config
+            if "role" in manager_agent_config:
+                manager_agent_config["role"] = parse_variables(
+                    manager_agent_config["role"], {}
+                )
+            if "goal" in manager_agent_config:
+                manager_agent_config["goal"] = parse_variables(
+                    manager_agent_config["goal"], {}
+                )
+            if "backstory" in manager_agent_config:
+                manager_agent_config["backstory"] = parse_variables(
+                    manager_agent_config["backstory"], {}
+                )
 
             self.manager_agent = Agent(
                 role=manager_agent_config["role"],
@@ -68,8 +82,8 @@ Even though you don't perform tasks by yourself, you have a lot of experience in
                 return tool_info.tool
         return None
 
-    def _create_agent(self, agent_config: Dict[str, Any]) -> Agent:
-        """Create an agent from configuration"""
+    def _create_agent(self, agent_config: Dict[str, Any], state: TeamState) -> Agent:
+        """Create an agent from configuration with variable parsing"""
         tools = []
         # 从配置中获取工具列表
         for tool_name in agent_config.get("tools", []):
@@ -77,10 +91,15 @@ Even though you don't perform tasks by yourself, you have a lot of experience in
             if tool:
                 tools.append(tool)
 
+        # Parse variables in agent configuration
+        role = parse_variables(agent_config["role"], state["node_outputs"])
+        goal = parse_variables(agent_config["goal"], state["node_outputs"])
+        backstory = parse_variables(agent_config["backstory"], state["node_outputs"])
+
         return Agent(
-            role=agent_config["role"],
-            goal=agent_config["goal"],
-            backstory=agent_config["backstory"],
+            role=role,
+            goal=goal,
+            backstory=backstory,
             allow_delegation=agent_config.get("allow_delegation", False),
             tools=tools,
             verbose=True,
@@ -88,15 +107,33 @@ Even though you don't perform tasks by yourself, you have a lot of experience in
         )
 
     def _create_task(
-        self, task_config: Dict[str, Any], agents: Dict[str, Agent]
+        self, task_config: Dict[str, Any], agents: Dict[str, Agent], state: TeamState
     ) -> Task:
-        """Create a task from configuration"""
+        """Create a task from configuration with variable parsing"""
+        # Parse variables in task configuration
+        description = parse_variables(task_config["description"], state["node_outputs"])
+        
+        # 确保 expected_output 始终是字符串
+        expected_output = ""
+        if task_config.get("expected_output"):
+            expected_output = parse_variables(
+                task_config["expected_output"], state["node_outputs"]
+            )
+
+        # Parse context variables if they exist
+        context = []
+        if task_config.get("context"):
+            context = [
+                parse_variables(ctx, state["node_outputs"])
+                for ctx in task_config["context"]
+            ]
+
         return Task(
-            description=task_config["description"],
+            description=description,
             agent=agents[task_config["agent_id"]],
-            expected_output=task_config.get("expected_output"),
+            expected_output=expected_output,  # 现在这里一定是字符串
             output_json=task_config.get("output_json"),
-            context=task_config.get("context", []),
+            context=context if context else None,
             llm=self.llm,
         )
 
@@ -104,15 +141,16 @@ Even though you don't perform tasks by yourself, you have a lot of experience in
         if "node_outputs" not in state:
             state["node_outputs"] = {}
 
-        # Create agents
+        # Create agents with variable parsing
         agents = {
-            agent_config["id"]: self._create_agent(agent_config)
+            agent_config["id"]: self._create_agent(agent_config, state)
             for agent_config in self.agents_config
         }
 
-        # Create tasks
+        # Create tasks with variable parsing
         tasks = [
-            self._create_task(task_config, agents) for task_config in self.tasks_config
+            self._create_task(task_config, agents, state)
+            for task_config in self.tasks_config
         ]
 
         # Create and run crew
@@ -133,6 +171,7 @@ Even though you don't perform tasks by yourself, you have a lot of experience in
         # Run the crew
         result = crew.kickoff()
         raw_result_str = result.raw
+
         # Update node_outputs
         new_output = {self.node_id: {"response": raw_result_str}}
         state["node_outputs"] = update_node_outputs(state["node_outputs"], new_output)
