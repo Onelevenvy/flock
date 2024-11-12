@@ -23,6 +23,7 @@ from .node.retrieval_node import RetrievalNode
 from .node.state import TeamState
 from .node.subgraph_node import SubgraphNode
 from .node.crewai_node import CrewAINode
+from .node.classifier_node import ClassifierNode
 
 
 def create_subgraph(subgraph_config: Dict[str, Any]) -> CompiledGraph:
@@ -153,13 +154,15 @@ def initialize_graph(
                 )
             elif node_type in ["tool", "toolretrieval"]:
                 _add_tool_node(graph_builder, node_id, node_type, node_data)
+            elif node_type == "classifier":
+                _add_classifier_node(graph_builder, node_id, node_data)
 
         # Add edges
         for edge in edges:
             _add_edge(graph_builder, edge, nodes, conditional_edges)
 
         # Add conditional edges
-        _add_conditional_edges(graph_builder, conditional_edges)
+        _add_conditional_edges(graph_builder, conditional_edges, nodes)
 
         # Set entry point and compile graph
         graph_builder.set_entry_point("InputNode")
@@ -406,18 +409,44 @@ def _add_edge(graph_builder, edge, nodes, conditional_edges):
         graph_builder.add_edge(edge["source"], edge["target"])
     elif target_node["type"] == "subgraph":
         graph_builder.add_edge(edge["source"], edge["target"])
+    elif source_node["type"] == "classifier":
+        if target_node["type"] == "end":
+            graph_builder.add_edge(edge["source"], END)
+        else:
+            # 对于分类器节点,我们需要添加条件边
+            if edge["type"] == "default":
+                graph_builder.add_edge(edge["source"], edge["target"])
+            else:
+                # 将分类器的输出添加到条件边中
+                conditional_edges[source_node["id"]]["default"][target_node["id"]] = target_node["id"]
 
 
-def _add_conditional_edges(graph_builder, conditional_edges):
-    for llm_id, conditions in conditional_edges.items():
+def _add_conditional_edges(graph_builder, conditional_edges, nodes):
+    """Add conditional edges to graph"""
+    for node_id, conditions in conditional_edges.items():
         edges_dict = {
             "default": next(iter(conditions["default"].values()), END),
             **conditions["call_tools"],
         }
+        
+        # 如果是分类器节点,添加分类结果作为条件
+        source_node = next((n for n in nodes if n["id"] == node_id), None)
+        if source_node and source_node["type"] == "classifier":
+            for category in source_node["data"]["categories"]:
+                category_id = category["category_id"]
+                # 不区分大小写地检查条件边
+                matching_keys = [
+                    key for key in conditions["default"].keys()
+                    if str(key).lower() == str(category_id).lower()
+                ]
+                if matching_keys:
+                    edges_dict[category_id] = conditions["default"][matching_keys[0]]
+        
         if conditions["call_human"]:
             edges_dict["call_human"] = next(iter(conditions["call_human"].values()))
+            
         if edges_dict != {"default": END}:
-            graph_builder.add_conditional_edges(llm_id, should_continue, edges_dict)
+            graph_builder.add_conditional_edges(node_id, should_continue, edges_dict)
 
 
 def _add_crewai_node(graph_builder, node_id, node_type, node_data):
@@ -483,3 +512,22 @@ def get_model_info(model_name: str) -> Dict[str, str]:
                 "api_key": model.provider.api_key,
             }
     raise ValueError(f"Model {model_name} not supported now.")
+
+
+def _add_classifier_node(graph_builder, node_id, node_data):
+    """Add classifier node to graph"""
+    # 获取模型信息
+    model_info = get_model_info(node_data["model"])
+    
+    graph_builder.add_node(
+        node_id,
+        ClassifierNode(
+            node_id=node_id,
+            provider=model_info["provider_name"],
+            model=model_info["ai_model_name"],
+            categories=node_data["categories"],
+            input=node_data.get("input", ""),
+            openai_api_key=model_info["api_key"],
+            openai_api_base=model_info["base_url"],
+        ).work,
+    )
