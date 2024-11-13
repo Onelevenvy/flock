@@ -1,4 +1,4 @@
-from typing import Optional
+from typing import Optional, List, Dict, Any
 
 from sqlmodel import Session, select
 
@@ -9,6 +9,7 @@ from ..models import (
     ModelProviderUpdate,
     ModelProviderWithModelsListOut,
     ProvidersListWithModelsOut,
+    Models,
 )
 
 
@@ -145,3 +146,50 @@ def get_model_provider_list_with_models(
         )
 
     return ProvidersListWithModelsOut(providers=providers_list)
+
+
+def sync_provider_models(
+    session: Session, 
+    provider_id: int, 
+    config_models: List[Dict[str, Any]]
+) -> List[Models]:
+    """
+    同步配置文件中的模型到数据库
+    """
+    # 获取现有模型
+    existing_models = session.exec(
+        select(Models).where(Models.provider_id == provider_id)
+    ).all()
+    existing_model_names = {model.ai_model_name for model in existing_models}
+    
+    synced_models = []
+    
+    for config_model in config_models:
+        model_name = config_model["name"]
+        
+        # 准备模型元数据
+        meta_ = {}
+        if "dimension" in config_model:
+            meta_["dimension"] = config_model["dimension"]
+            
+        if model_name in existing_model_names:
+            # 更新现有模型
+            model = next(m for m in existing_models if m.ai_model_name == model_name)
+            model.categories = config_model["categories"]
+            model.capabilities = config_model.get("capabilities", [])
+            model.meta_ = meta_
+        else:
+            # 创建新模型
+            model = Models(
+                ai_model_name=model_name,
+                provider_id=provider_id,
+                categories=config_model["categories"],
+                capabilities=config_model.get("capabilities", []),
+                meta_=meta_
+            )
+            session.add(model)
+            
+        synced_models.append(model)
+    
+    session.commit()
+    return synced_models

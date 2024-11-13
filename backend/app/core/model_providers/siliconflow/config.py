@@ -40,21 +40,25 @@ SUPPORTED_MODELS = [
         "name": "BAAI/bge-large-zh-v1.5",
         "categories": [ModelCategory.TEXT_EMBEDDING],
         "capabilities": [],
+        "dimension": 1024,
     },
     {
         "name": "BAAI/bge-large-en-v1.5",
         "categories": [ModelCategory.TEXT_EMBEDDING],
         "capabilities": [],
+        "dimension": 1024,
     },
     {
         "name": "BAAI/bge-m3",
         "categories": [ModelCategory.TEXT_EMBEDDING],
         "capabilities": [],
+        "dimension": 1024,
     },
     {
         "name": "netease-youdao/bce-embedding-base_v1",
         "categories": [ModelCategory.TEXT_EMBEDDING],
         "capabilities": [],
+        "dimension": 768,
     },
 ]
 

@@ -23,7 +23,7 @@ class QdrantStore:
         self.collection_name = settings.QDRANT_COLLECTION
         # self.url = "http://localhost:6333"
         self.url = settings.QDRANT_URL
-        self.embedding_model = get_embedding_model(settings.EMBEDDING_MODEL)
+        self.embedding_model = get_embedding_model(settings.EMBEDDING_PROVIDER)
 
         logger.debug(f"Initializing QdrantStore with URL: {self.url}")
 

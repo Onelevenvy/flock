@@ -30,16 +30,19 @@ SUPPORTED_MODELS = [
         "name": "text-embedding-v1",
         "categories": [ModelCategory.TEXT_EMBEDDING],
         "capabilities": [],
+        "dimension": 1536,
     },
     {
         "name": "text-embedding-v2",
         "categories": [ModelCategory.TEXT_EMBEDDING],
         "capabilities": [],
+        "dimension": 1536,
     },
     {
         "name": "text-embedding-v3",
         "categories": [ModelCategory.TEXT_EMBEDDING],
         "capabilities": [],
+        "dimension": 1536,
     },
 ]
 

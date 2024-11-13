@@ -11,7 +11,8 @@ from sqlmodel import select
 
 from app.core.config import settings
 from app.core.workflow.utils.db_utils import db_operation
-from app.models import ModelProvider
+from app.models import ModelProvider, Models
+from app.core.model_providers.model_provider_manager import model_provider_manager
 
 logger = logging.getLogger(__name__)
 
@@ -28,10 +29,49 @@ def get_api_key(provider_name: str) -> str:
     return db_operation(_get_api_key)
 
 
+def get_embedding_dimension(provider_name: str, model_name: str) -> int:
+    def _get_dimension(session):
+        provider = session.exec(
+            select(ModelProvider).where(ModelProvider.provider_name == provider_name)
+        ).first()
+        if not provider:
+            raise ValueError(f"Provider {provider_name} not found")
+
+        model = session.exec(
+            select(Models).where(Models.ai_model_name == model_name)
+        ).first()
+
+        if not model:
+            # 如果数据库中没有,从配置中获取
+            provider_models = model_provider_manager.get_supported_models(provider_name)
+            model_info = next(
+                (m for m in provider_models if m["name"] == model_name), None
+            )
+            if not model_info or "dimension" not in model_info:
+                raise ValueError(
+                    f"No dimension information found for model {model_name}"
+                )
+            dimension = model_info["dimension"]
+        else:
+            dimension = model.meta_.get("dimension")
+            if dimension is None:
+                raise ValueError(
+                    f"No dimension information found in database for model {model_name}"
+                )
+
+        return dimension
+
+    return db_operation(_get_dimension)
+
+
 class ZhipuAIEmbeddings(BaseModel, Embeddings):
     api_key: str
     model: str = "embedding-3"
-    dimension: int = 2048
+    dimension: int | None = None
+
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+        self.dimension = get_embedding_dimension("zhipuai", self.model)
 
     class Config:
         extra = Extra.forbid
@@ -53,8 +93,12 @@ class ZhipuAIEmbeddings(BaseModel, Embeddings):
 class SiliconFlowEmbeddings(BaseModel, Embeddings):
     api_key: str
     model: str = "BAAI/bge-large-zh-v1.5"
-    dimension: int = 1024
+    dimension: int | None = None
 
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+        self.dimension = get_embedding_dimension("Siliconflow", self.model)
+        
     class Config:
         extra = Extra.forbid
 
@@ -87,43 +131,35 @@ class SiliconFlowEmbeddings(BaseModel, Embeddings):
         return self.embed_documents([text])[0]
 
 
-def get_embedding_dimension(embedding_model: Embeddings) -> int:
-    if hasattr(embedding_model, "dimension"):
-        return embedding_model.dimension
-    elif hasattr(embedding_model, "embedding_dim"):
-        return embedding_model.embedding_dim
-    else:
-        sample_embedding = embedding_model.embed_query("Sample text for dimension")
-        return len(sample_embedding)
-
-
-def get_embedding_model(model_name: str) -> Embeddings:
-    logger.info(f"Initializing embedding model: {model_name}")
+def get_embedding_model(model__provider_name: str) -> Embeddings:
+    logger.info(f"Initializing embedding model: {model__provider_name}")
     try:
-        if model_name == "openai":
+        if model__provider_name == "openai":
             api_key = get_api_key("openai")
             embedding_model = OpenAIEmbeddings(openai_api_key=api_key)
-        elif model_name == "zhipuai":
+            embedding_model.dimension = get_embedding_dimension(
+                "openai", "text-embedding-ada-002"
+            )
+        elif model__provider_name == "zhipuai":
             api_key = get_api_key("zhipuai")
             embedding_model = ZhipuAIEmbeddings(api_key=api_key)
-        elif model_name == "Siliconflow":
+        elif model__provider_name == "Siliconflow":
             api_key = get_api_key("Siliconflow")
             embedding_model = SiliconFlowEmbeddings(api_key=api_key)
-        elif model_name == "local":
+        elif model__provider_name == "local":
             embedding_model = HuggingFaceEmbeddings(
                 model_name=settings.DENSE_EMBEDDING_MODEL,
                 model_kwargs={"device": "cpu"},
             )
+            # 对于local模型，我们可以通过实际嵌入一个样本文本来获取维度
+            sample_embedding = embedding_model.embed_query("Sample text for dimension")
+            embedding_model.dimension = len(sample_embedding)
         else:
-            raise ValueError(f"Unsupported embedding model: {model_name}")
+            raise ValueError(
+                f"Unsupported embedding model pvovider: {model__provider_name}"
+            )
 
         logger.info(f"Embedding model created: {type(embedding_model)}")
-
-        if not isinstance(embedding_model, ZhipuAIEmbeddings) and not isinstance(
-            embedding_model, SiliconFlowEmbeddings
-        ):
-            embedding_model.dimension = get_embedding_dimension(embedding_model)
-
         logger.info(f"Embedding model dimension: {embedding_model.dimension}")
 
         return embedding_model

@@ -149,9 +149,10 @@ class Settings(BaseSettings):
     QDRANT_COLLECTION: str | None = "kb_uploads"
 
     # Embeddings
-    # EMBEDDING_MODEL: str = "local"  # 或者你想使用的其他模型
-    # EMBEDDING_MODEL: str = "zhipuai"  # 或者你想使用的其他模型
-    EMBEDDING_MODEL: str = "Siliconflow"
+    # EMBEDDING_PROVIDER: str = "local"  # 或者你想使用的其他模型
+    # EMBEDDING_PROVIDER: str = "zhipuai"  # 或者你想使用的其他模型
+    EMBEDDING_PROVIDER: str = "Siliconflow"
+    # EMBEDDING_MODEL: str = "BAAI/bge-large-zh-v1.5"
 
     DENSE_EMBEDDING_MODEL: str = (
         "sentence-transformers/all-MiniLM-L6-v2"  # 默认的密集嵌入模型
@@ -179,6 +180,10 @@ class Settings(BaseSettings):
     # LANGCHAIN_ENDPOINT: str | None = None
     # LANGCHAIN_API_KEY: str | None = None
     # LANGCHAIN_PROJECT: str | None = None
+
+    # Embeddings配置
+    EMBEDDING_PROVIDER: str = "Siliconflow"
+    EMBEDDING_MODEL: str = "BAAI/bge-large-zh-v1.5"  # 默认模型
 
 
 settings = Settings()  # type: ignore

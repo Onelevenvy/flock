@@ -51,6 +51,7 @@ SUPPORTED_MODELS = [
         "name": "embedding-3",
         "categories": [ModelCategory.TEXT_EMBEDDING],
         "capabilities": [],
+        "dimension": 2048,
     },
 ]
 

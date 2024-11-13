@@ -561,7 +561,7 @@ class ModelProviderUpdate(ModelProviderBase):
 
 class ModelProvider(ModelProviderBase, table=True):
     id: int | None = Field(default=None, primary_key=True)
-    provider_name: str = Field(max_length=64)  # 调整长度与ModelProviderBase一致
+    provider_name: str = Field(max_length=64)  # ���整长度与ModelProviderBase一致
     base_url: str | None = Field(default=None)  # 保持可选
     api_key: str | None = Field(default=None)  # 保持可选
     icon: str | None = Field(default=None)  # 保持可选
@@ -601,6 +601,10 @@ class Models(ModelsBase, table=True):
     categories: list[ModelCategory] = Field(sa_column=Column(ARRAY(String)))
     capabilities: list[ModelCapability] = Field(
         sa_column=Column(ARRAY(String)), default=[]
+    )
+    meta_: dict[str, Any] = Field(
+        default_factory=dict,
+        sa_column=Column("metadata", JSONB, nullable=False, server_default="{}"),
     )
     # Relationship with ModelProvider
     provider: ModelProvider = Relationship(back_populates="models")

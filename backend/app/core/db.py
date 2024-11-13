@@ -158,16 +158,24 @@ def init_modelprovider_model_db(session: Session) -> None:
         }
 
         for model_info in supported_models:
+            # 准备元数据
+            meta_ = {}
+            if "dimension" in model_info:
+                meta_["dimension"] = model_info["dimension"]
+
             if model_info["name"] in existing_models:
                 model = existing_models[model_info["name"]]
                 model.categories = model_info["categories"]
                 model.capabilities = model_info["capabilities"]
+                # 更新元数据
+                model.meta_ = meta_
             else:
                 new_model = Models(
                     ai_model_name=model_info["name"],
                     provider_id=db_provider.id,
                     categories=model_info["categories"],
                     capabilities=model_info["capabilities"],
+                    meta_=meta_,  # 添加元数据
                 )
                 session.add(new_model)
 
@@ -181,13 +189,17 @@ def init_modelprovider_model_db(session: Session) -> None:
     # 打印当前数据库状态
     providers = session.exec(select(ModelProvider).order_by(ModelProvider.id)).all()
     for provider in providers:
-        print(f"Provider: {provider.provider_name} (ID: {provider.id})")
+        print(f"\nProvider: {provider.provider_name} (ID: {provider.id})")
         print(f"  Base URL: {provider.base_url}")
-        print(f"  API Key: {'*' * len(provider.api_key)}")
+        print(
+            f"  API Key: {'*' * len(provider.api_key) if provider.api_key else 'None'}"
+        )
+        print(f"  Description: {provider.description}")
         models = session.exec(
             select(Models).where(Models.provider_id == provider.id).order_by(Models.id)
         ).all()
         for model in models:
-            print(f"  - Model: {model.ai_model_name} (ID: {model.id})")
+            print(f"\n  - Model: {model.ai_model_name} (ID: {model.id})")
             print(f"    Categories: {', '.join(model.categories)}")
             print(f"    Capabilities: {', '.join(model.capabilities)}")
+            print(f"    Metadata: {model.meta_}")
