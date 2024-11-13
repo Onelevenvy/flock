@@ -14,7 +14,7 @@ import {
 import { useRouter } from "next/navigation";
 import { useMemo } from "react";
 import { useTranslation } from "react-i18next";
-import { GoGitMerge, GoGitPullRequestDraft } from "react-icons/go";
+import { GoGitMerge, GoGitPullRequestDraft,GoWorkflow } from "react-icons/go";
 import { PiChatCircleDots } from "react-icons/pi";
 import { RiApps2Line, RiBookLine } from "react-icons/ri";
 import { useQuery } from "react-query";
@@ -63,6 +63,11 @@ function Teams() {
       value: "all",
       text: t("panestate.team.all"),
       icon: <RiApps2Line className="w-[14px] h-[14px] mr-1" />,
+    },
+    {
+      value: "workflow",
+      text: "Workflow",
+      icon: <GoWorkflow className="w-[14px] h-[14px] mr-1" />,
     },
     {
       value: "sequential",

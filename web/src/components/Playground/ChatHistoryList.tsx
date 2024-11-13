@@ -6,6 +6,7 @@ import {
   IconButton,
   Spinner,
   Text,
+  VStack,
   useColorModeValue,
 } from "@chakra-ui/react";
 import { StarIcon, Trash2Icon } from "lucide-react";
@@ -15,7 +16,6 @@ import { useTranslation } from "react-i18next";
 import { useMutation, useQuery, useQueryClient } from "react-query";
 
 import useChatMessageStore from "@/stores/chatMessageStore";
-
 import { type ApiError, MembersService, ThreadsService } from "../../client";
 import useCustomToast from "../../hooks/useCustomToast";
 
@@ -26,11 +26,15 @@ interface ChatHistoryProps {
 
 const ChatHistoryList = ({ teamId, isPlayground }: ChatHistoryProps) => {
   const queryClient = useQueryClient();
-
   const navigate = useRouter();
   const showToast = useCustomToast();
   const rowTint = useColorModeValue("blackAlpha.50", "whiteAlpha.50");
+  const selctedColor = useColorModeValue(
+    "ui.selctedColor",
+    "ui.selctedColorDark"
+  );
   const [localTeamId, setLocalTeamId] = useState(teamId);
+  const { t } = useTranslation();
 
   useEffect(() => {
     setLocalTeamId(teamId);
@@ -45,7 +49,7 @@ const ChatHistoryList = ({ teamId, isPlayground }: ChatHistoryProps) => {
     ["teams", localTeamId, "members"],
     () => MembersService.readMembers({ teamId: localTeamId }),
     {
-      enabled: !!localTeamId, // 确保在 localTeamId 存在时才执行查询
+      enabled: !!localTeamId,
     }
   );
 
@@ -64,15 +68,10 @@ const ChatHistoryList = ({ teamId, isPlayground }: ChatHistoryProps) => {
       id: threadId,
     });
   };
-  const selctedColor = useColorModeValue(
-    "ui.selctedColor",
-    "ui.selctedColorDark"
-  );
+
   const deleteThreadMutation = useMutation(deleteThread, {
     onError: (err: ApiError) => {
       const errDetail = err.body?.detail;
-
-      // showToast("Unable to delete thread.", `${errDetail}`, "error");
       console.log("error", errDetail);
     },
     onSettled: () => {
@@ -80,7 +79,12 @@ const ChatHistoryList = ({ teamId, isPlayground }: ChatHistoryProps) => {
       queryClient.invalidateQueries(["threads", selectedThreadId]);
     },
   });
+
   const [selectedThreadId, setSelectedThreadId] = useState<string | null>(null);
+  const { setMessages } = useChatMessageStore();
+  const [shouldNavigate, setShouldNavigate] = useState(false);
+  const [showMenu, setShowMenu] = useState(false);
+
   const onClickRowHandler = (threadId: string) => {
     setSelectedThreadId(threadId);
     if (isPlayground) {
@@ -89,9 +93,6 @@ const ChatHistoryList = ({ teamId, isPlayground }: ChatHistoryProps) => {
       navigate.push(`/teams/${teamId}?threadId=${threadId}`);
     }
   };
-
-  const { setMessages } = useChatMessageStore();
-  const [shouldNavigate, setShouldNavigate] = useState(false);
 
   const handleDeleteThread = () => {
     if (selectedThreadId) {
@@ -115,109 +116,111 @@ const ChatHistoryList = ({ teamId, isPlayground }: ChatHistoryProps) => {
   if (isError || membersIsError) {
     const errors = error || membersError;
     const errDetail = (errors as ApiError).body?.detail;
-
     showToast("Something went wrong.", `${errDetail}`, "error");
   }
-  const [showMenu, setShowMenu] = useState(false);
-  const { t } = useTranslation();
 
   return (
-    <>
+    <Box h="100vh" bg="white" borderLeft="1px solid" borderColor="gray.200">
       {isLoading && membersLoading ? (
         <Flex justify="center" align="center" height="100vh" width="full">
-          <Spinner size="xl" color="ui.main" />
+          <Spinner size="xl" color="ui.main" thickness="3px" />
         </Flex>
       ) : (
-        <Box h="full" maxH={"full"} overflow={"hidden"}>
-          {threads && members && (
-            <>
-              <Box p={4} display="flex" overflow={"hidden"}>
-                <Text fontSize="lg" fontWeight="bold">
-                  {t("chat.chatHistoryList.chatHistory")}
-                </Text>
-              </Box>
-              <Box overflowY={"auto"} overflowX={"hidden"} maxH="full" h="full">
-                {threads.data.map((thread) => (
-                  <Box
-                    key={thread.id}
-                    width={"full"}
-                    borderRadius="md"
-                    borderColor={rowTint}
-                    cursor="pointer"
-                    onClick={() => onClickRowHandler(thread.id)}
-                    _hover={{ backgroundColor: rowTint }}
-                    position="relative" // Ensure menu is positioned relative to this container
-                    overflow={"hidden"}
-                    onMouseEnter={() => {
-                      setShowMenu(true);
-                    }}
-                    onMouseLeave={() => {
-                      setShowMenu(false);
-                    }}
-                    backgroundColor={
-                      selectedThreadId === thread.id.toString()
-                        ? selctedColor
-                        : "transparent"
-                    }
-                  >
-                    <Box
-                      display="flex"
-                      alignItems="center"
-                      alignContent="center"
-                      flexDirection="row"
-                      pt={4}
-                      pb={4}
-                      overflow={"hidden"}
-                    >
-                      <Icon as={StarIcon} mx={2} />
-                      <Box mr={2} minW={"45%"} maxW={"45%"}>
+        threads &&
+        members && (
+          <VStack h="full" spacing={0}>
+            <Box p={4} w="full" borderBottom="1px solid" borderColor="gray.100">
+              <Text fontSize="lg" fontWeight="bold">
+                {t("chat.chatHistoryList.chatHistory")}
+              </Text>
+            </Box>
+
+            <VStack
+              flex={1}
+              w="full"
+              spacing={0}
+              overflowY="auto"
+              overflowX="hidden"
+              sx={{
+                "&::-webkit-scrollbar": {
+                  width: "4px",
+                },
+                "&::-webkit-scrollbar-track": {
+                  width: "6px",
+                  bg: "gray.50",
+                },
+                "&::-webkit-scrollbar-thumb": {
+                  background: "gray.200",
+                  borderRadius: "24px",
+                },
+              }}
+            >
+              {threads.data.map((thread) => (
+                <Box
+                  key={thread.id}
+                  w="full"
+                  borderRadius="md"
+                  cursor="pointer"
+                  onClick={() => onClickRowHandler(thread.id)}
+                  onMouseEnter={() => setShowMenu(true)}
+                  onMouseLeave={() => setShowMenu(false)}
+                  position="relative"
+                  transition="all 0.2s"
+                  bg={
+                    selectedThreadId === thread.id
+                      ? selctedColor
+                      : "transparent"
+                  }
+                  _hover={{ bg: rowTint }}
+                >
+                  <Flex align="center" p={4} position="relative">
+                    <Icon as={StarIcon} color="gray.400" />
+                    <Box flex={1} ml={4}>
+                      <Box minW="45%" maxW="45%" mr={2}>
                         <Text
                           fontFamily="Arial, sans-serif"
-                          fontSize={"sm"}
+                          fontSize="sm"
                           color="gray.500"
                           noOfLines={1}
                         >
                           {thread.query}
                         </Text>
                       </Box>
-                      <Box mr={2} minW={"40%"} maxW={"40%"}>
+                      <Box minW="40%" maxW="40%" mr={2}>
                         <Text
                           fontFamily="Arial, sans-serif"
-                          fontSize={"sm"}
-                          color={"gray.500"}
+                          fontSize="sm"
+                          color="gray.500"
                           noOfLines={1}
                         >
                           {new Date(thread.updated_at).toLocaleString()}
                         </Text>
                       </Box>
-                      {showMenu && (
-                        <Box
-                          display="flex"
-                          position={"absolute"}
-                          right={1}
-                          ml={1}
-                        >
-                          <Button
-                            as={IconButton}
-                            size={"sm"}
-                            aria-label="Options"
-                            icon={<Icon as={Trash2Icon} w="4" h="4" />}
-                            variant="ghost"
-                            onClick={() => {
-                              handleDeleteThread();
-                            }}
-                          />
-                        </Box>
-                      )}
                     </Box>
-                  </Box>
-                ))}
-              </Box>
-            </>
-          )}
-        </Box>
+                    {showMenu && selectedThreadId === thread.id && (
+                      <Box position="absolute" right={4}>
+                        <Button
+                          as={IconButton}
+                          size="sm"
+                          aria-label="Delete thread"
+                          icon={<Icon as={Trash2Icon} boxSize={4} />}
+                          variant="ghost"
+                          colorScheme="red"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleDeleteThread();
+                          }}
+                        />
+                      </Box>
+                    )}
+                  </Flex>
+                </Box>
+              ))}
+            </VStack>
+          </VStack>
+        )
       )}
-    </>
+    </Box>
   );
 };
 

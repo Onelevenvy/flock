@@ -5,6 +5,8 @@ import {
   IconButton,
   Text,
   useColorModeValue,
+  VStack,
+  HStack,
 } from "@chakra-ui/react";
 import { useRouter } from "next/navigation";
 import React, { useEffect, useState } from "react";
@@ -15,7 +17,7 @@ import { useQuery } from "react-query";
 import { type ApiError, TeamsService } from "@/client";
 import useCustomToast from "@/hooks/useCustomToast";
 import useChatMessageStore from "@/stores/chatMessageStore";
-import useChatTeamIdStore from "@/stores/chatTeamIDStore"; // 引入 Zustand store
+import useChatTeamIdStore from "@/stores/chatTeamIDStore";
 
 import { tqxIconLibrary } from "../Icons/TqxIcon";
 
@@ -23,131 +25,148 @@ const ChatBotList = () => {
   const showToast = useCustomToast();
   const navigate = useRouter();
   const { t } = useTranslation();
-  const selctedColor = useColorModeValue(
-    "ui.selctedColor",
-    "ui.selctedColorDark"
-  );
+  const selectedBg = useColorModeValue("gray.50", "whiteAlpha.100");
+  const hoverBg = useColorModeValue("gray.100", "whiteAlpha.200");
 
   const {
     data: teams,
     isError,
     error,
   } = useQuery("teams", () => TeamsService.readTeams({}));
-  const { teamId, setTeamId } = useChatTeamIdStore(); // 使用 Zustand store
+  const { teamId, setTeamId } = useChatTeamIdStore();
   const [selectedTeamId, setSelectedTeamId] = useState(teamId);
 
   if (isError) {
     const errDetail = (error as ApiError).body?.detail;
-
     showToast("Something went wrong.", `${errDetail}`, "error");
   }
+
   const { setMessages } = useChatMessageStore();
+
   const handleRowClick = (teamId: number) => {
     setSelectedTeamId(teamId);
-    setTeamId(teamId); // 更新 Zustand store 中的 teamId
+    setTeamId(teamId);
     navigate.push(`/playground?teamId=${teamId}`);
     setMessages([]);
   };
 
-  // 同步 selectedTeamId 和 Zustand store 中的 teamId
   useEffect(() => {
     setTeamId(selectedTeamId);
   }, [selectedTeamId, setTeamId]);
 
   return (
     teams && (
-      <Box
-        display="flex"
-        flexDirection="column"
-        width="full"
-        p={1}
-        overflow={"hidden"}
-        maxH="100%"
-        h="100%"
-        justifyItems={"center"}
+      <VStack
+        h="100vh"
+        w="full"
+        spacing={0}
+        bg="white"
+        borderRight="1px solid"
+        borderColor="gray.200"
       >
-        <Box
-          width="full"
-          _hover={{ cursor: "pointer", backgroundColor: selctedColor }}
-          borderRadius="md"
-          onClick={() => handleRowClick(1)}
-          p={4}
-          backgroundColor={selectedTeamId === 1 ? selctedColor : "transparent"}
-          display="flex"
-          alignItems="center"
-        >
-          <Icon as={FaRobot} mr={2} ml={5} w={8} h={8} color="red.500" />
-          <Box width="full" display="flex" flexDirection="column">
-            <Text fontWeight="bold" fontSize="md" noOfLines={1}>
-              {t("chat.chatBotList.easyTalk")}
-            </Text>
-            <Text color="gray.500" fontSize="xs" noOfLines={1}>
-              {t("chat.chatBotList.description")}
-            </Text>
+        <Box p={4} w="full">
+          <Box
+            w="full"
+            onClick={() => handleRowClick(1)}
+            cursor="pointer"
+            p={3}
+            borderRadius="lg"
+            transition="all 0.2s"
+            bg={selectedTeamId === 1 ? selectedBg : "transparent"}
+            _hover={{ bg: hoverBg }}
+          >
+            <HStack spacing={3}>
+              <Box
+                p={2}
+                borderRadius="lg"
+                bg="red.50"
+                color="red.500"
+              >
+                <Icon as={FaRobot} boxSize={5} />
+              </Box>
+              <Box>
+                <Text fontWeight="600" color="gray.700">
+                  {t("chat.chatBotList.easyTalk")}
+                </Text>
+                <Text color="gray.500" fontSize="sm">
+                  {t("chat.chatBotList.description")}
+                </Text>
+              </Box>
+            </HStack>
           </Box>
         </Box>
 
-        <Box width="full" pb={4} display="flex" alignItems="center">
-          <Text ml="6" fontSize="sm" color="gray.500">
+        <Box w="full" px={4} py={2}>
+          <Text fontSize="sm" fontWeight="500" color="gray.500">
             {t("chat.chatBotList.agentList")}
           </Text>
         </Box>
-        <Divider colorScheme={"gray"} />
-        <Box
-          display="flex"
-          flexDirection={"column"}
-          maxH="100%"
-          h="100%"
-          overflow="auto"
+
+        <Divider />
+
+        <VStack
+          flex={1}
+          w="full"
+          spacing={1}
+          overflowY="auto"
+          p={4}
+          sx={{
+            "&::-webkit-scrollbar": {
+              width: "4px",
+            },
+            "&::-webkit-scrollbar-track": {
+              width: "6px",
+              bg: "gray.50",
+            },
+            "&::-webkit-scrollbar-thumb": {
+              background: "gray.200",
+              borderRadius: "24px",
+            },
+          }}
         >
           {teams.data
             .filter((team) => team.id !== 1)
             .map((team) => (
               <Box
-                width="full"
                 key={team.id}
+                w="full"
                 onClick={() => handleRowClick(team.id)}
-                _hover={{
-                  cursor: "pointer",
-                  backgroundColor: selctedColor,
-                }}
-                borderRadius="md"
-                p={4}
-                mt={0.5}
-                backgroundColor={
-                  selectedTeamId === team.id ? selctedColor : "transparent"
-                }
-                display="flex"
-                alignItems="center"
+                cursor="pointer"
+                p={3}
+                borderRadius="lg"
+                transition="all 0.2s"
+                bg={selectedTeamId === team.id ? selectedBg : "transparent"}
+                _hover={{ bg: hoverBg }}
               >
-                {team.icon && (
-                  <IconButton
-                    aria-label="icon_team"
-                    icon={tqxIconLibrary[team.icon].icon}
-                    colorScheme={tqxIconLibrary[team.icon].colorScheme}
-                    backgroundColor={tqxIconLibrary[team.icon].backgroundColor}
-                    ml={5}
-                    size={"sm"}
-                  />
-                )}
-                <Box width="full" display="flex" flexDirection="column" ml={4}>
-                  <Text fontWeight="bold" fontSize="md" noOfLines={1}>
-                    {team.name}
-                  </Text>
-                  <Text
-                    display="flex"
-                    fontFamily="Arial, sans-serif"
-                    color="gray.500"
-                    fontSize="xs"
-                    noOfLines={1}
-                  >
-                    {team.description}
-                  </Text>
-                </Box>
+                <HStack spacing={3}>
+                  {team.icon && (
+                    <Box
+                      p={2}
+                      borderRadius="lg"
+                      bg={`${tqxIconLibrary[team.icon].colorScheme}.50`}
+                    >
+                      <IconButton
+                        aria-label="Team icon"
+                        icon={tqxIconLibrary[team.icon].icon}
+                        size="sm"
+                        variant="ghost"
+                        color={`${tqxIconLibrary[team.icon].colorScheme}.500`}
+                      />
+                    </Box>
+                  )}
+                  <Box>
+                    <Text fontWeight="600" color="gray.700">
+                      {team.name}
+                    </Text>
+                    <Text color="gray.500" fontSize="sm" noOfLines={1}>
+                      {team.description}
+                    </Text>
+                  </Box>
+                </HStack>
               </Box>
             ))}
-        </Box>
-      </Box>
+        </VStack>
+      </VStack>
     )
   );
 };

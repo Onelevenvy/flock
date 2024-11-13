@@ -402,9 +402,11 @@ const ChatMain = ({ isPlayground }: { isPlayground?: boolean }) => {
       display="flex"
       flexDirection="column"
       position="relative"
+      bg="white"
+      boxShadow="sm"
     >
       <Box
-        p={2}
+        p={4}
         overflowY="auto"
         overflowX="hidden"
         h="full"
@@ -412,16 +414,17 @@ const ChatMain = ({ isPlayground }: { isPlayground?: boolean }) => {
         w="full"
         maxW="full"
         sx={{
-          scrollBehavior: 'auto',
-          '&::-webkit-scrollbar': {
-            width: '4px',
+          scrollBehavior: "smooth",
+          "&::-webkit-scrollbar": {
+            width: "4px",
           },
-          '&::-webkit-scrollbar-track': {
-            width: '6px',
+          "&::-webkit-scrollbar-track": {
+            width: "6px",
+            bg: "gray.50",
           },
-          '&::-webkit-scrollbar-thumb': {
-            background: 'gray.200',
-            borderRadius: '24px',
+          "&::-webkit-scrollbar-thumb": {
+            background: "gray.200",
+            borderRadius: "24px",
           },
         }}
       >
@@ -434,21 +437,28 @@ const ChatMain = ({ isPlayground }: { isPlayground?: boolean }) => {
           />
         ))}
       </Box>
-      <Box display={"flex"} justifyContent={"center"} mt="2">
+
+      <Box display="flex" justifyContent="center" mt={2} mb={2}>
         {isInterruptible && (
           <Button
             leftIcon={<FaRegStopCircle />}
-            bg={"transparent"}
-            border={"1px solid #f7fafc"}
-            boxShadow="0 0 10px rgba(0,0,0,0.2)"
+            variant="outline"
+            colorScheme="red"
+            size="sm"
             onClick={interruptStreamAndUpdate}
-            borderRadius={"lg"}
-            size={"sm"}
+            borderRadius="lg"
+            px={4}
+            transition="all 0.2s"
+            _hover={{
+              transform: "translateY(-1px)",
+              shadow: "md",
+            }}
           >
             {t("chat.chatMain.abort")}
           </Button>
         )}
       </Box>
+
       <MessageInput
         input={input}
         setInput={setInput}

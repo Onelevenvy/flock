@@ -6,7 +6,6 @@ import {
   AccordionPanel,
   Box,
   Button,
-  Flex,
   Icon,
   IconButton,
   Image,
@@ -14,9 +13,9 @@ import {
   InputGroup,
   InputRightElement,
   Text,
-  Tooltip,
   VStack,
   useDisclosure,
+  HStack,
 } from "@chakra-ui/react";
 import { useEffect, useRef, useState, useLayoutEffect } from "react";
 import {
@@ -96,39 +95,26 @@ const MessageBox = ({ message, onResume, isPlayground }: MessageBoxProps) => {
   const [timestamp, setTimestamp] = useState<string>("");
 
   useEffect(() => {
-    // Generate and set timestamp when message is received
     setTimestamp(new Date().toLocaleString());
   }, [message]);
 
   const tqxIcon = () => {
     const hw = 6;
-
-    if (type === "human") {
-      return <Icon as={FaUser} w={hw} h={hw} />;
-    }
-    if (type === "tool") {
-      return <Icon as={FaTools} w={hw} h={hw} />;
-    }
-    if (type === "ai") {
-      return <Icon as={FaRobot} w={hw} h={hw} />;
-    }
-    if (type === "interrupt") {
-      return <Icon as={FaHandPaper} w={hw} h={hw} />;
-    }
-
-    return <Icon as={FaBook} w={hw} h={hw} />; // 如果 type 不是 'human', 'tools', 'ai'，则不显示任何图标
+    if (type === "human") return <Icon as={FaUser} w={hw} h={hw} />;
+    if (type === "tool") return <Icon as={FaTools} w={hw} h={hw} />;
+    if (type === "ai") return <Icon as={FaRobot} w={hw} h={hw} />;
+    if (type === "interrupt") return <Icon as={FaHandPaper} w={hw} h={hw} />;
+    return <Icon as={FaBook} w={hw} h={hw} />;
   };
 
   function isImag(content: any): boolean {
     if (typeof content === "string") {
-      // 检查是否为 data URL 或有效的图像 URL
       return (
         content.startsWith("data:image/") ||
         content.startsWith("http://") ||
         content.startsWith("https://")
       );
     }
-
     return false;
   }
 
@@ -145,21 +131,20 @@ const MessageBox = ({ message, onResume, isPlayground }: MessageBoxProps) => {
         },
         "&::-webkit-scrollbar-track": {
           width: "6px",
+          bg: "gray.50",
         },
         "&::-webkit-scrollbar-thumb": {
           background: "gray.200",
           borderRadius: "24px",
         },
-        scrollBehavior: "auto",
+        scrollBehavior: "smooth",
         overscrollBehavior: "contain",
       }}
     >
       <Box
         w="full"
-        ml={isPlayground ? "10" : "0"}
-        mr={isPlayground ? "10" : "0"}
-        pl={isPlayground ? "10" : "0"}
-        pr={isPlayground ? "10" : "0"}
+        mx={isPlayground ? "10" : "0"}
+        px={isPlayground ? "10" : "0"}
         display="flex"
         alignItems="center"
         justifyContent={type === "human" ? "flex-end" : "flex-start"}
@@ -169,110 +154,107 @@ const MessageBox = ({ message, onResume, isPlayground }: MessageBoxProps) => {
           w="full"
           display="flex"
           flexDirection={type === "human" ? "row-reverse" : "row"}
-          alignItems="center"
+          alignItems="flex-start"
           maxW="full"
+          gap={4}
         >
           <Box
-            display="flex"
-            flexDirection="column"
-            pr={4}
-            pl="4"
-            alignItems="left"
-            maxW="full"
+            p={2}
+            borderRadius="lg"
+            bg={type === "human" ? "blue.50" : "gray.50"}
+            alignSelf="flex-start"
           >
-            <Box
-              display="flex"
-              flexDirection={type === "human" ? "row-reverse" : "row"}
-              alignItems="center"
-              gap={2}
-              maxW="full"
-            >
-              {next && <Icon as={GrFormNextLink} />}
-              {next && next}
-              {tqxIcon()}
+            {tqxIcon()}
+          </Box>
+
+          <Box display="flex" flexDirection="column" maxW="70%">
+            <HStack spacing={2} mb={1}>
               <Box
                 display="flex"
-                flexDirection="column"
-                alignItems={type === "human" ? "flex-end" : "flex-start"}
-                maxW="full"
+                flexDirection={type === "human" ? "row-reverse" : "row"}
+                alignItems="center"
+                gap={2}
               >
-                <Text fontSize={"xs"} color={"gray.500"}>
+                {next && <Icon as={GrFormNextLink} />}
+                {next && next}
+                <Text fontSize="sm" fontWeight="500" color="gray.700">
                   {name}
                 </Text>
                 {tool_calls?.map((tool_call, index) => (
-                  <Box key={index}>
-                    <Text fontSize={"xs"} color={"gray.500"}>
-                      {tool_call.name}
-                    </Text>
-                  </Box>
+                  <Text key={index} fontSize="xs" color="gray.500">
+                    {tool_call.name}
+                  </Text>
                 ))}
-                <Text fontSize={"xs"} color={"gray.500"}>
+                <Text fontSize="xs" color="gray.500">
                   {timestamp}
                 </Text>
               </Box>
-            </Box>
+            </HStack>
 
-            <Box
-              display="flex"
-              maxW="full"
-              bg={
-                type === "human"
-                  ? content
-                    ? "green.50"
-                    : "transparent"
-                  : content
-                    ? "gray.50"
-                    : "transparent"
-              }
-              // zIndex={1000}
-              borderRadius="lg" // 添加圆角
-              p={content === null ? 0 : 2}
-              flexDirection="column"
-              alignItems={type === "human" ? "flex-end" : "flex-start"}
-              mr={type === "human" ? "10" : "0"}
-              ml={type !== "human" ? "10" : "0"}
-              maxH="100%" // 设置最大高度，根据需要调整
-              overflowY="auto" // 使其可滚动
-              overflowX="hidden"
-            >
-              {imgdata && (
-                <Image src={imgdata} alt="img" height={"auto"} width={"auto"} />
-              )}
-              {content && <Markdown content={content} />}
-            </Box>
+            {imgdata && (
+              <Box
+                mt={2}
+                borderRadius="lg"
+                overflow="hidden"
+                transition="all 0.2s"
+                _hover={{ shadow: "sm" }}
+              >
+                <Image src={imgdata} alt="img" height="auto" width="auto" />
+              </Box>
+            )}
 
+            {content && (
+              <Box
+                bg={type === "human" ? "blue.50" : "gray.50"}
+                borderRadius="lg"
+                p={4}
+                maxW="full"
+                transition="all 0.2s"
+                _hover={{ shadow: "sm" }}
+              >
+                <Markdown content={content} />
+              </Box>
+            )}
+
+            {/* Tool Calls */}
             {tool_calls?.map((tool_call, index) => (
               <Box
                 key={index}
-                p={2}
-                bg={type === "human" ? "green.50" : "gray.50"}
-                borderRadius="lg" // 添加圆角
-                display="flex"
-                alignItems="flex-start"
-                ml="10"
+                mt={2}
+                p={4}
+                bg={type === "human" ? "blue.50" : "gray.50"}
+                borderRadius="lg"
+                transition="all 0.2s"
+                _hover={{
+                  shadow: "sm",
+                }}
               >
-                <Box display="flex" flexDirection="column">
-                  {Object.keys(tool_call.args).map((attribute, index) => (
-                    <Box key={index} ml="2">
-                      <Markdown
-                        content={`${attribute}: ${tool_call.args[attribute]}`}
-                      />
-                    </Box>
-                  ))}
-                </Box>
+                <Text fontSize="sm" fontWeight="500" color="gray.700" mb={2}>
+                  {tool_call.name}
+                </Text>
+                {Object.entries(tool_call.args).map(([key, value], i) => (
+                  <Box key={i} ml={2}>
+                    <Text fontSize="sm" color="gray.600">
+                      <strong>{key}:</strong> {value}
+                    </Text>
+                  </Box>
+                ))}
               </Box>
             ))}
 
+            {/* Tool Output */}
             {tool_output && (
               <Box
-                maxH={"10rem"}
+                mt={2}
+                maxH="10rem"
                 overflowY="auto"
                 overflowX="hidden"
-                maxW="full"
-                p={2}
-                ml="10"
-                bg={type === "human" ? "green.50" : "gray.50"}
-                borderRadius="lg" // 添加圆角
+                borderRadius="lg"
+                bg={type === "human" ? "blue.50" : "gray.50"}
+                transition="all 0.2s"
+                _hover={{
+                  shadow: "sm",
+                }}
               >
                 <Accordion allowMultiple>
                   {(() => {
@@ -367,11 +349,16 @@ const MessageBox = ({ message, onResume, isPlayground }: MessageBoxProps) => {
               </Box>
             )}
 
+            {/* Documents */}
             {documents && (
               <Box
-                ml="10"
+                mt={2}
                 borderRadius="lg"
-                bg={type === "human" ? "green.50" : "gray.50"}
+                bg={type === "human" ? "blue.50" : "gray.50"}
+                transition="all 0.2s"
+                _hover={{
+                  shadow: "sm",
+                }}
               >
                 <Accordion allowMultiple>
                   {(
@@ -400,68 +387,77 @@ const MessageBox = ({ message, onResume, isPlayground }: MessageBoxProps) => {
                 </Accordion>
               </Box>
             )}
-            {type === "interrupt" && name === "human" && !decision && (
-              <Flex alignItems={"center"} gap="1rem" mt={8}>
-                <InputGroup size="md" width={"20rem"}>
-                  <Input
-                    pr="3rem"
-                    placeholder="Your reply..."
-                    onChange={(e) => setToolMessage(e.target.value)}
-                  />
-                  <InputRightElement>
-                    <IconButton
-                      icon={<VscSend />}
-                      aria-label="human-reply"
-                      isDisabled={!toolMessage?.trim().length}
-                      onClick={() => onDecisionHandler("replied")}
+
+            {/* Interrupt Controls */}
+            {type === "interrupt" && (
+              <Box mt={4}>
+                {name === "human" && !decision && (
+                  <InputGroup size="md">
+                    <Input
+                      placeholder="Your reply..."
+                      bg="white"
+                      borderRadius="lg"
+                      onChange={(e) => setToolMessage(e.target.value)}
+                      _focus={{
+                        borderColor: "blue.400",
+                        boxShadow: "0 0 0 1px var(--chakra-colors-blue-400)",
+                      }}
                     />
-                  </InputRightElement>
-                </InputGroup>
-              </Flex>
-            )}
-            {type === "interrupt" && name === "interrupt" && !decision && (
-              <Flex alignItems={"center"} gap="1rem">
-                <Tooltip>
-                  <Button
-                    autoFocus
-                    variant={"outline"}
-                    aria-label="approve"
-                    leftIcon={<FaCheck />}
-                    colorScheme="green"
-                    onClick={() => onDecisionHandler("approved")}
-                  >
-                    Approve
-                  </Button>
-                </Tooltip>
-                or
-                <InputGroup size="md" width={"20rem"}>
-                  <Input
-                    pr="3rem"
-                    placeholder="Optional rejection instructions..."
-                    onChange={(e) => setToolMessage(e.target.value)}
-                  />
-                  <InputRightElement width="3rem">
-                    <Tooltip label="Reject">
+                    <InputRightElement>
                       <IconButton
-                        variant={"outline"}
-                        h="1.75rem"
-                        aria-label="reject"
-                        icon={<FaTimes />}
-                        size="sm"
-                        colorScheme="red"
-                        onClick={() => onDecisionHandler("rejected")}
-                      >
-                        Reject
-                      </IconButton>
-                    </Tooltip>
-                  </InputRightElement>
-                </InputGroup>
-              </Flex>
+                        icon={<VscSend />}
+                        aria-label="Send reply"
+                        variant="ghost"
+                        colorScheme="blue"
+                        isDisabled={!toolMessage?.trim().length}
+                        onClick={() => onDecisionHandler("replied")}
+                      />
+                    </InputRightElement>
+                  </InputGroup>
+                )}
+
+                {name === "interrupt" && !decision && (
+                  <HStack spacing={4}>
+                    <Button
+                      leftIcon={<FaCheck />}
+                      colorScheme="green"
+                      variant="solid"
+                      onClick={() => onDecisionHandler("approved")}
+                      size="sm"
+                    >
+                      Approve
+                    </Button>
+
+                    <InputGroup size="md">
+                      <Input
+                        placeholder="Optional rejection instructions..."
+                        bg="white"
+                        borderRadius="lg"
+                        onChange={(e) => setToolMessage(e.target.value)}
+                        _focus={{
+                          borderColor: "red.400",
+                          boxShadow: "0 0 0 1px var(--chakra-colors-red-400)",
+                        }}
+                      />
+                      <InputRightElement>
+                        <IconButton
+                          icon={<FaTimes />}
+                          aria-label="Reject"
+                          variant="ghost"
+                          colorScheme="red"
+                          onClick={() => onDecisionHandler("rejected")}
+                          size="sm"
+                        />
+                      </InputRightElement>
+                    </InputGroup>
+                  </HStack>
+                )}
+              </Box>
             )}
+
+            <Box ref={messagesEndRef} pb="5" />
           </Box>
         </Box>
-        {/* 这个空的 div 用于自动滚动 */}
-        <Box ref={messagesEndRef} pb={"5"} />
       </Box>
     </VStack>
   );
