@@ -11,104 +11,121 @@ import {
   MenuList,
   Text,
   useDisclosure,
+  VStack,
 } from "@chakra-ui/react";
-import { type BoxProps, forwardRef } from "@chakra-ui/react";
-import Link from "next/link";
+
 import { useTranslation } from "react-i18next";
+import { FiSettings, FiHelpCircle, FiInfo, FiLogOut } from "react-icons/fi";
 
 import AccountSetting from "@/components/Settings";
-
-import useAuth from "../../../hooks/useAuth";
+import useAuth from "@/hooks/useAuth";
 import CustomModalWrapper from "../CustomModal";
+
 const UserMenu = () => {
   const { logout, currentUser } = useAuth();
+  const { isOpen, onOpen, onClose } = useDisclosure();
+  const { t } = useTranslation();
 
   const handleLogout = async () => {
     logout();
   };
 
-  const { isOpen, onOpen, onClose } = useDisclosure();
-  const { t } = useTranslation();
-  const tqxMenuComponent = forwardRef<BoxProps, "div">((props, ref) => (
-    <Box
-      rounded="full"
-      cursor="pointer"
-      transition="background-color 0.3s ease"
-      _hover={{ backgroundColor: "gray.200" }}
-      _active={{ backgroundColor: "gray.200" }}
-      _focus={{ outline: "none" }}
-      ref={ref}
-      {...props}
-    >
-      <Flex alignItems="center">
-        <Avatar
-          size="md"
-          name={currentUser?.full_name!}
-          src=""
-          m={"2px"}
-          cursor="pointer"
-        />
-
-        <Button
-          rightIcon={<ChevronDownIcon />}
-          maxWidth="100%"
-          bg={"transparent"}
-          _hover={{ bg: "transparent" }}
-          _active={{ bg: "transparent" }}
-          _focus={{ outline: "none" }}
-        >
-          {currentUser?.full_name!}
-        </Button>
-      </Flex>
-    </Box>
-  ));
+  const getUserName = () => {
+    return currentUser?.full_name || currentUser?.email || 'User';
+  };
 
   return (
-    <>
-      <Box display="flex" w="full" ml={"auto"}>
-        <Box ml="auto">
-          <Menu autoSelect={false}>
-            <MenuButton as={tqxMenuComponent} />
-            <MenuList>
-              <Flex alignItems="center" mb={2}>
-                <Avatar
-                  size="sm"
-                  name={currentUser?.full_name!}
-                  src=""
-                  m={"10px"}
-                />
-                <Box>
-                  <Text fontWeight="bold">{currentUser?.full_name}</Text>
-                  <Text fontSize="sm">{currentUser?.email}</Text>
-                </Box>
-              </Flex>
-              <MenuDivider />
+    <Box>
+      <Menu autoSelect={false} placement="bottom-end">
+        <MenuButton
+          as={Button}
+          variant="ghost"
+          px={4}
+          py={2}
+          borderRadius="lg"
+          transition="all 0.2s"
+          _hover={{ bg: "gray.50" }}
+          _active={{ bg: "gray.100" }}
+        >
+          <Flex alignItems="center" gap={3}>
+            <Avatar
+              size="sm"
+              name={getUserName()}
+              bg="blue.500"
+              color="white"
+            />
+            <Box textAlign="left">
+              <Text
+                fontSize="sm"
+                fontWeight="500"
+                color="gray.700"
+                lineHeight="short"
+              >
+                {currentUser?.full_name || 'User'}
+              </Text>
+              <Text fontSize="xs" color="gray.500">
+                {currentUser?.email || 'No email'}
+              </Text>
+            </Box>
+            <ChevronDownIcon color="gray.500" />
+          </Flex>
+        </MenuButton>
 
-              <MenuItem as={Link} href="" onClick={onOpen}>
-                {t("setting.modal.setting")}
-                <CustomModalWrapper
-                  component={<AccountSetting />}
-                  size="6xl"
-                  isOpen={isOpen}
-                  onClose={onClose}
-                />
-              </MenuItem>
+        <MenuList
+          py={2}
+          border="1px solid"
+          borderColor="gray.100"
+          boxShadow="lg"
+          borderRadius="xl"
+        >
+          <VStack align="stretch" spacing={1}>
+            <MenuItem
+              icon={<FiSettings />}
+              onClick={onOpen}
+              py={2}
+              px={4}
+              _hover={{ bg: "gray.50" }}
+            >
+              {t("setting.modal.setting")}
+            </MenuItem>
+            <MenuItem
+              icon={<FiHelpCircle />}
+              py={2}
+              px={4}
+              _hover={{ bg: "gray.50" }}
+            >
+              {t("setting.modal.helpDocu")}
+            </MenuItem>
+            <MenuItem
+              icon={<FiInfo />}
+              py={2}
+              px={4}
+              _hover={{ bg: "gray.50" }}
+            >
+              About
+            </MenuItem>
+            <MenuDivider />
+            <MenuItem
+              icon={<FiLogOut />}
+              onClick={handleLogout}
+              py={2}
+              px={4}
+              color="red.500"
+              _hover={{ bg: "red.50" }}
+            >
+              {t("setting.modal.logOut")}
+            </MenuItem>
+          </VStack>
+        </MenuList>
+      </Menu>
 
-              <MenuItem as={Link} href="">
-                {t("setting.modal.helpDocu")}
-              </MenuItem>
-              <MenuItem as={Link} href="">
-                About
-              </MenuItem>
-              <MenuDivider />
-              <MenuItem onClick={handleLogout}>
-                {t("setting.modal.logOut")}
-              </MenuItem>
-            </MenuList>
-          </Menu>
-        </Box>
-      </Box>
-    </>
+      <CustomModalWrapper
+        component={<AccountSetting />}
+        size="6xl"
+        isOpen={isOpen}
+        onClose={onClose}
+      />
+    </Box>
   );
 };
 

@@ -1,17 +1,30 @@
-import { Box } from "@chakra-ui/react";
+import {  Flex } from "@chakra-ui/react";
 
 import { FlockLogo } from "./Logo";
 import UserMenu from "./UserMenu";
 
 export default function TopBar() {
   return (
-    <Box display="flex" flexDirection={"row"} justifyContent={"space-between"}>
-      <Box my="2" mx={5}>
-        <FlockLogo />
-      </Box>
-      <Box my="2" mx={2}>
-        <UserMenu />
-      </Box>
-    </Box>
+    <Flex
+      w="full"
+      h="70px"
+      bg="white"
+      borderBottom="1px solid"
+      borderColor="gray.100"
+      px={6}
+      alignItems="center"
+      justifyContent="space-between"
+      position="sticky"
+      top={0}
+      zIndex={10}
+      backdropFilter="blur(10px)"
+      transition="all 0.2s"
+      _hover={{
+        boxShadow: "sm",
+      }}
+    >
+      <FlockLogo />
+      <UserMenu />
+    </Flex>
   );
 }
