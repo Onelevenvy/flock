@@ -102,13 +102,16 @@ class ClassifierNode:
             (
                 cat
                 for cat in self.categories
-                if cat["category_name"].lower() == result["category_name"].lower()
+                # if cat["category_name"].lower() == result["category_name"].lower()
+                if isinstance(cat, dict)
+                and "category_name" in cat
+                and cat["category_name"].lower() == result["category_name"].lower()
             ),
             self.categories[0],  # Default to first category if no match found
         )
 
         # Create response message
-        result_message = AIMessage(content=matched_category["category_name"])
+        # result_message = AIMessage(content=matched_category["category_name"])
 
         # Update node outputs with both category_name and category_id
         new_output = {

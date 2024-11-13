@@ -8,6 +8,7 @@ from langchain_core.pydantic_v1 import BaseModel, Extra
 from langchain_openai import OpenAIEmbeddings
 from sqlmodel import select
 
+
 from app.core.config import settings
 from app.core.workflow.utils.db_utils import db_operation
 from app.models import ModelProvider
