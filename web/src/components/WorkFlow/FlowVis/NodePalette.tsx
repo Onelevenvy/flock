@@ -10,10 +10,10 @@ const NodePalette: React.FC = () => {
   const onNodeSelect = () => {}; // This is not used for draggable nodes
 
   return (
-    <Box 
-      h="full" 
-      maxH="full" 
-      bg="#fcfcfd" 
+    <Box
+      h="full"
+      maxH="full"
+      bg="#fcfcfd"
       borderTopLeftRadius="lg"
       position="relative"
       transition="all 0.3s ease"
@@ -22,20 +22,28 @@ const NodePalette: React.FC = () => {
     >
       <IconButton
         aria-label={isCollapsed ? "Expand" : "Collapse"}
-        icon={isCollapsed ? <RiMenuUnfoldFill size="20px" /> : <MdKeyboardDoubleArrowLeft size="20px" />}
+        icon={
+          isCollapsed ? (
+            <RiMenuUnfoldFill size="20px" />
+          ) : (
+            <MdKeyboardDoubleArrowLeft size="20px" />
+          )
+        }
         position="absolute"
         right={isCollapsed ? "-32px" : "-12px"}
-        top="20px"
+        top="25px"
         size="sm"
         zIndex={2}
         colorScheme="gray"
         onClick={() => setIsCollapsed(!isCollapsed)}
         borderRadius="full"
         boxShadow="md"
+        bg="white"
+        _hover={{ bg: "white" }}
       />
-      
-      <Box 
-        overflow="hidden" 
+
+      <Box
+        overflow="hidden"
         h="full"
         opacity={isCollapsed ? 0 : 1}
         visibility={isCollapsed ? "hidden" : "visible"}
