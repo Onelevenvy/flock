@@ -1,3 +1,4 @@
+import json
 import logging
 from typing import List
 
@@ -98,7 +99,7 @@ class SiliconFlowEmbeddings(BaseModel, Embeddings):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
         self.dimension = get_embedding_dimension("Siliconflow", self.model)
-        
+
     class Config:
         extra = Extra.forbid
 
@@ -112,7 +113,9 @@ class SiliconFlowEmbeddings(BaseModel, Embeddings):
         payload = {"model": self.model, "input": texts, "encoding_format": "float"}
         response = requests.post(url, json=payload, headers=headers)
         response_json = response.json()
-        logger.debug(f"SiliconFlow API response: {response_json}")
+        logger.debug(
+            f"SiliconFlow API response: {json.dumps(response_json, indent=2)[:20]}"
+        )
 
         if "data" not in response_json or not isinstance(response_json["data"], list):
             raise ValueError(

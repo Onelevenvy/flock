@@ -95,20 +95,55 @@ class ClassifierNode:
         )
         outputparser = JsonOutputParser()
         chain = prompt | llm | outputparser
+
+        # Add helper function to normalize result
+        def normalize_category_result(result: Any) -> str:
+            """Normalize classifier result to get category name string"""
+            try:
+                if isinstance(result, list) and len(result) > 0:
+                    return str(result[0])
+                elif isinstance(result, dict) and "category_name" in result:
+                    return str(result["category_name"])
+                elif isinstance(result, str):
+                    return result
+                else:
+                    print(f"Unexpected result format: {result}")
+                    return self.categories[0]["category_name"]  # 使用默认分类
+            except Exception as e:
+                print(f"Error normalizing result: {e}")
+                return self.categories[0]["category_name"]  # 出错时使用默认分类
+            
         result = await chain.ainvoke(input_json)
         print("classifier result:", result)
-        # Find matching category and get its ID
-        matched_category = next(
-            (
-                cat
-                for cat in self.categories
-                # if cat["category_name"].lower() == result["category_name"].lower()
-                if isinstance(cat, dict)
-                and "category_name" in cat
-                and cat["category_name"].lower() == result["category_name"].lower()
-            ),
-            self.categories[0],  # Default to first category if no match found
-        )
+        
+        # Ensure categories is not empty and has valid format
+        if not self.categories or not isinstance(self.categories, list):
+            print("Invalid categories format")
+            return {"node_outputs": state.get("node_outputs", {})}
+            
+        # Get normalized category name
+        category_name = normalize_category_result(result)
+        
+        try:
+            # Find matching category and get its ID
+            matched_category = next(
+                (
+                    cat
+                    for cat in self.categories
+                    if isinstance(cat, dict)
+                    and "category_name" in cat
+                    and "category_id" in cat  # 确保必要的键存在
+                    and cat["category_name"].lower() == category_name.lower()
+                ),
+                self.categories[0],  # Default to first category if no match found
+            )
+        except Exception as e:
+            print(f"Error matching category: {e}")
+            # 确保至少有一个有效的分类可用
+            matched_category = self.categories[0] if self.categories else {
+                "category_id": "default",
+                "category_name": "Default Category"
+            }
 
         # Create response message
         # result_message = AIMessage(content=matched_category["category_name"])
