@@ -29,6 +29,7 @@ import CredentialsPanel from "@/components/Tools/CredentialsPanel";
 import useCustomToast from "@/hooks/useCustomToast";
 import { useSkillsQuery } from "@/hooks/useSkillsQuery";
 import { useTabSearchParams } from "@/hooks/useTabSearchparams";
+import Navbar from "@/components/Common/Navbar";
 
 function Skills() {
   const showToast = useCustomToast();
@@ -85,28 +86,19 @@ function Skills() {
 
   return (
     <Flex>
-      <Box flex="1" bg="ui.bgMain" minH="100vh">
+      <Box flex="1" bg="ui.bgMain" minH="100vh" px={6} py={4}>
         {isLoading ? (
           <Flex justify="center" align="center" height="100vh" width="full">
             <Spinner size="xl" color="ui.main" thickness="3px" />
           </Flex>
         ) : (
           filteredSkills && (
-            <Box
-              maxW="full"
-              maxH="full"
-              display="flex"
-              flexDirection="column"
-              overflow="hidden"
-              px={6}
-              py={4}
-            >
-              <Box
-                display="flex"
-                flexDirection={"row"}
-                justifyItems={"center"}
-                py={2}
-                px={5}
+            <Box maxW="full" maxH="full">
+              <Flex
+                direction="row"
+                justify="space-between"
+                align="center"
+                mb={6}
               >
                 <Box>
                   <TabSlider
@@ -115,12 +107,14 @@ function Skills() {
                     options={options}
                   />
                 </Box>
-              </Box>
+                <Box>
+                  <Navbar type="Skill" />
+                </Box>
+              </Flex>
 
               <SimpleGrid
                 columns={{ base: 1, md: 2, lg: 3, xl: 4 }}
                 spacing={6}
-                w="full"
               >
                 {filteredSkills.map((skill) => (
                   <Box

@@ -9,7 +9,7 @@ import {
   Tag,
   TagLabel,
   Text,
-  useColorModeValue,
+  HStack,
 } from "@chakra-ui/react";
 import { useRouter } from "next/navigation";
 import { useMemo } from "react";
@@ -28,12 +28,19 @@ import useCustomToast from "@/hooks/useCustomToast";
 import { useTabSearchParams } from "@/hooks/useTabSearchparams";
 import useChatTeamIdStore from "@/stores/chatTeamIDStore";
 
+const getTeamIcon = (iconName: string | null | undefined) => {
+  if (!iconName || !tqxIconLibrary[iconName]) {
+    return tqxIconLibrary["default"].icon;
+  }
+  return tqxIconLibrary[iconName].icon;
+};
+
 function Teams() {
   const showToast = useCustomToast();
   const { t } = useTranslation();
-  const rowTint = useColorModeValue("blackAlpha.50", "whiteAlpha.50");
   const navigate = useRouter();
   const { setTeamId } = useChatTeamIdStore();
+
   const {
     data: teams,
     isLoading,
@@ -43,14 +50,14 @@ function Teams() {
 
   if (isError) {
     const errDetail = (error as ApiError).body?.detail;
-
     showToast("Something went wrong.", `${errDetail}`, "error");
   }
 
   const handleRowClick = (teamId: number) => {
-    setTeamId(teamId); // 确保在导航之前更新 teamId
+    setTeamId(teamId);
     navigate.push(`/teams/${teamId}`);
   };
+
   const options = [
     {
       value: "all",
@@ -78,6 +85,7 @@ function Teams() {
       icon: <RiBookLine className="w-[14px] h-[14px] mr-1" />,
     },
   ];
+
   const [activeTab, setActiveTab] = useTabSearchParams({
     searchParamName: "workflow",
     defaultTab: "all",
@@ -89,28 +97,27 @@ function Teams() {
       : teams?.data.filter((team) => team.workflow === activeTab);
   }, [activeTab, teams?.data]);
 
+  const getWorkflowColor = (workflow: string) => {
+    const colors = {
+      sequential: "green",
+      hierarchical: "purple",
+      chatbot: "yellow",
+      ragbot: "orange",
+      workflow: "blue",
+    };
+    return colors[workflow as keyof typeof colors] || "gray";
+  };
+
   return (
-    <>
+    <Box bg="ui.bgMain" minH="100vh" px={6} py={4}>
       {isLoading ? (
         <Flex justify="center" align="center" height="100vh" width="full">
-          <Spinner size="xl" color="ui.main" />
+          <Spinner size="xl" color="ui.main" thickness="3px" />
         </Flex>
       ) : (
         filteredTeams && (
-          <Box
-            maxW="full"
-            maxH="full"
-            display="flex"
-            flexDirection={"column"}
-            overflow={"hidden"}
-          >
-            <Box
-              display="flex"
-              flexDirection={"row"}
-              justifyItems={"center"}
-              py={2}
-              px={5}
-            >
+          <Box maxW="full" maxH="full">
+            <Flex direction="row" justify="space-between" align="center" mb={6}>
               <Box>
                 <TabSlider
                   value={activeTab}
@@ -118,91 +125,83 @@ function Teams() {
                   options={options}
                 />
               </Box>
-              <Box ml={"auto"}>
-                <Navbar type={"Team"} />
+              <Box>
+                <Navbar type="Team" />
               </Box>
-            </Box>
-            <Box mt={2} overflow={"auto"}>
-              <Box maxH="full">
-                <SimpleGrid columns={{ base: 1, md: 4 }} spacing={8} mx={5}>
-                  {filteredTeams.map((team) => (
+            </Flex>
+
+            <SimpleGrid columns={{ base: 1, md: 2, lg: 3, xl: 4 }} spacing={6}>
+              {filteredTeams.map((team) => (
+                <Box
+                  key={team.id}
+                  onClick={() => handleRowClick(team.id)}
+                  bg="white"
+                  p={6}
+                  borderRadius="xl"
+                  border="1px solid"
+                  borderColor="gray.100"
+                  cursor="pointer"
+                  transition="all 0.2s"
+                  _hover={{
+                    transform: "translateY(-2px)",
+                    boxShadow: "md",
+                    borderColor: "gray.200",
+                  }}
+                >
+                  <HStack spacing={4} mb={4}>
                     <Box
-                      key={team.id}
-                      _hover={{ backgroundColor: rowTint }}
-                      cursor={"pointer"}
-                      onClick={() => handleRowClick(team.id)}
-                      p={4}
-                      borderRadius="xl"
-                      borderWidth="1px"
-                      borderColor="gray.200"
-                      boxShadow="lg"
-                      bg="white"
+                      p={2}
+                      borderRadius="lg"
+                      bg={`${getWorkflowColor(team.workflow)}.50`}
                     >
-                      <Flex justify="space-between" alignItems="center">
-                        <Box
-                          display="flex"
-                          flexDirection={"row"}
-                          alignItems={"center"}
-                        >
-                          <Box>
-                            {team.icon && (
-                              <IconButton
-                                colorScheme={
-                                  tqxIconLibrary[team.icon].colorScheme
-                                }
-                                aria-label="Search database"
-                                size={"sm"}
-                                icon={tqxIconLibrary[team.icon].icon}
-                                backgroundColor={
-                                  tqxIconLibrary[team.icon].backgroundColor
-                                }
-                              />
-                            )}
-                          </Box>
-                          <Box>
-                            <Heading as="h4" size="md" ml={4}>
-                              {team.name}
-                            </Heading>
-                          </Box>
-                        </Box>
-                      </Flex>
-                      <Box mt={3} minH={"20"}>
-                        <Text
-                          color={!team.description ? "gray.400" : "gray.400"}
-                          noOfLines={2}
-                        >
-                          {team.description || "N/A"}
-                        </Text>
-                      </Box>
-                      <Box
-                        display="flex"
-                        flexDirection={"row"}
-                        mt={3}
-                        alignItems={"center"}
-                        justifyContent="space-between"
-                      >
-                        <Box>
-                          <Tag
-                            variant="outline"
-                            colorScheme="green"
-                            size={"sm"}
-                          >
-                            <TagLabel>{team.workflow || "N/A"}</TagLabel>
-                          </Tag>
-                        </Box>
-                        <Box>
-                          <ActionsMenu type={"Team"} value={team} />
-                        </Box>
-                      </Box>
+                      <IconButton
+                        aria-label="Team icon"
+                        icon={getTeamIcon(team.icon)}
+                        size="sm"
+                        variant="ghost"
+                        color={`${getWorkflowColor(team.workflow)}.500`}
+                      />
                     </Box>
-                  ))}
-                </SimpleGrid>
-              </Box>
-            </Box>
+                    <Heading
+                      size="md"
+                      color="gray.700"
+                      fontWeight="600"
+                      noOfLines={1}
+                    >
+                      {team.name}
+                    </Heading>
+                  </HStack>
+
+                  <Text
+                    color="gray.600"
+                    fontSize="sm"
+                    mb={4}
+                    noOfLines={2}
+                    minH="2.5rem"
+                  >
+                    {team.description || "N/A"}
+                  </Text>
+
+                  <Flex justify="space-between" align="center" mt="auto">
+                    <Tag
+                      size="md"
+                      variant="subtle"
+                      colorScheme={getWorkflowColor(team.workflow)}
+                      borderRadius="full"
+                      px={3}
+                      py={1}
+                    >
+                      <TagLabel fontWeight="500">{team.workflow}</TagLabel>
+                    </Tag>
+                    <ActionsMenu type="Team" value={team} />
+                  </Flex>
+                </Box>
+              ))}
+            </SimpleGrid>
           </Box>
         )
       )}
-    </>
+    </Box>
   );
 }
 

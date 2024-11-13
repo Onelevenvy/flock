@@ -145,15 +145,15 @@ function Dashboard() {
   );
 
   return (
-    <Container maxW="full" p={0}>
-      <Box bg="ui.bgMain" minH="100vh" py={8}>
-        <Container maxW="7xl">
-          <VStack spacing={8} align="stretch">
+    <Container maxW="full" p={0} h="full">
+      <Box bg="ui.bgMain" h="full" py={4}>
+        <Container maxW="7xl" h="full">
+          <VStack spacing={4} align="stretch">
             <Flex
               justifyContent="space-between"
               alignItems="center"
               bg="white"
-              p={6}
+              p={4}
               borderRadius="2xl"
               boxShadow="sm"
               backdropFilter="blur(10px)"
@@ -179,7 +179,7 @@ function Dashboard() {
               </Badge>
             </Flex>
 
-            <SimpleGrid columns={{ base: 1, md: 2, lg: 4 }} spacing={6}>
+            <SimpleGrid columns={{ base: 1, md: 2, lg: 4 }} spacing={4}>
               <StatCard
                 icon={FiCpu}
                 title="AI Models"
@@ -213,9 +213,9 @@ function Dashboard() {
               />
             </SimpleGrid>
 
-            <Card transition="all 0.2s" _hover={{ boxShadow: "md" }}>
-              <CardBody>
-                <VStack align="start" spacing={4}>
+            <Card>
+              <CardBody py={3}>
+                <VStack align="start" spacing={2}>
                   <Heading size="md" color="gray.800">
                     Welcome to Flock
                   </Heading>
@@ -254,15 +254,15 @@ function Dashboard() {
               </CardBody>
             </Card>
 
-            <Grid templateColumns={{ base: "1fr", md: "1fr 1fr" }} gap={6}>
+            <Grid templateColumns={{ base: "1fr", md: "1fr 1fr" }} gap={4}>
               <Card>
-                <CardHeader>
+                <CardHeader pb={1}>
                   <Heading size="md" color="gray.800">
                     Quick Access
                   </Heading>
                 </CardHeader>
-                <CardBody>
-                  <List spacing={3}>
+                <CardBody pt={1}>
+                  <List spacing={2}>
                     <QuickAccessItem icon={FiUsers} href="/teams" color="green">
                       Manage Teams
                     </QuickAccessItem>
@@ -284,14 +284,14 @@ function Dashboard() {
               </Card>
 
               <Card>
-                <CardHeader>
+                <CardHeader pb={2}>
                   <Heading size="md" color="gray.800">
                     Recent Teams
                   </Heading>
                 </CardHeader>
-                <CardBody>
+                <CardBody pt={2}>
                   <List spacing={3}>
-                    {teamsData?.data?.slice(0, 5).map((team: TeamOut) => (
+                    {teamsData?.data?.slice(0, 4).map((team: TeamOut) => (
                       <ListItem
                         key={team.id}
                         p={3}
@@ -319,9 +319,9 @@ function Dashboard() {
                       </ListItem>
                     ))}
                   </List>
-                  {teamsData?.data && teamsData.data.length > 5 && (
+                  {teamsData?.data && teamsData.data.length > 4 && (
                     <Text mt={4} color="ui.muted" fontSize="sm">
-                      And {teamsData.data.length - 5} more teams...
+                      And {teamsData.data.length - 4} more teams...
                     </Text>
                   )}
                 </CardBody>
