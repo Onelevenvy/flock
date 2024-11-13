@@ -158,7 +158,8 @@ function Uploads() {
                         textOverflow="ellipsis"
                         whiteSpace="nowrap"
                       >
-                        {upload.description || t("knowledge.page.noDescription")}
+                        {upload.description ||
+                          t("knowledge.page.noDescription")}
                       </Box>
                       <Box
                         overflow="hidden"
@@ -173,9 +174,7 @@ function Uploads() {
                         justifyContent={"space-between"}
                         alignItems={"center"}
                       >
-                        <Badge colorScheme="green">
-                          {t(`knowledge.page.status.${upload.status.toLowerCase()}`)}
-                        </Badge>
+                        <Badge colorScheme="green">{upload.status}</Badge>
                         <ActionsMenu type={"Upload"} value={upload} />
                       </Box>
                     </Box>

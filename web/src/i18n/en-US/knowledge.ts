@@ -79,7 +79,8 @@ const translation = {
       },
       description: {
         label: "Description",
-        placeholder: "Please input the knowledge base description"
+        placeholder: "Please input the knowledge base description",
+        default:"useful for when you want to answer queries about the"
       },
       type: {
         label: "Upload Type",
