@@ -97,6 +97,9 @@ const ToolsList: React.FC<ToolsListProps> = ({
                       variant="ghost"
                       onClick={() => onAddTool(skill.display_name!)}
                       isDisabled={selectedTools.includes(skill.display_name!)}
+                      minWidth="80px"
+                      width="auto"
+                      justifyContent="center"
                     >
                       {selectedTools.includes(skill.display_name!)
                         ? "Added"

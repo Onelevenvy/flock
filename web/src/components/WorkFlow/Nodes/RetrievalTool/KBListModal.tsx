@@ -76,21 +76,21 @@ const KBListModal: React.FC<KBListProps> = ({
                 _focus={{ borderColor: "blue.500", boxShadow: "none" }}
               />
             </InputGroup>
-            <VStack 
-              align="stretch" 
-              spacing={2} 
-              maxH="400px" 
+            <VStack
+              align="stretch"
+              spacing={2}
+              maxH="400px"
               overflowY="auto"
               sx={{
-                '&::-webkit-scrollbar': {
-                  width: '4px',
+                "&::-webkit-scrollbar": {
+                  width: "4px",
                 },
-                '&::-webkit-scrollbar-track': {
-                  width: '6px',
+                "&::-webkit-scrollbar-track": {
+                  width: "6px",
                 },
-                '&::-webkit-scrollbar-thumb': {
-                  background: 'gray.200',
-                  borderRadius: '24px',
+                "&::-webkit-scrollbar-thumb": {
+                  background: "gray.200",
+                  borderRadius: "24px",
                 },
               }}
             >
@@ -103,7 +103,7 @@ const KBListModal: React.FC<KBListProps> = ({
                   borderLeft="3px solid"
                   borderLeftColor="pink.400"
                   transition="all 0.2s"
-                  _hover={{ 
+                  _hover={{
                     bg: "gray.100",
                     borderLeftColor: "pink.500",
                   }}
@@ -139,14 +139,11 @@ const KBListModal: React.FC<KBListProps> = ({
                         })
                       }
                       isDisabled={selectedKBs.includes(upload.name)}
+                      minWidth="80px"
+                      width="auto"
+                      justifyContent="center"
                     >
-                      {selectedKBs.includes(upload.name) ? (
-                        <Text fontSize="sm" color="gray.500">
-                          Added
-                        </Text>
-                      ) : (
-                        "Add"
-                      )}
+                      {selectedKBs.includes(upload.name) ? "Added" : "Add"}
                     </Button>
                   </HStack>
                 </Box>
