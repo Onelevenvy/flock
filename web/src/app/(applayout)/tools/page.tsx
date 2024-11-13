@@ -30,16 +30,21 @@ import useCustomToast from "@/hooks/useCustomToast";
 import { useSkillsQuery } from "@/hooks/useSkillsQuery";
 import { useTabSearchParams } from "@/hooks/useTabSearchparams";
 
-
-
-
-
 function Skills() {
   const showToast = useCustomToast();
   const { t } = useTranslation();
+  const rowTint = useColorModeValue("gray.50", "whiteAlpha.50");
 
-  const { data: initialSkills, isLoading, isError, error, refetch } = useSkillsQuery();
-  const [skills, setSkills] = useState<SkillOut[] | undefined>(initialSkills?.data);
+  const {
+    data: initialSkills,
+    isLoading,
+    isError,
+    error,
+    refetch,
+  } = useSkillsQuery();
+  const [skills, setSkills] = useState<SkillOut[] | undefined>(
+    initialSkills?.data
+  );
 
   useEffect(() => {
     if (initialSkills) {
@@ -49,10 +54,9 @@ function Skills() {
 
   if (isError) {
     const errDetail = (error as ApiError).body?.detail;
-
     showToast("Something went wrong.", `${errDetail}`, "error");
   }
-  const rowTint = useColorModeValue("blackAlpha.50", "whiteAlpha.50");
+
   const options = [
     {
       value: "all",
@@ -70,57 +74,21 @@ function Skills() {
       icon: <RiBarChartFill className="w-[14px] h-[14px] mr-1" />,
     },
   ];
+
   const [activeTab, setActiveTab] = useTabSearchParams({
     searchParamName: "tooltype",
     defaultTab: "all",
   });
 
-  const filteredSkills = skills?.filter(
-    (skill) => skill.name !== "ask-human"
-  );
+  const filteredSkills = skills?.filter((skill) => skill.name !== "ask-human");
   const [selectedSkill, setSelectedSkill] = useState<SkillOut | null>(null);
-
-  const handleOpenCredentialsPanel = (skill: SkillOut) => {
-    setSelectedSkill(skill);
-  };
-
-  const handleCloseCredentialsPanel = () => {
-    setSelectedSkill(null);
-  };
-
-  const handleSaveCredentials = async (updatedCredentials: Record<string, any>) => {
-    if (selectedSkill) {
-      try {
-        const updatedSkill = await ToolsService.updateSkillCredentials({
-          id: selectedSkill.id,
-          requestBody: updatedCredentials
-        });
-
-        showToast("Success", "Credentials updated successfully", "success");
-        
-        setSkills(prevSkills => prevSkills?.map(skill => 
-          skill.id === selectedSkill.id ? { ...skill, credentials: updatedCredentials } : skill
-        ));
-        
-        // 更新选中的技能，而不是关闭面板
-        setSelectedSkill(prevSkill => ({
-          ...prevSkill!,
-          credentials: updatedCredentials
-        }));
-        
-        refetch(); // 重新获取所有技能数据
-      } catch (error) {
-        showToast("Error", "Failed to update credentials", "error");
-      }
-    }
-  };
 
   return (
     <Flex>
-      <Box flex="1">
+      <Box flex="1" bg="ui.bgMain" minH="100vh">
         {isLoading ? (
           <Flex justify="center" align="center" height="100vh" width="full">
-            <Spinner size="xl" color="ui.main" />
+            <Spinner size="xl" color="ui.main" thickness="3px" />
           </Flex>
         ) : (
           filteredSkills && (
@@ -128,8 +96,10 @@ function Skills() {
               maxW="full"
               maxH="full"
               display="flex"
-              flexDirection={"column"}
-              overflow={"hidden"}
+              flexDirection="column"
+              overflow="hidden"
+              px={6}
+              py={4}
             >
               <Box
                 display="flex"
@@ -146,73 +116,118 @@ function Skills() {
                   />
                 </Box>
               </Box>
-              <Box mt="2" overflow={"auto"}>
-                <Box maxH="full">
-                  <SimpleGrid
-                    columns={{ base: 1, md: 2, lg: 4 }}
-                    spacing={8}
-                    mx="5"
-                  >
-                    {filteredSkills.map((skill) => (
-                      <Box
-                        key={skill.id}
-                        onClick={() => handleOpenCredentialsPanel(skill)}
-                        _hover={{ backgroundColor: rowTint }}
-                        cursor={"pointer"}
-                        p={4}
-                        borderRadius="xl"
-                        borderWidth="1px"
-                        borderColor="gray.200"
-                        boxShadow="lg"
-                        bg="white"
-                      >
-                        <HStack spacing="16px">
-                          <ToolsIcon
-                            h="8"
-                            w="8"
-                            tools_name={skill
-                              .display_name!.toLowerCase()
-                              .replace(/ /g, "_")}
-                          />
 
-                          <Heading noOfLines={1} size="md">
-                            {skill.display_name}
-                          </Heading>
-                        </HStack>
-                        <Box
-                          overflow="hidden"
-                          minH={"55px"}
-                          h={"55px"}
-                          maxH={"55px"}
-                        >
-                          <Text textOverflow="ellipsis" noOfLines={2}>
-                            {skill.description}
-                          </Text>
-                        </Box>
-                        <Box pt={4}>
-                          {!skill.managed ? (
-                            <ActionsMenu type={"Skill"} value={skill} />
-                          ) : (
-                            <Tag variant="outline" colorScheme="green">
-                              <TagLabel>Built-in</TagLabel>
-                              <TagRightIcon as={MdSettings} />
-                            </Tag>
-                          )}
-                        </Box>
+              <SimpleGrid
+                columns={{ base: 1, md: 2, lg: 3, xl: 4 }}
+                spacing={6}
+                w="full"
+              >
+                {filteredSkills.map((skill) => (
+                  <Box
+                    key={skill.id}
+                    onClick={() => setSelectedSkill(skill)}
+                    cursor="pointer"
+                    bg="white"
+                    p={6}
+                    borderRadius="xl"
+                    border="1px solid"
+                    borderColor="gray.100"
+                    transition="all 0.2s"
+                    _hover={{
+                      transform: "translateY(-2px)",
+                      boxShadow: "md",
+                      borderColor: "gray.200",
+                    }}
+                  >
+                    <HStack spacing={4} mb={4}>
+                      <Box
+                        p={2}
+                        borderRadius="lg"
+                        bg={`${skill.managed ? "blue" : "purple"}.50`}
+                      >
+                        <ToolsIcon
+                          h="6"
+                          w="6"
+                          tools_name={skill
+                            .display_name!.toLowerCase()
+                            .replace(/ /g, "_")}
+                          color={`${skill.managed ? "blue" : "purple"}.500`}
+                        />
                       </Box>
-                    ))}
-                  </SimpleGrid>
-                </Box>
-              </Box>
+                      <Heading
+                        size="md"
+                        color="gray.700"
+                        fontWeight="600"
+                        noOfLines={1}
+                      >
+                        {skill.display_name}
+                      </Heading>
+                    </HStack>
+
+                    <Text
+                      color="gray.600"
+                      fontSize="sm"
+                      minH="3rem"
+                      maxH="3rem"
+                      overflow="hidden"
+                      mb={4}
+                    >
+                      {skill.description}
+                    </Text>
+
+                    <Flex justifyContent="space-between" alignItems="center">
+                      {!skill.managed ? (
+                        <ActionsMenu type="Skill" value={skill} />
+                      ) : (
+                        <Tag
+                          size="md"
+                          variant="subtle"
+                          colorScheme="blue"
+                          borderRadius="full"
+                          px={3}
+                          py={1}
+                        >
+                          <TagLabel fontWeight="500">Built-in</TagLabel>
+                          <TagRightIcon as={MdSettings} />
+                        </Tag>
+                      )}
+                    </Flex>
+                  </Box>
+                ))}
+              </SimpleGrid>
             </Box>
           )
         )}
       </Box>
+
       {selectedSkill && (
         <CredentialsPanel
           skill={selectedSkill}
-          onClose={handleCloseCredentialsPanel}
-          onSave={handleSaveCredentials}
+          onClose={() => setSelectedSkill(null)}
+          onSave={async (updatedCredentials) => {
+            try {
+              await ToolsService.updateSkillCredentials({
+                id: selectedSkill.id,
+                requestBody: updatedCredentials,
+              });
+
+              showToast(
+                "Success",
+                "Credentials updated successfully",
+                "success"
+              );
+              setSkills((prevSkills) =>
+                prevSkills?.map((skill) =>
+                  skill.id === selectedSkill.id
+                    ? { ...skill, credentials: updatedCredentials }
+                    : skill
+                )
+              );
+              refetch();
+            } catch (error) {
+              showToast("Error", "Failed to update credentials", "error");
+            }
+          }}
         />
       )}
     </Flex>

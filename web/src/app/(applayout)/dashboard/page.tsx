@@ -18,7 +18,6 @@ import {
   Icon,
   Flex,
   Badge,
-  useColorModeValue,
   SimpleGrid,
   Card,
   CardHeader,
@@ -45,8 +44,6 @@ import { useModelQuery } from "@/hooks/useModelQuery";
 import { useSkillsQuery } from "@/hooks/useSkillsQuery";
 import { useUploadsQuery } from "@/hooks/useUploadsQuery";
 
-
-
 interface StatCardProps {
   icon: React.ElementType;
   title: string;
@@ -57,27 +54,42 @@ interface StatCardProps {
 
 function StatCard({ icon, title, stat, description, color }: StatCardProps) {
   return (
-    <Card>
+    <Card
+      transition="all 0.2s"
+      _hover={{
+        transform: "translateY(-2px)",
+        boxShadow: "lg",
+      }}
+    >
       <CardBody>
         <Stat>
           <Flex alignItems="center">
             <Box
               my="-0.5rem"
               color={`${color}.500`}
-              borderRadius="md"
-              bg={`${color}.100`}
-              p={2}
+              borderRadius="xl"
+              bg={`${color}.50`}
+              p={3}
+              transition="all 0.2s"
+              _hover={{ bg: `${color}.100` }}
             >
-              <Icon as={icon} boxSize="1.5rem" />
+              <Icon as={icon} boxSize="1.75rem" />
             </Box>
-            <StatLabel ml={3} fontSize="sm" fontWeight="medium" isTruncated>
+            <StatLabel ml={4} fontSize="md" fontWeight="500" isTruncated>
               {title}
             </StatLabel>
           </Flex>
-          <StatNumber fontSize="2xl" fontWeight="medium" mt={2}>
+          <StatNumber
+            fontSize="3xl"
+            fontWeight="600"
+            mt={3}
+            color={`${color}.600`}
+          >
             {stat}
           </StatNumber>
-          <StatHelpText fontSize="sm">{description}</StatHelpText>
+          <StatHelpText fontSize="sm" color="ui.muted" mt={1}>
+            {description}
+          </StatHelpText>
         </Stat>
       </CardBody>
     </Card>
@@ -100,11 +112,23 @@ function QuickAccessItem({
   return (
     <ListItem>
       <NextLink href={href} passHref legacyBehavior>
-        <Link as="a" _hover={{ textDecoration: "none" }}>
-          <HStack>
-            <ListIcon as={icon} color={color} />
-            <Text>{children}</Text>
-          </HStack>
+        <Link
+          as="a"
+          display="flex"
+          alignItems="center"
+          p={3}
+          borderRadius="lg"
+          transition="all 0.2s"
+          _hover={{
+            textDecoration: "none",
+            bg: "gray.50",
+            transform: "translateX(2px)",
+          }}
+        >
+          <ListIcon as={icon} color={`${color}.500`} fontSize="xl" />
+          <Text ml={2} color="gray.700" fontWeight="500">
+            {children}
+          </Text>
         </Link>
       </NextLink>
     </ListItem>
@@ -120,66 +144,82 @@ function Dashboard() {
     TeamsService.readTeams({})
   );
 
-
-
   return (
     <Container maxW="full" p={0}>
-      <Box bg={useColorModeValue("gray.50", "gray.900")} minH="100vh" py={12}>
+      <Box bg="ui.bgMain" minH="100vh" py={8}>
         <Container maxW="7xl">
           <VStack spacing={8} align="stretch">
-            <Flex justifyContent="space-between" alignItems="center">
-              <Heading as="h1" size="xl">
-                Welcome, {currentUser?.full_name || currentUser?.email} 👋
+            <Flex
+              justifyContent="space-between"
+              alignItems="center"
+              bg="white"
+              p={6}
+              borderRadius="2xl"
+              boxShadow="sm"
+              backdropFilter="blur(10px)"
+              border="1px solid"
+              borderColor="gray.100"
+            >
+              <Heading as="h1" size="lg" color="gray.800">
+                Welcome back, {currentUser?.full_name || currentUser?.email} 👋
               </Heading>
-              <Badge colorScheme="green" p={2} borderRadius="md">
-                <HStack>
-                  <Icon as={FiActivity} />
-                  <Text>Online</Text>
-                </HStack>
+              <Badge
+                colorScheme="green"
+                p={2}
+                borderRadius="lg"
+                display="flex"
+                alignItems="center"
+                gap={2}
+                bg="green.50"
+              >
+                <Icon as={FiActivity} color="green.500" />
+                <Text color="green.700" fontWeight="500">
+                  Online
+                </Text>
               </Badge>
             </Flex>
 
             <SimpleGrid columns={{ base: 1, md: 2, lg: 4 }} spacing={6}>
               <StatCard
                 icon={FiCpu}
-                title="Supported Models"
+                title="AI Models"
                 stat={modelsData?.data?.length || 0}
-                description="Available AI models"
+                description="Available models"
                 color="blue"
               />
               <StatCard
                 icon={FiTool}
-                title="Total Tools"
+                title="Tools"
                 stat={skillsData?.data?.length || 0}
-                description="Configured tools"
+                description="Active tools"
                 color="purple"
               />
               <StatCard
                 icon={FiFileText}
-                title="Completed Uploads"
+                title="Uploads"
                 stat={
-                  uploadsData?.data?.filter(
-                    (upload) => upload.status === "Completed"
-                  ).length || 0
+                  uploadsData?.data?.filter((u) => u.status === "Completed")
+                    .length || 0
                 }
-                description="Successfully processed"
+                description="Processed files"
                 color="green"
               />
               <StatCard
                 icon={FiUsers}
-                title="Total Teams"
+                title="Teams"
                 stat={teamsData?.data?.length || 0}
-                description="Your teams"
+                description="Active teams"
                 color="orange"
               />
             </SimpleGrid>
 
-            {/* 新增 Flock 介绍卡片 */}
-            <Card>
+            <Card transition="all 0.2s" _hover={{ boxShadow: "md" }}>
               <CardBody>
                 <VStack align="start" spacing={4}>
-                  <Heading size="md">Welcome to Flock</Heading>
-                  <Text>
+                  <Heading size="md" color="gray.800">
+                    Welcome to Flock
+                  </Heading>
+                  <Text color="gray.600" lineHeight="tall">
                     Flock is a low-code platform for rapidly building chatbots,
                     RAG applications, and coordinating multi-agent teams,
                     primarily using LangChain, LangGraph, NextJS, and FastAPI.
@@ -195,7 +235,17 @@ function Dashboard() {
                       rel="noopener noreferrer"
                       _hover={{ textDecoration: "none" }}
                     >
-                      <Button leftIcon={<FiGithub />} colorScheme="gray">
+                      <Button
+                        leftIcon={<FiGithub />}
+                        variant="outline"
+                        colorScheme="gray"
+                        size="lg"
+                        transition="all 0.2s"
+                        _hover={{
+                          transform: "translateY(-1px)",
+                          shadow: "md",
+                        }}
+                      >
                         View on GitHub
                       </Button>
                     </Link>
@@ -207,53 +257,62 @@ function Dashboard() {
             <Grid templateColumns={{ base: "1fr", md: "1fr 1fr" }} gap={6}>
               <Card>
                 <CardHeader>
-                  <Heading size="md">Quick Access</Heading>
+                  <Heading size="md" color="gray.800">
+                    Quick Access
+                  </Heading>
                 </CardHeader>
                 <CardBody>
                   <List spacing={3}>
-                    <QuickAccessItem
-                      icon={FiUsers}
-                      href="/teams"
-                      color="green.500"
-                    >
-                      Manage Team
+                    <QuickAccessItem icon={FiUsers} href="/teams" color="green">
+                      Manage Teams
                     </QuickAccessItem>
                     <QuickAccessItem
                       icon={FiFileText}
                       href="/knowledge"
-                      color="blue.500"
+                      color="blue"
                     >
                       View Uploads
                     </QuickAccessItem>
-                    <QuickAccessItem
-                      icon={FiTool}
-                      href="/tools"
-                      color="purple.500"
-                    >
-                      Configure Skills
+                    <QuickAccessItem icon={FiTool} href="/tools" color="purple">
+                      Configure Tools
                     </QuickAccessItem>
-                    <QuickAccessItem
-                      icon={FiCpu}
-                      href="/models"
-                      color="red.500"
-                    >
+                    <QuickAccessItem icon={FiCpu} href="/models" color="red">
                       Explore Models
                     </QuickAccessItem>
                   </List>
                 </CardBody>
               </Card>
+
               <Card>
                 <CardHeader>
-                  <Heading size="md">Your Recent Teams</Heading>
+                  <Heading size="md" color="gray.800">
+                    Recent Teams
+                  </Heading>
                 </CardHeader>
                 <CardBody>
                   <List spacing={3}>
                     {teamsData?.data?.slice(0, 5).map((team: TeamOut) => (
-                      <ListItem key={team.id}>
-                        <HStack>
-                          <Icon as={FiBox} color="teal.500" />
-                          <Text fontWeight="medium">{team.name}</Text>
-                          <Badge colorScheme="teal" ml="auto">
+                      <ListItem
+                        key={team.id}
+                        p={3}
+                        borderRadius="lg"
+                        transition="all 0.2s"
+                        _hover={{
+                          bg: "gray.50",
+                        }}
+                      >
+                        <HStack spacing={3}>
+                          <Icon as={FiBox} color="teal.500" boxSize="1.2em" />
+                          <Text fontWeight="500" color="gray.700">
+                            {team.name}
+                          </Text>
+                          <Badge
+                            colorScheme="teal"
+                            ml="auto"
+                            borderRadius="full"
+                            px={3}
+                            py={1}
+                          >
                             {team.workflow}
                           </Badge>
                         </HStack>
@@ -261,7 +320,7 @@ function Dashboard() {
                     ))}
                   </List>
                   {teamsData?.data && teamsData.data.length > 5 && (
-                    <Text mt={2} color="gray.500" fontSize="sm">
+                    <Text mt={4} color="ui.muted" fontSize="sm">
                       And {teamsData.data.length - 5} more teams...
                     </Text>
                   )}
