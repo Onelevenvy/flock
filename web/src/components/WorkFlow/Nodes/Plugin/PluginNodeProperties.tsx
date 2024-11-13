@@ -1,5 +1,4 @@
 import {
-  Box,
   Text,
   VStack,
   Button,

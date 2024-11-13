@@ -1,4 +1,4 @@
-import { Box, Input, Text, VStack, Select } from "@chakra-ui/react";
+import { Box, Input, Text, VStack } from "@chakra-ui/react";
 import type React from "react";
 import { useCallback, useState, useEffect } from "react";
 import { useTranslation } from "react-i18next";
