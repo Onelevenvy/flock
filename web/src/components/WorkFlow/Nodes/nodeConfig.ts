@@ -178,8 +178,8 @@ export const nodeConfig: Record<string, NodeConfigItem> = {
   },
   classifier: {
     icon: FaSitemap,
-    display: "Classifier",
-    colorScheme: "purple",
+    display: "Intent Recognition",
+    colorScheme: "pink",
     properties: ClassifierNodeProperties,
     allowedConnections: {
       sources: ["right"],

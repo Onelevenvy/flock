@@ -194,11 +194,12 @@ def event_to_response(event: StreamEvent) -> ChatResponse | None:
         ):
             for _, outputs in output["node_outputs"].items():
                 if "category_name" in outputs:
+                    res = outputs["category_name"]
                     return ChatResponse(
                         type="ai",
                         id=id,
                         name=name,
-                        content=outputs["category_name"],
+                        content=f"用户意图：{res}",
                     )
 
     return None
