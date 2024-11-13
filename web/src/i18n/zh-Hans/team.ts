@@ -88,6 +88,7 @@ const translation = {
       },
       classifier: {
         title: "意图识别",
+        model: "模型",
         categories: "分类",
         category: "类别",
         addCategory: "添加类别",
@@ -117,7 +118,8 @@ const translation = {
           namePlaceholder: "输入唯一的智能体名称",
           rolePlaceholder: "例如：研究专家",
           goalPlaceholder: "智能体的主要目标",
-          backstoryPlaceholder: "智能体的背景和专长"
+          backstoryPlaceholder: "智能体的背景和专长",
+          uniqueNameError: "智能体名称必须唯一"
         },
         taskModal: {
           title: "任务配置",
@@ -128,7 +130,8 @@ const translation = {
           namePlaceholder: "输入唯一的任务名称",
           descriptionPlaceholder: "任务描述",
           expectedOutputPlaceholder: "预期输出格式或描述",
-          selectAgent: "选择智能体"
+          selectAgent: "选择智能体",
+          uniqueNameError: "任务名称必须唯一"
         }
       }
     },
@@ -167,7 +170,7 @@ const translation = {
         saving: "保存中..."
       },
       contextMenu: {
-        delete: "删除节点",
+        delete: "删节点",
         error: {
           title: "无法删除节点",
           description: "无法删除{type}节点。"

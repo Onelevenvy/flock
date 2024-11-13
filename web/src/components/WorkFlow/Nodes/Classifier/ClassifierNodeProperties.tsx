@@ -7,13 +7,20 @@ import {
   Text,
   VStack,
 } from "@chakra-ui/react";
-import React, { useCallback, useState } from "react";
+import React, { useCallback } from "react";
 import { FaPlus, FaTrash } from "react-icons/fa";
+import { useTranslation } from "react-i18next";
 import { v4 as uuidv4 } from "uuid";
-import { useForm } from "react-hook-form";
+
 import ModelSelect from "@/components/Common/ModelProvider";
 import { useModelQuery } from "@/hooks/useModelQuery";
 import { ClassifierCategory } from "../../types";
+import { useForm } from "react-hook-form";
+
+interface ClassifierNodePropertiesProps {
+  node: any;
+  onNodeDataChange: (nodeId: string, key: string, value: any) => void;
+}
 
 interface FormValues {
   model: string;
@@ -22,17 +29,12 @@ interface FormValues {
   openai_api_base: string;
 }
 
-interface ClassifierNodePropertiesProps {
-  node: any;
-  onNodeDataChange: (nodeId: string, key: string, value: any) => void;
-}
-
 const ClassifierNodeProperties: React.FC<ClassifierNodePropertiesProps> = ({
   node,
   onNodeDataChange,
 }) => {
+  const { t } = useTranslation();
   const { data: models, isLoading: isLoadingModel } = useModelQuery();
-
   const { control } = useForm<FormValues>({
     defaultValues: {
       model: node.data.model || "",
@@ -41,7 +43,6 @@ const ClassifierNodeProperties: React.FC<ClassifierNodePropertiesProps> = ({
       openai_api_base: "",
     },
   });
-
   const handleAddCategory = useCallback(() => {
     const newCategory: ClassifierCategory = {
       category_id: uuidv4(),
@@ -87,22 +88,22 @@ const ClassifierNodeProperties: React.FC<ClassifierNodePropertiesProps> = ({
   return (
     <VStack spacing={4} align="stretch">
       <Box>
-        <Text fontWeight="bold">Model:</Text>
+        <Text fontWeight="bold">{t("workflow.nodes.classifier.model")}:</Text>
         <ModelSelect
           models={models}
           control={control}
           name="model"
           value={node.data.model}
-          isLoading={isLoadingModel}
           onModelSelect={(model: string) =>
             onNodeDataChange(node.id, "model", model)
           }
+          isLoading={isLoadingModel}
         />
       </Box>
 
       <Box>
         <Text fontWeight="bold" mb={2}>
-          Categories:
+          {t("workflow.nodes.classifier.categories")}:
         </Text>
         <VStack spacing={4} align="stretch">
           {node.data.categories?.map(
@@ -116,11 +117,11 @@ const ClassifierNodeProperties: React.FC<ClassifierNodePropertiesProps> = ({
               >
                 <HStack justify="space-between" mb={2}>
                   <Text fontSize="sm" fontWeight="500" color="gray.600">
-                    Category {index + 1}
+                    {t("workflow.nodes.classifier.category")} {index + 1}
                   </Text>
                   {node.data.categories.length > 2 && (
                     <IconButton
-                      aria-label="Remove category"
+                      aria-label={t("workflow.common.delete")}
                       icon={<FaTrash />}
                       size="xs"
                       colorScheme="red"
@@ -137,7 +138,9 @@ const ClassifierNodeProperties: React.FC<ClassifierNodePropertiesProps> = ({
                       e.target.value
                     )
                   }
-                  placeholder="Enter category name"
+                  placeholder={String(
+                    t("workflow.nodes.classifier.placeholder")
+                  )}
                   size="sm"
                   bg="white"
                 />
@@ -153,7 +156,7 @@ const ClassifierNodeProperties: React.FC<ClassifierNodePropertiesProps> = ({
             size="sm"
             width="100%"
           >
-            Add Category
+            {t("workflow.nodes.classifier.addCategory")}
           </Button>
         </VStack>
       </Box>

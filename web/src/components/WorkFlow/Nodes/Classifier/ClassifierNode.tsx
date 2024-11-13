@@ -1,11 +1,14 @@
 import React from "react";
 import { Handle, Position, type NodeProps } from "reactflow";
 import { Box, Text, VStack } from "@chakra-ui/react";
+import { useTranslation } from "react-i18next";
+
 import { BaseNode } from "../Base/BaseNode";
 import { nodeConfig } from "../nodeConfig";
 import { ClassifierNodeData } from "../../types";
 
 const ClassifierNode: React.FC<NodeProps<ClassifierNodeData>> = (props) => {
+  const { t } = useTranslation();
   const { icon: Icon, colorScheme } = nodeConfig.classifier;
   const { categories } = props.data;
 
@@ -28,7 +31,7 @@ const ClassifierNode: React.FC<NodeProps<ClassifierNodeData>> = (props) => {
             borderRadius="md"
           >
             <Text fontSize="xs" fontWeight="500">
-              {category.category_name || `Category ${index + 1}`}
+              {category.category_name || `${t("workflow.nodes.classifier.category")} ${index + 1}`}
             </Text>
             <Handle
               type="source"

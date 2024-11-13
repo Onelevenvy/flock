@@ -90,6 +90,7 @@ const translation = {
       },
       classifier: {
         title: "Intent Recognition",
+        model: "Model",
         categories: "Categories",
         category: "Category",
         addCategory: "Add Category",
@@ -119,7 +120,8 @@ const translation = {
           namePlaceholder: "Enter a unique agent name",
           rolePlaceholder: "e.g., Research Specialist",
           goalPlaceholder: "Agent's primary objective",
-          backstoryPlaceholder: "Agent's background and expertise"
+          backstoryPlaceholder: "Agent's background and expertise",
+          uniqueNameError: "Agent name must be unique"
         },
         taskModal: {
           title: "Task Configuration",
@@ -130,7 +132,8 @@ const translation = {
           namePlaceholder: "Enter a unique task name",
           descriptionPlaceholder: "Task description",
           expectedOutputPlaceholder: "Expected output format or description",
-          selectAgent: "Select agent"
+          selectAgent: "Select agent",
+          uniqueNameError: "Task name must be unique"
         }
       }
     },
