@@ -4,7 +4,7 @@ from app.models import ModelCategory
 
 PROVIDER_CONFIG = {
     "provider_name": "Siliconflow",
-    "base_url": "fakeurl",
+    "base_url": "https://api.siliconflow.cn/v1",
     "api_key": "fakeapikey",
     "icon": "siliconflow_icon",
     "description": "Siliconflow API provider",
@@ -12,8 +12,48 @@ PROVIDER_CONFIG = {
 
 SUPPORTED_MODELS = [
     {
-        "name": "Qwen/Qwen2-7B-Instruct",
+        "name": "Qwen/Qwen2.5-7B-Instruct",
         "categories": [ModelCategory.LLM, ModelCategory.CHAT],
+        "capabilities": [],
+    },
+    {
+        "name": "meta-llama/Meta-Llama-3.1-8B-Instruct",
+        "categories": [ModelCategory.LLM, ModelCategory.CHAT],
+        "capabilities": [],
+    },
+    {
+        "name": "THUDM/glm-4-9b-chat",
+        "categories": [ModelCategory.LLM, ModelCategory.CHAT],
+        "capabilities": [],
+    },
+    {
+        "name": "01-ai/Yi-1.5-9B-Chat-16K",
+        "categories": [ModelCategory.LLM, ModelCategory.CHAT],
+        "capabilities": [],
+    },
+    {
+        "name": "google/gemma-2-9b-it",
+        "categories": [ModelCategory.LLM, ModelCategory.CHAT],
+        "capabilities": [],
+    },
+    {
+        "name": "BAAI/bge-large-zh-v1.5",
+        "categories": [ModelCategory.TEXT_EMBEDDING],
+        "capabilities": [],
+    },
+    {
+        "name": "BAAI/bge-large-en-v1.5",
+        "categories": [ModelCategory.TEXT_EMBEDDING],
+        "capabilities": [],
+    },
+    {
+        "name": "BAAI/bge-m3",
+        "categories": [ModelCategory.TEXT_EMBEDDING],
+        "capabilities": [],
+    },
+    {
+        "name": "netease-youdao/bce-embedding-base_v1",
+        "categories": [ModelCategory.TEXT_EMBEDDING],
         "capabilities": [],
     },
 ]

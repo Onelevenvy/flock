@@ -574,7 +574,7 @@ const FlowVisualizer: React.FC<FlowVisualizerProps> = ({
   }, [setSelectedNodeId]);
 
   const edgesWithStyles = useMemo(() => {
-    return edges.map((edge) => {
+    return edges?.map((edge) => {
       const sourceNode = nodes.find(n => n.id === edge.source);
       const isClassifierEdge = sourceNode?.type === "classifier";
       

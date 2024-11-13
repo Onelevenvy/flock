@@ -150,7 +150,8 @@ class Settings(BaseSettings):
 
     # Embeddings
     # EMBEDDING_MODEL: str = "local"  # 或者你想使用的其他模型
-    EMBEDDING_MODEL: str = "zhipuai"  # 或者你想使用的其他模型
+    # EMBEDDING_MODEL: str = "zhipuai"  # 或者你想使用的其他模型
+    EMBEDDING_MODEL: str = "Siliconflow"
 
     DENSE_EMBEDDING_MODEL: str = (
         "sentence-transformers/all-MiniLM-L6-v2"  # 默认的密集嵌入模型
