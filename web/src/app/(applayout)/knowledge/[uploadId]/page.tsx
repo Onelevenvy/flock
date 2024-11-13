@@ -282,6 +282,17 @@ function KnowledgeTest() {
                       >
                         {result.content}
                       </Text>
+                      {result.content.split("\n").length > 6 && (
+                        <Text
+                          position="absolute"
+                          bottom={2}
+                          right={2}
+                          color="blue.500"
+                          fontWeight="bold"
+                        >
+                          ...
+                        </Text>
+                      )}
                     </Box>
                   ))}
                 </SimpleGrid>
