@@ -16,7 +16,8 @@ const translation = {
       hybrid: {
         name: "混合检索",
         description: "同时执行全文检索和向量检索，并应用重排序步骤，从两类查询结果中选择匹配用户问题的最佳结果"
-      }
+      },
+       placeholder:"请输入你的查询"
     },
     settings: {
       title: "检索设置",

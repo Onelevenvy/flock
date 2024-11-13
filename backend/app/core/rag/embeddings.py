@@ -52,6 +52,7 @@ class ZhipuAIEmbeddings(BaseModel, Embeddings):
 class SiliconFlowEmbeddings(BaseModel, Embeddings):
     api_key: str
     model: str = "BAAI/bge-large-zh-v1.5"
+    dimension: int = 1024
 
     class Config:
         extra = Extra.forbid
@@ -104,7 +105,7 @@ def get_embedding_model(model_name: str) -> Embeddings:
         elif model_name == "zhipuai":
             api_key = get_api_key("zhipuai")
             embedding_model = ZhipuAIEmbeddings(api_key=api_key)
-        elif model_name == "siliconflow":
+        elif model_name == "Siliconflow":
             api_key = get_api_key("Siliconflow")
             embedding_model = SiliconFlowEmbeddings(api_key=api_key)
         elif model_name == "local":
@@ -117,7 +118,9 @@ def get_embedding_model(model_name: str) -> Embeddings:
 
         logger.info(f"Embedding model created: {type(embedding_model)}")
 
-        if not isinstance(embedding_model, ZhipuAIEmbeddings):
+        if not isinstance(embedding_model, ZhipuAIEmbeddings) and not isinstance(
+            embedding_model, SiliconFlowEmbeddings
+        ):
             embedding_model.dimension = get_embedding_dimension(embedding_model)
 
         logger.info(f"Embedding model dimension: {embedding_model.dimension}")

@@ -16,7 +16,8 @@ const translation = {
       hybrid: {
         name: "Hybrid Search",
         description: "Perform both full-text and vector searches, applying reranking steps to select the best results matching user questions from both types of queries"
-      }
+      },
+      placeholder:"Enter your query here"
     },
     settings: {
       title: "Search Settings",
