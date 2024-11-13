@@ -11,6 +11,7 @@ const colors = {
     dark: "#1A202C",
     darkSlate: "#252D3D",
     bgMain: "#f8fafc", // 更清新的背景色
+    // bgMain:"#e9ebf0",
     bgMainDark: "#1a202c",
     hoverColor: "#f1f5f9",
     hoverColorDark: "#2d3748",

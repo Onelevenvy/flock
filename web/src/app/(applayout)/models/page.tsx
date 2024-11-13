@@ -9,16 +9,17 @@ import {
   Spinner,
   Tag,
   TagLabel,
-  useColorModeValue,
+
 } from "@chakra-ui/react";
 import React, { useState, useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import { RiApps2Fill } from "react-icons/ri";
 
+
 import {
   type ApiError,
-  ModelOut,
   ProviderService,
+  ModelOut,
   ModelProviderOut,
 } from "@/client";
 import TabSlider from "@/components/Common/TabSlider";
@@ -57,11 +58,8 @@ function ModelPage() {
 
   if (error) {
     const errDetail = error.body?.detail;
-
     showToast("Something went wrong.", `${errDetail}`, "error");
   }
-
-  const rowTint = useColorModeValue("blackAlpha.50", "whiteAlpha.50");
 
   const options = [
     {
@@ -74,98 +72,97 @@ function ModelPage() {
   const [activeTab, setActiveTab] = useState("all");
 
   return (
-    <Flex>
-      <Box flex="1">
-        {isLoading ? (
-          <Flex justify="center" align="center" height="100vh" width="full">
-            <Spinner size="xl" color="ui.main" />
-          </Flex>
-        ) : (
-          models && (
-            <Box
-              maxW="full"
-              maxH="full"
-              display="flex"
-              flexDirection={"column"}
-              overflow={"hidden"}
-            >
-              <Box
-                display="flex"
-                flexDirection={"row"}
-                justifyItems={"center"}
-                py={2}
-                px={5}
-              >
-                <Box>
-                  <TabSlider
-                    value={activeTab}
-                    onChange={setActiveTab}
-                    options={options}
-                  />
-                </Box>
+    <Box bg="ui.bgMain" minH="100vh" px={6} py={4}>
+      {isLoading ? (
+        <Flex justify="center" align="center" height="100vh" width="full">
+          <Spinner size="xl" color="ui.main" thickness="3px" />
+        </Flex>
+      ) : (
+        models && (
+          <Box maxW="full" maxH="full">
+            <Flex direction="row" justify="space-between" align="center" mb={6}>
+              <Box>
+                <TabSlider
+                  value={activeTab}
+                  onChange={setActiveTab}
+                  options={options}
+                />
               </Box>
-              <Box mt="2" overflow={"auto"}>
-                <Box maxH="full">
-                  <SimpleGrid
-                    columns={{ base: 1, md: 2, lg: 4 }}
-                    spacing={8}
-                    mx="5"
-                  >
-                    {models.map((model) => (
-                      <Box
-                        key={model.id}
-                        _hover={{ backgroundColor: rowTint }}
-                        cursor={"pointer"}
-                        p={4}
-                        borderRadius="xl"
-                        borderWidth="1px"
-                        borderColor="gray.200"
-                        boxShadow="lg"
-                        bg="white"
+            </Flex>
+
+            <SimpleGrid columns={{ base: 1, md: 2, lg: 3, xl: 4 }} spacing={6}>
+              {models.map((model) => (
+                <Box
+                  key={model.id}
+                  bg="white"
+                  p={6}
+                  borderRadius="xl"
+                  border="1px solid"
+                  borderColor="gray.100"
+                  transition="all 0.2s"
+                  _hover={{
+                    transform: "translateY(-2px)",
+                    boxShadow: "md",
+                    borderColor: "gray.200",
+                  }}
+                >
+                  <HStack spacing={4} mb={4}>
+                    <Box
+                      p={2}
+                      borderRadius="lg"
+                      bg={`${model.categories[0] ? "blue" : "purple"}.50`}
+                    >
+                      <ModelProviderIcon
+                        h="6"
+                        w="6"
+                        modelprovider_name={model.provider.provider_name.toLowerCase()}
+                        color={`${model.categories[0] ? "blue" : "purple"}.500`}
+                      />
+                    </Box>
+                    <Heading
+                      size="md"
+                      color="gray.700"
+                      fontWeight="600"
+                      noOfLines={1}
+                    >
+                      {model.ai_model_name}
+                    </Heading>
+                  </HStack>
+
+                  <Text fontSize="sm" color="gray.600" mb={4}>
+                    Provider: {model.provider.provider_name}
+                  </Text>
+
+                  <Flex wrap="wrap" gap={2}>
+                    {model.categories.map((category) => (
+                      <Tag
+                        key={category}
+                        size="sm"
+                        variant="subtle"
+                        colorScheme="blue"
+                        borderRadius="full"
                       >
-                        <HStack spacing="16px">
-                          <ModelProviderIcon
-                            h="8"
-                            w="8"
-                            modelprovider_name={model.provider.provider_name.toLowerCase()}
-                          />
-                          <Heading noOfLines={1} size="md">
-                            {model.ai_model_name}
-                          </Heading>
-                        </HStack>
-                        <Box pt={2}>
-                          <Text fontSize="sm" color="gray.600">
-                            Provider: {model.provider.provider_name}
-                          </Text>
-                        </Box>
-                        <Box pt={2}>
-                          {model.categories.map((category) => (
-                            <Tag
-                              key={category}
-                              mr={2}
-                              mb={2}
-                              size="sm"
-                              colorScheme="blue"
-                            >
-                              <TagLabel>{category}</TagLabel>
-                            </Tag>
-                          ))}
-                          {model.capabilities.includes("vision") && (
-                            <Tag mr={2} mb={2} size="sm" colorScheme="purple">
-                              <TagLabel>vision</TagLabel>
-                            </Tag>
-                          )}
-                        </Box>
-                      </Box>
+                        <TagLabel fontWeight="500">{category}</TagLabel>
+                      </Tag>
                     ))}
-                  </SimpleGrid>
+                    {model.capabilities.includes("vision") && (
+                      <Tag
+                        size="sm"
+                        variant="subtle"
+                        colorScheme="purple"
+                        borderRadius="full"
+                      >
+                        <TagLabel fontWeight="500">vision</TagLabel>
+                      </Tag>
+                    )}
+                  </Flex>
                 </Box>
-              </Box>
-            </Box>
-          )
-        )}
-      </Box>
-    </Flex>
+              ))}
+            </SimpleGrid>
+          </Box>
+        )
+      )}
+    </Box>
   );
 }
 
