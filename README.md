@@ -9,12 +9,12 @@
 
 > [!TIP]
 >
-> ### 🎉 What's New
+> ### 🎉 What's New 2024/11/12
 >
-> **Intent Recognition Node**: New Intent Recognition node that can automatically identify user input intent based on preset categories, supporting multi-classification routing!
+> + **Intent Recognition Node**: New Intent Recognition node that can automatically identify user input intent based on preset categories, supporting multi-classification routing!
 > <img src="assets/intent.png" alt="intent recognition" width="500" />
 >
-> **CrewAI Node Support**: Now you can leverage CrewAI's powerful multi-agent capabilities in your workflows! Create sophisticated agent teams and orchestrate complex collaborative tasks with ease.
+> + **CrewAI Node Support**: Now you can leverage CrewAI's powerful multi-agent capabilities in your workflows! Create sophisticated agent teams and orchestrate complex collaborative tasks with ease.
 > <img src="assets/crewai.jpg" alt="crewai" width="500"  />
 
 ### A chatbot, RAG, agent, and multi-agent application project based on LangChain, LangGraph, and other frameworks, open-source, and capable of offline deployment.
