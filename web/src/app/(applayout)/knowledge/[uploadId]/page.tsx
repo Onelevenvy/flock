@@ -29,6 +29,7 @@ import { GiArrowScope } from "react-icons/gi";
 import { MdBuild } from "react-icons/md";
 import { VscTriangleRight } from "react-icons/vsc";
 import { useQuery, useMutation, useQueryClient } from "react-query";
+import { useTranslation } from "react-i18next";
 
 import { UploadsService, type ApiError } from "@/client";
 import CustomButton from "@/components/Common/CustomButton";
@@ -66,6 +67,7 @@ function KnowledgeTest() {
   const [scoreThreshold, setScoreThreshold] = useState(0.5);
   const [searchTaskId, setSearchTaskId] = useState<string | null>(null);
   const [isOptionsVisible, setIsOptionsVisible] = useState(false);
+  const { t } = useTranslation();
 
   const bgColor = useColorModeValue("white", "gray.800");
   const borderColor = useColorModeValue("gray.200", "gray.600");
@@ -173,10 +175,10 @@ function KnowledgeTest() {
       </Box>
       <Box px={8}>
         <Text fontSize={"lg"} fontWeight={"bold"}>
-          召回测试
+          {t("knowledge.test.title")}
         </Text>
         <Text mt={2} mb={2}>
-          基于给定的查询文本测试知识库的召回效果
+          {t("knowledge.test.description")}
         </Text>
         <HStack spacing={6} align="flex-start">
           <Box
@@ -194,12 +196,12 @@ function KnowledgeTest() {
               bg="#eef4ff"
             >
               <Text my={2} ml={3} fontWeight={"bold"}>
-                Knowledge Base: {currentUpload?.name}
+                {t("knowledge.test.knowledgeBase")}: {currentUpload?.name}
               </Text>
               <CustomButton
                 text={
                   SearchTypeInfo.find((info) => info.type === searchType)
-                    ?.displayName || "选择搜索类型"
+                    ?.displayName || t("knowledge.test.actions.selectType")
                 }
                 variant="white"
                 my={2}
@@ -212,7 +214,9 @@ function KnowledgeTest() {
             <Textarea
               value={query}
               onChange={(e) => setQuery(e.target.value)}
-              placeholder="Enter your query here"
+              placeholder={
+                t("knowledge.test.searchType.placeholder") || "Enter input"
+              }
               size="lg"
               px={"6"}
               pt={"6"}
@@ -220,7 +224,7 @@ function KnowledgeTest() {
               bg="white"
             />
             <CustomButton
-              text="Search"
+              text={t("knowledge.test.actions.search")}
               variant="blue"
               position="absolute"
               bottom={2}
@@ -236,7 +240,7 @@ function KnowledgeTest() {
             {searchResults?.results && (
               <>
                 <Text mb={2} fontSize={"lg"} fontWeight={"bold"}>
-                  召回段落
+                  {t("knowledge.test.results.title")}
                 </Text>
                 <SimpleGrid columns={{ base: 2, md: 2 }} spacing={4}>
                   {searchResults.results.map((result: any, index: number) => (
@@ -252,7 +256,8 @@ function KnowledgeTest() {
                     >
                       <HStack justifyContent="space-between" mb={2}>
                         <Text fontWeight="bold">
-                          Score: {result.score.toFixed(2)}
+                          {t("knowledge.test.results.score")}:{" "}
+                          {result.score.toFixed(2)}
                         </Text>
                         <Box
                           display={"flex"}
@@ -277,17 +282,6 @@ function KnowledgeTest() {
                       >
                         {result.content}
                       </Text>
-                      {result.content.split("\n").length > 6 && (
-                        <Text
-                          position="absolute"
-                          bottom={2}
-                          right={2}
-                          color="blue.500"
-                          fontWeight="bold"
-                        >
-                          ...
-                        </Text>
-                      )}
                     </Box>
                   ))}
                 </SimpleGrid>
@@ -295,7 +289,7 @@ function KnowledgeTest() {
             )}
           </Box>
 
-          {/* 搜索选项 */}
+          {/* 搜索选项面板 */}
           {isOptionsVisible && (
             <Box
               position="absolute"
@@ -312,7 +306,9 @@ function KnowledgeTest() {
             >
               <VStack spacing={4} align="stretch">
                 <HStack justifyContent="space-between">
-                  <Text fontWeight="bold">检索设置</Text>
+                  <Text fontWeight="bold">
+                    {t("knowledge.test.settings.title")}
+                  </Text>
                   <CustomButton
                     text="X"
                     variant="white"
@@ -336,9 +332,13 @@ function KnowledgeTest() {
                       <HStack spacing={4} flex={1}>
                         <Box as={info.icon} size="24px" color="blue.500" />
                         <VStack align="start" spacing={0}>
-                          <Text>{info.displayName}</Text>
+                          <Text>
+                            {t(`knowledge.test.searchType.${info.type}.name`)}
+                          </Text>
                           <Text fontSize="sm" color="gray.400">
-                            {info.description}
+                            {t(
+                              `knowledge.test.searchType.${info.type}.description`
+                            )}
                           </Text>
                         </VStack>
                       </HStack>

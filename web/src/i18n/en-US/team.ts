@@ -47,6 +47,67 @@ const translation = {
     knowledge: "Knowledge Base",
     chathistory: "Chat History",
   },
+  workflow: {
+    nodes: {
+      start: {
+        title: "Start Node",
+        initialInput: "Initial Input",
+        placeholder: "Enter initial input"
+      },
+      end: {
+        title: "End Node" 
+      },
+      llm: {
+        title: "LLM Node",
+        model: "Model",
+        temperature: "Temperature",
+        systemPrompt: "System Prompt",
+        placeholder: "Enter system prompt"
+      },
+      tool: {
+        title: "Tools",
+        addTool: "Add Tool",
+        searchTools: "Search tools...",
+        noTools: "No tools selected",
+        added: "Added"
+      },
+      retrieval: {
+        title: "Knowledge Retrieval",
+        query: "Query",
+        ragMethod: "RAG Method",
+        database: "Knowledge Database",
+        placeholder: "Enter query",
+        selectDatabase: "Select Knowledge Database"
+      },
+      classifier: {
+        title: "Intent Recognition",
+        categories: "Categories",
+        category: "Category",
+        addCategory: "Add Category",
+        placeholder: "Enter category name"
+      },
+      crewai: {
+        title: "CrewAI",
+        agents: "Agents",
+        tasks: "Tasks",
+        processType: "Process Type",
+        sequential: "Sequential",
+        hierarchical: "Hierarchical",
+        manager: "Manager Configuration",
+        defaultManager: "Default Manager Agent",
+        customManager: "Custom Manager Agent"
+      }
+    },
+    common: {
+      add: "Add",
+      edit: "Edit",
+      delete: "Delete",
+      save: "Save",
+      cancel: "Cancel",
+      search: "Search",
+      noResults: "No results found"
+    }
+  }
 };
 
 export default translation;

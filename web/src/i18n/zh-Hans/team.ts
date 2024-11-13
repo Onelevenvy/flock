@@ -45,6 +45,67 @@ const translation = {
     knowledge: "知识库",
     chathistory: "聊天记录",
   },
+  workflow: {
+    nodes: {
+      start: {
+        title: "开始节点",
+        initialInput: "初始输入",
+        placeholder: "请输入初始值"
+      },
+      end: {
+        title: "结束节点"
+      },
+      llm: {
+        title: "语言模型",
+        model: "模型",
+        temperature: "温度",
+        systemPrompt: "系统提示词",
+        placeholder: "请输入系统提示词"
+      },
+      tool: {
+        title: "工具",
+        addTool: "添加工具",
+        searchTools: "搜索工具...",
+        noTools: "未选择工具",
+        added: "已添加"
+      },
+      retrieval: {
+        title: "知识检索",
+        query: "查询",
+        ragMethod: "RAG方法",
+        database: "知识库",
+        placeholder: "请输入查询内容",
+        selectDatabase: "选择知识库"
+      },
+      classifier: {
+        title: "意图识别",
+        categories: "分类",
+        category: "类别",
+        addCategory: "添加类别",
+        placeholder: "请输入类别名称"
+      },
+      crewai: {
+        title: "多智能体",
+        agents: "智能体",
+        tasks: "任务",
+        processType: "处理类型",
+        sequential: "顺序执行",
+        hierarchical: "层级执行",
+        manager: "管理者配置",
+        defaultManager: "默认管理者",
+        customManager: "自定义管理者"
+      }
+    },
+    common: {
+      add: "添加",
+      edit: "编辑",
+      delete: "删除",
+      save: "保存",
+      cancel: "取消",
+      search: "搜索",
+      noResults: "未找到结果"
+    }
+  }
 };
 
 export default translation;

@@ -10,6 +10,7 @@ import {
 import type React from "react";
 import { useState } from "react";
 import { FaTools } from "react-icons/fa";
+import { useTranslation } from "react-i18next";
 
 import ToolsIcon from "@/components/Icons/Tools";
 import { useSkillsQuery } from "@/hooks/useSkillsQuery";
@@ -25,6 +26,7 @@ const ToolNodeProperties: React.FC<ToolNodePropertiesProps> = ({
   node,
   onNodeDataChange,
 }) => {
+  const { t } = useTranslation();
   const [isToolsListOpen, setIsToolsListOpen] = useState(false);
   const { data: skills, isLoading, isError } = useSkillsQuery();
 
@@ -54,7 +56,7 @@ const ToolNodeProperties: React.FC<ToolNodePropertiesProps> = ({
           <HStack spacing={2}>
             <FaTools size="14px" color="#4A5568" />
             <Text fontSize="md" fontWeight="600" color="gray.700">
-              Tools
+              {t("workflow.nodes.tool.title")}
             </Text>
             <Text fontSize="xs" color="gray.500">
               ({node.data.tools?.length || 0})
@@ -67,7 +69,7 @@ const ToolNodeProperties: React.FC<ToolNodePropertiesProps> = ({
             onClick={() => setIsToolsListOpen(true)}
             colorScheme="blue"
           >
-            Add Tool
+            {t("workflow.nodes.tool.addTool")}
           </Button>
         </HStack>
 

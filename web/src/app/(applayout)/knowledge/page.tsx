@@ -42,52 +42,53 @@ function Uploads() {
 
   if (isError) {
     const errDetail = (error as ApiError).body?.detail;
-
     showToast("Something went wrong.", `${errDetail}`, "error");
   }
+
   const rowTint = useColorModeValue("blackAlpha.50", "whiteAlpha.50");
   const options = [
     {
       value: "all",
-      text: t("panestate.kb.all"),
+      text: t("knowledge.page.types.all"),
       icon: <RiListUnordered className="w-[14px] h-[14px] mr-1" />,
     },
     {
-      value: "pfd",
-      text: "pfd",
+      value: "pdf",
+      text: t("knowledge.page.types.pdf"),
       icon: <FaFilePdf className="w-[14px] h-[14px] mr-1" />,
     },
     {
       value: "excel",
-      text: "excel",
+      text: t("knowledge.page.types.excel"),
       icon: <FaFileExcel className="w-[14px] h-[14px] mr-1" />,
     },
     {
       value: "word",
-      text: "word",
+      text: t("knowledge.page.types.word"),
       icon: <FaFileWord className="w-[14px] h-[14px] mr-1" />,
     },
     {
       value: "ppt",
-      text: "ppt",
+      text: t("knowledge.page.types.ppt"),
       icon: <FaFilePowerpoint className="w-[14px] h-[14px] mr-1" />,
     },
     {
       value: "md",
-      text: "md",
+      text: t("knowledge.page.types.md"),
       icon: <FaFileExport className="w-[14px] h-[14px] mr-1" />,
     },
     {
       value: "web",
-      text: "web",
+      text: t("knowledge.page.types.web"),
       icon: <TbWorldWww className="w-[14px] h-[14px] mr-1" />,
     },
     {
       value: "txt",
-      text: "txt",
+      text: t("knowledge.page.types.txt"),
       icon: <FaFileCode className="w-[14px] h-[14px] mr-1" />,
     },
   ];
+
   const [activeTab, setActiveTab] = useTabSearchParams({
     searchParamName: "tooltype",
     defaultTab: "all",
@@ -101,7 +102,6 @@ function Uploads() {
   return (
     <>
       {isLoading ? (
-        // TODO: Add skeleton
         <Flex justify="center" align="center" height="100vh" width="full">
           <Spinner size="xl" color="ui.main" />
         </Flex>
@@ -158,7 +158,7 @@ function Uploads() {
                         textOverflow="ellipsis"
                         whiteSpace="nowrap"
                       >
-                        {upload.description}
+                        {upload.description || t("knowledge.page.noDescription")}
                       </Box>
                       <Box
                         overflow="hidden"
@@ -173,7 +173,9 @@ function Uploads() {
                         justifyContent={"space-between"}
                         alignItems={"center"}
                       >
-                        <Badge colorScheme="green"> {upload.status}</Badge>
+                        <Badge colorScheme="green">
+                          {t(`knowledge.page.status.${upload.status.toLowerCase()}`)}
+                        </Badge>
                         <ActionsMenu type={"Upload"} value={upload} />
                       </Box>
                     </Box>

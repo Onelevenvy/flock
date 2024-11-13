@@ -17,6 +17,7 @@ import {
 } from "@chakra-ui/react";
 import type React from "react";
 import { useMemo, useState } from "react";
+import { useTranslation } from "react-i18next";
 
 import ToolsIcon from "@/components/Icons/Tools";
 import type { SkillOut } from "@/client";
@@ -34,6 +35,7 @@ const ToolsList: React.FC<ToolsListProps> = ({
   onAddTool,
   selectedTools,
 }) => {
+  const { t } = useTranslation();
   const [searchQuery, setSearchQuery] = useState("");
 
   const filteredSkills = useMemo(() => {
@@ -48,7 +50,7 @@ const ToolsList: React.FC<ToolsListProps> = ({
       <ModalContent>
         <ModalHeader>
           <Text fontSize="lg" fontWeight="600">
-            Add Tool
+            {t("workflow.nodes.tool.addTool")}
           </Text>
         </ModalHeader>
         <ModalCloseButton />
@@ -59,7 +61,9 @@ const ToolsList: React.FC<ToolsListProps> = ({
                 <SearchIcon color="gray.300" />
               </InputLeftElement>
               <Input
-                placeholder="Search tools..."
+                placeholder={
+                  t("workflow.nodes.tool.searchTools") || "Search tools..."
+                }
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 borderColor="gray.200"
@@ -102,8 +106,8 @@ const ToolsList: React.FC<ToolsListProps> = ({
                       justifyContent="center"
                     >
                       {selectedTools.includes(skill.display_name!)
-                        ? "Added"
-                        : "Add"}
+                        ? t("workflow.nodes.tool.added") || "Added"
+                        : t("workflow.common.add") || "Add"}
                     </Button>
                   </HStack>
                 </Box>

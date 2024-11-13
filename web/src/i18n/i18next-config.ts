@@ -12,6 +12,8 @@ const loadLangResources = (lang: string) => ({
     setting: require(`./${lang}/setting`).default,
     panestate: require(`./${lang}/panestate`).default,
     team: require(`./${lang}/team`).default,
+    workflow: require(`./${lang}/team`).default.workflow,
+    knowledge: require(`./${lang}/knowledge`).default,
   },
 });
 
