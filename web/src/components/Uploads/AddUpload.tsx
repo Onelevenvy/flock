@@ -9,6 +9,7 @@ import {
 import { useState } from "react";
 import { type SubmitHandler, useForm } from "react-hook-form";
 import { useMutation, useQueryClient } from "react-query";
+import { useTranslation } from "react-i18next";
 
 import UploadForm, { UploadFormData } from "./UploadForm";
 import {
@@ -24,6 +25,7 @@ interface AddUploadProps {
 }
 
 const AddUpload = ({ isOpen, onClose }: AddUploadProps) => {
+  const { t } = useTranslation();
   const queryClient = useQueryClient();
   const showToast = useCustomToast();
   const [fileType, setFileType] = useState<"file" | "web">("file");
@@ -45,15 +47,14 @@ const AddUpload = ({ isOpen, onClose }: AddUploadProps) => {
       }),
     {
       onSuccess: () => {
-        showToast("Success", "Upload created successfully", "success");
+        showToast("Success", t("knowledge.upload.add.success"), "success");
         form.reset();
         onClose();
         queryClient.invalidateQueries("uploads");
       },
       onError: (err: ApiError) => {
         const errDetail = err.body?.detail;
-
-        showToast("Something went wrong.", `${errDetail}`, "error");
+        showToast(t("knowledge.upload.error.generic"), `${errDetail}`, "error");
       },
     }
   );
@@ -74,7 +75,7 @@ const AddUpload = ({ isOpen, onClose }: AddUploadProps) => {
     >
       <ModalOverlay />
       <ModalContent>
-        <ModalHeader>Add Upload</ModalHeader>
+        <ModalHeader>{t("knowledge.upload.add.title")}</ModalHeader>
         <ModalCloseButton />
         <ModalBody pb={6}>
           <UploadForm

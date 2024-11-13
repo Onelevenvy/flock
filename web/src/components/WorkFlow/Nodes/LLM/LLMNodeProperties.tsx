@@ -1,30 +1,14 @@
-import {
-  Box,
-  Input,
-  Text,
-  VStack,
-  Popover,
-  PopoverTrigger,
-  PopoverContent,
-  Button,
-  Textarea,
-} from "@chakra-ui/react";
+import { Box, Input, Text, VStack, Select } from "@chakra-ui/react";
 import type React from "react";
-import { useEffect, useState, useCallback } from "react";
-import { useForm } from "react-hook-form";
+import { useCallback, useState, useEffect } from "react";
+import { useTranslation } from "react-i18next";
 
 import ModelSelect from "@/components/Common/ModelProvider";
 import { useVariableInsertion } from "@/hooks/graphs/useVariableInsertion";
 import { useModelQuery } from "@/hooks/useModelQuery";
-
 import { VariableReference } from "../../FlowVis/variableSystem";
 import VariableSelector from "../../Common/VariableSelector";
-
-interface LLMNodePropertiesProps {
-  node: any;
-  onNodeDataChange: (nodeId: string, key: string, value: any) => void;
-  availableVariables: VariableReference[];
-}
+import { useForm } from "react-hook-form";
 
 interface FormValues {
   model: string;
@@ -32,12 +16,18 @@ interface FormValues {
   openai_api_key: string;
   openai_api_base: string;
 }
+interface LLMNodePropertiesProps {
+  node: any;
+  onNodeDataChange: (nodeId: string, key: string, value: any) => void;
+  availableVariables: VariableReference[];
+}
 
 const LLMNodeProperties: React.FC<LLMNodePropertiesProps> = ({
   node,
   onNodeDataChange,
   availableVariables,
 }) => {
+  const { t } = useTranslation();
   const [temperatureInput, setTemperatureInput] = useState("");
   const [systemPromptInput, setSystemPromptInput] = useState("");
 
@@ -109,11 +99,11 @@ const LLMNodeProperties: React.FC<LLMNodePropertiesProps> = ({
   );
 
   const {
-    showVariables: showVariablesHook,
-    setShowVariables: setShowVariablesHook,
-    inputRef: inputRefHook,
-    handleKeyDown: handleKeyDownHook,
-    insertVariable: insertVariableHook,
+    showVariables,
+    setShowVariables,
+    inputRef,
+    handleKeyDown,
+    insertVariable,
   } = useVariableInsertion<HTMLTextAreaElement>({
     onValueChange: (value) => handleSystemPromptChange(value),
     availableVariables,
@@ -122,7 +112,7 @@ const LLMNodeProperties: React.FC<LLMNodePropertiesProps> = ({
   return (
     <VStack align="stretch" spacing={4}>
       <Box>
-        <Text fontWeight="bold">Model:</Text>
+        <Text fontWeight="bold">{t("workflow.nodes.llm.model")}:</Text>
         <ModelSelect<FormValues>
           models={models}
           control={control}
@@ -133,7 +123,7 @@ const LLMNodeProperties: React.FC<LLMNodePropertiesProps> = ({
         />
       </Box>
       <Box>
-        <Text fontWeight="bold">Temperature:</Text>
+        <Text fontWeight="bold">{t("workflow.nodes.llm.temperature")}:</Text>
         <Input
           type="number"
           bg="#edf2f7"
@@ -150,18 +140,19 @@ const LLMNodeProperties: React.FC<LLMNodePropertiesProps> = ({
           max={1}
         />
       </Box>
-      
+
       <VariableSelector
-        label="System Prompt"
+        label={String(t("workflow.nodes.llm.systemPrompt"))}
         value={systemPromptInput}
         onChange={handleSystemPromptChange}
-        showVariables={showVariablesHook}
-        setShowVariables={setShowVariablesHook}
-        inputRef={inputRefHook}
-        handleKeyDown={handleKeyDownHook}
-        insertVariable={insertVariableHook}
+        showVariables={showVariables}
+        setShowVariables={setShowVariables}
+        inputRef={inputRef}
+        handleKeyDown={handleKeyDown}
+        insertVariable={insertVariable}
         availableVariables={availableVariables}
         minHeight="100px"
+        placeholder={String(t("workflow.nodes.llm.placeholder"))}
       />
     </VStack>
   );

@@ -75,7 +75,16 @@ const translation = {
         ragMethod: "RAG方法",
         database: "知识库",
         placeholder: "请输入查询内容",
-        selectDatabase: "选择知识库"
+        selectDatabase: "选择知识库",
+        loading: "正在加载知识库...",
+        error: "加载知识库失败",
+        addKB: "添加知识库",
+        removeKB: "移除知识库",
+        noKB: "未选择知识库",
+        searchKB: "搜索知识库...",
+        added: "已添加",
+        noDescription: "暂无描述",
+        noResults: "未找到知识库"
       },
       classifier: {
         title: "意图识别",
@@ -104,6 +113,50 @@ const translation = {
       cancel: "取消",
       search: "搜索",
       noResults: "未找到结果"
+    },
+    flowVisualizer: {
+      shortcuts: {
+        title: "快捷键",
+        edgeType: "更改边类型",
+        delete: "删除",
+        info: {
+          title: "信息",
+          solidLine: "实线: 普通连接",
+          dashedLine: "虚线: 条件连接"
+        }
+      },
+      zoom: "缩放",
+      debug: {
+        title: "调试",
+        loading: "加载中...",
+        error: "错误",
+        preview: "调试预览"
+      },
+      actions: {
+        debug: "调试",
+        deploy: "部署",
+        apiKey: "API密钥",
+        save: "保存",
+        saving: "保存中..."
+      },
+      contextMenu: {
+        delete: "删除节点",
+        error: {
+          title: "无法删除节点",
+          description: "无法删除{type}节点。"
+        }
+      }
+    },
+    nodeMenu: {
+      title: "节点",
+      plugins: "插件",
+      loading: "加载工具中...",
+      error: "加载工具失败"
+    },
+    variableSelector: {
+      availableVariables: "可用变量",
+      noVariables: "没有可用变量",
+      placeholder: "在此处编写。使用 '/' 插入变量。"
     }
   }
 };

@@ -11,10 +11,9 @@ import {
   IconButton,
 } from "@chakra-ui/react";
 import React from "react";
-
+import { useTranslation } from "react-i18next";
 
 import { useSkillsQuery } from "@/hooks/useSkillsQuery";
-
 import ToolsIcon from "../../Icons/Tools";
 import { nodeConfig, type NodeType } from "../Nodes/nodeConfig";
 
@@ -27,6 +26,7 @@ const SharedNodeMenu: React.FC<SharedNodeMenuProps> = ({
   onNodeSelect,
   isDraggable = false,
 }) => {
+  const { t } = useTranslation();
   const { data: tools, isLoading, isError } = useSkillsQuery();
 
   const handleNodeInteraction =
@@ -59,8 +59,8 @@ const SharedNodeMenu: React.FC<SharedNodeMenuProps> = ({
     >
       <Tabs isLazy>
         <TabList mb="1em" position="sticky" top={0} bg="white" zIndex={1}>
-          <Tab>Nodes</Tab>
-          <Tab>Plugins</Tab>
+          <Tab>{t("workflow.nodeMenu.title")}</Tab>
+          <Tab>{t("workflow.nodeMenu.plugins")}</Tab>
         </TabList>
         <TabPanels>
           <TabPanel h="full" overflowY="auto" px={2} py={0} minH={"400px"}>
@@ -107,9 +107,9 @@ const SharedNodeMenu: React.FC<SharedNodeMenuProps> = ({
           <TabPanel h="full" overflowY="auto" px={2} py={0} minH={"400px"}>
             <VStack spacing={2} align="stretch">
               {isLoading ? (
-                <Text>Loading tools...</Text>
+                <Text>{t("workflow.nodeMenu.loading")}</Text>
               ) : isError ? (
-                <Text>Error loading tools</Text>
+                <Text>{t("workflow.nodeMenu.error")}</Text>
               ) : (
                 tools?.data.map((tool) => (
                   <Box

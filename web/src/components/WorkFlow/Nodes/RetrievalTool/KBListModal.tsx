@@ -18,6 +18,7 @@ import {
 } from "@chakra-ui/react";
 import type React from "react";
 import { useMemo, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { GiArchiveResearch } from "react-icons/gi";
 
 interface KBInfo {
@@ -40,6 +41,7 @@ const KBListModal: React.FC<KBListProps> = ({
   onAddKB,
   selectedKBs,
 }) => {
+  const { t } = useTranslation();
   const [searchQuery, setSearchQuery] = useState("");
 
   const filteredUploads = useMemo(() => {
@@ -56,7 +58,7 @@ const KBListModal: React.FC<KBListProps> = ({
           <HStack spacing={2}>
             <GiArchiveResearch size="20px" color="#4A5568" />
             <Text fontSize="lg" fontWeight="600">
-              Add Knowledge Base
+              {t("workflow.nodes.retrieval.addKB")}
             </Text>
           </HStack>
         </ModalHeader>
@@ -68,7 +70,7 @@ const KBListModal: React.FC<KBListProps> = ({
                 <SearchIcon color="gray.300" />
               </InputLeftElement>
               <Input
-                placeholder="Search knowledge bases..."
+                placeholder={String(t("workflow.nodes.retrieval.searchKB"))}
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 borderColor="gray.200"
@@ -122,7 +124,7 @@ const KBListModal: React.FC<KBListProps> = ({
                           {upload.name}
                         </Text>
                         <Text fontSize="xs" color="gray.500" noOfLines={2}>
-                          {upload.description || "No description"}
+                          {upload.description || t("workflow.nodes.retrieval.noDescription")}
                         </Text>
                       </VStack>
                     </HStack>
@@ -143,14 +145,16 @@ const KBListModal: React.FC<KBListProps> = ({
                       width="auto"
                       justifyContent="center"
                     >
-                      {selectedKBs.includes(upload.name) ? "Added" : "Add"}
+                      {selectedKBs.includes(upload.name)
+                        ? t("workflow.nodes.retrieval.added")
+                        : t("workflow.common.add")}
                     </Button>
                   </HStack>
                 </Box>
               ))}
               {filteredUploads.length === 0 && (
                 <Box p={4} textAlign="center">
-                  <Text color="gray.500">No knowledge bases found</Text>
+                  <Text color="gray.500">{t("workflow.nodes.retrieval.noResults")}</Text>
                 </Box>
               )}
             </VStack>

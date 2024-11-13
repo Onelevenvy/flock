@@ -77,7 +77,16 @@ const translation = {
         ragMethod: "RAG Method",
         database: "Knowledge Database",
         placeholder: "Enter query",
-        selectDatabase: "Select Knowledge Database"
+        selectDatabase: "Select Knowledge Database",
+        loading: "Loading knowledge bases...",
+        error: "Error loading knowledge bases",
+        addKB: "Add KB",
+        removeKB: "Remove knowledge base",
+        noKB: "No knowledge base selected",
+        searchKB: "Search knowledge bases...",
+        added: "Added",
+        noDescription: "No description",
+        noResults: "No knowledge bases found"
       },
       classifier: {
         title: "Intent Recognition",
@@ -106,6 +115,50 @@ const translation = {
       cancel: "Cancel",
       search: "Search",
       noResults: "No results found"
+    },
+    flowVisualizer: {
+      shortcuts: {
+        title: "Shortcuts",
+        edgeType: "Change edges type",
+        delete: "Delete",
+        info: {
+          title: "Info",
+          solidLine: "solid line: Normal edge",
+          dashedLine: "dashed line: Conditional edge"
+        }
+      },
+      zoom: "Zoom",
+      debug: {
+        title: "Debug",
+        loading: "Loading...",
+        error: "Error",
+        preview: "Debug Preview"
+      },
+      actions: {
+        debug: "Debug",
+        deploy: "Deploy",
+        apiKey: "API Key",
+        save: "Save",
+        saving: "Saving..."
+      },
+      contextMenu: {
+        delete: "Delete Node",
+        error: {
+          title: "Cannot delete node",
+          description: "{type} node cannot be deleted."
+        }
+      }
+    },
+    nodeMenu: {
+      title: "Nodes",
+      plugins: "Plugins",
+      loading: "Loading tools...",
+      error: "Error loading tools"
+    },
+    variableSelector: {
+      availableVariables: "Available Variables",
+      noVariables: "No variables available",
+      placeholder: "Write here. Use '/' to insert variables."
     }
   }
 };

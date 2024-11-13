@@ -9,6 +9,7 @@ import {
 } from "@chakra-ui/react";
 import type React from "react";
 import { useState } from "react";
+import { useTranslation } from "react-i18next";
 import { GiArchiveResearch } from "react-icons/gi";
 
 import { useUploadsQuery } from "@/hooks/useUploadsQuery";
@@ -30,6 +31,7 @@ interface RetrievalToolNodePropertiesProps {
 const RetrievalToolNodeProperties: React.FC<
   RetrievalToolNodePropertiesProps
 > = ({ node, onNodeDataChange }) => {
+  const { t } = useTranslation();
   const [isKBListOpen, setIsKBListOpen] = useState(false);
   const { data: uploads, isLoading, isError } = useUploadsQuery();
 
@@ -57,8 +59,8 @@ const RetrievalToolNodeProperties: React.FC<
     );
   };
 
-  if (isLoading) return <Text>Loading knowledge bases...</Text>;
-  if (isError) return <Text>Error loading knowledge bases</Text>;
+  if (isLoading) return <Text>{t("workflow.nodes.retrieval.loading")}</Text>;
+  if (isError) return <Text>{t("workflow.nodes.retrieval.error")}</Text>;
 
   return (
     <VStack align="stretch" spacing={4}>
@@ -67,7 +69,7 @@ const RetrievalToolNodeProperties: React.FC<
           <HStack spacing={2}>
             <GiArchiveResearch size="14px" color="#4A5568" />
             <Text fontSize="md" fontWeight="600" color="gray.700">
-              Knowledge Bases
+              {t("workflow.nodes.retrieval.title")}
             </Text>
             <Text fontSize="xs" color="gray.500">
               ({node.data.tools?.length || 0})
@@ -80,7 +82,7 @@ const RetrievalToolNodeProperties: React.FC<
             onClick={() => setIsKBListOpen(true)}
             colorScheme="blue"
           >
-            Add KB
+            {t("workflow.nodes.retrieval.addKB")}
           </Button>
         </HStack>
 
@@ -116,7 +118,7 @@ const RetrievalToolNodeProperties: React.FC<
                     </Text>
                   </HStack>
                   <IconButton
-                    aria-label="Remove knowledge base"
+                    aria-label={t("workflow.nodes.retrieval.removeKB")}
                     icon={<DeleteIcon />}
                     size="xs"
                     variant="ghost"

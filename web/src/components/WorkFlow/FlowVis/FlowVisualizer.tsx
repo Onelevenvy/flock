@@ -49,6 +49,7 @@ import SharedNodeMenu from "./SharedNodeMenu";
 import useWorkflowStore from "@/stores/workflowStore";
 import CustomButton from "@/components/Common/CustomButton";
 import ApiKeyButton from "@/components/Teams/Apikey/ApiKeyManageButton";
+import { useTranslation } from "react-i18next";
 
 const FlowVisualizer: React.FC<FlowVisualizerProps> = ({
   nodeTypes,
@@ -56,6 +57,7 @@ const FlowVisualizer: React.FC<FlowVisualizerProps> = ({
   teamId,
   graphData,
 }) => {
+  const { t } = useTranslation();
   const {
     nodes,
     setNodes,
@@ -346,14 +348,15 @@ const FlowVisualizer: React.FC<FlowVisualizerProps> = ({
         (nodeToDelete.type === "start" || nodeToDelete.type === "end")
       ) {
         toast({
-          title: "Cannot delete node",
-          description: `${nodeToDelete.type.charAt(0).toUpperCase() + nodeToDelete.type.slice(1)} node cannot be deleted.`,
+          title: t("workflow.flowVisualizer.contextMenu.error.title"),
+          description: t("workflow.flowVisualizer.contextMenu.error.description", {
+            type: nodeToDelete.type.charAt(0).toUpperCase() + nodeToDelete.type.slice(1)
+          }),
           status: "warning",
           duration: 3000,
           isClosable: true,
         });
         closeContextMenu();
-
         return;
       }
       setNodes((nds) => nds.filter((node) => node.id !== contextMenu.nodeId));
@@ -375,6 +378,7 @@ const FlowVisualizer: React.FC<FlowVisualizerProps> = ({
     closeContextMenu,
     closePropertiesPanel,
     toast,
+    t
   ]);
 
   const {
@@ -405,7 +409,9 @@ const FlowVisualizer: React.FC<FlowVisualizerProps> = ({
   const { zoom } = useViewport();
 
   const ZoomDisplay = () => (
-    <Panel position="bottom-right">{Math.round(zoom * 100)}%</Panel>
+    <Panel position="bottom-right">
+      {t("workflow.flowVisualizer.zoom")}: {Math.round(zoom * 100)}%
+    </Panel>
   );
 
   const [isShortcutPanelVisible, setShortcutPanelVisible] = useState(false);
@@ -674,15 +680,16 @@ const FlowVisualizer: React.FC<FlowVisualizerProps> = ({
             />
             {isShortcutPanelVisible && (
               <Box bg="white" p={2} borderRadius="md" boxShadow="md">
-                Shortcut:
-                <br /> Change edges type:<Kbd>E</Kbd>
+                {t("workflow.flowVisualizer.shortcuts.title")}:
+                <br /> {t("workflow.flowVisualizer.shortcuts.edgeType")}: <Kbd>E</Kbd>
                 <br />
-                Delete:<Kbd>Backspace</Kbd> <Kbd>Delete</Kbd>
+                {t("workflow.flowVisualizer.shortcuts.delete")}: <Kbd>Backspace</Kbd>{" "}
+                <Kbd>Delete</Kbd>
                 <br />
-                Info:
-                <br /> solid line: Normal edge
+                {t("workflow.flowVisualizer.shortcuts.info.title")}:
+                <br /> {t("workflow.flowVisualizer.shortcuts.info.solidLine")}
                 <br />
-                dashed line: Conditional edge
+                {t("workflow.flowVisualizer.shortcuts.info.dashedLine")}
               </Box>
             )}
           </Panel>
@@ -698,7 +705,7 @@ const FlowVisualizer: React.FC<FlowVisualizerProps> = ({
           alignItems="center"
         >
           <CustomButton
-            text="Debug"
+            text={t("workflow.flowVisualizer.actions.debug")}
             variant="white"
             rightIcon={<VscDebugAlt color="#155aef" size="12px" />}
             onClick={() => setShowDebugPreview(true)}
@@ -706,12 +713,12 @@ const FlowVisualizer: React.FC<FlowVisualizerProps> = ({
           />
           <ApiKeyButton teamId={teamId.toString()} mr={4} />
           <CustomButton
-            text="Deploy"
+            text={t("workflow.flowVisualizer.actions.deploy")}
             variant="blue"
             rightIcon={<MdBuild color="white" size="12px" />}
             onClick={onSave}
             isLoading={isSaving}
-            loadingText="Saving..."
+            loadingText={t("workflow.flowVisualizer.actions.saving")}
           />
         </Box>
       </Box>

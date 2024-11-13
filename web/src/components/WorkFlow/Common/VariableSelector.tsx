@@ -9,6 +9,7 @@ import {
   VStack,
 } from "@chakra-ui/react";
 import React from "react";
+import { useTranslation } from "react-i18next";
 
 import { VariableReference } from "../FlowVis/variableSystem";
 
@@ -30,7 +31,7 @@ const VariableSelector: React.FC<VariableSelectorProps> = ({
   label,
   value,
   onChange,
-  placeholder = "Write here. Use '/' to insert variables.",
+  placeholder,
   showVariables,
   setShowVariables,
   inputRef,
@@ -39,6 +40,8 @@ const VariableSelector: React.FC<VariableSelectorProps> = ({
   availableVariables = [],
   minHeight = "100px",
 }) => {
+  const { t } = useTranslation();
+
   return (
     <Box>
       <Text fontWeight="bold" mb={2}>
@@ -56,7 +59,7 @@ const VariableSelector: React.FC<VariableSelectorProps> = ({
             value={value}
             onChange={(e) => onChange(e.target.value)}
             onKeyDown={handleKeyDown}
-            placeholder={placeholder}
+            placeholder={placeholder || String(t("workflow.variableSelector.placeholder"))}
             style={{
               whiteSpace: "pre-wrap",
               minHeight: minHeight,
@@ -77,7 +80,7 @@ const VariableSelector: React.FC<VariableSelectorProps> = ({
         >
           <VStack align="stretch" spacing={1}>
             <Text fontSize="sm" fontWeight="500" color="gray.600" p={2}>
-              Available Variables
+              {t("workflow.variableSelector.availableVariables")}
             </Text>
             {availableVariables?.length > 0 ? (
               availableVariables.map((v) => (
@@ -115,7 +118,7 @@ const VariableSelector: React.FC<VariableSelectorProps> = ({
               ))
             ) : (
               <Text fontSize="sm" color="gray.500" textAlign="center" p={2}>
-                No variables available
+                {t("workflow.variableSelector.noVariables")}
               </Text>
             )}
           </VStack>

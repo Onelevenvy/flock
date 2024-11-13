@@ -9,6 +9,7 @@ import {
 import { useState, useEffect } from "react";
 import { type SubmitHandler, useForm } from "react-hook-form";
 import { useMutation, useQueryClient } from "react-query";
+import { useTranslation } from "react-i18next";
 
 import UploadForm, { UploadFormData } from "./UploadForm";
 import {
@@ -25,6 +26,7 @@ interface EditUploadProps {
 }
 
 const EditUpload = ({ upload, isOpen, onClose }: EditUploadProps) => {
+  const { t } = useTranslation();
   const queryClient = useQueryClient();
   const showToast = useCustomToast();
   const [fileType, setFileType] = useState<"file" | "web">(
@@ -59,15 +61,14 @@ const EditUpload = ({ upload, isOpen, onClose }: EditUploadProps) => {
       }),
     {
       onSuccess: (data) => {
-        showToast("Success!", "Upload updated successfully.", "success");
+        showToast("Success", t("knowledge.upload.edit.success"), "success");
         form.reset(data);
         onClose();
         queryClient.invalidateQueries("uploads");
       },
       onError: (err: ApiError) => {
         const errDetail = err.body?.detail;
-
-        showToast("Something went wrong.", `${errDetail}`, "error");
+        showToast(t("knowledge.upload.error.generic"), `${errDetail}`, "error");
       },
     }
   );
@@ -85,7 +86,7 @@ const EditUpload = ({ upload, isOpen, onClose }: EditUploadProps) => {
     >
       <ModalOverlay />
       <ModalContent>
-        <ModalHeader>Edit Upload</ModalHeader>
+        <ModalHeader>{t("knowledge.upload.edit.title")}</ModalHeader>
         <ModalCloseButton />
         <ModalBody pb={6}>
           <UploadForm

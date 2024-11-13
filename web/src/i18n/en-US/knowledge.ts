@@ -60,6 +60,55 @@ const translation = {
     actions: {
       create: "Create Knowledge Base"
     }
+  },
+  upload: {
+    add: {
+      title: "Add Upload",
+      success: "Upload created successfully"
+    },
+    edit: {
+      title: "Edit Upload",
+      success: "Upload updated successfully"
+    },
+    form: {
+      name: {
+        label: "Name",
+        placeholder: "Please input the knowledge base name",
+        pattern: "Name must follow pattern: ^[a-zA-Z0-9_-]{1,64}$"
+      },
+      description: {
+        label: "Description",
+        placeholder: "Please input the knowledge base description"
+      },
+      type: {
+        label: "Upload Type",
+        file: "File",
+        web: "Web Page"
+      },
+      file: {
+        label: "File",
+        button: "Upload File"
+      },
+      webUrl: {
+        label: "Web Page URL",
+        placeholder: "https://example.com",
+        error: "Invalid URL format"
+      },
+      chunkSize: {
+        label: "Chunk Size"
+      },
+      chunkOverlap: {
+        label: "Chunk Overlap"
+      },
+      actions: {
+        save: "Save",
+        cancel: "Cancel"
+      }
+    },
+    error: {
+      generic: "Something went wrong",
+      required: "This field is required"
+    }
   }
 };
 
