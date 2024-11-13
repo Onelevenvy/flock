@@ -97,6 +97,7 @@ const translation = {
         placeholder: "Enter category name"
       },
       crewai: {
+        model:"Model",
         title: "CrewAI",
         agents: "Agents",
         tasks: "Tasks",

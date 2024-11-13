@@ -95,6 +95,7 @@ const translation = {
         placeholder: "请输入类别名称"
       },
       crewai: {
+        model:"模型",
         title: "多智能体",
         agents: "智能体",
         tasks: "任务",
