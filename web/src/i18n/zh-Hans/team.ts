@@ -102,7 +102,34 @@ const translation = {
         hierarchical: "层级执行",
         manager: "管理者配置",
         defaultManager: "默认管理者",
-        customManager: "自定义管理者"
+        customManager: "自定义管理者",
+        addTaskDisabledMessage: "请先添加智能体并配置管理者（对于层级执行）",
+        addTaskMessage: "添加新任务",
+        agentModal: {
+          title: "配置智能体",
+          name: "智能体名称",
+          role: "角色",
+          goal: "目标",
+          backstory: "背景故事",
+          allowDelegation: "允许委派",
+          tools: "工具",
+          addTool: "添加工具",
+          namePlaceholder: "输入唯一的智能体名称",
+          rolePlaceholder: "例如：研究专家",
+          goalPlaceholder: "智能体的主要目标",
+          backstoryPlaceholder: "智能体的背景和专长"
+        },
+        taskModal: {
+          title: "任务配置",
+          name: "任务名称",
+          description: "描述",
+          assignAgent: "分配智能体",
+          expectedOutput: "预期输出",
+          namePlaceholder: "输入唯一的任务名称",
+          descriptionPlaceholder: "任务描述",
+          expectedOutputPlaceholder: "预期输出格式或描述",
+          selectAgent: "选择智能体"
+        }
       }
     },
     common: {

@@ -16,6 +16,7 @@ import React, { useState, useMemo } from "react";
 import { FaEdit, FaPlus, FaTrash, FaRobot, FaListAlt } from "react-icons/fa";
 import { useForm } from "react-hook-form";
 import { v4 as uuidv4 } from "uuid";
+import { useTranslation } from "react-i18next";
 
 import ModelSelect from "@/components/Common/ModelProvider";
 import { useModelQuery } from "@/hooks/useModelQuery";
@@ -37,6 +38,7 @@ const CrewAINodeProperties: React.FC<CrewAINodePropertiesProps> = ({
   node,
   onNodeDataChange,
 }) => {
+  const { t } = useTranslation();
   const data = node.data as CrewAINodeData;
   const { data: models } = useModelQuery();
   const toast = useToast();
@@ -243,20 +245,20 @@ const CrewAINodeProperties: React.FC<CrewAINodePropertiesProps> = ({
   return (
     <VStack spacing={4} align="stretch">
       <FormControl>
-        <FormLabel>Agents Type</FormLabel>
+        <FormLabel>{String(t("workflow.nodes.crewai.processType"))}</FormLabel>
         <RadioGroup
           value={data.process_type}
           onChange={handleProcessTypeChange}
         >
           <HStack spacing={4}>
-            <Radio value="sequential">Sequential</Radio>
-            <Radio value="hierarchical">Hierarchical</Radio>
+            <Radio value="sequential">{String(t("workflow.nodes.crewai.sequential"))}</Radio>
+            <Radio value="hierarchical">{String(t("workflow.nodes.crewai.hierarchical"))}</Radio>
           </HStack>
         </RadioGroup>
       </FormControl>
 
       <FormControl>
-        <FormLabel>Select Model</FormLabel>
+        <FormLabel>{t("workflow.nodes.crewai.model")}</FormLabel>
         <ModelSelect
           models={models}
           control={control}
@@ -269,7 +271,7 @@ const CrewAINodeProperties: React.FC<CrewAINodePropertiesProps> = ({
       {data.process_type === "hierarchical" && (
         <>
           <FormControl>
-            <FormLabel>Manager Configuration</FormLabel>
+            <FormLabel>{t("workflow.nodes.crewai.manager")}</FormLabel>
             <RadioGroup
               value={useCustomManager ? "custom" : "default"}
               onChange={(value) => {
@@ -286,8 +288,8 @@ const CrewAINodeProperties: React.FC<CrewAINodePropertiesProps> = ({
               }}
             >
               <HStack spacing={4}>
-                <Radio value="default">Default Manager Agent</Radio>
-                <Radio value="custom">Custom Manager Agent</Radio>
+                <Radio value="default">{t("workflow.nodes.crewai.defaultManager")}</Radio>
+                <Radio value="custom">{t("workflow.nodes.crewai.customManager")}</Radio>
               </HStack>
             </RadioGroup>
           </FormControl>
@@ -299,7 +301,7 @@ const CrewAINodeProperties: React.FC<CrewAINodePropertiesProps> = ({
           <HStack spacing={2}>
             <FaRobot size="14px" color="#4A5568" />
             <Text fontSize="md" fontWeight="600" color="gray.700">
-              Agents
+              {t("workflow.nodes.crewai.agents")}
             </Text>
             <Text fontSize="xs" color="gray.500">
               ({data.agents?.length || 0})
@@ -315,7 +317,7 @@ const CrewAINodeProperties: React.FC<CrewAINodePropertiesProps> = ({
             }}
             colorScheme="blue"
           >
-            Add
+            {t("workflow.common.add")}
           </Button>
         </HStack>
         <VStack align="stretch" spacing={2}>
@@ -376,7 +378,7 @@ const CrewAINodeProperties: React.FC<CrewAINodePropertiesProps> = ({
           <HStack spacing={2}>
             <FaListAlt size="14px" color="#4A5568" />
             <Text fontSize="md" fontWeight="600" color="gray.700">
-              Tasks
+              {t("workflow.nodes.crewai.tasks")}
             </Text>
             <Text fontSize="xs" color="gray.500">
               ({data.tasks?.length || 0})
@@ -391,14 +393,14 @@ const CrewAINodeProperties: React.FC<CrewAINodePropertiesProps> = ({
               onTaskModalOpen();
             }}
             isDisabled={!canAddTask}
-            title={
+            title={String(
               !canAddTask
-                ? "Add agents and configure manager (for hierarchical) first"
-                : "Add new task"
-            }
+                ? t("workflow.nodes.crewai.addTaskDisabledMessage")
+                : t("workflow.nodes.crewai.addTaskMessage")
+            )}
             colorScheme="blue"
           >
-            Add
+            {t("workflow.common.add")}
           </Button>
         </HStack>
         <VStack align="stretch" spacing={2}>

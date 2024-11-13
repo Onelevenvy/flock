@@ -104,7 +104,34 @@ const translation = {
         hierarchical: "Hierarchical",
         manager: "Manager Configuration",
         defaultManager: "Default Manager Agent",
-        customManager: "Custom Manager Agent"
+        customManager: "Custom Manager Agent",
+        addTaskDisabledMessage: "Add agents and configure manager (for hierarchical) first",
+        addTaskMessage: "Add new task",
+        agentModal: {
+          title: "Configure Agent",
+          name: "Agent Name",
+          role: "Role",
+          goal: "Goal",
+          backstory: "Backstory",
+          allowDelegation: "Allow Delegation",
+          tools: "Tools",
+          addTool: "Add Tool",
+          namePlaceholder: "Enter a unique agent name",
+          rolePlaceholder: "e.g., Research Specialist",
+          goalPlaceholder: "Agent's primary objective",
+          backstoryPlaceholder: "Agent's background and expertise"
+        },
+        taskModal: {
+          title: "Task Configuration",
+          name: "Task Name",
+          description: "Description",
+          assignAgent: "Assign Agent",
+          expectedOutput: "Expected Output",
+          namePlaceholder: "Enter a unique task name",
+          descriptionPlaceholder: "Task description",
+          expectedOutputPlaceholder: "Expected output format or description",
+          selectAgent: "Select agent"
+        }
       }
     },
     common: {
