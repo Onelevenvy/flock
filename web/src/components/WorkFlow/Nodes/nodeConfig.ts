@@ -5,7 +5,7 @@ import {
   FaTools,
   FaCommentDots,
   FaDatabase,
-  FaSitemap,
+ 
 } from "react-icons/fa";
 import { FaBookAtlas, FaPeopleGroup } from "react-icons/fa6";
 import { TfiGithub } from "react-icons/tfi";
@@ -20,6 +20,7 @@ import StartNodeProperties from "./Start/StartNodeProperties";
 import ToolNodeProperties from "./Tool/ToolNodeProperties";
 import CrewAINodeProperties from "./CrewAI/CrewAINodeProperties";
 import ClassifierNodeProperties from "./Classifier/ClassifierNodeProperties";
+import { LuBrainCircuit } from "react-icons/lu";
 
 interface NodeConfigItem {
   display: string;
@@ -177,7 +178,7 @@ export const nodeConfig: Record<string, NodeConfigItem> = {
     outputVariables: ["response"],
   },
   classifier: {
-    icon: FaSitemap,
+    icon: LuBrainCircuit,
     display: "Intent Recognition",
     colorScheme: "pink",
     properties: ClassifierNodeProperties,
