@@ -34,7 +34,6 @@ const SharedNodeMenu: React.FC<SharedNodeMenuProps> = ({
     (event: React.MouseEvent | React.DragEvent) => {
       if (isDraggable && event.type === "dragstart") {
         const dragEvent = event as React.DragEvent;
-
         dragEvent.dataTransfer.setData(
           "application/reactflow",
           JSON.stringify({
@@ -52,18 +51,49 @@ const SharedNodeMenu: React.FC<SharedNodeMenuProps> = ({
     <Box
       width="200px"
       bg="white"
-      borderRadius="md"
-      boxShadow="md"
+      borderRadius="xl"
+      boxShadow="sm"
       h="full"
       minH="full"
+      border="1px solid"
+      borderColor="gray.100"
+      overflow="hidden"
     >
-      <Tabs isLazy>
-        <TabList mb="1em" position="sticky" top={0} bg="white" zIndex={1}>
-          <Tab>{t("workflow.nodeMenu.title")}</Tab>
-          <Tab>{t("workflow.nodeMenu.plugins")}</Tab>
+      <Tabs isLazy variant="soft-rounded" colorScheme="blue">
+        <TabList
+          mb={4}
+          position="sticky"
+          top={0}
+          bg="white"
+          zIndex={1}
+          p={2}
+          borderBottom="1px solid"
+          borderColor="gray.100"
+        >
+          <Tab
+            _selected={{
+              bg: "blue.50",
+              color: "blue.600",
+              fontWeight: "500",
+            }}
+            transition="all 0.2s"
+          >
+            {t("workflow.nodeMenu.title")}
+          </Tab>
+          <Tab
+            _selected={{
+              bg: "blue.50",
+              color: "blue.600",
+              fontWeight: "500",
+            }}
+            transition="all 0.2s"
+          >
+            {t("workflow.nodeMenu.plugins")}
+          </Tab>
         </TabList>
+
         <TabPanels>
-          <TabPanel h="full" overflowY="auto" px={2} py={0} minH={"400px"}>
+          <TabPanel h="full" overflowY="auto" px={3} py={2} minH="400px">
             <VStack spacing={2} align="stretch">
               {Object.entries(nodeConfig).map(
                 ([nodeType, { display, icon: Icon, colorScheme }]) =>
@@ -72,9 +102,10 @@ const SharedNodeMenu: React.FC<SharedNodeMenuProps> = ({
                   nodeType !== "end" && (
                     <Box
                       key={nodeType}
-                      border="1px solid #ddd"
-                      borderRadius="md"
-                      padding={2}
+                      border="1px solid"
+                      borderColor="gray.200"
+                      borderRadius="lg"
+                      p={3}
                       cursor={isDraggable ? "move" : "pointer"}
                       onClick={
                         !isDraggable
@@ -87,36 +118,61 @@ const SharedNodeMenu: React.FC<SharedNodeMenuProps> = ({
                           : undefined
                       }
                       draggable={isDraggable}
-                      _hover={{ bg: "gray.100" }}
+                      transition="all 0.2s"
+                      _hover={{
+                        bg: "gray.50",
+                        transform: "translateY(-1px)",
+                        boxShadow: "sm",
+                        borderColor: "gray.300",
+                      }}
+                      _active={{
+                        transform: "translateY(0)",
+                      }}
                     >
-                      <IconButton
-                        aria-label={display}
-                        icon={<Icon />}
-                        colorScheme={colorScheme}
-                        size="xs"
-                        mr={2}
-                      />
-                      <Text display="inline" fontSize="sm">
-                        {display}
-                      </Text>
+                      <HStack spacing={3} overflow="hidden">
+                        <IconButton
+                          aria-label={display}
+                          icon={<Icon />}
+                          colorScheme={colorScheme}
+                          size="sm"
+                          variant="ghost"
+                          bg={`${colorScheme}.50`}
+                          color={`${colorScheme}.500`}
+                          flexShrink={0}
+                        />
+                        <Text
+                          fontSize="xs"
+                          fontWeight="500"
+                          color="gray.700"
+                          noOfLines={1}
+                          overflow="hidden"
+                          textOverflow="ellipsis"
+                          whiteSpace="nowrap"
+                          title={display}
+                        >
+                          {display}
+                        </Text>
+                      </HStack>
                     </Box>
                   )
               )}
             </VStack>
           </TabPanel>
-          <TabPanel h="full" overflowY="auto" px={2} py={0} minH={"400px"}>
+
+          <TabPanel h="full" overflowY="auto" px={3} py={2} minH="400px">
             <VStack spacing={2} align="stretch">
               {isLoading ? (
-                <Text>{t("workflow.nodeMenu.loading")}</Text>
+                <Text color="gray.600">{t("workflow.nodeMenu.loading")}</Text>
               ) : isError ? (
-                <Text>{t("workflow.nodeMenu.error")}</Text>
+                <Text color="red.500">{t("workflow.nodeMenu.error")}</Text>
               ) : (
                 tools?.data.map((tool) => (
                   <Box
                     key={tool.display_name}
-                    border="1px solid #ddd"
-                    borderRadius="md"
-                    p={2}
+                    border="1px solid"
+                    borderColor="gray.200"
+                    borderRadius="lg"
+                    p={3}
                     cursor={isDraggable ? "move" : "pointer"}
                     onClick={
                       !isDraggable
@@ -129,13 +185,37 @@ const SharedNodeMenu: React.FC<SharedNodeMenuProps> = ({
                         : undefined
                     }
                     draggable={isDraggable}
-                    _hover={{ bg: "gray.100" }}
+                    transition="all 0.2s"
+                    _hover={{
+                      bg: "gray.50",
+                      transform: "translateY(-1px)",
+                      boxShadow: "sm",
+                      borderColor: "gray.300",
+                    }}
+                    _active={{
+                      transform: "translateY(0)",
+                    }}
                   >
-                    <HStack spacing="2">
-                      <ToolsIcon
-                        tools_name={tool.display_name!.replace(/ /g, "_")}
-                      />
-                      <Text fontSize="xs">{tool.display_name}</Text>
+                    <HStack spacing={3} overflow="hidden">
+                      <Box p={2} borderRadius="lg" bg="blue.50" flexShrink={0}>
+                        <ToolsIcon
+                          tools_name={tool.display_name!.replace(/ /g, "_")}
+                          color="blue.500"
+                          boxSize={4}
+                        />
+                      </Box>
+                      <Text
+                        fontSize="xs"
+                        fontWeight="500"
+                        color="gray.700"
+                        noOfLines={1}
+                        overflow="hidden"
+                        textOverflow="ellipsis"
+                        whiteSpace="nowrap"
+                        title={tool.display_name!}
+                      >
+                        {tool.display_name}
+                      </Text>
                     </HStack>
                   </Box>
                 ))

@@ -16,10 +16,10 @@ export const nodeTypes: NodeTypes = {
   end: EndNode,
   llm: LLMNode,
   tool: ToolNode,
-  answer: AnswerNode,
   retrieval: RetrievalNode,
   toolretrieval: RetrievalToolNode,
   plugin: PluginNode,
   crewai: CrewAINode,
   classifier: ClassifierNode,
+  answer: AnswerNode,
 };

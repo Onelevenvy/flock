@@ -5,7 +5,6 @@ import {
   FaTools,
   FaCommentDots,
   FaDatabase,
- 
 } from "react-icons/fa";
 import { FaBookAtlas, FaPeopleGroup } from "react-icons/fa6";
 import { TfiGithub } from "react-icons/tfi";
@@ -109,23 +108,9 @@ export const nodeConfig: Record<string, NodeConfigItem> = {
     inputVariables: [],
     outputVariables: ["response"],
   },
-  answer: {
-    display: "Answer",
-    icon: FaCommentDots,
-    colorScheme: "orange",
-    properties: AnswerNodeProperties,
-    initialData: {
-      answer: null,
-    },
-    allowedConnections: {
-      sources: ["left", "right"],
-      targets: ["left", "right"],
-    },
-    inputVariables: [],
-    outputVariables: ["response"],
-  },
+
   retrieval: {
-    display: "Knowledge Retrieval",
+    display: "KB Retrieval",
     icon: FaBookAtlas,
     colorScheme: "teal",
     properties: RetrievalProperties,
@@ -191,10 +176,25 @@ export const nodeConfig: Record<string, NodeConfigItem> = {
     initialData: {
       categories: [
         { category_id: "1", category_name: "" },
-        { category_id: "2", category_name: "" }
+        { category_id: "2", category_name: "" },
       ],
       model: "glm-4-flash",
-    }
+    },
+  },
+  answer: {
+    display: "Answer",
+    icon: FaCommentDots,
+    colorScheme: "orange",
+    properties: AnswerNodeProperties,
+    initialData: {
+      answer: null,
+    },
+    allowedConnections: {
+      sources: ["left", "right"],
+      targets: ["left", "right"],
+    },
+    inputVariables: [],
+    outputVariables: ["response"],
   },
 };
 
