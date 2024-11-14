@@ -403,7 +403,6 @@ const ChatMain = ({ isPlayground }: { isPlayground?: boolean }) => {
       flexDirection="column"
       position="relative"
       bg="white"
-      boxShadow="sm"
     >
       <Box
         p={4}

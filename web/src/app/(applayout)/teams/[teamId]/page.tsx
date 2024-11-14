@@ -163,7 +163,7 @@ function Team() {
           flexDirection="column"
           maxH="full"
           overflow="hidden"
-          p={4}
+          p={2}
         >
           {team.workflow === "sequential" || team.workflow === "hierarchical" ? (
             <Flex h="full" gap={4}>

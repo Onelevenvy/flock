@@ -1,4 +1,4 @@
-import { Box, Flex, Spinner } from "@chakra-ui/react";
+import { Box, Flex, Spinner, useColorModeValue } from "@chakra-ui/react";
 import { useEffect, useState } from "react";
 import { useQuery, useQueryClient } from "react-query";
 import { v4 } from "uuid";
@@ -16,6 +16,8 @@ function WorkflowTeamSettings({ teamId }: WorkflowSettingProps) {
   const showToast = useCustomToast();
   const queryClient = useQueryClient();
   const [currentTeamId, setCurrentTeamId] = useState(teamId);
+
+  const bgColor = useColorModeValue("ui.bgMain", "gray.800");
 
   const {
     data: graphs,
@@ -124,15 +126,42 @@ function WorkflowTeamSettings({ teamId }: WorkflowSettingProps) {
   }
 
   return (
-    <Flex width="full" height="full" flexDirection="column">
-      <Box width={"100%"} transition="width 0.3s" flex={1}>
+    <Flex 
+      width="full" 
+      height="full" 
+      flexDirection="column"
+      bg={bgColor}
+      borderRadius="xl"
+      overflow="hidden"
+      transition="all 0.2s"
+    >
+      <Box 
+        width="100%" 
+        transition="width 0.3s" 
+        flex={1}
+        position="relative"
+      >
         {isLoading ? (
-          <Flex justify="center" align="center" height="100%" width="100%">
-            <Spinner size="xl" color="ui.main" />
+          <Flex 
+            justify="center" 
+            align="center" 
+            height="100%" 
+            width="100%"
+          >
+            <Spinner 
+              size="xl" 
+              color="ui.main" 
+              thickness="3px"
+              speed="0.8s"
+            />
           </Flex>
         ) : (
           graphs && (
-            <Box height="100%" bg="#f6f8fa">
+            <Box 
+              height="100%" 
+              bg={bgColor}
+              position="relative"
+            >
               <TqxWorkflow teamId={currentTeamId} graphData={graphs} />
             </Box>
           )

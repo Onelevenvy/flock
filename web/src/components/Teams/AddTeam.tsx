@@ -17,6 +17,8 @@ import {
   SimpleGrid,
   Text,
   Textarea,
+  VStack,
+  useColorModeValue,
 } from "@chakra-ui/react";
 import { useState } from "react";
 import { Controller, type SubmitHandler, useForm } from "react-hook-form";
@@ -37,10 +39,36 @@ interface AddTeamProps {
   onClose: () => void;
 }
 
+interface WorkflowCardProps {
+  workflow: string;
+  selectedWorkflow: string;
+  handleWorkflowClick: (workflow: string) => void;
+}
+
+interface CardIconInfo {
+  colorScheme: string;
+  backgroundColor: string;
+  icon: JSX.Element;
+  title: string;
+  descripthion: string;
+}
+
+type CardIcons = {
+  [key: string]: CardIconInfo;
+};
+
 const AddTeam = ({ isOpen, onClose }: AddTeamProps) => {
   const { t } = useTranslation();
   const queryClient = useQueryClient();
   const showToast = useCustomToast();
+  const [selectedWorkflow, setSelectedWorkflow] = useState<string>("chatbot");
+
+  const bgColor = useColorModeValue("white", "gray.800");
+  const borderColor = useColorModeValue("gray.100", "gray.700");
+  const inputBgColor = useColorModeValue("ui.inputbgcolor", "gray.700");
+  const cardBgColor = useColorModeValue("white", "gray.700");
+  const cardHoverBgColor = useColorModeValue("gray.50", "gray.600");
+
   const {
     register,
     handleSubmit,
@@ -69,7 +97,6 @@ const AddTeam = ({ isOpen, onClose }: AddTeamProps) => {
     },
     onError: (err: ApiError) => {
       const errDetail = err.body?.detail;
-
       showToast("Something went wrong.", `${errDetail}`, "error");
     },
     onSettled: () => {
@@ -80,8 +107,6 @@ const AddTeam = ({ isOpen, onClose }: AddTeamProps) => {
   const onSubmit: SubmitHandler<TeamCreate> = (data) => {
     mutation.mutate({ ...data, workflow: selectedWorkflow });
   };
-
-  const [selectedWorkflow, setSelectedWorkflow] = useState<string>("chatbot");
 
   const handleWorkflowClick = (workflow: string) => {
     setSelectedWorkflow(workflow);
@@ -97,16 +122,7 @@ const AddTeam = ({ isOpen, onClose }: AddTeamProps) => {
     "codeassistant",
   ];
 
-  const cardIcons: Record<
-    string,
-    {
-      colorScheme: string;
-      backgroundColor: string;
-      icon: React.ReactElement;
-      title: string;
-      descripthion: string;
-    }
-  > = {
+  const cardIcons: CardIcons = {
     chatbot: {
       colorScheme: "blue",
       backgroundColor: "#36abff",
@@ -146,121 +162,137 @@ const AddTeam = ({ isOpen, onClose }: AddTeamProps) => {
       colorScheme: "yellow",
       backgroundColor: "#ad7f9a",
       icon: <SiVisualstudiocode size="24" />,
-      // title: t("team.teamcard.sagent.title"),
-      // descripthion: t("team.teamcard.sagent.description"),
       title: "Code assistant",
       descripthion: "To be added",
     },
   };
 
-  // WorkflowButton 组件
-  const WorkflowCard: React.FC<{
-    workflow: string;
-    selectedWorkflow: string;
-    handleWorkflowClick: (workflow: string) => void;
-  }> = ({ workflow, selectedWorkflow, handleWorkflowClick }) => {
+  // WorkflowCard 组件
+  const WorkflowCard: React.FC<WorkflowCardProps> = ({
+    workflow,
+    selectedWorkflow,
+    handleWorkflowClick,
+  }) => {
+    const isSelected = selectedWorkflow === workflow;
+    const info = cardIcons[workflow];
+
     return (
       <Box
-        bg={selectedWorkflow === workflow ? "gray.100" : "white.200"}
-        height="125px"
+        bg={cardBgColor}
+        p={4}
         onClick={() => handleWorkflowClick(workflow)}
         cursor="pointer"
-        borderRadius={"md"}
-        border={
-          selectedWorkflow === workflow
-            ? "2px solid #9ebbfe"
-            : "2px solid #ecedf2"
-        }
+        borderRadius="xl"
+        border="2px solid"
+        borderColor={isSelected ? "ui.main" : borderColor}
+        transition="all 0.2s"
+        _hover={{
+          bg: cardHoverBgColor,
+          transform: "translateY(-2px)",
+          boxShadow: "md",
+        }}
+        _active={{
+          transform: "translateY(0)",
+        }}
       >
-        <Box
-          display="flex"
-          flexDirection="row"
-          alignItems="center"
-          mt={3}
-          ml={3}
-        >
+        <Box display="flex" alignItems="center" mb={3}>
           <IconButton
-            colorScheme={cardIcons[workflow].colorScheme} // 根据任务类型获取对应的 colorScheme
-            aria-label="Search database"
-            icon={cardIcons[workflow].icon} // 根据任务类型获取对应的图标
-            backgroundColor={cardIcons[workflow].backgroundColor} // 根据任务类型获取对应的 backgroundColor
-            // size="sm"
+            aria-label={info.title}
+            icon={info.icon}
+            bg={info.backgroundColor}
+            color="white"
+            size="md"
+            borderRadius="lg"
+            _hover={{ bg: info.backgroundColor }}
           />
-
-          <Text textAlign="left" ml={3} fontSize={"lg"}>
-            {cardIcons[workflow].title}
+          <Text ml={3} fontSize="md" fontWeight="600" color="gray.800">
+            {info.title}
           </Text>
         </Box>
-        <Text
-          textAlign="left"
-          ml={3}
-          pr="3"
-          pb="2"
-          fontSize={"sm"}
-          color={"gray.500"}
-        >
-          {cardIcons[workflow].descripthion}
+        <Text fontSize="sm" color="gray.500" noOfLines={2} lineHeight="tall">
+          {info.descripthion}
         </Text>
       </Box>
     );
   };
 
   return (
-    <>
-      <Modal isOpen={isOpen} onClose={onClose} size="3xl" isCentered>
-        <ModalOverlay />
-        <ModalContent as="form" onSubmit={handleSubmit(onSubmit)}>
-          <ModalHeader>{t("team.addteam.createteam")}</ModalHeader>
-          <ModalCloseButton />
-          <ModalBody pb={6}>
-            <Text whiteSpace="nowrap" fontWeight={"bold"} pb="4">
-              {t("team.addteam.apptype")}
-            </Text>
-            <SimpleGrid columns={2} spacing={6} pb={4}>
-              {taskTypes.map((workflow) => (
-                <WorkflowCard
-                  key={workflow}
-                  workflow={workflow}
-                  selectedWorkflow={selectedWorkflow}
-                  handleWorkflowClick={handleWorkflowClick}
-                />
-              ))}
-            </SimpleGrid>
-            <Box alignItems={"left"}>
-              <Text whiteSpace="nowrap" pb={2} fontWeight={"bold"}>
+    <Modal
+      isOpen={isOpen}
+      onClose={onClose}
+      size="3xl"
+      isCentered
+      motionPreset="slideInBottom"
+    >
+      <ModalOverlay bg="blackAlpha.300" backdropFilter="blur(10px)" />
+      <ModalContent
+        bg={bgColor}
+        borderRadius="xl"
+        boxShadow="xl"
+        border="1px solid"
+        borderColor={borderColor}
+        as="form"
+        onSubmit={handleSubmit(onSubmit)}
+      >
+        <ModalHeader
+          borderBottom="1px solid"
+          borderColor={borderColor}
+          py={4}
+          fontSize="lg"
+          fontWeight="600"
+        >
+          {t("team.addteam.createteam")}
+        </ModalHeader>
+
+        <ModalCloseButton
+          position="absolute"
+          right={4}
+          top={4}
+          borderRadius="full"
+          transition="all 0.2s"
+          _hover={{
+            bg: "gray.100",
+            transform: "rotate(90deg)",
+          }}
+        />
+
+        <ModalBody py={6}>
+          <VStack spacing={6} align="stretch">
+            <Box>
+              <Text fontSize="sm" fontWeight="600" color="gray.700" mb={4}>
+                {t("team.addteam.apptype")}
+              </Text>
+              <SimpleGrid columns={2} spacing={4}>
+                {taskTypes.map((workflow) => (
+                  <WorkflowCard
+                    key={workflow}
+                    workflow={workflow}
+                    selectedWorkflow={selectedWorkflow}
+                    handleWorkflowClick={handleWorkflowClick}
+                  />
+                ))}
+              </SimpleGrid>
+            </Box>
+
+            <Box>
+              <Text fontSize="sm" fontWeight="600" color="gray.700" mb={3}>
                 {t("team.addteam.nameandicon")}
               </Text>
-              <Box
-                display="flex"
-                flexDirection="row"
-                alignItems="center"
-                alignContent={"center"}
-              >
-                <Box display="flex" alignItems="center" alignContent={"center"}>
-                  <FormControl>
-                    <Controller
-                      name="icon"
-                      control={control}
-                      defaultValue="0" // 默认值
-                      render={({ field: { onChange, value } }) => (
-                        <Box
-                          display="flex"
-                          alignItems="center"
-                          alignContent={"center"}
-                        >
-                          <IconPicker
-                            onSelect={onChange}
-                            selectedIcon={value!}
-                          />
-                        </Box>
-                      )}
-                    />
-                  </FormControl>
-                </Box>
 
-                <FormControl isRequired isInvalid={!!errors.name} ml="2">
+              <Box display="flex" alignItems="center" gap={4}>
+                <FormControl w="auto">
+                  <Controller
+                    name="icon"
+                    control={control}
+                    defaultValue="0"
+                    render={({ field: { onChange, value } }) => (
+                      <IconPicker onSelect={onChange} selectedIcon={value!} />
+                    )}
+                  />
+                </FormControl>
+
+                <FormControl isRequired isInvalid={!!errors.name} flex={1}>
                   <Input
-                    id="title"
                     {...register("name", {
                       required: "Title is required.",
                       pattern: {
@@ -270,7 +302,21 @@ const AddTeam = ({ isOpen, onClose }: AddTeamProps) => {
                       },
                     })}
                     placeholder={t("team.addteam.placeholderapp") as string}
-                    type="text"
+                    bg={inputBgColor}
+                    border="1px solid"
+                    borderColor={borderColor}
+                    borderRadius="lg"
+                    fontSize="sm"
+                    w="full"
+                    minW="300px"
+                    transition="all 0.2s"
+                    _hover={{
+                      borderColor: "gray.300",
+                    }}
+                    _focus={{
+                      borderColor: "ui.main",
+                      boxShadow: "0 0 0 1px var(--chakra-colors-ui-main)",
+                    }}
                   />
                   {errors.name && (
                     <FormErrorMessage>{errors.name.message}</FormErrorMessage>
@@ -278,33 +324,64 @@ const AddTeam = ({ isOpen, onClose }: AddTeamProps) => {
                 </FormControl>
               </Box>
             </Box>
-            <FormControl mt={4}>
-              <FormLabel htmlFor="description" fontWeight={"bold"}>
+
+            <FormControl>
+              <FormLabel fontSize="sm" fontWeight="600" color="gray.700">
                 {t("team.addteam.description")}
               </FormLabel>
               <Textarea
-                id="description"
-                resize="none"
                 {...register("description")}
                 placeholder={t("team.addteam.placeholderdescription") as string}
+                bg={inputBgColor}
+                border="1px solid"
+                borderColor={borderColor}
+                borderRadius="lg"
+                fontSize="sm"
+                resize="vertical"
+                minH="100px"
+                transition="all 0.2s"
+                _hover={{
+                  borderColor: "gray.300",
+                }}
+                _focus={{
+                  borderColor: "ui.main",
+                  boxShadow: "0 0 0 1px var(--chakra-colors-ui-main)",
+                }}
               />
             </FormControl>
-          </ModalBody>
+          </VStack>
+        </ModalBody>
 
-          <ModalFooter gap={3}>
-            <Button
-              variant="primary"
-              type="submit"
-              isLoading={isSubmitting}
-              isDisabled={!isValid}
-            >
-              Save
-            </Button>
-            <Button onClick={onClose}>Cancel</Button>
-          </ModalFooter>
-        </ModalContent>
-      </Modal>
-    </>
+        <ModalFooter borderTop="1px solid" borderColor={borderColor} gap={3}>
+          <Button
+            variant="primary"
+            type="submit"
+            isLoading={isSubmitting}
+            isDisabled={!isValid}
+            transition="all 0.2s"
+            _hover={{
+              transform: "translateY(-1px)",
+              boxShadow: "md",
+            }}
+            _active={{
+              transform: "translateY(0)",
+            }}
+          >
+            Save
+          </Button>
+          <Button
+            onClick={onClose}
+            variant="ghost"
+            transition="all 0.2s"
+            _hover={{
+              bg: "gray.100",
+            }}
+          >
+            Cancel
+          </Button>
+        </ModalFooter>
+      </ModalContent>
+    </Modal>
   );
 };
 
