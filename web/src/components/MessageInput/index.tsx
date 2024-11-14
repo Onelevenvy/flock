@@ -68,15 +68,15 @@ const MessageInput: React.FC<MessageInputProps> = ({
     <Box
       display="flex"
       flexDirection="column"
-      px={6}
-      py={4}
+      pl="6"
+      pr="6"
+      pt="2"
+      pb="6"
       position="relative"
-      bg="white"
-      borderTop="1px solid"
-      borderColor="gray.100"
+      w="full"
     >
       {imageData && (
-        <Flex alignItems="center" mb={3}>
+        <Flex alignItems="center" mb={2}>
           <Box
             position="relative"
             borderRadius="lg"
@@ -109,69 +109,63 @@ const MessageInput: React.FC<MessageInputProps> = ({
         </Flex>
       )}
 
-      <InputGroup as="form" onSubmit={onSubmit}>
+      <InputGroup as="form" onSubmit={onSubmit} w="full">
         <Box
           position="relative"
-          w="full"
-          bg="white"
-          borderRadius="xl"
-          border="1px solid"
-          borderColor="gray.200"
-          boxShadow="sm"
+          boxShadow="0 0 10px rgba(0,0,0,0.1)"
+          borderRadius="lg"
           transition="all 0.2s"
           _hover={{
-            boxShadow: "md",
-            borderColor: "gray.300",
+            boxShadow: "0 0 15px rgba(0,0,0,0.15)",
           }}
+          w="full"
         >
           <Textarea
-            placeholder="Input your message..."
+            placeholder="Input your message ..."
             value={input}
             onChange={(e) => setInput(e.target.value)}
             onKeyDown={handleKeyDown}
-            minH="100px"
-            maxH="200px"
+            minHeight="150px"
+            maxHeight="300px"
             resize="none"
+            overflow="auto"
+            transition="height 0.2s"
             border="none"
+            w="full"
+            px={4}
+            pt={4}
             _focus={{
               boxShadow: "none",
-              borderColor: "blue.500",
+              border: "none",
             }}
-            pb="40px"
-            transition="all 0.2s"
+            pb="50px"
           />
 
           <HStack
             position="absolute"
-            bottom={0}
-            right={0}
-            left={0}
-            p={2}
+            bottom="0"
+            right="0"
+            left="0"
+            p="3"
             bg="white"
+            borderBottomRadius="lg"
+            justifyContent="space-between"
             borderTop="1px solid"
             borderColor="gray.100"
-            justify="space-between"
-            align="center"
           >
             <Text fontSize="xs" color="gray.500">
-              Enter to send / Shift + Enter for new line
+              ↵ 发送 / ^ ↵ 换行
             </Text>
-            
+
             <HStack spacing={2}>
               {newChatHandler && (
-                <Tooltip 
-                  label="New Chat" 
-                  placement="top"
-                  bg="gray.700"
-                  color="white"
-                >
+                <Tooltip label="New Chat" fontSize="md" bg="gray.700">
                   <IconButton
-                    aria-label="New chat"
+                    aria-label="new chat"
                     icon={<GrNewWindow />}
                     onClick={newChatHandler}
                     size="sm"
                     variant="ghost"
-                    colorScheme="gray"
                     transition="all 0.2s"
                     _hover={{
                       transform: "translateY(-1px)",
@@ -181,19 +175,13 @@ const MessageInput: React.FC<MessageInputProps> = ({
                 </Tooltip>
               )}
 
-              <Tooltip 
-                label="Upload Image" 
-                placement="top"
-                bg="gray.700"
-                color="white"
-              >
+              <Tooltip label="Upload Image" fontSize="md" bg="gray.700">
                 <IconButton
-                  aria-label="Upload image"
+                  aria-label="upload-image"
                   icon={<RiImageAddLine />}
                   onClick={() => document.getElementById("file-input")?.click()}
                   size="sm"
                   variant="ghost"
-                  colorScheme="gray"
                   transition="all 0.2s"
                   _hover={{
                     transform: "translateY(-1px)",
@@ -205,7 +193,7 @@ const MessageInput: React.FC<MessageInputProps> = ({
               <IconButton
                 type="submit"
                 icon={<VscSend />}
-                aria-label="Send message"
+                aria-label="send-question"
                 isLoading={isStreaming}
                 isDisabled={!input.trim().length && !imageData}
                 size="sm"
