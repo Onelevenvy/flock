@@ -44,7 +44,11 @@ import "reactflow/dist/style.css";
 import DebugPreview from "../../Teams/DebugPreview";
 import BaseProperties from "../Nodes/Base/BaseNodeProperties";
 import { type NodeType, nodeConfig } from "../Nodes/nodeConfig";
-import type { ClassifierNodeData, CustomNode, FlowVisualizerProps } from "../types";
+import type {
+  ClassifierNodeData,
+  CustomNode,
+  FlowVisualizerProps,
+} from "../types";
 import { calculateEdgeCenter } from "./utils";
 import SharedNodeMenu from "./SharedNodeMenu";
 
@@ -52,7 +56,7 @@ import useWorkflowStore from "@/stores/workflowStore";
 import CustomButton from "@/components/Common/CustomButton";
 import ApiKeyButton from "@/components/Teams/Apikey/ApiKeyManageButton";
 import { useTranslation } from "react-i18next";
-import { FiEye, FiEyeOff } from 'react-icons/fi';
+import { FiEye, FiEyeOff } from "react-icons/fi";
 
 const FlowVisualizer: React.FC<FlowVisualizerProps> = ({
   nodeTypes,
@@ -182,13 +186,19 @@ const FlowVisualizer: React.FC<FlowVisualizerProps> = ({
       if (sourceType === "classifier") {
         // 分类器节点的输出连接必须使用分类ID作为handleId
         if (!connection.sourceHandle) return false;
-        
+
         // 验证sourceHandle是否是有效的分类ID
         const categories = (sourceNode.data as ClassifierNodeData).categories;
-        if (!categories.find(c => c.category_id === connection.sourceHandle)) return false;
-        
+        if (!categories.find((c) => c.category_id === connection.sourceHandle))
+          return false;
+
         // 验证目标节点的连接点
-        if (connection.targetHandle && !nodeConfig[targetType].allowedConnections.targets.includes(connection.targetHandle)) {
+        if (
+          connection.targetHandle &&
+          !nodeConfig[targetType].allowedConnections.targets.includes(
+            connection.targetHandle
+          )
+        ) {
           return false;
         }
         return true;
@@ -198,17 +208,24 @@ const FlowVisualizer: React.FC<FlowVisualizerProps> = ({
       if (targetType === "classifier") {
         // 分类器只允许从左侧连入
         if (connection.targetHandle !== "input") return false;
-        
+
         // 验证源节点的连接点
-        if (connection.sourceHandle && !nodeConfig[sourceType].allowedConnections.sources.includes(connection.sourceHandle)) {
+        if (
+          connection.sourceHandle &&
+          !nodeConfig[sourceType].allowedConnections.sources.includes(
+            connection.sourceHandle
+          )
+        ) {
           return false;
         }
         return true;
       }
 
       // 其他节点类型的常规验证
-      const sourceAllowedConnections = nodeConfig[sourceType].allowedConnections;
-      const targetAllowedConnections = nodeConfig[targetType].allowedConnections;
+      const sourceAllowedConnections =
+        nodeConfig[sourceType].allowedConnections;
+      const targetAllowedConnections =
+        nodeConfig[targetType].allowedConnections;
 
       // 检查源节点是否允许从指定的 handle 连出
       if (
@@ -352,9 +369,14 @@ const FlowVisualizer: React.FC<FlowVisualizerProps> = ({
       ) {
         toast({
           title: t("workflow.flowVisualizer.contextMenu.error.title"),
-          description: t("workflow.flowVisualizer.contextMenu.error.description", {
-            type: nodeToDelete.type.charAt(0).toUpperCase() + nodeToDelete.type.slice(1)
-          }),
+          description: t(
+            "workflow.flowVisualizer.contextMenu.error.description",
+            {
+              type:
+                nodeToDelete.type.charAt(0).toUpperCase() +
+                nodeToDelete.type.slice(1),
+            }
+          ),
           status: "warning",
           duration: 3000,
           isClosable: true,
@@ -381,7 +403,7 @@ const FlowVisualizer: React.FC<FlowVisualizerProps> = ({
     closeContextMenu,
     closePropertiesPanel,
     toast,
-    t
+    t,
   ]);
 
   const {
@@ -410,12 +432,6 @@ const FlowVisualizer: React.FC<FlowVisualizerProps> = ({
     [defaultEdgeOptions]
   );
   const { zoom } = useViewport();
-
-  const ZoomDisplay = () => (
-    <Panel position="bottom-right">
-      {t("workflow.flowVisualizer.zoom")}: {Math.round(zoom * 100)}%
-    </Panel>
-  );
 
   const [isShortcutPanelVisible, setShortcutPanelVisible] = useState(false);
 
@@ -578,9 +594,9 @@ const FlowVisualizer: React.FC<FlowVisualizerProps> = ({
 
   const edgesWithStyles = useMemo(() => {
     return edges?.map((edge) => {
-      const sourceNode = nodes.find(n => n.id === edge.source);
+      const sourceNode = nodes.find((n) => n.id === edge.source);
       const isClassifierEdge = sourceNode?.type === "classifier";
-      
+
       // 分类器节点的边默认为虚线类型
       if (isClassifierEdge && edge.type === undefined) {
         edge.type = "smoothstep";
@@ -621,8 +637,8 @@ const FlowVisualizer: React.FC<FlowVisualizerProps> = ({
       position="relative"
     >
       {/* 节点面板 */}
-      <Box 
-        h="full" 
+      <Box
+        h="full"
         maxH="full"
         borderRight="1px solid"
         borderColor="gray.100"
@@ -631,14 +647,9 @@ const FlowVisualizer: React.FC<FlowVisualizerProps> = ({
       >
         <NodePalette />
       </Box>
-      
+
       {/* Flow 区域 */}
-      <Box 
-        flex={1} 
-        position="relative"
-        bg="gray.50"
-        transition="all 0.2s"
-      >
+      <Box flex={1} position="relative" bg="gray.50" transition="all 0.2s">
         <ReactFlow
           onNodeClick={onNodeClick}
           nodes={nodesWithSelection}
@@ -658,9 +669,9 @@ const FlowVisualizer: React.FC<FlowVisualizerProps> = ({
               height: 20,
               color: "ui.main",
             },
-            style: { 
+            style: {
               strokeWidth: 2,
-              transition: 'all 0.2s',
+              transition: "all 0.2s",
             },
           }}
           connectionLineType={ConnectionLineType.SmoothStep}
@@ -670,36 +681,36 @@ const FlowVisualizer: React.FC<FlowVisualizerProps> = ({
           onEdgeClick={onEdgeClick}
           onPaneClick={onPaneClick}
         >
-          <Controls 
+          <Controls
             className="react-flow__controls-custom"
             style={{
-              backgroundColor: 'white',
-              borderRadius: '12px',
-              padding: '4px',
-              boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)',
+              backgroundColor: "white",
+              borderRadius: "12px",
+              padding: "4px",
+              boxShadow: "0 4px 6px -1px rgba(0, 0, 0, 0.1)",
             }}
           />
           <Background gap={16} style={{ background: "ui.bgMain" }} />
-          
+
           {showMiniMap && (
-            <MiniMap 
+            <MiniMap
               style={{
-                backgroundColor: 'white',
-                borderRadius: '12px',
-                boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)',
+                backgroundColor: "white",
+                borderRadius: "12px",
+                boxShadow: "0 4px 6px -1px rgba(0, 0, 0, 0.1)",
               }}
             />
           )}
 
-          <Panel 
+          <Panel
             position="bottom-left"
             style={{
-              background: 'white',
-              borderRadius: '12px',
-              padding: '2px',
-              boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)',
-              marginLeft: '4rem',
-              marginBottom: '1rem',
+              background: "white",
+              borderRadius: "12px",
+              padding: "2px",
+              boxShadow: "0 4px 6px -1px rgba(0, 0, 0, 0.1)",
+              marginLeft: "4rem",
+              marginBottom: "1rem",
             }}
           >
             <IconButton
@@ -711,11 +722,11 @@ const FlowVisualizer: React.FC<FlowVisualizerProps> = ({
               onClick={() => setShowMiniMap(!showMiniMap)}
               transition="all 0.2s"
               _hover={{
-                bg: 'gray.100',
-                transform: 'scale(1.1)',
+                bg: "gray.100",
+                transform: "scale(1.1)",
               }}
               _active={{
-                transform: 'scale(0.95)',
+                transform: "scale(0.95)",
               }}
             />
           </Panel>
@@ -739,13 +750,13 @@ const FlowVisualizer: React.FC<FlowVisualizerProps> = ({
                   isRound
                   bg="ui.main"
                   color="white"
-                  _hover={{ 
-                    transform: 'scale(1.1)',
-                    bg: 'blue.500',
+                  _hover={{
+                    transform: "scale(1.1)",
+                    bg: "blue.500",
                   }}
-                  _active={{ 
-                    transform: 'scale(0.95)',
-                    bg: 'blue.600',
+                  _active={{
+                    transform: "scale(0.95)",
+                    bg: "blue.600",
                   }}
                   transition="all 0.2s"
                 />
@@ -754,26 +765,31 @@ const FlowVisualizer: React.FC<FlowVisualizerProps> = ({
           </EdgeLabelRenderer>
 
           {/* 帮助面板 */}
-          <Panel 
+          <Panel
             position="top-left"
             style={{
-              background: 'white',
-              borderRadius: '12px',
-              padding: '8px',
-              boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)',
+              background: "white",
+              borderRadius: "12px",
+              padding: "2px",
+              boxShadow: "0 4px 6px -1px rgba(0, 0, 0, 0.1)",
+              marginLeft: "1rem",
+              marginTop: "0.5rem",
             }}
           >
-            <Box
-              as={MdOutlineHelp}
+            <IconButton
+              aria-label="Help"
+              icon=<MdOutlineHelp />
+              size="sm"
               onMouseEnter={toggleShortcutPanel}
               onMouseLeave={hideShortcutPanel}
               cursor="pointer"
               color="gray.600"
+              colorScheme="grayp"
               fontSize="24px"
               transition="all 0.2s"
-              _hover={{ 
-                color: 'ui.main',
-                transform: 'scale(1.1)',
+              _hover={{
+                color: "ui.main",
+                transform: "scale(1.1)",
               }}
             />
             {isShortcutPanelVisible && (
@@ -794,41 +810,57 @@ const FlowVisualizer: React.FC<FlowVisualizerProps> = ({
                 backdropFilter="blur(8px)"
                 transition="all 0.2s"
               >
-                <Text fontWeight="600" mb={2}>{t("workflow.flowVisualizer.shortcuts.title")}:</Text>
+                <Text fontWeight="600" mb={2}>
+                  {t("workflow.flowVisualizer.shortcuts.title")}:
+                </Text>
                 <HStack mb={2}>
-                  <Text>{t("workflow.flowVisualizer.shortcuts.edgeType")}:</Text>
-                  <Kbd bg="gray.100" color="gray.700">{t("E")}</Kbd>
+                  <Text>
+                    {t("workflow.flowVisualizer.shortcuts.edgeType")}:
+                  </Text>
+                  <Kbd bg="gray.100" color="gray.700">
+                    {t("E")}
+                  </Kbd>
                 </HStack>
                 <HStack mb={3}>
                   <Text>{t("workflow.flowVisualizer.shortcuts.delete")}:</Text>
-                  <Kbd bg="gray.100" color="gray.700">Backspace</Kbd>
-                  <Kbd bg="gray.100" color="gray.700">Delete</Kbd>
+                  <Kbd bg="gray.100" color="gray.700">
+                    Backspace
+                  </Kbd>
+                  <Kbd bg="gray.100" color="gray.700">
+                    Delete
+                  </Kbd>
                 </HStack>
-                <Text fontWeight="600" mb={2}>{t("workflow.flowVisualizer.shortcuts.info.title")}:</Text>
-                <Text mb={1}>{t("workflow.flowVisualizer.shortcuts.info.solidLine")}</Text>
-                <Text>{t("workflow.flowVisualizer.shortcuts.info.dashedLine")}</Text>
+                <Text fontWeight="600" mb={2}>
+                  {t("workflow.flowVisualizer.shortcuts.info.title")}:
+                </Text>
+                <Text mb={1}>
+                  {t("workflow.flowVisualizer.shortcuts.info.solidLine")}
+                </Text>
+                <Text>
+                  {t("workflow.flowVisualizer.shortcuts.info.dashedLine")}
+                </Text>
               </Box>
             )}
           </Panel>
 
           {/* Zoom 显示 */}
-          <Panel 
+          <Panel
             position="bottom-left"
             style={{
-              background: 'white',
-              borderRadius: '12px',
-              padding: '8px 12px',
-              boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)',
-              fontSize: '14px',
-              color: 'gray.600',
-              marginLeft: '7rem',
-              marginBottom: '1rem',
+              background: "white",
+              borderRadius: "12px",
+              padding: "8px 12px",
+              boxShadow: "0 4px 6px -1px rgba(0, 0, 0, 0.1)",
+              fontSize: "14px",
+              color: "gray.600",
+              marginLeft: "7rem",
+              marginBottom: "1rem",
             }}
           >
             {t("workflow.flowVisualizer.zoom")}: {Math.round(zoom * 100)}%
           </Panel>
         </ReactFlow>
-        
+
         {/* 顶部按钮组 */}
         <Box
           position="absolute"
@@ -889,8 +921,8 @@ const FlowVisualizer: React.FC<FlowVisualizerProps> = ({
             borderRadius="full"
             transition="all 0.2s"
             _hover={{
-              bg: 'gray.100',
-              transform: 'rotate(90deg)',
+              bg: "gray.100",
+              transform: "rotate(90deg)",
             }}
           />
           {getNodePropertiesComponent(
@@ -925,8 +957,8 @@ const FlowVisualizer: React.FC<FlowVisualizerProps> = ({
             borderRadius="full"
             transition="all 0.2s"
             _hover={{
-              bg: 'gray.100',
-              transform: 'rotate(90deg)',
+              bg: "gray.100",
+              transform: "rotate(90deg)",
             }}
           />
           <Box h="full" overflow="hidden">
@@ -980,13 +1012,13 @@ const FlowVisualizer: React.FC<FlowVisualizerProps> = ({
             borderColor="gray.100"
             p={2}
           >
-            <MenuItem 
+            <MenuItem
               onClick={deleteNode}
               borderRadius="lg"
               transition="all 0.2s"
               _hover={{
-                bg: 'red.50',
-                color: 'red.500',
+                bg: "red.50",
+                color: "red.500",
               }}
             >
               Delete Node
