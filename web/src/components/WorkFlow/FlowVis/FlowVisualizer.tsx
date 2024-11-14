@@ -968,7 +968,7 @@ const FlowVisualizer: React.FC<FlowVisualizerProps> = ({
               useDeployButton={false}
               useApiKeyButton={false}
               isWorkflow={true}
-              showHistoryButton={true}
+              showHistoryButton={false}
               onClose={() => setShowDebugPreview(false)}
             />
           </Box>

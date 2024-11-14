@@ -1,7 +1,6 @@
-import { Box, CloseButton } from "@chakra-ui/react";
+import { Box, CloseButton, useColorModeValue } from "@chakra-ui/react";
 
 import ChatMain from "@/components/Playground/ChatMain";
-
 import DebugPreviewHead from "./head";
 
 interface DebugPreviewProps {
@@ -23,25 +22,35 @@ function DebugPreview({
   showHistoryButton = false,
   onClose,
 }: DebugPreviewProps) {
+  const bgColor = useColorModeValue("white", "gray.800");
+  const borderColor = useColorModeValue("gray.100", "gray.700");
+
   return (
     <Box
       w="full"
       h="full"
-      bg="white"
-      borderRadius={"lg"}
-      display={"flex"}
-      flexDirection={"column"}
+      bg={bgColor}
+      borderRadius="xl"
+      border="1px solid"
+      borderColor={borderColor}
+      display="flex"
+      flexDirection="column"
       position="relative"
+      transition="all 0.2s"
+      boxShadow="sm"
+      _hover={{
+        boxShadow: "md",
+        borderColor: "gray.200",
+      }}
     >
       {onClose && (
         <CloseButton
           onClick={onClose}
           position="absolute"
-          right={2}
-          top={2}
-          size={"md"}
+          right={4}
+          top={4}
+          size="md"
           zIndex={2}
-         
           borderRadius="full"
           transition="all 0.2s"
           _hover={{
@@ -52,13 +61,17 @@ function DebugPreview({
       )}
       
       <Box 
-        py="5" 
+        py={5}
+        px={4}
         position="absolute"
         top={0}
         left={0}
         right={0}
-        bg="white"
+        bg={bgColor}
+        borderBottom="1px solid"
+        borderColor={borderColor}
         zIndex={1}
+        backdropFilter="blur(8px)"
       >
         <DebugPreviewHead
           teamId={teamId}
@@ -73,11 +86,24 @@ function DebugPreview({
       <Box
         position="absolute"
         top="80px"
-        bottom="0"
-        left="0"
-        right="0"
+        bottom={0}
+        left={0}
+        right={0}
         overflowY="auto"
         display="flex"
+        p={4}
+        sx={{
+          "&::-webkit-scrollbar": {
+            width: "4px",
+          },
+          "&::-webkit-scrollbar-track": {
+            bg: "gray.50",
+          },
+          "&::-webkit-scrollbar-thumb": {
+            bg: "gray.300",
+            borderRadius: "full",
+          },
+        }}
       >
         <ChatMain isPlayground={false} />
       </Box>

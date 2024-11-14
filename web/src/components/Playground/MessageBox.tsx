@@ -159,10 +159,11 @@ const MessageBox = ({ message, onResume, isPlayground }: MessageBoxProps) => {
           gap={4}
         >
           <Box
-            p={2}
+            // p={2}
             borderRadius="lg"
             bg={type === "human" ? "blue.50" : "gray.50"}
             alignSelf="flex-start"
+            as={IconButton}
           >
             {tqxIcon()}
           </Box>
