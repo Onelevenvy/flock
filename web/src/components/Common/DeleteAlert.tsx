@@ -6,6 +6,7 @@ import {
   AlertDialogHeader,
   AlertDialogOverlay,
   Button,
+  Text,
 } from "@chakra-ui/react";
 import React from "react";
 import { useForm } from "react-hook-form";
@@ -51,12 +52,13 @@ const Delete = ({ type, id, isOpen, onClose }: DeleteProps) => {
 
   const mutation = useMutation(deleteEntity, {
     onSuccess: () => {
-      if (type !== "Upload")
+      if (type !== "Upload") {
         showToast(
           "Success",
           `The ${type.toLowerCase()} was deleted successfully.`,
           "success"
         );
+      }
       onClose();
     },
     onError: () => {
@@ -84,48 +86,79 @@ const Delete = ({ type, id, isOpen, onClose }: DeleteProps) => {
   };
 
   return (
-    <>
-      <AlertDialog
-        isOpen={isOpen}
-        onClose={onClose}
-        leastDestructiveRef={cancelRef}
-        size={{ base: "sm", md: "md" }}
-        isCentered
-      >
-        <AlertDialogOverlay>
-          <AlertDialogContent as="form" onSubmit={handleSubmit(onSubmit)}>
-            <AlertDialogHeader>Delete {type}</AlertDialogHeader>
+    <AlertDialog
+      isOpen={isOpen}
+      onClose={onClose}
+      leastDestructiveRef={cancelRef}
+      size={{ base: "sm", md: "md" }}
+      isCentered
+    >
+      <AlertDialogOverlay bg="blackAlpha.300" backdropFilter="blur(10px)">
+        <AlertDialogContent
+          as="form"
+          onSubmit={handleSubmit(onSubmit)}
+          borderRadius="xl"
+          boxShadow="xl"
+          p={4}
+        >
+          <AlertDialogHeader
+            fontSize="lg"
+            fontWeight="600"
+            color="gray.800"
+            pb={2}
+          >
+            Delete {type}
+          </AlertDialogHeader>
 
-            <AlertDialogBody>
-              {type === "User" && (
-                <span>
-                  All items associated with this user will also be{" "}
-                  <strong>permantly deleted. </strong>
-                </span>
-              )}
+          <AlertDialogBody py={4}>
+            {type === "User" && (
+              <Text color="gray.600" mb={2}>
+                All items associated with this user will also be{" "}
+                <Text as="span" fontWeight="600" color="red.500">
+                  permanently deleted.
+                </Text>
+              </Text>
+            )}
+            <Text color="gray.700">
               Are you sure? You will not be able to undo this action.
-            </AlertDialogBody>
+            </Text>
+          </AlertDialogBody>
 
-            <AlertDialogFooter gap={3}>
-              <Button
-                variant="danger"
-                type="submit"
-                isLoading={isSubmitting || mutation.isLoading}
-              >
-                Delete
-              </Button>
-              <Button
-                ref={cancelRef}
-                onClick={onClose}
-                isDisabled={isSubmitting}
-              >
-                Cancel
-              </Button>
-            </AlertDialogFooter>
-          </AlertDialogContent>
-        </AlertDialogOverlay>
-      </AlertDialog>
-    </>
+          <AlertDialogFooter gap={3}>
+            <Button
+              colorScheme="red"
+              type="submit"
+              isLoading={isSubmitting || mutation.isLoading}
+              borderRadius="lg"
+              px={6}
+              transition="all 0.2s"
+              _hover={{
+                transform: "translateY(-1px)",
+                boxShadow: "md",
+              }}
+              _active={{
+                transform: "translateY(0)",
+              }}
+            >
+              Delete
+            </Button>
+            <Button
+              ref={cancelRef}
+              onClick={onClose}
+              isDisabled={isSubmitting}
+              variant="ghost"
+              borderRadius="lg"
+              transition="all 0.2s"
+              _hover={{
+                bg: "gray.100",
+              }}
+            >
+              Cancel
+            </Button>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialogOverlay>
+    </AlertDialog>
   );
 };
 
