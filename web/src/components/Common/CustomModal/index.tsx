@@ -32,22 +32,42 @@ const CustomModalWrapper = ({
   component: React.ReactNode;
 }) => {
   return (
-    <>
-      <Modal
-        size={size}
-        isOpen={isOpen}
-        onClose={onClose}
-        closeOnOverlayClick={false}
+    <Modal
+      size={size}
+      isOpen={isOpen}
+      onClose={onClose}
+      closeOnOverlayClick={false}
+      motionPreset="slideInBottom"
+    >
+      <ModalOverlay 
+        bg="blackAlpha.300" 
+        backdropFilter="blur(10px)"
+      />
+      <ModalContent
+        borderRadius="xl"
+        boxShadow="xl"
+        bg="white"
+        overflow="hidden"
+        mx={4}
+        my={4}
+        transition="all 0.2s"
       >
-        <ModalOverlay />
-        <ModalContent width={"1000px"}>
-          {/* <ModalHeader /> */}
-          <ModalCloseButton />
-          <ModalBody width={"1000px"}>{component}</ModalBody>
-          {/* <ModalFooter /> */}
-        </ModalContent>
-      </Modal>
-    </>
+        <ModalCloseButton
+          position="absolute"
+          right={4}
+          top={4}
+          borderRadius="full"
+          transition="all 0.2s"
+          _hover={{
+            bg: "gray.100",
+            transform: "rotate(90deg)",
+          }}
+        />
+        <ModalBody p={6}>
+          {component}
+        </ModalBody>
+      </ModalContent>
+    </Modal>
   );
 };
 
