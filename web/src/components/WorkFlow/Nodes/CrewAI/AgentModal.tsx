@@ -259,8 +259,8 @@ const AgentModal: React.FC<AgentModalProps> = ({
                     <Box
                       p={2}
                       borderRadius="lg"
-                      bg="purple.50"
-                      color="purple.500"
+                      bg="blue.50"
+                      color="blue.500"
                       transition="all 0.2s"
                       _hover={{ bg: "purple.100" }}
                     >
@@ -278,7 +278,7 @@ const AgentModal: React.FC<AgentModalProps> = ({
                     variant="ghost"
                     leftIcon={<FaPlus size="12px" />}
                     onClick={() => setIsToolsListOpen(true)}
-                    colorScheme="purple"
+                    colorScheme="blue"
                     transition="all 0.2s"
                     _hover={{
                       transform: "translateY(-1px)",
@@ -297,11 +297,11 @@ const AgentModal: React.FC<AgentModalProps> = ({
                       bg="gray.50"
                       borderRadius="lg"
                       borderLeft="3px solid"
-                      borderLeftColor="purple.400"
+                      borderLeftColor="blue.400"
                       transition="all 0.2s"
                       _hover={{
                         bg: "gray.100",
-                        borderLeftColor: "purple.500",
+                        borderLeftColor: "blue.500",
                         transform: "translateX(2px)",
                         shadow: "sm",
                       }}

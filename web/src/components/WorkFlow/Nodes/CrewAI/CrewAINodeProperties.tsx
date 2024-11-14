@@ -433,10 +433,10 @@ const CrewAINodeProperties: React.FC<CrewAINodePropertiesProps> = ({
             <Box
               p={2}
               borderRadius="lg"
-              bg="green.50"
-              color="green.500"
+              bg="blue.50"
+              color="blue.500"
               transition="all 0.2s"
-              _hover={{ bg: "green.100" }}
+              _hover={{ bg: "blue.100" }}
             >
               <FaListAlt size="14px" />
             </Box>
@@ -456,7 +456,7 @@ const CrewAINodeProperties: React.FC<CrewAINodePropertiesProps> = ({
               onTaskModalOpen();
             }}
             isDisabled={!canAddTask}
-            colorScheme="green"
+            colorScheme="blue"
             transition="all 0.2s"
             _hover={{
               transform: "translateY(-1px)",
@@ -475,11 +475,11 @@ const CrewAINodeProperties: React.FC<CrewAINodePropertiesProps> = ({
               bg="gray.50"
               borderRadius="lg"
               borderLeft="3px solid"
-              borderLeftColor="green.400"
+              borderLeftColor="blue.400"
               transition="all 0.2s"
               _hover={{
                 bg: "gray.100",
-                borderLeftColor: "green.500",
+                borderLeftColor: "blue.500",
                 transform: "translateX(2px)",
                 shadow: "sm",
               }}
@@ -499,7 +499,7 @@ const CrewAINodeProperties: React.FC<CrewAINodePropertiesProps> = ({
                     icon={<FaEdit size="12px" />}
                     size="sm"
                     variant="ghost"
-                    colorScheme="green"
+                    colorScheme="blue"
                     onClick={() => handleEditTask(task)}
                     transition="all 0.2s"
                     _hover={{

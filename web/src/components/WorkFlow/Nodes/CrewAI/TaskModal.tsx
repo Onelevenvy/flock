@@ -14,6 +14,7 @@ import {
   FormErrorMessage,
   HStack,
   Text,
+  Box,
 } from "@chakra-ui/react";
 import React from "react";
 import { useForm } from "react-hook-form";
@@ -84,7 +85,7 @@ const TaskModal: React.FC<TaskModalProps> = ({
   return (
     <Modal isOpen={isOpen} onClose={onClose} size="xl">
       <ModalOverlay bg="blackAlpha.300" backdropFilter="blur(10px)" />
-      <ModalContent 
+      <ModalContent
         borderRadius="xl"
         boxShadow="xl"
         bg="white"
@@ -94,13 +95,25 @@ const TaskModal: React.FC<TaskModalProps> = ({
       >
         <ModalHeader>
           <HStack spacing={2}>
-            <FaListAlt size="20px" color="var(--chakra-colors-gray-600)" />
+            <Box
+              p={2}
+              borderRadius="lg"
+              bg="blue.50"
+              color="blue.500"
+              transition="all 0.2s"
+              _hover={{ bg: "blue.100" }}
+            >
+              <FaListAlt size="20px" />
+            </Box>
             <Text fontSize="lg" fontWeight="600" color="gray.800">
-              {t("workflow.nodes.crewai.taskModal.title")}
+              {initialData 
+                ? t("workflow.nodes.crewai.taskModal.editTitle")
+                : t("workflow.nodes.crewai.taskModal.addTitle")
+              }
             </Text>
           </HStack>
         </ModalHeader>
-        <ModalCloseButton 
+        <ModalCloseButton
           position="absolute"
           right={4}
           top={4}
@@ -126,10 +139,10 @@ const TaskModal: React.FC<TaskModalProps> = ({
                   placeholder={String(t("workflow.nodes.crewai.taskModal.namePlaceholder"))}
                   borderRadius="lg"
                   borderColor="gray.200"
-                  _hover={{ borderColor: "blue.200" }}
+                  _hover={{ borderColor: "green.200" }}
                   _focus={{
-                    borderColor: "blue.500",
-                    boxShadow: "0 0 0 1px var(--chakra-colors-blue-500)"
+                    borderColor: "green.500",
+                    boxShadow: "0 0 0 1px var(--chakra-colors-green-500)"
                   }}
                   transition="all 0.2s"
                 />
@@ -161,10 +174,10 @@ const TaskModal: React.FC<TaskModalProps> = ({
                   placeholder={String(t("workflow.nodes.crewai.taskModal.selectAgent"))}
                   borderRadius="lg"
                   borderColor="gray.200"
-                  _hover={{ borderColor: "blue.200" }}
+                  _hover={{ borderColor: "green.200" }}
                   _focus={{
-                    borderColor: "blue.500",
-                    boxShadow: "0 0 0 1px var(--chakra-colors-blue-500)"
+                    borderColor: "green.500",
+                    boxShadow: "0 0 0 1px var(--chakra-colors-green-500)"
                   }}
                   transition="all 0.2s"
                 >
@@ -192,7 +205,7 @@ const TaskModal: React.FC<TaskModalProps> = ({
 
               <Button 
                 type="submit" 
-                colorScheme="blue"
+                colorScheme="green"
                 size="md"
                 w="100%"
                 borderRadius="lg"
@@ -201,12 +214,12 @@ const TaskModal: React.FC<TaskModalProps> = ({
                 fontWeight="500"
                 transition="all 0.2s"
                 _hover={{
-                  bg: "blue.500",
+                  bg: "green.600",
                   transform: "translateY(-1px)",
                   boxShadow: "md",
                 }}
                 _active={{
-                  bg: "blue.600",
+                  bg: "green.700",
                   transform: "translateY(0)",
                 }}
               >

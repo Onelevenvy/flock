@@ -134,7 +134,9 @@ const translation = {
           descriptionPlaceholder: "Task description",
           expectedOutputPlaceholder: "Expected output format or description",
           selectAgent: "Select agent",
-          uniqueNameError: "Task name must be unique"
+          uniqueNameError: "Task name must be unique",
+          editTitle: "Edit Task",
+          addTitle: "Add Task",
         }
       }
     },
