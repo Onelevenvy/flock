@@ -16,6 +16,7 @@ interface FormValues {
   openai_api_key: string;
   openai_api_base: string;
 }
+
 interface LLMNodePropertiesProps {
   node: any;
   onNodeDataChange: (nodeId: string, key: string, value: any) => void;
@@ -112,7 +113,14 @@ const LLMNodeProperties: React.FC<LLMNodePropertiesProps> = ({
   return (
     <VStack align="stretch" spacing={4}>
       <Box>
-        <Text fontWeight="bold">{t("workflow.nodes.llm.model")}:</Text>
+        <Text 
+          fontWeight="500" 
+          fontSize="sm" 
+          color="gray.700"
+          mb={2}
+        >
+          {t("workflow.nodes.llm.model")}:
+        </Text>
         <ModelSelect<FormValues>
           models={models}
           control={control}
@@ -122,19 +130,36 @@ const LLMNodeProperties: React.FC<LLMNodePropertiesProps> = ({
           value={node.data.model}
         />
       </Box>
+
       <Box>
-        <Text fontWeight="bold">{t("workflow.nodes.llm.temperature")}:</Text>
+        <Text 
+          fontWeight="500" 
+          fontSize="sm" 
+          color="gray.700"
+          mb={2}
+        >
+          {t("workflow.nodes.llm.temperature")}:
+        </Text>
         <Input
           type="number"
-          bg="#edf2f7"
           value={temperatureInput}
           onChange={(e) => {
             setTemperatureInput(e.target.value);
             const numValue =
               e.target.value === "" ? 0 : Number.parseFloat(e.target.value);
-
             onNodeDataChange(node.id, "temperature", numValue);
           }}
+          size="sm"
+          borderRadius="lg"
+          borderColor="gray.200"
+          _hover={{
+            borderColor: "blue.200"
+          }}
+          _focus={{
+            borderColor: "blue.500",
+            boxShadow: "0 0 0 1px var(--chakra-colors-blue-500)"
+          }}
+          transition="all 0.2s"
           step={0.1}
           min={0}
           max={1}

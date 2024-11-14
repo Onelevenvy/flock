@@ -14,8 +14,17 @@ const EndProperties: React.FC<EndPropertiesProps> = ({
 }) => {
   return (
     <VStack spacing={4} align="stretch">
-      <FormControl isInvalid={!!nameError}>
-        <FormErrorMessage>{nameError}</FormErrorMessage>
+      <FormControl 
+        isInvalid={!!nameError}
+        transition="all 0.2s"
+      >
+        <FormErrorMessage
+          fontSize="sm"
+          color="red.500"
+          fontWeight="500"
+        >
+          {nameError}
+        </FormErrorMessage>
       </FormControl>
       {children}
     </VStack>

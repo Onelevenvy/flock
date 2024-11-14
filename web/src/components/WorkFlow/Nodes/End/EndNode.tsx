@@ -9,7 +9,19 @@ const EndNode: React.FC<NodeProps> = (props) => {
 
   return (
     <BaseNode {...props} icon={<Icon />} colorScheme={colorScheme}>
-      <Handle type="target" position={Position.Left} id="left" />
+      <Handle 
+        type="target" 
+        position={Position.Left} 
+        id="left"
+        style={{
+          background: '#E53E3E',  // 使用 theme 中的 red.500
+          width: 8,
+          height: 8,
+          border: '2px solid white',
+          transition: 'all 0.2s',
+        }}
+        className="custom-handle"
+      />
     </BaseNode>
   );
 };

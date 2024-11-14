@@ -16,7 +16,6 @@ const LLMNode: React.FC<NodeProps> = (props) => {
     setProviderName(props.data.model);
   }, [props.data]);
 
-  // 使用 useMemo 来缓存 ModelProviderIcon，只有当 providerName 变化时才重新创建
   const memoizedIcon = useMemo(
     () => (
       <ModelProviderIcon modelprovider_name={providerName} key={providerName} />
@@ -26,23 +25,76 @@ const LLMNode: React.FC<NodeProps> = (props) => {
 
   return (
     <BaseNode {...props} icon={<Icon />} colorScheme={colorScheme}>
-      <Handle type="target" position={Position.Left} id="left" />
-      <Handle type="target" position={Position.Right} id="right" />
-      <Handle type="source" position={Position.Left} id="left" />
-      <Handle type="source" position={Position.Right} id="right" />
+      <Handle 
+        type="target" 
+        position={Position.Left} 
+        id="left"
+        style={{
+          background: '#3182CE',  // theme 中的 blue.500
+          width: 8,
+          height: 8,
+          border: '2px solid white',
+          transition: 'all 0.2s',
+        }}
+      />
+      <Handle 
+        type="target" 
+        position={Position.Right} 
+        id="right"
+        style={{
+          background: '#3182CE',
+          width: 8,
+          height: 8,
+          border: '2px solid white',
+          transition: 'all 0.2s',
+        }}
+      />
+      <Handle 
+        type="source" 
+        position={Position.Left} 
+        id="left"
+        style={{
+          background: '#3182CE',
+          width: 8,
+          height: 8,
+          border: '2px solid white',
+          transition: 'all 0.2s',
+        }}
+      />
+      <Handle 
+        type="source" 
+        position={Position.Right} 
+        id="right"
+        style={{
+          background: '#3182CE',
+          width: 8,
+          height: 8,
+          border: '2px solid white',
+          transition: 'all 0.2s',
+        }}
+      />
       <VStack spacing={1}>
         <Box
-          bg="#f2f4f7"
-          borderRadius={"md"}
+          bg="gray.50"
+          borderRadius="md"
           w="full"
           p="2"
-          display={"flex"}
-          flexDirection={"row"}
-          justifyContent={"center"}
-          alignContent={"center"}
+          display="flex"
+          flexDirection="row"
+          justifyContent="center"
+          alignItems="center"
+          transition="all 0.2s"
+          _hover={{
+            bg: "gray.100",
+          }}
         >
           {memoizedIcon}
-          <Text fontSize="xs" ml={2}>
+          <Text 
+            fontSize="xs" 
+            ml={2}
+            color="gray.700"
+            fontWeight="500"
+          >
             {props.data.model || "No model selected"}
           </Text>
         </Box>
@@ -51,7 +103,6 @@ const LLMNode: React.FC<NodeProps> = (props) => {
   );
 };
 
-// 使用 React.memo 并提供自定义的比较函数
 export default React.memo(LLMNode, (prevProps, nextProps) => {
   return (
     prevProps.data.modelprovider_name === nextProps.data.modelprovider_name &&
