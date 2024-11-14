@@ -13,12 +13,19 @@ const NodePalette: React.FC = () => {
     <Box
       h="full"
       maxH="full"
-      bg="#fcfcfd"
-      borderTopLeftRadius="lg"
+      bg="white"
+      borderRadius="xl"
       position="relative"
       transition="all 0.3s ease"
       width={isCollapsed ? "0" : "200px"}
       minWidth={isCollapsed ? "0" : "200px"}
+      border="1px solid"
+      borderColor="gray.100"
+      overflow="hidden"
+      boxShadow="sm"
+      _hover={{
+        boxShadow: "md",
+      }}
     >
       <IconButton
         aria-label={isCollapsed ? "Expand" : "Collapse"}
@@ -39,7 +46,15 @@ const NodePalette: React.FC = () => {
         borderRadius="full"
         boxShadow="md"
         bg="white"
-        _hover={{ bg: "white" }}
+        transition="all 0.2s"
+        _hover={{ 
+          bg: "gray.50",
+          transform: "scale(1.1)",
+        }}
+        _active={{
+          bg: "gray.100",
+          transform: "scale(1)",
+        }}
       />
 
       <Box
@@ -47,7 +62,7 @@ const NodePalette: React.FC = () => {
         h="full"
         opacity={isCollapsed ? 0 : 1}
         visibility={isCollapsed ? "hidden" : "visible"}
-        transition="all 0.2s ease"
+        transition="all 0.3s ease"
         pointerEvents={isCollapsed ? "none" : "auto"}
       >
         <SharedNodeMenu onNodeSelect={onNodeSelect} isDraggable={true} />
