@@ -42,13 +42,18 @@ import "reactflow/dist/style.css";
 import DebugPreview from "../../Teams/DebugPreview";
 import BaseProperties from "../Nodes/Base/BaseNodeProperties";
 import { type NodeType, nodeConfig } from "../Nodes/nodeConfig";
-import type { CustomNode, FlowVisualizerProps } from "../types";
+import type {
+  ClassifierNodeData,
+  CustomNode,
+  FlowVisualizerProps,
+} from "../types";
 import { calculateEdgeCenter } from "./utils";
 import SharedNodeMenu from "./SharedNodeMenu";
 
 import useWorkflowStore from "@/stores/workflowStore";
 import CustomButton from "@/components/Common/CustomButton";
 import ApiKeyButton from "@/components/Teams/Apikey/ApiKeyManageButton";
+import { useTranslation } from "react-i18next";
 
 const FlowVisualizer: React.FC<FlowVisualizerProps> = ({
   nodeTypes,
@@ -56,6 +61,7 @@ const FlowVisualizer: React.FC<FlowVisualizerProps> = ({
   teamId,
   graphData,
 }) => {
+  const { t } = useTranslation();
   const {
     nodes,
     setNodes,
@@ -161,14 +167,58 @@ const FlowVisualizer: React.FC<FlowVisualizerProps> = ({
       const sourceType = sourceNode.type as NodeType;
       const targetType = targetNode.type as NodeType;
 
-      // Prevent multiple connections from start node
-      if (sourceType === "start") {
-        const existingStartConnections = edges.filter(
-          (edge) => edge.source === connection.source
-        );
+      // 防止自连接
+      if (connection.source === connection.target) return false;
 
-        if (existingStartConnections.length > 0) return false;
+      // 防止重复连接
+      const existingEdge = edges.find(
+        (edge) =>
+          edge.source === connection.source &&
+          edge.target === connection.target &&
+          edge.sourceHandle === connection.sourceHandle
+      );
+      if (existingEdge) return false;
+
+      // 分类器节点的特殊处理
+      if (sourceType === "classifier") {
+        // 分类器节点的输出连接必须使用分类ID作为handleId
+        if (!connection.sourceHandle) return false;
+
+        // 验证sourceHandle是否是有效的分类ID
+        const categories = (sourceNode.data as ClassifierNodeData).categories;
+        if (!categories.find((c) => c.category_id === connection.sourceHandle))
+          return false;
+
+        // 验证目标节点的连接点
+        if (
+          connection.targetHandle &&
+          !nodeConfig[targetType].allowedConnections.targets.includes(
+            connection.targetHandle
+          )
+        ) {
+          return false;
+        }
+        return true;
       }
+
+      // 目标节点是分类器的情况
+      if (targetType === "classifier") {
+        // 分类器只允许从左侧连入
+        if (connection.targetHandle !== "input") return false;
+
+        // 验证源节点的连接点
+        if (
+          connection.sourceHandle &&
+          !nodeConfig[sourceType].allowedConnections.sources.includes(
+            connection.sourceHandle
+          )
+        ) {
+          return false;
+        }
+        return true;
+      }
+
+      // 其他节点类型的常规验证
       const sourceAllowedConnections =
         nodeConfig[sourceType].allowedConnections;
       const targetAllowedConnections =
@@ -181,24 +231,15 @@ const FlowVisualizer: React.FC<FlowVisualizerProps> = ({
       ) {
         return false;
       }
-      // 检查目标节点是否允许从指的 handle 连入
+
+      // 检查目标节点是否允许从指定的 handle 连入
       if (
         connection.targetHandle &&
         !targetAllowedConnections.targets.includes(connection.targetHandle)
       ) {
         return false;
       }
-      // 防止自连接
-      if (connection.source === connection.target) return false;
-      // 防止重复连接
-      const existingEdge = edges.find(
-        (edge) =>
-          edge.source === connection.source && edge.target === connection.target
-      );
 
-      if (existingEdge) return false;
-
-      // 允许所有其他连接
       return true;
     },
     [nodes, edges]
@@ -210,19 +251,11 @@ const FlowVisualizer: React.FC<FlowVisualizerProps> = ({
         eds.map((e) => {
           if (e.id === edge.id) {
             const newType = e.type === "default" ? "smoothstep" : "default";
-
             return {
               ...e,
               type: newType,
-              animated: newType !== "default",
-              style: {
-                strokeWidth: 2,
-                stroke: newType === "default" ? "#5e5a6a" : "#517359",
-                strokeDasharray: newType === "default" ? "none" : "10,5",
-              },
             };
           }
-
           return e;
         })
       );
@@ -242,7 +275,6 @@ const FlowVisualizer: React.FC<FlowVisualizerProps> = ({
     (event: KeyboardEvent) => {
       if (event.key === "e" || event.key === "E") {
         const selectedEdges = edges.filter((e) => e.selected);
-
         selectedEdges.forEach(toggleEdgeType);
       }
     },
@@ -333,14 +365,20 @@ const FlowVisualizer: React.FC<FlowVisualizerProps> = ({
         (nodeToDelete.type === "start" || nodeToDelete.type === "end")
       ) {
         toast({
-          title: "Cannot delete node",
-          description: `${nodeToDelete.type.charAt(0).toUpperCase() + nodeToDelete.type.slice(1)} node cannot be deleted.`,
+          title: t("workflow.flowVisualizer.contextMenu.error.title"),
+          description: t(
+            "workflow.flowVisualizer.contextMenu.error.description",
+            {
+              type:
+                nodeToDelete.type.charAt(0).toUpperCase() +
+                nodeToDelete.type.slice(1),
+            }
+          ),
           status: "warning",
           duration: 3000,
           isClosable: true,
         });
         closeContextMenu();
-
         return;
       }
       setNodes((nds) => nds.filter((node) => node.id !== contextMenu.nodeId));
@@ -362,6 +400,7 @@ const FlowVisualizer: React.FC<FlowVisualizerProps> = ({
     closeContextMenu,
     closePropertiesPanel,
     toast,
+    t,
   ]);
 
   const {
@@ -392,7 +431,9 @@ const FlowVisualizer: React.FC<FlowVisualizerProps> = ({
   const { zoom } = useViewport();
 
   const ZoomDisplay = () => (
-    <Panel position="bottom-right">{Math.round(zoom * 100)}%</Panel>
+    <Panel position="bottom-right">
+      {t("workflow.flowVisualizer.zoom")}: {Math.round(zoom * 100)}%
+    </Panel>
   );
 
   const [isShortcutPanelVisible, setShortcutPanelVisible] = useState(false);
@@ -555,36 +596,49 @@ const FlowVisualizer: React.FC<FlowVisualizerProps> = ({
   }, [setSelectedNodeId]);
 
   const edgesWithStyles = useMemo(() => {
-    return edges?.map((edge) => ({
-      ...edge,
-      style: {
-        ...edge.style,
-        strokeWidth: 2, // 加粗线条
-        stroke:
-          edge.source === activeNodeName || edge.target === activeNodeName
-            ? "#38a169" // 如果边连接到活跃节点，使用绿色
-            : edge.type === "default"
-              ? "#5e5a6a"
-              : "#517359",
-      },
-    }));
-  }, [edges, activeNodeName]);
+    return edges?.map((edge) => {
+      const sourceNode = nodes.find((n) => n.id === edge.source);
+      const isClassifierEdge = sourceNode?.type === "classifier";
+
+      // 分类器节点的边默认为虚线类型
+      if (isClassifierEdge && edge.type === undefined) {
+        edge.type = "smoothstep";
+      }
+
+      return {
+        ...edge,
+        style: {
+          ...edge.style,
+          strokeWidth: 2,
+          strokeDasharray: edge.type === "smoothstep" ? "5,5" : undefined,
+          stroke:
+            edge.source === activeNodeName || edge.target === activeNodeName
+              ? "#38a169"
+              : edge.type === "default"
+                ? "#5e5a6a"
+                : "#517359",
+        },
+      };
+    });
+  }, [edges, activeNodeName, nodes]);
 
   return (
     <Box
       display="flex"
       h="100%"
       maxH={"full"}
-      onKeyDown={onKeyDown}
-      tabIndex={0}
       bg={"#f0f2f7"}
       border={"1px solid #d1d5db"}
       borderRadius={"lg"}
       boxShadow={"md"}
+      onKeyDown={onKeyDown}
+      tabIndex={0}
     >
       <Box h="full" maxH={"full"}>
         <NodePalette />
       </Box>
+
+      {/* Flow 区域 */}
       <Box flex={1} position="relative">
         <ReactFlow
           onNodeClick={onNodeClick}
@@ -603,9 +657,9 @@ const FlowVisualizer: React.FC<FlowVisualizerProps> = ({
               type: MarkerType.ArrowClosed,
               width: 20,
               height: 20,
-              color: "#2970ff", // Keep the arrow color blue
+              color: "#2970ff",
             },
-            style: { strokeWidth: 2 }, // I
+            style: { strokeWidth: 2 },
           }}
           connectionLineType={ConnectionLineType.SmoothStep}
           onDragOver={onDragOver}
@@ -615,31 +669,8 @@ const FlowVisualizer: React.FC<FlowVisualizerProps> = ({
           onPaneClick={onPaneClick}
         >
           <Controls />
-
           <Background gap={16} style={{ background: "#f0f2f7" }} />
           <MiniMap />
-
-          <Panel position="top-left">
-            <MdOutlineHelp
-              onMouseEnter={toggleShortcutPanel}
-              onMouseLeave={hideShortcutPanel}
-              cursor="pointer"
-            />
-            {isShortcutPanelVisible && (
-              <Box bg="white" p={2} borderRadius="md" boxShadow="md">
-                Shortcut:
-                <br /> Change edges type:<Kbd>E</Kbd>
-                <br />
-                Delete:<Kbd>Backspace</Kbd> <Kbd>Delete</Kbd>
-                <br />
-                Info:
-                <br /> solid line: Normal edge
-                <br />
-                dashed line: Conditional edge
-              </Box>
-            )}
-          </Panel>
-          <ZoomDisplay />
           <EdgeLabelRenderer>
             {selectedEdge && (
               <div
@@ -656,67 +687,78 @@ const FlowVisualizer: React.FC<FlowVisualizerProps> = ({
                   size="xs"
                   colorScheme="blue"
                   onClick={handleAddNodeClick}
-                  isRound={true} // 使按钮变成圆形
-                  _hover={{ bg: "blue.500" }} // 悬停时的样式
-                  _active={{ bg: "blue.600" }} // 点击时的样式
+                  isRound={true}
+                  _hover={{ bg: "blue.500" }}
+                  _active={{ bg: "blue.600" }}
                 />
               </div>
             )}
           </EdgeLabelRenderer>
+          <Panel position="top-left">
+            <MdOutlineHelp
+              onMouseEnter={toggleShortcutPanel}
+              onMouseLeave={hideShortcutPanel}
+              cursor="pointer"
+            />
+            {isShortcutPanelVisible && (
+              <Box bg="white" p={2} borderRadius="md" boxShadow="md">
+                {t("workflow.flowVisualizer.shortcuts.title")}:
+                <br /> {t("workflow.flowVisualizer.shortcuts.edgeType")}:{" "}
+                <Kbd>E</Kbd>
+                <br />
+                {t("workflow.flowVisualizer.shortcuts.delete")}:{" "}
+                <Kbd>Backspace</Kbd> <Kbd>Delete</Kbd>
+                <br />
+                {t("workflow.flowVisualizer.shortcuts.info.title")}:
+                <br /> {t("workflow.flowVisualizer.shortcuts.info.solidLine")}
+                <br />
+                {t("workflow.flowVisualizer.shortcuts.info.dashedLine")}
+              </Box>
+            )}
+          </Panel>
+          <ZoomDisplay />
         </ReactFlow>
-        {contextMenu.nodeId && (
-          <Menu isOpen={true} onClose={closeContextMenu}>
-            <MenuButton as={Button} style={{ display: "none" }} />
-            <MenuList
-              style={{
-                position: "absolute",
-                left: `${contextMenu.x}px`,
-                top: `${contextMenu.y}px`,
-              }}
-            >
-              <MenuItem onClick={deleteNode}>Delete Node</MenuItem>
-            </MenuList>
-          </Menu>
-        )}
+
+        {/* 顶部按钮组 */}
+        <Box
+          position={"absolute"}
+          right={"20px"}
+          top={"8px"}
+          display="flex"
+          alignItems="center"
+        >
+          <CustomButton
+            text={t("workflow.flowVisualizer.actions.debug")}
+            variant="white"
+            rightIcon={<VscDebugAlt color="#155aef" size="12px" />}
+            onClick={() => setShowDebugPreview(true)}
+            mr={4}
+          />
+          <ApiKeyButton teamId={teamId.toString()} mr={4} />
+          <CustomButton
+            text={t("workflow.flowVisualizer.actions.deploy")}
+            variant="blue"
+            rightIcon={<MdBuild color="white" size="12px" />}
+            onClick={onSave}
+            isLoading={isSaving}
+            loadingText={t("workflow.flowVisualizer.actions.saving")}
+          />
+        </Box>
       </Box>
 
-      <Box
-        position={"absolute"}
-        right={"20px"}
-        top={"8px"}
-        display="flex"
-        alignItems="center"
-      >
-        <CustomButton
-          text="Debug"
-          variant="white"
-          rightIcon={<VscDebugAlt color="#155aef" size="12px" />}
-          onClick={() => setShowDebugPreview(true)}
-          mr={4}
-        />
-        <ApiKeyButton teamId={teamId.toString()} mr={4} />
-        <CustomButton
-          text="Deploy"
-          variant="blue"
-          rightIcon={<MdBuild color="white" size="12px" />}
-          onClick={onSave}
-          isLoading={isSaving}
-          loadingText="Saving..."
-        />
-      </Box>
-
+      {/* 属性面板 */}
       {selectedNodeId && (
         <Box
-          position="relative"
-          w="330"
-          minW={"330"}
-          maxW={"330"}
+          w="330px"
+          minW={"330px"}
+          maxW={"330px"}
           bg={"#fcfcfd"}
           p={4}
           borderRadius={"lg"}
           boxShadow="md"
           mr={"5px"}
           my={1}
+          position="relative"
         >
           <CloseButton
             onClick={closePropertiesPanel}
@@ -725,23 +767,23 @@ const FlowVisualizer: React.FC<FlowVisualizerProps> = ({
             top={2}
             size={"md"}
           />
-
           {getNodePropertiesComponent(
             nodes.find((n) => n.id === selectedNodeId) || null
           )}
         </Box>
       )}
+
+      {/* Debug 预览面板 */}
       {showDebugPreview && (
         <Box
-          position="absolute"
-          right="20px"
-          top="60px"
           w="350px"
-          h="calc(100% - 80px)"
+          h="calc(100% - 2px)"
           bg={"white"}
           borderRadius={"lg"}
           boxShadow="md"
           overflow="hidden"
+          my={1}
+          position="relative"
         >
           <CloseButton
             onClick={() => setShowDebugPreview(false)}
@@ -749,6 +791,7 @@ const FlowVisualizer: React.FC<FlowVisualizerProps> = ({
             right={2}
             top={2}
             size={"md"}
+            zIndex={1}
           />
           <Box h="full" overflow="hidden">
             <DebugPreview
@@ -758,10 +801,12 @@ const FlowVisualizer: React.FC<FlowVisualizerProps> = ({
               useApiKeyButton={false}
               isWorkflow={true}
               showHistoryButton={true}
+              onClose={() => setShowDebugPreview(false)}
             />
           </Box>
         </Box>
       )}
+
       {showNodeMenu && (
         <Box
           position="fixed"
@@ -773,6 +818,22 @@ const FlowVisualizer: React.FC<FlowVisualizerProps> = ({
         >
           <SharedNodeMenu onNodeSelect={addNodeToEdge} isDraggable={false} />
         </Box>
+      )}
+
+      {/* ... 其他弹出组件（菜单等）保持不变 ... */}
+      {contextMenu.nodeId && (
+        <Menu isOpen={true} onClose={closeContextMenu}>
+          <MenuButton as={Button} style={{ display: "none" }} />
+          <MenuList
+            style={{
+              position: "absolute",
+              left: `${contextMenu.x}px`,
+              top: `${contextMenu.y}px`,
+            }}
+          >
+            <MenuItem onClick={deleteNode}>Delete Node</MenuItem>
+          </MenuList>
+        </Menu>
       )}
     </Box>
   );

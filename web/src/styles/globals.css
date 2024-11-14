@@ -1,0 +1,29 @@
+.react-flow__controls-custom {
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.react-flow__controls-custom button {
+  background: white;
+  border: none;
+  border-radius: 4px;
+  color: #666;
+  padding: 8px;
+  margin: 2px;
+  transition: all 0.2s;
+}
+
+.react-flow__controls-custom button:hover {
+  background: #f0f0f0;
+  transform: translateY(-1px);
+}
+
+.react-flow__controls-custom button:active {
+  background: #e0e0e0;
+  transform: translateY(0);
+}
+
+.react-flow__controls-custom button path {
+  fill: currentColor;
+} 
