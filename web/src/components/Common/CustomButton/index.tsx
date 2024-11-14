@@ -19,18 +19,35 @@ const CustomButton: React.FC<CustomButtonProps> = ({
     switch (v) {
       case "blue":
         return {
-          bg: "#155aef",
+          bg: "ui.main",
           color: "white",
           border: "none",
-          _hover: { backgroundColor: "#1c86ee" },
+          _hover: { 
+            bg: "blue.500",
+            transform: "translateY(-1px)",
+            boxShadow: "md",
+          },
+          _active: {
+            bg: "blue.600",
+            transform: "translateY(0)",
+          },
         };
       case "white":
       default:
         return {
           bg: "white",
-          color: "#155aef",
-          border: "1px solid #d1d5db",
-          _hover: { backgroundColor: "#eff4ff" },
+          color: "ui.main",
+          border: "1px solid",
+          borderColor: "gray.200",
+          _hover: { 
+            bg: "gray.50",
+            transform: "translateY(-1px)",
+            boxShadow: "sm",
+          },
+          _active: {
+            bg: "gray.100",
+            transform: "translateY(0)",
+          },
         };
     }
   };
@@ -43,6 +60,8 @@ const CustomButton: React.FC<CustomButtonProps> = ({
       leftIcon={leftIcon}
       rightIcon={rightIcon}
       size="sm"
+      fontWeight="500"
+      transition="all 0.2s"
       {...rest}
     >
       <Text>{text}</Text>

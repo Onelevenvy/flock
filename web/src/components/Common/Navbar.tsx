@@ -23,8 +23,24 @@ const Navbar = ({ type }: NavbarProps) => {
       <Flex gap={2}>
         <Button
           variant="primary"
-          gap={1}
+          leftIcon={<Icon as={FaPlus} boxSize={3} />}
           fontSize="sm"
+          fontWeight="500"
+          px={4}
+          py={2}
+          borderRadius="lg"
+          bg="ui.main"
+          color="white"
+          transition="all 0.2s"
+          _hover={{
+            transform: "translateY(-1px)",
+            boxShadow: "md",
+            bg: "blue.500",
+          }}
+          _active={{
+            transform: "translateY(0)",
+            bg: "blue.600",
+          }}
           onClick={
             type === "User"
               ? addUserModal.onOpen
@@ -35,15 +51,13 @@ const Navbar = ({ type }: NavbarProps) => {
                   : addUploadModal.onOpen
           }
         >
-          <Icon as={FaPlus} /> {t("setting.create")}{" "}
-          {t(`setting.${type.toLowerCase()}`)}
+          {t("setting.create")} {t(`setting.${type.toLowerCase()}`)}
         </Button>
+
+        {/* Modals */}
         <AddUser isOpen={addUserModal.isOpen} onClose={addUserModal.onClose} />
         <AddTeam isOpen={addTeamModal.isOpen} onClose={addTeamModal.onClose} />
-        <AddSkill
-          isOpen={addSkillModal.isOpen}
-          onClose={addSkillModal.onClose}
-        />
+        <AddSkill isOpen={addSkillModal.isOpen} onClose={addSkillModal.onClose} />
         <AddUpload
           isOpen={addUploadModal.isOpen}
           onClose={addUploadModal.onClose}
