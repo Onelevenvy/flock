@@ -15,6 +15,8 @@ import {
   ModalHeader,
   ModalOverlay,
   Text,
+  VStack,
+  useColorModeValue,
 } from "@chakra-ui/react";
 import { useState } from "react";
 import { type SubmitHandler, useForm } from "react-hook-form";
@@ -38,6 +40,12 @@ export default function ProviderUpdate({
   const queryClient = useQueryClient();
   const showToast = useCustomToast();
   const providerInfo = useModelProviderContext();
+  const [show, setShow] = useState(false);
+
+  const bgColor = useColorModeValue("white", "gray.800");
+  const borderColor = useColorModeValue("gray.100", "gray.700");
+  const inputBgColor = useColorModeValue("ui.inputbgcolor", "gray.700");
+
   const {
     register,
     handleSubmit,
@@ -68,7 +76,6 @@ export default function ProviderUpdate({
     },
     onError: (err: ApiError) => {
       const errDetail = err.body?.detail;
-
       showToast("Something went wrong.", `${errDetail}`, "error");
     },
     onSettled: () => {
@@ -85,79 +92,178 @@ export default function ProviderUpdate({
     setIsModalOpen(false);
     setShow(false);
   };
-  const [show, setShow] = useState(false);
-  const handleClick = () => setShow(!show);
 
   return (
-    <Modal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)}>
-      <ModalOverlay />
-      <ModalContent as="form" onSubmit={handleSubmit(onSubmit)}>
-        <ModalHeader>Model Provider</ModalHeader>
-        <ModalCloseButton />
-        <ModalBody>
-          <FormControl isInvalid={!!errors.api_key}>
-            <FormLabel>API Key</FormLabel>
-            <InputGroup size="md">
-              <Input
-                pr="4.5rem"
-                type={show ? "text" : "password"}
-                id="api_key"
-                {...register("api_key", { required: "API Key是必填项" })}
-              />
-              <InputRightElement>
-                <IconButton
-                  aria-label="api_key"
-                  icon={show ? <ViewIcon /> : <ViewOffIcon />}
-                  onClick={handleClick}
-                />
-              </InputRightElement>
-            </InputGroup>
+    <Modal
+      isOpen={isModalOpen}
+      onClose={() => setIsModalOpen(false)}
+      size={{ base: "sm", md: "md" }}
+      isCentered
+      motionPreset="slideInBottom"
+    >
+      <ModalOverlay bg="blackAlpha.300" backdropFilter="blur(10px)" />
+      <ModalContent
+        bg={bgColor}
+        borderRadius="xl"
+        boxShadow="xl"
+        border="1px solid"
+        borderColor={borderColor}
+        as="form"
+        onSubmit={handleSubmit(onSubmit)}
+      >
+        <ModalHeader
+          borderBottom="1px solid"
+          borderColor={borderColor}
+          py={4}
+          fontSize="lg"
+          fontWeight="600"
+        >
+          Model Provider Settings
+        </ModalHeader>
 
-            {errors.api_key && (
-              <Text as="span" color="red.500">
-                {errors.api_key.message}
-              </Text>
-            )}
-          </FormControl>
-          <FormControl isInvalid={!!errors.base_url}>
-            <FormLabel>Base URL</FormLabel>
-            <Input
-              id="base_url"
-              {...register("base_url", { required: "Base_URL 是必填项" })}
-            />
-            {errors.base_url && (
-              <Text as="span" color="red.500">
-                {errors.base_url.message}
-              </Text>
-            )}
-          </FormControl>
-          <FormControl isInvalid={!!errors.description}>
-            <FormLabel>Description</FormLabel>
-            <Input
-              id="description"
-              {...register("description", { required: "描述是必填项" })}
-            />
-            {errors.description && (
-              <Text as="span" color="red.500">
-                {errors.description.message}
-              </Text>
-            )}
-          </FormControl>
+        <ModalCloseButton
+          position="absolute"
+          right={4}
+          top={4}
+          borderRadius="full"
+          transition="all 0.2s"
+          _hover={{
+            bg: "gray.100",
+            transform: "rotate(90deg)",
+          }}
+        />
+
+        <ModalBody py={6}>
+          <VStack spacing={6}>
+            <FormControl isInvalid={!!errors.api_key}>
+              <FormLabel fontSize="sm" fontWeight="500" color="gray.700">
+                API Key
+              </FormLabel>
+              <InputGroup size="md">
+                <Input
+                  {...register("api_key", { required: "API Key is required" })}
+                  type={show ? "text" : "password"}
+                  bg={inputBgColor}
+                  border="1px solid"
+                  borderColor={borderColor}
+                  borderRadius="lg"
+                  fontSize="sm"
+                  transition="all 0.2s"
+                  _hover={{
+                    borderColor: "gray.300",
+                  }}
+                  _focus={{
+                    borderColor: "ui.main",
+                    boxShadow: "0 0 0 1px var(--chakra-colors-ui-main)",
+                  }}
+                />
+                <InputRightElement>
+                  <IconButton
+                    aria-label={show ? "Hide API key" : "Show API key"}
+                    icon={show ? <ViewIcon /> : <ViewOffIcon />}
+                    size="sm"
+                    variant="ghost"
+                    onClick={() => setShow(!show)}
+                    transition="all 0.2s"
+                    borderRadius="lg"
+                    _hover={{
+                      bg: "gray.100",
+                    }}
+                  />
+                </InputRightElement>
+              </InputGroup>
+              {errors.api_key && (
+                <Text fontSize="sm" color="red.500" mt={1}>
+                  {errors.api_key.message}
+                </Text>
+              )}
+            </FormControl>
+
+            <FormControl isInvalid={!!errors.base_url}>
+              <FormLabel fontSize="sm" fontWeight="500" color="gray.700">
+                Base URL
+              </FormLabel>
+              <Input
+                {...register("base_url", { required: "Base URL is required" })}
+                bg={inputBgColor}
+                border="1px solid"
+                borderColor={borderColor}
+                borderRadius="lg"
+                fontSize="sm"
+                transition="all 0.2s"
+                _hover={{
+                  borderColor: "gray.300",
+                }}
+                _focus={{
+                  borderColor: "ui.main",
+                  boxShadow: "0 0 0 1px var(--chakra-colors-ui-main)",
+                }}
+              />
+              {errors.base_url && (
+                <Text fontSize="sm" color="red.500" mt={1}>
+                  {errors.base_url.message}
+                </Text>
+              )}
+            </FormControl>
+
+            <FormControl isInvalid={!!errors.description}>
+              <FormLabel fontSize="sm" fontWeight="500" color="gray.700">
+                Description
+              </FormLabel>
+              <Input
+                {...register("description", {
+                  required: "Description is required",
+                })}
+                bg={inputBgColor}
+                border="1px solid"
+                borderColor={borderColor}
+                borderRadius="lg"
+                fontSize="sm"
+                transition="all 0.2s"
+                _hover={{
+                  borderColor: "gray.300",
+                }}
+                _focus={{
+                  borderColor: "ui.main",
+                  boxShadow: "0 0 0 1px var(--chakra-colors-ui-main)",
+                }}
+              />
+              {errors.description && (
+                <Text fontSize="sm" color="red.500" mt={1}>
+                  {errors.description.message}
+                </Text>
+              )}
+            </FormControl>
+          </VStack>
         </ModalBody>
-        <ModalFooter>
+
+        <ModalFooter borderTop="1px solid" borderColor={borderColor} gap={3}>
           <Button
-            colorScheme="blue"
-            mr="3"
+            variant="primary"
             type="submit"
             isLoading={isSubmitting}
             isDisabled={!isDirty}
-            onClick={() => {
-              setShow(false);
+            transition="all 0.2s"
+            _hover={{
+              transform: "translateY(-1px)",
+              boxShadow: "md",
+            }}
+            _active={{
+              transform: "translateY(0)",
             }}
           >
-            保存
+            Save
           </Button>
-          <Button onClick={onCancel}>取消</Button>
+          <Button
+            onClick={onCancel}
+            variant="ghost"
+            transition="all 0.2s"
+            _hover={{
+              bg: "gray.100",
+            }}
+          >
+            Cancel
+          </Button>
         </ModalFooter>
       </ModalContent>
     </Modal>

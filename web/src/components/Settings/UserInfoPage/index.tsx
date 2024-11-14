@@ -9,6 +9,7 @@ import {
   FormLabel,
   Input,
   Text,
+  VStack,
   useColorModeValue,
 } from "@chakra-ui/react";
 import { useState } from "react";
@@ -27,10 +28,16 @@ import { emailPattern } from "../../../utils";
 
 const UserInfoPage = () => {
   const queryClient = useQueryClient();
-  const color = useColorModeValue("inherit", "ui.white");
   const showToast = useCustomToast();
   const [editMode, setEditMode] = useState(false);
   const { user: currentUser } = useAuth();
+
+  const bgColor = useColorModeValue("white", "gray.800");
+  const borderColor = useColorModeValue("gray.100", "gray.700");
+  const inputBgColor = useColorModeValue("ui.inputbgcolor", "gray.700");
+  const labelColor = useColorModeValue("gray.700", "gray.300");
+  const textBgColor = useColorModeValue("gray.50", "gray.700");
+
   const {
     register,
     handleSubmit,
@@ -60,7 +67,6 @@ const UserInfoPage = () => {
     },
     onError: (err: ApiError) => {
       const errDetail = err.body?.detail;
-
       showToast("Something went wrong.", `${errDetail}`, "error");
     },
     onSettled: () => {
@@ -79,71 +85,153 @@ const UserInfoPage = () => {
   };
 
   return (
-    <>
-      <Container maxW="full" as="form" onSubmit={handleSubmit(onSubmit)}>
-        <FormLabel color={color} htmlFor="name">
-          Avatar
-        </FormLabel>
-        <Box w="full">
+    <Container maxW="full">
+      <Box
+        bg={bgColor}
+        borderRadius="xl"
+        border="1px solid"
+        borderColor={borderColor}
+        p={6}
+        transition="all 0.2s"
+        boxShadow="sm"
+        _hover={{
+          boxShadow: "md",
+          borderColor: "gray.200",
+        }}
+        as="form"
+        onSubmit={handleSubmit(onSubmit)}
+      >
+        <VStack spacing={6} align="stretch">
           <FormControl>
+            <FormLabel 
+              color={labelColor}
+              fontSize="sm"
+              fontWeight="600"
+              mb={3}
+            >
+              Avatar
+            </FormLabel>
             <Avatar
-              size="md"
+              size="lg"
               name={currentUser?.full_name!}
               src=""
               cursor="pointer"
+              transition="all 0.2s"
+              _hover={{
+                transform: "scale(1.05)",
+                boxShadow: "md",
+              }}
             />
-            <FormLabel color={color} htmlFor="name" mt="8">
+          </FormControl>
+
+          <FormControl>
+            <FormLabel 
+              color={labelColor}
+              fontSize="sm"
+              fontWeight="600"
+              mb={3}
+            >
               Name
             </FormLabel>
             {editMode ? (
               <Input
-                id="name"
                 {...register("full_name", { maxLength: 30 })}
                 type="text"
-                size="md"
+                bg={inputBgColor}
+                border="1px solid"
+                borderColor={borderColor}
+                borderRadius="lg"
+                fontSize="sm"
+                transition="all 0.2s"
+                _hover={{
+                  borderColor: "gray.300",
+                }}
+                _focus={{
+                  borderColor: "ui.main",
+                  boxShadow: "0 0 0 1px var(--chakra-colors-ui-main)",
+                }}
               />
             ) : (
-              <Text
-                size="md"
+              <Box
                 py={2}
-                px="4"
-                color={!currentUser?.full_name ? "gray.400" : "inherit"}
-                bg={"#f2f4f7"}
+                px={4}
+                bg={textBgColor}
+                borderRadius="lg"
+                transition="all 0.2s"
               >
-                {currentUser?.full_name || "N/A"}
-              </Text>
+                <Text
+                  color={!currentUser?.full_name ? "gray.400" : "gray.700"}
+                  fontSize="sm"
+                >
+                  {currentUser?.full_name || "N/A"}
+                </Text>
+              </Box>
             )}
           </FormControl>
-          <FormControl mt={8} isInvalid={!!errors.email}>
-            <FormLabel color={color} htmlFor="email">
+
+          <FormControl isInvalid={!!errors.email}>
+            <FormLabel 
+              color={labelColor}
+              fontSize="sm"
+              fontWeight="600"
+              mb={3}
+            >
               Email
             </FormLabel>
             {editMode ? (
               <Input
-                id="email"
                 {...register("email", {
                   required: "Email is required",
                   pattern: emailPattern,
                 })}
                 type="email"
-                size="md"
+                bg={inputBgColor}
+                border="1px solid"
+                borderColor={borderColor}
+                borderRadius="lg"
+                fontSize="sm"
+                transition="all 0.2s"
+                _hover={{
+                  borderColor: "gray.300",
+                }}
+                _focus={{
+                  borderColor: "ui.main",
+                  boxShadow: "0 0 0 1px var(--chakra-colors-ui-main)",
+                }}
               />
             ) : (
-              <Text size="md" py={2} px="4" bg={"#f2f4f7"}>
-                {currentUser?.email}
-              </Text>
+              <Box
+                py={2}
+                px={4}
+                bg={textBgColor}
+                borderRadius="lg"
+                transition="all 0.2s"
+              >
+                <Text color="gray.700" fontSize="sm">
+                  {currentUser?.email}
+                </Text>
+              </Box>
             )}
             {errors.email && (
               <FormErrorMessage>{errors.email.message}</FormErrorMessage>
             )}
           </FormControl>
-          <Flex mt={8} gap={3} justifyContent={"right"}>
+
+          <Flex mt={4} gap={3} justify="flex-end">
             <Button
               variant="primary"
-              onClick={toggleEditMode}
-              type={editMode ? "button" : "submit"}
+              onClick={editMode ? handleSubmit(onSubmit) : toggleEditMode}
+              type={editMode ? "submit" : "button"}
               isLoading={editMode ? isSubmitting : false}
               isDisabled={editMode ? !isDirty || !getValues("email") : false}
+              transition="all 0.2s"
+              _hover={{
+                transform: "translateY(-1px)",
+                boxShadow: "md",
+              }}
+              _active={{
+                transform: "translateY(0)",
+              }}
             >
               {editMode ? "Save" : "Edit Account"}
             </Button>
@@ -151,15 +239,19 @@ const UserInfoPage = () => {
               <Button
                 onClick={onCancel}
                 isDisabled={isSubmitting}
-                variant="primary"
+                variant="ghost"
+                transition="all 0.2s"
+                _hover={{
+                  bg: "gray.100",
+                }}
               >
                 Cancel
               </Button>
             )}
           </Flex>
-        </Box>
-      </Container>
-    </>
+        </VStack>
+      </Box>
+    </Container>
   );
 };
 
