@@ -48,15 +48,32 @@ const BaseProperties: React.FC<BasePropertiesProps> = ({
             aria-label="names"
             icon={icon}
             colorScheme={colorScheme}
-            size="xs"
+            size="sm"
+            transition="all 0.2s"
+            _hover={{
+              transform: "scale(1.1)",
+            }}
+            _active={{
+              transform: "scale(0.95)",
+            }}
           />
           <Input
             value={nodeName}
             onChange={(e) => onNameChange(e.target.value)}
-            border={"1px solid white"}
-            size={"sm"}
-            fontWeight={"bold"}
-            w={"50%"}
+            size="sm"
+            fontWeight="500"
+            w="75%"
+            bg="white"
+            borderRadius="lg"
+            borderColor="white"
+            transition="all 0.2s"
+            _hover={{
+              borderColor: `${colorScheme}.200`,
+            }}
+            _focus={{
+              borderColor: `${colorScheme}.500`,
+              boxShadow: `0 0 0 1px ${colorScheme}.500`,
+            }}
           />
         </HStack>
         <FormErrorMessage>{nameError}</FormErrorMessage>
@@ -64,10 +81,23 @@ const BaseProperties: React.FC<BasePropertiesProps> = ({
 
       {inputVariables.map((varName) => (
         <FormControl key={varName}>
-          <Text fontWeight="bold">{varName}:</Text>
+          <Text fontWeight="500" fontSize="sm" color="gray.700" mb={1}>
+            {varName}:
+          </Text>
           <Select
             value={node.data[varName] || ""}
             onChange={(e) => onNodeDataChange(node.id, varName, e.target.value)}
+            size="sm"
+            borderRadius="lg"
+            borderColor="gray.200"
+            transition="all 0.2s"
+            _hover={{
+              borderColor: `${colorScheme}.200`,
+            }}
+            _focus={{
+              borderColor: `${colorScheme}.500`,
+              boxShadow: `0 0 0 1px ${colorScheme}.500`,
+            }}
           >
             <option value="">Select a variable</option>
             {availableVariables.map((v) => (
