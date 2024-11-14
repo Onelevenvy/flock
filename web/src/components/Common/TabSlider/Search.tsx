@@ -1,4 +1,5 @@
 import { Icon, Input, InputGroup, InputLeftElement } from "@chakra-ui/react";
+import React from "react";
 import { FaSearch } from "react-icons/fa";
 
 const Search = () => {

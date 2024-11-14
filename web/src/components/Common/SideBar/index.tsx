@@ -16,9 +16,9 @@ const Sidebar = () => {
   const secBgColor = useColorModeValue("gray.50", "ui.darkSlate");
 
   return (
-    <Box 
-      bg={bgColor} 
-      p={1} 
+    <Box
+      bg={bgColor}
+      p={1}
       h="100vh"
       borderRight="1px solid"
       borderColor="gray.100"
@@ -56,12 +56,13 @@ const Sidebar = () => {
               >
                 <Avatar
                   size="md"
-                  bg="transparent"
-                  icon={<FaGithubSquare size={40} color="gray.800" />}
+                  // bg="transparent"
+                  icon={<FaGithubSquare size={36} color="gray.800" />}
                   mt={3}
                   transition="all 0.2s"
                   _hover={{
                     transform: "rotate(5deg)",
+                    bg: "ui.main",
                   }}
                 />
               </Tooltip>
