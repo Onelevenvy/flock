@@ -52,30 +52,61 @@ const KBListModal: React.FC<KBListProps> = ({
 
   return (
     <Modal isOpen={true} onClose={onClose} size="md">
-      <ModalOverlay />
-      <ModalContent>
+      <ModalOverlay bg="blackAlpha.300" backdropFilter="blur(10px)" />
+      <ModalContent
+        borderRadius="xl"
+        boxShadow="xl"
+        bg="white"
+        overflow="hidden"
+        mx={4}
+        my={4}
+      >
         <ModalHeader>
           <HStack spacing={2}>
-            <GiArchiveResearch size="20px" color="#4A5568" />
-            <Text fontSize="lg" fontWeight="600">
+            <Box
+              p={2}
+              borderRadius="lg"
+              bg="blue.50"
+              color="blue.500"
+              transition="all 0.2s"
+              _hover={{ bg: "teal.100" }}
+            >
+              <GiArchiveResearch size="20px" />
+            </Box>
+            <Text fontSize="lg" fontWeight="600" color="gray.800">
               {t("workflow.nodes.retrieval.addKB")}
             </Text>
           </HStack>
         </ModalHeader>
-        <ModalCloseButton />
+        <ModalCloseButton
+          position="absolute"
+          right={4}
+          top={4}
+          borderRadius="full"
+          transition="all 0.2s"
+          _hover={{
+            bg: "gray.100",
+            transform: "rotate(90deg)",
+          }}
+        />
         <ModalBody pb={6}>
           <VStack align="stretch" spacing={4}>
             <InputGroup>
               <InputLeftElement pointerEvents="none">
-                <SearchIcon color="gray.300" />
+                <SearchIcon color="gray.400" />
               </InputLeftElement>
               <Input
                 placeholder={String(t("workflow.nodes.retrieval.searchKB"))}
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
+                borderRadius="lg"
                 borderColor="gray.200"
-                _hover={{ borderColor: "gray.300" }}
-                _focus={{ borderColor: "blue.500", boxShadow: "none" }}
+                _hover={{ borderColor: "teal.200" }}
+                _focus={{
+                  borderColor: "teal.500",
+                  boxShadow: "0 0 0 1px var(--chakra-colors-teal-500)",
+                }}
+                transition="all 0.2s"
               />
             </InputGroup>
             <VStack
@@ -83,6 +114,7 @@ const KBListModal: React.FC<KBListProps> = ({
               spacing={2}
               maxH="400px"
               overflowY="auto"
+              overflowX="hidden"
               sx={{
                 "&::-webkit-scrollbar": {
                   width: "4px",
@@ -99,15 +131,17 @@ const KBListModal: React.FC<KBListProps> = ({
               {filteredUploads.map((upload) => (
                 <Box
                   key={upload.id}
-                  p={2}
-                  borderRadius="md"
+                  p={3}
                   bg="gray.50"
+                  borderRadius="lg"
                   borderLeft="3px solid"
-                  borderLeftColor="pink.400"
+                  borderLeftColor="blue.400"
                   transition="all 0.2s"
                   _hover={{
                     bg: "gray.100",
-                    borderLeftColor: "pink.500",
+                    borderLeftColor: "teal.500",
+                    transform: "translateX(2px)",
+                    shadow: "sm",
                   }}
                 >
                   <HStack justify="space-between">
@@ -115,16 +149,21 @@ const KBListModal: React.FC<KBListProps> = ({
                       <IconButton
                         aria-label="db"
                         icon={<GiArchiveResearch size="16px" />}
-                        colorScheme="pink"
-                        size="xs"
+                        colorScheme="blue"
+                        size="sm"
                         variant="ghost"
+                        transition="all 0.2s"
+                        _hover={{
+                          transform: "scale(1.1)",
+                        }}
                       />
                       <VStack align="start" spacing={0}>
-                        <Text fontSize="sm" fontWeight="500">
+                        <Text fontSize="sm" fontWeight="500" color="gray.700">
                           {upload.name}
                         </Text>
                         <Text fontSize="xs" color="gray.500" noOfLines={2}>
-                          {upload.description || t("workflow.nodes.retrieval.noDescription")}
+                          {upload.description ||
+                            t("workflow.nodes.retrieval.noDescription")}
                         </Text>
                       </VStack>
                     </HStack>
@@ -142,8 +181,11 @@ const KBListModal: React.FC<KBListProps> = ({
                       }
                       isDisabled={selectedKBs.includes(upload.name)}
                       minWidth="80px"
-                      width="auto"
-                      justifyContent="center"
+                      transition="all 0.2s"
+                      _hover={{
+                        transform: "translateY(-1px)",
+                        shadow: "sm",
+                      }}
                     >
                       {selectedKBs.includes(upload.name)
                         ? t("workflow.nodes.retrieval.added")
@@ -153,8 +195,14 @@ const KBListModal: React.FC<KBListProps> = ({
                 </Box>
               ))}
               {filteredUploads.length === 0 && (
-                <Box p={4} textAlign="center">
-                  <Text color="gray.500">{t("workflow.nodes.retrieval.noResults")}</Text>
+                <Box
+                  p={4}
+                  textAlign="center"
+                  color="gray.500"
+                  fontSize="sm"
+                  fontWeight="500"
+                >
+                  {t("workflow.nodes.retrieval.noResults")}
                 </Box>
               )}
             </VStack>

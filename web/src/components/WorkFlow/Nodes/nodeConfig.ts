@@ -112,7 +112,7 @@ export const nodeConfig: Record<string, NodeConfigItem> = {
   retrieval: {
     display: "KB Retrieval",
     icon: FaBookAtlas,
-    colorScheme: "teal",
+    colorScheme: "red",
     properties: RetrievalProperties,
     initialData: {
       query: null,
@@ -131,7 +131,7 @@ export const nodeConfig: Record<string, NodeConfigItem> = {
   toolretrieval: {
     display: "Retrieval As Tools",
     icon: FaDatabase,
-    colorScheme: "red",
+    colorScheme: "teal",
     properties: RetrievalToolNodeProperties,
     allowedConnections: {
       sources: ["left", "right"],
