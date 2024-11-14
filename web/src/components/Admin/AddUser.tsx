@@ -13,6 +13,7 @@ import {
   ModalFooter,
   ModalHeader,
   ModalOverlay,
+  VStack,
 } from "@chakra-ui/react";
 import { type SubmitHandler, useForm } from "react-hook-form";
 import { useMutation, useQueryClient } from "react-query";
@@ -79,49 +80,84 @@ const AddUser = ({ isOpen, onClose }: AddUserProps) => {
   };
 
   return (
-    <>
-      <Modal
-        isOpen={isOpen}
-        onClose={onClose}
-        size={{ base: "sm", md: "md" }}
-        isCentered
+    <Modal
+      isOpen={isOpen}
+      onClose={onClose}
+      size={{ base: "sm", md: "md" }}
+      isCentered
+    >
+      <ModalOverlay bg="blackAlpha.300" backdropFilter="blur(10px)" />
+      <ModalContent
+        as="form"
+        onSubmit={handleSubmit(onSubmit)}
+        borderRadius="xl"
+        boxShadow="xl"
       >
-        <ModalOverlay />
-        <ModalContent as="form" onSubmit={handleSubmit(onSubmit)}>
-          <ModalHeader>Add User</ModalHeader>
-          <ModalCloseButton />
-          <ModalBody pb={6}>
+        <ModalHeader 
+          borderBottom="1px solid" 
+          borderColor="gray.100"
+          py={4}
+        >
+          Add User
+        </ModalHeader>
+        <ModalCloseButton 
+          top={4}
+          transition="all 0.2s"
+          _hover={{
+            bg: "gray.100",
+            transform: "rotate(90deg)",
+          }}
+        />
+
+        <ModalBody py={6}>
+          <VStack spacing={4}>
             <FormControl isRequired isInvalid={!!errors.email}>
-              <FormLabel htmlFor="email">Email</FormLabel>
+              <FormLabel color="gray.700">Email</FormLabel>
               <Input
-                id="email"
                 {...register("email", {
                   required: "Email is required",
                   pattern: emailPattern,
                 })}
                 placeholder="Email"
                 type="email"
+                bg="white"
+                borderColor="gray.200"
+                transition="all 0.2s"
+                _hover={{
+                  borderColor: "gray.300",
+                }}
+                _focus={{
+                  borderColor: "blue.500",
+                  boxShadow: "0 0 0 1px var(--chakra-colors-blue-500)",
+                }}
               />
               {errors.email && (
                 <FormErrorMessage>{errors.email.message}</FormErrorMessage>
               )}
             </FormControl>
-            <FormControl mt={4} isInvalid={!!errors.full_name}>
-              <FormLabel htmlFor="name">Full name</FormLabel>
+
+            <FormControl>
+              <FormLabel color="gray.700">Full name</FormLabel>
               <Input
-                id="name"
                 {...register("full_name")}
                 placeholder="Full name"
                 type="text"
+                bg="white"
+                borderColor="gray.200"
+                transition="all 0.2s"
+                _hover={{
+                  borderColor: "gray.300",
+                }}
+                _focus={{
+                  borderColor: "blue.500",
+                  boxShadow: "0 0 0 1px var(--chakra-colors-blue-500)",
+                }}
               />
-              {errors.full_name && (
-                <FormErrorMessage>{errors.full_name.message}</FormErrorMessage>
-              )}
             </FormControl>
-            <FormControl mt={4} isRequired isInvalid={!!errors.password}>
-              <FormLabel htmlFor="password">Set Password</FormLabel>
+
+            <FormControl isRequired isInvalid={!!errors.password}>
+              <FormLabel color="gray.700">Password</FormLabel>
               <Input
-                id="password"
                 {...register("password", {
                   required: "Password is required",
                   minLength: {
@@ -131,27 +167,43 @@ const AddUser = ({ isOpen, onClose }: AddUserProps) => {
                 })}
                 placeholder="Password"
                 type="password"
+                bg="white"
+                borderColor="gray.200"
+                transition="all 0.2s"
+                _hover={{
+                  borderColor: "gray.300",
+                }}
+                _focus={{
+                  borderColor: "blue.500",
+                  boxShadow: "0 0 0 1px var(--chakra-colors-blue-500)",
+                }}
               />
               {errors.password && (
                 <FormErrorMessage>{errors.password.message}</FormErrorMessage>
               )}
             </FormControl>
-            <FormControl
-              mt={4}
-              isRequired
-              isInvalid={!!errors.confirm_password}
-            >
-              <FormLabel htmlFor="confirm_password">Confirm Password</FormLabel>
+
+            <FormControl isRequired isInvalid={!!errors.confirm_password}>
+              <FormLabel color="gray.700">Confirm Password</FormLabel>
               <Input
-                id="confirm_password"
                 {...register("confirm_password", {
                   required: "Please confirm your password",
                   validate: (value) =>
                     value === getValues().password ||
                     "The passwords do not match",
                 })}
-                placeholder="Password"
+                placeholder="Confirm password"
                 type="password"
+                bg="white"
+                borderColor="gray.200"
+                transition="all 0.2s"
+                _hover={{
+                  borderColor: "gray.300",
+                }}
+                _focus={{
+                  borderColor: "blue.500",
+                  boxShadow: "0 0 0 1px var(--chakra-colors-blue-500)",
+                }}
               />
               {errors.confirm_password && (
                 <FormErrorMessage>
@@ -159,28 +211,58 @@ const AddUser = ({ isOpen, onClose }: AddUserProps) => {
                 </FormErrorMessage>
               )}
             </FormControl>
-            <Flex mt={4}>
-              <FormControl>
-                <Checkbox {...register("is_superuser")} colorScheme="teal">
-                  Is superuser?
-                </Checkbox>
-              </FormControl>
-              <FormControl>
-                <Checkbox {...register("is_active")} colorScheme="teal">
-                  Is active?
-                </Checkbox>
-              </FormControl>
+
+            <Flex w="full" gap={8}>
+              <Checkbox
+                {...register("is_superuser")}
+                colorScheme="blue"
+                size="lg"
+              >
+                Is superuser
+              </Checkbox>
+              <Checkbox
+                {...register("is_active")}
+                colorScheme="blue"
+                size="lg"
+              >
+                Is active
+              </Checkbox>
             </Flex>
-          </ModalBody>
-          <ModalFooter gap={3}>
-            <Button variant="primary" type="submit" isLoading={isSubmitting}>
-              Save
-            </Button>
-            <Button onClick={onClose}>Cancel</Button>
-          </ModalFooter>
-        </ModalContent>
-      </Modal>
-    </>
+          </VStack>
+        </ModalBody>
+
+        <ModalFooter 
+          borderTop="1px solid" 
+          borderColor="gray.100"
+          gap={3}
+          py={4}
+        >
+          <Button
+            type="submit"
+            colorScheme="blue"
+            isLoading={isSubmitting}
+            loadingText="Creating..."
+            transition="all 0.2s"
+            _hover={{
+              transform: "translateY(-1px)",
+              boxShadow: "md",
+            }}
+          >
+            Create
+          </Button>
+          <Button
+            onClick={onClose}
+            variant="ghost"
+            transition="all 0.2s"
+            _hover={{
+              bg: "gray.100",
+            }}
+          >
+            Cancel
+          </Button>
+        </ModalFooter>
+      </ModalContent>
+    </Modal>
   );
 };
 

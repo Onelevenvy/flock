@@ -14,6 +14,7 @@ import type React from "react";
 import { GrNewWindow } from "react-icons/gr";
 import { RiImageAddLine } from "react-icons/ri";
 import { VscSend } from "react-icons/vsc";
+
 interface MessageInputProps {
   input: string;
   setInput: (value: string) => void;
@@ -35,10 +36,8 @@ const MessageInput: React.FC<MessageInputProps> = ({
 }) => {
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
-
     if (file) {
       const reader = new FileReader();
-
       reader.onloadend = () => {
         setImageData!(reader.result as string);
       };
@@ -50,7 +49,6 @@ const MessageInput: React.FC<MessageInputProps> = ({
   const removeImage = () => {
     setImageData!(null);
     const fileInput = document.getElementById("file-input") as HTMLInputElement;
-
     if (fileInput) {
       fileInput.value = "";
     }
@@ -70,91 +68,158 @@ const MessageInput: React.FC<MessageInputProps> = ({
     <Box
       display="flex"
       flexDirection="column"
-      pl="6"
-      pr="6"
-      pt="2"
-      pb="6"
+      px={6}
+      py={4}
       position="relative"
+      bg="white"
+      borderTop="1px solid"
+      borderColor="gray.100"
     >
-      {/* 图片预览区域 */}
       {imageData && (
-        <Flex alignItems="center" mb={2}>
-          <Image
-            src={imageData}
-            alt="Uploaded preview"
-            boxSize="60px"
-            borderRadius="md"
-            objectFit="cover"
-            mr={2}
-          />
-          <CloseButton onClick={removeImage} variant="outline" size="sm" />
+        <Flex alignItems="center" mb={3}>
+          <Box
+            position="relative"
+            borderRadius="lg"
+            overflow="hidden"
+            boxShadow="sm"
+            transition="all 0.2s"
+            _hover={{ transform: "scale(1.02)" }}
+          >
+            <Image
+              src={imageData}
+              alt="Uploaded preview"
+              boxSize="60px"
+              objectFit="cover"
+            />
+            <CloseButton
+              position="absolute"
+              top={1}
+              right={1}
+              size="sm"
+              bg="blackAlpha.300"
+              color="white"
+              onClick={removeImage}
+              _hover={{
+                bg: "blackAlpha.400",
+                transform: "rotate(90deg)",
+              }}
+              transition="all 0.2s"
+            />
+          </Box>
         </Flex>
       )}
-      <InputGroup as="form" onSubmit={onSubmit} flexDirection="column">
+
+      <InputGroup as="form" onSubmit={onSubmit}>
         <Box
           position="relative"
-          boxShadow="0 0 10px rgba(0,0,0,0.2)"
-          borderRadius="md"
+          w="full"
+          bg="white"
+          borderRadius="xl"
+          border="1px solid"
+          borderColor="gray.200"
+          boxShadow="sm"
+          transition="all 0.2s"
+          _hover={{
+            boxShadow: "md",
+            borderColor: "gray.300",
+          }}
         >
           <Textarea
-            placeholder="Input your message ..."
+            placeholder="Input your message..."
             value={input}
             onChange={(e) => setInput(e.target.value)}
             onKeyDown={handleKeyDown}
-            minHeight="100px"
-            maxHeight="200px"
+            minH="100px"
+            maxH="200px"
             resize="none"
-            overflow="auto"
-            transition="height 0.2s"
             border="none"
             _focus={{
               boxShadow: "none",
-              border: "none",
+              borderColor: "blue.500",
             }}
-            pb="40px" // 为底部按钮留出空间
+            pb="40px"
+            transition="all 0.2s"
           />
+
           <HStack
             position="absolute"
-            bottom="0"
-            right="0"
-            left="0"
-            p="2"
+            bottom={0}
+            right={0}
+            left={0}
+            p={2}
             bg="white"
-            borderBottomRadius="md"
-            justifyContent="flex-end" // 将内容靠右对齐
-            spacing={2} // 增加按钮之间的间距
+            borderTop="1px solid"
+            borderColor="gray.100"
+            justify="space-between"
+            align="center"
           >
             <Text fontSize="xs" color="gray.500">
-              ↵ 发送 / ^ ↵ 换行
+              Enter to send / Shift + Enter for new line
             </Text>
-            {newChatHandler && (
-              <Tooltip label="New Chat" fontSize="md" bg="green">
+            
+            <HStack spacing={2}>
+              {newChatHandler && (
+                <Tooltip 
+                  label="New Chat" 
+                  placement="top"
+                  bg="gray.700"
+                  color="white"
+                >
+                  <IconButton
+                    aria-label="New chat"
+                    icon={<GrNewWindow />}
+                    onClick={newChatHandler}
+                    size="sm"
+                    variant="ghost"
+                    colorScheme="gray"
+                    transition="all 0.2s"
+                    _hover={{
+                      transform: "translateY(-1px)",
+                      bg: "gray.100",
+                    }}
+                  />
+                </Tooltip>
+              )}
+
+              <Tooltip 
+                label="Upload Image" 
+                placement="top"
+                bg="gray.700"
+                color="white"
+              >
                 <IconButton
-                  aria-label="new chat"
-                  icon={<GrNewWindow />}
-                  onClick={newChatHandler}
+                  aria-label="Upload image"
+                  icon={<RiImageAddLine />}
+                  onClick={() => document.getElementById("file-input")?.click()}
                   size="sm"
+                  variant="ghost"
+                  colorScheme="gray"
+                  transition="all 0.2s"
+                  _hover={{
+                    transform: "translateY(-1px)",
+                    bg: "gray.100",
+                  }}
                 />
               </Tooltip>
-            )}
-            <Tooltip label="Upload Image" fontSize="md">
+
               <IconButton
-                aria-label="upload-image"
-                icon={<RiImageAddLine />}
-                onClick={() => document.getElementById("file-input")?.click()}
+                type="submit"
+                icon={<VscSend />}
+                aria-label="Send message"
+                isLoading={isStreaming}
+                isDisabled={!input.trim().length && !imageData}
                 size="sm"
+                colorScheme="blue"
+                transition="all 0.2s"
+                _hover={{
+                  transform: "translateY(-1px)",
+                  shadow: "md",
+                }}
               />
-            </Tooltip>
-            <IconButton
-              type="submit"
-              icon={<VscSend />}
-              aria-label="send-question"
-              isLoading={isStreaming}
-              isDisabled={!input.trim().length && !imageData}
-              size="sm"
-            />
+            </HStack>
           </HStack>
         </Box>
+
         <input
           type="file"
           id="file-input"
