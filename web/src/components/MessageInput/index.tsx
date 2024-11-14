@@ -16,6 +16,7 @@ import { RiImageAddLine } from "react-icons/ri";
 import { VscSend } from "react-icons/vsc";
 
 interface MessageInputProps {
+  isPlayground?:boolean;
   input: string;
   setInput: (value: string) => void;
   onSubmit: (e: React.FormEvent) => void;
@@ -26,6 +27,7 @@ interface MessageInputProps {
 }
 
 const MessageInput: React.FC<MessageInputProps> = ({
+  isPlayground,
   input,
   setInput,
   onSubmit,
@@ -68,8 +70,8 @@ const MessageInput: React.FC<MessageInputProps> = ({
     <Box
       display="flex"
       flexDirection="column"
-      pl="6"
-      pr="6"
+      px={isPlayground?"6":"0"}
+      // px="6"
       pt="2"
       pb="6"
       position="relative"

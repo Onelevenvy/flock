@@ -405,7 +405,7 @@ const ChatMain = ({ isPlayground }: { isPlayground?: boolean }) => {
       bg="white"
     >
       <Box
-        p={4}
+        p={isPlayground ? 4 : 0}
         overflowY="auto"
         overflowX="hidden"
         h="full"
@@ -459,6 +459,7 @@ const ChatMain = ({ isPlayground }: { isPlayground?: boolean }) => {
       </Box>
 
       <MessageInput
+        isPlayground={isPlayground}
         input={input}
         setInput={setInput}
         onSubmit={onSubmit}
