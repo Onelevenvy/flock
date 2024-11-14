@@ -21,31 +21,55 @@ const TabSlider: FC<TabSliderProps> = ({
   options,
 }) => {
   return (
-    <Flex className={className} position="relative">
+    <Flex 
+      className={className} 
+      position="relative" 
+      bg="gray.50" 
+      p={1} 
+      borderRadius="xl"
+    >
       {options.map((option, index) => (
         <Box
           key={option.value}
           onClick={() => onChange(option.value)}
           px={3}
           py={2}
-          height="32px"
           display="flex"
           alignItems="center"
-          borderRadius="md"
-          borderWidth="1px"
-          fontSize="14px"
-          fontWeight="md"
-          lineHeight="18px"
+          borderRadius="lg"
           cursor="pointer"
+          transition="all 0.2s ease-in-out"
           bg={value === option.value ? "white" : "transparent"}
-          borderColor={value === option.value ? "gray.200" : "transparent"}
+          color={value === option.value ? "gray.800" : "gray.600"}
           boxShadow={value === option.value ? "sm" : "none"}
-          color={value === option.value ? "primary.600" : "gray.700"}
-          _hover={{ bg: value === option.value ? "white" : "gray.200" }}
-          marginRight={index < options.length - 1 ? "4px" : "0"} // 为最后一个元素设置 0 的 marginRight
+          borderWidth="1px"
+          borderColor={value === option.value ? "gray.200" : "transparent"}
+          _hover={{
+            bg: value === option.value ? "white" : "gray.100",
+            transform: "translateY(-1px)",
+          }}
+          _active={{
+            transform: "translateY(0)",
+          }}
+          mr={index < options.length - 1 ? 2 : 0}
         >
-          {option.icon}
-          <Text ml={2}>{option.text}</Text>
+          {option.icon && (
+            <Box
+              as="span"
+              mr={2}
+              color={value === option.value ? "blue.500" : "gray.500"}
+              transition="all 0.2s"
+            >
+              {option.icon}
+            </Box>
+          )}
+          <Text
+            fontSize="sm"
+            fontWeight={value === option.value ? "600" : "500"}
+            transition="all 0.2s"
+          >
+            {option.text}
+          </Text>
         </Box>
       ))}
     </Flex>
