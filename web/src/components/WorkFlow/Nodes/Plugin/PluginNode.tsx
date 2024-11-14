@@ -2,18 +2,23 @@ import React from "react";
 import { Handle, type NodeProps, Position } from "reactflow";
 
 import ToolsIcon from "@/components/Icons/Tools";
-import { useSkillsQuery } from "@/hooks/useSkillsQuery"; // 新增导入
+import { useSkillsQuery } from "@/hooks/useSkillsQuery";
 
 import { BaseNode } from "../Base/BaseNode";
 import { nodeConfig } from "../nodeConfig";
 
 const PluginNode: React.FC<NodeProps> = (props) => {
-  const { data: skills } = useSkillsQuery(); // 获取工具信息
-  // 获取工具名称
-  const toolName =
-    skills?.data.find((skill) => skill.name === props.data.toolName)
-      ?.display_name || props.data.toolName;
+  const { data: skills } = useSkillsQuery();
+  const toolName = skills?.data.find((skill) => skill.name === props.data.toolName)?.display_name || props.data.toolName;
   const { colorScheme } = nodeConfig.plugin;
+
+  const handleStyle = {
+    background: 'var(--chakra-colors-gray-500)',
+    width: 8,
+    height: 8,
+    border: '2px solid white',
+    transition: 'all 0.2s',
+  };
 
   return (
     <BaseNode
@@ -21,12 +26,10 @@ const PluginNode: React.FC<NodeProps> = (props) => {
       icon={<ToolsIcon tools_name={toolName.replace(/ /g, "_")} w={6} h={6} />}
       colorScheme={colorScheme}
     >
-      <>
-        <Handle type="target" position={Position.Left} id="left" />
-        <Handle type="target" position={Position.Right} id="right" />
-        <Handle type="source" position={Position.Left} id="left" />
-        <Handle type="source" position={Position.Right} id="right" />
-      </>
+      <Handle type="target" position={Position.Left} id="left" style={handleStyle} />
+      <Handle type="target" position={Position.Right} id="right" style={handleStyle} />
+      <Handle type="source" position={Position.Left} id="left" style={handleStyle} />
+      <Handle type="source" position={Position.Right} id="right" style={handleStyle} />
     </BaseNode>
   );
 };

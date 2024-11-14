@@ -11,34 +11,55 @@ const ToolNode: React.FC<NodeProps> = (props) => {
   const { icon: Icon, colorScheme } = nodeConfig.tool;
   const tools = Array.isArray(props.data.tools) ? props.data.tools : [];
 
+  const handleStyle = {
+    background: 'var(--chakra-colors-purple-500)',
+    width: 8,
+    height: 8,
+    border: '2px solid white',
+    transition: 'all 0.2s',
+  };
+
   return (
     <BaseNode {...props} icon={<Icon />} colorScheme={colorScheme}>
-      <Handle type="target" position={Position.Left} id="left" />
-      <Handle type="target" position={Position.Right} id="right" />
-      <Handle type="source" position={Position.Left} id="left" />
-      <Handle type="source" position={Position.Right} id="right" />
+      <Handle type="target" position={Position.Left} id="left" style={handleStyle} />
+      <Handle type="target" position={Position.Right} id="right" style={handleStyle} />
+      <Handle type="source" position={Position.Left} id="left" style={handleStyle} />
+      <Handle type="source" position={Position.Right} id="right" style={handleStyle} />
 
       <VStack align="stretch" spacing={1}>
         {tools.length > 0 ? (
           tools.map((tool: string, index: number) => (
             <Box
               key={index}
-              bg="#f2f4f7"
+              bg="gray.50"
               borderRadius="md"
               p={1}
               transition="all 0.2s"
-              _hover={{ bg: "#e2e8f0" }}
+              _hover={{ 
+                bg: "gray.100",
+                transform: "translateY(-1px)",
+                boxShadow: "sm",
+              }}
             >
               <HStack spacing={2} px={2}>
                 <ToolsIcon tools_name={tool.replace(/ /g, "_")} />
-                <Text fontSize="xs" fontWeight="500">
+                <Text 
+                  fontSize="xs" 
+                  fontWeight="500"
+                  color="gray.700"
+                >
                   {tool}
                 </Text>
               </HStack>
             </Box>
           ))
         ) : (
-          <Text fontSize="xs" color="gray.500" textAlign="center">
+          <Text 
+            fontSize="xs" 
+            color="gray.500" 
+            textAlign="center"
+            fontWeight="500"
+          >
             No tools selected
           </Text>
         )}

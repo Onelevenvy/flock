@@ -54,8 +54,12 @@ const ToolNodeProperties: React.FC<ToolNodePropertiesProps> = ({
       <Box>
         <HStack justify="space-between" align="center" mb={3}>
           <HStack spacing={2}>
-            <FaTools size="14px" color="#4A5568" />
-            <Text fontSize="md" fontWeight="600" color="gray.700">
+            <FaTools size="14px" color="var(--chakra-colors-gray-600)" />
+            <Text 
+              fontSize="sm" 
+              fontWeight="500" 
+              color="gray.700"
+            >
               {t("workflow.nodes.tool.title")}
             </Text>
             <Text fontSize="xs" color="gray.500">
@@ -68,6 +72,10 @@ const ToolNodeProperties: React.FC<ToolNodePropertiesProps> = ({
             leftIcon={<FaTools size="12px" />}
             onClick={() => setIsToolsListOpen(true)}
             colorScheme="blue"
+            transition="all 0.2s"
+            _hover={{
+              transform: "translateY(-1px)",
+            }}
           >
             {t("workflow.nodes.tool.addTool")}
           </Button>
@@ -86,12 +94,17 @@ const ToolNodeProperties: React.FC<ToolNodePropertiesProps> = ({
               _hover={{
                 bg: "gray.100",
                 borderLeftColor: "blue.500",
+                transform: "translateX(2px)",
               }}
             >
               <HStack justify="space-between" align="center">
                 <HStack spacing={2}>
                   <ToolsIcon tools_name={tool.replace(/ /g, "_")} />
-                  <Text fontSize="sm" fontWeight="500">
+                  <Text 
+                    fontSize="sm" 
+                    fontWeight="500"
+                    color="gray.700"
+                  >
                     {tool}
                   </Text>
                 </HStack>
@@ -102,6 +115,10 @@ const ToolNodeProperties: React.FC<ToolNodePropertiesProps> = ({
                   variant="ghost"
                   colorScheme="red"
                   onClick={() => removeTool(tool)}
+                  transition="all 0.2s"
+                  _hover={{
+                    transform: "scale(1.1)",
+                  }}
                 />
               </HStack>
             </Box>

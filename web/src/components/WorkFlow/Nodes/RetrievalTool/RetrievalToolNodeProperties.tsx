@@ -28,9 +28,10 @@ interface RetrievalToolNodePropertiesProps {
   onNodeDataChange: (nodeId: string, key: string, value: any) => void;
 }
 
-const RetrievalToolNodeProperties: React.FC<
-  RetrievalToolNodePropertiesProps
-> = ({ node, onNodeDataChange }) => {
+const RetrievalToolNodeProperties: React.FC<RetrievalToolNodePropertiesProps> = ({
+  node,
+  onNodeDataChange,
+}) => {
   const { t } = useTranslation();
   const [isKBListOpen, setIsKBListOpen] = useState(false);
   const { data: uploads, isLoading, isError } = useUploadsQuery();
@@ -67,8 +68,12 @@ const RetrievalToolNodeProperties: React.FC<
       <Box>
         <HStack justify="space-between" align="center" mb={3}>
           <HStack spacing={2}>
-            <GiArchiveResearch size="14px" color="#4A5568" />
-            <Text fontSize="md" fontWeight="600" color="gray.700">
+            <GiArchiveResearch size="14px" color="var(--chakra-colors-gray-600)" />
+            <Text 
+              fontSize="sm" 
+              fontWeight="500" 
+              color="gray.700"
+            >
               {t("workflow.nodes.retrieval.title")}
             </Text>
             <Text fontSize="xs" color="gray.500">
@@ -81,6 +86,10 @@ const RetrievalToolNodeProperties: React.FC<
             leftIcon={<GiArchiveResearch size="12px" />}
             onClick={() => setIsKBListOpen(true)}
             colorScheme="blue"
+            transition="all 0.2s"
+            _hover={{
+              transform: "translateY(-1px)",
+            }}
           >
             {t("workflow.nodes.retrieval.addKB")}
           </Button>
@@ -97,11 +106,12 @@ const RetrievalToolNodeProperties: React.FC<
                 bg="gray.50"
                 borderRadius="md"
                 borderLeft="3px solid"
-                borderLeftColor="pink.400"
+                borderLeftColor="blue.400"
                 transition="all 0.2s"
                 _hover={{
                   bg: "gray.100",
-                  borderLeftColor: "pink.500",
+                  borderLeftColor: "blue.500",
+                  transform: "translateX(2px)",
                 }}
               >
                 <HStack justify="space-between" align="center">
@@ -109,11 +119,19 @@ const RetrievalToolNodeProperties: React.FC<
                     <IconButton
                       aria-label="db"
                       icon={<GiArchiveResearch size="16px" />}
-                      colorScheme="pink"
+                      colorScheme="blue"
                       size="xs"
                       variant="ghost"
+                      transition="all 0.2s"
+                      _hover={{
+                        transform: "scale(1.1)",
+                      }}
                     />
-                    <Text fontSize="sm" fontWeight="500">
+                    <Text 
+                      fontSize="sm" 
+                      fontWeight="500"
+                      color="gray.700"
+                    >
                       {kbName}
                     </Text>
                   </HStack>
@@ -124,6 +142,10 @@ const RetrievalToolNodeProperties: React.FC<
                     variant="ghost"
                     colorScheme="red"
                     onClick={() => removeKB(kbName)}
+                    transition="all 0.2s"
+                    _hover={{
+                      transform: "scale(1.1)",
+                    }}
                   />
                 </HStack>
               </Box>

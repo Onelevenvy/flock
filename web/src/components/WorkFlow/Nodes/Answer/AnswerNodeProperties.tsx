@@ -57,6 +57,7 @@ const AnswerProperties: React.FC<AnswerPropertiesProps> = ({
         handleKeyDown={handleKeyDown}
         insertVariable={insertVariable}
         availableVariables={availableVariables}
+        minHeight="120px"
       />
     </VStack>
   );

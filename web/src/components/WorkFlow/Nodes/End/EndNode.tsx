@@ -14,7 +14,7 @@ const EndNode: React.FC<NodeProps> = (props) => {
         position={Position.Left} 
         id="left"
         style={{
-          background: '#E53E3E',  // 使用 theme 中的 red.500
+          background: 'var(--chakra-colors-red-500)',
           width: 8,
           height: 8,
           border: '2px solid white',

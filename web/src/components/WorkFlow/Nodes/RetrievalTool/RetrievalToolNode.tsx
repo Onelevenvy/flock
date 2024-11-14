@@ -19,12 +19,20 @@ const RetrievalToolNode: React.FC<NodeProps> = (props) => {
     ? props.data.tools
     : [];
 
+  const handleStyle = {
+    background: 'var(--chakra-colors-red-500)',
+    width: 8,
+    height: 8,
+    border: '2px solid white',
+    transition: 'all 0.2s',
+  };
+
   return (
     <BaseNode {...props} icon={<Icon />} colorScheme={colorScheme}>
-      <Handle type="target" position={Position.Left} id="left" />
-      <Handle type="target" position={Position.Right} id="right" />
-      <Handle type="source" position={Position.Left} id="left" />
-      <Handle type="source" position={Position.Right} id="right" />
+      <Handle type="target" position={Position.Left} id="left" style={handleStyle} />
+      <Handle type="target" position={Position.Right} id="right" style={handleStyle} />
+      <Handle type="source" position={Position.Left} id="left" style={handleStyle} />
+      <Handle type="source" position={Position.Right} id="right" style={handleStyle} />
 
       <VStack align="stretch" spacing={1}>
         {knowledgeBases.length > 0 ? (
@@ -34,21 +42,34 @@ const RetrievalToolNode: React.FC<NodeProps> = (props) => {
             return (
               <Box
                 key={index}
-                bg="#f2f4f7"
+                bg="gray.50"
                 borderRadius="md"
-                p={1}
+                p={2}
                 transition="all 0.2s"
-                _hover={{ bg: "#e2e8f0" }}
+                _hover={{ 
+                  bg: "gray.100",
+                  transform: "translateY(-1px)",
+                  boxShadow: "sm",
+                }}
               >
-                <HStack spacing={2} px={2}>
+                <HStack spacing={2} px={2} align="center">
                   <IconButton
                     aria-label="db"
                     icon={<GiArchiveResearch size="16px" />}
-                    colorScheme="pink"
+                    colorScheme="blue"
                     size="xs"
                     variant="ghost"
+                    transition="all 0.2s"
+                    _hover={{
+                      transform: "scale(1.1)",
+                    }}
                   />
-                  <Text fontSize="xs" fontWeight="500">
+                  <Text 
+                    fontSize="xs" 
+                    fontWeight="500"
+                    color="gray.700"
+                    noOfLines={1}
+                  >
                     {kbName}
                   </Text>
                 </HStack>
@@ -56,7 +77,12 @@ const RetrievalToolNode: React.FC<NodeProps> = (props) => {
             );
           })
         ) : (
-          <Text fontSize="xs" color="gray.500" textAlign="center">
+          <Text 
+            fontSize="xs" 
+            color="gray.500" 
+            textAlign="center"
+            fontWeight="500"
+          >
             No knowledge bases selected
           </Text>
         )}

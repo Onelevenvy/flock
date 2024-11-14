@@ -23,56 +23,20 @@ const LLMNode: React.FC<NodeProps> = (props) => {
     [providerName]
   );
 
+  const handleStyle = {
+    background: 'var(--chakra-colors-blue-500)',
+    width: 8,
+    height: 8,
+    border: '2px solid white',
+    transition: 'all 0.2s',
+  };
+
   return (
     <BaseNode {...props} icon={<Icon />} colorScheme={colorScheme}>
-      <Handle 
-        type="target" 
-        position={Position.Left} 
-        id="left"
-        style={{
-          background: '#3182CE',  // theme 中的 blue.500
-          width: 8,
-          height: 8,
-          border: '2px solid white',
-          transition: 'all 0.2s',
-        }}
-      />
-      <Handle 
-        type="target" 
-        position={Position.Right} 
-        id="right"
-        style={{
-          background: '#3182CE',
-          width: 8,
-          height: 8,
-          border: '2px solid white',
-          transition: 'all 0.2s',
-        }}
-      />
-      <Handle 
-        type="source" 
-        position={Position.Left} 
-        id="left"
-        style={{
-          background: '#3182CE',
-          width: 8,
-          height: 8,
-          border: '2px solid white',
-          transition: 'all 0.2s',
-        }}
-      />
-      <Handle 
-        type="source" 
-        position={Position.Right} 
-        id="right"
-        style={{
-          background: '#3182CE',
-          width: 8,
-          height: 8,
-          border: '2px solid white',
-          transition: 'all 0.2s',
-        }}
-      />
+      <Handle type="target" position={Position.Left} id="left" style={handleStyle} />
+      <Handle type="target" position={Position.Right} id="right" style={handleStyle} />
+      <Handle type="source" position={Position.Left} id="left" style={handleStyle} />
+      <Handle type="source" position={Position.Right} id="right" style={handleStyle} />
       <VStack spacing={1}>
         <Box
           bg="gray.50"

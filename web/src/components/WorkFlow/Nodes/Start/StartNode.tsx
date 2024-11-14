@@ -14,7 +14,7 @@ const StartNode: React.FC<NodeProps> = (props) => {
         position={Position.Right} 
         id="right"
         style={{
-          background: '#38A169',  // 使用 theme 中的 green.500
+          background: 'var(--chakra-colors-green-500)',
           width: 8,
           height: 8,
           border: '2px solid white',

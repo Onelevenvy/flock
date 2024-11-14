@@ -10,24 +10,59 @@ const RetrievalNode: React.FC<NodeProps> = (props) => {
   const { icon: Icon, colorScheme } = nodeConfig.retrieval;
   const selectedDatabase = props.data.knownledge_database?.[0] || null;
 
+  const handleStyle = {
+    background: 'var(--chakra-colors-teal-500)',
+    width: 8,
+    height: 8,
+    border: '2px solid white',
+    transition: 'all 0.2s',
+  };
+
   return (
     <BaseNode {...props} icon={<Icon />} colorScheme={colorScheme}>
-      <Handle type="target" position={Position.Left} id="left" />
-      <Handle type="target" position={Position.Right} id="right" />
-      <Handle type="source" position={Position.Left} id="left" />
-      <Handle type="source" position={Position.Right} id="right" />
+      <Handle type="target" position={Position.Left} id="left" style={handleStyle} />
+      <Handle type="target" position={Position.Right} id="right" style={handleStyle} />
+      <Handle type="source" position={Position.Left} id="left" style={handleStyle} />
+      <Handle type="source" position={Position.Right} id="right" style={handleStyle} />
+      
       <VStack spacing={1} align="stretch">
         {selectedDatabase ? (
-          <HStack justifyContent="center" justifyItems={"center"}>
-            <Box bg="#f2f4f7" borderRadius="md" w="full" p="1">
-              <HStack spacing={"2"} ml="2">
-                <ImFolderOpen color="#434cf0" />
-                <Text fontWeight={"bold"}>{selectedDatabase}</Text>
-              </HStack>
-            </Box>
+          <HStack 
+            justifyContent="center" 
+            alignItems="center"
+            bg="gray.50"
+            borderRadius="md"
+            p={2}
+            transition="all 0.2s"
+            _hover={{
+              bg: "gray.100",
+              transform: "translateY(-1px)",
+            }}
+          >
+            <Box 
+              as={ImFolderOpen} 
+              color="teal.500"
+              transition="all 0.2s"
+              _hover={{
+                transform: "scale(1.1)",
+              }}
+            />
+            <Text 
+              fontSize="xs"
+              fontWeight="500"
+              color="gray.700"
+              noOfLines={1}
+            >
+              {selectedDatabase}
+            </Text>
           </HStack>
         ) : (
-          <Text fontSize="xs" textAlign="center">
+          <Text 
+            fontSize="xs" 
+            textAlign="center"
+            color="gray.500"
+            fontWeight="500"
+          >
             No knowledge base selected
           </Text>
         )}
