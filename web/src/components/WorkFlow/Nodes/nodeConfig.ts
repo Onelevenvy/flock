@@ -172,7 +172,7 @@ export const nodeConfig: Record<string, NodeConfigItem> = {
       targets: ["left"],
     },
     outputVariables: ["class_name"],
-    inputVariables: ["input"],
+    inputVariables: ["Input"],
     initialData: {
       categories: [
         { category_id: "1", category_name: "" },

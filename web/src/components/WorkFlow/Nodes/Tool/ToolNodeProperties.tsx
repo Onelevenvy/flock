@@ -55,11 +55,7 @@ const ToolNodeProperties: React.FC<ToolNodePropertiesProps> = ({
         <HStack justify="space-between" align="center" mb={3}>
           <HStack spacing={2}>
             <FaTools size="14px" color="var(--chakra-colors-gray-600)" />
-            <Text 
-              fontSize="sm" 
-              fontWeight="500" 
-              color="gray.700"
-            >
+            <Text fontSize="sm" fontWeight="500" color="gray.700">
               {t("workflow.nodes.tool.title")}
             </Text>
             <Text fontSize="xs" color="gray.500">
@@ -86,7 +82,7 @@ const ToolNodeProperties: React.FC<ToolNodePropertiesProps> = ({
             <Box
               key={tool}
               p={2}
-              bg="gray.50"
+              bg="ui.inputbgcolor"
               borderRadius="md"
               borderLeft="3px solid"
               borderLeftColor="blue.400"
@@ -100,11 +96,7 @@ const ToolNodeProperties: React.FC<ToolNodePropertiesProps> = ({
               <HStack justify="space-between" align="center">
                 <HStack spacing={2}>
                   <ToolsIcon tools_name={tool.replace(/ /g, "_")} />
-                  <Text 
-                    fontSize="sm" 
-                    fontWeight="500"
-                    color="gray.700"
-                  >
+                  <Text fontSize="sm" fontWeight="500" color="gray.700">
                     {tool}
                   </Text>
                 </HStack>

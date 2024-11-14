@@ -35,8 +35,9 @@ function ModelSelect<T extends FieldValues>({
   isLoading,
   value,
 }: ModelSelectProps<T>) {
-  const filteredModels = models?.data.filter(model => 
-    model.categories.includes("llm") || model.categories.includes("chat")
+  const filteredModels = models?.data.filter(
+    (model) =>
+      model.categories.includes("llm") || model.categories.includes("chat")
   );
 
   const groupedModels = filteredModels?.reduce(
@@ -51,7 +52,8 @@ function ModelSelect<T extends FieldValues>({
     {} as Record<string, typeof filteredModels>
   );
 
-  const [selectedModelProvider, setSelectedModelProvider] = useState<string>("openai");
+  const [selectedModelProvider, setSelectedModelProvider] =
+    useState<string>("openai");
 
   const updateSelectedProvider = useCallback(
     (modelName: string) => {
@@ -90,7 +92,7 @@ function ModelSelect<T extends FieldValues>({
                     rightIcon={<ChevronDownIcon w={4} h={4} />}
                     w="full"
                     textAlign="left"
-                    bg="white"
+                    bg="ui.inputbgcolor"
                     border="1px solid"
                     borderColor="gray.200"
                     borderRadius="lg"
@@ -128,8 +130,8 @@ function ModelSelect<T extends FieldValues>({
                     }}
                   >
                     {Object.keys(groupedModels || {}).map((providerName) => (
-                      <MenuGroup 
-                        key={providerName} 
+                      <MenuGroup
+                        key={providerName}
                         title={providerName}
                         color="gray.700"
                         fontWeight="600"
@@ -158,11 +160,11 @@ function ModelSelect<T extends FieldValues>({
                             />
                             {model.ai_model_name}
                             {model.capabilities.includes("vision") && (
-                              <FaEye 
-                                style={{ 
-                                  marginLeft: 'auto',
-                                  color: 'var(--chakra-colors-gray-400)'
-                                }} 
+                              <FaEye
+                                style={{
+                                  marginLeft: "auto",
+                                  color: "var(--chakra-colors-gray-400)",
+                                }}
                               />
                             )}
                           </MenuItem>

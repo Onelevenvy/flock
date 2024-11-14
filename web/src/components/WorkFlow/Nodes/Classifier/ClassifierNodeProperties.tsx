@@ -116,6 +116,7 @@ const ClassifierNodeProperties: React.FC<ClassifierNodePropertiesProps> = ({
                 borderColor="gray.200"
                 borderRadius="md"
                 p={3}
+                bg="ui.inputbgcolor"
                 transition="all 0.2s"
                 _hover={{
                   borderColor: "blue.300",
@@ -123,7 +124,7 @@ const ClassifierNodeProperties: React.FC<ClassifierNodePropertiesProps> = ({
                 }}
               >
                 <HStack justify="space-between" mb={2}>
-                  <Text fontSize="sm" fontWeight="500" color="gray.600">
+                  <Text fontSize="sm" fontWeight="500" color="gray.900">
                     {t("workflow.nodes.classifier.category")} {index + 1}
                   </Text>
                   {node.data.categories.length > 2 && (
@@ -131,7 +132,7 @@ const ClassifierNodeProperties: React.FC<ClassifierNodePropertiesProps> = ({
                       aria-label={t("workflow.common.delete")}
                       icon={<FaTrash />}
                       size="xs"
-                      colorScheme="red"
+                      colorScheme="gray"
                       variant="ghost"
                       transition="all 0.2s"
                       _hover={{
@@ -153,11 +154,11 @@ const ClassifierNodeProperties: React.FC<ClassifierNodePropertiesProps> = ({
                     t("workflow.nodes.classifier.placeholder")
                   )}
                   size="sm"
-                  bg="white"
-                  borderColor="gray.200"
+                  bg="ui.inputbgcolor"
+                  
                   _hover={{ borderColor: "blue.200" }}
                   _focus={{
-                    borderColor: "blue.500",
+                    borderColor: "blue.50",
                     boxShadow: "0 0 0 1px var(--chakra-colors-blue-500)",
                   }}
                   transition="all 0.2s"

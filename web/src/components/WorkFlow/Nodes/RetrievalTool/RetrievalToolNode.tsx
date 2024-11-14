@@ -20,33 +20,53 @@ const RetrievalToolNode: React.FC<NodeProps> = (props) => {
     : [];
 
   const handleStyle = {
-    background: 'var(--chakra-colors-ui-wfhandlecolor)',
+    background: "var(--chakra-colors-ui-wfhandlecolor)",
     width: 8,
     height: 8,
-    border: '2px solid white',
-    transition: 'all 0.2s',
+    border: "2px solid white",
+    transition: "all 0.2s",
   };
 
   return (
     <BaseNode {...props} icon={<Icon />} colorScheme={colorScheme}>
-      <Handle type="target" position={Position.Left} id="left" style={handleStyle} />
-      <Handle type="target" position={Position.Right} id="right" style={handleStyle} />
-      <Handle type="source" position={Position.Left} id="left" style={handleStyle} />
-      <Handle type="source" position={Position.Right} id="right" style={handleStyle} />
+      <Handle
+        type="target"
+        position={Position.Left}
+        id="left"
+        style={handleStyle}
+      />
+      <Handle
+        type="target"
+        position={Position.Right}
+        id="right"
+        style={handleStyle}
+      />
+      <Handle
+        type="source"
+        position={Position.Left}
+        id="left"
+        style={handleStyle}
+      />
+      <Handle
+        type="source"
+        position={Position.Right}
+        id="right"
+        style={handleStyle}
+      />
 
       <VStack align="stretch" spacing={1}>
         {knowledgeBases.length > 0 ? (
           knowledgeBases.map((kb: string | KBInfo, index: number) => {
-            const kbName = typeof kb === 'string' ? kb : kb.name;
+            const kbName = typeof kb === "string" ? kb : kb.name;
 
             return (
               <Box
                 key={index}
-                bg="gray.50"
+                bg="ui.inputbgcolor"
                 borderRadius="md"
                 p={2}
                 transition="all 0.2s"
-                _hover={{ 
+                _hover={{
                   bg: "gray.100",
                   transform: "translateY(-1px)",
                   boxShadow: "sm",
@@ -64,8 +84,8 @@ const RetrievalToolNode: React.FC<NodeProps> = (props) => {
                       transform: "scale(1.1)",
                     }}
                   />
-                  <Text 
-                    fontSize="xs" 
+                  <Text
+                    fontSize="xs"
                     fontWeight="500"
                     color="gray.700"
                     noOfLines={1}
@@ -77,9 +97,9 @@ const RetrievalToolNode: React.FC<NodeProps> = (props) => {
             );
           })
         ) : (
-          <Text 
-            fontSize="xs" 
-            color="gray.500" 
+          <Text
+            fontSize="xs"
+            color="gray.500"
             textAlign="center"
             fontWeight="500"
           >

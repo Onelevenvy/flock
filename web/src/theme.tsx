@@ -20,6 +20,7 @@ const colors = {
     accent: "#3b82f6", // 强调色
     muted: "#64748b", // 次要文本颜色
     wfhandlecolor: "#3182ce",
+    inputbgcolor:"#f2f4f7"
   },
 };
 

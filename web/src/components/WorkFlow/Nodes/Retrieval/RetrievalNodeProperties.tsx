@@ -1,9 +1,4 @@
-import {
-  Box,
-  Text,
-  VStack,
-  Select,
-} from "@chakra-ui/react";
+import { Box, Text, VStack, Select } from "@chakra-ui/react";
 import type React from "react";
 import { useCallback, useState, useEffect } from "react";
 
@@ -100,26 +95,22 @@ const RetrievalProperties: React.FC<RetrievalPropertiesProps> = ({
       />
 
       <Box>
-        <Text 
-          fontWeight="500" 
-          fontSize="sm" 
-          color="gray.700"
-          mb={2}
-        >
+        <Text fontWeight="500" fontSize="sm" color="gray.700" mb={2}>
           RAG Method:
         </Text>
-        <Select 
-          value={ragMethod} 
+        <Select
+          value={ragMethod}
           onChange={handleRagMethodChange}
           size="sm"
+          bg="ui.inputbgcolor"
           borderRadius="lg"
           borderColor="gray.200"
           _hover={{
-            borderColor: "teal.200"
+            borderColor: "teal.200",
           }}
           _focus={{
             borderColor: "teal.500",
-            boxShadow: "0 0 0 1px var(--chakra-colors-teal-500)"
+            boxShadow: "0 0 0 1px var(--chakra-colors-teal-500)",
           }}
           transition="all 0.2s"
         >
@@ -131,12 +122,7 @@ const RetrievalProperties: React.FC<RetrievalPropertiesProps> = ({
       </Box>
 
       <Box>
-        <Text 
-          fontWeight="500" 
-          fontSize="sm" 
-          color="gray.700"
-          mb={2}
-        >
+        <Text fontWeight="500" fontSize="sm" color="gray.700" mb={2}>
           Knowledge Database:
         </Text>
         <Select
@@ -144,14 +130,15 @@ const RetrievalProperties: React.FC<RetrievalPropertiesProps> = ({
           onChange={handleDatabaseChange}
           value={selectedDatabase || ""}
           size="sm"
+          bg="ui.inputbgcolor"
           borderRadius="lg"
           borderColor="gray.200"
           _hover={{
-            borderColor: "teal.200"
+            borderColor: "teal.200",
           }}
           _focus={{
             borderColor: "teal.500",
-            boxShadow: "0 0 0 1px var(--chakra-colors-teal-500)"
+            boxShadow: "0 0 0 1px var(--chakra-colors-teal-500)",
           }}
           transition="all 0.2s"
         >

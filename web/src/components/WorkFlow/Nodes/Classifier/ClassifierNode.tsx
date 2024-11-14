@@ -13,11 +13,11 @@ const ClassifierNode: React.FC<NodeProps<ClassifierNodeData>> = (props) => {
   const { categories } = props.data;
 
   const handleStyle = {
-    background: 'var(--chakra-colors-ui-wfhandlecolor)',
+    background: "var(--chakra-colors-ui-wfhandlecolor)",
     width: 8,
     height: 8,
-    border: '2px solid white',
-    transition: 'all 0.2s',
+    border: "2px solid white",
+    transition: "all 0.2s",
   };
 
   return (
@@ -28,13 +28,13 @@ const ClassifierNode: React.FC<NodeProps<ClassifierNodeData>> = (props) => {
         id="input"
         style={handleStyle}
       />
-      
+
       <VStack spacing={1} align="stretch">
         {categories.map((category, index) => (
           <Box
             key={category.category_id}
             position="relative"
-            bg="gray.50"
+            bg="ui.inputbgcolor"
             p={1}
             borderRadius="md"
             transition="all 0.2s"
@@ -43,7 +43,8 @@ const ClassifierNode: React.FC<NodeProps<ClassifierNodeData>> = (props) => {
             }}
           >
             <Text fontSize="xs" fontWeight="500">
-              {category.category_name || `${t("workflow.nodes.classifier.category")} ${index + 1}`}
+              {category.category_name ||
+                `${t("workflow.nodes.classifier.category")} ${index + 1}`}
             </Text>
             <Handle
               type="source"

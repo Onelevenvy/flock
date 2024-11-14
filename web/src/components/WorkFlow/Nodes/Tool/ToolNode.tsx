@@ -51,7 +51,7 @@ const ToolNode: React.FC<NodeProps> = (props) => {
           tools.map((tool: string, index: number) => (
             <Box
               key={index}
-              bg="gray.50"
+              bg="ui.inputbgcolor"
               borderRadius="md"
               p={1}
               transition="all 0.2s"

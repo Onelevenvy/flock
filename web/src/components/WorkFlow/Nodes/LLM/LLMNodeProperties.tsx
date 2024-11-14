@@ -150,6 +150,7 @@ const LLMNodeProperties: React.FC<LLMNodePropertiesProps> = ({
             onNodeDataChange(node.id, "temperature", numValue);
           }}
           size="sm"
+           bg="ui.inputbgcolor"
           borderRadius="lg"
           borderColor="gray.200"
           _hover={{

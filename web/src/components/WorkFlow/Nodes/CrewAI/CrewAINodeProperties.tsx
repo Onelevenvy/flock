@@ -374,7 +374,7 @@ const CrewAINodeProperties: React.FC<CrewAINodePropertiesProps> = ({
             <Box
               key={agent.id}
               p={3}
-              bg="gray.50"
+              bg="ui.inputbgcolor"
               borderRadius="lg"
               borderLeft="3px solid"
               borderLeftColor="blue.400"
@@ -472,7 +472,7 @@ const CrewAINodeProperties: React.FC<CrewAINodePropertiesProps> = ({
             <Box
               key={index}
               p={3}
-              bg="gray.50"
+              bg="ui.inputbgcolor"
               borderRadius="lg"
               borderLeft="3px solid"
               borderLeftColor="blue.400"

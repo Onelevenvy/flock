@@ -11,26 +11,46 @@ const RetrievalNode: React.FC<NodeProps> = (props) => {
   const selectedDatabase = props.data.knownledge_database?.[0] || null;
 
   const handleStyle = {
-    background: 'var(--chakra-colors-ui-wfhandlecolor)',
+    background: "var(--chakra-colors-ui-wfhandlecolor)",
     width: 8,
     height: 8,
-    border: '2px solid white',
-    transition: 'all 0.2s',
+    border: "2px solid white",
+    transition: "all 0.2s",
   };
 
   return (
     <BaseNode {...props} icon={<Icon />} colorScheme={colorScheme}>
-      <Handle type="target" position={Position.Left} id="left" style={handleStyle} />
-      <Handle type="target" position={Position.Right} id="right" style={handleStyle} />
-      <Handle type="source" position={Position.Left} id="left" style={handleStyle} />
-      <Handle type="source" position={Position.Right} id="right" style={handleStyle} />
-      
+      <Handle
+        type="target"
+        position={Position.Left}
+        id="left"
+        style={handleStyle}
+      />
+      <Handle
+        type="target"
+        position={Position.Right}
+        id="right"
+        style={handleStyle}
+      />
+      <Handle
+        type="source"
+        position={Position.Left}
+        id="left"
+        style={handleStyle}
+      />
+      <Handle
+        type="source"
+        position={Position.Right}
+        id="right"
+        style={handleStyle}
+      />
+
       <VStack spacing={1} align="stretch">
         {selectedDatabase ? (
-          <HStack 
-            justifyContent="center" 
+          <HStack
+            justifyContent="center"
             alignItems="center"
-            bg="gray.50"
+            bg="ui.inputbgcolor"
             borderRadius="md"
             p={2}
             transition="all 0.2s"
@@ -39,26 +59,21 @@ const RetrievalNode: React.FC<NodeProps> = (props) => {
               transform: "translateY(-1px)",
             }}
           >
-            <Box 
-              as={ImFolderOpen} 
+            <Box
+              as={ImFolderOpen}
               color="teal.500"
               transition="all 0.2s"
               _hover={{
                 transform: "scale(1.1)",
               }}
             />
-            <Text 
-              fontSize="xs"
-              fontWeight="500"
-              color="gray.700"
-              noOfLines={1}
-            >
+            <Text fontSize="xs" fontWeight="500" color="gray.700" noOfLines={1}>
               {selectedDatabase}
             </Text>
           </HStack>
         ) : (
-          <Text 
-            fontSize="xs" 
+          <Text
+            fontSize="xs"
             textAlign="center"
             color="gray.500"
             fontWeight="500"

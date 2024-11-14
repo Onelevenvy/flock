@@ -28,10 +28,9 @@ interface RetrievalToolNodePropertiesProps {
   onNodeDataChange: (nodeId: string, key: string, value: any) => void;
 }
 
-const RetrievalToolNodeProperties: React.FC<RetrievalToolNodePropertiesProps> = ({
-  node,
-  onNodeDataChange,
-}) => {
+const RetrievalToolNodeProperties: React.FC<
+  RetrievalToolNodePropertiesProps
+> = ({ node, onNodeDataChange }) => {
   const { t } = useTranslation();
   const [isKBListOpen, setIsKBListOpen] = useState(false);
   const { data: uploads, isLoading, isError } = useUploadsQuery();
@@ -68,12 +67,11 @@ const RetrievalToolNodeProperties: React.FC<RetrievalToolNodePropertiesProps> = 
       <Box>
         <HStack justify="space-between" align="center" mb={3}>
           <HStack spacing={2}>
-            <GiArchiveResearch size="14px" color="var(--chakra-colors-gray-600)" />
-            <Text 
-              fontSize="sm" 
-              fontWeight="500" 
-              color="gray.700"
-            >
+            <GiArchiveResearch
+              size="14px"
+              color="var(--chakra-colors-gray-600)"
+            />
+            <Text fontSize="sm" fontWeight="500" color="gray.700">
               {t("workflow.nodes.retrieval.title")}
             </Text>
             <Text fontSize="xs" color="gray.500">
@@ -97,13 +95,13 @@ const RetrievalToolNodeProperties: React.FC<RetrievalToolNodePropertiesProps> = 
 
         <VStack align="stretch" spacing={2}>
           {node.data.tools?.map((kb: string | KBInfo) => {
-            const kbName = typeof kb === 'string' ? kb : kb.name;
-            
+            const kbName = typeof kb === "string" ? kb : kb.name;
+
             return (
               <Box
                 key={kbName}
                 p={2}
-                bg="gray.50"
+                bg="ui.inputbgcolor"
                 borderRadius="md"
                 borderLeft="3px solid"
                 borderLeftColor="blue.400"
@@ -127,11 +125,7 @@ const RetrievalToolNodeProperties: React.FC<RetrievalToolNodePropertiesProps> = 
                         transform: "scale(1.1)",
                       }}
                     />
-                    <Text 
-                      fontSize="sm" 
-                      fontWeight="500"
-                      color="gray.700"
-                    >
+                    <Text fontSize="sm" fontWeight="500" color="gray.700">
                       {kbName}
                     </Text>
                   </HStack>

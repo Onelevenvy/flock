@@ -81,13 +81,14 @@ const BaseProperties: React.FC<BasePropertiesProps> = ({
 
       {inputVariables.map((varName) => (
         <FormControl key={varName}>
-          <Text fontWeight="500" fontSize="sm" color="gray.700" mb={1}>
+          <Text fontWeight="bold"  color="gray.700" mb={1}>
             {varName}:
           </Text>
           <Select
             value={node.data[varName] || ""}
             onChange={(e) => onNodeDataChange(node.id, varName, e.target.value)}
             size="sm"
+            bg="ui.inputbgcolor"
             borderRadius="lg"
             borderColor="gray.200"
             transition="all 0.2s"
