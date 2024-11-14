@@ -23,9 +23,10 @@ interface SidebarItemsProps {
 const SidebarItems = ({ onClose }: SidebarItemsProps) => {
   const textColor = useColorModeValue("ui.main", "ui.white");
   const bgActive = useColorModeValue("white", "#4A5568");
-  const currentPath = usePathname(); // 获取当前路径
+  const currentPath = usePathname();
   const { user: currentUser } = useAuth();
   const { t } = useTranslation();
+
   const superuser_items = [
     {
       activeIcon: FaHouseChimney,
@@ -73,49 +74,57 @@ const SidebarItems = ({ onClose }: SidebarItemsProps) => {
       path: "/playground",
     },
   ];
+
   const items = currentUser?.is_superuser ? superuser_items : nosuperuser_items;
 
-  const listItems = items.map((item) => {
-    // const isActive = currentPath === item.path;
-    const isActive = new RegExp(`^${item.path}`).test(currentPath);
-
-    return (
-      <Flex
-        as={Link}
-        href={item.path}
-        w="100%"
-        p={2}
-        mt={2}
-        key={item.title}
-        style={{
-          background: isActive ? bgActive : "transparent", // 根据当前路径设置背景
-          borderRadius: "6px",
-        }}
-        color={textColor}
-        onClick={onClose}
-        direction="column" // 使图标和文字垂直排列
-        alignItems="center" // 水平居中对齐
-        justifyContent="center" // 垂直居中对齐
-      >
-        <Icon
-          as={isActive ? item.activeIcon : item.inactiveIcon}
-          fontSize="28px"
-          mb={1}
-          color={isActive ? textColor : "gray.500"}
-        />
-        <Text fontSize={"10px"} color={isActive ? textColor : "gray.500"}>
-          {item.title}
-        </Text>
-      </Flex>
-    );
-  });
-
   return (
-    <>
-      <Box display="flex" flexDirection={"column"}>
-        {listItems}
-      </Box>
-    </>
+    <Box display="flex" flexDirection="column">
+      {items.map((item) => {
+        const isActive = new RegExp(`^${item.path}`).test(currentPath);
+        return (
+          <Flex
+            as={Link}
+            href={item.path}
+            key={item.title}
+            w="full"
+            p={2}
+            mt={2}
+            direction="column"
+            alignItems="center"
+            justifyContent="center"
+            bg={isActive ? bgActive : "transparent"}
+            color={textColor}
+            borderRadius="lg"
+            transition="all 0.2s"
+            onClick={onClose}
+            _hover={{
+              bg: isActive ? bgActive : "gray.100",
+              transform: "translateY(-1px)",
+              boxShadow: "sm",
+            }}
+            _active={{
+              transform: "translateY(0)",
+            }}
+          >
+            <Icon
+              as={isActive ? item.activeIcon : item.inactiveIcon}
+              fontSize="28px"
+              mb={1}
+              color={isActive ? textColor : "gray.500"}
+              transition="all 0.2s"
+            />
+            <Text 
+              fontSize="xs" 
+              color={isActive ? textColor : "gray.500"}
+              fontWeight={isActive ? "600" : "500"}
+              transition="all 0.2s"
+            >
+              {item.title}
+            </Text>
+          </Flex>
+        );
+      })}
+    </Box>
   );
 };
 
