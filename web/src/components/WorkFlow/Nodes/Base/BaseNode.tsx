@@ -43,6 +43,10 @@ export const BaseNode: React.FC<BaseNodeProps> = ({
           icon={icon}
           colorScheme={colorScheme}
           size="sm"
+          variant="ghost"
+          bg={`${colorScheme}.50`}
+          color={`${colorScheme}.500`}
+          flexShrink={0}
           transition="all 0.2s"
           _hover={{
             transform: "scale(1.1)",

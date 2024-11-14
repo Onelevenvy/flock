@@ -21,7 +21,7 @@ import {
 import React, { useState } from "react";
 import { useForm } from "react-hook-form";
 import { DeleteIcon } from "@chakra-ui/icons";
-import { FaTools, FaRobot } from "react-icons/fa";
+import { FaTools, FaRobot, FaPlus } from "react-icons/fa";
 
 import { AgentConfig } from "../../types";
 import { DEFAULT_MANAGER } from "./constants";
@@ -126,12 +126,28 @@ const AgentModal: React.FC<AgentModalProps> = ({
 
   return (
     <Modal isOpen={isOpen} onClose={onClose} size="xl">
-      <ModalOverlay />
-      <ModalContent>
+      <ModalOverlay bg="blackAlpha.300" backdropFilter="blur(10px)" />
+      <ModalContent
+        borderRadius="xl"
+        boxShadow="xl"
+        bg="white"
+        overflow="hidden"
+        mx={4}
+        my={4}
+      >
         <ModalHeader>
           <HStack spacing={2}>
-            <FaRobot size="20px" color="#4A5568" />
-            <Text>
+            <Box
+              p={2}
+              borderRadius="lg"
+              bg="blue.50"
+              color="blue.500"
+              transition="all 0.2s"
+              _hover={{ bg: "blue.100" }}
+            >
+              <FaRobot size="20px" />
+            </Box>
+            <Text fontSize="lg" fontWeight="600" color="gray.800">
               {isManager
                 ? "Configure Manager Agent"
                 : initialData
@@ -140,21 +156,38 @@ const AgentModal: React.FC<AgentModalProps> = ({
             </Text>
           </HStack>
         </ModalHeader>
-        <ModalCloseButton />
+        <ModalCloseButton
+          position="absolute"
+          right={4}
+          top={4}
+          borderRadius="full"
+          transition="all 0.2s"
+          _hover={{
+            bg: "gray.100",
+            transform: "rotate(90deg)",
+          }}
+        />
         <ModalBody pb={6}>
           <form onSubmit={handleSubmit(handleFormSubmit)}>
             <VStack spacing={4} align="stretch">
               <FormControl isRequired isInvalid={!!errors.name}>
-                <FormLabel fontWeight="500">Agent Name</FormLabel>
+                <FormLabel fontWeight="500" color="gray.700">
+                  Agent Name
+                </FormLabel>
                 <Input
                   {...register("name", {
                     required: "Agent name is required",
                     validate: validateUniqueName,
                   })}
                   placeholder="Enter a unique agent name"
+                  borderRadius="lg"
                   borderColor="gray.200"
-                  _hover={{ borderColor: "gray.300" }}
-                  _focus={{ borderColor: "blue.500", boxShadow: "none" }}
+                  _hover={{ borderColor: "blue.200" }}
+                  _focus={{
+                    borderColor: "blue.500",
+                    boxShadow: "0 0 0 1px var(--chakra-colors-blue-500)",
+                  }}
+                  transition="all 0.2s"
                 />
                 <FormErrorMessage>
                   {errors.name && errors.name.message}
@@ -165,7 +198,9 @@ const AgentModal: React.FC<AgentModalProps> = ({
                 label="Role"
                 value={watch("role") || ""}
                 onChange={(value) => setValue("role", value)}
-                placeholder={isManager ? "Crew Manager" : "e.g., Research Specialist"}
+                placeholder={
+                  isManager ? "Crew Manager" : "e.g., Research Specialist"
+                }
                 showVariables={roleVariableHook.showVariables}
                 setShowVariables={roleVariableHook.setShowVariables}
                 inputRef={roleVariableHook.inputRef}
@@ -205,19 +240,32 @@ const AgentModal: React.FC<AgentModalProps> = ({
 
               {!isManager && (
                 <FormControl display="flex" alignItems="center">
-                  <FormLabel mb="0" fontWeight="500">
+                  <FormLabel mb="0" fontWeight="500" color="gray.700">
                     Allow Delegation
                   </FormLabel>
-                  <Switch {...register("allow_delegation")} colorScheme="blue" />
+                  <Switch
+                    {...register("allow_delegation")}
+                    colorScheme="blue"
+                    size="md"
+                  />
                 </FormControl>
               )}
 
-              <Divider />
+              <Divider my={2} />
 
               <Box>
                 <HStack justify="space-between" align="center" mb={3}>
                   <HStack spacing={2}>
-                    <FaTools size="14px" color="#4A5568" />
+                    <Box
+                      p={2}
+                      borderRadius="lg"
+                      bg="purple.50"
+                      color="purple.500"
+                      transition="all 0.2s"
+                      _hover={{ bg: "purple.100" }}
+                    >
+                      <FaTools size="14px" />
+                    </Box>
                     <Text fontSize="md" fontWeight="600" color="gray.700">
                       Tools
                     </Text>
@@ -226,11 +274,16 @@ const AgentModal: React.FC<AgentModalProps> = ({
                     </Text>
                   </HStack>
                   <Button
-                    size="xs"
+                    size="sm"
                     variant="ghost"
-                    leftIcon={<FaTools size="12px" />}
+                    leftIcon={<FaPlus size="12px" />}
                     onClick={() => setIsToolsListOpen(true)}
-                    colorScheme="blue"
+                    colorScheme="purple"
+                    transition="all 0.2s"
+                    _hover={{
+                      transform: "translateY(-1px)",
+                      shadow: "sm",
+                    }}
                   >
                     Add Tool
                   </Button>
@@ -240,31 +293,37 @@ const AgentModal: React.FC<AgentModalProps> = ({
                   {selectedTools.map((tool) => (
                     <Box
                       key={tool}
-                      p={2}
+                      p={3}
                       bg="gray.50"
-                      borderRadius="md"
+                      borderRadius="lg"
                       borderLeft="3px solid"
-                      borderLeftColor="blue.400"
+                      borderLeftColor="purple.400"
                       transition="all 0.2s"
                       _hover={{
                         bg: "gray.100",
-                        borderLeftColor: "blue.500",
+                        borderLeftColor: "purple.500",
+                        transform: "translateX(2px)",
+                        shadow: "sm",
                       }}
                     >
                       <HStack justify="space-between" align="center">
                         <HStack spacing={2}>
                           <ToolsIcon tools_name={tool.replace(/ /g, "_")} />
-                          <Text fontSize="sm" fontWeight="500">
+                          <Text fontSize="sm" fontWeight="500" color="gray.700">
                             {tool}
                           </Text>
                         </HStack>
                         <IconButton
                           aria-label="Remove tool"
                           icon={<DeleteIcon />}
-                          size="xs"
+                          size="sm"
                           variant="ghost"
                           colorScheme="red"
                           onClick={() => removeTool(tool)}
+                          transition="all 0.2s"
+                          _hover={{
+                            transform: "scale(1.1)",
+                          }}
                         />
                       </HStack>
                     </Box>
@@ -278,6 +337,20 @@ const AgentModal: React.FC<AgentModalProps> = ({
                 size="md"
                 width="100%"
                 mt={4}
+                bg="ui.main"
+                color="white"
+                fontWeight="500"
+                borderRadius="lg"
+                transition="all 0.2s"
+                _hover={{
+                  bg: "blue.500",
+                  transform: "translateY(-1px)",
+                  boxShadow: "md",
+                }}
+                _active={{
+                  bg: "blue.600",
+                  transform: "translateY(0)",
+                }}
               >
                 {isManager
                   ? "Save Manager Configuration"

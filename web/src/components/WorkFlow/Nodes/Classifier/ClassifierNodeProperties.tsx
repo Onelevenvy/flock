@@ -88,7 +88,9 @@ const ClassifierNodeProperties: React.FC<ClassifierNodePropertiesProps> = ({
   return (
     <VStack spacing={4} align="stretch">
       <Box>
-        <Text fontWeight="bold">{t("workflow.nodes.classifier.model")}:</Text>
+        <Text fontWeight="bold" color="gray.700">
+          {t("workflow.nodes.classifier.model")}:
+        </Text>
         <ModelSelect
           models={models}
           control={control}
@@ -102,7 +104,7 @@ const ClassifierNodeProperties: React.FC<ClassifierNodePropertiesProps> = ({
       </Box>
 
       <Box>
-        <Text fontWeight="bold" mb={2}>
+        <Text fontWeight="bold" mb={2} color="gray.700">
           {t("workflow.nodes.classifier.categories")}:
         </Text>
         <VStack spacing={4} align="stretch">
@@ -114,6 +116,11 @@ const ClassifierNodeProperties: React.FC<ClassifierNodePropertiesProps> = ({
                 borderColor="gray.200"
                 borderRadius="md"
                 p={3}
+                transition="all 0.2s"
+                _hover={{
+                  borderColor: "blue.300",
+                  boxShadow: "md",
+                }}
               >
                 <HStack justify="space-between" mb={2}>
                   <Text fontSize="sm" fontWeight="500" color="gray.600">
@@ -126,6 +133,10 @@ const ClassifierNodeProperties: React.FC<ClassifierNodePropertiesProps> = ({
                       size="xs"
                       colorScheme="red"
                       variant="ghost"
+                      transition="all 0.2s"
+                      _hover={{
+                        transform: "scale(1.1)",
+                      }}
                       onClick={() => handleRemoveCategory(category.category_id)}
                     />
                   )}
@@ -143,6 +154,13 @@ const ClassifierNodeProperties: React.FC<ClassifierNodePropertiesProps> = ({
                   )}
                   size="sm"
                   bg="white"
+                  borderColor="gray.200"
+                  _hover={{ borderColor: "blue.200" }}
+                  _focus={{
+                    borderColor: "blue.500",
+                    boxShadow: "0 0 0 1px var(--chakra-colors-blue-500)",
+                  }}
+                  transition="all 0.2s"
                 />
               </Box>
             )
@@ -155,6 +173,12 @@ const ClassifierNodeProperties: React.FC<ClassifierNodePropertiesProps> = ({
             variant="ghost"
             size="sm"
             width="100%"
+            transition="all 0.2s"
+            _hover={{
+              bg: "blue.50",
+              transform: "translateY(-1px)",
+              boxShadow: "sm",
+            }}
           >
             {t("workflow.nodes.classifier.addCategory")}
           </Button>

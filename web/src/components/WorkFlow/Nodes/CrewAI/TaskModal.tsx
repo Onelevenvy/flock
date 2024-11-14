@@ -83,29 +83,55 @@ const TaskModal: React.FC<TaskModalProps> = ({
 
   return (
     <Modal isOpen={isOpen} onClose={onClose} size="xl">
-      <ModalOverlay />
-      <ModalContent>
+      <ModalOverlay bg="blackAlpha.300" backdropFilter="blur(10px)" />
+      <ModalContent 
+        borderRadius="xl"
+        boxShadow="xl"
+        bg="white"
+        overflow="hidden"
+        mx={4}
+        my={4}
+      >
         <ModalHeader>
           <HStack spacing={2}>
-            <FaListAlt size="20px" color="#4A5568" />
-            <Text>{t("workflow.nodes.crewai.taskModal.title")}</Text>
+            <FaListAlt size="20px" color="var(--chakra-colors-gray-600)" />
+            <Text fontSize="lg" fontWeight="600" color="gray.800">
+              {t("workflow.nodes.crewai.taskModal.title")}
+            </Text>
           </HStack>
         </ModalHeader>
-        <ModalCloseButton />
+        <ModalCloseButton 
+          position="absolute"
+          right={4}
+          top={4}
+          borderRadius="full"
+          transition="all 0.2s"
+          _hover={{
+            bg: "gray.100",
+            transform: "rotate(90deg)",
+          }}
+        />
         <ModalBody pb={6}>
           <form onSubmit={handleSubmit(onSubmit)}>
             <VStack spacing={4} align="stretch">
               <FormControl isRequired isInvalid={!!errors.name}>
-                <FormLabel fontWeight="500">{t("workflow.nodes.crewai.taskModal.name")}</FormLabel>
+                <FormLabel fontWeight="500" color="gray.700">
+                  {t("workflow.nodes.crewai.taskModal.name")}
+                </FormLabel>
                 <Input
                   {...register("name", {
                     required: String(t("knowledge.upload.error.required")),
                     validate: validateUniqueName
                   })}
                   placeholder={String(t("workflow.nodes.crewai.taskModal.namePlaceholder"))}
+                  borderRadius="lg"
                   borderColor="gray.200"
-                  _hover={{ borderColor: "gray.300" }}
-                  _focus={{ borderColor: "blue.500", boxShadow: "none" }}
+                  _hover={{ borderColor: "blue.200" }}
+                  _focus={{
+                    borderColor: "blue.500",
+                    boxShadow: "0 0 0 1px var(--chakra-colors-blue-500)"
+                  }}
+                  transition="all 0.2s"
                 />
                 <FormErrorMessage>
                   {errors.name && errors.name.message}
@@ -127,13 +153,20 @@ const TaskModal: React.FC<TaskModalProps> = ({
               />
 
               <FormControl isRequired>
-                <FormLabel fontWeight="500">{t("workflow.nodes.crewai.taskModal.assignAgent")}</FormLabel>
+                <FormLabel fontWeight="500" color="gray.700">
+                  {t("workflow.nodes.crewai.taskModal.assignAgent")}
+                </FormLabel>
                 <Select 
                   {...register("agent_id")} 
                   placeholder={String(t("workflow.nodes.crewai.taskModal.selectAgent"))}
+                  borderRadius="lg"
                   borderColor="gray.200"
-                  _hover={{ borderColor: "gray.300" }}
-                  _focus={{ borderColor: "blue.500", boxShadow: "none" }}
+                  _hover={{ borderColor: "blue.200" }}
+                  _focus={{
+                    borderColor: "blue.500",
+                    boxShadow: "0 0 0 1px var(--chakra-colors-blue-500)"
+                  }}
+                  transition="all 0.2s"
                 >
                   {agents.map((agent) => (
                     <option key={agent.id} value={agent.id}>
@@ -159,9 +192,23 @@ const TaskModal: React.FC<TaskModalProps> = ({
 
               <Button 
                 type="submit" 
-                colorScheme="blue" 
-                w="100%"
+                colorScheme="blue"
                 size="md"
+                w="100%"
+                borderRadius="lg"
+                bg="ui.main"
+                color="white"
+                fontWeight="500"
+                transition="all 0.2s"
+                _hover={{
+                  bg: "blue.500",
+                  transform: "translateY(-1px)",
+                  boxShadow: "md",
+                }}
+                _active={{
+                  bg: "blue.600",
+                  transform: "translateY(0)",
+                }}
               >
                 {initialData ? t("workflow.common.edit") : t("workflow.common.add")}
               </Button>

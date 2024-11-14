@@ -24,8 +24,10 @@ import { AgentConfig, CrewAINodeData, TaskConfig } from "../../types";
 import { DEFAULT_MANAGER } from "./constants";
 import AgentModal from "./AgentModal";
 import TaskModal from "./TaskModal";
-import { VariableReference } from "../../FlowVis/variableSystem";
-import { getAvailableVariables } from "../../FlowVis/variableSystem";
+import {
+  VariableReference,
+  getAvailableVariables,
+} from "../../FlowVis/variableSystem";
 import { useReactFlow } from "reactflow";
 
 interface CrewAINodePropertiesProps {
@@ -245,20 +247,38 @@ const CrewAINodeProperties: React.FC<CrewAINodePropertiesProps> = ({
   return (
     <VStack spacing={4} align="stretch">
       <FormControl>
-        <FormLabel>{String(t("workflow.nodes.crewai.processType"))}</FormLabel>
+        <FormLabel fontWeight="500" color="gray.700">
+          {t("workflow.nodes.crewai.processType")}
+        </FormLabel>
         <RadioGroup
           value={data.process_type}
           onChange={handleProcessTypeChange}
         >
           <HStack spacing={4}>
-            <Radio value="sequential">{String(t("workflow.nodes.crewai.sequential"))}</Radio>
-            <Radio value="hierarchical">{String(t("workflow.nodes.crewai.hierarchical"))}</Radio>
+            <Radio
+              value="sequential"
+              colorScheme="blue"
+              borderColor="gray.300"
+              _hover={{ borderColor: "blue.400" }}
+            >
+              {t("workflow.nodes.crewai.sequential")}
+            </Radio>
+            <Radio
+              value="hierarchical"
+              colorScheme="blue"
+              borderColor="gray.300"
+              _hover={{ borderColor: "blue.400" }}
+            >
+              {t("workflow.nodes.crewai.hierarchical")}
+            </Radio>
           </HStack>
         </RadioGroup>
       </FormControl>
 
       <FormControl>
-        <FormLabel>{t("workflow.nodes.crewai.model")}</FormLabel>
+        <FormLabel fontWeight="500" color="gray.700">
+          {t("workflow.nodes.crewai.model")}
+        </FormLabel>
         <ModelSelect
           models={models}
           control={control}
@@ -269,37 +289,60 @@ const CrewAINodeProperties: React.FC<CrewAINodePropertiesProps> = ({
       </FormControl>
 
       {data.process_type === "hierarchical" && (
-        <>
-          <FormControl>
-            <FormLabel>{t("workflow.nodes.crewai.manager")}</FormLabel>
-            <RadioGroup
-              value={useCustomManager ? "custom" : "default"}
-              onChange={(value) => {
-                setUseCustomManager(value === "custom");
-                if (value === "default") {
-                  onNodeDataChange(node.id, "manager_config", {
-                    agent: {
-                      id: uuidv4(),
-                      ...DEFAULT_MANAGER,
-                      allow_delegation: true,
-                    },
-                  });
-                }
-              }}
-            >
-              <HStack spacing={4}>
-                <Radio value="default">{t("workflow.nodes.crewai.defaultManager")}</Radio>
-                <Radio value="custom">{t("workflow.nodes.crewai.customManager")}</Radio>
-              </HStack>
-            </RadioGroup>
-          </FormControl>
-        </>
+        <FormControl>
+          <FormLabel fontWeight="500" color="gray.700">
+            {t("workflow.nodes.crewai.manager")}
+          </FormLabel>
+          <RadioGroup
+            value={useCustomManager ? "custom" : "default"}
+            onChange={(value) => {
+              setUseCustomManager(value === "custom");
+              if (value === "default") {
+                onNodeDataChange(node.id, "manager_config", {
+                  agent: {
+                    id: uuidv4(),
+                    ...DEFAULT_MANAGER,
+                    allow_delegation: true,
+                  },
+                });
+              }
+            }}
+          >
+            <HStack spacing={4}>
+              <Radio
+                value="default"
+                colorScheme="blue"
+                borderColor="gray.300"
+                _hover={{ borderColor: "blue.400" }}
+              >
+                {t("workflow.nodes.crewai.defaultManager")}
+              </Radio>
+              <Radio
+                value="custom"
+                colorScheme="blue"
+                borderColor="gray.300"
+                _hover={{ borderColor: "blue.400" }}
+              >
+                {t("workflow.nodes.crewai.customManager")}
+              </Radio>
+            </HStack>
+          </RadioGroup>
+        </FormControl>
       )}
 
       <Box>
         <HStack justify="space-between" align="center" mb={3}>
           <HStack spacing={2}>
-            <FaRobot size="14px" color="#4A5568" />
+            <Box
+              p={2}
+              borderRadius="lg"
+              bg="blue.50"
+              color="blue.500"
+              transition="all 0.2s"
+              _hover={{ bg: "blue.100" }}
+            >
+              <FaRobot size="14px" />
+            </Box>
             <Text fontSize="md" fontWeight="600" color="gray.700">
               {t("workflow.nodes.crewai.agents")}
             </Text>
@@ -308,63 +351,74 @@ const CrewAINodeProperties: React.FC<CrewAINodePropertiesProps> = ({
             </Text>
           </HStack>
           <Button
-            size="xs"
+            size="sm"
             variant="ghost"
-            leftIcon={<FaPlus size="10px" />}
+            leftIcon={<FaPlus size="12px" />}
             onClick={() => {
               setEditingAgent(undefined);
               onAgentModalOpen();
             }}
             colorScheme="blue"
+            transition="all 0.2s"
+            _hover={{
+              transform: "translateY(-1px)",
+              shadow: "sm",
+            }}
           >
             {t("workflow.common.add")}
           </Button>
         </HStack>
+
         <VStack align="stretch" spacing={2}>
-          {data.agents?.map((agent, index) => (
+          {data.agents?.map((agent) => (
             <Box
               key={agent.id}
-              p={2}
+              p={3}
               bg="gray.50"
-              borderRadius="md"
+              borderRadius="lg"
               borderLeft="3px solid"
               borderLeftColor="blue.400"
               transition="all 0.2s"
               _hover={{
                 bg: "gray.100",
                 borderLeftColor: "blue.500",
+                transform: "translateX(2px)",
+                shadow: "sm",
               }}
             >
               <HStack justify="space-between" align="start">
-                <VStack align="start" spacing={0.5} flex={1}>
-                  <Text
-                    fontSize="sm"
-                    fontWeight="500"
-                    color="gray.700"
-                    noOfLines={1}
-                  >
+                <VStack align="start" spacing={1}>
+                  <Text fontSize="sm" fontWeight="500" color="gray.700">
                     {agent.name}
                   </Text>
-                  <Text fontSize="xs" color="gray.500" noOfLines={1}>
+                  <Text fontSize="xs" color="gray.500">
                     {agent.role}
                   </Text>
                 </VStack>
-                <HStack spacing={1}>
+                <HStack spacing={2}>
                   <IconButton
                     aria-label="Edit agent"
                     icon={<FaEdit size="12px" />}
-                    size="xs"
+                    size="sm"
                     variant="ghost"
                     colorScheme="blue"
                     onClick={() => handleEditAgent(agent)}
+                    transition="all 0.2s"
+                    _hover={{
+                      transform: "scale(1.1)",
+                    }}
                   />
                   <IconButton
                     aria-label="Delete agent"
                     icon={<FaTrash size="12px" />}
-                    size="xs"
+                    size="sm"
                     variant="ghost"
                     colorScheme="red"
                     onClick={() => handleDeleteAgent(agent.id)}
+                    transition="all 0.2s"
+                    _hover={{
+                      transform: "scale(1.1)",
+                    }}
                   />
                 </HStack>
               </HStack>
@@ -376,7 +430,16 @@ const CrewAINodeProperties: React.FC<CrewAINodePropertiesProps> = ({
       <Box>
         <HStack justify="space-between" align="center" mb={3}>
           <HStack spacing={2}>
-            <FaListAlt size="14px" color="#4A5568" />
+            <Box
+              p={2}
+              borderRadius="lg"
+              bg="green.50"
+              color="green.500"
+              transition="all 0.2s"
+              _hover={{ bg: "green.100" }}
+            >
+              <FaListAlt size="14px" />
+            </Box>
             <Text fontSize="md" fontWeight="600" color="gray.700">
               {t("workflow.nodes.crewai.tasks")}
             </Text>
@@ -385,69 +448,75 @@ const CrewAINodeProperties: React.FC<CrewAINodePropertiesProps> = ({
             </Text>
           </HStack>
           <Button
-            size="xs"
+            size="sm"
             variant="ghost"
-            leftIcon={<FaPlus size="10px" />}
+            leftIcon={<FaPlus size="12px" />}
             onClick={() => {
               setEditingTask(undefined);
               onTaskModalOpen();
             }}
             isDisabled={!canAddTask}
-            title={String(
-              !canAddTask
-                ? t("workflow.nodes.crewai.addTaskDisabledMessage")
-                : t("workflow.nodes.crewai.addTaskMessage")
-            )}
-            colorScheme="blue"
+            colorScheme="green"
+            transition="all 0.2s"
+            _hover={{
+              transform: "translateY(-1px)",
+              shadow: "sm",
+            }}
           >
             {t("workflow.common.add")}
           </Button>
         </HStack>
+
         <VStack align="stretch" spacing={2}>
           {data.tasks?.map((task, index) => (
             <Box
               key={index}
-              p={2}
+              p={3}
               bg="gray.50"
-              borderRadius="md"
+              borderRadius="lg"
               borderLeft="3px solid"
               borderLeftColor="green.400"
               transition="all 0.2s"
               _hover={{
                 bg: "gray.100",
                 borderLeftColor: "green.500",
+                transform: "translateX(2px)",
+                shadow: "sm",
               }}
             >
               <HStack justify="space-between" align="start">
-                <VStack align="start" spacing={0.5} flex={1}>
-                  <Text
-                    fontSize="sm"
-                    fontWeight="500"
-                    color="gray.700"
-                    noOfLines={1}
-                  >
+                <VStack align="start" spacing={1}>
+                  <Text fontSize="sm" fontWeight="500" color="gray.700">
                     {task.name}
                   </Text>
-                  <Text fontSize="xs" color="gray.500" noOfLines={1}>
+                  <Text fontSize="xs" color="gray.500" noOfLines={2}>
                     {task.description}
                   </Text>
                 </VStack>
-                <HStack spacing={1}>
+                <HStack spacing={2}>
                   <IconButton
                     aria-label="Edit task"
                     icon={<FaEdit size="12px" />}
-                    size="xs"
+                    size="sm"
                     variant="ghost"
-                    colorScheme="blue"
+                    colorScheme="green"
                     onClick={() => handleEditTask(task)}
+                    transition="all 0.2s"
+                    _hover={{
+                      transform: "scale(1.1)",
+                    }}
                   />
                   <IconButton
                     aria-label="Delete task"
                     icon={<FaTrash size="12px" />}
-                    size="xs"
+                    size="sm"
                     variant="ghost"
                     colorScheme="red"
                     onClick={() => handleDeleteTask(index)}
+                    transition="all 0.2s"
+                    _hover={{
+                      transform: "scale(1.1)",
+                    }}
                   />
                 </HStack>
               </HStack>

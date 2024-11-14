@@ -1,8 +1,4 @@
-import {
-  Text,
-  VStack,
-  Button,
-} from "@chakra-ui/react";
+import { Text, VStack, Button } from "@chakra-ui/react";
 import type React from "react";
 import { useCallback, useState } from "react";
 
@@ -70,7 +66,9 @@ const PluginNodeProperties: React.FC<PluginNodePropertiesProps> = ({
 
   return (
     <VStack align="stretch" spacing={4}>
-      <Text fontWeight="bold" mb={2}>Input Parameters:</Text>
+      <Text fontWeight="bold" mb={2} color="gray.700">
+        Input Parameters:
+      </Text>
       {tool?.input_parameters &&
         Object.entries(tool.input_parameters).map(([key]) => (
           <VariableSelector
@@ -84,9 +82,29 @@ const PluginNodeProperties: React.FC<PluginNodePropertiesProps> = ({
             handleKeyDown={variableInsertionHooks[key]?.handleKeyDown}
             insertVariable={variableInsertionHooks[key]?.insertVariable}
             availableVariables={availableVariables}
+            minHeight="80px"
           />
         ))}
-      <Button onClick={handleInvoke} isLoading={loading}>
+      <Button
+        onClick={handleInvoke}
+        isLoading={loading}
+        colorScheme="blue"
+        size="md"
+        borderRadius="lg"
+        bg="ui.main"
+        color="white"
+        fontWeight="500"
+        transition="all 0.2s"
+        _hover={{
+          bg: "blue.500",
+          transform: "translateY(-1px)",
+          boxShadow: "md",
+        }}
+        _active={{
+          bg: "blue.600",
+          transform: "translateY(0)",
+        }}
+      >
         Run Tool
       </Button>
     </VStack>
