@@ -1,4 +1,11 @@
-import { Box, Flex, Text, useColorModeValue } from "@chakra-ui/react";
+import {
+  Box,
+  Flex,
+  Text,
+  useColorModeValue,
+  Icon,
+  HStack,
+} from "@chakra-ui/react";
 import "highlight.js/styles/atom-one-dark.css";
 import { Terminal } from "lucide-react";
 import ReactMarkdown from "react-markdown";
@@ -7,26 +14,37 @@ import { v4 } from "uuid";
 
 import CopyButton from "./CopyButton";
 
-// const DynamicLoadMarkdownCSSStyle = dynamic(
-//   () => import("./LoadMarkdownCSSStyle"),
-//   {
-//     ssr: false, // 关闭服务器端渲染，这样只在客户端执行
-//   }
-// );
-
 const Markdown = ({ content }: { content: any }) => {
-  const textColor = useColorModeValue("ui.dark", "ui.white");
-  const secBgColor = useColorModeValue("ui.secondary", "ui.darkSlate");
+  const textColor = useColorModeValue("gray.700", "gray.200");
+  const codeBg = useColorModeValue("gray.50", "gray.700");
+  const headerBg = useColorModeValue("gray.50", "gray.700");
+  const borderColor = useColorModeValue("gray.200", "gray.600");
+  const inlineCodeBg = useColorModeValue("gray.100", "gray.700");
 
   return (
     <>
-      {/* <DynamicLoadMarkdownCSSStyle /> */}
       {content && !content.startsWith("data:image") ? (
         <ReactMarkdown
           rehypePlugins={[rehypeHighlight]}
           components={{
             pre: ({ children }) => (
-              <Box as="pre" overflow="auto">
+              <Box 
+                as="pre" 
+                overflow="auto"
+                sx={{
+                  "&::-webkit-scrollbar": {
+                    width: "4px",
+                    height: "4px",
+                  },
+                  "&::-webkit-scrollbar-track": {
+                    bg: "transparent",
+                  },
+                  "&::-webkit-scrollbar-thumb": {
+                    bg: "gray.300",
+                    borderRadius: "full",
+                  },
+                }}
+              >
                 {children}
               </Box>
             ),
@@ -39,38 +57,73 @@ const Markdown = ({ content }: { content: any }) => {
                 return (
                   <Box
                     borderWidth="1px"
-                    borderRadius="md"
+                    borderColor={borderColor}
+                    borderRadius="lg"
                     overflow="hidden"
-                    my={2}
+                    my={4}
                     maxW="full"
+                    transition="all 0.2s"
+                    _hover={{
+                      boxShadow: "md",
+                      borderColor: "gray.300",
+                    }}
                   >
                     <Flex
                       align="center"
                       justify="space-between"
-                      bg={secBgColor}
-                      p={1}
+                      bg={headerBg}
+                      px={4}
+                      py={2}
                       borderBottomWidth="1px"
+                      borderColor={borderColor}
                     >
-                      <Flex align="center" gap={2}>
-                        <Terminal size={18} />
-                        <Text fontSize="sm" color={textColor}>
-                          {match[0]}
+                      <HStack spacing={3}>
+                        <Icon 
+                          as={Terminal} 
+                          boxSize={4} 
+                          color="gray.500"
+                        />
+                        <Text 
+                          fontSize="sm" 
+                          color="gray.600"
+                          fontWeight="500"
+                        >
+                          {match[1].toUpperCase()}
                         </Text>
-                      </Flex>
+                      </HStack>
                       <CopyButton id={id} />
                     </Flex>
                     <Box
                       as="pre"
                       id={id}
-                      p={2}
+                      p={4}
                       overflowX="auto"
-                      whiteSpace="pre-wrap"
+                      bg={codeBg}
+                      fontSize="sm"
+                      sx={{
+                        "&::-webkit-scrollbar": {
+                          width: "4px",
+                          height: "4px",
+                        },
+                        "&::-webkit-scrollbar-track": {
+                          bg: "transparent",
+                        },
+                        "&::-webkit-scrollbar-thumb": {
+                          bg: "gray.300",
+                          borderRadius: "full",
+                        },
+                      }}
                     >
                       <Box
                         as="code"
-                        backgroundColor={"white"}
                         className={className}
                         {...props}
+                        sx={{
+                          "& .hljs": {
+                            bg: "transparent",
+                            color: textColor,
+                          },
+                        }}
                       >
                         {children}
                       </Box>
@@ -83,9 +136,12 @@ const Markdown = ({ content }: { content: any }) => {
                 <Box
                   as="code"
                   {...props}
-                  bg={secBgColor}
                   px={2}
+                  py={0.5}
+                  bg={inlineCodeBg}
                   borderRadius="md"
+                  fontSize="sm"
+                  color={textColor}
                 >
                   {children}
                 </Box>
@@ -93,16 +149,35 @@ const Markdown = ({ content }: { content: any }) => {
             },
             img: ({ alt, src, title }) => {
               return (
-                <Box as="figure" my={3}>
+                <Box 
+                  as="figure" 
+                  my={6}
+                  transition="all 0.2s"
+                  _hover={{
+                    transform: "scale(1.01)",
+                  }}
+                >
                   <Box
                     as="img"
                     alt={alt}
                     src={src}
                     title={title}
-                    style={{ maxWidth: "100%", height: "auto" }}
+                    borderRadius="lg"
+                    boxShadow="sm"
+                    maxW="100%"
+                    h="auto"
+                    transition="all 0.2s"
+                    _hover={{
+                      boxShadow: "md",
+                    }}
                   />
                   {alt && (
-                    <Text fontSize="sm" color={textColor} textAlign="center">
+                    <Text
+                      fontSize="sm"
+                      color="gray.500"
+                      textAlign="center"
+                      mt={2}
+                    >
                       {alt}
                     </Text>
                   )}
@@ -115,7 +190,20 @@ const Markdown = ({ content }: { content: any }) => {
           {content}
         </ReactMarkdown>
       ) : (
-        <Box as="img" src={content} alt="Image" width="100%" height={"100%"} />
+        <Box
+          as="img"
+          src={content}
+          alt="Image"
+          width="100%"
+          height="100%"
+          objectFit="contain"
+          borderRadius="lg"
+          transition="all 0.2s"
+          _hover={{
+            transform: "scale(1.01)",
+            boxShadow: "lg",
+          }}
+        />
       )}
     </>
   );

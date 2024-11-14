@@ -13,6 +13,7 @@ import {
   IconButton,
   CloseButton,
   HStack,
+  useColorModeValue,
 } from "@chakra-ui/react";
 import React, { useState, useEffect } from "react";
 
@@ -31,10 +32,12 @@ const CredentialsPanel: React.FC<CredentialsPanelProps> = ({
   onSave,
 }) => {
   const [credentials, setCredentials] = useState<Record<string, any>>({});
-  const [showPasswords, setShowPasswords] = useState<Record<string, boolean>>(
-    {}
-  );
- 
+  const [showPasswords, setShowPasswords] = useState<Record<string, boolean>>({});
+
+  const bgColor = useColorModeValue("white", "gray.800");
+  const borderColor = useColorModeValue("gray.100", "gray.700");
+  const inputBgColor = useColorModeValue("ui.inputbgcolor", "gray.700");
+  const labelColor = useColorModeValue("gray.700", "gray.300");
 
   useEffect(() => {
     if (skill.credentials) {
@@ -69,68 +72,125 @@ const CredentialsPanel: React.FC<CredentialsPanelProps> = ({
   return (
     <Box
       width="300px"
-      p={4}
-      borderLeft="1px"
-      borderColor="gray.200"
+      p={6}
+      borderLeft="1px solid"
+      borderColor={borderColor}
+      bg={bgColor}
       position="relative"
-      maxH={"full"}
+      maxH="full"
+      transition="all 0.2s"
+      boxShadow="sm"
+      _hover={{
+        boxShadow: "md",
+      }}
     >
       <CloseButton
-        aria-label="Close panel"
         onClick={onClose}
         position="absolute"
-        right="8px"
-        top="8px"
-        size="sm"
+        right={4}
+        top={4}
+        size="md"
+        borderRadius="full"
+        transition="all 0.2s"
+        _hover={{
+          bg: "gray.100",
+          transform: "rotate(90deg)",
+        }}
       />
-      <Heading size="md" mb={4}>
-        {skill.display_name}
-      </Heading>
-      <Text mb={4} color={"gray.500"}>
-        {skill.description}
-      </Text>
-      {credentials && Object.keys(credentials).length > 0 ? (
-        <VStack spacing={4}>
-          {Object.entries(credentials).map(([key, credInfo]) => (
-            <FormControl key={key}>
-              <HStack spacing={2} mb={1}>
-                <FormLabel mb={0}>{formatLabel(key)}</FormLabel>
-                <Tooltip label={credInfo.description} placement="top">
-                  <QuestionIcon boxSize={3} color="gray.500" />
-                </Tooltip>
-              </HStack>
-              <InputGroup>
-                <Input
-                  type={showPasswords[key] ? "text" : "password"}
-                  value={credInfo.value || ""}
-                  onChange={(e) => handleInputChange(key, e.target.value)}
-                  placeholder={formatLabel(key)}
-                />
-                <InputRightElement width="4.5rem">
-                  <IconButton
-                    h="1.75rem"
-                    size="sm"
-                    onClick={() => togglePasswordVisibility(key)}
-                    aria-label={
-                      showPasswords[key] ? "Hide password" : "Show password"
-                    }
-                    icon={showPasswords[key] ? <ViewOffIcon /> : <ViewIcon />}
+
+      <VStack spacing={6} align="stretch">
+        <Heading size="md" color="gray.800" fontWeight="600">
+          {skill.display_name}
+        </Heading>
+
+        <Text color="gray.500" fontSize="sm" lineHeight="tall">
+          {skill.description}
+        </Text>
+
+        {credentials && Object.keys(credentials).length > 0 ? (
+          <VStack spacing={4}>
+            {Object.entries(credentials).map(([key, credInfo]) => (
+              <FormControl key={key}>
+                <HStack spacing={2} mb={2}>
+                  <FormLabel 
+                    mb={0}
+                    fontSize="sm"
+                    fontWeight="500"
+                    color={labelColor}
+                  >
+                    {formatLabel(key)}
+                  </FormLabel>
+                  <Tooltip 
+                    label={credInfo.description} 
+                    placement="top"
+                    hasArrow
+                    bg="gray.700"
+                    color="white"
+                    px={3}
+                    py={2}
+                    borderRadius="md"
+                  >
+                    <QuestionIcon boxSize={3} color="gray.400" />
+                  </Tooltip>
+                </HStack>
+                <InputGroup size="md">
+                  <Input
+                    type={showPasswords[key] ? "text" : "password"}
+                    value={credInfo.value || ""}
+                    onChange={(e) => handleInputChange(key, e.target.value)}
+                    placeholder={formatLabel(key)}
+                    bg={inputBgColor}
+                    border="1px solid"
+                    borderColor={borderColor}
+                    borderRadius="lg"
+                    fontSize="sm"
+                    transition="all 0.2s"
+                    _hover={{
+                      borderColor: "gray.300",
+                    }}
+                    _focus={{
+                      borderColor: "ui.main",
+                      boxShadow: "0 0 0 1px var(--chakra-colors-ui-main)",
+                    }}
                   />
-                </InputRightElement>
-              </InputGroup>
-            </FormControl>
-          ))}
-          <CustomButton
-            text="Save"
-            variant="blue"
-            onClick={handleSave}
-            mt={4}
-            width="100%"
-          />
-        </VStack>
-      ) : (
-        <Text>No credentials required for this tool.</Text>
-      )}
+                  <InputRightElement>
+                    <IconButton
+                      aria-label={showPasswords[key] ? "Hide password" : "Show password"}
+                      icon={showPasswords[key] ? <ViewOffIcon /> : <ViewIcon />}
+                      size="sm"
+                      variant="ghost"
+                      onClick={() => togglePasswordVisibility(key)}
+                      transition="all 0.2s"
+                      borderRadius="lg"
+                      _hover={{
+                        bg: "gray.100",
+                      }}
+                    />
+                  </InputRightElement>
+                </InputGroup>
+              </FormControl>
+            ))}
+            <CustomButton
+              text="Save"
+              variant="blue"
+              onClick={handleSave}
+              width="full"
+              transition="all 0.2s"
+              _hover={{
+                transform: "translateY(-1px)",
+                boxShadow: "md",
+              }}
+              _active={{
+                transform: "translateY(0)",
+              }}
+            />
+          </VStack>
+        ) : (
+          <Text color="gray.500" fontSize="sm">
+            No credentials required for this tool.
+          </Text>
+        )}
+      </VStack>
     </Box>
   );
 };

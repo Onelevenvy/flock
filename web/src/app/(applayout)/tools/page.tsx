@@ -11,6 +11,7 @@ import {
   TagLabel,
   TagRightIcon,
   useColorModeValue,
+  IconButton,
 } from "@chakra-ui/react";
 import React, { useState, useEffect } from "react";
 import { useTranslation } from "react-i18next";
@@ -135,9 +136,9 @@ function Skills() {
                   >
                     <HStack spacing={4} mb={4}>
                       <Box
-                        p={2}
                         borderRadius="lg"
                         bg={`${skill.managed ? "blue" : "purple"}.50`}
+                        as={IconButton}
                       >
                         <ToolsIcon
                           h="6"
@@ -158,16 +159,22 @@ function Skills() {
                       </Heading>
                     </HStack>
 
-                    <Text
-                      color="gray.600"
-                      fontSize="sm"
-                      minH="3rem"
-                      maxH="3rem"
+                    <Box
                       overflow="hidden"
+                      minH="55px"
+                      h="55px"
+                      maxH="55px"
                       mb={4}
                     >
-                      {skill.description}
-                    </Text>
+                      <Text
+                        color="gray.600"
+                        fontSize="sm"
+                        textOverflow="ellipsis"
+                        noOfLines={2}
+                      >
+                        {skill.description}
+                      </Text>
+                    </Box>
 
                     <Flex justifyContent="space-between" alignItems="center">
                       {!skill.managed ? (

@@ -5,6 +5,7 @@ import {
   ModalContent,
   ModalHeader,
   ModalOverlay,
+  useColorModeValue,
 } from "@chakra-ui/react";
 import { useState } from "react";
 import { type SubmitHandler, useForm } from "react-hook-form";
@@ -29,6 +30,9 @@ const AddUpload = ({ isOpen, onClose }: AddUploadProps) => {
   const queryClient = useQueryClient();
   const showToast = useCustomToast();
   const [fileType, setFileType] = useState<"file" | "web">("file");
+
+  const bgColor = useColorModeValue("white", "gray.800");
+  const borderColor = useColorModeValue("gray.100", "gray.700");
 
   const form = useForm<UploadFormData>({
     mode: "onBlur",
@@ -67,17 +71,44 @@ const AddUpload = ({ isOpen, onClose }: AddUploadProps) => {
   };
 
   return (
-    <Modal
-      isOpen={isOpen}
-      onClose={onClose}
+    <Modal 
+      isOpen={isOpen} 
+      onClose={onClose} 
       size={{ base: "sm", md: "md" }}
       isCentered
+      motionPreset="slideInBottom"
     >
-      <ModalOverlay />
-      <ModalContent>
-        <ModalHeader>{t("knowledge.upload.add.title")}</ModalHeader>
-        <ModalCloseButton />
-        <ModalBody pb={6}>
+      <ModalOverlay bg="blackAlpha.300" backdropFilter="blur(10px)" />
+      <ModalContent
+        bg={bgColor}
+        borderRadius="xl"
+        boxShadow="xl"
+        border="1px solid"
+        borderColor={borderColor}
+      >
+        <ModalHeader 
+          borderBottom="1px solid"
+          borderColor={borderColor}
+          py={4}
+          fontSize="lg"
+          fontWeight="600"
+        >
+          {t("knowledge.upload.add.title")}
+        </ModalHeader>
+        
+        <ModalCloseButton
+          position="absolute"
+          right={4}
+          top={4}
+          borderRadius="full"
+          transition="all 0.2s"
+          _hover={{
+            bg: "gray.100",
+            transform: "rotate(90deg)",
+          }}
+        />
+
+        <ModalBody py={6}>
           <UploadForm
             form={form}
             fileType={fileType}

@@ -14,7 +14,7 @@ import {
 import { useRouter } from "next/navigation";
 import { useMemo } from "react";
 import { useTranslation } from "react-i18next";
-import { GoGitMerge, GoGitPullRequestDraft,GoWorkflow } from "react-icons/go";
+import { GoGitMerge, GoGitPullRequestDraft, GoWorkflow } from "react-icons/go";
 import { PiChatCircleDots } from "react-icons/pi";
 import { RiApps2Line, RiBookLine } from "react-icons/ri";
 import { useQuery } from "react-query";
@@ -155,7 +155,7 @@ function Teams() {
                 >
                   <HStack spacing={4} mb={4}>
                     <Box
-                      p={2}
+                      as={IconButton}
                       borderRadius="lg"
                       bg={`${getWorkflowColor(team.workflow)}.50`}
                     >

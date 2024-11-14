@@ -12,10 +12,16 @@ import {
   Radio,
   RadioGroup,
   Stack,
+  VStack,
+  useColorModeValue,
+  Text,
+  Box,
+  HStack,
 } from "@chakra-ui/react";
 import React, { useEffect, useCallback } from "react";
 import { Controller, UseFormReturn, useWatch } from "react-hook-form";
 import { useTranslation } from "react-i18next";
+import { FiUpload, FiGlobe } from "react-icons/fi";
 
 import {
   Body_uploads_create_upload,
@@ -51,8 +57,12 @@ const UploadForm: React.FC<UploadFormProps> = ({
     register,
     control,
     setValue,
-    formState: { errors, isDirty, isValid },
+    formState: { errors },
   } = form;
+
+  const bgColor = useColorModeValue("white", "gray.800");
+  const borderColor = useColorModeValue("gray.100", "gray.700");
+  const inputBgColor = useColorModeValue("ui.inputbgcolor", "gray.700");
 
   const watchFile = useWatch({ control, name: "file" }) as File[] | undefined;
   const watchWebUrl = useWatch({ control, name: "web_url" }) as string | undefined;
@@ -63,7 +73,6 @@ const UploadForm: React.FC<UploadFormProps> = ({
 
   useEffect(() => {
     let fileName = "";
-
     if (fileType === "file" && watchFile && watchFile.length > 0) {
       fileName = watchFile[0].name;
     } else if (fileType === "web" && watchWebUrl) {
@@ -78,11 +87,16 @@ const UploadForm: React.FC<UploadFormProps> = ({
   }, [watchFile, watchWebUrl, fileType, setValue, isUpdating, generateDefaultDescription]);
 
   return (
-    <>
+    <VStack spacing={6} align="stretch">
       <FormControl isInvalid={!!errors.name}>
-        <FormLabel htmlFor="name">{t("knowledge.upload.form.name.label")}</FormLabel>
+        <FormLabel 
+          fontSize="sm"
+          fontWeight="500"
+          color="gray.700"
+        >
+          {t("knowledge.upload.form.name.label")}
+        </FormLabel>
         <Input
-          id="name"
           {...register("name", {
             pattern: {
               value: /^[a-zA-Z0-9_-]{1,64}$/,
@@ -90,46 +104,118 @@ const UploadForm: React.FC<UploadFormProps> = ({
             },
           })}
           placeholder={String(t("knowledge.upload.form.name.placeholder"))}
-          type="text"
+          bg={inputBgColor}
+          border="1px solid"
+          borderColor={borderColor}
+          borderRadius="lg"
+          fontSize="sm"
+          transition="all 0.2s"
+          _hover={{
+            borderColor: "gray.300",
+          }}
+          _focus={{
+            borderColor: "ui.main",
+            boxShadow: "0 0 0 1px var(--chakra-colors-ui-main)",
+          }}
         />
         {errors.name && (
           <FormErrorMessage>{errors.name.message}</FormErrorMessage>
         )}
       </FormControl>
 
-      <FormControl isInvalid={!!errors.description} mt={4}>
-        <FormLabel htmlFor="description">{t("knowledge.upload.form.description.label")}</FormLabel>
+      <FormControl isInvalid={!!errors.description}>
+        <FormLabel 
+          fontSize="sm"
+          fontWeight="500"
+          color="gray.700"
+        >
+          {t("knowledge.upload.form.description.label")}
+        </FormLabel>
         <Input
-          id="description"
           {...register("description")}
-          placeholder={t("knowledge.upload.form.description.placeholder")|| "Enter initial input"}
-          type="text"
+          placeholder={t("knowledge.upload.form.description.placeholder") || "Enter initial input"}
+          bg={inputBgColor}
+          border="1px solid"
+          borderColor={borderColor}
+          borderRadius="lg"
+          fontSize="sm"
+          transition="all 0.2s"
+          _hover={{
+            borderColor: "gray.300",
+          }}
+          _focus={{
+            borderColor: "ui.main",
+            boxShadow: "0 0 0 1px var(--chakra-colors-ui-main)",
+          }}
         />
       </FormControl>
 
-      <FormControl isRequired mt={4}>
-        <FormLabel>{t("knowledge.upload.form.type.label")}</FormLabel>
+      <FormControl isRequired>
+        <FormLabel 
+          fontSize="sm"
+          fontWeight="500"
+          color="gray.700"
+        >
+          {t("knowledge.upload.form.type.label")}
+        </FormLabel>
         <RadioGroup value={fileType} onChange={setFileType}>
-          <Stack direction="row">
-            <Radio value="file">{t("knowledge.upload.form.type.file")}</Radio>
-            <Radio value="web">{t("knowledge.upload.form.type.web")}</Radio>
+          <Stack direction="row" spacing={6}>
+            <Radio 
+              value="file" 
+              colorScheme="blue"
+              size="lg"
+            >
+              <HStack spacing={2}>
+                <FiUpload />
+                <Text>{t("knowledge.upload.form.type.file")}</Text>
+              </HStack>
+            </Radio>
+            <Radio 
+              value="web" 
+              colorScheme="blue"
+              size="lg"
+            >
+              <HStack spacing={2}>
+                <FiGlobe />
+                <Text>{t("knowledge.upload.form.type.web")}</Text>
+              </HStack>
+            </Radio>
           </Stack>
         </RadioGroup>
       </FormControl>
 
       {fileType === "file" ? (
-        <FileUpload
-          name="file"
-          acceptedFileTypes=".pdf,.docx,.pptx,.xlsx,.txt,.html,.md"
-          isRequired={!isUpdating}
-          placeholder={t("knowledge.upload.form.file.label")|| "Enter initial input"}
-          control={control}
+        <Box
+          bg={bgColor}
+          borderRadius="xl"
+          border="1px solid"
+          borderColor={borderColor}
+          p={4}
+          transition="all 0.2s"
+          _hover={{
+            borderColor: "gray.200",
+            boxShadow: "sm",
+          }}
         >
-          {t("knowledge.upload.form.file.button")}
-        </FileUpload>
+          <FileUpload
+            name="file"
+            acceptedFileTypes=".pdf,.docx,.pptx,.xlsx,.txt,.html,.md"
+            isRequired={!isUpdating}
+            placeholder={t("knowledge.upload.form.file.label") || "Enter initial input"}
+            control={control}
+          >
+            {t("knowledge.upload.form.file.button")}
+          </FileUpload>
+        </Box>
       ) : (
-        <FormControl isRequired mt={4}>
-          <FormLabel>{t("knowledge.upload.form.webUrl.label")}</FormLabel>
+        <FormControl isRequired>
+          <FormLabel 
+            fontSize="sm"
+            fontWeight="500"
+            color="gray.700"
+          >
+            {t("knowledge.upload.form.webUrl.label")}
+          </FormLabel>
           <Input
             {...register("web_url", {
               required: String(t("knowledge.upload.error.required")),
@@ -139,6 +225,19 @@ const UploadForm: React.FC<UploadFormProps> = ({
               },
             })}
             placeholder={String(t("knowledge.upload.form.webUrl.placeholder"))}
+            bg={inputBgColor}
+            border="1px solid"
+            borderColor={borderColor}
+            borderRadius="lg"
+            fontSize="sm"
+            transition="all 0.2s"
+            _hover={{
+              borderColor: "gray.300",
+            }}
+            _focus={{
+              borderColor: "ui.main",
+              boxShadow: "0 0 0 1px var(--chakra-colors-ui-main)",
+            }}
           />
           {errors.web_url && (
             <FormErrorMessage>{errors.web_url.message}</FormErrorMessage>
@@ -149,15 +248,19 @@ const UploadForm: React.FC<UploadFormProps> = ({
       <Controller
         control={control}
         name="chunk_size"
-        rules={{ 
-          required: String(t("knowledge.upload.error.required"))
-        }}
+        rules={{ required: String(t("knowledge.upload.error.required")) }}
         render={({
           field: { onChange, onBlur, value, name, ref },
           fieldState: { error },
         }) => (
-          <FormControl mt={4} isRequired isInvalid={!!error}>
-            <FormLabel htmlFor="chunk_size">{t("knowledge.upload.form.chunkSize.label")}</FormLabel>
+          <FormControl isRequired isInvalid={!!error}>
+            <FormLabel 
+              fontSize="sm"
+              fontWeight="500"
+              color="gray.700"
+            >
+              {t("knowledge.upload.form.chunkSize.label")}
+            </FormLabel>
             <NumberInput
               id="chunk_size"
               name={name}
@@ -165,8 +268,21 @@ const UploadForm: React.FC<UploadFormProps> = ({
               onChange={(_, valueAsNumber) => onChange(valueAsNumber)}
               onBlur={onBlur}
               min={0}
+              bg={inputBgColor}
+              borderRadius="lg"
             >
-              <NumberInputField ref={ref} />
+              <NumberInputField 
+                ref={ref}
+                border="1px solid"
+                borderColor={borderColor}
+                _hover={{
+                  borderColor: "gray.300",
+                }}
+                _focus={{
+                  borderColor: "ui.main",
+                  boxShadow: "0 0 0 1px var(--chakra-colors-ui-main)",
+                }}
+              />
               <NumberInputStepper>
                 <NumberIncrementStepper />
                 <NumberDecrementStepper />
@@ -185,8 +301,14 @@ const UploadForm: React.FC<UploadFormProps> = ({
           field: { onChange, onBlur, value, name, ref },
           fieldState: { error },
         }) => (
-          <FormControl mt={4} isRequired isInvalid={!!error}>
-            <FormLabel htmlFor="chunk_overlap">{t("knowledge.upload.form.chunkOverlap.label")}</FormLabel>
+          <FormControl isRequired isInvalid={!!error}>
+            <FormLabel 
+              fontSize="sm"
+              fontWeight="500"
+              color="gray.700"
+            >
+              {t("knowledge.upload.form.chunkOverlap.label")}
+            </FormLabel>
             <NumberInput
               id="chunk_overlap"
               name={name}
@@ -194,8 +316,21 @@ const UploadForm: React.FC<UploadFormProps> = ({
               onChange={(_, valueAsNumber) => onChange(valueAsNumber)}
               onBlur={onBlur}
               min={0}
+              bg={inputBgColor}
+              borderRadius="lg"
             >
-              <NumberInputField ref={ref} />
+              <NumberInputField 
+                ref={ref}
+                border="1px solid"
+                borderColor={borderColor}
+                _hover={{
+                  borderColor: "gray.300",
+                }}
+                _focus={{
+                  borderColor: "ui.main",
+                  boxShadow: "0 0 0 1px var(--chakra-colors-ui-main)",
+                }}
+              />
               <NumberInputStepper>
                 <NumberIncrementStepper />
                 <NumberDecrementStepper />
@@ -206,20 +341,34 @@ const UploadForm: React.FC<UploadFormProps> = ({
         )}
       />
 
-      <Stack direction="row" spacing={4} mt={4}>
+      <Stack direction="row" spacing={4} justify="flex-end">
         <Button
           variant="primary"
           onClick={onSubmit}
           isLoading={isSubmitting || isLoading}
-          isDisabled={!isDirty || !isValid}
+          transition="all 0.2s"
+          _hover={{
+            transform: "translateY(-1px)",
+            boxShadow: "md",
+          }}
+          _active={{
+            transform: "translateY(0)",
+          }}
         >
           {t("knowledge.upload.form.actions.save")}
         </Button>
-        <Button onClick={onCancel}>
+        <Button
+          onClick={onCancel}
+          variant="ghost"
+          transition="all 0.2s"
+          _hover={{
+            bg: "gray.100",
+          }}
+        >
           {t("knowledge.upload.form.actions.cancel")}
         </Button>
       </Stack>
-    </>
+    </VStack>
   );
 };
 
