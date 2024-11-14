@@ -41,6 +41,13 @@ function DebugPreview({
           top={2}
           size={"md"}
           zIndex={2}
+         
+          borderRadius="full"
+          transition="all 0.2s"
+          _hover={{
+            bg: "gray.100",
+            transform: "rotate(90deg)",
+          }}
         />
       )}
       

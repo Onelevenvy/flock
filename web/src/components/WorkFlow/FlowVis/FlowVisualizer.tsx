@@ -115,9 +115,9 @@ const FlowVisualizer: React.FC<FlowVisualizerProps> = ({
           ...node.style,
           border:
             node.id === selectedNodeId
-              ? "2px solid #2970ff"
+              ? "3px solid #2970ff"
               : isActive
-                ? "3px solid #38a169"
+                ? "4px solid #38a169"
                 : "none",
           borderRadius: "8px",
           backgroundColor: isActive ? "#e6fffa" : "white",

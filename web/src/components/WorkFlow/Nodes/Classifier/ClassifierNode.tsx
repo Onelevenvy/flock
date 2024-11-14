@@ -13,7 +13,7 @@ const ClassifierNode: React.FC<NodeProps<ClassifierNodeData>> = (props) => {
   const { categories } = props.data;
 
   const handleStyle = {
-    background: 'var(--chakra-colors-pink-500)',
+    background: 'var(--chakra-colors-ui-wfhandlecolor)',
     width: 8,
     height: 8,
     border: '2px solid white',

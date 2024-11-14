@@ -8,7 +8,7 @@ const AnswerNode: React.FC<NodeProps> = (props) => {
   const { icon: Icon, colorScheme } = nodeConfig.answer;
 
   const handleStyle = {
-    background: 'var(--chakra-colors-orange-500)',
+    background: 'var(--chakra-colors-ui-wfhandlecolor)',
     width: 8,
     height: 8,
     border: '2px solid white',

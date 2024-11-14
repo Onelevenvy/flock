@@ -14,7 +14,7 @@ const EndNode: React.FC<NodeProps> = (props) => {
         position={Position.Left} 
         id="left"
         style={{
-          background: 'var(--chakra-colors-red-500)',
+          background: 'var(--chakra-colors-ui-wfhandlecolor)',
           width: 8,
           height: 8,
           border: '2px solid white',

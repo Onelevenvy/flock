@@ -11,7 +11,7 @@ const RetrievalNode: React.FC<NodeProps> = (props) => {
   const selectedDatabase = props.data.knownledge_database?.[0] || null;
 
   const handleStyle = {
-    background: 'var(--chakra-colors-teal-500)',
+    background: 'var(--chakra-colors-ui-wfhandlecolor)',
     width: 8,
     height: 8,
     border: '2px solid white',

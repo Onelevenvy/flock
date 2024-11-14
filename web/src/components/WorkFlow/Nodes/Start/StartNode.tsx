@@ -14,7 +14,7 @@ const StartNode: React.FC<NodeProps> = (props) => {
         position={Position.Right} 
         id="right"
         style={{
-          background: 'var(--chakra-colors-green-500)',
+          background: 'var(--chakra-colors-ui-wfhandlecolor)',
           width: 8,
           height: 8,
           border: '2px solid white',

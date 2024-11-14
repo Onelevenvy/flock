@@ -12,19 +12,39 @@ const ToolNode: React.FC<NodeProps> = (props) => {
   const tools = Array.isArray(props.data.tools) ? props.data.tools : [];
 
   const handleStyle = {
-    background: 'var(--chakra-colors-purple-500)',
+    background: "var(--chakra-colors-ui-wfhandlecolor)",
     width: 8,
     height: 8,
-    border: '2px solid white',
-    transition: 'all 0.2s',
+    border: "2px solid white",
+    transition: "all 0.2s",
   };
 
   return (
     <BaseNode {...props} icon={<Icon />} colorScheme={colorScheme}>
-      <Handle type="target" position={Position.Left} id="left" style={handleStyle} />
-      <Handle type="target" position={Position.Right} id="right" style={handleStyle} />
-      <Handle type="source" position={Position.Left} id="left" style={handleStyle} />
-      <Handle type="source" position={Position.Right} id="right" style={handleStyle} />
+      <Handle
+        type="target"
+        position={Position.Left}
+        id="left"
+        style={handleStyle}
+      />
+      <Handle
+        type="target"
+        position={Position.Right}
+        id="right"
+        style={handleStyle}
+      />
+      <Handle
+        type="source"
+        position={Position.Left}
+        id="left"
+        style={handleStyle}
+      />
+      <Handle
+        type="source"
+        position={Position.Right}
+        id="right"
+        style={handleStyle}
+      />
 
       <VStack align="stretch" spacing={1}>
         {tools.length > 0 ? (
@@ -35,7 +55,7 @@ const ToolNode: React.FC<NodeProps> = (props) => {
               borderRadius="md"
               p={1}
               transition="all 0.2s"
-              _hover={{ 
+              _hover={{
                 bg: "gray.100",
                 transform: "translateY(-1px)",
                 boxShadow: "sm",
@@ -43,20 +63,16 @@ const ToolNode: React.FC<NodeProps> = (props) => {
             >
               <HStack spacing={2} px={2}>
                 <ToolsIcon tools_name={tool.replace(/ /g, "_")} />
-                <Text 
-                  fontSize="xs" 
-                  fontWeight="500"
-                  color="gray.700"
-                >
+                <Text fontSize="xs" fontWeight="500" color="gray.700">
                   {tool}
                 </Text>
               </HStack>
             </Box>
           ))
         ) : (
-          <Text 
-            fontSize="xs" 
-            color="gray.500" 
+          <Text
+            fontSize="xs"
+            color="gray.500"
             textAlign="center"
             fontWeight="500"
           >

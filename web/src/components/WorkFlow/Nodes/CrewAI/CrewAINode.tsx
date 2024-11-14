@@ -11,7 +11,7 @@ const CrewAINode: React.FC<NodeProps> = (props) => {
   const data = props.data as CrewAINodeData;
 
   const handleStyle = {
-    background: 'var(--chakra-colors-purple-500)',
+    background: 'var(--chakra-colors-ui-wfhandlecolor)',
     width: 8,
     height: 8,
     border: '2px solid white',
