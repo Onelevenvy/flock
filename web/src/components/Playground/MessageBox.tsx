@@ -99,12 +99,22 @@ const MessageBox = ({ message, onResume, isPlayground }: MessageBoxProps) => {
   }, [message]);
 
   const tqxIcon = () => {
-    const hw = 6;
-    if (type === "human") return <Icon as={FaUser} w={hw} h={hw} />;
-    if (type === "tool") return <Icon as={FaTools} w={hw} h={hw} />;
-    if (type === "ai") return <Icon as={FaRobot} w={hw} h={hw} />;
-    if (type === "interrupt") return <Icon as={FaHandPaper} w={hw} h={hw} />;
-    return <Icon as={FaBook} w={hw} h={hw} />;
+    const hw = 5;
+    
+    if (type === "human") {
+      return <Icon as={FaUser} w={hw} h={hw} color="blue.500" />;  // 用户图标使用蓝色
+    }
+    if (type === "tool") {
+      return <Icon as={FaTools} w={hw} h={hw} color="gray.500" />; // 工具图标使用紫色
+    }
+    if (type === "ai") {
+      return <Icon as={FaRobot} w={hw} h={hw} color="green.400" />; // AI图标使用绿色
+    }
+    if (type === "interrupt") {
+      return <Icon as={FaHandPaper} w={hw} h={hw} color="cyan.500" />; // 中断图标使用橙色
+    }
+
+    return <Icon as={FaBook} w={hw} h={hw} color="orange.500" />; // 默认图标使用灰色
   };
 
   function isImag(content: any): boolean {
@@ -159,9 +169,8 @@ const MessageBox = ({ message, onResume, isPlayground }: MessageBoxProps) => {
           gap={4}
         >
           <Box
-            // p={2}
             borderRadius="lg"
-            bg={type === "human" ? "blue.50" : "gray.50"}
+            bg={type === "human" ? "blue.50" : "blue.50"}
             alignSelf="flex-start"
             as={IconButton}
           >

@@ -77,10 +77,10 @@ const ChatBotList = () => {
           >
             <HStack spacing={3}>
               <Box
-                p={2}
                 borderRadius="lg"
                 bg="red.50"
                 color="red.500"
+                as={IconButton}
               >
                 <Icon as={FaRobot} boxSize={5} />
               </Box>
