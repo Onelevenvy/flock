@@ -12,12 +12,12 @@
 > ### 🎉 最新更新 2024/11/12
 >
 > + **意图识别节点**: 新增意图识别节点,可以根据预设的类别自动识别用户输入的意图,支持多分类路由!
-> <img src="assets/intent.png" alt="intent recognition" width="500" />
+> <img src="../assets/intent.png" alt="intent recognition" width="500" />
 >
 > + **CrewAI 节点支持**: 现在您可以在工作流中使用 CrewAI 的强大多代理功能！轻松创建复杂的代理团队并编排复杂的协作任务。
-> <img src="assets/crewai.jpg" alt="crewai" width="500"  />
+> <img src="../assets/crewai.jpg" alt="crewai" width="500"  />
 
-### Flock 是一个低代码平台，用于快速构建聊天机器人、RAG 应用和协调多代理团队。基于 LangChain 和 LangGraph 构建，旨在提供一套全面的 LLMOps 解决方案，支持聊天机器人、RAG 应用、代理和多代理系统，并具备离线运行能力。
+### Flock 是一个基于工作流的低代码平台，用于快速构建聊天机器人、RAG 应用和协调多代理团队。它基于 LangChain 和 LangGraph 构建，提供灵活的低代码编排协作代理解决方案，支持聊天机器人、RAG 应用、代理和多代理系统，并具备离线运行能力。
 
 ### 一个基于 LangChain、LangGraph 和其他框架的聊天机器人、RAG、代理和多代理应用项目，开源且能够离线部署。
 <video src="https://private-user-images.githubusercontent.com/49232224/386539219-5dc96133-72f3-4cc3-9f50-096c38bde715.mp4?jwt=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJnaXRodWIuY29tIiwiYXVkIjoicmF3LmdpdGh1YnVzZXJjb250ZW50LmNvbSIsImtleSI6ImtleTUiLCJleHAiOjE3MzE2NjMzNDQsIm5iZiI6MTczMTY2MzA0NCwicGF0aCI6Ii80OTIzMjIyNC8zODY1MzkyMTktNWRjOTYxMzMtNzJmMy00Y2MzLTlmNTAtMDk2YzM4YmRlNzE1Lm1wND9YLUFtei1BbGdvcml0aG09QVdTNC1ITUFDLVNIQTI1NiZYLUFtei1DcmVkZW50aWFsPUFLSUFWQ09EWUxTQTUzUFFLNFpBJTJGMjAyNDExMTUlMkZ1cy1lYXN0LTElMkZzMyUyRmF3czRfcmVxdWVzdCZYLUFtei1EYXRlPTIwMjQxMTE1VDA5MzA0NFomWC1BbXotRXhwaXJlcz0zMDAmWC1BbXotU2lnbmF0dXJlPWVhOWY1NTc1Mjk5YWU1MjZmNmQyNmY3Mzk0YjY2MGYyMzlmZWQ2MTVkMjExODEwNmY3YmMxYTVmNGRhNzMxZWEmWC1BbXotU2lnbmVkSGVhZGVycz1ob3N0In0.69R3pTktxrl8C6tdduABLiRhkhwdfeVO3vlGGTGK4to" data-canonical-src="https://private-user-images.githubusercontent.com/49232224/386539219-5dc96133-72f3-4cc3-9f50-096c38bde715.mp4?jwt=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJnaXRodWIuY29tIiwiYXVkIjoicmF3LmdpdGh1YnVzZXJjb250ZW50LmNvbSIsImtleSI6ImtleTUiLCJleHAiOjE3MzE2NjMzNDQsIm5iZiI6MTczMTY2MzA0NCwicGF0aCI6Ii80OTIzMjIyNC8zODY1MzkyMTktNWRjOTYxMzMtNzJmMy00Y2MzLTlmNTAtMDk2YzM4YmRlNzE1Lm1wND9YLUFtei1BbGdvcml0aG09QVdTNC1ITUFDLVNIQTI1NiZYLUFtei1DcmVkZW50aWFsPUFLSUFWQ09EWUxTQTUzUFFLNFpBJTJGMjAyNDExMTUlMkZ1cy1lYXN0LTElMkZzMyUyRmF3czRfcmVxdWVzdCZYLUFtei1EYXRlPTIwMjQxMTE1VDA5MzA0NFomWC1BbXotRXhwaXJlcz0zMDAmWC1BbXotU2lnbmF0dXJlPWVhOWY1NTc1Mjk5YWU1MjZmNmQyNmY3Mzk0YjY2MGYyMzlmZWQ2MTVkMjExODEwNmY3YmMxYTVmNGRhNzMxZWEmWC1BbXotU2lnbmVkSGVhZGVycz1ob3N0In0.69R3pTktxrl8C6tdduABLiRhkhwdfeVO3vlGGTGK4to" controls="controls" muted="muted" class="d-block rounded-bottom-2 border-top width-fit" style="max-height:640px; min-height: 200px">
@@ -73,7 +73,7 @@ Flock 的工作流系统由各种类型的节点组成，每种节点都有特�
 
 ### Human-in-the-Loop（人工审批或让 LLM 重新思考或寻求人工帮助）
 
-Flock 旨在成为一个开源的大语言模型（LLM）应用开发平台。它是一个基于 LangChain 和 LangGraph 概念的 LLM 应用。目标是创建一套支持聊天机器人、RAG 应用、代理和多代理系统的 LLMOps 解决方案，并具备离线运行能力。
+Flock 旨在成为一个开源的大语言模型（LLM）应用开发平台。它是一个基于 LangChain 和 LangGraph 概念的 LLM 应用。目标是��建一套支持聊天机器人、RAG 应用、代理和多代理系统的 LLMOps 解决方案，并具备离线运行能力。
 
 受 [StreetLamb](https://github.com/StreetLamb) 项目及其 [tribe](https://github.com/StreetLamb/tribe) 项目的启发，Flock 采用了许多相同的方法和代码。在此基础上，它引入了一些新的功能和方向。
 
