@@ -626,7 +626,7 @@ const FlowVisualizer: React.FC<FlowVisualizerProps> = ({
     const layoutedNodes = getLayoutedElements(nodes, edges, {
       nodeWidth: 200,
       nodeHeight: 100,
-      rankSpacing: 80, // 默认水平间距
+      rankSpacing: 80,
       nodeSpacing: 20,
     });
 
@@ -653,8 +653,11 @@ const FlowVisualizer: React.FC<FlowVisualizerProps> = ({
           className: node.className?.replace("react-flow__node-animated", ""),
         }))
       );
+      
+      // 自动布局完成后保存
+      onSave();
     }, 500);
-  }, [nodes, edges, reactFlowInstance, setNodes]);
+  }, [nodes, edges, reactFlowInstance, setNodes, onSave]);
 
   return (
     <Box
