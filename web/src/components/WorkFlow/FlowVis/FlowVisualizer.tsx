@@ -12,10 +12,11 @@ import {
   IconButton,
   Text,
   HStack,
+  Tooltip,
 } from "@chakra-ui/react";
 import type React from "react";
 import { type KeyboardEvent, useCallback, useMemo, useState } from "react";
-import { FaPlus } from "react-icons/fa";
+import { FaGripHorizontal, FaPlus } from "react-icons/fa";
 import { MdBuild, MdOutlineHelp } from "react-icons/md";
 import { VscDebugAlt } from "react-icons/vsc";
 import ReactFlow, {
@@ -49,7 +50,7 @@ import type {
   CustomNode,
   FlowVisualizerProps,
 } from "../types";
-import { calculateEdgeCenter } from "./utils";
+import { calculateEdgeCenter, getLayoutedElements } from "./utils";
 import SharedNodeMenu from "./SharedNodeMenu";
 
 import useWorkflowStore from "@/stores/workflowStore";
@@ -533,7 +534,7 @@ const FlowVisualizer: React.FC<FlowVisualizerProps> = ({
           (a, b) => a.position.x - b.position.x
         );
 
-        // 找到新节点应该插入的位置
+        // 找到节点应该插入的位置
         const insertIndex = sortedNodes.findIndex(
           (node) => node.position.x > newNodeX
         );
@@ -621,6 +622,40 @@ const FlowVisualizer: React.FC<FlowVisualizerProps> = ({
 
   const [showMiniMap, setShowMiniMap] = useState(false);
 
+  const handleAutoLayout = useCallback(() => {
+    const layoutedNodes = getLayoutedElements(nodes, edges, {
+      nodeWidth: 200,
+      nodeHeight: 100,
+      rankSpacing: 80, // 默认水平间距
+      nodeSpacing: 20,
+    });
+
+    // 添加节点移动的 CSS 动画
+    const style = document.createElement("style");
+    style.textContent = `
+      .react-flow__node-animated {
+        transition: all 0.5s ease-in-out;
+      }
+    `;
+    document.head.appendChild(style);
+
+    // 更新节点位置
+    setNodes(layoutedNodes);
+
+    // 重置视图以适应新布局
+    setTimeout(() => {
+      reactFlowInstance.fitView({ padding: 0.2 });
+      // 清除动画类
+      document.head.removeChild(style);
+      setNodes((nodes) =>
+        nodes.map((node) => ({
+          ...node,
+          className: node.className?.replace("react-flow__node-animated", ""),
+        }))
+      );
+    }, 500);
+  }, [nodes, edges, reactFlowInstance, setNodes]);
+
   return (
     <Box
       display="flex"
@@ -701,7 +736,7 @@ const FlowVisualizer: React.FC<FlowVisualizerProps> = ({
               }}
             />
           )}
-
+          {/* 迷你地图按钮 */}
           <Panel
             position="bottom-left"
             style={{
@@ -709,26 +744,32 @@ const FlowVisualizer: React.FC<FlowVisualizerProps> = ({
               borderRadius: "12px",
               padding: "2px",
               boxShadow: "0 4px 6px -1px rgba(0, 0, 0, 0.1)",
-              marginLeft: "4rem",
+              marginLeft: "7rem",
               marginBottom: "1rem",
             }}
           >
-            <IconButton
-              aria-label="Toggle minimap"
-              icon={showMiniMap ? <FiEyeOff /> : <FiEye />}
-              size="sm"
-              variant="ghost"
-              colorScheme="gray"
-              onClick={() => setShowMiniMap(!showMiniMap)}
-              transition="all 0.2s"
-              _hover={{
-                bg: "gray.100",
-                transform: "scale(1.1)",
-              }}
-              _active={{
-                transform: "scale(0.95)",
-              }}
-            />
+            <Tooltip 
+              label={showMiniMap ? t("workflow.flowVisualizer.tooltips.hideMinimap") : t("workflow.flowVisualizer.tooltips.showMinimap")} 
+              placement="top"
+              hasArrow
+            >
+              <IconButton
+                aria-label="Toggle minimap"
+                icon={showMiniMap ? <FiEyeOff /> : <FiEye />}
+                size="sm"
+                variant="ghost"
+                colorScheme="gray"
+                onClick={() => setShowMiniMap(!showMiniMap)}
+                transition="all 0.2s"
+                _hover={{
+                  bg: "gray.100",
+                  transform: "scale(1.1)",
+                }}
+                _active={{
+                  transform: "scale(0.95)",
+                }}
+              />
+            </Tooltip>
           </Panel>
 
           <EdgeLabelRenderer>
@@ -776,22 +817,28 @@ const FlowVisualizer: React.FC<FlowVisualizerProps> = ({
               marginTop: "0.5rem",
             }}
           >
-            <IconButton
-              aria-label="Help"
-              icon=<MdOutlineHelp />
-              size="sm"
-              onMouseEnter={toggleShortcutPanel}
-              onMouseLeave={hideShortcutPanel}
-              cursor="pointer"
-              color="gray.600"
-              colorScheme="grayp"
-              fontSize="24px"
-              transition="all 0.2s"
-              _hover={{
-                color: "ui.main",
-                transform: "scale(1.1)",
-              }}
-            />
+            <Tooltip 
+              label={t("workflow.flowVisualizer.tooltips.help")}
+              placement="right"
+              hasArrow
+            >
+              <IconButton
+                aria-label="Help"
+                icon={<MdOutlineHelp />}
+                size="sm"
+                onMouseEnter={toggleShortcutPanel}
+                onMouseLeave={hideShortcutPanel}
+                cursor="pointer"
+                color="gray.600"
+                colorScheme="gray"
+                fontSize="24px"
+                transition="all 0.2s"
+                _hover={{
+                  color: "ui.main",
+                  transform: "scale(1.1)",
+                }}
+              />
+            </Tooltip>
             {isShortcutPanelVisible && (
               <Box
                 position="absolute"
@@ -853,11 +900,47 @@ const FlowVisualizer: React.FC<FlowVisualizerProps> = ({
               boxShadow: "0 4px 6px -1px rgba(0, 0, 0, 0.1)",
               fontSize: "14px",
               color: "gray.600",
-              marginLeft: "7rem",
+              marginLeft: "10rem",
               marginBottom: "1rem",
             }}
           >
             {t("workflow.flowVisualizer.zoom")}: {Math.round(zoom * 100)}%
+          </Panel>
+
+          {/* 自动布局按钮 */}
+          <Panel
+            position="bottom-left"
+            style={{
+              background: "white",
+              borderRadius: "12px",
+              padding: "2px",
+              boxShadow: "0 4px 6px -1px rgba(0, 0, 0, 0.1)",
+              marginLeft: "4rem",
+              marginBottom: "1rem",
+            }}
+          >
+            <Tooltip 
+              label={t("workflow.flowVisualizer.tooltips.autoLayout")}
+              placement="top"
+              hasArrow
+            >
+              <IconButton
+                aria-label="Auto layout"
+                icon={<FaGripHorizontal />}
+                size="sm"
+                variant="ghost"
+                colorScheme="gray"
+                onClick={handleAutoLayout}
+                transition="all 0.2s"
+                _hover={{
+                  bg: "gray.100",
+                  transform: "scale(1.1)",
+                }}
+                _active={{
+                  transform: "scale(0.95)",
+                }}
+              />
+            </Tooltip>
           </Panel>
         </ReactFlow>
 

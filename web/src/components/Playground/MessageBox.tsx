@@ -100,21 +100,21 @@ const MessageBox = ({ message, onResume, isPlayground }: MessageBoxProps) => {
 
   const tqxIcon = () => {
     const hw = 5;
-    
+
     if (type === "human") {
-      return <Icon as={FaUser} w={hw} h={hw} color="blue.500" />;  // 用户图标使用蓝色
+      return <Icon as={FaUser} w={hw} h={hw} color="blue.500" />;
     }
     if (type === "tool") {
-      return <Icon as={FaTools} w={hw} h={hw} color="gray.500" />; // 工具图标使用紫色
+      return <Icon as={FaTools} w={hw} h={hw} color="gray.500" />;
     }
     if (type === "ai") {
-      return <Icon as={FaRobot} w={hw} h={hw} color="green.400" />; // AI图标使用绿色
+      return <Icon as={FaRobot} w={hw} h={hw} color="green.400" />;
     }
     if (type === "interrupt") {
-      return <Icon as={FaHandPaper} w={hw} h={hw} color="cyan.500" />; // 中断图标使用橙色
+      return <Icon as={FaHandPaper} w={hw} h={hw} color="cyan.500" />;
     }
 
-    return <Icon as={FaBook} w={hw} h={hw} color="orange.500" />; // 默认图标使用灰色
+    return <Icon as={FaBook} w={hw} h={hw} color="orange.500" />;
   };
 
   function isImag(content: any): boolean {

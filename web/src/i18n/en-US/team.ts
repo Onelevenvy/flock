@@ -52,24 +52,24 @@ const translation = {
       start: {
         title: "Start Node",
         initialInput: "Initial Input",
-        placeholder: "Enter initial input"
+        placeholder: "Enter initial input",
       },
       end: {
-        title: "End Node" 
+        title: "End Node",
       },
       llm: {
         title: "LLM Node",
         model: "Model",
         temperature: "Temperature",
         systemPrompt: "System Prompt",
-        placeholder: "Enter system prompt"
+        placeholder: "Enter system prompt",
       },
       tool: {
         title: "Tools",
         addTool: "Add Tool",
         searchTools: "Search tools...",
         noTools: "No tools selected",
-        added: "Added"
+        added: "Added",
       },
       retrieval: {
         title: "Knowledge Retrieval",
@@ -86,7 +86,7 @@ const translation = {
         searchKB: "Search knowledge bases...",
         added: "Added",
         noDescription: "No description",
-        noResults: "No knowledge bases found"
+        noResults: "No knowledge bases found",
       },
       classifier: {
         title: "Intent Recognition",
@@ -94,10 +94,10 @@ const translation = {
         categories: "Categories",
         category: "Category",
         addCategory: "Add Category",
-        placeholder: "Enter category name"
+        placeholder: "Enter category name",
       },
       crewai: {
-        model:"Model",
+        model: "Model",
         title: "CrewAI",
         agents: "Agents",
         tasks: "Tasks",
@@ -107,7 +107,8 @@ const translation = {
         manager: "Manager Configuration",
         defaultManager: "Default Manager Agent",
         customManager: "Custom Manager Agent",
-        addTaskDisabledMessage: "Add agents and configure manager (for hierarchical) first",
+        addTaskDisabledMessage:
+          "Add agents and configure manager (for hierarchical) first",
         addTaskMessage: "Add new task",
         agentModal: {
           title: "Configure Agent",
@@ -122,7 +123,7 @@ const translation = {
           rolePlaceholder: "e.g., Research Specialist",
           goalPlaceholder: "Agent's primary objective",
           backstoryPlaceholder: "Agent's background and expertise",
-          uniqueNameError: "Agent name must be unique"
+          uniqueNameError: "Agent name must be unique",
         },
         taskModal: {
           title: "Task Configuration",
@@ -137,8 +138,8 @@ const translation = {
           uniqueNameError: "Task name must be unique",
           editTitle: "Edit Task",
           addTitle: "Add Task",
-        }
-      }
+        },
+      },
     },
     common: {
       add: "Add",
@@ -147,9 +148,15 @@ const translation = {
       save: "Save",
       cancel: "Cancel",
       search: "Search",
-      noResults: "No results found"
+      noResults: "No results found",
     },
     flowVisualizer: {
+      tooltips: {
+        showMinimap: "Show Minimap",
+        hideMinimap: "Hide Minimap",
+        autoLayout: "Auto Layout",
+        help: "Keyboard Shortcuts",
+      },
       shortcuts: {
         title: "Shortcuts",
         edgeType: "Change edges type",
@@ -157,43 +164,43 @@ const translation = {
         info: {
           title: "Info",
           solidLine: "solid line: Normal edge",
-          dashedLine: "dashed line: Conditional edge"
-        }
+          dashedLine: "dashed line: Conditional edge",
+        },
       },
       zoom: "Zoom",
       debug: {
         title: "Debug",
         loading: "Loading...",
         error: "Error",
-        preview: "Debug Preview"
+        preview: "Debug Preview",
       },
       actions: {
         debug: "Debug",
         deploy: "Deploy",
         apiKey: "API Key",
         save: "Save",
-        saving: "Saving..."
+        saving: "Saving...",
       },
       contextMenu: {
         delete: "Delete Node",
         error: {
           title: "Cannot delete node",
-          description: "{type} node cannot be deleted."
-        }
-      }
+          description: "{type} node cannot be deleted.",
+        },
+      },
     },
     nodeMenu: {
       title: "Nodes",
       plugins: "Plugins",
       loading: "Loading tools...",
-      error: "Error loading tools"
+      error: "Error loading tools",
     },
     variableSelector: {
       availableVariables: "Available Variables",
       noVariables: "No variables available",
-      placeholder: "Write here. Use '/' to insert variables."
-    }
-  }
+      placeholder: "Write here. Use '/' to insert variables.",
+    },
+  },
 };
 
 export default translation;
