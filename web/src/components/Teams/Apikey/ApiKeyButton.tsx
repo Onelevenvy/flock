@@ -1,9 +1,9 @@
-import { useDisclosure, ButtonProps } from "@chakra-ui/react";
+import { useDisclosure } from "@chakra-ui/react";
 import { MdVpnKey } from "react-icons/md";
 import CustomButton from "@/components/Common/CustomButton";
 import ApiKeyManager from "./ApiKeyManager";
 
-interface ApiKeyButtonProps extends ButtonProps {
+interface ApiKeyButtonProps {
   teamId: string;
 }
 
@@ -14,7 +14,7 @@ const ApiKeyButton: React.FC<ApiKeyButtonProps> = ({ teamId, ...rest }) => {
     <>
       <CustomButton
         text="API Keys"
-        variant="white"
+        variant={"white" as const}
         rightIcon={<MdVpnKey color="#155aef" size="12px" />}
         onClick={onOpen}
         {...rest}
