@@ -7,7 +7,7 @@
   <a href="#how-to-get-started">Getting Started</a>
 </p>
 
-> [!TIP]
+> [!NOTE]
 >
 > ### 🎉 What's New 2024/11/12
 >
@@ -17,20 +17,20 @@
 > - **CrewAI Node Support**: Now you can leverage CrewAI's powerful multi-agent capabilities in your workflows! Create sophisticated agent teams and orchestrate complex collaborative tasks with ease.
 >   <img src="assets/crewai.jpg" alt="crewai" width="500"  />
 
-### A chatbot, RAG, agent, and multi-agent application project based on LangChain, LangGraph, and other frameworks, open-source, and capable of offline deployment.
+### Flock is a low-code platform for rapidly building chatbots, RAG applications, and coordinating multi-agent teams.
 
 <video src="https://private-user-images.githubusercontent.com/49232224/386539219-5dc96133-72f3-4cc3-9f50-096c38bde715.mp4?jwt=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJnaXRodWIuY29tIiwiYXVkIjoicmF3LmdpdGh1YnVzZXJjb250ZW50LmNvbSIsImtleSI6ImtleTUiLCJleHAiOjE3MzE2NjMzNDQsIm5iZiI6MTczMTY2MzA0NCwicGF0aCI6Ii80OTIzMjIyNC8zODY1MzkyMTktNWRjOTYxMzMtNzJmMy00Y2MzLTlmNTAtMDk2YzM4YmRlNzE1Lm1wND9YLUFtei1BbGdvcml0aG09QVdTNC1ITUFDLVNIQTI1NiZYLUFtei1DcmVkZW50aWFsPUFLSUFWQ09EWUxTQTUzUFFLNFpBJTJGMjAyNDExMTUlMkZ1cy1lYXN0LTElMkZzMyUyRmF3czRfcmVxdWVzdCZYLUFtei1EYXRlPTIwMjQxMTE1VDA5MzA0NFomWC1BbXotRXhwaXJlcz0zMDAmWC1BbXotU2lnbmF0dXJlPWVhOWY1NTc1Mjk5YWU1MjZmNmQyNmY3Mzk0YjY2MGYyMzlmZWQ2MTVkMjExODEwNmY3YmMxYTVmNGRhNzMxZWEmWC1BbXotU2lnbmVkSGVhZGVycz1ob3N0In0.69R3pTktxrl8C6tdduABLiRhkhwdfeVO3vlGGTGK4to" data-canonical-src="https://private-user-images.githubusercontent.com/49232224/386539219-5dc96133-72f3-4cc3-9f50-096c38bde715.mp4?jwt=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJnaXRodWIuY29tIiwiYXVkIjoicmF3LmdpdGh1YnVzZXJjb250ZW50LmNvbSIsImtleSI6ImtleTUiLCJleHAiOjE3MzE2NjMzNDQsIm5iZiI6MTczMTY2MzA0NCwicGF0aCI6Ii80OTIzMjIyNC8zODY1MzkyMTktNWRjOTYxMzMtNzJmMy00Y2MzLTlmNTAtMDk2YzM4YmRlNzE1Lm1wND9YLUFtei1BbGdvcml0aG09QVdTNC1ITUFDLVNIQTI1NiZYLUFtei1DcmVkZW50aWFsPUFLSUFWQ09EWUxTQTUzUFFLNFpBJTJGMjAyNDExMTUlMkZ1cy1lYXN0LTElMkZzMyUyRmF3czRfcmVxdWVzdCZYLUFtei1EYXRlPTIwMjQxMTE1VDA5MzA0NFomWC1BbXotRXhwaXJlcz0zMDAmWC1BbXotU2lnbmF0dXJlPWVhOWY1NTc1Mjk5YWU1MjZmNmQyNmY3Mzk0YjY2MGYyMzlmZWQ2MTVkMjExODEwNmY3YmMxYTVmNGRhNzMxZWEmWC1BbXotU2lnbmVkSGVhZGVycz1ob3N0In0.69R3pTktxrl8C6tdduABLiRhkhwdfeVO3vlGGTGK4to" controls="controls" muted="muted" class="d-block rounded-bottom-2 border-top width-fit" style="max-height:640px; min-height: 200px">
  </video>
-
-
+Flock aims to be an open-source platform for developing large language model (LLM) applications. It is an LLM-based application utilizing the concepts of
+LangChain and LangGraph. The goal is to create a suite of LLMOps solutions that supports chatbots, RAG applications, agents, and multi-agent systems, with the capability for offline operation.
 
 ### 🤖️ Overview
 
-
+ <img src="assets/Overview.png" alt="overview"  />
 
 ### Work Flow
 
-
+ <img src="assets/workflow.png" alt="overview"  />
 
 ### Node Types and Functions
 
@@ -55,25 +55,20 @@ Future planned nodes include:
 
 These nodes can be combined to create powerful and flexible workflows suitable for various complex business needs and application scenarios.
 
-### Image
+### Image Tools use
 
 ![image](https://github.com/user-attachments/assets/4097b087-0309-4aab-8be9-a06fdc9d4964)
 
-
 ### Knowledge Retrieval
+
 ![image](https://github.com/user-attachments/assets/836fac80-ab49-4f6b-973c-25ba173149eb)
 
-
 ### Human in the loop (human approval or let the LLM rethink or ask human for help)
+
 <p>
   <img src="https://github.com/user-attachments/assets/ec53f7de-10cb-4001-897a-2695da9cf6bf" alt="image" style="width: 49%; display: inline-block;">
   <img src="https://github.com/user-attachments/assets/1c7d383d-e6bf-42b8-94ec-9f0c37be19b8" alt="image" style="width: 49%; display: inline-block;">
 </p>
-
-
-
-Flock aims to be an open-source platform for developing large language model (LLM) applications. It is an LLM-based application utilizing the concepts of
-LangChain and LangGraph. The goal is to create a suite of LLMOps solutions that supports chatbots, RAG applications, agents, and multi-agent systems, with the capability for offline operation.
 
 Inspired by the [StreetLamb](https://github.com/StreetLamb) project and its [tribe](https://github.com/StreetLamb/tribe) project , Flock adopts much of the approach and code.
 Building on this foundation, it introduces some new features and directions of its own.
@@ -104,8 +99,8 @@ Project tech stack: LangChain + LangGraph + React + Next.js + Chakra UI + Postgr
 - [x] Hierarchical Agent
 - [x] Sequential Agent
 - [x] Work-Flow
-- [ ] CrewAI Integration ---On Progress
-- [ ] More muti-agent
+- [x] CrewAI Integration
+- [ ] More muti-agent ---On Progress
 
 2 Model
 
