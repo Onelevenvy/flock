@@ -29,6 +29,7 @@ const LLMNode: React.FC<NodeProps> = (props) => {
     height: 8,
     border: "2px solid white",
     transition: "all 0.2s",
+    // top: "30px",
   };
 
   return (

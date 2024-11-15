@@ -653,11 +653,8 @@ const FlowVisualizer: React.FC<FlowVisualizerProps> = ({
           className: node.className?.replace("react-flow__node-animated", ""),
         }))
       );
-      
-      // 自动布局完成后保存
-      onSave();
     }, 500);
-  }, [nodes, edges, reactFlowInstance, setNodes, onSave]);
+  }, [nodes, edges, reactFlowInstance, setNodes]);
 
   return (
     <Box
