@@ -83,11 +83,11 @@ Project tech stack: LangChain + LangGraph + React + Next.js + Chakra UI + Postgr
 >
 > ### 🤖 Model System
 >
-> Flock supports various model providers and makes it easy to add new ones. Check out our [Models Guide](Add_New_Model_Providers_Guide.md) to learn about supported models and how to add support for new providers.
+> Flock supports various model providers and makes it easy to add new ones. Check out our [Models Guide](./docs/Add_New_Model_Providers_Guide.md) to learn about supported models and how to add support for new providers.
 
 > ### 🛠️ Tools System
 >
-> Flock comes with various built-in tools and supports easy integration of custom tools. Check out our [Tools Guide](Add_New_Tools_Guide.md) to learn about available tools and how to add your own.
+> Flock comes with various built-in tools and supports easy integration of custom tools. Check out our [Tools Guide](./docs/Add_New_Tools_Guide.md) to learn about available tools and how to add your own.
 
 ### 💡RoadMap
 

@@ -11,22 +11,22 @@
 >
 > ### 🎉 最新アップデート 2024/11/12
 >
-> + **意図認識ノード**: 新しい意図認識ノードが追加され、プリセットされたカテゴリに基づいてユーザー入力の意図を自動的に識別し、マルチ分類ルーティングをサポートします！
-> <img src="../assets/intent.png" alt="intent recognition" width="500" />
+> - **意図認識ノード**: 新しい意図認識ノードが追加され、プリセットされたカテゴリに基づいてユーザー入力の意図を自動的に識別し、マルチ分類ルーティングをサポートします！
+>   <img src="../assets/intent.png" alt="intent recognition" width="500" />
 >
-> + **CrewAI ノードのサポート**: ワークフローで CrewAI の強力なマルチエージェント機能を活用できるようになりました！洗練されたエージェントチームを作成し、複雑な協調タスクを簡単に編成できます。
-> <img src="../assets/crewai.jpg" alt="crewai" width="500"  />
+> - **CrewAI ノードのサポート**: ワークフローで CrewAI の強力なマルチエージェント機能を活用できるようになりました！洗練されたエージェントチームを作成し、複雑な協調タスクを簡単に編成できます。
+>   <img src="../assets/crewai.jpg" alt="crewai" width="500"  />
 
 ### Flock は、ワークフローベースのローコードプラットフォームで、チャットボット、RAG アプリケーション、マルチエージェントチームの調整を迅速に構築するためのプラットフォームです。LangChain と LangGraph をベースに構築され、柔軟なローコード協調エージェント編成ソリューションを提供し、チャットボット、RAG アプリケーション、エージェント、マルチエージェントシステムをサポートし、オフライン運用機能も備えています。
 
 <video src="https://private-user-images.githubusercontent.com/49232224/386539219-5dc96133-72f3-4cc3-9f50-096c38bde715.mp4?jwt=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJnaXRodWIuY29tIiwiYXVkIjoicmF3LmdpdGh1YnVzZXJjb250ZW50LmNvbSIsImtleSI6ImtleTUiLCJleHAiOjE3MzE2NjMzNDQsIm5iZiI6MTczMTY2MzA0NCwicGF0aCI6Ii80OTIzMjIyNC8zODY1MzkyMTktNWRjOTYxMzMtNzJmMy00Y2MzLTlmNTAtMDk2YzM4YmRlNzE1Lm1wND9YLUFtei1BbGdvcml0aG09QVdTNC1ITUFDLVNIQTI1NiZYLUFtei1DcmVkZW50aWFsPUFLSUFWQ09EWUxTQTUzUFFLNFpBJTJGMjAyNDExMTUlMkZ1cy1lYXN0LTElMkZzMyUyRmF3czRfcmVxdWVzdCZYLUFtei1EYXRlPTIwMjQxMTE1VDA5MzA0NFomWC1BbXotRXhwaXJlcz0zMDAmWC1BbXotU2lnbmF0dXJlPWVhOWY1NTc1Mjk5YWU1MjZmNmQyNmY3Mzk0YjY2MGYyMzlmZWQ2MTVkMjExODEwNmY3YmMxYTVmNGRhNzMxZWEmWC1BbXotU2lnbmVkSGVhZGVycz1ob3N0In0.69R3pTktxrl8C6tdduABLiRhkhwdfeVO3vlGGTGK4to" data-canonical-src="https://private-user-images.githubusercontent.com/49232224/386539219-5dc96133-72f3-4cc3-9f50-096c38bde715.mp4?jwt=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJnaXRodWIuY29tIiwiYXVkIjoicmF3LmdpdGh1YnVzZXJjb250ZW50LmNvbSIsImtleSI6ImtleTUiLCJleHAiOjE3MzE2NjMzNDQsIm5iZiI6MTczMTY2MzA0NCwicGF0aCI6Ii80OTIzMjIyNC8zODY1MzkyMTktNWRjOTYxMzMtNzJmMy00Y2MzLTlmNTAtMDk2YzM4YmRlNzE1Lm1wND9YLUFtei1BbGdvcml0aG09QVdTNC1ITUFDLVNIQTI1NiZYLUFtei1DcmVkZW50aWFsPUFLSUFWQ09EWUxTQTUzUFFLNFpBJTJGMjAyNDExMTUlMkZ1cy1lYXN0LTElMkZzMyUyRmF3czRfcmVxdWVzdCZYLUFtei1EYXRlPTIwMjQxMTE1VDA5MzA0NFomWC1BbXotRXhwaXJlcz0zMDAmWC1BbXotU2lnbmF0dXJlPWVhOWY1NTc1Mjk5YWU1MjZmNmQyNmY3Mzk0YjY2MGYyMzlmZWQ2MTVkMjExODEwNmY3YmMxYTVmNGRhNzMxZWEmWC1BbXotU2lnbmVkSGVhZGVycz1ob3N0In0.69R3pTktxrl8C6tdduABLiRhkhwdfeVO3vlGGTGK4to" controls="controls" muted="muted" class="d-block rounded-bottom-2 border-top width-fit" style="max-height:640px; min-height: 200px">
  </video>
 
-![alt text](assets/login.jpg)
+![alt text](../assets/login.jpg)
 
 ### 🤖️ 概要
 
-![alt text](assets/image.png)
+![alt text](../assets/image.png)
 
 #### ワークフロー
 
@@ -48,6 +48,7 @@ Flock のワークフローシステムは、様々なタイプのノードで�
 9. 開始と終了ノード：ワークフローの開始と終了を示します。
 
 将来計画されているノードには以下が含まれます：
+
 - 条件分岐ノード（If-Else）
 - ファイルアップロードノード
 - コード実行ノード
