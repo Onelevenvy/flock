@@ -748,8 +748,12 @@ const FlowVisualizer: React.FC<FlowVisualizerProps> = ({
               marginBottom: "1rem",
             }}
           >
-            <Tooltip 
-              label={showMiniMap ? t("workflow.flowVisualizer.tooltips.hideMinimap") : t("workflow.flowVisualizer.tooltips.showMinimap")} 
+            <Tooltip
+              label={
+                showMiniMap
+                  ? t("workflow.flowVisualizer.tooltips.hideMinimap")
+                  : t("workflow.flowVisualizer.tooltips.showMinimap")
+              }
               placement="top"
               hasArrow
             >
@@ -817,7 +821,7 @@ const FlowVisualizer: React.FC<FlowVisualizerProps> = ({
               marginTop: "0.5rem",
             }}
           >
-            <Tooltip 
+            <Tooltip
               label={t("workflow.flowVisualizer.tooltips.help")}
               placement="right"
               hasArrow
@@ -919,7 +923,7 @@ const FlowVisualizer: React.FC<FlowVisualizerProps> = ({
               marginBottom: "1rem",
             }}
           >
-            <Tooltip 
+            <Tooltip
               label={t("workflow.flowVisualizer.tooltips.autoLayout")}
               placement="top"
               hasArrow
