@@ -27,12 +27,11 @@
 
 ### 🤖️ 概览
 
-![alt text](../assets/image.png)
+<img src="../assets/Overview.png" alt="overview"  />
 
 ### 工作流
 
-![image](https://github.com/user-attachments/assets/a4e33565-7acf-45d9-8e82-5a740cd88344)
-![image](https://github.com/user-attachments/assets/4d5874f1-aeb0-47c5-b907-21878a2fa4d9)
+<img src="../assets/workflow.png" alt="overview"  />
 
 ### 节点类型和功能
 
@@ -58,7 +57,7 @@ Flock 的工作流系统由各种类型的节点组成，每种节点都有特�
 
 ### Agent Chat
 
-![image](https://github.com/user-attachments/assets/4097b087-0309-4aab-8be9-a06fdc9d4964)
+<img src="../assets/agent-chat.png" alt="agent chat"  />
 
 ### 图像
 
@@ -66,70 +65,14 @@ Flock 的工作流系统由各种类型的节点组成，每种节点都有特�
 
 ### 知识检索
 
-<p>
-  <img src="https://github.com/user-attachments/assets/ec53f7de-10cb-4001-897a-2695da9cf6bf" alt="image" style="width: 49%; display: inline-block;">
-  <img src="https://github.com/user-attachments/assets/1c7d383d-e6bf-42b8-94ec-9f0c37be19b8" alt="image" style="width: 49%; display: inline-block;">
-</p>
+<img src="../assets/knowledge-retrieval.png" alt="knowledge retrieval"  />
 
 ### Human-in-the-Loop（人工审批或让 LLM 重新思考或寻求人工帮助）
 
-Flock 旨在成为一个开源的大语言模型（LLM）应用开发平台。它是一个基于 LangChain 和 LangGraph 概念的 LLM 应用。目标是��建一套支持聊天机器人、RAG 应用、代理和多代理系统的 LLMOps 解决方案，并具备离线运行能力。
-
-受 [StreetLamb](https://github.com/StreetLamb) 项目及其 [tribe](https://github.com/StreetLamb/tribe) 项目的启发，Flock 采用了许多相同的方法和代码。在此基础上，它引入了一些新的功能和方向。
-
-本项目的一些布局参考了 [Lobe-chat](https://github.com/lobehub/lobe-chat)、[Dify](https://github.com/langgenius/dify) 和 [fastgpt](https://github.com/labring/FastGPT)。它们都是优秀的开源项目，在此表示感谢 🙇‍。
-
-### 👨‍💻 开发
-
-项目技术栈：LangChain + LangGraph + React + Next.js + Chakra UI + PostgreSQL
-
-> [!NOTE]
->
-> ### 🤖 模型系统
->
-> Flock 支持多种模型提供商，并且可以轻松添加新的提供商。查看我们的[模型指南](Add_New_Model_Providers_Guide.md)了解支持的模型以及如何添加新的提供商支持。
-
-> ### 🛠️ 工具系统
->
-> Flock 内置了多种工具，并支持轻松集成自定义工具。查看我们的[工具指南](Add_New_Tools_Guide.md)了解可用工具和如何添加自己的工具。
-
-### 💡 路线图
-
-1 应用
-
-- [x] 聊天机器人
-- [x] 简单 RAG
-- [x] 层次代理
-- [x] 顺序代理
-- [x] 工作流
-- [x] 意图识别节点 - 自动识别用户输入意图并路由到不同的处理流程
-- [x] CrewAI 集成 ---进行中
-- [ ] 更多多代理系统
-
-2 模型
-
-- [x] OpenAI
-- [x] ZhipuAI
-- [x] Siliconflow
-- [x] Ollama
-- [x] Qwen
-- [ ] Xinference
-
-3 其他
-
-- [x] Tools Calling
-- [x] I18n
-- [ ] Langchain Templates
-
-### 🏘️ 亮点
-
-- 持久化对话：保存并维护聊天历史，允许您继续对话。
-- 可观察性：使用 LangSmith 实时监控和跟踪您的代理性能和输出，确保它们高效运行。
-- 工具调用：使您的代理能够使用外部工具和 API。
-- 检索增强生成：使您的代理能够利用您的内部知识库进行推理。
-- Human-in-the-loop：在工具调用前启用人工审批。
-- 开源模型：使用开源 LLM 模型，如 llama、Qwen 和 Glm。
-- 多租户：管理和支持多个用户和团队。
+<p>
+  <img src="../assets/human-in-loop-1.png" alt="human in loop" style="width: 49%; display: inline-block;">
+  <img src="../assets/human-in-loop-2.png" alt="human in loop" style="width: 49%; display: inline-block;">
+</p>
 
 ### 如何开始
 

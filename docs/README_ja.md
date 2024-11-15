@@ -26,45 +26,25 @@
 
 ### 🤖️ 概要
 
-![alt text](../assets/image.png)
+<img src="../assets/Overview.png" alt="overview"  />
 
-#### ワークフロー
+### ワークフロー
 
-![image](https://github.com/user-attachments/assets/a4e33565-7acf-45d9-8e82-5a740cd88344)
-![image](https://github.com/user-attachments/assets/4d5874f1-aeb0-47c5-b907-21878a2fa4d9)
+<img src="../assets/workflow.png" alt="overview"  />
 
-### ノードタイプと機能
+### エージェントチャット
 
-Flock のワークフローシステムは、様々なタイプのノードで構成されており、それぞれが特定の目的を果たします：
+<img src="../assets/agent-chat.png" alt="agent chat"  />
 
-1. 入力ノード：初期入力を処理し、ワークフローが扱える形式に変換します。
-2. LLM ノード：大規模言語モデルを利用してテキスト生成と処理を行います。
-3. 検索ノード：知識ベースから関連情報を取得します。
-4. ツールノード：特定のタスクや操作を実行し、ワークフローの機能を拡張します。
-5. 検索ツールノード：検索機能とツール機能を組み合わせます。
-6. 意図認識ノード：プリセットされたカテゴリに基づいてユーザー入力の意図を自動的に識別し、異なる処理フローにルーティングします。
-7. 回答ノード：前のノードの結果を統合し、最終的な回答や出力を生成します。
-8. サブグラフノード：完全なサブワークフローをカプセル化し、モジュラー設計を可能にします。
-9. 開始と終了ノード：ワークフローの開始と終了を示します。
+### 知識検索
 
-将来計画されているノードには以下が含まれます：
+<img src="../assets/knowledge-retrieval.png" alt="knowledge retrieval"  />
 
-- 条件分岐ノード（If-Else）
-- ファイルアップロードノード
-- コード実行ノード
-- パラメータ抽出ノード
-
-これらのノードを組み合わせることで、様々な複雑なビジネスニーズやアプリケーションシナリオに適した強力で柔軟なワークフローを作成できます。
-
-#### 画像
-
-![image](https://github.com/user-attachments/assets/4097b087-0309-4aab-8be9-a06fdc9d4964)
-
-#### ヒューマン・イン・ザ・ループ（人間の承認または LLM の再考または人間への助けを求める）
+### ヒューマン・イン・ザ・ループ（人間の承認または LLM の再考または人間への助けを求める）
 
 <p>
-  <img src="https://github.com/user-attachments/assets/ec53f7de-10cb-4001-897a-2695da9cf6bf" alt="image" style="width: 49%; display: inline-block;">
-  <img src="https://github.com/user-attachments/assets/1c7d383d-e6bf-42b8-94ec-9f0c37be19b8" alt="image" style="width: 49%; display: inline-block;">
+  <img src="../assets/human-in-loop-1.png" alt="human in loop" style="width: 49%; display: inline-block;">
+  <img src="../assets/human-in-loop-2.png" alt="human in loop" style="width: 49%; display: inline-block;">
 </p>
 
 Flock は、大規模言語モデル（LLM）アプリケーションを開発するためのオープンソースプラットフォームを目指しています。これは、LangChain と LangGraph の概念を利用した LLM ベースのアプリケーションです。チャットボット、RAG アプリケーション、エージェント、およびマルチエージェントシステムをサポートする LLMOps ソリューションのスイートを作成し、オフライン操作の機能を備えることを目指しています。
@@ -117,7 +97,7 @@ Flock は、大規模言語モデル（LLM）アプリケーションを開発�
 
 ### 🏘️ ハイライト
 
-- 永続的な会話：チャット履歴を保存および維持し、会話を続けるとができます。
+- 永続��な会話：チャット履歴を保存および維持し、会話を続けるとができます。
 - 可観測性：LangSmith を使用してエージェントのパフォーマンスと出力をリアルタイムで監視および追跡し、効率的に動作するようにします。
 - ツール呼び出し：エージェントが外部ツールや API を利用できるようにします。
 - 検索強化生成：エージェントが内部知識ベースを利用して推論できるようにします。
@@ -142,7 +122,7 @@ cp .env.example .env
 ##### 1.3 秘密鍵を生成
 
 .env ファイルのいくつかの環境変数には、デフォルト値として changethis が設定されています。
-これらを秘密鍵に変更する必要があります。秘密鍵を生成するには、次のコマンドを実行します：
+これらを秘密鍵に変更する必要があります。秘密鍵を生成するには、次のコマンドを実行します���
 
 ```bash
 python -c "import secrets; print(secrets.token_urlsafe(32))"
