@@ -2,8 +2,8 @@
 
 <p align="center">
   <a href="./docs/README_cn.md">简体中文</a> |
-  <a href="./docs/README.md">English</a> |
-  <a href="./README_ja.md">日本語</a> |
+  <a href="./README.md">English</a> |
+  <a href="./docs/README_ja.md">日本語</a> |
   <a href="#how-to-get-started">Getting Started</a>
 </p>
 
@@ -17,7 +17,7 @@
 > - **CrewAI Node Support**: Now you can leverage CrewAI's powerful multi-agent capabilities in your workflows! Create sophisticated agent teams and orchestrate complex collaborative tasks with ease.
 >   <img src="assets/crewai.jpg" alt="crewai" width="500"  />
 
-### Flock is a low-code platform for rapidly building chatbots, RAG applications, and coordinating multi-agent teams.
+### Flock is a low-code platform for rapidly building chatbots, RAG applications, and coordinating multi-agent teams. Built on LangChain and LangGraph, it aims to provide a comprehensive suite of LLMOps solutions supporting chatbots, RAG applications, agents, and multi-agent systems, with the capability for offline operation.
 
 <video src="https://private-user-images.githubusercontent.com/49232224/386539219-5dc96133-72f3-4cc3-9f50-096c38bde715.mp4?jwt=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJnaXRodWIuY29tIiwiYXVkIjoicmF3LmdpdGh1YnVzZXJjb250ZW50LmNvbSIsImtleSI6ImtleTUiLCJleHAiOjE3MzE2NjMzNDQsIm5iZiI6MTczMTY2MzA0NCwicGF0aCI6Ii80OTIzMjIyNC8zODY1MzkyMTktNWRjOTYxMzMtNzJmMy00Y2MzLTlmNTAtMDk2YzM4YmRlNzE1Lm1wND9YLUFtei1BbGdvcml0aG09QVdTNC1ITUFDLVNIQTI1NiZYLUFtei1DcmVkZW50aWFsPUFLSUFWQ09EWUxTQTUzUFFLNFpBJTJGMjAyNDExMTUlMkZ1cy1lYXN0LTElMkZzMyUyRmF3czRfcmVxdWVzdCZYLUFtei1EYXRlPTIwMjQxMTE1VDA5MzA0NFomWC1BbXotRXhwaXJlcz0zMDAmWC1BbXotU2lnbmF0dXJlPWVhOWY1NTc1Mjk5YWU1MjZmNmQyNmY3Mzk0YjY2MGYyMzlmZWQ2MTVkMjExODEwNmY3YmMxYTVmNGRhNzMxZWEmWC1BbXotU2lnbmVkSGVhZGVycz1ob3N0In0.69R3pTktxrl8C6tdduABLiRhkhwdfeVO3vlGGTGK4to" data-canonical-src="https://private-user-images.githubusercontent.com/49232224/386539219-5dc96133-72f3-4cc3-9f50-096c38bde715.mp4?jwt=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJnaXRodWIuY29tIiwiYXVkIjoicmF3LmdpdGh1YnVzZXJjb250ZW50LmNvbSIsImtleSI6ImtleTUiLCJleHAiOjE3MzE2NjMzNDQsIm5iZiI6MTczMTY2MzA0NCwicGF0aCI6Ii80OTIzMjIyNC8zODY1MzkyMTktNWRjOTYxMzMtNzJmMy00Y2MzLTlmNTAtMDk2YzM4YmRlNzE1Lm1wND9YLUFtei1BbGdvcml0aG09QVdTNC1ITUFDLVNIQTI1NiZYLUFtei1DcmVkZW50aWFsPUFLSUFWQ09EWUxTQTUzUFFLNFpBJTJGMjAyNDExMTUlMkZ1cy1lYXN0LTElMkZzMyUyRmF3czRfcmVxdWVzdCZYLUFtei1EYXRlPTIwMjQxMTE1VDA5MzA0NFomWC1BbXotRXhwaXJlcz0zMDAmWC1BbXotU2lnbmF0dXJlPWVhOWY1NTc1Mjk5YWU1MjZmNmQyNmY3Mzk0YjY2MGYyMzlmZWQ2MTVkMjExODEwNmY3YmMxYTVmNGRhNzMxZWEmWC1BbXotU2lnbmVkSGVhZGVycz1ob3N0In0.69R3pTktxrl8C6tdduABLiRhkhwdfeVO3vlGGTGK4to" controls="controls" muted="muted" class="d-block rounded-bottom-2 border-top width-fit" style="max-height:640px; min-height: 200px">
  </video>
@@ -41,13 +41,12 @@ Flock's workflow system consists of various node types, each serving a specific 
 3. Retrieval Node: Fetches relevant information from knowledge bases.
 4. Tool Node: Executes specific tasks or operations, extending workflow functionality.
 5. Retrieval Tool Node: Combines retrieval capabilities with tool functionality.
-6. Answer Node: Generates final answers or outputs, integrating results from previous nodes.
-7. Subgraph Node: Encapsulates a complete sub-workflow, allowing for modular design.
-8. Start and End Nodes: Mark the beginning and end of the workflow.
+6. Intent Recognition Node: Automatically identifies user input intent based on preset categories and routes to different processing flows.
+7. Answer Node: Generates final answers or outputs, integrating results from previous nodes.
+8. Subgraph Node: Encapsulates a complete sub-workflow, allowing for modular design.
+9. Start and End Nodes: Mark the beginning and end of the workflow.
 
 Future planned nodes include:
-
-- Intent Recognition Node
 - Conditional Branch Node (If-Else)
 - File Upload Node
 - Code Execution Node
@@ -99,6 +98,7 @@ Project tech stack: LangChain + LangGraph + React + Next.js + Chakra UI + Postgr
 - [x] Hierarchical Agent
 - [x] Sequential Agent
 - [x] Work-Flow
+- [x] Intent Recognition Node - Automatically identify user input intent and route to different processing flows
 - [x] CrewAI Integration
 - [ ] More muti-agent ---On Progress
 
