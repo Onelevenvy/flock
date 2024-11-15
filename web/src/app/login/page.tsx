@@ -19,6 +19,7 @@ import {
 import { useRouter } from "next/navigation";
 import React from "react";
 import { type SubmitHandler, useForm } from "react-hook-form";
+import { useTranslation } from "react-i18next";
 
 import type { ApiError } from "@/client";
 import type { Body_login_login_access_token as AccessToken } from "@/client/models/Body_login_login_access_token";
@@ -42,6 +43,7 @@ function Login() {
     },
   });
   const router = useRouter();
+  const { t } = useTranslation();
   const onSubmit: SubmitHandler<AccessToken> = async (data) => {
     try {
       await login(data);
@@ -91,37 +93,43 @@ function Login() {
           fontWeight="500"
           mb={6}
         >
-          {/* Flexible Low-code Orchestrating Collaborative-agent Kits */}
           <Text as="span" color="blue.300" fontWeight="bold">
             F
           </Text>
-          exible{" "}
+          {t("login.subtitle.flexible")}{" "}
           <Text as="span" color="blue.300" fontWeight="bold">
             L
           </Text>
-          ow-code{" "}
+          {t("login.subtitle.lowcode")}{" "}
           <Text as="span" color="blue.300" fontWeight="bold">
             O
           </Text>
-          rchestrating{" "}
+          {t("login.subtitle.orchestrating")}{" "}
           <Text as="span" color="blue.300" fontWeight="bold">
             C
           </Text>
-          ollaborative-agent &{" "}
+          {t("login.subtitle.collaborative")}{" "}
           <Text as="span" color="blue.300" fontWeight="bold">
             K
           </Text>
-          its
+          {t("login.subtitle.kits")}
         </Text>
         <Text fontSize="2xl" color="white" lineHeight="1.8" opacity={0.9}>
-          低代码 AI 应用开发平台
+          {t("login.subtitle.platform")}
         </Text>
-        <Text fontSize="xl" color="white" mt={4} lineHeight="1.8" opacity={0.9} fontWeight="400">
-          快速构建ChatBot、RAG和Muti-Agent应用
+        <Text
+          fontSize="xl"
+          color="white"
+          mt={4}
+          lineHeight="1.8"
+          opacity={0.9}
+          fontWeight="400"
+        >
+          {t("login.subtitle.features.line1")}
           <br />
-          基于 LangGraph 和 Langchain 的可视化workflow
+          {t("login.subtitle.features.line2")}
           <br />
-          让LLM应用开发更简单高效
+          {t("login.subtitle.features.line3")}
         </Text>
       </Box>
 
@@ -139,20 +147,20 @@ function Login() {
         border="1px solid rgba(255, 255, 255, 0.2)"
       >
         <VStack spacing={6}>
-          <Image 
-            src="logo.png" 
-            alt="logo" 
-            height="60px" 
-            width="auto" 
+          <Image
+            src="logo.png"
+            alt="logo"
+            height="60px"
+            width="auto"
             filter="drop-shadow(0 2px 4px rgba(0,0,0,0.1))"
           />
-          <Text 
-            fontSize="2xl" 
-            fontWeight="600" 
+          <Text
+            fontSize="2xl"
+            fontWeight="600"
             color="white"
             letterSpacing="tight"
           >
-            欢迎回来
+            {t("login.title")}
           </Text>
 
           <FormControl id="username" isInvalid={!!errors.username || !!error}>
@@ -161,7 +169,7 @@ function Login() {
               {...register("username", {
                 pattern: emailPattern,
               })}
-              placeholder="邮箱地址"
+              placeholder={t("login.form.email.placeholder")!}
               type="email"
               size="lg"
               bg="rgba(255, 255, 255, 0.08)"
@@ -180,7 +188,7 @@ function Login() {
               borderRadius="xl"
             />
             {errors.username && (
-              <FormErrorMessage>{errors.username.message}</FormErrorMessage>
+              <FormErrorMessage>{t("login.form.email.error")}</FormErrorMessage>
             )}
           </FormControl>
 
@@ -189,7 +197,7 @@ function Login() {
               <Input
                 {...register("password")}
                 type={show ? "text" : "password"}
-                placeholder="密码"
+                placeholder={t("login.form.password.placeholder")!}
                 autoComplete="password"
                 bg="rgba(255, 255, 255, 0.08)"
                 border="1px solid rgba(255, 255, 255, 0.2)"
@@ -216,13 +224,19 @@ function Login() {
               >
                 <Icon
                   onClick={setShow.toggle}
-                  aria-label={show ? "Hide password" : "Show password"}
+                  aria-label={
+                    show
+                      ? t("login.form.password.hide")!
+                      : t("login.form.password.show")!
+                  }
                 >
                   {show ? <ViewOffIcon /> : <ViewIcon />}
                 </Icon>
               </InputRightElement>
             </InputGroup>
-            {error && <FormErrorMessage>{error}</FormErrorMessage>}
+            {error && (
+              <FormErrorMessage>{t("login.form.error")}</FormErrorMessage>
+            )}
           </FormControl>
 
           <Link
@@ -237,7 +251,7 @@ function Login() {
               opacity: 1,
             }}
           >
-            忘记密码？
+            {t("login.form.password.forgot")}
           </Link>
 
           <Button
@@ -261,7 +275,7 @@ function Login() {
             fontSize="md"
             fontWeight="500"
           >
-            登录
+            {t("login.form.submit")}
           </Button>
         </VStack>
       </Flex>
