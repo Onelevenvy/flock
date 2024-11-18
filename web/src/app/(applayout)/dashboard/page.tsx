@@ -145,40 +145,42 @@ function Dashboard() {
   );
 
   return (
-    <Container maxW="full" p={0} h="full">
-      <Box bg="ui.bgMain" h="full" py={4}>
-        <Container maxW="7xl" h="full">
-          <VStack spacing={4} align="stretch">
-            <Flex
-              justifyContent="space-between"
+    <Flex h="full">
+      <Box flex="1" bg="ui.bgMain" display="flex" flexDirection="column" h="full">
+        <Box px={6} py={4}>
+          <Flex
+            justifyContent="space-between"
+            alignItems="center"
+            bg="white"
+            p={4}
+            borderRadius="2xl"
+            boxShadow="sm"
+            backdropFilter="blur(10px)"
+            border="1px solid"
+            borderColor="gray.100"
+          >
+            <Heading as="h1" size="lg" color="gray.800">
+              Welcome back, {currentUser?.full_name || currentUser?.email} 👋
+            </Heading>
+            <Badge
+              colorScheme="green"
+              p={2}
+              borderRadius="lg"
+              display="flex"
               alignItems="center"
-              bg="white"
-              p={4}
-              borderRadius="2xl"
-              boxShadow="sm"
-              backdropFilter="blur(10px)"
-              border="1px solid"
-              borderColor="gray.100"
+              gap={2}
+              bg="green.50"
             >
-              <Heading as="h1" size="lg" color="gray.800">
-                Welcome back, {currentUser?.full_name || currentUser?.email} 👋
-              </Heading>
-              <Badge
-                colorScheme="green"
-                p={2}
-                borderRadius="lg"
-                display="flex"
-                alignItems="center"
-                gap={2}
-                bg="green.50"
-              >
-                <Icon as={FiActivity} color="green.500" />
-                <Text color="green.700" fontWeight="500">
-                  Online
-                </Text>
-              </Badge>
-            </Flex>
+              <Icon as={FiActivity} color="green.500" />
+              <Text color="green.700" fontWeight="500">
+                Online
+              </Text>
+            </Badge>
+          </Flex>
+        </Box>
 
+        <Box flex="1" overflowY="auto" px={6} pb={4}>
+          <VStack spacing={4} align="stretch">
             <SimpleGrid columns={{ base: 1, md: 2, lg: 4 }} spacing={4}>
               <StatCard
                 icon={FiCpu}
@@ -328,9 +330,9 @@ function Dashboard() {
               </Card>
             </Grid>
           </VStack>
-        </Container>
+        </Box>
       </Box>
-    </Container>
+    </Flex>
   );
 }
 

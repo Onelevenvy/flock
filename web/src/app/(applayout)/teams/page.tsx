@@ -114,99 +114,103 @@ function Teams() {
   };
 
   return (
-    <Box bg="ui.bgMain" minH="100vh" px={6} py={4}>
-      {isLoading ? (
-        <Flex justify="center" align="center" height="100vh" width="full">
-          <Spinner size="xl" color="ui.main" thickness="3px" />
-        </Flex>
-      ) : (
-        filteredTeams && (
-          <Box maxW="full" maxH="full">
-            <Flex direction="row" justify="space-between" align="center" mb={6}>
-              <Box>
-                <TabSlider
-                  value={activeTab}
-                  onChange={setActiveTab}
-                  options={options}
-                />
-              </Box>
-              <Box>
-                <Navbar type="Team" />
-              </Box>
+    <Flex h="full">
+      <Box flex="1" bg="ui.bgMain" display="flex" flexDirection="column" h="full">
+        <Box px={6} py={4}>
+          <Flex direction="row" justify="space-between" align="center" mb={2}>
+            <Box>
+              <TabSlider
+                value={activeTab}
+                onChange={setActiveTab}
+                options={options}
+              />
+            </Box>
+            <Box>
+              <Navbar type="Team" />
+            </Box>
+          </Flex>
+        </Box>
+
+        <Box flex="1" overflowY="auto" px={6} pb={4}>
+          {isLoading ? (
+            <Flex justify="center" align="center" height="full" width="full">
+              <Spinner size="xl" color="ui.main" thickness="3px" />
             </Flex>
-
-            <SimpleGrid columns={{ base: 1, md: 2, lg: 3, xl: 4 }} spacing={6}>
-              {filteredTeams.map((team) => (
-                <Box
-                  key={team.id}
-                  onClick={() => handleRowClick(team.id)}
-                  bg="white"
-                  p={6}
-                  borderRadius="xl"
-                  border="1px solid"
-                  borderColor="gray.100"
-                  cursor="pointer"
-                  transition="all 0.2s"
-                  _hover={{
-                    transform: "translateY(-2px)",
-                    boxShadow: "md",
-                    borderColor: "gray.200",
-                  }}
-                >
-                  <HStack spacing={4} mb={4}>
-                    <Box
-                      as={IconButton}
-                      borderRadius="lg"
-                      bg={`${getWorkflowColor(team.workflow)}.50`}
-                    >
-                      <IconButton
-                        aria-label="Team icon"
-                        icon={getTeamIcon(team.icon)}
-                        size="sm"
-                        variant="ghost"
-                        color={`${getWorkflowColor(team.workflow)}.500`}
-                      />
-                    </Box>
-                    <Heading
-                      size="md"
-                      color="gray.700"
-                      fontWeight="600"
-                      noOfLines={1}
-                    >
-                      {team.name}
-                    </Heading>
-                  </HStack>
-
-                  <Text
-                    color="gray.600"
-                    fontSize="sm"
-                    mb={4}
-                    noOfLines={2}
-                    minH="2.5rem"
+          ) : (
+            filteredTeams && (
+              <SimpleGrid columns={{ base: 1, md: 2, lg: 3, xl: 4 }} spacing={6}>
+                {filteredTeams.map((team) => (
+                  <Box
+                    key={team.id}
+                    onClick={() => handleRowClick(team.id)}
+                    bg="white"
+                    p={6}
+                    borderRadius="xl"
+                    border="1px solid"
+                    borderColor="gray.100"
+                    cursor="pointer"
+                    transition="all 0.2s"
+                    _hover={{
+                      transform: "translateY(-2px)",
+                      boxShadow: "md",
+                      borderColor: "gray.200",
+                    }}
                   >
-                    {team.description || "N/A"}
-                  </Text>
+                    <HStack spacing={4} mb={4}>
+                      <Box
+                        as={IconButton}
+                        borderRadius="lg"
+                        bg={`${getWorkflowColor(team.workflow)}.50`}
+                      >
+                        <IconButton
+                          aria-label="Team icon"
+                          icon={getTeamIcon(team.icon)}
+                          size="sm"
+                          variant="ghost"
+                          color={`${getWorkflowColor(team.workflow)}.500`}
+                        />
+                      </Box>
+                      <Heading
+                        size="md"
+                        color="gray.700"
+                        fontWeight="600"
+                        noOfLines={1}
+                      >
+                        {team.name}
+                      </Heading>
+                    </HStack>
 
-                  <Flex justify="space-between" align="center" mt="auto">
-                    <Tag
-                      size="md"
-                      variant="subtle"
-                      colorScheme={getWorkflowColor(team.workflow)}
-                      borderRadius="full"
-                      px={3}
-                      py={1}
+                    <Text
+                      color="gray.600"
+                      fontSize="sm"
+                      mb={4}
+                      noOfLines={2}
+                      minH="2.5rem"
                     >
-                      <TagLabel fontWeight="500">{team.workflow}</TagLabel>
-                    </Tag>
-                    <ActionsMenu type="Team" value={team} />
-                  </Flex>
-                </Box>
-              ))}
-            </SimpleGrid>
-          </Box>
-        )
-      )}
-    </Box>
+                      {team.description || "N/A"}
+                    </Text>
+
+                    <Flex justify="space-between" align="center" mt="auto">
+                      <Tag
+                        size="md"
+                        variant="subtle"
+                        colorScheme={getWorkflowColor(team.workflow)}
+                        borderRadius="full"
+                        px={3}
+                        py={1}
+                      >
+                        <TagLabel fontWeight="500">{team.workflow}</TagLabel>
+                      </Tag>
+                      <ActionsMenu type="Team" value={team} />
+                    </Flex>
+                  </Box>
+                ))}
+              </SimpleGrid>
+            )
+          )}
+        </Box>
+      </Box>
+    </Flex>
   );
 }
 

@@ -162,102 +162,106 @@ function Uploads() {
   };
 
   return (
-    <Box bg="ui.bgMain" minH="100vh" px={6} py={4}>
-      {isLoading ? (
-        <Flex justify="center" align="center" height="100vh" width="full">
-          <Spinner size="xl" color="ui.main" thickness="3px" />
-        </Flex>
-      ) : (
-        uploads && (
-          <Box maxW="full" maxH="full">
-            <Flex direction="row" justify="space-between" align="center" mb={6}>
-              <Box>
-                <TabSlider
-                  value={activeTab}
-                  onChange={setActiveTab}
-                  options={options}
-                />
-              </Box>
-              <Box>
-                <Navbar type="Knowledge" />
-              </Box>
+    <Flex h="full">
+      <Box flex="1" bg="ui.bgMain" display="flex" flexDirection="column" h="full">
+        <Box px={6} py={4}>
+          <Flex direction="row" justify="space-between" align="center" mb={2}>
+            <Box>
+              <TabSlider
+                value={activeTab}
+                onChange={setActiveTab}
+                options={options}
+              />
+            </Box>
+            <Box>
+              <Navbar type="Knowledge" />
+            </Box>
+          </Flex>
+        </Box>
+
+        <Box flex="1" overflowY="auto" px={6} pb={4}>
+          {isLoading ? (
+            <Flex justify="center" align="center" height="full" width="full">
+              <Spinner size="xl" color="ui.main" thickness="3px" />
             </Flex>
-
-            <SimpleGrid columns={{ base: 1, md: 2, lg: 3, xl: 4 }} spacing={6}>
-              {uploads.data.map((upload) => (
-                <Box
-                  key={upload.id}
-                  onClick={() => handleUploadClick(upload.id)}
-                  bg="white"
-                  p={6}
-                  borderRadius="xl"
-                  border="1px solid"
-                  borderColor="gray.100"
-                  cursor="pointer"
-                  transition="all 0.2s"
-                  _hover={{
-                    transform: "translateY(-2px)",
-                    boxShadow: "md",
-                    borderColor: "gray.200",
-                  }}
-                >
-                  <HStack spacing={4} mb={4}>
-                    <Box
-                      as={IconButton}
-                      borderRadius="lg"
-                      bg={`${getFileColor(upload.name)}.50`}
-                    >
-                      <Icon
-                        as={getFileIcon(upload.name)}
-                        boxSize="6"
-                        color={`${getFileColor(upload.name)}.500`}
-                      />
-                    </Box>
-                    <Heading
-                      size="md"
-                      color="gray.700"
-                      fontWeight="600"
-                      noOfLines={1}
-                    >
-                      {upload.name}
-                    </Heading>
-                  </HStack>
-
-                  <Text
-                    color="gray.600"
-                    fontSize="sm"
-                    mb={4}
-                    noOfLines={2}
-                    minH="2.5rem"
+          ) : (
+            uploads && (
+              <SimpleGrid columns={{ base: 1, md: 2, lg: 3, xl: 4 }} spacing={6}>
+                {uploads.data.map((upload) => (
+                  <Box
+                    key={upload.id}
+                    onClick={() => handleUploadClick(upload.id)}
+                    bg="white"
+                    p={6}
+                    borderRadius="xl"
+                    border="1px solid"
+                    borderColor="gray.100"
+                    cursor="pointer"
+                    transition="all 0.2s"
+                    _hover={{
+                      transform: "translateY(-2px)",
+                      boxShadow: "md",
+                      borderColor: "gray.200",
+                    }}
                   >
-                    {upload.description || t("knowledge.page.noDescription")}
-                  </Text>
-
-                  <Flex justify="space-between" align="center" mt="auto">
-                    <Text fontSize="sm" color="gray.500">
-                      {formatDateTime(upload.last_modified)}
-                    </Text>
-                    <HStack spacing={3}>
-                      <Badge
-                        colorScheme={
-                          upload.status === "Completed" ? "green" : "yellow"
-                        }
-                        borderRadius="full"
-                        px={3}
-                        py={1}
+                    <HStack spacing={4} mb={4}>
+                      <Box
+                        as={IconButton}
+                        borderRadius="lg"
+                        bg={`${getFileColor(upload.name)}.50`}
                       >
-                        {upload.status}
-                      </Badge>
-                      <ActionsMenu type="Upload" value={upload} />
+                        <Icon
+                          as={getFileIcon(upload.name)}
+                          boxSize="6"
+                          color={`${getFileColor(upload.name)}.500`}
+                        />
+                      </Box>
+                      <Heading
+                        size="md"
+                        color="gray.700"
+                        fontWeight="600"
+                        noOfLines={1}
+                      >
+                        {upload.name}
+                      </Heading>
                     </HStack>
-                  </Flex>
-                </Box>
-              ))}
-            </SimpleGrid>
-          </Box>
-        )
-      )}
-    </Box>
+
+                    <Text
+                      color="gray.600"
+                      fontSize="sm"
+                      mb={4}
+                      noOfLines={2}
+                      minH="2.5rem"
+                    >
+                      {upload.description || t("knowledge.page.noDescription")}
+                    </Text>
+
+                    <Flex justify="space-between" align="center" mt="auto">
+                      <Text fontSize="sm" color="gray.500">
+                        {formatDateTime(upload.last_modified)}
+                      </Text>
+                      <HStack spacing={3}>
+                        <Badge
+                          colorScheme={
+                            upload.status === "Completed" ? "green" : "yellow"
+                          }
+                          borderRadius="full"
+                          px={3}
+                          py={1}
+                        >
+                          {upload.status}
+                        </Badge>
+                        <ActionsMenu type="Upload" value={upload} />
+                      </HStack>
+                    </Flex>
+                  </Box>
+                ))}
+              </SimpleGrid>
+            )
+          )}
+        </Box>
+      </Box>
+    </Flex>
   );
 }
 

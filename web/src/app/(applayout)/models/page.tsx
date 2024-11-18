@@ -72,97 +72,101 @@ function ModelPage() {
   const [activeTab, setActiveTab] = useState("all");
 
   return (
-    <Box bg="ui.bgMain" minH="100vh" px={6} py={4}>
-      {isLoading ? (
-        <Flex justify="center" align="center" height="100vh" width="full">
-          <Spinner size="xl" color="ui.main" thickness="3px" />
-        </Flex>
-      ) : (
-        models && (
-          <Box maxW="full" maxH="full">
-            <Flex direction="row" justify="space-between" align="center" mb={6}>
-              <Box>
-                <TabSlider
-                  value={activeTab}
-                  onChange={setActiveTab}
-                  options={options}
-                />
-              </Box>
+    <Flex h="full">
+      <Box flex="1" bg="ui.bgMain" display="flex" flexDirection="column" h="full">
+        <Box px={6} py={4}>
+          <Flex direction="row" justify="space-between" align="center" mb={2}>
+            <Box>
+              <TabSlider
+                value={activeTab}
+                onChange={setActiveTab}
+                options={options}
+              />
+            </Box>
+          </Flex>
+        </Box>
+
+        <Box flex="1" overflowY="auto" px={6} pb={4}>
+          {isLoading ? (
+            <Flex justify="center" align="center" height="full" width="full">
+              <Spinner size="xl" color="ui.main" thickness="3px" />
             </Flex>
-
-            <SimpleGrid columns={{ base: 1, md: 2, lg: 3, xl: 4 }} spacing={6}>
-              {models.map((model) => (
-                <Box
-                  key={model.id}
-                  bg="white"
-                  p={6}
-                  borderRadius="xl"
-                  border="1px solid"
-                  borderColor="gray.100"
-                  transition="all 0.2s"
-                  _hover={{
-                    transform: "translateY(-2px)",
-                    boxShadow: "md",
-                    borderColor: "gray.200",
-                  }}
-                >
-                  <HStack spacing={4} mb={4}>
-                    <Box
-                      p={2}
-                      borderRadius="lg"
-                      bg={`${model.categories[0] ? "blue" : "purple"}.50`}
-                    >
-                      <ModelProviderIcon
-                        h="6"
-                        w="6"
-                        modelprovider_name={model.provider.provider_name.toLowerCase()}
-                        color={`${model.categories[0] ? "blue" : "purple"}.500`}
-                      />
-                    </Box>
-                    <Heading
-                      size="md"
-                      color="gray.700"
-                      fontWeight="600"
-                      noOfLines={1}
-                    >
-                      {model.ai_model_name}
-                    </Heading>
-                  </HStack>
-
-                  <Text fontSize="sm" color="gray.600" mb={4}>
-                    Provider: {model.provider.provider_name}
-                  </Text>
-
-                  <Flex wrap="wrap" gap={2}>
-                    {model.categories.map((category) => (
-                      <Tag
-                        key={category}
-                        size="sm"
-                        variant="subtle"
-                        colorScheme="blue"
-                        borderRadius="full"
+          ) : (
+            models && (
+              <SimpleGrid columns={{ base: 1, md: 2, lg: 3, xl: 4 }} spacing={6}>
+                {models.map((model) => (
+                  <Box
+                    key={model.id}
+                    bg="white"
+                    p={6}
+                    borderRadius="xl"
+                    border="1px solid"
+                    borderColor="gray.100"
+                    transition="all 0.2s"
+                    _hover={{
+                      transform: "translateY(-2px)",
+                      boxShadow: "md",
+                      borderColor: "gray.200",
+                    }}
+                  >
+                    <HStack spacing={4} mb={4}>
+                      <Box
+                        p={2}
+                        borderRadius="lg"
+                        bg={`${model.categories[0] ? "blue" : "purple"}.50`}
                       >
-                        <TagLabel fontWeight="500">{category}</TagLabel>
-                      </Tag>
-                    ))}
-                    {model.capabilities.includes("vision") && (
-                      <Tag
-                        size="sm"
-                        variant="subtle"
-                        colorScheme="purple"
-                        borderRadius="full"
+                        <ModelProviderIcon
+                          h="6"
+                          w="6"
+                          modelprovider_name={model.provider.provider_name.toLowerCase()}
+                          color={`${model.categories[0] ? "blue" : "purple"}.500`}
+                        />
+                      </Box>
+                      <Heading
+                        size="md"
+                        color="gray.700"
+                        fontWeight="600"
+                        noOfLines={1}
                       >
-                        <TagLabel fontWeight="500">vision</TagLabel>
-                      </Tag>
-                    )}
-                  </Flex>
-                </Box>
-              ))}
-            </SimpleGrid>
-          </Box>
-        )
-      )}
-    </Box>
+                        {model.ai_model_name}
+                      </Heading>
+                    </HStack>
+
+                    <Text fontSize="sm" color="gray.600" mb={4}>
+                      Provider: {model.provider.provider_name}
+                    </Text>
+
+                    <Flex wrap="wrap" gap={2}>
+                      {model.categories.map((category) => (
+                        <Tag
+                          key={category}
+                          size="sm"
+                          variant="subtle"
+                          colorScheme="blue"
+                          borderRadius="full"
+                        >
+                          <TagLabel fontWeight="500">{category}</TagLabel>
+                        </Tag>
+                      ))}
+                      {model.capabilities.includes("vision") && (
+                        <Tag
+                          size="sm"
+                          variant="subtle"
+                          colorScheme="purple"
+                          borderRadius="full"
+                        >
+                          <TagLabel fontWeight="500">vision</TagLabel>
+                        </Tag>
+                      )}
+                    </Flex>
+                  </Box>
+                ))}
+              </SimpleGrid>
+            )
+          )}
+        </Box>
+      </Box>
+    </Flex>
   );
 }
 

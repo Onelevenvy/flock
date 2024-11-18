@@ -86,33 +86,40 @@ function Skills() {
   const [selectedSkill, setSelectedSkill] = useState<SkillOut | null>(null);
 
   return (
-    <Flex>
-      <Box flex="1" bg="ui.bgMain" minH="100vh" px={6} py={4}>
-        {isLoading ? (
-          <Flex justify="center" align="center" height="100vh" width="full">
-            <Spinner size="xl" color="ui.main" thickness="3px" />
+    <Flex h="full">
+      <Box flex="1" bg="ui.bgMain" display="flex" flexDirection="column" h="full">
+        <Box px={6} py={4}>
+          <Flex
+            direction="row"
+            justify="space-between"
+            align="center"
+            mb={2}
+          >
+            <Box>
+              <TabSlider
+                value={activeTab}
+                onChange={setActiveTab}
+                options={options}
+              />
+            </Box>
+            <Box>
+              <Navbar type="Skill" />
+            </Box>
           </Flex>
-        ) : (
-          filteredSkills && (
-            <Box maxW="full" maxH="full">
-              <Flex
-                direction="row"
-                justify="space-between"
-                align="center"
-                mb={6}
-              >
-                <Box>
-                  <TabSlider
-                    value={activeTab}
-                    onChange={setActiveTab}
-                    options={options}
-                  />
-                </Box>
-                <Box>
-                  <Navbar type="Skill" />
-                </Box>
-              </Flex>
+        </Box>
 
+        <Box 
+          flex="1" 
+          overflowY="auto"
+          px={6}
+          pb={4}
+        >
+          {isLoading ? (
+            <Flex justify="center" align="center" height="full" width="full">
+              <Spinner size="xl" color="ui.main" thickness="3px" />
+            </Flex>
+          ) : (
+            filteredSkills && (
               <SimpleGrid
                 columns={{ base: 1, md: 2, lg: 3, xl: 4 }}
                 spacing={6}
@@ -196,9 +203,9 @@ function Skills() {
                   </Box>
                 ))}
               </SimpleGrid>
-            </Box>
-          )
-        )}
+            )
+          )}
+        </Box>
       </Box>
 
       {selectedSkill && (

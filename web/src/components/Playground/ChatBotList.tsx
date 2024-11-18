@@ -88,7 +88,7 @@ const ChatBotList = () => {
                 <Text fontWeight="600" color="gray.700">
                   {t("chat.chatBotList.easyTalk")}
                 </Text>
-                <Text color="gray.500" fontSize="sm">
+                <Text color="gray.500" fontSize="sm" noOfLines={2}>
                   {t("chat.chatBotList.description")}
                 </Text>
               </Box>
