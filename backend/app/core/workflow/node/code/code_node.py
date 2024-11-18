@@ -55,27 +55,25 @@ class ContainerPool:
                 remove=True,  # 容器停止时自动删除
                 stdin_open=True,
                 network="docker_default",
-                volumes={
-                    "app-code-workspace": {
-                        "bind": "/workspace",
-                        "mode": "rw"
-                    }
-                },
+                volumes={"app-code-workspace": {"bind": "/workspace", "mode": "rw"}},
                 mem_limit=self.memory_limit,
                 security_opt=["no-new-privileges:true"],
                 cap_drop=["ALL"],
                 name=container_name,
-                command=["/bin/bash", "/opt/code-interpreter/scripts/entrypoint.sh"]  # 显式指定启动命令
+                command=[
+                    "/bin/bash",
+                    "/opt/code-interpreter/scripts/entrypoint.sh",
+                ],  # 显式指定启动命令
             )
-            
+
             # 等待容器完全启动
             time.sleep(2)
             container.reload()
-            
+
             self.active_containers[container.id] = container
             logger.info(f"Created container: {container_name}")
             return container
-            
+
         except Exception as e:
             logger.error(f"Error creating container: {e}")
             raise
@@ -131,8 +129,7 @@ class ContainerPool:
             # 清理所有 code-interpreter-worker 容器
             try:
                 containers = self.client.containers.list(
-                    all=True,
-                    filters={"name": "code-interpreter-worker"}
+                    all=True, filters={"name": "code-interpreter-worker"}
                 )
                 for container in containers:
                     try:
@@ -153,6 +150,37 @@ class CodeExecutor:
 
     _instance = None
     _pool = None
+
+    # Python 内置库，不需要安装
+    BUILTIN_LIBRARIES = {
+        "os",
+        "sys",
+        "glob",
+        "json",
+        "time",
+        "datetime",
+        "random",
+        "math",
+        "re",
+        "collections",
+        "itertools",
+        "functools",
+        "pathlib",
+        "base64",
+        "hashlib",
+        "uuid",
+        # ... 其他内置库
+    }
+
+    # 预装的第三方库
+    PREINSTALLED_LIBRARIES = {
+        "numpy",
+        "pandas",
+        "requests",
+        "python-dateutil",
+        "matplotlib",
+        # ... 其他预装的第三方库
+    }
 
     def __new__(cls, *args, **kwargs):
         if cls._instance is None:
@@ -190,52 +218,63 @@ class CodeExecutor:
         self, container: docker.models.containers.Container, libraries: List[str]
     ) -> None:
         """Install required libraries in container"""
-        for library in libraries:
-            container.exec_run(f"pip install --user {library}")
+        # 过滤掉内置库和预装库
+        libraries_to_install = [
+            lib for lib in libraries 
+            if lib.lower() not in self.PREINSTALLED_LIBRARIES 
+            and lib.lower() not in self.BUILTIN_LIBRARIES
+        ]
+
+        if libraries_to_install:
+            print(f"Installing libraries: {', '.join(libraries_to_install)}")
+            for library in libraries_to_install:
+                container.exec_run(f"pip install --user {library}")
+        else:
+            print("All required libraries are pre-installed or built-in")
 
     def execute(self, code: str, libraries: List[str]) -> str:
         """Execute code in Docker container with safety measures"""
         print(f"\nStarting code execution with {len(libraries)} libraries")
         if libraries:
             print(f"Required libraries: {', '.join(libraries)}")
-        
+
         container = self._pool.get_container()
         print(f"Using container: {container.name}")
-        
+
         try:
             # Install required libraries
             self._install_libraries(container, libraries)
             print("Libraries installed successfully")
-            
+
             # 使用 base64 编码代码
-            code_bytes = code.encode('utf-8')
-            code_base64 = base64.b64encode(code_bytes).decode('utf-8')
-            
+            code_bytes = code.encode("utf-8")
+            code_base64 = base64.b64encode(code_bytes).decode("utf-8")
+
             # 创建解码和执行代码的 Python 命令
             decode_and_exec = f'''python3 -c "import base64; exec(base64.b64decode('{code_base64}').decode('utf-8'))"'''
-            
+
             # 执行代码
             exec_result = container.exec_run(
-                decode_and_exec,
-                tty=True,
-                environment={"PYTHONUNBUFFERED": "1"}
+                decode_and_exec, tty=True, environment={"PYTHONUNBUFFERED": "1"}
             )
-            
+
             if exec_result.exit_code != 0:
-                error_msg = f"Error executing code: {exec_result.output.decode('utf-8')}"
+                error_msg = (
+                    f"Error executing code: {exec_result.output.decode('utf-8')}"
+                )
                 print(f"\nError: {error_msg}")
                 return error_msg
-            
+
             result = exec_result.output.decode("utf-8")
             print("\nCode execution result:")
             print(result)
             return result
-            
+
         except Exception as e:
             error_msg = f"Execution error: {str(e)}"
             print(f"\nError: {error_msg}")
             return error_msg
-            
+
         finally:
             print("Returning container to pool")
             self._pool.return_container(container)
