@@ -23,8 +23,8 @@ services:
       - QDRANT_SERVICE_API_KEY=${QDRANT_SERVICE_API_KEY?Variable not set}
     labels:
       - traefik.enable=true
-      - traefik.docker.network=evoagi_default
-      - traefik.constraint-label=evoagi_default
+      - traefik.docker.network=docker_default
+      - traefik.constraint-label=docker_default
       - traefik.http.routers.${STACK_NAME?Variable not set}-qdrant-http.rule=Host(`qdrant.${DOMAIN?Variable not set}`)
       - traefik.http.routers.${STACK_NAME?Variable not set}-qdrant-http.entrypoints=http
       - traefik.http.routers.${STACK_NAME?Variable not set}-qdrant-http.middlewares=https-redirect
@@ -43,8 +43,8 @@ services:
       - 6379:6379
     labels:
       - traefik.enable=true
-      - traefik.docker.network=evoagi_default
-      - traefik.constraint-label=evoagi_default
+      - traefik.docker.network=docker_default
+      - traefik.constraint-label=docker_default
       - traefik.http.routers.${STACK_NAME?Variable not set}-redis-http.rule=Host(`redis.${DOMAIN?Variable not set}`)
       - traefik.http.routers.${STACK_NAME?Variable not set}-redis-http.entrypoints=http
       - traefik.http.routers.${STACK_NAME?Variable not set}-redis-http.middlewares=https-redirect
@@ -54,12 +54,45 @@ services:
       - traefik.http.routers.${STACK_NAME?Variable not set}-redis-https.tls.certresolver=le
       - traefik.http.services.${STACK_NAME?Variable not set}-redis.loadbalancer.server.port=6379
 
+  code-interpreter:
+    build:
+      context: ./code-interpreter
+      dockerfile: Dockerfile
+    image: code-interpreter:latest
+    deploy:
+      resources:
+        limits:
+          memory: 1G
+        reservations:
+          memory: 256M
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+    networks:
+      - docker_default
+    volumes:
+      - app-code-workspace:/workspace
+    environment:
+      - PYTHONUNBUFFERED=1
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+    healthcheck:
+      test: ["CMD", "python3", "/opt/code-interpreter/scripts/healthcheck.py"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+
 networks:
-  evoagi_default:
-    # Allow setting it to false for testing
+  docker_default:
     external: true
 volumes:
   app-db-data:
   app-qdrant-data:
   app-backend-model-cache:
   app-upload-data:
+  app-code-workspace:

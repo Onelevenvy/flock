@@ -1,0 +1,308 @@
+from typing import Any, Dict, List, Optional
+from langchain_core.messages import AIMessage
+from langchain_core.runnables import RunnableConfig
+import docker
+from ..state import ReturnTeamState, TeamState, parse_variables, update_node_outputs
+import threading
+import queue
+import time
+import logging
+import tempfile
+import os
+import base64
+
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
+
+
+class ContainerPool:
+    """管理Docker容器池"""
+
+    def __init__(self, image_tag: str, pool_size: int = 3, memory_limit: str = "256m"):
+        self.image_tag = image_tag
+        self.pool_size = pool_size
+        self.memory_limit = memory_limit
+        self.available_containers = queue.Queue()
+        self.active_containers = {}  # 改用字典来跟踪容器
+        self.client = docker.from_env()
+        self.lock = threading.Lock()
+        self._initialize_pool()
+
+    def _initialize_pool(self):
+        """初始化容器池"""
+        container = self._create_container()
+        self.available_containers.put(container)
+
+    def _create_container(self):
+        """创建新的容器"""
+        container_name = f"code-interpreter-worker-{len(self.active_containers)}"
+        try:
+            logger.info(f"Creating container: {container_name}")
+            # 先尝试删除同名容器
+            try:
+                old_container = self.client.containers.get(container_name)
+                old_container.remove(force=True)
+                logger.info(f"Removed old container: {container_name}")
+            except docker.errors.NotFound:
+                pass
+
+            # 创建新容器
+            container = self.client.containers.run(
+                self.image_tag,
+                detach=True,
+                tty=True,
+                working_dir="/workspace",
+                remove=True,  # 容器停止时自动删除
+                stdin_open=True,
+                network="docker_default",
+                volumes={
+                    "app-code-workspace": {
+                        "bind": "/workspace",
+                        "mode": "rw"
+                    }
+                },
+                mem_limit=self.memory_limit,
+                security_opt=["no-new-privileges:true"],
+                cap_drop=["ALL"],
+                name=container_name,
+                command=["/bin/bash", "/opt/code-interpreter/scripts/entrypoint.sh"]  # 显式指定启动命令
+            )
+            
+            # 等待容器完全启动
+            time.sleep(2)
+            container.reload()
+            
+            self.active_containers[container.id] = container
+            logger.info(f"Created container: {container_name}")
+            return container
+            
+        except Exception as e:
+            logger.error(f"Error creating container: {e}")
+            raise
+
+    def get_container(self):
+        """获取一个可用的容器"""
+        with self.lock:
+            try:
+                container = self.available_containers.get_nowait()
+                # 检查容器是否还在运行
+                try:
+                    container.reload()
+                    return container
+                except:
+                    # 使用 pop 而不是 discard，因为是字典
+                    self.active_containers.pop(container.id, None)
+                    return self._create_container()
+            except queue.Empty:
+                if len(self.active_containers) < self.pool_size:
+                    return self._create_container()
+                else:
+                    # 等待可用容器
+                    return self.available_containers.get(timeout=5)
+
+    def return_container(self, container):
+        """归还容器到池中"""
+        with self.lock:
+            try:
+                container.reload()  # 检查容器状态
+                container.exec_run("rm -rf /workspace/*")  # 清理工作目录
+                self.available_containers.put(container)
+            except:
+                # 使用 pop 而不是 discard
+                self.active_containers.pop(container.id, None)
+                try:
+                    container.remove(force=True)
+                except:
+                    pass
+
+    def cleanup(self):
+        """清理所有容器"""
+        with self.lock:
+            # 清理活动容器
+            for container_id, container in list(self.active_containers.items()):
+                try:
+                    logger.info(f"Removing container: {container.name}")
+                    container.remove(force=True)
+                except Exception as e:
+                    logger.error(f"Error removing container: {e}")
+                finally:
+                    self.active_containers.pop(container_id, None)
+
+            # 清理所有 code-interpreter-worker 容器
+            try:
+                containers = self.client.containers.list(
+                    all=True,
+                    filters={"name": "code-interpreter-worker"}
+                )
+                for container in containers:
+                    try:
+                        container.remove(force=True)
+                        logger.info(f"Removed worker container: {container.name}")
+                    except Exception as e:
+                        logger.error(f"Error removing worker container: {e}")
+            except Exception as e:
+                logger.error(f"Error listing containers: {e}")
+
+    def __del__(self):
+        """确保在对象被销毁时清理所有容器"""
+        self.cleanup()
+
+
+class CodeExecutor:
+    """Code execution engine using Docker with container pooling"""
+
+    _instance = None
+    _pool = None
+
+    def __new__(cls, *args, **kwargs):
+        if cls._instance is None:
+            cls._instance = super(CodeExecutor, cls).__new__(cls)
+        return cls._instance
+
+    def __init__(
+        self,
+        timeout: int = 30,
+        memory_limit: str = "256m",
+        image_tag: str = "code-interpreter:latest",
+        pool_size: int = 3,
+    ):
+        if not hasattr(self, "initialized"):
+            self.timeout = timeout
+            self.memory_limit = memory_limit
+            self.image_tag = image_tag
+            self.client = docker.from_env()
+            self._verify_docker_image()
+            self._pool = ContainerPool(
+                image_tag=image_tag, pool_size=pool_size, memory_limit=memory_limit
+            )
+            self.initialized = True
+
+    def _verify_docker_image(self) -> None:
+        """Verify if Docker image exists, build if not"""
+        try:
+            self.client.images.get(self.image_tag)
+        except docker.errors.ImageNotFound:
+            # 更新Dockerfile路径
+            dockerfile_path = "./docker/code-interpreter"
+            self.client.images.build(path=dockerfile_path, tag=self.image_tag, rm=True)
+
+    def _install_libraries(
+        self, container: docker.models.containers.Container, libraries: List[str]
+    ) -> None:
+        """Install required libraries in container"""
+        for library in libraries:
+            container.exec_run(f"pip install --user {library}")
+
+    def execute(self, code: str, libraries: List[str]) -> str:
+        """Execute code in Docker container with safety measures"""
+        print(f"\nStarting code execution with {len(libraries)} libraries")
+        if libraries:
+            print(f"Required libraries: {', '.join(libraries)}")
+        
+        container = self._pool.get_container()
+        print(f"Using container: {container.name}")
+        
+        try:
+            # Install required libraries
+            self._install_libraries(container, libraries)
+            print("Libraries installed successfully")
+            
+            # 使用 base64 编码代码
+            code_bytes = code.encode('utf-8')
+            code_base64 = base64.b64encode(code_bytes).decode('utf-8')
+            
+            # 创建解码和执行代码的 Python 命令
+            decode_and_exec = f'''python3 -c "import base64; exec(base64.b64decode('{code_base64}').decode('utf-8'))"'''
+            
+            # 执行代码
+            exec_result = container.exec_run(
+                decode_and_exec,
+                tty=True,
+                environment={"PYTHONUNBUFFERED": "1"}
+            )
+            
+            if exec_result.exit_code != 0:
+                error_msg = f"Error executing code: {exec_result.output.decode('utf-8')}"
+                print(f"\nError: {error_msg}")
+                return error_msg
+            
+            result = exec_result.output.decode("utf-8")
+            print("\nCode execution result:")
+            print(result)
+            return result
+            
+        except Exception as e:
+            error_msg = f"Execution error: {str(e)}"
+            print(f"\nError: {error_msg}")
+            return error_msg
+            
+        finally:
+            print("Returning container to pool")
+            self._pool.return_container(container)
+
+    def cleanup(self):
+        """清理所有资源"""
+        if self._pool:
+            self._pool.cleanup()
+
+    def __del__(self):
+        """确保在对象被销毁时清理资源"""
+        self.cleanup()
+
+
+class CodeNode:
+    """Node for executing Python code in workflow"""
+
+    def __init__(
+        self,
+        node_id: str,
+        code: str,
+        libraries: Optional[List[str]] = None,
+        timeout: int = 30,
+        memory_limit: str = "256m",
+    ):
+        self.node_id = node_id
+        self.code = code
+        self.libraries = libraries or []
+        self.executor = CodeExecutor(timeout=timeout, memory_limit=memory_limit)
+
+    async def work(self, state: TeamState, config: RunnableConfig) -> ReturnTeamState:
+        """Execute code and update state"""
+        if "node_outputs" not in state:
+            state["node_outputs"] = {}
+
+        try:
+            # Parse variables in code
+            parsed_code = parse_variables(self.code, state["node_outputs"])
+
+            # Execute code
+            result = self.executor.execute(parsed_code, self.libraries)
+
+            # Create result message
+            result_message = AIMessage(content=str(result))
+
+            # Update node outputs
+            new_output = {self.node_id: {"response": result}}
+            state["node_outputs"] = update_node_outputs(
+                state["node_outputs"], new_output
+            )
+
+            return_state: ReturnTeamState = {
+                "history": state.get("history", []) + [result_message],
+                "messages": [result_message],
+                "all_messages": state.get("all_messages", []) + [result_message],
+                "node_outputs": state["node_outputs"],
+            }
+
+            return return_state
+
+        except Exception as e:
+            error_message = f"Code execution failed: {str(e)}"
+            error_result = AIMessage(content=error_message)
+
+            return {
+                "history": state.get("history", []) + [error_result],
+                "messages": [error_result],
+                "all_messages": state.get("all_messages", []) + [error_result],
+                "node_outputs": state["node_outputs"],
+            }
