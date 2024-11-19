@@ -1,3 +1,4 @@
+import json
 from typing import Any, Dict, List, Optional
 from langchain_core.messages import AIMessage
 from langchain_core.runnables import RunnableConfig
@@ -7,8 +8,6 @@ import threading
 import queue
 import time
 import logging
-import tempfile
-import os
 import base64
 
 logging.basicConfig(level=logging.INFO)
@@ -67,7 +66,7 @@ class ContainerPool:
             )
 
             # 等待容器完全启动
-            time.sleep(2)
+            time.sleep(0.5)
             container.reload()
 
             self.active_containers[container.id] = container
@@ -220,8 +219,9 @@ class CodeExecutor:
         """Install required libraries in container"""
         # 过滤掉内置库和预装库
         libraries_to_install = [
-            lib for lib in libraries 
-            if lib.lower() not in self.PREINSTALLED_LIBRARIES 
+            lib
+            for lib in libraries
+            if lib.lower() not in self.PREINSTALLED_LIBRARIES
             and lib.lower() not in self.BUILTIN_LIBRARIES
         ]
 
@@ -246,8 +246,57 @@ class CodeExecutor:
             self._install_libraries(container, libraries)
             print("Libraries installed successfully")
 
+            # 首先执行代码分析来获取函数名
+            analyze_code = """
+import ast, base64
+
+def find_function_name(code):
+    tree = ast.parse(code)
+    for node in ast.walk(tree):
+        if isinstance(node, ast.FunctionDef):
+            return node.name
+    return None
+
+code = base64.b64decode('{code_base64}').decode('utf-8')
+func_name = find_function_name(code)
+if func_name:
+    print(f'FOUND_FUNCTION:{{func_name}}')
+"""
+            # 对原始代码进行base64编码
+            original_code_base64 = base64.b64encode(code.encode("utf-8")).decode("utf-8")
+            # 将base64编码的代码插入到分析代码中
+            analyze_code = analyze_code.format(code_base64=original_code_base64)
+
+            # 对分析代码进行base64编码
+            analyze_code_base64 = base64.b64encode(analyze_code.encode("utf-8")).decode("utf-8")
+
+            # 执行分析代码
+            analyze_cmd = f'''python3 -c "import base64; exec(base64.b64decode('{analyze_code_base64}').decode('utf-8'))"'''
+            analyze_result = container.exec_run(analyze_cmd)
+
+            function_name = None
+            for line in analyze_result.output.decode("utf-8").split("\n"):
+                if line.startswith("FOUND_FUNCTION:"):
+                    function_name = line.replace("FOUND_FUNCTION:", "").strip()
+                    break
+
+            if not function_name:
+                raise Exception("No function found in the code")
+
+            # 使用模板构建执行代码
+            runner_script = f"""
+import json
+
+{code}
+
+# 执行函数并获取结果
+result = {function_name}()
+
+# 转换结果为JSON并打印
+print(f'<<RESULT>>{{json.dumps(result)}}<<RESULT>>')
+"""
             # 使用 base64 编码代码
-            code_bytes = code.encode("utf-8")
+            code_bytes = runner_script.encode("utf-8")
             code_base64 = base64.b64encode(code_bytes).decode("utf-8")
 
             # 创建解码和执行代码的 Python 命令
@@ -266,6 +315,20 @@ class CodeExecutor:
                 return error_msg
 
             result = exec_result.output.decode("utf-8")
+
+            # 解析输出中的结果
+            import re
+
+            result_match = re.search(r"<<RESULT>>(.+?)<<RESULT>>", result)
+            if result_match:
+                result_json = result_match.group(1)
+                try:
+                    # 解析JSON结果
+                    result = json.loads(result_json)
+                except:
+                    pass
+                return result
+
             print("\nCode execution result:")
             print(result)
             return result
@@ -317,9 +380,6 @@ class CodeNode:
             # Execute code
             result = self.executor.execute(parsed_code, self.libraries)
 
-            # Create result message
-            result_message = AIMessage(content=str(result))
-
             # Update node outputs
             new_output = {self.node_id: {"response": result}}
             state["node_outputs"] = update_node_outputs(
@@ -327,9 +387,6 @@ class CodeNode:
             )
 
             return_state: ReturnTeamState = {
-                "history": state.get("history", []) + [result_message],
-                "messages": [result_message],
-                "all_messages": state.get("all_messages", []) + [result_message],
                 "node_outputs": state["node_outputs"],
             }
 
@@ -337,11 +394,8 @@ class CodeNode:
 
         except Exception as e:
             error_message = f"Code execution failed: {str(e)}"
-            error_result = AIMessage(content=error_message)
 
+            new_output = {self.node_id: {"response": error_message}}
             return {
-                "history": state.get("history", []) + [error_result],
-                "messages": [error_result],
-                "all_messages": state.get("all_messages", []) + [error_result],
                 "node_outputs": state["node_outputs"],
             }

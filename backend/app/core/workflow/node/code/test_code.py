@@ -7,26 +7,32 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 
-# 使用 r-string 和三重引号，避免转义问题
+# 测试带返回值的函数
 test_code = r"""
-import os
-import json
-from datetime import datetime
+def process_data():
+    # 使用预装的库
+    import numpy as np
+    import pandas as pd
+    
+    # 创建示例数据
+    data = {
+        'numbers': np.random.randn(5),
+        'letters': ['A', 'B', 'C', 'D', 'E']
+    }
+    
+    # 创建 DataFrame
+    df = pd.DataFrame(data)
+    
+    # 计算一些统计信息
+    result = {
+        'mean': float(df['numbers'].mean()),  # 转换为普通 float
+        'std': float(df['numbers'].std()),    # 转换为普通 float
+        'letters': df['letters'].tolist()
+    }
+    
+    return result
 
-# 基本操作
-current_time = datetime.now()
-print(f'Current time: {current_time}')
-
-# 文件系统操作
-files = os.listdir('.')
-print('\nFiles in current directory:')
-print(json.dumps(files, indent=2))
-
-# 使用预装的 numpy
-import numpy as np
-arr = np.array([1, 2, 3, 4, 5])
-print(f'\nNumPy array mean: {arr.mean()}')
-"""  # 使用 r-string 和三重引号
+"""
 
 
 async def test_code_execution():
@@ -39,8 +45,7 @@ async def test_code_execution():
         code_node = CodeNode(
             node_id="test-code",
             code=test_code,
-            # 由于使用的都是预装库，可以不指定 libraries
-            libraries=[],  # 移除不必要的库声明
+            libraries=[],  # 使用预装库
             timeout=30,
             memory_limit="256m",
         )
@@ -51,7 +56,10 @@ async def test_code_execution():
         result = await code_node.work(test_state, {})
 
         print("\n=== Execution Result ===")
-        print(result["messages"][0].content)
+        print("Node outputs:", result["node_outputs"])
+        print(
+            "\nFunction return value:", result["node_outputs"]["test-code"]["response"]
+        )
 
     except Exception as e:
         print(f"Test failed: {e}")
