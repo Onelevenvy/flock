@@ -9,6 +9,7 @@ import queue
 import time
 import logging
 import base64
+from textwrap import dedent
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -144,6 +145,61 @@ class ContainerPool:
         self.cleanup()
 
 
+class CodeTemplate:
+    """代码模板管理类"""
+
+    _code_placeholder = "{code}"
+    _inputs_placeholder = "{inputs}"
+
+    @classmethod
+    def get_runner_script(cls) -> str:
+        """创建标准化的执行脚本模板"""
+        runner_script = dedent(
+            f"""
+            # 用户定义的函数
+            {cls._code_placeholder}
+            
+            import json, ast
+            
+            def find_function_name(code):
+                tree = ast.parse(code)
+                for node in ast.walk(tree):
+                    if isinstance(node, ast.FunctionDef):
+                        return node.name
+                return None
+            
+            # 分析代码获取函数名
+            code = '''{cls._code_placeholder}'''
+            function_name = find_function_name(code)
+            
+            if not function_name:
+                raise Exception("No function found in the code")
+            
+            # 执行代码
+            exec(code)
+            
+            # 执行函数并获取结果
+            result = eval(f"{{function_name}}()")
+            
+            # 转换结果为JSON并打印
+            output_json = json.dumps(result, indent=4)
+            print(f'<<RESULT>>{{output_json}}<<RESULT>>')
+            """
+        )
+        return runner_script
+
+    @classmethod
+    def create_execution_script(cls, code: str, inputs: dict = None) -> str:
+        """创建完整的执行脚本"""
+        runner_script = cls.get_runner_script()
+        # 替换占位符
+        script = runner_script.replace(cls._code_placeholder, code)
+        if inputs:
+            inputs_json = json.dumps(inputs)
+            script = script.replace(cls._inputs_placeholder, inputs_json)
+        return script
+
+
 class CodeExecutor:
     """Code execution engine using Docker with container pooling"""
 
@@ -246,60 +302,13 @@ class CodeExecutor:
             self._install_libraries(container, libraries)
             print("Libraries installed successfully")
 
-            # 首先执行代码分析来获取函数名
-            analyze_code = """
-import ast, base64
+            # 使用模板创建执行脚本
+            runner_script = CodeTemplate.create_execution_script(code)
 
-def find_function_name(code):
-    tree = ast.parse(code)
-    for node in ast.walk(tree):
-        if isinstance(node, ast.FunctionDef):
-            return node.name
-    return None
-
-code = base64.b64decode('{code_base64}').decode('utf-8')
-func_name = find_function_name(code)
-if func_name:
-    print(f'FOUND_FUNCTION:{{func_name}}')
-"""
-            # 对原始代码进行base64编码
-            original_code_base64 = base64.b64encode(code.encode("utf-8")).decode("utf-8")
-            # 将base64编码的代码插入到分析代码中
-            analyze_code = analyze_code.format(code_base64=original_code_base64)
-
-            # 对分析代码进行base64编码
-            analyze_code_base64 = base64.b64encode(analyze_code.encode("utf-8")).decode("utf-8")
-
-            # 执行分析代码
-            analyze_cmd = f'''python3 -c "import base64; exec(base64.b64decode('{analyze_code_base64}').decode('utf-8'))"'''
-            analyze_result = container.exec_run(analyze_cmd)
-
-            function_name = None
-            for line in analyze_result.output.decode("utf-8").split("\n"):
-                if line.startswith("FOUND_FUNCTION:"):
-                    function_name = line.replace("FOUND_FUNCTION:", "").strip()
-                    break
-
-            if not function_name:
-                raise Exception("No function found in the code")
-
-            # 使用模板构建执行代码
-            runner_script = f"""
-import json
-
-{code}
-
-# 执行函数并获取结果
-result = {function_name}()
-
-# 转换结果为JSON并打印
-print(f'<<RESULT>>{{json.dumps(result)}}<<RESULT>>')
-"""
-            # 使用 base64 编码代码
-            code_bytes = runner_script.encode("utf-8")
-            code_base64 = base64.b64encode(code_bytes).decode("utf-8")
-
-            # 创建解码和执行代码的 Python 命令
+            # 只需要一次编码
+            code_base64 = base64.b64encode(runner_script.encode("utf-8")).decode(
+                "utf-8"
+            )
             decode_and_exec = f'''python3 -c "import base64; exec(base64.b64decode('{code_base64}').decode('utf-8'))"'''
 
             # 执行代码
@@ -318,17 +327,16 @@ print(f'<<RESULT>>{{json.dumps(result)}}<<RESULT>>')
 
             # 解析输出中的结果
             import re
-
-            result_match = re.search(r"<<RESULT>>(.+?)<<RESULT>>", result)
+            result_match = re.search(r"<<RESULT>>(.+?)<<RESULT>>", result, re.DOTALL)
             if result_match:
                 result_json = result_match.group(1)
                 try:
-                    # 解析JSON结果
-                    result = json.loads(result_json)
-                except:
-                    pass
-                return result
-
+                    result = json.loads(result_json.strip())
+                    return result
+                except json.JSONDecodeError as e:
+                    print(f"JSON decode error: {e}")
+                    return result_json.strip()
+            
             print("\nCode execution result:")
             print(result)
             return result

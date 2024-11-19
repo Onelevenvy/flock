@@ -9,7 +9,7 @@ logger = logging.getLogger(__name__)
 
 # 测试带返回值的函数
 test_code = r"""
-def process_data():
+def main():
     # 使用预装的库
     import numpy as np
     import pandas as pd
