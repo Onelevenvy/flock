@@ -68,6 +68,35 @@ Flock 的工作流系统由各种类型的节点组成，每种节点都有特�
   <img src="https://github.com/user-attachments/assets/1c7d383d-e6bf-42b8-94ec-9f0c37be19b8" alt="image" style="width: 49%; display: inline-block;">
 </p>
 
+本项目受到 [StreetLamb](https://github.com/StreetLamb) 项目及其 [tribe](https://github.com/StreetLamb/tribe) 项目的启发，采用了许多相似的方法和代码。在此基础上，我们引入了一些新的特性和方向。
+
+项目的部分布局参考了 [Lobe-chat](https://github.com/lobehub/lobe-chat)、[Dify](https://github.com/langgenius/dify) 和 [fastgpt](https://github.com/labring/FastGPT)。
+它们都是优秀的开源项目，在此表示感谢🙇‍。
+
+### 👨‍💻 开发技术
+
+项目技术栈：LangChain + LangGraph + React + Next.js + Chakra UI + PostgreSQL
+
+> [!NOTE]
+>
+> ### 🤖 模型系统
+>
+> Flock 支持多种模型提供商，并且易于添加新的模型。查看我们的 [模型指南](./docs/Add_New_Model_Providers_Guide.md) 了解支持的模型以及如何添加新的提供商支持。
+
+> ### 🛠️ 工具系统
+>
+> Flock 内置多种工具，并支持轻松集成自定义工具。查看我们的 [工具指南](./docs/Add_New_Tools_Guide.md) 了解可用工具以及如何添加自己的工具。
+
+### 🏘️ 亮点特性
+
+- 持久化对话：保存并维护聊天历史，使您能够继续之前的对话。
+- 可观察性：使用 LangSmith 实时监控和跟踪代理的性能和输出，确保它们高效运行。
+- 工具调用：使您的代理能够使用外部工具和 API。
+- 检索增强生成：使您的代理能够利用内部知识库进行推理。
+- 人机协作：在工具调用前启用人工审批。
+- 开源模型：使用开源 LLM 模型，如 llama、Qwen 和 Glm。
+- 多租户：管理和支持多个用户和团队。
+
 ### 如何开始
 
 #### 1. 准备工作
@@ -141,7 +170,7 @@ python /app/app/backend_pre_start.py
 # 运行迁移
 alembic upgrade head
 
-# 在数据库中创建初始数据
+# 在数库中创建初始数据
 python /app/app/initial_data.py
 ```
 
