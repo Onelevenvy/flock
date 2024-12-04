@@ -10,6 +10,7 @@ import RetrievalToolNode from "./RetrievalTool/RetrievalToolNode";
 import StartNode from "./Start/StartNode";
 import ToolNode from "./Tool/ToolNode";
 import ClassifierNode from "./Classifier/ClassifierNode";
+import CodeNode from "./Code/CodeNode";
 
 export const nodeTypes: NodeTypes = {
   start: StartNode,
@@ -22,4 +23,5 @@ export const nodeTypes: NodeTypes = {
   crewai: CrewAINode,
   classifier: ClassifierNode,
   answer: AnswerNode,
+  code: CodeNode,
 };

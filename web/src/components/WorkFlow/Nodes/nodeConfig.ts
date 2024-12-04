@@ -5,6 +5,7 @@ import {
   FaTools,
   FaCommentDots,
   FaDatabase,
+  FaCode,
 } from "react-icons/fa";
 import { FaBookAtlas, FaPeopleGroup } from "react-icons/fa6";
 import { TfiGithub } from "react-icons/tfi";
@@ -20,6 +21,7 @@ import ToolNodeProperties from "./Tool/ToolNodeProperties";
 import CrewAINodeProperties from "./CrewAI/CrewAINodeProperties";
 import ClassifierNodeProperties from "./Classifier/ClassifierNodeProperties";
 import { LuBrainCircuit } from "react-icons/lu";
+import CodeNodeProperties from "./Code/CodeNodeProperties";
 
 interface NodeConfigItem {
   display: string;
@@ -195,6 +197,22 @@ export const nodeConfig: Record<string, NodeConfigItem> = {
     },
     inputVariables: [],
     outputVariables: ["response"],
+  },
+  code: {
+    display: "Code Execution",
+    icon: FaCode,
+    colorScheme: "purple",
+    properties: CodeNodeProperties,
+    allowedConnections: {
+      sources: ["left", "right"],
+      targets: ["left", "right"],
+    },
+    outputVariables: ["result", "output"],
+    inputVariables: ["input"],
+    initialData: {
+      code: "",
+      language: "python",
+    },
   },
 };
 
