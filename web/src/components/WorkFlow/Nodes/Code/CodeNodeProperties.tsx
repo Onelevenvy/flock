@@ -12,6 +12,7 @@ import {
 import React, { useCallback, useState, useEffect } from "react";
 import { FaPlay, FaPlus, FaTrash } from "react-icons/fa";
 import { useTranslation } from "react-i18next";
+import Editor from "@monaco-editor/react";
 
 import { useVariableInsertion } from "../../../../hooks/graphs/useVariableInsertion";
 import { VariableReference } from "../../FlowVis/variableSystem";
@@ -32,6 +33,17 @@ interface CodeNodePropertiesProps {
   onNodeDataChange: (nodeId: string, key: string, value: any) => void;
   availableVariables: VariableReference[];
 }
+
+// Monaco Editor 主题配置
+const MONACO_THEME = {
+  base: "vs",
+  inherit: true,
+  rules: [],
+  colors: {
+    "editor.background": "#F9FAFB",
+    "editor.lineHighlightBackground": "#F3F4F6",
+  },
+};
 
 const CodeNodeProperties: React.FC<CodeNodePropertiesProps> = ({
   node,
@@ -56,7 +68,7 @@ const CodeNodeProperties: React.FC<CodeNodePropertiesProps> = ({
     } else {
       setArgs(node.data.args);
     }
-  }, [node.id, node.data.code, node.data.args, onNodeDataChange]);
+  }, [node.id, node.data.code, node.data.args, onNodeDataChange, args]);
 
   const handleCodeChange = useCallback(
     (value: string) => {
@@ -126,7 +138,7 @@ const CodeNodeProperties: React.FC<CodeNodePropertiesProps> = ({
     try {
       const code = node.data.code;
       // TODO: 调用后端 API 执行代码
-      
+
       toast({
         title: "执行成功",
         status: "success",
@@ -142,6 +154,58 @@ const CodeNodeProperties: React.FC<CodeNodePropertiesProps> = ({
     } finally {
       setIsExecuting(false);
     }
+  };
+
+  // Monaco Editor 配置
+  const editorOptions = {
+    minimap: { enabled: false },
+    scrollBeyondLastLine: false,
+    fontSize: 14,
+    lineNumbers: "on",
+    renderLineHighlight: "all",
+    automaticLayout: true,
+    tabSize: 4,
+    detectIndentation: true,
+    formatOnPaste: true,
+    formatOnType: true,
+    autoIndent: "full",
+    suggestOnTriggerCharacters: true,
+    quickSuggestions: true,
+    lineNumbersMinChars: 3,
+    glyphMargin: false,
+    folding: false,
+    lineDecorationsWidth: 5,
+  };
+
+  // 编辑器加载完成时的回调
+  const handleEditorDidMount = (editor: any, monaco: any) => {
+    // 定义 Python 主题
+    monaco.editor.defineTheme("python-theme", MONACO_THEME);
+    monaco.editor.setTheme("python-theme");
+
+    // 添加自动补全
+    monaco.languages.registerCompletionItemProvider("python", {
+      provideCompletionItems: () => {
+        const suggestions = [
+          {
+            label: "def",
+            kind: monaco.languages.CompletionItemKind.Keyword,
+            insertText: "def ${1:function_name}(${2:parameters}):\n\t${0}",
+            insertTextRules:
+              monaco.languages.CompletionItemInsertTextRule.InsertAsSnippet,
+          },
+          {
+            label: "return",
+            kind: monaco.languages.CompletionItemKind.Keyword,
+            insertText: "return ${0}",
+            insertTextRules:
+              monaco.languages.CompletionItemInsertTextRule.InsertAsSnippet,
+          },
+          // 可以添加更多自动补全项
+        ];
+        return { suggestions };
+      },
+    });
   };
 
   return (
@@ -199,19 +263,32 @@ const CodeNodeProperties: React.FC<CodeNodePropertiesProps> = ({
         </VStack>
       </Box>
 
-      <VariableSelector
-        label="Python 代码"
-        value={node.data.code || ""}
-        onChange={handleCodeChange}
-        placeholder="输入 Python 代码，使用 '/' 插入变量。代码必须包含 main 函数作为入口点。"
-        showVariables={showVariables}
-        setShowVariables={setShowVariables}
-        inputRef={inputRef}
-        handleKeyDown={handleKeyDown}
-        insertVariable={insertVariable}
-        availableVariables={availableVariables}
-        minHeight="200px"
-      />
+      <Box>
+        <Text fontWeight="500" color="gray.700" mb={2}>
+          Python 代码
+        </Text>
+        <Box
+          borderRadius="md"
+          overflow="hidden"
+          border="1px solid"
+          borderColor="gray.200"
+          _hover={{
+            borderColor: "gray.300",
+          }}
+        >
+          <Editor
+            height="300px"
+            defaultLanguage="python"
+            value={node.data.code}
+            onChange={(value: string | undefined) =>
+              handleCodeChange(value || "")
+            }
+            options={editorOptions}
+            onMount={handleEditorDidMount}
+            theme="python-theme"
+          />
+        </Box>
+      </Box>
 
       <Button
         leftIcon={<FaPlay />}
