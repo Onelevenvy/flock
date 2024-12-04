@@ -1,6 +1,7 @@
 import json
 from typing import Any, Dict, List, Optional
-from langchain_core.messages import AIMessage
+import uuid
+from langchain_core.messages import AIMessage, ToolMessage
 from langchain_core.runnables import RunnableConfig
 import docker
 from ..state import ReturnTeamState, TeamState, parse_variables, update_node_outputs
@@ -327,6 +328,7 @@ class CodeExecutor:
 
             # 解析输出中的结果
             import re
+
             result_match = re.search(r"<<RESULT>>(.+?)<<RESULT>>", result, re.DOTALL)
             if result_match:
                 result_json = result_match.group(1)
@@ -336,7 +338,7 @@ class CodeExecutor:
                 except json.JSONDecodeError as e:
                     print(f"JSON decode error: {e}")
                     return result_json.strip()
-            
+
             print("\nCode execution result:")
             print(result)
             return result
@@ -386,24 +388,45 @@ class CodeNode:
             parsed_code = parse_variables(self.code, state["node_outputs"])
 
             # Execute code
-            result = self.executor.execute(parsed_code, self.libraries)
+            code_result = self.executor.execute(parsed_code, self.libraries)
+
+            result = ToolMessage(
+                content=code_result,
+                name="CodeExecutor",
+                tool_call_id=str(uuid.uuid4()),
+            )
 
             # Update node outputs
-            new_output = {self.node_id: {"response": result}}
+            new_output = {self.node_id: {"response": result.content}}
             state["node_outputs"] = update_node_outputs(
                 state["node_outputs"], new_output
             )
 
             return_state: ReturnTeamState = {
+                "history": state.get("history", []) + [result],
+                "messages": [result],
+                "all_messages": state.get("all_messages", []) + [result],
                 "node_outputs": state["node_outputs"],
             }
-
             return return_state
 
         except Exception as e:
             error_message = f"Code execution failed: {str(e)}"
 
-            new_output = {self.node_id: {"response": error_message}}
-            return {
+            result = ToolMessage(
+                content=error_message,
+                name="CodeExecutor",
+                tool_call_id=str(uuid.uuid4()),
+            )
+
+            new_output = {self.node_id: {"response": result.content}}
+            state["node_outputs"] = update_node_outputs(
+                state["node_outputs"], new_output
+            )
+            return_state: ReturnTeamState = {
+                "history": state.get("history", []) + [result],
+                "messages": [result],
+                "all_messages": state.get("all_messages", []) + [result],
                 "node_outputs": state["node_outputs"],
             }
+            return return_state

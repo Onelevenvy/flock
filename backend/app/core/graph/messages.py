@@ -167,7 +167,7 @@ def event_to_response(event: StreamEvent) -> ChatResponse | None:
                     name=name,
                     content=output.content,
                 )
-        if name and name.startswith("crewai"):
+        elif name and name.startswith("crewai"):
             if isinstance(output, dict):
                 if "messages" in output and output["messages"]:
                     last_message = output["messages"][-1]
@@ -186,7 +186,7 @@ def event_to_response(event: StreamEvent) -> ChatResponse | None:
                     name=name,
                     content=output.content,
                 )
-        if (
+        elif (
             name
             and name.startswith("classifier")
             and isinstance(output, dict)
@@ -201,5 +201,26 @@ def event_to_response(event: StreamEvent) -> ChatResponse | None:
                         name=name,
                         content=f"用户意图：{res}",
                     )
+        elif name and name.startswith("code"):
+            if isinstance(output, dict):
+                if "messages" in output and output["messages"]:
+                    last_message = output["messages"][-1]
+                    if isinstance(last_message, ToolMessage):
+                        return ChatResponse(
+                            type="tool",
+                            id=id,
+                            name=name,
+                            tool_output=json.dumps(
+                                last_message.content,
+                            ),
+                        )
+            elif isinstance(output, AIMessage):
+                # 这里可能需要额外的逻辑来确定是否应该返回这个消息　ＴＯＤＯ
+                return ChatResponse(
+                    type="tool",
+                    id=id,
+                    name=name,
+                    content=output.content,
+                )
 
     return None
