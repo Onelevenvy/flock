@@ -86,20 +86,11 @@ const CodeNodeProperties: React.FC<CodeNodePropertiesProps> = ({
 
   const handleRemoveArg = useCallback(
     (index: number) => {
-      if (args.length <= 2) {
-        toast({
-          title: "无法删除",
-          description: "至少需要保留两个参数",
-          status: "warning",
-          duration: 3000,
-        });
-        return;
-      }
       const newArgs = args.filter((_, i) => i !== index);
       setArgs(newArgs);
       onNodeDataChange(node.id, "args", newArgs);
     },
-    [args, node.id, onNodeDataChange, toast]
+    [args, node.id, onNodeDataChange]
   );
 
   const handleArgNameChange = useCallback(
