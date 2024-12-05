@@ -7,9 +7,8 @@ from fastapi.security import OAuth2PasswordRequestForm
 
 from app.api.deps import CurrentUser, SessionDep, get_current_active_superuser
 from app.api.routes.users import users
-from app.core import security
+from app.core.security import security_manager
 from app.core.config import settings
-from app.core.security import get_password_hash
 from app.models import Message, NewPassword, Token, UserOut
 from app.utils import (
     generate_password_reset_token,
@@ -37,7 +36,7 @@ def login_access_token(
         raise HTTPException(status_code=400, detail="Inactive user")
     access_token_expires = timedelta(minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES)
     return Token(
-        access_token=security.create_access_token(
+        access_token=security_manager.create_access_token(
             user.id, expires_delta=access_token_expires
         )
     )
@@ -91,7 +90,7 @@ def reset_password(session: SessionDep, body: NewPassword) -> Message:
         )
     elif not user.is_active:
         raise HTTPException(status_code=400, detail="Inactive user")
-    hashed_password = get_password_hash(password=body.new_password)
+    hashed_password = security_manager.get_password_hash(password=body.new_password)
     user.hashed_password = hashed_password
     session.add(user)
     session.commit()

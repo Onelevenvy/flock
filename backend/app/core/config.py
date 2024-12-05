@@ -185,5 +185,8 @@ class Settings(BaseSettings):
     EMBEDDING_PROVIDER: str = "Siliconflow"
     EMBEDDING_MODEL: str = "BAAI/bge-large-zh-v1.5"  # 默认模型
 
+    # 用于加密API密钥的密钥 (用于 security_manager)
+    MODEL_PROVIDER_ENCRYPTION_KEY: str = ""
+
 
 settings = Settings()  # type: ignore

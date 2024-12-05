@@ -2,6 +2,7 @@ from datetime import datetime
 from enum import Enum
 from typing import Any
 from uuid import UUID, uuid4
+from zoneinfo import ZoneInfo
 
 from pydantic import BaseModel, model_validator
 from pydantic import Field as PydanticField
@@ -12,7 +13,8 @@ from sqlalchemy.dialects.postgresql import JSONB
 from sqlmodel import Field, Relationship, SQLModel
 
 from app.core.graph.messages import ChatResponse
-from zoneinfo import ZoneInfo
+from app.core.security import security_manager
+
 
 class Message(SQLModel):
     message: str
@@ -147,14 +149,13 @@ class TeamChat(BaseModel):
 class TeamChatPublic(BaseModel):
     message: ChatMessage | None = None
     interrupt: Interrupt | None = None
+
     @model_validator(mode="after")
     def check_either_field(cls: Any, values: Any) -> Any:
         message, interrupt = values.message, values.interrupt
         if not message and not interrupt:
             raise ValueError('Either "message" or "interrupt" must be provided.')
         return values
-
-
 
 
 class Team(TeamBase, table=True):
@@ -175,6 +176,7 @@ class Team(TeamBase, table=True):
     apikeys: list["ApiKey"] = Relationship(
         back_populates="team", sa_relationship_kwargs={"cascade": "delete"}
     )
+
 
 # Properties to return via API, id is always required
 class TeamOut(TeamBase):
@@ -481,7 +483,7 @@ class Write(SQLModel, table=True):
 class UploadBase(SQLModel):
     name: str
     description: str
-    file_type: str  # 新增字段，用于存储文件类型
+    file_type: str  # 新增字段，用于��储文件类型
     web_url: str | None = None  # 新增字段，用于存储网页 URL
 
 
@@ -561,9 +563,25 @@ class ModelProviderUpdate(ModelProviderBase):
 
 class ModelProvider(ModelProviderBase, table=True):
     id: int | None = Field(default=None, primary_key=True)
-    provider_name: str = Field(max_length=64)  # ���整长度与ModelProviderBase一致
+    provider_name: str = Field(max_length=64)  # 整长度与ModelProviderBase一致
     base_url: str | None = Field(default=None)  # 保持可选
-    api_key: str | None = Field(default=None)  # 保持可选
+    api_key: str | None = Field(default=None, alias="api_key")
+
+    @property
+    def api_key(self) -> str | None:
+        """获取解密后的API密钥"""
+        if self._api_key:
+            return security_manager.decrypt_api_key(self._api_key)
+        return None
+
+    @api_key.setter
+    def api_key(self, value: str | None):
+        """存储加密后的API密钥"""
+        if value:
+            self._api_key = security_manager.encrypt_api_key(value)
+        else:
+            self._api_key = None
+
     icon: str | None = Field(default=None)  # 保持可选
     description: str | None = Field(default=None, max_length=256)  # 保持可选，长度调整
     # Relationship with Model
@@ -714,8 +732,12 @@ class GraphsOut(SQLModel):
 # ==============Api Keys=====================
 class ApiKeyBase(SQLModel):
     description: str | None = "Default API Key Description"
+
+
 class ApiKeyCreate(ApiKeyBase):
     pass
+
+
 class ApiKey(ApiKeyBase, table=True):
     id: int | None = Field(default=None, primary_key=True)
     hashed_key: str
@@ -725,14 +747,20 @@ class ApiKey(ApiKeyBase, table=True):
     created_at: datetime | None = Field(
         default_factory=lambda: datetime.now(ZoneInfo("UTC"))
     )
+
+
 class ApiKeyOut(ApiKeyBase):
     id: int | None = Field(default=None, primary_key=True)
     key: str
     created_at: datetime
+
+
 class ApiKeyOutPublic(ApiKeyBase):
     id: int
     short_key: str
     created_at: datetime
+
+
 class ApiKeysOutPublic(SQLModel):
     data: list[ApiKeyOutPublic]
     count: int

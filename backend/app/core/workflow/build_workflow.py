@@ -535,15 +535,7 @@ def _add_crewai_node(graph_builder, node_id, node_type, node_data):
 def get_model_info(model_name: str) -> Dict[str, str]:
     """
     Get model information from all available models.
-
-    Args:
-        model_name: Name of the AI model
-
-    Returns:
-        Dict containing model information including provider name, base url, and api key
-
-    Raises:
-        ValueError: If the specified model is not supported
+    加解密在ModelProvider模型层自动处理，这里不需要修改
     """
     all_models = get_all_models_helper()
     for model in all_models.data:
@@ -552,7 +544,7 @@ def get_model_info(model_name: str) -> Dict[str, str]:
                 "ai_model_name": model.ai_model_name,
                 "provider_name": model.provider.provider_name,
                 "base_url": model.provider.base_url,
-                "api_key": model.provider.api_key,
+                "api_key": model.provider.api_key,  # 自动解密
             }
     raise ValueError(f"Model {model_name} not supported now.")
 

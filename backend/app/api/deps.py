@@ -8,7 +8,7 @@ from jwt.exceptions import InvalidTokenError
 from pydantic import ValidationError
 from sqlmodel import Session
 
-from app.core import security
+from app.core.security import security_manager
 from app.core.config import settings
 from app.core.db import engine
 from app.models import Team, TokenPayload, User
@@ -30,7 +30,7 @@ TokenDep = Annotated[str, Depends(reusable_oauth2)]
 def get_current_user(session: SessionDep, token: TokenDep) -> User:
     try:
         payload = jwt.decode(
-            token, settings.SECRET_KEY, algorithms=[security.ALGORITHM]
+            token, settings.SECRET_KEY, algorithms=[security_manager.jwt_algorithm]
         )
         token_data = TokenPayload(**payload)
     except (InvalidTokenError, ValidationError):
@@ -71,7 +71,7 @@ def get_current_team_from_key(
         raise HTTPException(status_code=404, detail="Team not found")
     verified = False
     for apikey in team.apikeys:
-        if security.verify_password(key, apikey.hashed_key):
+        if security_manager.verify_password(key, apikey.hashed_key):
             verified = True
             break
     if not verified:
