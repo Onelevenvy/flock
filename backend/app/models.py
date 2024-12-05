@@ -483,7 +483,7 @@ class Write(SQLModel, table=True):
 class UploadBase(SQLModel):
     name: str
     description: str
-    file_type: str  # 新增字段，用于��储文件类型
+    file_type: str  # 新增字段，用于储文件类型
     web_url: str | None = None  # 新增字段，用于存储网页 URL
 
 
@@ -563,27 +563,33 @@ class ModelProviderUpdate(ModelProviderBase):
 
 class ModelProvider(ModelProviderBase, table=True):
     id: int | None = Field(default=None, primary_key=True)
-    provider_name: str = Field(max_length=64)  # 整长度与ModelProviderBase一致
-    base_url: str | None = Field(default=None)  # 保持可选
-    api_key: str | None = Field(default=None, alias="api_key")
+    provider_name: str = Field(max_length=64)
+    base_url: str | None = Field(default=None)
+    api_key: str | None = Field(default=None)
+    icon: str | None = Field(default=None)
+    description: str | None = Field(default=None, max_length=256)
 
     @property
-    def api_key(self) -> str | None:
-        """获取解密后的API密钥"""
-        if self._api_key:
-            return security_manager.decrypt_api_key(self._api_key)
+    def encrypted_api_key(self) -> str | None:
+        """返回加密的API密钥，用于API响应"""
+        if self.api_key:
+            return self.api_key  # 已经是加密的
         return None
 
-    @api_key.setter
-    def api_key(self, value: str | None):
-        """存储加密后的API密钥"""
-        if value:
-            self._api_key = security_manager.encrypt_api_key(value)
-        else:
-            self._api_key = None
+    @property
+    def decrypted_api_key(self) -> str | None:
+        """获取解密后的API密钥，用于内部业务逻辑"""
+        if self.api_key:
+            return security_manager.decrypt_api_key(self.api_key)
+        return None
 
-    icon: str | None = Field(default=None)  # 保持可选
-    description: str | None = Field(default=None, max_length=256)  # 保持可选，长度调整
+    def set_api_key(self, value: str | None) -> None:
+        """设置并加密API密钥"""
+        if value:
+            self.api_key = security_manager.encrypt_api_key(value)
+        else:
+            self.api_key = None
+
     # Relationship with Model
     models: list["Models"] = Relationship(
         back_populates="provider", cascade_delete="all, delete-orphan"
@@ -636,6 +642,9 @@ class ModelProviderOut(SQLModel):
     api_key: str | None
     icon: str | None
     description: str | None
+
+    class Config:
+        from_attributes = True
 
 
 class ModelOut(SQLModel):

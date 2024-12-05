@@ -1,5 +1,5 @@
 from fastapi import APIRouter, HTTPException, Depends
-from typing import List
+from typing import List, Any
 
 from app.api.deps import SessionDep
 from app.curd.modelprovider import (
@@ -17,6 +17,7 @@ from app.models import (
     ModelProviderUpdate,
     ModelProviderWithModelsListOut,
     ProvidersListWithModelsOut,
+    ModelProviderOut,
 )
 from app.core.model_providers.model_provider_manager import model_provider_manager
 from sqlmodel import select
@@ -30,12 +31,28 @@ def create_provider(model_provider: ModelProviderCreate, session: SessionDep):
     return create_model_provider(session, model_provider)
 
 
-@router.get("/{model_provider_id}", response_model=ModelProvider)
-def read_provider(model_provider_id: int, session: SessionDep):
-    model_provider = get_model_provider(session, model_provider_id)
-    if model_provider is None:
-        raise HTTPException(status_code=404, detail="ModelProvider not found")
-    return model_provider
+@router.get("/{model_provider_id}", response_model=ModelProviderOut)
+def read_provider(
+    model_provider_id: int,
+    session: SessionDep,
+) -> Any:
+    """
+    Get provider by ID.
+    """
+    provider = get_model_provider(session, model_provider_id)
+    if not provider:
+        raise HTTPException(
+            status_code=404,
+            detail="The provider with this ID does not exist in the system",
+        )
+    return ModelProviderOut(
+        id=provider.id,
+        provider_name=provider.provider_name,
+        base_url=provider.base_url,
+        api_key=provider.encrypted_api_key,  # 只返回加密的api_key
+        icon=provider.icon,
+        description=provider.description,
+    )
 
 
 @router.get(
@@ -58,18 +75,29 @@ def read_provider_list_with_models(session: SessionDep):
     return model_provider_with_models
 
 
-@router.put("/{model_provider_id}", response_model=ModelProvider)
+@router.put("/{model_provider_id}", response_model=ModelProviderOut)
 def update_provider(
     model_provider_id: int,
-    model_provider_update: ModelProviderUpdate,
+    provider_update: ModelProviderUpdate,
     session: SessionDep,
-):
-    model_provider = update_model_provider(
-        session, model_provider_id, model_provider_update
+) -> Any:
+    """
+    Update a provider.
+    """
+    provider = update_model_provider(session, model_provider_id, provider_update)
+    if not provider:
+        raise HTTPException(
+            status_code=404,
+            detail="The provider with this ID does not exist in the system",
+        )
+    return ModelProviderOut(
+        id=provider.id,
+        provider_name=provider.provider_name,
+        base_url=provider.base_url,
+        api_key=provider.encrypted_api_key,  # 使用加密的api_key
+        icon=provider.icon,
+        description=provider.description,
     )
-    if model_provider is None:
-        raise HTTPException(status_code=404, detail="ModelProvider not found")
-    return model_provider
 
 
 @router.delete("/{model_provider_id}", response_model=ModelProvider)
@@ -97,7 +125,7 @@ async def sync_provider(
     if not provider:
         raise HTTPException(status_code=404, detail="Provider not found")
     
-    # 获取提供者的配置模型
+    # 获取提供者的配置��型
     config_models = model_provider_manager.get_supported_models(provider_name)
     if not config_models:
         raise HTTPException(

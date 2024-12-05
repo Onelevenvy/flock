@@ -3,6 +3,7 @@ from functools import lru_cache
 from typing import Any, Dict
 
 from app.core.model_providers import model_provider_manager
+from app.models import ModelProvider, Models
 from langchain.tools import BaseTool
 from langchain.tools.retriever import create_retriever_tool
 from langchain_core.messages import AIMessage, AnyMessage
@@ -14,7 +15,8 @@ from langgraph.prebuilt import ToolNode
 
 from app.core.rag.qdrant import QdrantStore
 from app.core.tools import managed_tools
-from app.core.workflow.utils.db_utils import get_all_models_helper
+from app.core.workflow.utils.db_utils import get_all_models_helper, get_db_session
+from sqlmodel import select
 
 from .node.answer_node import AnswerNode
 from .node.input_node import InputNode
@@ -535,18 +537,22 @@ def _add_crewai_node(graph_builder, node_id, node_type, node_data):
 def get_model_info(model_name: str) -> Dict[str, str]:
     """
     Get model information from all available models.
-    加解密在ModelProvider模型层自动处理，这里不需要修改
     """
-    all_models = get_all_models_helper()
-    for model in all_models.data:
-        if model.ai_model_name == model_name:
-            return {
-                "ai_model_name": model.ai_model_name,
-                "provider_name": model.provider.provider_name,
-                "base_url": model.provider.base_url,
-                "api_key": model.provider.api_key,  # 自动解密
-            }
-    raise ValueError(f"Model {model_name} not supported now.")
+    with get_db_session() as session:
+        # 直接从数据库查询 Models 和关联的 ModelProvider
+        model = session.exec(
+            select(Models).join(ModelProvider).where(Models.ai_model_name == model_name)
+        ).first()
+
+        if not model:
+            raise ValueError(f"Model {model_name} not supported now.")
+
+        return {
+            "ai_model_name": model.ai_model_name,
+            "provider_name": model.provider.provider_name,
+            "base_url": model.provider.base_url,
+            "api_key": model.provider.decrypted_api_key,  # 现在可以使用decrypted_api_key
+        }
 
 
 def _add_classifier_node(graph_builder, node_id, node_data):

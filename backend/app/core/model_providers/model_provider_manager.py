@@ -58,6 +58,7 @@ class ModelProviderManager:
     ):
         init_function = self.init_functions.get(provider_name)
         if init_function:
+
             return init_function(
                 model, temperature, openai_api_key, openai_api_base, **kwargs
             )

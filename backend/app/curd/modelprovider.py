@@ -16,7 +16,17 @@ from ..models import (
 def create_model_provider(
     session: Session, model_provider: ModelProviderCreate
 ) -> ModelProvider:
-    db_model_provider = ModelProvider.model_validate(model_provider)
+    # 创建新的 ModelProvider 实例
+    db_model_provider = ModelProvider(
+        provider_name=model_provider.provider_name,
+        base_url=model_provider.base_url,
+        icon=model_provider.icon,
+        description=model_provider.description,
+    )
+    
+    # 使用 set_api_key 方法设置并加密 api_key
+    db_model_provider.set_api_key(model_provider.api_key)
+    
     session.add(db_model_provider)
     session.commit()
     session.refresh(db_model_provider)
@@ -37,8 +47,16 @@ def update_model_provider(
     db_model_provider = get_model_provider(session, model_provider_id)
     if db_model_provider:
         update_data = model_provider_update.model_dump(exclude_unset=True)
+        
+        # 特殊处理 api_key，使用 set_api_key 方法进行加密
+        if "api_key" in update_data:
+            api_key = update_data.pop("api_key")  # 从更新数据中移除
+            db_model_provider.set_api_key(api_key)  # 使用方法加密并设置
+            
+        # 更新其他字段
         for key, value in update_data.items():
             setattr(db_model_provider, key, value)
+            
         session.add(db_model_provider)
         session.commit()
         session.refresh(db_model_provider)

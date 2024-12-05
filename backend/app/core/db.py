@@ -137,14 +137,16 @@ def init_modelprovider_model_db(session: Session) -> None:
         if db_provider:
             db_provider.icon = provider_data["icon"]
             db_provider.description = provider_data["description"]
+            if not db_provider.api_key:
+                db_provider.set_api_key(provider_data["api_key"])
         else:
             db_provider = ModelProvider(
                 provider_name=provider_data["provider_name"],
                 base_url=provider_data["base_url"],
-                api_key=provider_data["api_key"],
                 icon=provider_data["icon"],
                 description=provider_data["description"],
             )
+            db_provider.set_api_key(provider_data["api_key"])
             session.add(db_provider)
 
         session.flush()
