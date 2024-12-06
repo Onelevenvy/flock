@@ -26,6 +26,7 @@ from .node.state import TeamState
 from .node.subgraph_node import SubgraphNode
 from .node.crewai_node import CrewAINode
 from .node.classifier_node import ClassifierNode
+from .node.code.code_node import CodeNode
 
 
 def create_subgraph(subgraph_config: Dict[str, Any]) -> CompiledGraph:
@@ -87,7 +88,7 @@ def get_retrieval_tool(tool_name: str, description: str, owner_id: int, kb_id: i
 tool_name_to_node_id: Dict[str, str] = {}
 
 
-def should_continue(state: TeamState) -> str:
+def should_continue_tools(state: TeamState) -> str:
     messages: list[AnyMessage] = state["messages"]
     if messages and isinstance(messages[-1], AIMessage) and messages[-1].tool_calls:
         for tool_call in messages[-1].tool_calls:
@@ -208,6 +209,8 @@ def initialize_graph(
                 _add_tool_node(graph_builder, node_id, node_type, node_data)
             elif node_type == "classifier":
                 _add_classifier_node(graph_builder, node_id, node_data)
+            elif node_type == "code":
+                _add_code_node(graph_builder, node_id, node_data)
 
         # Add edges
         for edge in edges:
@@ -472,6 +475,11 @@ def _add_edge(graph_builder, edge, nodes, conditional_edges):
         graph_builder.add_edge(edge["source"], edge["target"])
     elif target_node["type"] == "subgraph":
         graph_builder.add_edge(edge["source"], edge["target"])
+    elif source_node["type"] == "code":
+        if target_node["type"] == "end":
+            graph_builder.add_edge(edge["source"], END)
+        else:
+            graph_builder.add_edge(edge["source"], edge["target"])
     # elif source_node["type"] == "classifier":   #   classifier  必定是conditional_edges  不会有普通边
     #     if target_node["type"] == "end":
     #         graph_builder.add_edge(edge["source"], END)
@@ -491,7 +499,7 @@ def _add_conditional_edges(graph_builder, conditional_edges, nodes):
             edges_dict["call_human"] = next(iter(conditions["call_human"].values()))
 
         if edges_dict != {"default": END}:
-            graph_builder.add_conditional_edges(node_id, should_continue, edges_dict)
+            graph_builder.add_conditional_edges(node_id, should_continue_tools, edges_dict)
 
 
 def _add_crewai_node(graph_builder, node_id, node_type, node_data):
@@ -571,4 +579,20 @@ def _add_classifier_node(graph_builder, node_id, node_data):
             openai_api_key=model_info["api_key"],
             openai_api_base=model_info["base_url"],
         ).work,
+    )
+
+
+def _add_code_node(graph_builder, node_id, node_data):
+    """Add code execution node to graph"""
+    graph_builder.add_node(
+        node_id,
+        (
+            CodeNode(
+                node_id=node_id,
+                code=node_data["code"],
+                libraries=node_data.get("libraries", []),  # Optional libraries list
+                timeout=node_data.get("timeout", 30),  # Default timeout 30 seconds
+                memory_limit=node_data.get("memory_limit", "256m"),  # Default memory limit
+            ).work
+        ),
     )
