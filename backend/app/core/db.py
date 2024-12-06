@@ -191,9 +191,7 @@ def init_modelprovider_model_db(session: Session) -> None:
     for provider in providers:
         print(f"\nProvider: {provider.provider_name} (ID: {provider.id})")
         print(f"  Base URL: {provider.base_url}")
-        print(
-            f"  API Key: {'*' * len(provider.api_key) if provider.api_key else 'None'}"
-        )
+        print(f"  API Key: {'***************'  if provider.api_key else 'None'}")
         print(f"  Description: {provider.description}")
         models = session.exec(
             select(Models).where(Models.provider_id == provider.id).order_by(Models.id)
