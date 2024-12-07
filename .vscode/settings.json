@@ -5,7 +5,7 @@
             "server": "localhost",
             "port": 5432,
             "driver": "PostgreSQL",
-            "name": "n",
+            "name": "flock",
             "database": "flock",
             "username": "postgres",
             "password": "flock123456"

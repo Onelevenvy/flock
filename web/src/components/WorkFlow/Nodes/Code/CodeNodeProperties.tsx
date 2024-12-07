@@ -79,6 +79,18 @@ const CodeNodeProperties: React.FC<CodeNodePropertiesProps> = ({
     }
   }, [node.id, node.data.code, node.data.args, onNodeDataChange, args]);
 
+  // 添加一个工具函数来处理代码显示
+  const getDisplayCode = (code: string, currentArgs: ArgVariable[]) => {
+    const [funcDef, ...restCode] = code.split('\n');
+    return funcDef.replace(
+      /(def\s+main\s*\().*?(\))/,
+      (match: string, start: string, end: string) => {
+        const params = currentArgs.map(arg => `${arg.name}: str`).join(', ');
+        return `${start}${params}${end}`;
+      }
+    ) + '\n' + restCode.join('\n');
+  };
+
   // 修改参数处理函数
   const handleArgValueChange = useCallback(
     (index: number, value: string) => {
@@ -94,7 +106,7 @@ const CodeNodeProperties: React.FC<CodeNodePropertiesProps> = ({
           const [funcDef, ...restCode] = currentCode.split('\n');
           
           // 保存时的代码 - 包含变量引用
-          const updatedFuncDef = funcDef.replace(
+          const saveCode = funcDef.replace(
             /(def\s+main\s*\().*?(\))/,
             (match: string, start: string, end: string) => {
               const params = newArgs.map(arg => 
@@ -107,25 +119,20 @@ const CodeNodeProperties: React.FC<CodeNodePropertiesProps> = ({
           );
           
           // 保存完整代码，包含变量引用
-          const codeToSave = [updatedFuncDef, ...restCode].join('\n');
+          const codeToSave = [saveCode, ...restCode].join('\n');
           onNodeDataChange(node.id, "code", codeToSave);
           
-          // 显示时的代码 - 不包含变量引用
-          const displayFuncDef = funcDef.replace(
-            /(def\s+main\s*\().*?(\))/,
-            (match: string, start: string, end: string) => {
-              const params = newArgs.map(arg => `${arg.name}: str`).join(', ');
-              return `${start}${params}${end}`;
-            }
-          );
-          const displayCode = [displayFuncDef, ...restCode].join('\n');
-          editorInstance.setValue(displayCode);
+          // 立即更新显示为简洁版本
+          const displayCode = getDisplayCode(currentCode, newArgs);
+          requestAnimationFrame(() => {
+            editorInstance.getModel().setValue(displayCode);
+          });
         }
       } catch (error) {
         console.error('Error updating code:', error);
         toast({
           title: "更新代码失败",
-          description: "请重试或刷新页面",
+          description: "请重试或刷新页面", 
           status: "error",
           duration: 3000,
           isClosable: true,
@@ -252,21 +259,27 @@ const CodeNodeProperties: React.FC<CodeNodePropertiesProps> = ({
   const handleEditorDidMount = (editor: any, monaco: any) => {
     setEditorInstance(editor);
     
-    // 定义 Python 主
+    // 定义 Python 主题
     monaco.editor.defineTheme("python-theme", MONACO_THEME);
     monaco.editor.setTheme("python-theme");
 
     // 初始化代码显示
-    if (node.data.code && editor) {
+    if (node.data.code) {
+      // 显示不带变量引用的代码
       const [funcDef, ...restCode] = node.data.code.split('\n');
-      const displayFuncDef = funcDef.replace(
+      const displayCode = funcDef.replace(
         /(def\s+main\s*\().*?(\))/,
         (match: string, start: string, end: string) => {
           const params = args.map(arg => `${arg.name}: str`).join(', ');
           return `${start}${params}${end}`;
         }
       );
-      editor.setValue([displayFuncDef, ...restCode].join('\n'));
+      editor.setValue([displayCode, ...restCode].join('\n'));
+    } else {
+      // 使用默认模板
+      const params = args.map(arg => `${arg.name}: str`).join(', ');
+      const defaultCode = `def main(${params}) -> dict:\n    return {\n        "result": ${args.map(arg => arg.name).join(' + ')},\n    }`;
+      editor.setValue(defaultCode);
     }
 
     // 添加自动补全
@@ -421,6 +434,12 @@ const CodeNodeProperties: React.FC<CodeNodePropertiesProps> = ({
                 );
                 const codeToSave = [updatedFuncDef, ...restCode].join('\n');
                 onNodeDataChange(node.id, "code", codeToSave);
+
+                // 立即更新显示为简洁版本
+                if (editorInstance) {
+                  const displayCode = getDisplayCode(value, args);
+                  editorInstance.getModel().setValue(displayCode);
+                }
               }
             }}
             options={editorOptions}

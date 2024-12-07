@@ -54,7 +54,7 @@ const CodeNode: React.FC<NodeProps> = (props) => {
         }}
       >
         <Text fontSize="xs" color="gray.600" fontFamily="mono" noOfLines={2}>
-          {props.data.code || "// 无代码"}
+          {props.data.language || "// 无代码"}
         </Text>
       </Box>
     </BaseNode>
