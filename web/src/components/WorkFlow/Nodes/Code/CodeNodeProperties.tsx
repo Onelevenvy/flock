@@ -2,7 +2,7 @@ import {
   Box,
   Text,
   VStack,
-  Button,
+
   useToast,
   HStack,
   Input,
@@ -11,7 +11,7 @@ import {
   Spinner,
 } from "@chakra-ui/react";
 import React, { useCallback, useState, useEffect } from "react";
-import { FaPlay, FaPlus, FaTrash } from "react-icons/fa";
+import {  FaPlus, FaTrash } from "react-icons/fa";
 import { useTranslation } from "react-i18next";
 import Editor from "@monaco-editor/react";
 import type { OnMount } from "@monaco-editor/react";
@@ -42,7 +42,7 @@ const MONACO_THEME: MonacoEditor.IStandaloneThemeData = {
   },
 };
 
-// 工具函数：获取简洁版本的代码（不带变量引用）
+// 工具函��：获取简洁版本的代码（不带变量引用）
 const getSimplifiedCode = (code: string, currentArgs: ArgVariable[]) => {
   const [funcDef, ...restCode] = code.split("\n");
   const simplifiedFuncDef = funcDef.replace(
@@ -79,7 +79,7 @@ const CodeNodeProperties: React.FC<CodeNodePropertiesProps> = ({
 }) => {
   const { t } = useTranslation();
   const toast = useToast();
-  const [isExecuting, setIsExecuting] = useState(false);
+ 
   const [editorInstance, setEditorInstance] =
     useState<MonacoEditor.IStandaloneCodeEditor | null>(null);
   const [args, setArgs] = useState<ArgVariable[]>([]);
@@ -127,7 +127,7 @@ const CodeNodeProperties: React.FC<CodeNodePropertiesProps> = ({
           { name: "arg2", value: "" },
         ];
         setArgs(defaultArgs);
-        const defaultCode = `def main(arg1: str, arg2: str) -> dict:\n    return {"result": ""}\n`;
+        const defaultCode = `def main(arg1: str, arg2: str) -> dict:\n    return {"code_result": ""}\n`;
         onNodeDataChange(node.id, "code", defaultCode);
       }
 
@@ -164,10 +164,11 @@ const CodeNodeProperties: React.FC<CodeNodePropertiesProps> = ({
     lineNumbersMinChars: 3,
     glyphMargin: false,
     folding: false,
-    lineDecorationsWidth: 0,
-    renderFinalNewline: "on" as const,
+    lineDecorationsWidth: 10,
+    wordWrap: "on" as const,
     scrollbar: {
       horizontal: "hidden",
+      verticalScrollbarSize: 10,
     },
     overviewRulerLanes: 0,
     hideCursorInOverviewRuler: true,
@@ -229,28 +230,6 @@ const CodeNodeProperties: React.FC<CodeNodePropertiesProps> = ({
     availableVariables,
   });
 
-  const handleExecute = async () => {
-    setIsExecuting(true);
-    try {
-      const code = node.data.code;
-      // TODO: 调���端 API 执行代码
-
-      toast({
-        title: "行成功",
-        status: "success",
-        duration: 3000,
-      });
-    } catch (error) {
-      toast({
-        title: "执行失败",
-        description: error instanceof Error ? error.message : "未知错误",
-        status: "error",
-        duration: 3000,
-      });
-    } finally {
-      setIsExecuting(false);
-    }
-  };
 
   // 添加加载状态处理
   const handleEditorLoading = () => {
@@ -369,24 +348,7 @@ const CodeNodeProperties: React.FC<CodeNodePropertiesProps> = ({
         </Box>
       </Box>
 
-      <Button
-        leftIcon={<FaPlay />}
-        onClick={handleExecute}
-        isLoading={isExecuting}
-        colorScheme="purple"
-        size="md"
-        width="100%"
-        transition="all 0.2s"
-        _hover={{
-          transform: "translateY(-1px)",
-          boxShadow: "md",
-        }}
-        _active={{
-          transform: "translateY(0)",
-        }}
-      >
-        {t("行代码")}
-      </Button>
+     
 
       {node.data.output && (
         <Box
