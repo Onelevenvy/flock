@@ -126,7 +126,7 @@ const CodeNodeProperties: React.FC<CodeNodePropertiesProps> = ({
           { name: "arg2", value: "" },
         ];
         setArgs(defaultArgs);
-        const defaultCode = `def main(arg1: str, arg2: str) -> dict:\n    return {"code_result": ""}\n`;
+        const defaultCode = `def main(arg1: str, arg2: str) -> dict:\n    return {"res": ""}\n`;
         onNodeDataChange(node.id, "code", defaultCode);
       }
 

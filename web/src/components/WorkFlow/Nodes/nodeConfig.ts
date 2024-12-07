@@ -207,8 +207,8 @@ export const nodeConfig: Record<string, NodeConfigItem> = {
       sources: ["left", "right"],
       targets: ["left", "right"],
     },
-    outputVariables: ["result", "output"],
-    inputVariables: ["input"],
+    outputVariables: ["code_result"],
+    inputVariables: [],
     initialData: {
       code: "",
       language: "python",

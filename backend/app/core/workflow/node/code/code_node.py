@@ -255,7 +255,7 @@ class CodeExecutor:
             self.memory_limit = memory_limit
             self.image_tag = image_tag
             self.client = docker.from_env()
-            self._verify_docker_image()
+            # self._verify_docker_image()
             self._pool = ContainerPool(
                 image_tag=image_tag, pool_size=pool_size, memory_limit=memory_limit
             )
@@ -395,13 +395,13 @@ class CodeNode:
                 # If code_result is a string, return it as it is
                 code_result = code_execution_result
             elif isinstance(code_execution_result, dict):
-                if "code_result" in code_execution_result:
+                if "res" in code_execution_result:
                     # If the dictionary contains the "result" key, return its value
-                    code_result = code_execution_result["code_result"]
+                    code_result = code_execution_result["res"]
                 else:
-                    code_result = "Error: The Code Execution Result must return a dictionary with the 'code_result' key."
+                    code_result = "Error: The Code Execution Result must return a dictionary with the 'res' key."
             else:
-                code_result = "Error: Invalid code return type, please return a dictionary with the 'code_result' key."
+                code_result = "Error: Invalid code return type, please return a dictionary with the 'res' key."
 
             result = ToolMessage(
                 content=code_result,
