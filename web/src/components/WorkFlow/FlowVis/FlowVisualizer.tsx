@@ -98,6 +98,8 @@ const FlowVisualizer: React.FC<FlowVisualizerProps> = ({
 
   const { activeNodeName } = useWorkflowStore();
 
+  const selectedNode = nodes.find((n) => n.id === selectedNodeId);
+
   const nodesWithSelection = useMemo(() => {
     return nodes?.map((node) => {
       let isActive = node.id === activeNodeName;
@@ -985,9 +987,9 @@ const FlowVisualizer: React.FC<FlowVisualizerProps> = ({
       {/* 属性面板 */}
       {selectedNodeId && (
         <Box
-          w="330px"
-          minW="330px"
-          maxW="330px"
+          w={selectedNode?.type === 'code' ? "450px" : "330px"}
+          minW={selectedNode?.type === 'code' ? "450px" : "330px"}
+          maxW={selectedNode?.type === 'code' ? "450px" : "330px"}
           bg="white"
           p={6}
           borderRadius="xl"
