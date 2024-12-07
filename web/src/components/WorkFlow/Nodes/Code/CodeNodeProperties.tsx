@@ -42,7 +42,7 @@ const MONACO_THEME: MonacoEditor.IStandaloneThemeData = {
   },
 };
 
-// 工具函��：获取简洁版本的代码（不带变量引用）
+// 工具函数：获取简洁版本的代码（不带变量引用）
 const getSimplifiedCode = (code: string, currentArgs: ArgVariable[]) => {
   const [funcDef, ...restCode] = code.split("\n");
   const simplifiedFuncDef = funcDef.replace(
@@ -92,37 +92,9 @@ const CodeNodeProperties: React.FC<CodeNodePropertiesProps> = ({
         if (!model) return;
 
         const value = model.getValue();
-        const lines = value.split("\n");
-        const firstLine = lines[0];
-
-        // 只更新第一行的函数签名，使用简洁格式（不带变量引用）
-        const newFirstLine = firstLine.replace(
-          /(def\s+main\s*\().*?(\))/,
-          (match: string, start: string, end: string) => {
-            const params = newArgs.map((arg) => `${arg.name}: str`).join(", ");
-            return `${start}${params}${end}`;
-          }
-        );
-
-        if (newFirstLine !== firstLine) {
-          const startPosition = model.getPositionAt(0);
-          const endPosition = model.getPositionAt(firstLine.length);
-          const editOperation: MonacoEditor.IIdentifiedSingleEditOperation = {
-            range: {
-              startLineNumber: startPosition.lineNumber,
-              startColumn: startPosition.column,
-              endLineNumber: endPosition.lineNumber,
-              endColumn: endPosition.column + 1,
-            },
-            text: newFirstLine,
-          };
-
-          model.pushEditOperations([], [editOperation], () => null);
-
-          // 保存时使用完整格式（带变量引用）
-          const codeToSave = getFullCode(value, newArgs);
-          onNodeDataChange(node.id, "code", codeToSave);
-        }
+        // 保存完整版本（带变量引用）
+        const codeToSave = getFullCode(value, newArgs);
+        onNodeDataChange(node.id, "code", codeToSave);
       }
     },
     [editorInstance, node.id, onNodeDataChange]
@@ -147,12 +119,6 @@ const CodeNodeProperties: React.FC<CodeNodePropertiesProps> = ({
             };
           });
           setArgs(params);
-
-          // 设置简洁版本的代码到编辑器
-          if (editorInstance) {
-            const simplifiedCode = getSimplifiedCode(node.data.code, params);
-            editorInstance.setValue(simplifiedCode);
-          }
         }
       } else {
         // 使用默认参数
@@ -171,19 +137,13 @@ const CodeNodeProperties: React.FC<CodeNodePropertiesProps> = ({
     } catch (error) {
       console.error("Error in initialization:", error);
     }
-  }, [node.id, node.data.code, node.data.args, onNodeDataChange, editorInstance]);
+  }, [node.id, node.data.code, node.data.args, onNodeDataChange]);
 
   // 编辑器加载完成时的回调
   const handleEditorDidMount: OnMount = (editor, monaco) => {
     setEditorInstance(editor);
     monaco.editor.defineTheme("python-theme", MONACO_THEME);
     monaco.editor.setTheme("python-theme");
-
-    // 立即显示简洁版本
-    if (node.data.code) {
-      const simplifiedCode = getSimplifiedCode(node.data.code, args);
-      editor.setValue(simplifiedCode);
-    }
   };
 
   // Monaco Editor 配置
@@ -273,7 +233,7 @@ const CodeNodeProperties: React.FC<CodeNodePropertiesProps> = ({
     setIsExecuting(true);
     try {
       const code = node.data.code;
-      // TODO: 调用端 API 执行代码
+      // TODO: 调���端 API 执行代码
 
       toast({
         title: "行成功",
@@ -392,7 +352,8 @@ const CodeNodeProperties: React.FC<CodeNodePropertiesProps> = ({
           <Editor
             height="300px"
             defaultLanguage="python"
-            value={node.data.code}
+            // 显示简洁版本
+            value={getSimplifiedCode(node.data.code, args)}
             onChange={(value: string | undefined) => {
               if (value !== undefined) {
                 // 保存完整版本（带变量引用）
