@@ -49,7 +49,10 @@ class SecurityManager:
         """解密API密钥"""
         if not encrypted_data:
             return encrypted_data
-        return self._fernet.decrypt(encrypted_data.encode()).decode()
+        try:
+            return self._fernet.decrypt(encrypted_data.encode()).decode()
+        except Exception as e:
+            raise ValueError("Decryption failed,Invalid API key Token") from e
 
 # 创建单例实例
 security_manager = SecurityManager()
