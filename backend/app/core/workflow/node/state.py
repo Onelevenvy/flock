@@ -151,7 +151,7 @@ class ReturnTeamState(TypedDict):
     node_outputs: Annotated[Dict[str, Any], update_node_outputs]
 
 
-def parse_variables(text: str, node_outputs: Dict,is_code:bool=False) -> str:
+def parse_variables(text: str, node_outputs: Dict, is_code: bool = False) -> str:
     def replace_variable(match):
         var_path = match.group(1).split(".")
         value = node_outputs
@@ -160,9 +160,29 @@ def parse_variables(text: str, node_outputs: Dict,is_code:bool=False) -> str:
                 value = value[key]
             else:
                 return match.group(0)  # 如果找不到变量，保持原样
+        
+        # 转换全角字符为半角字符
+        def convert_fullwidth_to_halfwidth(s: str) -> str:
+            # 全角字符范围是 0xFF01 到 0xFF5E
+            # 半角字符范围是 0x0021 到 0x007E
+            result = []
+            for char in str(s):
+                code = ord(char)
+                if 0xFF01 <= code <= 0xFF5E:
+                    # 转换全角字符到半角字符
+                    result.append(chr(code - 0xFEE0))
+                else:
+                    result.append(char)
+            return ''.join(result)
+        
+        str_value = str(value)
         if is_code:
-            return f'"{str(value)}"' 
+            # 对于代码中的字符串，需要转换全角字符并正确转义
+            converted_value = convert_fullwidth_to_halfwidth(str_value)
+            # 转义引号和反斜杠
+            escaped_value = converted_value.replace('"', '\\"').replace("\\", "\\\\")
+            return f'"{escaped_value}"'
         else:
-            return str(value) 
+            return str_value
 
     return re.sub(r"\{([^}]+)\}", replace_variable, text)

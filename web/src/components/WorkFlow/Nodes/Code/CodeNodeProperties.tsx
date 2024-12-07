@@ -17,7 +17,6 @@ import Editor from "@monaco-editor/react";
 import type { OnMount } from "@monaco-editor/react";
 import type { editor as MonacoEditor } from "monaco-editor";
 
-import { useVariableInsertion } from "../../../../hooks/graphs/useVariableInsertion";
 import { VariableReference } from "../../FlowVis/variableSystem";
 
 interface ArgVariable {
@@ -42,7 +41,7 @@ const MONACO_THEME: MonacoEditor.IStandaloneThemeData = {
   },
 };
 
-// 工具函��：获取简洁版本的代码（不带变量引用）
+// 工具函数：获取简洁版本的代码（不带变量引用）
 const getSimplifiedCode = (code: string, currentArgs: ArgVariable[]) => {
   const [funcDef, ...restCode] = code.split("\n");
   const simplifiedFuncDef = funcDef.replace(
@@ -214,22 +213,6 @@ const CodeNodeProperties: React.FC<CodeNodePropertiesProps> = ({
     setArgs(newArgs);
     onNodeDataChange(node.id, "args", newArgs);
   }, [args, node.id, onNodeDataChange]);
-
-  const {
-    showVariables,
-    setShowVariables,
-    inputRef,
-    handleKeyDown,
-    insertVariable,
-  } = useVariableInsertion<HTMLTextAreaElement>({
-    onValueChange: (value: string) => {
-      if (value !== undefined) {
-        onNodeDataChange(node.id, "code", value);
-      }
-    },
-    availableVariables,
-  });
-
 
   // 添加加载状态处理
   const handleEditorLoading = () => {
