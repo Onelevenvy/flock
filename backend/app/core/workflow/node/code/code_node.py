@@ -388,7 +388,18 @@ class CodeNode:
             parsed_code = parse_variables(self.code, state["node_outputs"])
 
             # Execute code
-            code_result = self.executor.execute(parsed_code, self.libraries)
+            code_execution_result = self.executor.execute(parsed_code, self.libraries)
+            if isinstance(code_execution_result, str):
+                # If code_result is a string, return it as it is
+                code_result = code_execution_result
+            elif isinstance(code_execution_result, dict):
+                if "code_result" in code_execution_result:
+                    # If the dictionary contains the "result" key, return its value
+                    code_result = code_execution_result["code_result"]
+                else:
+                    code_result = "Error: The Code Execution Result must return a dictionary with the 'code_result' key."
+            else:
+                code_result = "Error: Invalid code return type, please return a dictionary with the 'code_result' key."
 
             result = ToolMessage(
                 content=code_result,

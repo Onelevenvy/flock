@@ -65,7 +65,7 @@ const CodeNodeProperties: React.FC<CodeNodePropertiesProps> = ({
     try {
       if (!node.data.code) {
         const params = args.map(arg => `${arg.name}: str`).join(', ');
-        const defaultCode = `def main(${params}) -> dict:\n    return {\n        "result": ${args.map(arg => arg.name).join(' + ')},\n    }`;
+        const defaultCode = `def main(${params}) -> dict:\n    return {\n        "code_result": ${args.map(arg => arg.name).join(' + ')},\n    }`;
         onNodeDataChange(node.id, "code", defaultCode);
       }
 
