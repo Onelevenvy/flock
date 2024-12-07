@@ -9,6 +9,11 @@
 
 > [!NOTE]
 >
+> ### 🎉 What's New 2024/12/7
+>
+> - **Code Execution Node**: Added Python code execution capabilities to workflows! This node allows you to write and execute Python scripts directly within your workflow, supporting variable references and dynamic data transformations. Perfect for arithmetic operations, data processing, text manipulation, and custom logic that goes beyond preset node functionalities.
+
+>
 > ### 🎉 What's New 2024/11/12
 >
 > - **Intent Recognition Node**: New Intent Recognition node that can automatically identify user input intent based on preset categories, supporting multi-classification routing!
