@@ -385,10 +385,12 @@ class CodeNode:
 
         try:
             # Parse variables in code
-            parsed_code = parse_variables(self.code, state["node_outputs"])
+            parsed_code = parse_variables(self.code, state["node_outputs"],is_code=True)
 
+        
             # Execute code
             code_execution_result = self.executor.execute(parsed_code, self.libraries)
+         
             if isinstance(code_execution_result, str):
                 # If code_result is a string, return it as it is
                 code_result = code_execution_result

@@ -151,7 +151,7 @@ class ReturnTeamState(TypedDict):
     node_outputs: Annotated[Dict[str, Any], update_node_outputs]
 
 
-def parse_variables(text: str, node_outputs: Dict) -> str:
+def parse_variables(text: str, node_outputs: Dict,is_code:bool=False) -> str:
     def replace_variable(match):
         var_path = match.group(1).split(".")
         value = node_outputs
@@ -160,6 +160,9 @@ def parse_variables(text: str, node_outputs: Dict) -> str:
                 value = value[key]
             else:
                 return match.group(0)  # 如果找不到变量，保持原样
-        return str(value)
+        if is_code:
+            return f'"{str(value)}"' 
+        else:
+            return str(value) 
 
     return re.sub(r"\{([^}]+)\}", replace_variable, text)
