@@ -6,9 +6,11 @@ import {
   FaCommentDots,
   FaDatabase,
   FaCode,
+  FaCodeBranch,
 } from "react-icons/fa";
 import { FaBookAtlas, FaPeopleGroup } from "react-icons/fa6";
 import { TfiGithub } from "react-icons/tfi";
+import { v4 as uuidv4 } from "uuid";
 
 import AnswerNodeProperties from "./Answer/AnswerNodeProperties";
 import EndNodeProperties from "./End/EndNodeProperties";
@@ -22,6 +24,7 @@ import CrewAINodeProperties from "./CrewAI/CrewAINodeProperties";
 import ClassifierNodeProperties from "./Classifier/ClassifierNodeProperties";
 import { LuBrainCircuit } from "react-icons/lu";
 import CodeNodeProperties from "./Code/CodeNodeProperties";
+import IfElseNodeProperties from "./IfElse/IfElseNodeProperties";
 
 interface NodeConfigItem {
   display: string;
@@ -213,6 +216,27 @@ export const nodeConfig: Record<string, NodeConfigItem> = {
       code: "",
       language: "python",
     },
+  },
+  ifelse: {
+    display: "If-Else",
+    icon: FaCodeBranch,
+    colorScheme: "purple",
+    properties: IfElseNodeProperties,
+    initialData: {
+      cases: [
+        {
+          case_id: uuidv4(),
+          condition: "",
+          output: "",
+        },
+      ],
+    },
+    allowedConnections: {
+      sources: ["right"],
+      targets: ["left"],
+    },
+    inputVariables: ["condition"],
+    outputVariables: ["result"],
   },
 };
 

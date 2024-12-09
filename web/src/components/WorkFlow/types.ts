@@ -67,3 +67,14 @@ export interface ClassifierNodeData extends NodeData {
   categories: ClassifierCategory[];
   model?: string;
 }
+
+export interface IfElseCase {
+  case_id: string;
+  condition: string;
+  output: string;
+}
+
+export interface IfElseNodeData {
+  label: string;
+  cases: IfElseCase[];
+}

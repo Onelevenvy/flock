@@ -58,6 +58,7 @@ import CustomButton from "@/components/Common/CustomButton";
 import ApiKeyButton from "@/components/Teams/Apikey/ApiKeyManageButton";
 import { useTranslation } from "react-i18next";
 import { FiEye, FiEyeOff } from "react-icons/fi";
+import IfElseNode from "../Nodes/IfElse/IfElseNode";
 
 const FlowVisualizer: React.FC<FlowVisualizerProps> = ({
   nodeTypes,
@@ -98,10 +99,14 @@ const FlowVisualizer: React.FC<FlowVisualizerProps> = ({
 
   const { activeNodeName } = useWorkflowStore();
 
-  const selectedNode = nodes.find((n) => n.id === selectedNodeId);
+  const selectedNode = useMemo(() => 
+    nodes?.find((n) => n.id === selectedNodeId) || null
+  , [nodes, selectedNodeId]);
 
   const nodesWithSelection = useMemo(() => {
-    return nodes?.map((node) => {
+    if (!nodes) return [];
+    
+    return nodes.map((node) => {
       let isActive = node.id === activeNodeName;
 
       if (
@@ -427,6 +432,7 @@ const FlowVisualizer: React.FC<FlowVisualizerProps> = ({
   const memoizedNodeTypes = useMemo(
     () => ({
       ...nodeTypes,
+      ifelse: IfElseNode,
     }),
     [nodeTypes]
   );
