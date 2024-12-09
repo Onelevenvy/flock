@@ -238,8 +238,8 @@ export const nodeConfig: Record<string, NodeConfigItem> = {
       ],
     },
     allowedConnections: {
-      sources: ["right"],
-      targets: ["left"],
+      sources: ["left", "right"],
+      targets: ["left", "right"],
     },
     inputVariables: ["condition"],
     outputVariables: ["result"],

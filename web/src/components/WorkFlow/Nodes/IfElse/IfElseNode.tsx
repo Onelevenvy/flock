@@ -25,7 +25,7 @@ const IfElseNode: React.FC<NodeProps<IfElseNodeData>> = (props) => {
       <Handle
         type="target"
         position={Position.Left}
-        id="input"
+        id="left"
         style={handleStyle}
       />
 

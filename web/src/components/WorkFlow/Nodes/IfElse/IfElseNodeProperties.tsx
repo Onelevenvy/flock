@@ -24,7 +24,6 @@ const IfElseNodeProperties: React.FC<IfElseNodePropertiesProps> = ({
   onNodeDataChange,
   availableVariables,
 }) => {
-  console.log("Cases:", node.data.cases);
 
   // 确保初始状态有 IF 和 ELSE
   useEffect(() => {
