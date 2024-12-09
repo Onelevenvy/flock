@@ -25,6 +25,7 @@ import ClassifierNodeProperties from "./Classifier/ClassifierNodeProperties";
 import { LuBrainCircuit } from "react-icons/lu";
 import CodeNodeProperties from "./Code/CodeNodeProperties";
 import IfElseNodeProperties from "./IfElse/IfElseNodeProperties";
+import {  LogicalOperator } from "../types";
 
 interface NodeConfigItem {
   display: string;
@@ -226,8 +227,13 @@ export const nodeConfig: Record<string, NodeConfigItem> = {
       cases: [
         {
           case_id: uuidv4(),
-          condition: "",
-          output: "",
+          logical_operator: LogicalOperator.and,
+          conditions: [],
+        },
+        {
+          case_id: "false",
+          logical_operator: LogicalOperator.and,
+          conditions: [],
         },
       ],
     },

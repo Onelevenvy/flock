@@ -68,13 +68,42 @@ export interface ClassifierNodeData extends NodeData {
   model?: string;
 }
 
-export interface IfElseCase {
-  case_id: string;
-  condition: string;
-  output: string;
+export enum LogicalOperator {
+  and = 'and',
+  or = 'or',
 }
 
-export interface IfElseNodeData {
-  label: string;
+export enum ComparisonOperator {
+  contains = 'contains',
+  notContains = 'not contains',
+  startWith = 'start with',
+  endWith = 'end with',
+  is = 'is',
+  isNot = 'is not',
+  empty = 'empty',
+  notEmpty = 'not empty',
+  equal = '=',
+  notEqual = '≠',
+  largerThan = '>',
+  lessThan = '<',
+  largerThanOrEqual = '≥',
+  lessThanOrEqual = '≤',
+}
+
+export interface Condition {
+  id: string;
+  variable_selector?: string[];
+  comparison_operator?: ComparisonOperator;
+  value: string | string[];
+  compareType?: "constant" | "variable";
+}
+
+export interface IfElseCase {
+  case_id: string;
+  logical_operator: LogicalOperator;
+  conditions: Condition[];
+}
+
+export interface IfElseNodeData extends NodeData {
   cases: IfElseCase[];
 }
