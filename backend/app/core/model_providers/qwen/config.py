@@ -3,7 +3,7 @@ from crewai import LLM
 from app.models import ModelCapability, ModelCategory
 
 PROVIDER_CONFIG = {
-    "provider_name": "Qwen",
+    "provider_name": "qwen",
     "base_url": "https://dashscope.aliyuncs.com/compatible-mode/v1",
     "api_key": "fakeapikey",
     "icon": "qwen_icon",

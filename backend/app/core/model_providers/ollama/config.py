@@ -4,7 +4,7 @@ from crewai import LLM
 from app.models import ModelCategory
 
 PROVIDER_CONFIG = {
-    "provider_name": "Ollama",
+    "provider_name": "ollama",
     "base_url": "http://host.docker.internal:11434",
     "api_key": "fakeapikey",
     "icon": "ollama_icon",

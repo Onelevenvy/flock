@@ -3,7 +3,7 @@ from crewai import LLM
 from app.models import ModelCategory
 
 PROVIDER_CONFIG = {
-    "provider_name": "Siliconflow",
+    "provider_name": "siliconflow",
     "base_url": "https://api.siliconflow.cn/v1",
     "api_key": "fakeapikey",
     "icon": "siliconflow_icon",
