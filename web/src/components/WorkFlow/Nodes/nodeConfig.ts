@@ -25,7 +25,7 @@ import ClassifierNodeProperties from "./Classifier/ClassifierNodeProperties";
 import { LuBrainCircuit } from "react-icons/lu";
 import CodeNodeProperties from "./Code/CodeNodeProperties";
 import IfElseNodeProperties from "./IfElse/IfElseNodeProperties";
-import {  LogicalOperator } from "../types";
+import { LogicalOperator } from "../types";
 
 interface NodeConfigItem {
   display: string;
@@ -231,7 +231,7 @@ export const nodeConfig: Record<string, NodeConfigItem> = {
           conditions: [],
         },
         {
-          case_id: "false",
+          case_id: "false_else",
           logical_operator: LogicalOperator.and,
           conditions: [],
         },
@@ -241,7 +241,7 @@ export const nodeConfig: Record<string, NodeConfigItem> = {
       sources: ["left", "right"],
       targets: ["left", "right"],
     },
-    inputVariables: ["condition"],
+    inputVariables: [],
     outputVariables: ["result"],
   },
 };
