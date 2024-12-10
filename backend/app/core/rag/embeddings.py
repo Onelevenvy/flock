@@ -98,7 +98,7 @@ class SiliconFlowEmbeddings(BaseModel, Embeddings):
 
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
-        self.dimension = get_embedding_dimension("Siliconflow", self.model)
+        self.dimension = get_embedding_dimension("siliconflow", self.model)
 
     class Config:
         extra = Extra.forbid
@@ -146,8 +146,8 @@ def get_embedding_model(model__provider_name: str) -> Embeddings:
         elif model__provider_name == "zhipuai":
             api_key = get_api_key("zhipuai")
             embedding_model = ZhipuAIEmbeddings(api_key=api_key)
-        elif model__provider_name == "Siliconflow":
-            api_key = get_api_key("Siliconflow")
+        elif model__provider_name == "siliconflow":
+            api_key = get_api_key("siliconflow")
             embedding_model = SiliconFlowEmbeddings(api_key=api_key)
         elif model__provider_name == "local":
             embedding_model = HuggingFaceEmbeddings(

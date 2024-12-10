@@ -51,7 +51,7 @@ class LLMBaseNode:
 
         except ValueError:
             # 如果 model_provider_manager 无法初始化模型，回退到原来的初始化方法
-            if provider in ["zhipuai", "Siliconflow"]:
+            if provider in ["zhipuai", "siliconflow"]:
                 self.model = ChatOpenAI(
                     model=model,
                     temperature=temperature,
