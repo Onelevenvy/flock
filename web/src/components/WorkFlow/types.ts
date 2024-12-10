@@ -92,9 +92,9 @@ export enum ComparisonOperator {
 
 export interface Condition {
   id: string;
-  variable_selector?: string[];
-  comparison_operator?: ComparisonOperator;
-  value: string | string[];
+  variable_selector: string[];
+  comparison_operator: ComparisonOperator;
+  value: string;
   compareType?: "constant" | "variable";
 }
 

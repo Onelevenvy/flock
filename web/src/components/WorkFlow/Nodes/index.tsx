@@ -11,6 +11,7 @@ import StartNode from "./Start/StartNode";
 import ToolNode from "./Tool/ToolNode";
 import ClassifierNode from "./Classifier/ClassifierNode";
 import CodeNode from "./Code/CodeNode";
+import IfElseNode from "./IfElse/IfElseNode";
 
 export const nodeTypes: NodeTypes = {
   start: StartNode,
@@ -24,4 +25,5 @@ export const nodeTypes: NodeTypes = {
   classifier: ClassifierNode,
   answer: AnswerNode,
   code: CodeNode,
+  ifelse: IfElseNode,
 };
