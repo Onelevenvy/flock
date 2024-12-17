@@ -56,19 +56,21 @@ const IfElseNodeProperties: React.FC<IfElseNodePropertiesProps> = ({
   const handleAddCase = useCallback(() => {
     const newCases = [...node.data.cases];
     const elseCaseIndex = newCases.length - 1;
-    
+
     const newCase: IfElseCase = {
       case_id: uuidv4(),
       logical_operator: LogicalOperator.and,
-      conditions: [{
-        id: uuidv4(),
-        variable_selector: [],
-        comparison_operator: ComparisonOperator.equal,
-        value: "",
-        compareType: "constant" as "constant" | "variable"
-      }]
+      conditions: [
+        {
+          id: uuidv4(),
+          variable_selector: [],
+          comparison_operator: ComparisonOperator.equal,
+          value: "",
+          compareType: "constant" as "constant" | "variable",
+        },
+      ],
     };
-    
+
     newCases.splice(elseCaseIndex, 0, newCase);
     onNodeDataChange(node.id, "cases", newCases);
   }, [node.id, node.data.cases, onNodeDataChange]);
@@ -87,7 +89,7 @@ const IfElseNodeProperties: React.FC<IfElseNodePropertiesProps> = ({
                 variable_selector: [],
                 comparison_operator: ComparisonOperator.equal,
                 value: "",
-                compareType: "constant" as "constant" | "variable"
+                compareType: "constant" as "constant" | "variable",
               },
             ],
           };
@@ -213,26 +215,27 @@ const IfElseNodeProperties: React.FC<IfElseNodePropertiesProps> = ({
 
   return (
     <VStack spacing={4} align="stretch" maxH="600px">
-      <Box 
-        overflowY="auto" 
+      <Box
+        overflowY="auto"
+        fontSize="sm"
         css={{
-          '&::-webkit-scrollbar': {
-            width: '4px',
+          "&::-webkit-scrollbar": {
+            width: "4px",
           },
-          '&::-webkit-scrollbar-track': {
-            width: '6px',
-            background: 'var(--chakra-colors-gray-50)',
+          "&::-webkit-scrollbar-track": {
+            width: "6px",
+            background: "var(--chakra-colors-gray-50)",
           },
-          '&::-webkit-scrollbar-thumb': {
-            background: 'var(--chakra-colors-gray-200)',
-            borderRadius: '24px',
+          "&::-webkit-scrollbar-thumb": {
+            background: "var(--chakra-colors-gray-200)",
+            borderRadius: "24px",
           },
         }}
       >
         {node.data.cases.slice(0, -1).map((caseItem, index) => (
           <Box
             key={caseItem.case_id}
-            p={4}
+            p={3}
             bg="white"
             borderRadius="xl"
             boxShadow="sm"
@@ -246,15 +249,15 @@ const IfElseNodeProperties: React.FC<IfElseNodePropertiesProps> = ({
               transform: "translateY(-1px)",
             }}
           >
-            <HStack justify="space-between" mb={3}>
+            <HStack justify="space-between" mb={2}>
               <HStack spacing={2}>
                 <Box
                   bg="blue.50"
                   color="blue.500"
-                  px={3}
+                  px={2}
                   py={1}
                   borderRadius="md"
-                  fontSize="sm"
+                  fontSize="xs"
                   fontWeight="600"
                 >
                   {index === 0 ? "IF" : "ELIF"}
@@ -266,32 +269,39 @@ const IfElseNodeProperties: React.FC<IfElseNodePropertiesProps> = ({
                   icon={<FaTrash />}
                   size="sm"
                   variant="ghost"
-                  colorScheme="red"
+                  colorScheme="gray.400"
                   onClick={() => handleRemoveCase(caseItem.case_id)}
                   transition="all 0.2s"
                   _hover={{
                     transform: "scale(1.1)",
-                    bg: "red.50",
+                    bg: "gray.50",
                   }}
                 />
               )}
             </HStack>
 
             {caseItem.conditions.map((condition) => (
-              <Box 
-                key={condition.id} 
-                mb={4}
-                p={3}
+              <Box
+                key={condition.id}
+                mb={3}
+                p={2}
                 bg="gray.50"
                 borderRadius="lg"
                 borderLeft="3px solid"
                 borderLeftColor="blue.400"
               >
-                <HStack spacing={2} mb={3}>
+                <HStack spacing={2} mb={2} width="100%">
                   <Select
+                    size="sm"
                     placeholder="Select variable"
                     value={condition.variable_selector?.join(".")}
-                    onChange={(e) => handleVariableSelect(caseItem.case_id, condition.id, e.target.value)}
+                    onChange={(e) =>
+                      handleVariableSelect(
+                        caseItem.case_id,
+                        condition.id,
+                        e.target.value
+                      )
+                    }
                     bg="white"
                     borderColor="gray.200"
                     _hover={{ borderColor: "blue.200" }}
@@ -299,92 +309,127 @@ const IfElseNodeProperties: React.FC<IfElseNodePropertiesProps> = ({
                       borderColor: "blue.500",
                       boxShadow: "0 0 0 1px var(--chakra-colors-blue-500)",
                     }}
-                    flex={1}
+                    width="60%"
                   >
                     {availableVariables.map((v) => (
-                      <option key={`${v.nodeId}.${v.variableName}`} value={`${v.nodeId}.${v.variableName}`}>
-                        {v.nodeId}.{v.variableName}
+                      <option
+                        key={`${v.nodeId}.${v.variableName}`}
+                        value={`${v.nodeId}.${v.variableName}`}
+                      >
+                        {`${v.nodeId}.${v.variableName}`}
                       </option>
                     ))}
                   </Select>
                   <ConditionOperator
                     value={condition.comparison_operator}
-                    onSelect={(value) => handleOperatorChange(caseItem.case_id, condition.id, value)}
+                    onSelect={(value) =>
+                      handleOperatorChange(
+                        caseItem.case_id,
+                        condition.id,
+                        value
+                      )
+                    }
+                    width="40%"
                   />
                   <IconButton
                     aria-label="Remove condition"
-                    icon={<FaTrash />}
+                    icon={<FaTrash size="12px" />}
                     size="sm"
                     variant="ghost"
-                    colorScheme="red"
-                    onClick={() => handleRemoveCondition(caseItem.case_id, condition.id)}
+                    color="gray.400"
+                    onClick={() =>
+                      handleRemoveCondition(caseItem.case_id, condition.id)
+                    }
                     transition="all 0.2s"
                     _hover={{
                       transform: "scale(1.1)",
-                      bg: "red.50",
+                      bg: "gray.50",
                     }}
                   />
                 </HStack>
 
-                {condition.comparison_operator !== ComparisonOperator.empty && 
-                 condition.comparison_operator !== ComparisonOperator.notEmpty && (
-                  <HStack spacing={2}>
-                    <Select
-                      w="120px"
-                      value={condition.compareType || "constant"}
-                      onChange={(e) => {
-                        const newCases = node.data.cases.map((c) => {
-                          if (c.case_id === caseItem.case_id) {
-                            return {
-                              ...c,
-                              conditions: c.conditions.map((cond) =>
-                                cond.id === condition.id
-                                  ? { ...cond, compareType: e.target.value, value: "" }
-                                  : cond
-                              ),
-                            };
-                          }
-                          return c;
-                        });
-                        onNodeDataChange(node.id, "cases", newCases);
-                      }}
-                      bg="white"
-                      borderColor="gray.200"
-                      _hover={{ borderColor: "blue.200" }}
-                    >
-                      <option value="constant">Constant</option>
-                      <option value="variable">Variable</option>
-                    </Select>
-
-                    {condition.compareType === "variable" ? (
+                {condition.comparison_operator !== ComparisonOperator.empty &&
+                  condition.comparison_operator !==
+                    ComparisonOperator.notEmpty && (
+                    <HStack spacing={2} width="100%">
                       <Select
-                        placeholder="Select variable"
-                        value={condition.value as string}
-                        onChange={(e) => handleValueSelect(caseItem.case_id, condition.id, e.target.value)}
-                        flex={1}
+                        size="sm"
+                        width="49%"
+                        value={condition.compareType || "constant"}
+                        onChange={(e) => {
+                          const newCases = node.data.cases.map((c) => {
+                            if (c.case_id === caseItem.case_id) {
+                              return {
+                                ...c,
+                                conditions: c.conditions.map((cond) =>
+                                  cond.id === condition.id
+                                    ? {
+                                        ...cond,
+                                        compareType: e.target.value,
+                                        value: "",
+                                      }
+                                    : cond
+                                ),
+                              };
+                            }
+                            return c;
+                          });
+                          onNodeDataChange(node.id, "cases", newCases);
+                        }}
                         bg="white"
                         borderColor="gray.200"
                         _hover={{ borderColor: "blue.200" }}
                       >
-                        {availableVariables.map((v) => (
-                          <option key={`${v.nodeId}.${v.variableName}`} value={`${v.nodeId}.${v.variableName}`}>
-                            {v.nodeId}.{v.variableName}
-                          </option>
-                        ))}
+                        <option value="constant">Constant</option>
+                        <option value="variable">Variable</option>
                       </Select>
-                    ) : (
-                      <Input
-                        placeholder="Enter constant value"
-                        value={condition.value as string}
-                        onChange={(e) => handleValueSelect(caseItem.case_id, condition.id, e.target.value)}
-                        flex={1}
-                        bg="white"
-                        borderColor="gray.200"
-                        _hover={{ borderColor: "blue.200" }}
-                      />
-                    )}
-                  </HStack>
-                )}
+
+                      {condition.compareType === "variable" ? (
+                        <Select
+                          size="sm"
+                          placeholder="Select variable"
+                          value={condition.value as string}
+                          onChange={(e) =>
+                            handleValueSelect(
+                              caseItem.case_id,
+                              condition.id,
+                              e.target.value
+                            )
+                          }
+                          width="49%"
+                          bg="white"
+                          borderColor="gray.200"
+                          _hover={{ borderColor: "blue.200" }}
+                        >
+                          {availableVariables.map((v) => (
+                            <option
+                              key={`${v.nodeId}.${v.variableName}`}
+                              value={`${v.nodeId}.${v.variableName}`}
+                            >
+                              {v.nodeId}.{v.variableName}
+                            </option>
+                          ))}
+                        </Select>
+                      ) : (
+                        <Input
+                          size="sm"
+                          placeholder="Enter constant value"
+                          value={condition.value as string}
+                          onChange={(e) =>
+                            handleValueSelect(
+                              caseItem.case_id,
+                              condition.id,
+                              e.target.value
+                            )
+                          }
+                          width="49%"
+                          bg="white"
+                          borderColor="gray.200"
+                          _hover={{ borderColor: "blue.200" }}
+                        />
+                      )}
+                    </HStack>
+                  )}
               </Box>
             ))}
 
@@ -405,13 +450,9 @@ const IfElseNodeProperties: React.FC<IfElseNodePropertiesProps> = ({
               size="sm"
               leftIcon={<FaPlus />}
               onClick={() => handleAddCondition(caseItem.case_id)}
-              colorScheme="blue"
-              variant="ghost"
+              variant="outline"
+              colorScheme="gray"
               w="full"
-              _hover={{
-                transform: "translateY(-1px)",
-                shadow: "sm",
-              }}
             >
               Add Condition
             </Button>

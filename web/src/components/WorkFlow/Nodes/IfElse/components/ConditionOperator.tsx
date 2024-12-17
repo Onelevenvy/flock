@@ -4,30 +4,27 @@ import { ComparisonOperator } from '../../../types';
 import { useTranslation } from 'react-i18next';
 
 interface ConditionOperatorProps {
-  value?: ComparisonOperator;
+  value: ComparisonOperator;
   onSelect: (value: ComparisonOperator) => void;
+  width?: string;
 }
 
 const ConditionOperator: React.FC<ConditionOperatorProps> = ({
   value,
   onSelect,
+  width,
 }) => {
   const { t } = useTranslation();
 
   return (
     <Select
+      size="sm"
       value={value}
       onChange={(e) => onSelect(e.target.value as ComparisonOperator)}
-      size="sm"
-      w="150px"
       bg="white"
       borderColor="gray.200"
       _hover={{ borderColor: "blue.200" }}
-      _focus={{
-        borderColor: "blue.500",
-        boxShadow: "0 0 0 1px var(--chakra-colors-blue-500)",
-      }}
-      transition="all 0.2s"
+      width={width}
     >
       <option value={ComparisonOperator.contains}>{t("workflow.nodes.ifelse.operators.contains")}</option>
       <option value={ComparisonOperator.notContains}>{t("workflow.nodes.ifelse.operators.notContains")}</option>
