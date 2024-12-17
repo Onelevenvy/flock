@@ -452,7 +452,7 @@ const IfElseNodeProperties: React.FC<IfElseNodePropertiesProps> = ({
               onClick={() => handleAddCondition(caseItem.case_id)}
               variant="outline"
               colorScheme="gray"
-              w="full"
+          
             >
               Add Condition
             </Button>
