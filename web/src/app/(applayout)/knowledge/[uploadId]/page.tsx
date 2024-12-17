@@ -210,47 +210,29 @@ function KnowledgeTest() {
           }
         >
           <BreadcrumbItem>
-            <Link href="/knowledge">
-              <BreadcrumbLink
-                display="flex"
-                alignItems="center"
-                color="gray.600"
-                fontSize="sm"
-                fontWeight="500"
-                transition="all 0.2s"
-                _hover={{
-                  color: "ui.main",
-                  textDecoration: "none",
-                  transform: "translateY(-1px)",
-                }}
-              >
+            <BreadcrumbLink as={Link} href="/knowledge">
+              <Box display="flex" alignItems="center" color="gray.600" fontSize="sm" fontWeight="500">
                 <FiFileText style={{ marginRight: "6px" }} />
                 Knowledge
-              </BreadcrumbLink>
-            </Link>
+              </Box>
+            </BreadcrumbLink>
           </BreadcrumbItem>
+          
           <BreadcrumbItem isCurrentPage>
-            <Link href="#">
-              <BreadcrumbLink
-                fontSize="sm"
-                fontWeight="600"
-                color="gray.800"
-                transition="all 0.2s"
-                _hover={{
-                  color: "ui.main",
-                  textDecoration: "none",
-                }}
-                display="flex"
-                alignItems="center"
-                bg="white"
-                px={3}
-                py={1}
-                borderRadius="full"
-                boxShadow="sm"
-              >
-                {currentUpload?.name}
-              </BreadcrumbLink>
-            </Link>
+            <BreadcrumbLink
+              fontSize="sm"
+              fontWeight="600"
+              color="gray.800"
+              display="flex"
+              alignItems="center"
+              bg="white"
+              px={3}
+              py={1}
+              borderRadius="full"
+              boxShadow="sm"
+            >
+              {currentUpload?.name}
+            </BreadcrumbLink>
           </BreadcrumbItem>
         </Breadcrumb>
       </Box>
