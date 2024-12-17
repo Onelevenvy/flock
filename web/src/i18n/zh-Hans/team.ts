@@ -135,6 +135,18 @@ const translation = {
           uniqueNameError: "任务名称必须唯一",
         },
       },
+      ifelse: {
+        operators: {
+          contains: "包含",
+          notContains: "不包含",
+          startWith: "开始是",
+          endWith: "结束是", 
+          equal: "是",
+          notEqual: "不是",
+          empty: "为空",
+          notEmpty: "不为空"
+        }
+      }
     },
     common: {
       add: "添加",

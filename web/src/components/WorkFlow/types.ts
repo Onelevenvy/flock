@@ -75,19 +75,13 @@ export enum LogicalOperator {
 
 export enum ComparisonOperator {
   contains = 'contains',
-  notContains = 'not contains',
-  startWith = 'start with',
-  endWith = 'end with',
-  is = 'is',
-  isNot = 'is not',
+  notContains = 'notContains',
+  startWith = 'startWith',
+  endWith = 'endWith',
+  equal = 'equal',
+  notEqual = 'notEqual',
   empty = 'empty',
-  notEmpty = 'not empty',
-  equal = '=',
-  notEqual = '≠',
-  largerThan = '>',
-  lessThan = '<',
-  largerThanOrEqual = '≥',
-  lessThanOrEqual = '≤',
+  notEmpty = 'notEmpty'
 }
 
 export interface Condition {

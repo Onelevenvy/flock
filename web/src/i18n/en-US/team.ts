@@ -140,6 +140,18 @@ const translation = {
           addTitle: "Add Task",
         },
       },
+      ifelse: {
+        operators: {
+          contains: "Contains",
+          notContains: "Not Contains",
+          startWith: "Starts With",
+          endWith: "Ends With",
+          equal: "Is",
+          notEqual: "Is Not",
+          empty: "Is Empty",
+          notEmpty: "Is Not Empty"
+        }
+      }
     },
     common: {
       add: "Add",
@@ -159,12 +171,12 @@ const translation = {
       },
       shortcuts: {
         title: "Shortcuts",
-        edgeType: "Change edges type",
+        edgeType: "Change Edge Type",
         delete: "Delete",
         info: {
-          title: "Info",
-          solidLine: "solid line: Normal edge",
-          dashedLine: "dashed line: Conditional edge",
+          title: "Information",
+          solidLine: "Solid Line: Normal Connection",
+          dashedLine: "Dashed Line: Conditional Connection",
         },
       },
       zoom: "Zoom",
@@ -184,8 +196,8 @@ const translation = {
       contextMenu: {
         delete: "Delete Node",
         error: {
-          title: "Cannot delete node",
-          description: "{type} node cannot be deleted.",
+          title: "Cannot Delete Node",
+          description: "Cannot delete {type} node.",
         },
       },
     },
