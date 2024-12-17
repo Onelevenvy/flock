@@ -1030,9 +1030,9 @@ const FlowVisualizer: React.FC<FlowVisualizerProps> = ({
       {/* 属性面板 */}
       {selectedNodeId && (
         <Box
-          w={selectedNode?.type === "code" ? "450px" : "330px"}
-          minW={selectedNode?.type === "code" ? "450px" : "330px"}
-          maxW={selectedNode?.type === "code" ? "450px" : "330px"}
+          w={selectedNode?.type === "code" || selectedNode?.type === "ifelse" ? "450px" : "330px"}
+          minW={selectedNode?.type === "code" || selectedNode?.type === "ifelse" ? "450px" : "330px"}
+          maxW={selectedNode?.type === "code" || selectedNode?.type === "ifelse" ? "450px" : "330px"}
           bg="white"
           p={6}
           borderRadius="xl"
@@ -1043,6 +1043,8 @@ const FlowVisualizer: React.FC<FlowVisualizerProps> = ({
           my={2}
           position="relative"
           transition="all 0.2s"
+          maxH="calc(100vh - 64px)"
+          overflowY="auto"
         >
           <CloseButton
             onClick={closePropertiesPanel}

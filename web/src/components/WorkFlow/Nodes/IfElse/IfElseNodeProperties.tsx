@@ -5,8 +5,8 @@ import {
   IconButton,
   Select,
   Text,
-  VStack,
   Input,
+  VStack,
 } from "@chakra-ui/react";
 import React, { useCallback, useEffect } from "react";
 import { FaPlus, FaTrash } from "react-icons/fa";
@@ -214,10 +214,11 @@ const IfElseNodeProperties: React.FC<IfElseNodePropertiesProps> = ({
   );
 
   return (
-    <VStack spacing={4} align="stretch" maxH="600px">
+    <VStack spacing={4} align="stretch">
       <Box
         overflowY="auto"
         fontSize="sm"
+        maxH="calc(100vh - 200px)"
         css={{
           "&::-webkit-scrollbar": {
             width: "4px",
@@ -245,7 +246,6 @@ const IfElseNodeProperties: React.FC<IfElseNodePropertiesProps> = ({
             transition="all 0.2s"
             _hover={{
               boxShadow: "md",
-              borderColor: "blue.200",
               transform: "translateY(-1px)",
             }}
           >
@@ -269,7 +269,7 @@ const IfElseNodeProperties: React.FC<IfElseNodePropertiesProps> = ({
                   icon={<FaTrash />}
                   size="sm"
                   variant="ghost"
-                  colorScheme="gray.400"
+                  color="gray.400"
                   onClick={() => handleRemoveCase(caseItem.case_id)}
                   transition="all 0.2s"
                   _hover={{
@@ -287,8 +287,6 @@ const IfElseNodeProperties: React.FC<IfElseNodePropertiesProps> = ({
                 p={2}
                 bg="gray.50"
                 borderRadius="lg"
-                borderLeft="3px solid"
-                borderLeftColor="blue.400"
               >
                 <HStack spacing={2} mb={2} width="100%">
                   <Select
