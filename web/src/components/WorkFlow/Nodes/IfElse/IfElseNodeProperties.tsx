@@ -250,34 +250,49 @@ const IfElseNodeProperties: React.FC<IfElseNodePropertiesProps> = ({
             }}
           >
             <HStack justify="space-between" mb={2}>
+              <Box
+                bg="blue.50"
+                color="blue.500"
+                px={2}
+                py={1}
+                borderRadius="md"
+                fontSize="sm"
+                fontWeight="600"
+              >
+                {index === 0 ? "IF" : "ELIF"}
+              </Box>
+              
               <HStack spacing={2}>
-                <Box
-                  bg="blue.50"
-                  color="blue.500"
-                  px={2}
-                  py={1}
-                  borderRadius="md"
-                  fontSize="xs"
-                  fontWeight="600"
-                >
-                  {index === 0 ? "IF" : "ELIF"}
-                </Box>
+                {caseItem.conditions.length > 1 && (
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    rightIcon={<RiLoopLeftLine />}
+                    onClick={() => handleToggleLogicalOperator(caseItem.case_id)}
+                    colorScheme="blue"
+                  >
+                    {caseItem.logical_operator.toUpperCase()}
+                  </Button>
+                )}
+                {index === 0 && (
+                  <Box w="32px" />
+                )}
+                {index > 0 && (
+                  <IconButton
+                    aria-label="Remove case"
+                    icon={<FaTrash />}
+                    size="sm"
+                    variant="ghost"
+                    color="gray.400"
+                    onClick={() => handleRemoveCase(caseItem.case_id)}
+                    transition="all 0.2s"
+                    _hover={{
+                      transform: "scale(1.1)",
+                      bg: "gray.50",
+                    }}
+                  />
+                )}
               </HStack>
-              {index > 0 && (
-                <IconButton
-                  aria-label="Remove case"
-                  icon={<FaTrash />}
-                  size="sm"
-                  variant="ghost"
-                  color="gray.400"
-                  onClick={() => handleRemoveCase(caseItem.case_id)}
-                  transition="all 0.2s"
-                  _hover={{
-                    transform: "scale(1.1)",
-                    bg: "gray.50",
-                  }}
-                />
-              )}
             </HStack>
 
             {caseItem.conditions.map((condition) => (
@@ -430,19 +445,6 @@ const IfElseNodeProperties: React.FC<IfElseNodePropertiesProps> = ({
                   )}
               </Box>
             ))}
-
-            {caseItem.conditions.length > 1 && (
-              <Button
-                size="sm"
-                variant="outline"
-                rightIcon={<RiLoopLeftLine />}
-                onClick={() => handleToggleLogicalOperator(caseItem.case_id)}
-                mb={3}
-                colorScheme="blue"
-              >
-                {caseItem.logical_operator.toUpperCase()}
-              </Button>
-            )}
 
             <Button
               size="sm"
