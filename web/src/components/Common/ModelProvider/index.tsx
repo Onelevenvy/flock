@@ -11,7 +11,7 @@ import {
   MenuList,
   Spinner,
 } from "@chakra-ui/react";
-import React, { useState, useCallback } from "react";
+import React, { useState, useEffect } from "react";
 import { type Control, Controller, FieldValues, Path } from "react-hook-form";
 import { FaEye } from "react-icons/fa";
 
@@ -55,17 +55,16 @@ function ModelSelect<T extends FieldValues>({
   const [selectedModelProvider, setSelectedModelProvider] =
     useState<string>("openai");
 
-  const updateSelectedProvider = useCallback(
-    (modelName: string) => {
+  useEffect(() => {
+    if (value) {
       const selectedModelData = models?.data.find(
-        (model) => model.ai_model_name === modelName
+        (model) => model.ai_model_name === value
       );
       if (selectedModelData) {
         setSelectedModelProvider(selectedModelData.provider.provider_name);
       }
-    },
-    [models]
-  );
+    }
+  }, [value, models]);
 
   return (
     <Box>
@@ -77,7 +76,6 @@ function ModelSelect<T extends FieldValues>({
             name={name}
             control={control}
             render={({ field }) => {
-              updateSelectedProvider(field.value);
               return (
                 <Menu autoSelect={false}>
                   <MenuButton
