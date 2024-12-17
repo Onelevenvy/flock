@@ -72,8 +72,8 @@ export const nodeConfig: Record<string, NodeConfigItem> = {
     colorScheme: "blue",
     properties: LLMNodeProperties,
     allowedConnections: {
-      sources: ["left", "right"],
-      targets: ["left", "right"],
+      sources: ["right"],
+      targets: ["left"],
     },
     initialData: {
       model: "glm-4-flash",
@@ -89,8 +89,8 @@ export const nodeConfig: Record<string, NodeConfigItem> = {
     colorScheme: "purple",
     properties: ToolNodeProperties,
     allowedConnections: {
-      sources: ["left", "right"],
-      targets: ["left", "right"],
+      sources: ["right"],
+      targets: ["left"],
     },
     initialData: {
       tools: ["Open Weather"],
@@ -128,8 +128,8 @@ export const nodeConfig: Record<string, NodeConfigItem> = {
       kb_id: "",
     },
     allowedConnections: {
-      sources: ["left", "right"],
-      targets: ["left", "right"],
+      sources: ["right"],
+      targets: ["left"],
     },
     inputVariables: [],
     outputVariables: ["response"],
@@ -140,8 +140,8 @@ export const nodeConfig: Record<string, NodeConfigItem> = {
     colorScheme: "teal",
     properties: RetrievalToolNodeProperties,
     allowedConnections: {
-      sources: ["left", "right"],
-      targets: ["left", "right"],
+      sources: ["right"],
+      targets: ["left"],
     },
     initialData: {
       tools: [],
@@ -155,8 +155,8 @@ export const nodeConfig: Record<string, NodeConfigItem> = {
     colorScheme: "purple",
     properties: CrewAINodeProperties,
     allowedConnections: {
-      sources: ["left", "right"],
-      targets: ["left", "right"],
+      sources: ["right"],
+      targets: ["left"],
     },
     initialData: {
       agents: [],
@@ -174,8 +174,8 @@ export const nodeConfig: Record<string, NodeConfigItem> = {
     colorScheme: "pink",
     properties: ClassifierNodeProperties,
     allowedConnections: {
-      sources: ["right"],
-      targets: ["left"],
+      sources: [],
+      targets: ["input"],
     },
     outputVariables: ["class_name"],
     inputVariables: ["Input"],
@@ -196,8 +196,8 @@ export const nodeConfig: Record<string, NodeConfigItem> = {
       answer: null,
     },
     allowedConnections: {
-      sources: ["left", "right"],
-      targets: ["left", "right"],
+      sources: ["right"],
+      targets: ["left"],
     },
     inputVariables: [],
     outputVariables: ["response"],
@@ -208,8 +208,8 @@ export const nodeConfig: Record<string, NodeConfigItem> = {
     colorScheme: "purple",
     properties: CodeNodeProperties,
     allowedConnections: {
-      sources: ["left", "right"],
-      targets: ["left", "right"],
+      sources: ["right"],
+      targets: ["left"],
     },
     outputVariables: ["code_result"],
     inputVariables: [],
@@ -238,8 +238,8 @@ export const nodeConfig: Record<string, NodeConfigItem> = {
       ],
     },
     allowedConnections: {
-      sources: ["left", "right"],
-      targets: ["left", "right"],
+      sources: [],
+      targets: ["left"],
     },
     inputVariables: [],
     outputVariables: ["result"],

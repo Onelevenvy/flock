@@ -59,12 +59,7 @@ const IfElseNode: React.FC<NodeProps<IfElseNodeData>> = (props) => {
               type="source"
               position={Position.Right}
               id={caseItem.case_id}
-              style={{
-                ...handleStyle,
-                right: -8,
-                top: "50%",
-                transform: "translateY(-50%)",
-              }}
+              style={handleStyle}
             />
           </Box>
         ))}

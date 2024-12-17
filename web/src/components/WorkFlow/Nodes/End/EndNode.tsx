@@ -7,20 +7,21 @@ import { nodeConfig } from "../nodeConfig";
 const EndNode: React.FC<NodeProps> = (props) => {
   const { icon: Icon, colorScheme } = nodeConfig.end;
 
+  const handleStyle = {
+    background: 'var(--chakra-colors-ui-wfhandlecolor)',
+    width: 8,
+    height: 8,
+    border: '2px solid white',
+    transition: 'all 0.2s',
+  };
+
   return (
     <BaseNode {...props} icon={<Icon />} colorScheme={colorScheme}>
       <Handle 
         type="target" 
         position={Position.Left} 
         id="left"
-        style={{
-          background: 'var(--chakra-colors-ui-wfhandlecolor)',
-          width: 8,
-          height: 8,
-          border: '2px solid white',
-          transition: 'all 0.2s',
-        }}
-        className="custom-handle"
+        style={handleStyle}
       />
     </BaseNode>
   );
