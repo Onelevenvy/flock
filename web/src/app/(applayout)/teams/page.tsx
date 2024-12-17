@@ -115,7 +115,13 @@ function Teams() {
 
   return (
     <Flex h="full">
-      <Box flex="1" bg="ui.bgMain" display="flex" flexDirection="column" h="full">
+      <Box
+        flex="1"
+        bg="ui.bgMain"
+        display="flex"
+        flexDirection="column"
+        h="full"
+      >
         <Box px={6} py={4}>
           <Flex direction="row" justify="space-between" align="center" mb={2}>
             <Box>
@@ -138,7 +144,10 @@ function Teams() {
             </Flex>
           ) : (
             filteredTeams && (
-              <SimpleGrid columns={{ base: 1, md: 2, lg: 3, xl: 4 }} spacing={6}>
+              <SimpleGrid
+                columns={{ base: 1, md: 2, lg: 3, xl: 4 }}
+                spacing={6}
+              >
                 {filteredTeams.map((team) => (
                   <Box
                     key={team.id}
@@ -158,7 +167,6 @@ function Teams() {
                   >
                     <HStack spacing={4} mb={4}>
                       <Box
-                        as={IconButton}
                         borderRadius="lg"
                         bg={`${getWorkflowColor(team.workflow)}.50`}
                       >
