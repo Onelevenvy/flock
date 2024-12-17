@@ -1,5 +1,5 @@
-import React from "react";
-import { Handle, Position, type NodeProps } from "reactflow";
+import React, { useEffect } from "react";
+import { Handle, Position, type NodeProps, useUpdateNodeInternals } from "reactflow";
 import { Box, Text, VStack } from "@chakra-ui/react";
 import { useTranslation } from "react-i18next";
 
@@ -11,6 +11,12 @@ const IfElseNode: React.FC<NodeProps<IfElseNodeData>> = (props) => {
   const { t } = useTranslation();
   const { icon: Icon, colorScheme } = nodeConfig.ifelse;
   const { cases } = props.data;
+  const updateNodeInternals = useUpdateNodeInternals();
+
+  // 当 cases 改变时更新节点内部状态
+  useEffect(() => {
+    updateNodeInternals(props.id);
+  }, [props.id, cases, updateNodeInternals]);
 
   const handleStyle = {
     background: "var(--chakra-colors-ui-wfhandlecolor)",
@@ -30,7 +36,7 @@ const IfElseNode: React.FC<NodeProps<IfElseNodeData>> = (props) => {
       />
 
       <VStack spacing={1} align="stretch">
-        {cases.map((caseItem: IfElseCase, index: number) => (
+        {cases.map((caseItem: IfElseCase) => (
           <Box
             key={caseItem.case_id}
             position="relative"
@@ -43,7 +49,11 @@ const IfElseNode: React.FC<NodeProps<IfElseNodeData>> = (props) => {
             }}
           >
             <Text fontSize="xs" fontWeight="500">
-              {index === 0 ? "IF" : index === cases.length - 1 ? "ELSE" : "ELIF"}
+              {caseItem.case_id === cases[cases.length - 1].case_id 
+                ? "ELSE" 
+                : caseItem.case_id === cases[0].case_id 
+                  ? "IF" 
+                  : "ELIF"}
             </Text>
             <Handle
               type="source"
