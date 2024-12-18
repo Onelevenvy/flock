@@ -118,7 +118,7 @@ def should_continue_ifelse(state: TeamState) -> str:
         for node_id, outputs in state["node_outputs"].items():
             if "result" in outputs:
                 return outputs["result"]
-    return "false"  # 默认返回 ELSE 分支
+    return "false_else"  # 默认返回 ELSE 分支
 
 
 def _add_classifier_conditional_edges(
@@ -159,6 +159,44 @@ def _add_classifier_conditional_edges(
     if edges_dict:
         graph_builder.add_conditional_edges(
             classifier_node_id, should_continue_classifier, edges_dict
+        )
+
+
+def _add_ifelse_conditional_edges(
+    graph_builder, ifelse_node_id: str, nodes: list, edges: list
+):
+    """处理 if-else 节点的条件边"""
+    # 获取 if-else 节点的配置
+    ifelse_node = next((node for node in nodes if node["id"] == ifelse_node_id), None)
+    if not ifelse_node:
+        return
+
+    # 构建条件边字典
+    edges_dict = {}
+
+    # 获取所有从 if-else 出发的边
+    ifelse_edges = [edge for edge in edges if edge["source"] == ifelse_node_id]
+
+    # 为每个 case 创建条件边
+    for edge in ifelse_edges:
+        target_node = next(
+            (node for node in nodes if node["id"] == edge["target"]), None
+        )
+        if target_node:
+            source_handle = edge.get("sourceHandle")
+            if source_handle:  # 如果有 sourceHandle，使用它作为路由键
+                edges_dict[source_handle] = edge["target"]
+
+    # 添加默认路径
+    default_edge = next(
+        (edge for edge in ifelse_edges if edge.get("sourceHandle") == "false"), None
+    )
+    edges_dict["false"] = default_edge["target"] if default_edge else END
+
+    # 添加条件边到图中
+    if edges_dict:
+        graph_builder.add_conditional_edges(
+            ifelse_node_id, should_continue_ifelse, edges_dict
         )
 
 
@@ -240,6 +278,10 @@ def initialize_graph(
             _add_classifier_conditional_edges(
                 graph_builder, classifier_node_id, nodes, edges
             )
+
+        if_else_nodes = [node["id"] for node in nodes if node["type"] == "ifelse"]
+        for if_else_node_id in if_else_nodes:
+            _add_ifelse_conditional_edges(graph_builder, if_else_node_id, nodes, edges)
 
         # Set entry point and compile graph
         graph_builder.set_entry_point("InputNode")
@@ -492,7 +534,7 @@ def _add_edge(graph_builder, edge, nodes, conditional_edges):
             graph_builder.add_edge(edge["source"], END)
         else:
             graph_builder.add_edge(edge["source"], edge["target"])
-    # elif source_node["type"] == "classifier":   #   classifier  必定是conditional_edges  不会有普通边
+    # elif source_node["type"] == "classifier":   #   classifier  必定是conditional_edges  不会有普通边，if else node也一样
     #     if target_node["type"] == "end":
     #         graph_builder.add_edge(edge["source"], END)
     #     if edge["type"] == "default":
@@ -511,7 +553,9 @@ def _add_conditional_edges(graph_builder, conditional_edges, nodes):
             edges_dict["call_human"] = next(iter(conditions["call_human"].values()))
 
         if edges_dict != {"default": END}:
-            graph_builder.add_conditional_edges(node_id, should_continue_tools, edges_dict)
+            graph_builder.add_conditional_edges(
+                node_id, should_continue_tools, edges_dict
+            )
 
 
 def _add_crewai_node(graph_builder, node_id, node_type, node_data):
@@ -604,7 +648,9 @@ def _add_code_node(graph_builder, node_id, node_data):
                 code=node_data["code"],
                 libraries=node_data.get("libraries", []),  # Optional libraries list
                 timeout=node_data.get("timeout", 30),  # Default timeout 30 seconds
-                memory_limit=node_data.get("memory_limit", "256m"),  # Default memory limit
+                memory_limit=node_data.get(
+                    "memory_limit", "256m"
+                ),  # Default memory limit
             ).work
         ),
     )
@@ -619,43 +665,3 @@ def _add_ifelse_node(graph_builder, node_id: str, node_data: Dict[str, Any]):
             cases=node_data["cases"],
         ).work,
     )
-
-
-def _add_ifelse_conditional_edges(
-    graph_builder, ifelse_node_id: str, nodes: list, edges: list
-):
-    """处理 if-else 节点的条件边"""
-    # 获取 if-else 节点的配置
-    ifelse_node = next(
-        (node for node in nodes if node["id"] == ifelse_node_id), None
-    )
-    if not ifelse_node:
-        return
-
-    # 构建条件边字典
-    edges_dict = {}
-
-    # 获取所有从 if-else 出发的边
-    ifelse_edges = [edge for edge in edges if edge["source"] == ifelse_node_id]
-
-    # 为每个 case 创建条件边
-    for edge in ifelse_edges:
-        target_node = next(
-            (node for node in nodes if node["id"] == edge["target"]), None
-        )
-        if target_node:
-            source_handle = edge.get("sourceHandle")
-            if source_handle:  # 如果有 sourceHandle，使用它作为路由键
-                edges_dict[source_handle] = edge["target"]
-
-    # 添加默认路径
-    default_edge = next(
-        (edge for edge in ifelse_edges if edge.get("sourceHandle") == "false"), None
-    )
-    edges_dict["false"] = default_edge["target"] if default_edge else END
-
-    # 添加条件边到图中
-    if edges_dict:
-        graph_builder.add_conditional_edges(
-            ifelse_node_id, should_continue_ifelse, edges_dict
-        )

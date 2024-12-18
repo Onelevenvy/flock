@@ -72,8 +72,8 @@ export const nodeConfig: Record<string, NodeConfigItem> = {
     colorScheme: "blue",
     properties: LLMNodeProperties,
     allowedConnections: {
-      sources: ["right"],
-      targets: ["left"],
+      sources: ["left","right"],
+      targets: ["left","right"],
     },
     initialData: {
       model: "glm-4-flash",

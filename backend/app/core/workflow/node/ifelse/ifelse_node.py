@@ -2,6 +2,7 @@ from typing import Dict, Any
 from langchain_core.runnables import RunnableConfig
 from ..state import ReturnTeamState, TeamState, parse_variables, update_node_outputs
 
+
 class IfElseNode:
     """Node for handling conditional logic in workflow"""
 
@@ -12,10 +13,18 @@ class IfElseNode:
     def _evaluate_condition(self, condition: Dict[str, Any], state: TeamState) -> bool:
         """Evaluate a single condition"""
         # 解析变量
-        field_value = parse_variables(condition["field"], state["node_outputs"]) if condition["field"] else ""
-        
+        field_value = (
+            parse_variables(condition["field"], state["node_outputs"])
+            if condition["field"]
+            else ""
+        )
+
         if condition["compareType"] == "variable":
-            compare_value = parse_variables(condition["value"], state["node_outputs"]) if condition["value"] else ""
+            compare_value = (
+                parse_variables(condition["value"], state["node_outputs"])
+                if condition["value"]
+                else ""
+            )
         else:
             compare_value = condition["value"]
 
@@ -38,7 +47,9 @@ class IfElseNode:
             case "notEmpty":
                 return bool(field_value)
             case _:
-                raise ValueError(f"Unknown operator: {condition['comparison_operator']}")
+                raise ValueError(
+                    f"Unknown operator: {condition['comparison_operator']}"
+                )
 
     def _evaluate_case(self, case: Dict[str, Any], state: TeamState) -> bool:
         """Evaluate all conditions in a case"""
@@ -46,7 +57,7 @@ class IfElseNode:
             return False
 
         results = [self._evaluate_condition(cond, state) for cond in case["conditions"]]
-        
+
         # 根据逻辑运算符组合结果
         if case["logical_operator"] == "and":
             return all(results)
@@ -60,25 +71,22 @@ class IfElseNode:
 
         # 遍历所有case进行判断
         for case in self.cases:
-            if case["case_id"] == "false":  # ELSE case
+            if case["case_id"] == "false_else":  # ELSE case
                 result_case_id = case["case_id"]
                 break
-            
+
             if self._evaluate_case(case, state):
                 result_case_id = case["case_id"]
                 break
         else:
-            result_case_id = "false"  # 如果没有匹配的case，使用ELSE
+            result_case_id = "false_else"  # 如果没有匹配的case，使用ELSE
 
         # 更新节点输出
-        new_output = {
-            self.node_id: {
-                "result": result_case_id
-            }
-        }
+        print(f"result_case_id==================: {result_case_id}")
+        new_output = {self.node_id: {"result": result_case_id}}
         state["node_outputs"] = update_node_outputs(state["node_outputs"], new_output)
 
         return_state: ReturnTeamState = {
             "node_outputs": state["node_outputs"],
         }
-        return return_state 
+        return return_state
