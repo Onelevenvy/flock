@@ -9,6 +9,10 @@
 
 > [!TIP]
 >
+> ### 🎉 最新更新 2024/12/18
+>
+> - **If-Else 节点**: 新增 If-Else 节点以支持工作流中的条件逻辑！该节点支持多种条件类型，包括：包含、不包含、开始是、结束是、是、不是、为空、不为空。可以使用 AND/OR 运算符组合多个条件进行复杂的条件判断，让您能够基于数据创建复杂的分支工作流。
+
 > ### 🎉 最新更新 2024/12/7
 >
 > - **代码执行节点**: 新增 Python 代码执行功能！该节点允许您在工作流中直接编写和执行 Python 代码，支持变量引用和动态数据转换。它非常适合算术运算、数据处理、文本操作等场景，让您能够实现超越预设节点功能的自定义逻辑。
@@ -72,10 +76,10 @@ Flock 的工作流系统由各种类型的节点组成，每种节点都有特�
   <img src="https://github.com/user-attachments/assets/1c7d383d-e6bf-42b8-94ec-9f0c37be19b8" alt="image" style="width: 49%; display: inline-block;">
 </p>
 
-本项目受到 [StreetLamb](https://github.com/StreetLamb) 项目及其 [tribe](https://github.com/StreetLamb/tribe) 项目的启发，采用了许多相似的方法和代码。在此基础上，我们引入了一些新的特性和方向。
+本项目受到 [StreetLamb](https://github.com/StreetLamb) 项目及其 [tribe](https://github.com/StreetLamb/tribe) 项目的启发，采用了许多相似的方法和代码。在此基础上 ��� 我们引入了一些新的特性和方向。
 
 项目的部分布局参考了 [Lobe-chat](https://github.com/lobehub/lobe-chat)、[Dify](https://github.com/langgenius/dify) 和 [fastgpt](https://github.com/labring/FastGPT)。
-它们都是优秀的开源项目，在此表示感谢🙇‍。
+它们都是优秀的开源项目，在此表示感谢 🙇‍。
 
 ### 👨‍💻 开发技术
 
@@ -94,7 +98,7 @@ Flock 的工作流系统由各种类型的节点组成，每种节点都有特�
 ### 🏘️ 亮点特性
 
 - 持久化对话：保存并维护聊天历史，使您能够继续之前的对话。
-- 可观察性：使用 LangSmith 实时监���和跟踪代理的性能和输出，确保它们高效运行。
+- 可观察性：使用 LangSmith 实时监控和跟踪代理的性能和输出，确保它们高效运行。
 - 工具调用：使您的代理能够使用外部工具和 API。
 - 检索增强生成：使您的代理能够利用内部知识库进行推理。
 - 人机协作：在工具调用前启用人工审批。
