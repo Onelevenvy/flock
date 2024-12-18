@@ -12,10 +12,10 @@ class IfElseNode:
     def _evaluate_condition(self, condition: Dict[str, Any], state: TeamState) -> bool:
         """Evaluate a single condition"""
         # 解析变量
-        field_value = parse_variables(condition["field"], state["node_outputs"])
+        field_value = parse_variables(condition["field"], state["node_outputs"]) if condition["field"] else ""
         
         if condition["compareType"] == "variable":
-            compare_value = parse_variables(condition["value"], state["node_outputs"])
+            compare_value = parse_variables(condition["value"], state["node_outputs"]) if condition["value"] else ""
         else:
             compare_value = condition["value"]
 
@@ -42,7 +42,7 @@ class IfElseNode:
 
     def _evaluate_case(self, case: Dict[str, Any], state: TeamState) -> bool:
         """Evaluate all conditions in a case"""
-        if not case["conditions"]:
+        if case["case_id"] == "false_else" or not case["conditions"]:
             return False
 
         results = [self._evaluate_condition(cond, state) for cond in case["conditions"]]
