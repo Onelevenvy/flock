@@ -63,7 +63,7 @@ const IfElseNodeProperties: React.FC<IfElseNodePropertiesProps> = ({
       conditions: [
         {
           id: uuidv4(),
-          variable_selector: "",
+          field: "",
           comparison_operator: ComparisonOperator.equal,
           value: "",
           compareType: "constant" as "constant" | "variable",
@@ -86,7 +86,7 @@ const IfElseNodeProperties: React.FC<IfElseNodePropertiesProps> = ({
               ...(caseItem.conditions || []),
               {
                 id: uuidv4(),
-                variable_selector:"",
+                field: "",
                 comparison_operator: ComparisonOperator.equal,
                 value: "",
                 compareType: "constant" as "constant" | "variable",
@@ -111,7 +111,7 @@ const IfElseNodeProperties: React.FC<IfElseNodePropertiesProps> = ({
               condition.id === conditionId
                 ? {
                     ...condition,
-                    variable_selector: value,
+                    field: value,
                   }
                 : condition
             ),
@@ -310,7 +310,7 @@ const IfElseNodeProperties: React.FC<IfElseNodePropertiesProps> = ({
                   <Select
                     size="sm"
                     placeholder="Select variable"
-                    value={condition.variable_selector || ""}
+                    value={condition.field || ""}
                     onChange={(e) =>
                       handleVariableSelect(
                         caseItem.case_id,
