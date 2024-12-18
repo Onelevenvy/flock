@@ -209,7 +209,7 @@ const IfElseNodeProperties: React.FC<IfElseNodePropertiesProps> = ({
         // 保留 IF (第一个) 和 ELSE (最后一个)
         if (c.case_id === node.data.cases[0].case_id) return true; // 保留 IF
         if (c.case_id === "false") return true; // 保留 ELSE
-        return c.case_id !== caseId; // 删除指定����� ELIF
+        return c.case_id !== caseId; // 删除指定 ELIF
       });
       onNodeDataChange(node.id, "cases", newCases);
     },
@@ -404,7 +404,7 @@ const IfElseNodeProperties: React.FC<IfElseNodePropertiesProps> = ({
                         <Select
                           size="sm"
                           placeholder="Select variable"
-                          value={condition.value}
+                          value={condition.value?.replace(/[{}]/g, '') || ''}
                           onChange={(e) =>
                             handleValueSelect(
                               caseItem.case_id,
