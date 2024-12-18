@@ -10,3 +10,4 @@
 backend/fastembed_cache
 
 backend/poetry.lock
+backend/app/core/workflow/node/ifelse/operator_ref.py

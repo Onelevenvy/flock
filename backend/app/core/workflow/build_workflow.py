@@ -27,6 +27,7 @@ from .node.subgraph_node import SubgraphNode
 from .node.crewai_node import CrewAINode
 from .node.classifier_node import ClassifierNode
 from .node.code.code_node import CodeNode
+from .node.ifelse.ifelse_node import IfElseNode
 
 
 def create_subgraph(subgraph_config: Dict[str, Any]) -> CompiledGraph:
@@ -109,6 +110,15 @@ def should_continue_classifier(state: TeamState) -> str:
             if "category_id" in outputs:
                 return outputs["category_id"]
     return "default"
+
+
+def should_continue_ifelse(state: TeamState) -> str:
+    """处理 if-else 节点的条件判断"""
+    if "node_outputs" in state:
+        for node_id, outputs in state["node_outputs"].items():
+            if "result" in outputs:
+                return outputs["result"]
+    return "false"  # 默认返回 ELSE 分支
 
 
 def _add_classifier_conditional_edges(
@@ -211,6 +221,8 @@ def initialize_graph(
                 _add_classifier_node(graph_builder, node_id, node_data)
             elif node_type == "code":
                 _add_code_node(graph_builder, node_id, node_data)
+            elif node_type == "ifelse":
+                _add_ifelse_node(graph_builder, node_id, node_data)
 
         # Add edges
         for edge in edges:
@@ -596,3 +608,54 @@ def _add_code_node(graph_builder, node_id, node_data):
             ).work
         ),
     )
+
+
+def _add_ifelse_node(graph_builder, node_id: str, node_data: Dict[str, Any]):
+    """Add if-else node to graph"""
+    graph_builder.add_node(
+        node_id,
+        IfElseNode(
+            node_id=node_id,
+            cases=node_data["cases"],
+        ).work,
+    )
+
+
+def _add_ifelse_conditional_edges(
+    graph_builder, ifelse_node_id: str, nodes: list, edges: list
+):
+    """处理 if-else 节点的条件边"""
+    # 获取 if-else 节点的配置
+    ifelse_node = next(
+        (node for node in nodes if node["id"] == ifelse_node_id), None
+    )
+    if not ifelse_node:
+        return
+
+    # 构建条件边字典
+    edges_dict = {}
+
+    # 获取所有从 if-else 出发的边
+    ifelse_edges = [edge for edge in edges if edge["source"] == ifelse_node_id]
+
+    # 为每个 case 创建条件边
+    for edge in ifelse_edges:
+        target_node = next(
+            (node for node in nodes if node["id"] == edge["target"]), None
+        )
+        if target_node:
+            source_handle = edge.get("sourceHandle")
+            if source_handle:  # 如果有 sourceHandle，使用它作为路由键
+                edges_dict[source_handle] = edge["target"]
+
+    # 添加默认路径
+    default_edge = next(
+        (edge for edge in ifelse_edges if edge.get("sourceHandle") == "false"), None
+    )
+    edges_dict["false"] = default_edge["target"] if default_edge else END
+
+    # 添加条件边到图中
+    if edges_dict:
+        graph_builder.add_conditional_edges(
+            ifelse_node_id, should_continue_ifelse, edges_dict
+        )
