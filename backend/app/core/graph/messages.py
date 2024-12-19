@@ -63,7 +63,8 @@ def event_to_response(event: StreamEvent) -> ChatResponse | None:
                 if isinstance(c, str):
                     content += c
                 elif isinstance(c, dict):
-                    content += c.get("text", "")
+                    if c.get("type") == "text":
+                        content += c.get("text", "")
         else:
             content = message_chunk.content
         tool_calls = message_chunk.tool_calls
@@ -160,7 +161,7 @@ def event_to_response(event: StreamEvent) -> ChatResponse | None:
                             ),
                         )
             elif isinstance(output, AIMessage):
-                # 这里可能需要额外的逻辑来确定是否应该返回这个消息　ＴＯＤＯ
+                # 这里可能需要额外的逻辑来确定是否应该返回这个消息　Ｔ���ＤＯ
                 return ChatResponse(
                     type="tool",
                     id=id,

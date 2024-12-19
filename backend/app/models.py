@@ -128,6 +128,7 @@ class ChatMessageType(str, Enum):
 class ChatMessage(BaseModel):
     type: ChatMessageType
     content: str
+    imgdata: str | None = None  # 添加 imgdata 字段
 
 
 class InterruptDecision(Enum):
@@ -483,7 +484,7 @@ class Write(SQLModel, table=True):
 class UploadBase(SQLModel):
     name: str
     description: str
-    file_type: str  # 新增字段，用于储文件类型
+    file_type: str  # 新��字段，用于储文件类型
     web_url: str | None = None  # 新增字段，用于存储网页 URL
 
 

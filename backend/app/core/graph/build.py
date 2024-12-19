@@ -639,12 +639,14 @@ async def generator(
 ) -> AsyncGenerator[Any, Any]:
     """Create the graph and stream responses as JSON."""
     formatted_messages = [
-        # Current only one message is passed - the user's query.
-        (
-            HumanMessage(content=message.content, name="user")
-            if message.type == "human"
-            else AIMessage(content=message.content)
-        )
+        HumanMessage(
+            content=[
+                {"type": "text", "text": message.content},
+                {"type": "image_url", "image_url": {"url": message.imgdata}}
+            ] if message.imgdata else message.content,
+            name="user"
+        ) if message.type == "human"
+        else AIMessage(content=message.content)
         for message in messages
     ]
 

@@ -31,18 +31,27 @@ def convert_checkpoint_tuple_to_messages(
     )
     formatted_messages: list[ChatResponse] = []
     for message in all_messages:
-        if (
-            isinstance(message, HumanMessage)
-            and message.id
-            and message.name
-            and isinstance(message.content, str)
-        ):
+        if isinstance(message, HumanMessage):
+            content = ""
+            imgdata = None
+            
+            if isinstance(message.content, list):
+                for c in message.content:
+                    if isinstance(c, dict):
+                        if c.get("type") == "text":
+                            content += c.get("text", "")
+                        elif c.get("type") == "image_url":
+                            imgdata = c.get("image_url", {}).get("url")
+            else:
+                content = message.content
+                
             formatted_messages.append(
                 ChatResponse(
                     type="human",
                     id=message.id,
                     name=message.name,
-                    content=message.content,
+                    content=content,
+                    imgdata=imgdata
                 )
             )
         elif (
