@@ -8,5 +8,6 @@ import type { ChatMessageType } from './ChatMessageType';
 export type ChatMessage = {
     type: ChatMessageType;
     content: string;
+    imgdata?: (string | null);
 };
 

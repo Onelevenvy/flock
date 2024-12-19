@@ -1,6 +1,6 @@
 """update encry api key
 
-Revision ID: 826bbe110545
+Revision ID: fe2c95366646
 Revises: 92f07171e6e3
 Create Date: 2024-12-05 11:31:36.057595
 
@@ -11,7 +11,7 @@ from sqlalchemy import text
 from app.core.security import security_manager
 
 # revision identifiers, used by Alembic.
-revision = '826bbe110545'
+revision = 'fe2c95366646'
 down_revision = '92f07171e6e3'
 branch_labels = None
 depends_on = None

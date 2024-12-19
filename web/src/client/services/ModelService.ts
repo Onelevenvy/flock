@@ -2,9 +2,10 @@
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
+import type { ModelCreate } from '../models/ModelCreate';
 import type { Models } from '../models/Models';
-import type { ModelsBase } from '../models/ModelsBase';
 import type { ModelsOut } from '../models/ModelsOut';
+import type { ModelUpdate } from '../models/ModelUpdate';
 
 import type { CancelablePromise } from '../core/CancelablePromise';
 import { OpenAPI } from '../core/OpenAPI';
@@ -26,14 +27,14 @@ export class ModelService {
 
     /**
      * Create Models
-     * @returns ModelsBase Successful Response
+     * @returns Models Successful Response
      * @throws ApiError
      */
     public static createModels({
         requestBody,
     }: {
-        requestBody: ModelsBase,
-    }): CancelablePromise<ModelsBase> {
+        requestBody: ModelCreate,
+    }): CancelablePromise<Models> {
         return __request(OpenAPI, {
             method: 'POST',
             url: '/api/v1/model/',
@@ -99,11 +100,37 @@ export class ModelService {
         requestBody,
     }: {
         modelId: number,
-        requestBody: ModelsBase,
+        requestBody: ModelUpdate,
     }): CancelablePromise<Models> {
         return __request(OpenAPI, {
             method: 'PUT',
             url: '/api/v1/model/{model_id}',
+            path: {
+                'model_id': modelId,
+            },
+            body: requestBody,
+            mediaType: 'application/json',
+            errors: {
+                422: `Validation Error`,
+            },
+        });
+    }
+
+    /**
+     * Update Model Metadata
+     * @returns Models Successful Response
+     * @throws ApiError
+     */
+    public static updateModelMetadata({
+        modelId,
+        requestBody,
+    }: {
+        modelId: number,
+        requestBody: Record<string, any>,
+    }): CancelablePromise<Models> {
+        return __request(OpenAPI, {
+            method: 'PATCH',
+            url: '/api/v1/model/{model_id}/metadata',
             path: {
                 'model_id': modelId,
             },

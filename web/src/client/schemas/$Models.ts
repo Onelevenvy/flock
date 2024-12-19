@@ -34,5 +34,12 @@ export const $Models = {
                 type: 'null',
             }],
         },
+        meta_: {
+            type: 'dictionary',
+            contains: {
+                properties: {
+                },
+            },
+        },
     },
 } as const;

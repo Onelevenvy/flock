@@ -12,5 +12,13 @@ export const $ChatMessage = {
             type: 'string',
             isRequired: true,
         },
+        imgdata: {
+            type: 'any-of',
+            contains: [{
+                type: 'string',
+            }, {
+                type: 'null',
+            }],
+        },
     },
 } as const;

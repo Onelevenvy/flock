@@ -12,5 +12,6 @@ export type Models = {
     categories: Array<ModelCategory>;
     capabilities?: Array<ModelCapability>;
     id?: (number | null);
+    meta_?: Record<string, any>;
 };
 

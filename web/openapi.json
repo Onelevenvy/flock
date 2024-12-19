@@ -2573,6 +2573,7 @@
           "provider"
         ],
         "summary": "Read Provider",
+        "description": "Get provider by ID.",
         "operationId": "read_provider",
         "parameters": [
           {
@@ -2591,7 +2592,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/ModelProvider"
+                  "$ref": "#/components/schemas/ModelProviderOut"
                 }
               }
             }
@@ -2613,6 +2614,7 @@
           "provider"
         ],
         "summary": "Update Provider",
+        "description": "Update a provider.",
         "operationId": "update_provider",
         "parameters": [
           {
@@ -2641,7 +2643,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/ModelProvider"
+                  "$ref": "#/components/schemas/ModelProviderOut"
                 }
               }
             }
@@ -2741,6 +2743,53 @@
         }
       }
     },
+    "/api/v1/provider/{provider_name}/sync": {
+      "post": {
+        "tags": [
+          "provider"
+        ],
+        "summary": "Sync Provider",
+        "description": "从配置文件同步提供者的模型到数据库\n返回同步的模型名称列表",
+        "operationId": "sync_provider",
+        "parameters": [
+          {
+            "name": "provider_name",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Provider Name"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  },
+                  "title": "Response Provider-Sync Provider"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/v1/model/": {
       "get": {
         "tags": [
@@ -2771,7 +2820,7 @@
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/ModelsBase"
+                "$ref": "#/components/schemas/ModelCreate"
               }
             }
           },
@@ -2783,7 +2832,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/ModelsBase"
+                  "$ref": "#/components/schemas/Models"
                 }
               }
             }
@@ -2906,7 +2955,60 @@
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/ModelsBase"
+                "$ref": "#/components/schemas/ModelUpdate"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Models"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/model/{model_id}/metadata": {
+      "patch": {
+        "tags": [
+          "model"
+        ],
+        "summary": "Update Model Metadata",
+        "operationId": "update_model_metadata",
+        "parameters": [
+          {
+            "name": "model_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Model Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "title": "Metadata Update"
               }
             }
           }
@@ -3742,6 +3844,17 @@
           "content": {
             "type": "string",
             "title": "Content"
+          },
+          "imgdata": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Imgdata"
           }
         },
         "type": "object",
@@ -4519,6 +4632,53 @@
         ],
         "title": "ModelCategory"
       },
+      "ModelCreate": {
+        "properties": {
+          "ai_model_name": {
+            "type": "string",
+            "pattern": "^[a-zA-Z0-9/_:.-]{1,64}$",
+            "title": "Ai Model Name",
+            "unique": true
+          },
+          "provider_id": {
+            "type": "integer",
+            "title": "Provider Id"
+          },
+          "categories": {
+            "items": {
+              "$ref": "#/components/schemas/ModelCategory"
+            },
+            "type": "array",
+            "title": "Categories"
+          },
+          "capabilities": {
+            "items": {
+              "$ref": "#/components/schemas/ModelCapability"
+            },
+            "type": "array",
+            "title": "Capabilities",
+            "default": []
+          },
+          "meta_": {
+            "anyOf": [
+              {
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Meta "
+          }
+        },
+        "type": "object",
+        "required": [
+          "ai_model_name",
+          "provider_id",
+          "categories"
+        ],
+        "title": "ModelCreate"
+      },
       "ModelOut": {
         "properties": {
           "id": {
@@ -4917,6 +5077,69 @@
         ],
         "title": "ModelProviderWithModelsListOut"
       },
+      "ModelUpdate": {
+        "properties": {
+          "ai_model_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Ai Model Name"
+          },
+          "provider_id": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Provider Id"
+          },
+          "categories": {
+            "anyOf": [
+              {
+                "items": {},
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Categories"
+          },
+          "capabilities": {
+            "anyOf": [
+              {
+                "items": {},
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Capabilities"
+          },
+          "meta_": {
+            "anyOf": [
+              {
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Meta "
+          }
+        },
+        "type": "object",
+        "title": "ModelUpdate"
+      },
       "Models": {
         "properties": {
           "ai_model_name": {
@@ -4953,6 +5176,10 @@
               }
             ],
             "title": "Id"
+          },
+          "meta_": {
+            "type": "object",
+            "title": "Meta "
           }
         },
         "type": "object",
@@ -4962,42 +5189,6 @@
           "categories"
         ],
         "title": "Models"
-      },
-      "ModelsBase": {
-        "properties": {
-          "ai_model_name": {
-            "type": "string",
-            "pattern": "^[a-zA-Z0-9/_:.-]{1,64}$",
-            "title": "Ai Model Name",
-            "unique": true
-          },
-          "provider_id": {
-            "type": "integer",
-            "title": "Provider Id"
-          },
-          "categories": {
-            "items": {
-              "$ref": "#/components/schemas/ModelCategory"
-            },
-            "type": "array",
-            "title": "Categories"
-          },
-          "capabilities": {
-            "items": {
-              "$ref": "#/components/schemas/ModelCapability"
-            },
-            "type": "array",
-            "title": "Capabilities",
-            "default": []
-          }
-        },
-        "type": "object",
-        "required": [
-          "ai_model_name",
-          "provider_id",
-          "categories"
-        ],
-        "title": "ModelsBase"
       },
       "ModelsOut": {
         "properties": {

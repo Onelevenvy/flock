@@ -2,7 +2,7 @@
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
-export const $ModelsBase = {
+export const $ModelCreate = {
     properties: {
         ai_model_name: {
             type: 'string',
@@ -25,6 +25,18 @@ export const $ModelsBase = {
             contains: {
                 type: 'ModelCapability',
             },
+        },
+        meta_: {
+            type: 'any-of',
+            contains: [{
+                type: 'dictionary',
+                contains: {
+                    properties: {
+                    },
+                },
+            }, {
+                type: 'null',
+            }],
         },
     },
 } as const;
