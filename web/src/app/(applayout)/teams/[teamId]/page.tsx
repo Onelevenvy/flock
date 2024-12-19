@@ -10,7 +10,7 @@ import {
 } from "@chakra-ui/react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
-import { useRef } from "react";
+import { useRef, useEffect } from "react";
 import { useQuery } from "react-query";
 import { ChevronRightIcon } from "@chakra-ui/icons";
 import { FiUsers } from "react-icons/fi";
@@ -21,11 +21,20 @@ import DebugPreview from "@/components/Teams/DebugPreview";
 import NormalTeamSettings from "@/components/Teams/NormalTeamSettings";
 import WorkflowTeamSettings from "@/components/Teams/WorkflowTeamSettings";
 import useCustomToast from "@/hooks/useCustomToast";
+import useChatTeamIdStore from "@/stores/chatTeamIDStore";
 
 function Team() {
   const showToast = useCustomToast();
   const { teamId } = useParams() as { teamId: string };
   const formRef = useRef<HTMLFormElement>(null);
+  const { setTeamId } = useChatTeamIdStore();
+
+  useEffect(() => {
+    const numTeamId = Number(teamId);
+    if (!isNaN(numTeamId)) {
+      setTeamId(numTeamId);
+    }
+  }, [teamId, setTeamId]);
 
   // 使用主题颜色
   const breadcrumbBg = useColorModeValue("ui.inputbgcolor", "gray.700");

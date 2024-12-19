@@ -84,7 +84,7 @@ const ChatMain = ({ isPlayground }: { isPlayground?: boolean }) => {
 
   const [imageData, setImageData] = useState<string | null>(null);
   const [currentThreadId, setCurrentThreadId] = useState<string | null>(
-    searchParams.get("threadId")
+    searchParams.get("threadId") || null
   );
   const showToast = useCustomToast();
   const [input, setInput] = useState("");
@@ -123,7 +123,7 @@ const ChatMain = ({ isPlayground }: { isPlayground?: boolean }) => {
         // if thread changed, then show new thread's messages
         if (!threadId || threadId === currentThreadId) return;
         setMessages([]);
-        setCurrentThreadId(threadId);
+        setCurrentThreadId(threadId || null);
         for (const message of data.messages) {
           processMessage(message);
         }
@@ -132,6 +132,8 @@ const ChatMain = ({ isPlayground }: { isPlayground?: boolean }) => {
   );
 
   const createThread = async (data: ThreadCreate) => {
+    if (!teamId) return;
+
     const thread = await ThreadsService.createThread({
       teamId: teamId,
       requestBody: data,
@@ -141,6 +143,7 @@ const ChatMain = ({ isPlayground }: { isPlayground?: boolean }) => {
   };
   const createThreadMutation = useMutation(createThread, {
     onSuccess: (threadId) => {
+      if (!threadId) return;
       setCurrentThreadId(threadId);
       if (isPlayground) {
         navigate.push(`/playground?teamId=${teamId}&threadId=${threadId}`);
@@ -297,29 +300,36 @@ const ChatMain = ({ isPlayground }: { isPlayground?: boolean }) => {
   }, [setMessages, t]);
 
   const chatTeam = async (data: TeamChat) => {
-    // Create a new thread or update current thread with most recent user query
+    if (!teamId) return;
+    
+    // 如果当前已经在非1的team中，就不应该跳转到1
+    const currentTeamId = searchParams.get("teamId");
+    if (currentTeamId && Number(currentTeamId) !== 1 && teamId === 1) {
+      console.error("Unexpected team ID switch to 1");
+      return;
+    }
+
     const query = data.messages;
-    let currentThreadId: string | null = threadId;
+    let currentThreadId: string | null = searchParams.get("threadId") || null;
 
     if (!threadId) {
-      currentThreadId = await createThreadMutation.mutateAsync({
+      const newThreadId = await createThreadMutation.mutateAsync({
         query: query[0].content,
       });
+      currentThreadId = newThreadId || null;
     } else {
       try {
-        currentThreadId = await updateThreadMutation.mutateAsync({
+        const updatedThreadId = await updateThreadMutation.mutateAsync({
           query: query[0].content,
         });
+        currentThreadId = updatedThreadId || null;
       } catch (error) {
         console.error("Failed to update thread:", error);
-
-        // showToast("Failed to update thread", "", "error");
         return;
       }
     }
 
     if (!currentThreadId) {
-      // showToast("Something went wrong.", "Unable to obtain thread id", "error");
       return;
     }
 

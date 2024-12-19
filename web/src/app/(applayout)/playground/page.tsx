@@ -1,6 +1,6 @@
 "use client";
 import { Box, Center, Flex, IconButton, useDisclosure } from "@chakra-ui/react";
-import { useSearchParams } from "next/navigation";
+import { useSearchParams,useRouter } from "next/navigation";
 import { useEffect } from "react";
 import { LuChevronLeft, LuChevronRight } from "react-icons/lu";
 
@@ -12,19 +12,24 @@ import useChatTeamIdStore from "@/stores/chatTeamIDStore";
 function Playground() {
   const searchParams = useSearchParams();
   const teamId = searchParams.get("teamId");
-  const { setTeamId } = useChatTeamIdStore();
+  const { teamId: storeTeamId, setTeamId } = useChatTeamIdStore();
   const { isOpen: isChatBotListOpen, onToggle: toggleChatBotList } =
     useDisclosure({ defaultIsOpen: true });
   const { isOpen: isChatHistoryOpen, onToggle: toggleChatHistoryList } =
     useDisclosure({ defaultIsOpen: false });
-
+  const navigate = useRouter();
   useEffect(() => {
-    if (!teamId) {
+    if (teamId) {
+      setTeamId(Number(teamId));
+    } else if (storeTeamId) {
+      // 如果 URL 没有 teamId 但 store 有，则更新 URL
+      navigate.push(`/playground?teamId=${storeTeamId}`);
+    } else {
+      // 都没有时才设置默认值 1
       setTeamId(1);
-      return;
+      navigate.push(`/playground?teamId=1`);
     }
-    setTeamId(Number(teamId));
-  }, [teamId, setTeamId]);
+  }, [teamId, storeTeamId, setTeamId, navigate]);
 
   const chatAreaWidth =
     !isChatBotListOpen && !isChatHistoryOpen
