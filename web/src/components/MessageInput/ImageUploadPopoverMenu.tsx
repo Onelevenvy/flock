@@ -12,6 +12,8 @@ import {
   FormControl,
   FormErrorMessage,
   Text,
+  Alert,
+  AlertIcon,
 } from "@chakra-ui/react";
 import { useState } from "react";
 import { RiImageAddLine, RiUploadCloud2Line } from "react-icons/ri";
@@ -97,6 +99,10 @@ const ImageUploadModal = ({ onImageSelect }: ImageUploadModalProps) => {
       <PopoverContent width="300px">
         <PopoverBody p={4}>
           <VStack spacing={4}>
+            <Alert status="info">
+              <AlertIcon />
+              Please make sure your llm supports image input!
+            </Alert>
             <Button
               leftIcon={<RiUploadCloud2Line />}
               onClick={() =>
