@@ -1,6 +1,7 @@
 from collections.abc import Mapping, Sequence
 from typing import Annotated, Any
 
+from app.core.workflow.node.state import format_messages
 from langchain.chat_models import init_chat_model
 from langchain_core.messages import AIMessage, AnyMessage
 from langchain_core.output_parsers.openai_tools import JsonOutputKeyToolsParser
@@ -122,12 +123,7 @@ def add_or_replace_messages(
         return add_messages(messages, new_messages)  # type: ignore[return-value, arg-type]
 
 
-def format_messages(messages: list[AnyMessage]) -> str:
-    """Format list of messages to string"""
-    message_str: str = ""
-    for message in messages:
-        message_str += f"{message.name}: {message.content}\n\n"
-    return message_str
+
 
 
 class TeamState(TypedDict):
