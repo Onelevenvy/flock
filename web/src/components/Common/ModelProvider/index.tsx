@@ -10,6 +10,7 @@ import {
   MenuItem,
   MenuList,
   Spinner,
+  Text,
 } from "@chakra-ui/react";
 import React, { useState, useEffect } from "react";
 import { type Control, Controller, FieldValues, Path } from "react-hook-form";
@@ -25,6 +26,7 @@ interface ModelSelectProps<T extends FieldValues> {
   onModelSelect: (selectData: string) => void;
   isLoading?: boolean;
   value?: string;
+  selectedProvider?: string;
 }
 
 function ModelSelect<T extends FieldValues>({
@@ -34,7 +36,12 @@ function ModelSelect<T extends FieldValues>({
   onModelSelect,
   isLoading,
   value,
+  selectedProvider,
 }: ModelSelectProps<T>) {
+  const [internalProvider, setInternalProvider] = useState<string>("openai");
+
+  const effectiveProvider = selectedProvider || internalProvider;
+
   const filteredModels = models?.data.filter(
     (model) =>
       model.categories.includes("llm") || model.categories.includes("chat")
@@ -52,19 +59,16 @@ function ModelSelect<T extends FieldValues>({
     {} as Record<string, typeof filteredModels>
   );
 
-  const [selectedModelProvider, setSelectedModelProvider] =
-    useState<string>("openai");
-
   useEffect(() => {
-    if (value) {
+    if (!selectedProvider && value) {
       const selectedModelData = models?.data.find(
         (model) => model.ai_model_name === value
       );
       if (selectedModelData) {
-        setSelectedModelProvider(selectedModelData.provider.provider_name);
+        setInternalProvider(selectedModelData.provider.provider_name);
       }
     }
-  }, [value, models]);
+  }, [value, models, selectedProvider]);
 
   return (
     <Box>
@@ -82,7 +86,7 @@ function ModelSelect<T extends FieldValues>({
                     as={Button}
                     leftIcon={
                       <ModelProviderIcon
-                        modelprovider_name={selectedModelProvider}
+                        modelprovider_name={effectiveProvider}
                         w={5}
                         h={5}
                       />
@@ -149,19 +153,27 @@ function ModelSelect<T extends FieldValues>({
                             _hover={{
                               bg: "gray.50",
                             }}
+                            display="flex"
+                            justifyContent="space-between"
+                            alignItems="center"
                           >
-                            <ModelProviderIcon
-                              modelprovider_name={providerName}
-                              mr={3}
-                              w={5}
-                              h={5}
-                            />
-                            {model.ai_model_name}
-                            {model.capabilities.includes("vision") && (
+                            <Box display="flex" alignItems="center" flex="1">
+                              <ModelProviderIcon
+                                modelprovider_name={providerName}
+                                mr={3}
+                                w={5}
+                                h={5}
+                              />
+                              <Text isTruncated maxW="200px">
+                                {model.ai_model_name}
+                              </Text>
+                            </Box>
+                            {model.capabilities?.includes("vision") && (
                               <FaEye
                                 style={{
-                                  marginLeft: "auto",
+                                  marginLeft: "12px",
                                   color: "var(--chakra-colors-gray-400)",
+                                  flexShrink: 0,
                                 }}
                               />
                             )}

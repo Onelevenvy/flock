@@ -22,7 +22,7 @@ import {
   Tooltip,
 } from "@chakra-ui/react";
 import { Select as MultiSelect, chakraComponents } from "chakra-react-select";
-import { type Ref, forwardRef, useState } from "react";
+import { type Ref, forwardRef, useState, useEffect } from "react";
 import { Controller, type SubmitHandler, useForm } from "react-hook-form";
 import { useTranslation } from "react-i18next";
 import { useMutation, useQueryClient } from "react-query";
@@ -140,6 +140,7 @@ const EditTeamMember = forwardRef<HTMLFormElement, EditTeamMemberProps>(
     const queryClient = useQueryClient();
     const showToast = useCustomToast();
     const [showTooltip, setShowTooltip] = useState(false);
+    const [selectedModelProvider, setSelectedModelProvider] = useState<string>("openai");
     const {
       data: skills,
       isLoading: isLoadingSkills,
@@ -254,12 +255,28 @@ const EditTeamMember = forwardRef<HTMLFormElement, EditTeamMemberProps>(
       const selectedModel = models?.data.find(
         (model) => model.ai_model_name === modelName,
       );
+      
+    
 
-      setValue("model", modelName);
-      setValue("openai_api_key", selectedModel?.provider.api_key);
-      setValue("provider", selectedModel?.provider.provider_name);
-      setValue("openai_api_base", selectedModel?.provider.base_url);
+      if (selectedModel) {
+        setValue("model", modelName);
+        setValue("openai_api_key", selectedModel?.provider.api_key);
+        setValue("provider", selectedModel?.provider.provider_name);
+        setValue("openai_api_base", selectedModel?.provider.base_url);
+        setSelectedModelProvider(selectedModel.provider.provider_name);
+      }
     };
+
+    useEffect(() => {
+      if (member.model) {
+        const selectedModelData = models?.data.find(
+          (model) => model.ai_model_name === member.model
+        );
+        if (selectedModelData) {
+          setSelectedModelProvider(selectedModelData.provider.provider_name);
+        }
+      }
+    }, [member.model, models]);
 
     if (member.type.endsWith("bot")) {
       return (
@@ -335,6 +352,8 @@ const EditTeamMember = forwardRef<HTMLFormElement, EditTeamMemberProps>(
                   models={models}
                   control={control}
                   name="model"
+                  value={member.model}
+                  selectedProvider={selectedModelProvider}
                   onModelSelect={onModelSelect}
                   isLoading={isLoadingModel}
                 />
@@ -521,6 +540,8 @@ const EditTeamMember = forwardRef<HTMLFormElement, EditTeamMemberProps>(
                   models={models}
                   control={control}
                   name="model"
+                  value={member.model}
+                  selectedProvider={selectedModelProvider}
                   onModelSelect={onModelSelect}
                   isLoading={isLoadingModel}
                 />
