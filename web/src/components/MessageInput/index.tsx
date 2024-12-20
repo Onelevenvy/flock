@@ -46,6 +46,15 @@ const MessageInput: React.FC<MessageInputProps> = ({
     }, 0);
   };
 
+  const handleNewChat = () => {
+    if (newChatHandler) {
+      newChatHandler();
+      setTimeout(() => {
+        textareaRef.current?.focus();
+      }, 0);
+    }
+  };
+
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === "Enter" && (e.shiftKey || e.metaKey)) {
       e.preventDefault();
@@ -163,7 +172,7 @@ const MessageInput: React.FC<MessageInputProps> = ({
                   <IconButton
                     aria-label="new chat"
                     icon={<GrNewWindow />}
-                    onClick={newChatHandler}
+                    onClick={handleNewChat}
                     size="sm"
                     variant="ghost"
                     transition="all 0.2s"
