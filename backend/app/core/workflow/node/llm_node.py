@@ -159,9 +159,31 @@ class LLMNode(LLMBaseNode):
             )
         history = state.get("history", [])
         messages = state.get("messages", [])
+        all_messages = state.get("all_messages", [])
         prompt = llm_node_prompts.partial(history_string=format_messages(history))
         chain: RunnableSerializable[dict[str, Any], AnyMessage] = prompt | self.model
-        result: AIMessage = await chain.ainvoke(state, config)
+
+        # 检查消息是否包含图片
+        if (
+            all_messages
+            and isinstance(all_messages[-1].content, list)
+            and any(
+                isinstance(item, dict)
+                and "type" in item
+                and item["type"] in ["text", "image_url"]
+                for item in all_messages[-1].content
+            )
+        ):
+
+            from langchain_core.messages import HumanMessage
+
+            # 创建新的临时状态用于处理图片消息
+            temp_state = [HumanMessage(content=all_messages[-1].content, name="user")]
+
+            result: AIMessage = await self.model.ainvoke(temp_state, config)
+        else:
+            # 普通消息保持原有处理方式
+            result: AIMessage = await chain.ainvoke(state, config)
 
         # 更新 node_outputs
         new_output = {self.node_id: {"response": result.content}}
