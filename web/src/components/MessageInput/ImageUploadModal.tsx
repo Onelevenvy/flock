@@ -1,29 +1,25 @@
 import {
-  Modal,
-  ModalOverlay,
-  ModalContent,
-  ModalHeader,
-  ModalBody,
-  ModalCloseButton,
+  Popover,
+  PopoverTrigger,
+  PopoverContent,
+  PopoverBody,
   Button,
   Input,
   VStack,
-  HStack,
-  Text,
+  InputGroup,
+  InputRightElement,
   useToast,
   FormControl,
   FormErrorMessage,
 } from "@chakra-ui/react";
 import { useState } from "react";
-import { RiImageAddLine, RiLink } from "react-icons/ri";
+import { RiImageAddLine } from "react-icons/ri";
 
 interface ImageUploadModalProps {
-  isOpen: boolean;
-  onClose: () => void;
   onImageSelect: (imageData: string) => void;
 }
 
-const ImageUploadModal = ({ isOpen, onClose, onImageSelect }: ImageUploadModalProps) => {
+const ImageUploadModal = ({ onImageSelect }: ImageUploadModalProps) => {
   const [imageUrl, setImageUrl] = useState("");
   const [urlError, setUrlError] = useState("");
   const toast = useToast();
@@ -34,11 +30,14 @@ const ImageUploadModal = ({ isOpen, onClose, onImageSelect }: ImageUploadModalPr
       const reader = new FileReader();
       reader.onloadend = () => {
         onImageSelect(reader.result as string);
-        onClose();
       };
       reader.readAsDataURL(file);
     }
     e.target.value = "";
+  };
+
+  const isValidUrl = (url: string) => {
+    return /^https?:\/\/.+/.test(url);
   };
 
   const validateAndLoadUrl = async () => {
@@ -47,19 +46,23 @@ const ImageUploadModal = ({ isOpen, onClose, onImageSelect }: ImageUploadModalPr
       return;
     }
 
+    if (!isValidUrl(imageUrl)) {
+      setUrlError("URL必须以http://或https://开头");
+      return;
+    }
+
     try {
       const response = await fetch(imageUrl);
       if (!response.ok) throw new Error("图片加载失败");
-      
+
       const blob = await response.blob();
-      if (!blob.type.startsWith('image/')) {
+      if (!blob.type.startsWith("image/")) {
         throw new Error("请输入有效的图片URL");
       }
 
       const reader = new FileReader();
       reader.onloadend = () => {
         onImageSelect(reader.result as string);
-        onClose();
         setImageUrl("");
       };
       reader.readAsDataURL(blob);
@@ -76,59 +79,73 @@ const ImageUploadModal = ({ isOpen, onClose, onImageSelect }: ImageUploadModalPr
   };
 
   return (
-    <Modal isOpen={isOpen} onClose={onClose} isCentered>
-      <ModalOverlay />
-      <ModalContent>
-        <ModalHeader>添加图片</ModalHeader>
-        <ModalCloseButton />
-        <ModalBody pb={6}>
+    <Popover placement="top-end">
+      <PopoverTrigger>
+        <Button
+          leftIcon={<RiImageAddLine />}
+          size="sm"
+          variant="ghost"
+          aria-label="upload-image"
+          transition="all 0.2s"
+          _hover={{
+            transform: "translateY(-1px)",
+            bg: "gray.100",
+          }}
+        />
+      </PopoverTrigger>
+      <PopoverContent width="300px">
+        <PopoverBody p={4}>
           <VStack spacing={4}>
-            <HStack w="full" spacing={4}>
-              <Button
-                leftIcon={<RiImageAddLine />}
-                onClick={() => document.getElementById("modal-file-input")?.click()}
-                flex={1}
-                colorScheme="blue"
-                variant="outline"
-              >
-                本地上传
-              </Button>
-              <input
-                type="file"
-                id="modal-file-input"
-                accept="image/*"
-                style={{ display: "none" }}
-                onChange={handleFileChange}
-              />
-            </HStack>
-
-            <Text>或</Text>
-
-            <FormControl isInvalid={!!urlError}>
-              <Input
-                placeholder="输入图片URL"
-                value={imageUrl}
-                onChange={(e) => {
-                  setImageUrl(e.target.value);
-                  setUrlError("");
-                }}
-              />
-              <FormErrorMessage>{urlError}</FormErrorMessage>
-            </FormControl>
-
             <Button
-              leftIcon={<RiLink />}
-              onClick={validateAndLoadUrl}
+              leftIcon={<RiImageAddLine />}
+              onClick={() =>
+                document.getElementById("modal-file-input")?.click()
+              }
               w="full"
               colorScheme="blue"
+              variant="outline"
+              size="sm"
             >
-              通过URL添加
+              本地上传
             </Button>
+            <input
+              type="file"
+              id="modal-file-input"
+              accept="image/*"
+              style={{ display: "none" }}
+              onChange={handleFileChange}
+            />
+
+            <FormControl isInvalid={!!urlError}>
+              <InputGroup size="sm">
+                <Input
+                  placeholder="输入图片URL (http(s)://...)"
+                  value={imageUrl}
+                  onChange={(e) => {
+                    setImageUrl(e.target.value);
+                    setUrlError("");
+                  }}
+                  pr="4.5rem"
+                />
+                <InputRightElement width="4.5rem">
+                  <Button
+                    h="1.4rem"
+                    size="xs"
+                    colorScheme="blue"
+                    onClick={validateAndLoadUrl}
+                    isDisabled={!imageUrl.trim()}
+                  >
+                    添加
+                  </Button>
+                </InputRightElement>
+              </InputGroup>
+              <FormErrorMessage>{urlError}</FormErrorMessage>
+            </FormControl>
           </VStack>
-        </ModalBody>
-      </ModalContent>
-    </Modal>
+        </PopoverBody>
+      </PopoverContent>
+    </Popover>
   );
 };
 
-export default ImageUploadModal; 
+export default ImageUploadModal;

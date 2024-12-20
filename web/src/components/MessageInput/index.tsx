@@ -9,17 +9,15 @@ import {
   CloseButton,
   HStack,
   Text,
-  useDisclosure,
 } from "@chakra-ui/react";
 import type React from "react";
 import { GrNewWindow } from "react-icons/gr";
-import { RiImageAddLine } from "react-icons/ri";
 import { VscSend } from "react-icons/vsc";
 import { useRef } from "react";
 import ImageUploadModal from "./ImageUploadModal";
 
 interface MessageInputProps {
-  isPlayground?:boolean;
+  isPlayground?: boolean;
   input: string;
   setInput: (value: string) => void;
   onSubmit: (e: React.FormEvent) => void;
@@ -40,7 +38,6 @@ const MessageInput: React.FC<MessageInputProps> = ({
   setImageData,
 }) => {
   const textareaRef = useRef<HTMLTextAreaElement>(null);
-  const { isOpen, onOpen, onClose } = useDisclosure();
 
   const handleImageSelect = (imageData: string) => {
     setImageData(imageData);
@@ -63,7 +60,7 @@ const MessageInput: React.FC<MessageInputProps> = ({
     <Box
       display="flex"
       flexDirection="column"
-      px={isPlayground?"6":"0"}
+      px={isPlayground ? "6" : "0"}
       // px="6"
       pt="2"
       pb="6"
@@ -136,9 +133,9 @@ const MessageInput: React.FC<MessageInputProps> = ({
             }}
             pb="50px"
             sx={{
-              '&:focus ~ div': {
-                pointerEvents: 'auto',
-              }
+              "&:focus ~ div": {
+                pointerEvents: "auto",
+              },
             }}
           />
 
@@ -179,18 +176,9 @@ const MessageInput: React.FC<MessageInputProps> = ({
               )}
 
               <Tooltip label="Upload Image" fontSize="md" bg="gray.700">
-                <IconButton
-                  aria-label="upload-image"
-                  icon={<RiImageAddLine />}
-                  onClick={onOpen}
-                  size="sm"
-                  variant="ghost"
-                  transition="all 0.2s"
-                  _hover={{
-                    transform: "translateY(-1px)",
-                    bg: "gray.100",
-                  }}
-                />
+                <Box>
+                  <ImageUploadModal onImageSelect={handleImageSelect} />
+                </Box>
               </Tooltip>
 
               <IconButton
@@ -210,12 +198,6 @@ const MessageInput: React.FC<MessageInputProps> = ({
             </HStack>
           </HStack>
         </Box>
-
-        <ImageUploadModal
-          isOpen={isOpen}
-          onClose={onClose}
-          onImageSelect={handleImageSelect}
-        />
       </InputGroup>
     </Box>
   );
