@@ -27,6 +27,7 @@ import {
   type ThreadCreate,
   type ThreadUpdate,
   ThreadsService,
+  type ChatMessageType,
 } from "../../client";
 import type { ApiRequestOptions } from "../../client/core/ApiRequestOptions";
 import {
@@ -301,7 +302,7 @@ const ChatMain = ({ isPlayground }: { isPlayground?: boolean }) => {
 
   const chatTeam = async (data: TeamChat) => {
     if (!teamId) return;
-    
+
     // 如果当前已经在非1的team中，就不应该跳转到1
     const currentTeamId = searchParams.get("teamId");
     if (currentTeamId && Number(currentTeamId) !== 1 && teamId === 1) {
@@ -339,8 +340,8 @@ const ChatMain = ({ isPlayground }: { isPlayground?: boolean }) => {
         type: "human",
         // id: self.crypto.randomUUID(),
         id: v4(),
-        content: data.messages[0].content,
-        img: imageData,
+        content: input,
+        imgdata: imageData,
         name: "user",
       },
     ]);
@@ -369,11 +370,19 @@ const ChatMain = ({ isPlayground }: { isPlayground?: boolean }) => {
   const onSubmit = useCallback(
     async (e: React.FormEvent) => {
       e.preventDefault();
-      mutation.mutate({ messages: [{ type: "human", content: input }] });
+
+      // 构建包含文本和图片的消息
+      const message = {
+        type: "human" as ChatMessageType,
+        content: input,
+        imgdata: imageData,
+      };
+
+      mutation.mutate({ messages: [message] });
       setInput("");
-      setImageData("");
+      setImageData(null);
     },
-    [input, mutation]
+    [input, imageData, mutation]
   );
 
   const newChatHandler = useCallback(() => {
@@ -393,7 +402,7 @@ const ChatMain = ({ isPlayground }: { isPlayground?: boolean }) => {
       mutation.mutate({
         messages: [
           {
-            type: "human",
+            type: "human" as ChatMessageType,
             content: tool_message || decision,
           },
         ],

@@ -353,6 +353,17 @@ class SequentialWorkerNode(WorkerNode):
         work_chain: RunnableSerializable[dict[str, Any], Any] = chain | RunnableLambda(
             self.tag_with_name  # type: ignore[arg-type]
         ).bind(name=member.name)
+
+        # from langchain_core.messages import HumanMessage
+
+        # state = HumanMessage(
+        #     content=[
+        #         {"type": "text", "text": "describe the image 用中文回答"},
+        #         {"type": "image_url", "image_url": {"url": "http://gips3.baidu.com/it/u=1821127123,1149655687&fm=3028&app=3028&f=JPEG&fmt=auto?w=720&h=1280"}},
+        #     ], name="user"
+        # )
+
+
         result: AIMessage = await work_chain.ainvoke(state, config)  # type: ignore[arg-type]
         # if agent is calling a tool, set the next member_name to be itself. This is so that when an agent triggers a
         # tool and the tool returns the response back, the next value will be the agent's name
@@ -571,6 +582,7 @@ class ChatBotNode(BaseNode):
         work_chain: RunnableSerializable[dict[str, Any], Any] = chain | RunnableLambda(
             self.tag_with_name  # type: ignore[arg-type]
         ).bind(name=member.name)
+
         result: AIMessage = await work_chain.ainvoke(state, config)  # type: ignore[arg-type]
         if result.tool_calls:
             return {"messages": [result]}

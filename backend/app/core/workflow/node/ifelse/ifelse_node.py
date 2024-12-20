@@ -82,7 +82,7 @@ class IfElseNode:
             result_case_id = "false_else"  # 如果没有匹配的case，使用ELSE
 
         # 更新节点输出
-        print(f"result_case_id==================: {result_case_id}")
+      
         new_output = {self.node_id: {"result": result_case_id}}
         state["node_outputs"] = update_node_outputs(state["node_outputs"], new_output)
 

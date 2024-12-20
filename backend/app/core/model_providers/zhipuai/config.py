@@ -33,6 +33,11 @@ SUPPORTED_MODELS = [
         "capabilities": [],
     },
     {
+        "name": "glm-4v-flash",
+        "categories": [ModelCategory.LLM, ModelCategory.CHAT],
+        "capabilities": [ModelCapability.VISION],
+    },
+    {
         "name": "glm-4v-plus",
         "categories": [ModelCategory.LLM, ModelCategory.CHAT],
         "capabilities": [ModelCapability.VISION],
