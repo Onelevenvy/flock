@@ -11,6 +11,7 @@ import {
   useToast,
   FormControl,
   FormErrorMessage,
+  Text,
 } from "@chakra-ui/react";
 import { useState } from "react";
 import { RiImageAddLine } from "react-icons/ri";
@@ -115,6 +116,10 @@ const ImageUploadModal = ({ onImageSelect }: ImageUploadModalProps) => {
               style={{ display: "none" }}
               onChange={handleFileChange}
             />
+
+            <Text fontSize="sm" color="gray.500">
+              或
+            </Text>
 
             <FormControl isInvalid={!!urlError}>
               <InputGroup size="sm">
