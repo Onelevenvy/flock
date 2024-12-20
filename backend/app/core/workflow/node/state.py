@@ -1,7 +1,7 @@
 import re
 from typing import Annotated, Any, Dict
 
-from langchain_core.messages import AnyMessage
+from langchain_core.messages import AnyMessage, AIMessage,ToolMessage
 from langchain_core.tools import BaseTool
 from langgraph.graph import add_messages
 from pydantic import BaseModel, Field
@@ -115,7 +115,28 @@ def format_messages(messages: list[AnyMessage]) -> str:
     """Format list of messages to string"""
     message_str: str = ""
     for message in messages:
-        message_str += f"{message.name}: {message.content}\n\n"
+        # 确定消息名称
+        name = message.name if message.name else (
+            "AI" if isinstance(message, AIMessage) else
+            "Tool" if isinstance(message, ToolMessage) else
+            "User"
+        )
+        
+        # 处理消息内容为列表的情况（包含图片的消息）
+        if isinstance(message.content, list):
+            # 提取所有文本内容
+            text_contents = []
+            for item in message.content:
+                if isinstance(item, dict):
+                    if item.get("type") == "text":
+                        text_contents.append(item.get("text", ""))
+                    elif item.get("type") == "image_url":
+                        text_contents.append("[图片]")
+            content = " ".join(text_contents)
+        else:
+            content = message.content
+            
+        message_str += f"{name}: {content}\n\n"
     return message_str
 
 
