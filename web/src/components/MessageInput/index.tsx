@@ -14,7 +14,7 @@ import type React from "react";
 import { GrNewWindow } from "react-icons/gr";
 import { VscSend } from "react-icons/vsc";
 import { useRef } from "react";
-import ImageUploadModal from "./ImageUploadModal";
+import ImageUploadModal from "./ImageUploadPopoverMenu";
 
 interface MessageInputProps {
   isPlayground?: boolean;

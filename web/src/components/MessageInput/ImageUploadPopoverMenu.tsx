@@ -14,7 +14,7 @@ import {
   Text,
 } from "@chakra-ui/react";
 import { useState } from "react";
-import { RiImageAddLine } from "react-icons/ri";
+import { RiImageAddLine, RiUploadCloud2Line } from "react-icons/ri";
 
 interface ImageUploadModalProps {
   onImageSelect: (imageData: string) => void;
@@ -98,7 +98,7 @@ const ImageUploadModal = ({ onImageSelect }: ImageUploadModalProps) => {
         <PopoverBody p={4}>
           <VStack spacing={4}>
             <Button
-              leftIcon={<RiImageAddLine />}
+              leftIcon={<RiUploadCloud2Line />}
               onClick={() =>
                 document.getElementById("modal-file-input")?.click()
               }
@@ -124,7 +124,7 @@ const ImageUploadModal = ({ onImageSelect }: ImageUploadModalProps) => {
             <FormControl isInvalid={!!urlError}>
               <InputGroup size="sm">
                 <Input
-                  placeholder="输入图片URL (http(s)://...)"
+                  placeholder="输入图片链接"
                   value={imageUrl}
                   onChange={(e) => {
                     setImageUrl(e.target.value);
