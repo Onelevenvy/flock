@@ -290,7 +290,26 @@ class WorkerNode(BaseNode):
         work_chain: RunnableSerializable[dict[str, Any], Any] = chain | RunnableLambda(
             self.tag_with_name  # type: ignore[arg-type]
         ).bind(name=member.name)
-        result: AIMessage = await work_chain.ainvoke(state, config)  # type: ignore[arg-type]
+        all_messages = state.get("all_messages", [])
+        if (
+            all_messages
+            and isinstance(all_messages[-1].content, list)
+            and any(
+                isinstance(item, dict)
+                and "type" in item
+                and item["type"] in ["text", "image_url"]
+                for item in all_messages[-1].content
+            )
+        ):
+
+            from langchain_core.messages import HumanMessage
+
+            # 创建新的临时状态用于处理图片消息
+            temp_state = [HumanMessage(content=all_messages[-1].content, name="user")]
+
+            result: AIMessage = await self.model.ainvoke(temp_state, config)
+        else:
+            result: AIMessage = await work_chain.ainvoke(state, config)
         if result.tool_calls:
             return {"messages": [result]}
         else:
@@ -353,18 +372,26 @@ class SequentialWorkerNode(WorkerNode):
         work_chain: RunnableSerializable[dict[str, Any], Any] = chain | RunnableLambda(
             self.tag_with_name  # type: ignore[arg-type]
         ).bind(name=member.name)
+        all_messages = state.get("all_messages", [])
+        if (
+            all_messages
+            and isinstance(all_messages[-1].content, list)
+            and any(
+                isinstance(item, dict)
+                and "type" in item
+                and item["type"] in ["text", "image_url"]
+                for item in all_messages[-1].content
+            )
+        ):
 
-        # from langchain_core.messages import HumanMessage
+            from langchain_core.messages import HumanMessage
 
-        # state = HumanMessage(
-        #     content=[
-        #         {"type": "text", "text": "describe the image 用中文回答"},
-        #         {"type": "image_url", "image_url": {"url": "http://gips3.baidu.com/it/u=1821127123,1149655687&fm=3028&app=3028&f=JPEG&fmt=auto?w=720&h=1280"}},
-        #     ], name="user"
-        # )
+            # 创建新的临时状态用于处理图片消息
+            temp_state = [HumanMessage(content=all_messages[-1].content, name="user")]
 
-
-        result: AIMessage = await work_chain.ainvoke(state, config)  # type: ignore[arg-type]
+            result: AIMessage = await self.model.ainvoke(temp_state, config)
+        else:
+            result: AIMessage = await work_chain.ainvoke(state, config)  # type: ignore[arg-type]
         # if agent is calling a tool, set the next member_name to be itself. This is so that when an agent triggers a
         # tool and the tool returns the response back, the next value will be the agent's name
         next: str | None
@@ -482,7 +509,26 @@ class LeaderNode(BaseNode):
             | bind_tool
             | JsonOutputKeyToolsParser(key_name="route", first_tool_only=True)
         )
-        result: dict[str, Any] = await delegate_chain.ainvoke(state, config)
+        all_messages = state.get("all_messages", [])
+        if (
+            all_messages
+            and isinstance(all_messages[-1].content, list)
+            and any(
+                isinstance(item, dict)
+                and "type" in item
+                and item["type"] in ["text", "image_url"]
+                for item in all_messages[-1].content
+            )
+        ):
+
+            from langchain_core.messages import HumanMessage
+
+            # 创建新的临时状态用于处理图片消息
+            temp_state = [HumanMessage(content=all_messages[-1].content, name="user")]
+
+            result: AIMessage = await self.model.ainvoke(temp_state, config)
+        else:
+            result: AIMessage = await delegate_chain.ainvoke(state, config)
         if not result or result.get("next") is None or result["next"] == "FINISH":
             return {
                 "next": "FINISH",
@@ -582,8 +628,26 @@ class ChatBotNode(BaseNode):
         work_chain: RunnableSerializable[dict[str, Any], Any] = chain | RunnableLambda(
             self.tag_with_name  # type: ignore[arg-type]
         ).bind(name=member.name)
+        all_messages = state.get("all_messages", [])
+        if (
+            all_messages
+            and isinstance(all_messages[-1].content, list)
+            and any(
+                isinstance(item, dict)
+                and "type" in item
+                and item["type"] in ["text", "image_url"]
+                for item in all_messages[-1].content
+            )
+        ):
 
-        result: AIMessage = await work_chain.ainvoke(state, config)  # type: ignore[arg-type]
+            from langchain_core.messages import HumanMessage
+
+            # 创建新的临时状态用于处理图片消息
+            temp_state = [HumanMessage(content=all_messages[-1].content, name="user")]
+
+            result: AIMessage = await self.model.ainvoke(temp_state, config)
+        else:
+            result: AIMessage = await work_chain.ainvoke(state, config)
         if result.tool_calls:
             return {"messages": [result]}
         else:
@@ -639,7 +703,26 @@ class RAGBotNode(BaseNode):
         work_chain: RunnableSerializable[dict[str, Any], Any] = chain | RunnableLambda(
             self.tag_with_name  # type: ignore[arg-type]
         ).bind(name=member.name)
-        result: AIMessage = await work_chain.ainvoke(state, config)  # type: ignore[arg-type]
+        all_messages = state.get("all_messages", [])
+        if (
+            all_messages
+            and isinstance(all_messages[-1].content, list)
+            and any(
+                isinstance(item, dict)
+                and "type" in item
+                and item["type"] in ["text", "image_url"]
+                for item in all_messages[-1].content
+            )
+        ):
+
+            from langchain_core.messages import HumanMessage
+
+            # 创建新的临时状态用于处理图片消息
+            temp_state = [HumanMessage(content=all_messages[-1].content, name="user")]
+
+            result: AIMessage = await self.model.ainvoke(temp_state, config)
+        else:
+            result: AIMessage = await work_chain.ainvoke(state, config)
         if result.tool_calls:
             return {"messages": [result]}
         else:
