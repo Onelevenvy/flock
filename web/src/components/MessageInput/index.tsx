@@ -141,6 +141,11 @@ const MessageInput: React.FC<MessageInputProps> = ({
               border: "none",
             }}
             pb="50px"
+            sx={{
+              '&:focus ~ div': {
+                pointerEvents: 'auto',
+              }
+            }}
           />
 
           <HStack
@@ -154,6 +159,8 @@ const MessageInput: React.FC<MessageInputProps> = ({
             justifyContent="space-between"
             borderTop="1px solid"
             borderColor="gray.100"
+            zIndex="1"
+            pointerEvents="auto"
           >
             <Text fontSize="xs" color="gray.500">
               ↵ 发送 / ^ ↵ 换行
