@@ -9,12 +9,14 @@ import {
   CloseButton,
   HStack,
   Text,
+  useDisclosure,
 } from "@chakra-ui/react";
 import type React from "react";
 import { GrNewWindow } from "react-icons/gr";
 import { RiImageAddLine } from "react-icons/ri";
 import { VscSend } from "react-icons/vsc";
 import { useRef } from "react";
+import ImageUploadModal from "./ImageUploadModal";
 
 interface MessageInputProps {
   isPlayground?:boolean;
@@ -38,28 +40,13 @@ const MessageInput: React.FC<MessageInputProps> = ({
   setImageData,
 }) => {
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const { isOpen, onOpen, onClose } = useDisclosure();
 
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setImageData!(reader.result as string);
-        setTimeout(() => {
-          textareaRef.current?.focus();
-        }, 0);
-      };
-      reader.readAsDataURL(file);
-    }
-    e.target.value = "";
-  };
-
-  const removeImage = () => {
-    setImageData!(null);
-    const fileInput = document.getElementById("file-input") as HTMLInputElement;
-    if (fileInput) {
-      fileInput.value = "";
-    }
+  const handleImageSelect = (imageData: string) => {
+    setImageData(imageData);
+    setTimeout(() => {
+      textareaRef.current?.focus();
+    }, 0);
   };
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
@@ -106,7 +93,7 @@ const MessageInput: React.FC<MessageInputProps> = ({
               size="sm"
               bg="blackAlpha.300"
               color="white"
-              onClick={removeImage}
+              onClick={() => setImageData(null)}
               _hover={{
                 bg: "blackAlpha.400",
                 transform: "rotate(90deg)",
@@ -195,7 +182,7 @@ const MessageInput: React.FC<MessageInputProps> = ({
                 <IconButton
                   aria-label="upload-image"
                   icon={<RiImageAddLine />}
-                  onClick={() => document.getElementById("file-input")?.click()}
+                  onClick={onOpen}
                   size="sm"
                   variant="ghost"
                   transition="all 0.2s"
@@ -224,12 +211,10 @@ const MessageInput: React.FC<MessageInputProps> = ({
           </HStack>
         </Box>
 
-        <input
-          type="file"
-          id="file-input"
-          accept="image/*"
-          style={{ display: "none" }}
-          onChange={handleFileChange}
+        <ImageUploadModal
+          isOpen={isOpen}
+          onClose={onClose}
+          onImageSelect={handleImageSelect}
         />
       </InputGroup>
     </Box>
