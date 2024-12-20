@@ -14,6 +14,7 @@ import type React from "react";
 import { GrNewWindow } from "react-icons/gr";
 import { RiImageAddLine } from "react-icons/ri";
 import { VscSend } from "react-icons/vsc";
+import { useRef } from "react";
 
 interface MessageInputProps {
   isPlayground?:boolean;
@@ -36,12 +37,17 @@ const MessageInput: React.FC<MessageInputProps> = ({
   imageData,
   setImageData,
 }) => {
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
+
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
       const reader = new FileReader();
       reader.onloadend = () => {
         setImageData!(reader.result as string);
+        setTimeout(() => {
+          textareaRef.current?.focus();
+        }, 0);
       };
       reader.readAsDataURL(file);
     }
@@ -123,6 +129,7 @@ const MessageInput: React.FC<MessageInputProps> = ({
           w="full"
         >
           <Textarea
+            ref={textareaRef}
             placeholder="Input your message ..."
             value={input}
             onChange={(e) => setInput(e.target.value)}
