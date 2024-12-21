@@ -17,12 +17,14 @@ import {
 } from "@chakra-ui/react";
 import { useState } from "react";
 import { RiImageAddLine, RiUploadCloud2Line } from "react-icons/ri";
+import { useTranslation } from "react-i18next";
 
 interface ImageUploadModalProps {
   onImageSelect: (imageData: string) => void;
 }
 
 const ImageUploadModal = ({ onImageSelect }: ImageUploadModalProps) => {
+  const { t } = useTranslation();
   const [imageUrl, setImageUrl] = useState("");
   const [urlError, setUrlError] = useState("");
   const toast = useToast();
@@ -45,22 +47,29 @@ const ImageUploadModal = ({ onImageSelect }: ImageUploadModalProps) => {
 
   const validateAndLoadUrl = async () => {
     if (!imageUrl) {
-      setUrlError("请输入URL地址");
+      setUrlError(
+        t("components.imageUpload.imageUrl.error.required") as string
+      );
       return;
     }
 
     if (!isValidUrl(imageUrl)) {
-      setUrlError("URL必须以http://或https://开头");
+      setUrlError(t("components.imageUpload.imageUrl.error.format") as string);
       return;
     }
 
     try {
       const response = await fetch(imageUrl);
-      if (!response.ok) throw new Error("图片加载失败");
+      if (!response.ok)
+        throw new Error(
+          t("components.imageUpload.imageUrl.error.loading") as string
+        );
 
       const blob = await response.blob();
       if (!blob.type.startsWith("image/")) {
-        throw new Error("请输入有效的图片URL");
+        throw new Error(
+          t("components.imageUpload.imageUrl.error.notImage") as string
+        );
       }
 
       const reader = new FileReader();
@@ -70,10 +79,10 @@ const ImageUploadModal = ({ onImageSelect }: ImageUploadModalProps) => {
       };
       reader.readAsDataURL(blob);
     } catch (error) {
-      setUrlError("无效的图片URL");
+      setUrlError(t("components.imageUpload.imageUrl.error.invalid") as string);
       toast({
-        title: "图片加载失败",
-        description: "请确保输入的是有效的图片URL",
+        title: t("components.imageUpload.imageUrl.error.loading"),
+        description: t("components.imageUpload.imageUrl.error.notImage"),
         status: "error",
         duration: 3000,
         isClosable: true,
@@ -101,7 +110,7 @@ const ImageUploadModal = ({ onImageSelect }: ImageUploadModalProps) => {
           <VStack spacing={4}>
             <Alert status="info">
               <AlertIcon />
-              Please make sure your llm supports image input!
+              {t("components.imageUpload.warning")}
             </Alert>
             <Button
               leftIcon={<RiUploadCloud2Line />}
@@ -113,7 +122,7 @@ const ImageUploadModal = ({ onImageSelect }: ImageUploadModalProps) => {
               variant="outline"
               size="sm"
             >
-              本地上传
+              {t("components.imageUpload.localUpload")}
             </Button>
             <input
               type="file"
@@ -124,13 +133,15 @@ const ImageUploadModal = ({ onImageSelect }: ImageUploadModalProps) => {
             />
 
             <Text fontSize="sm" color="gray.500">
-              或
+              {t("components.imageUpload.or")}
             </Text>
 
             <FormControl isInvalid={!!urlError}>
               <InputGroup size="sm">
                 <Input
-                  placeholder="输入图片链接"
+                  placeholder={
+                    t("components.imageUpload.imageUrl.placeholder") as string
+                  }
                   value={imageUrl}
                   onChange={(e) => {
                     setImageUrl(e.target.value);
@@ -146,7 +157,7 @@ const ImageUploadModal = ({ onImageSelect }: ImageUploadModalProps) => {
                     onClick={validateAndLoadUrl}
                     isDisabled={!imageUrl.trim()}
                   >
-                    添加
+                    {t("components.imageUpload.imageUrl.add")}
                   </Button>
                 </InputRightElement>
               </InputGroup>

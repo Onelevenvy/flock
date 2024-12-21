@@ -15,6 +15,7 @@ import { GrNewWindow } from "react-icons/gr";
 import { VscSend } from "react-icons/vsc";
 import { useRef } from "react";
 import ImageUploadModal from "./ImageUploadPopoverMenu";
+import { useTranslation } from "react-i18next";
 
 interface MessageInputProps {
   isPlayground?: boolean;
@@ -38,6 +39,7 @@ const MessageInput: React.FC<MessageInputProps> = ({
   setImageData,
 }) => {
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const { t } = useTranslation();
 
   const handleImageSelect = (imageData: string) => {
     setImageData(imageData);
@@ -123,7 +125,7 @@ const MessageInput: React.FC<MessageInputProps> = ({
         >
           <Textarea
             ref={textareaRef}
-            placeholder="Input your message ..."
+            placeholder={t("components.messageInput.placeholder") as string}
             value={input}
             onChange={(e) => setInput(e.target.value)}
             onKeyDown={handleKeyDown}
@@ -163,12 +165,17 @@ const MessageInput: React.FC<MessageInputProps> = ({
             pointerEvents="auto"
           >
             <Text fontSize="xs" color="gray.500">
-              ↵ 发送 / ^ ↵ 换行
+              {t("components.messageInput.shortcuts.send")} /{" "}
+              {t("components.messageInput.shortcuts.newLine")}
             </Text>
 
             <HStack spacing={2}>
               {newChatHandler && (
-                <Tooltip label="New Chat" fontSize="md" bg="gray.700">
+                <Tooltip
+                  label={t("components.messageInput.tooltips.newChat")}
+                  fontSize="md"
+                  bg="gray.700"
+                >
                   <IconButton
                     aria-label="new chat"
                     icon={<GrNewWindow />}
@@ -184,7 +191,11 @@ const MessageInput: React.FC<MessageInputProps> = ({
                 </Tooltip>
               )}
 
-              <Tooltip label="Upload Image" fontSize="md" bg="gray.700">
+              <Tooltip
+                label={t("components.messageInput.tooltips.uploadImage")}
+                fontSize="md"
+                bg="gray.700"
+              >
                 <Box>
                   <ImageUploadModal onImageSelect={handleImageSelect} />
                 </Box>
@@ -193,7 +204,7 @@ const MessageInput: React.FC<MessageInputProps> = ({
               <IconButton
                 type="submit"
                 icon={<VscSend />}
-                aria-label="send-question"
+                aria-label={t("components.messageInput.tooltips.send")}
                 isLoading={isStreaming}
                 isDisabled={!input.trim().length && !imageData}
                 size="sm"

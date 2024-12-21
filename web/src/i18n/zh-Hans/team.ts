@@ -140,13 +140,26 @@ const translation = {
           contains: "包含",
           notContains: "不包含",
           startWith: "开始是",
-          endWith: "结束是", 
+          endWith: "结束是",
           equal: "是",
           notEqual: "不是",
           empty: "为空",
-          notEmpty: "不为空"
-        }
-      }
+          notEmpty: "不为空",
+        },
+      },
+      code: {
+        title: "代码节点",
+        inputVariables: "输入变量",
+        variableName: "输入变量名",
+        selectVariable: "选择变量",
+        addVariable: "添加变量",
+        pythonCode: "Python 代码",
+        executionResult: "执行结果",
+        placeholder: {
+          variableName: "输入变量名",
+          selectVariable: "选择变量",
+        },
+      },
     },
     common: {
       add: "添加",

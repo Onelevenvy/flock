@@ -149,9 +149,22 @@ const translation = {
           equal: "Is",
           notEqual: "Is Not",
           empty: "Is Empty",
-          notEmpty: "Is Not Empty"
-        }
-      }
+          notEmpty: "Is Not Empty",
+        },
+      },
+      code: {
+        title: "Code Node",
+        inputVariables: "Input Variables",
+        variableName: "Variable Name",
+        selectVariable: "Select Variable",
+        addVariable: "Add Variable",
+        pythonCode: "Python Code",
+        executionResult: "Execution Result",
+        placeholder: {
+          variableName: "Enter variable name",
+          selectVariable: "Select variable",
+        },
+      },
     },
     common: {
       add: "Add",
