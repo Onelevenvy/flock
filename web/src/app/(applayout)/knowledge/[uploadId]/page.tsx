@@ -289,31 +289,35 @@ function KnowledgeTest() {
                 />
               </HStack>
 
-              <Textarea
-                value={query}
-                onChange={(e) => setQuery(e.target.value)}
-                placeholder={t("knowledge.test.searchType.placeholder")!}
-                size="lg"
-                p={4}
-                minH="400px"
-                border="none"
-                _focus={{
-                  boxShadow: "none",
-                  borderColor: "ui.main",
-                }}
-                resize="none"
-                fontSize="sm"
-                transition="all 0.2s"
-              />
-
-              <Box position="absolute" bottom={4} right={4}>
-                <CustomButton
-                  text={t("knowledge.test.actions.search")}
-                  variant="blue"
-                  onClick={handleSearch}
-                  rightIcon={<MdBuild />}
-                  isLoading={searchMutation.isLoading}
+              <Box position="relative" minH="400px">
+                <Textarea
+                  value={query}
+                  onChange={(e) => setQuery(e.target.value)}
+                  placeholder={t("knowledge.test.searchType.placeholder")!}
+                  size="lg"
+                  p={4}
+                  pb="60px"
+                  minH="400px"
+                  border="none"
+                  _focus={{
+                    boxShadow: "none",
+                    borderColor: "ui.main",
+                  }}
+                  resize="none"
+                  fontSize="sm"
+                  transition="all 0.2s"
                 />
+
+                <Box position="absolute" bottom={4} right={4} bg="white" py={2}>
+                  <CustomButton
+                    text={t("knowledge.test.actions.search")}
+                    variant="blue"
+                    onClick={handleSearch}
+                    rightIcon={<MdBuild />}
+                    isLoading={searchMutation.isLoading}
+                    isDisabled={!query.trim()}
+                  />
+                </Box>
               </Box>
             </Box>
 

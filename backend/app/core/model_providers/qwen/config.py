@@ -5,7 +5,7 @@ from app.models import ModelCapability, ModelCategory
 PROVIDER_CONFIG = {
     "provider_name": "qwen",
     "base_url": "https://dashscope.aliyuncs.com/compatible-mode/v1",
-    "api_key": "fakeapikey",
+    "api_key": "",
     "icon": "qwen_icon",
     "description": "qwen API provider",
 }

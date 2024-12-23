@@ -6,7 +6,7 @@ from app.models import ModelCapability, ModelCategory
 PROVIDER_CONFIG = {
     "provider_name": "zhipuai",
     "base_url": "https://open.bigmodel.cn/api/paas/v4",
-    "api_key": "fake_api_key",
+    "api_key": "",
     "icon": "zhipuai_icon",
     "description": "智谱AI",
 }

@@ -5,7 +5,7 @@ from app.models import ModelCategory
 PROVIDER_CONFIG = {
     "provider_name": "siliconflow",
     "base_url": "https://api.siliconflow.cn/v1",
-    "api_key": "fakeapikey",
+    "api_key": "",
     "icon": "siliconflow_icon",
     "description": "Siliconflow API provider",
 }

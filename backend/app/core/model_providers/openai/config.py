@@ -6,7 +6,7 @@ from app.models import ModelCategory
 PROVIDER_CONFIG = {
     "provider_name": "openai",
     "base_url": "https://api.openai.com/v1",
-    "api_key": "your_api_key_here",
+    "api_key": "",
     "icon": "openai_icon",
     "description": "OpenAI API provider",
 }

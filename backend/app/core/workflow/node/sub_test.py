@@ -24,7 +24,7 @@ def create_subgraph_from_config(config: Dict[str, Any]) -> StateGraph:
                         provider="openai",  # 假设使用OpenAI，您可以根据需要修改
                         model=node["data"]["model"],
                         tools=[],  # 这里可以添加工具如果需要
-                        openai_api_key="9953866f9b7fac2fd6d564842d8bcc79.AbXduj53KA3SDSMs",  # 请替换为实际的API密钥
+                        openai_api_key="XXXXXXX",  # 请替换为实际的API密钥
                         openai_api_base="https://open.bigmodel.cn/api/paas/v4",  # 可以根据需要修改
                         temperature=node["data"]["temperature"],
                         system_prompt=node["data"]["systemMessage"],

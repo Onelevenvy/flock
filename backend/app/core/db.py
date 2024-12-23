@@ -35,16 +35,16 @@ def print_skills_info(session: Session) -> None:
         print(f"Skill: {skill.name} (ID: {skill.id})")
         print(f"  Display Name: {skill.display_name}")
         print(f"  Description: {skill.description}")
-        print(f"  Managed: {'Yes' if skill.managed else 'No'}")
-        print(f"  Owner ID: {skill.owner_id}")
-        if skill.input_parameters:
-            print("  Input Parameters:")
-            for param, param_type in skill.input_parameters.items():
-                print(f"    - {param}: {param_type}")
-        if skill.credentials:
-            print("  Credentials:")
-            for credential_name, credential_info in skill.credentials.items():
-                print(f"    - {credential_name}: {credential_info}")
+        # print(f"  Managed: {'Yes' if skill.managed else 'No'}")
+        # print(f"  Owner ID: {skill.owner_id}")
+        # if skill.input_parameters:
+        #     print("  Input Parameters:")
+        #     for param, param_type in skill.input_parameters.items():
+        #         print(f"    - {param}: {param_type}")
+        # if skill.credentials:
+        #     print("  Credentials:")
+        #     for credential_name, credential_info in skill.credentials.items():
+        #         print(f"    - {credential_name}: {credential_info}")
         print()
 
 
@@ -192,9 +192,9 @@ def init_modelprovider_model_db(session: Session) -> None:
     providers = session.exec(select(ModelProvider).order_by(ModelProvider.id)).all()
     for provider in providers:
         print(f"\nProvider: {provider.provider_name} (ID: {provider.id})")
-        print(f"  Base URL: {provider.base_url}")
-        print(f"  API Key: {'***************'  if provider.api_key else 'None'}")
-        print(f"  Description: {provider.description}")
+        # print(f"  Base URL: {provider.base_url}")
+        # print(f"  API Key: {'***************'  if provider.api_key else 'None'}")
+        # print(f"  Description: {provider.description}")
         models = session.exec(
             select(Models).where(Models.provider_id == provider.id).order_by(Models.id)
         ).all()

@@ -6,7 +6,7 @@ from app.models import ModelCategory
 PROVIDER_CONFIG = {
     "provider_name": "ollama",
     "base_url": "http://host.docker.internal:11434",
-    "api_key": "fakeapikey",
+    "api_key": "",
     "icon": "ollama_icon",
     "description": "Ollama API provider",
 }
