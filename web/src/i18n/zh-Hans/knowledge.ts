@@ -36,6 +36,7 @@ const translation = {
     results: {
       title: "召回段落",
       score: "相似度",
+      noResults: "未找到结果",
     },
     actions: {
       search: "搜索",

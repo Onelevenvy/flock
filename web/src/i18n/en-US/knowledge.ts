@@ -37,6 +37,7 @@ const translation = {
     results: {
       title: "Retrieved Paragraphs",
       score: "Score",
+      noResults: "No results found",
     },
     actions: {
       search: "Search",
