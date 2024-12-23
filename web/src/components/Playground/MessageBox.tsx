@@ -29,6 +29,7 @@ import {
 } from "react-icons/fa";
 import { GrFormNextLink } from "react-icons/gr";
 import { VscSend } from "react-icons/vsc";
+import { throttle } from "lodash";
 
 import useWorkflowStore from "@/stores/workflowStore";
 
@@ -79,7 +80,9 @@ const MessageBox = ({ message, onResume, isPlayground }: MessageBoxProps) => {
       if (contentRef.current) {
         const parentElement = contentRef.current.parentElement;
         if (parentElement && !userScrolling) {
-          parentElement.scrollTop = parentElement.scrollHeight;
+          requestAnimationFrame(() => {
+            parentElement.scrollTop = parentElement.scrollHeight;
+          });
         }
       }
     };
@@ -99,6 +102,7 @@ const MessageBox = ({ message, onResume, isPlayground }: MessageBoxProps) => {
         childList: true,
         subtree: true,
         characterData: true,
+        attributes: false,
       });
     }
 
@@ -111,7 +115,7 @@ const MessageBox = ({ message, onResume, isPlayground }: MessageBoxProps) => {
     const parent = contentRef.current?.parentElement;
     if (!parent) return;
 
-    const handleScroll = () => {
+    const throttledScrollHandler = throttle(() => {
       if (scrollTimeout.current) {
         clearTimeout(scrollTimeout.current);
       }
@@ -125,10 +129,13 @@ const MessageBox = ({ message, onResume, isPlayground }: MessageBoxProps) => {
       if (isScrolledToBottom) {
         setUserScrolling(false);
       }
-    };
+    }, 100);
 
-    parent.addEventListener("scroll", handleScroll);
-    return () => parent.removeEventListener("scroll", handleScroll);
+    parent.addEventListener("scroll", throttledScrollHandler);
+    return () => {
+      throttledScrollHandler.cancel();
+      parent.removeEventListener("scroll", throttledScrollHandler);
+    };
   }, []);
 
   const [timestamp, setTimestamp] = useState<string>("");
@@ -188,6 +195,10 @@ const MessageBox = ({ message, onResume, isPlayground }: MessageBoxProps) => {
         },
         scrollBehavior: "smooth",
         overscrollBehavior: "contain",
+        willChange: "transform",
+        transform: "translateZ(0)",
+        backfaceVisibility: "hidden",
+        perspective: 1000,
       }}
     >
       <Box
