@@ -12,7 +12,7 @@
 > ### 🎉 最新アップデート 2024/12/23
 >
 > - **モルチモーダルチャットサポート**: マルチモーダルチャット機能を追加しました（現在は画像モダリティのみサポート、今後他のモダリティも順次追加予定）！
- <img src="assets/gemini.png" alt="multimodal" width="500" />
+>   <img src="../assets/gemini.png" alt="multimodal" width="500" />
 
 > ### 🎉 最新アップデート 2024/12/18
 >

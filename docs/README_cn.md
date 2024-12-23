@@ -12,7 +12,7 @@
 > ### 🎉 最新更新 2024/12/23
 >
 > - **多模态对话支持**: 新增多模态对话的支持（目前仅支持图片模态，后续会陆续增加对其他模态的支持）！
- <img src="assets/gemini.png" alt="multimodal" width="500" />
+>   <img src="../assets/gemini.png" alt="multimodal" width="500" />
 
 > ### 🎉 最新更新 2024/12/18
 >

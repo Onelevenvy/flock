@@ -8,11 +8,11 @@
 </p>
 
 > [!NOTE]
-
+>
 > ### 🎉 What's New 2024/12/23
 >
 > - **Multimodal Chat Support**: Added support for multimodal chat (currently only supports image modality, with more modalities coming soon)!
- <img src="assets/gemini.png" alt="multimodal" width="500" />
+>   <img src="assets/gemini.png" alt="multimodal" width="500" />
 
 > ### 🎉 What's New 2024/12/18
 >
