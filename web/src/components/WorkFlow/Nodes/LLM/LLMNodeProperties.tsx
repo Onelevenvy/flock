@@ -13,8 +13,8 @@ import { useForm } from "react-hook-form";
 interface FormValues {
   model: string;
   provider: string;
-  openai_api_key: string;
-  openai_api_base: string;
+  api_key: string;
+  base_url: string;
 }
 
 interface LLMNodePropertiesProps {
@@ -38,8 +38,8 @@ const LLMNodeProperties: React.FC<LLMNodePropertiesProps> = ({
     defaultValues: {
       model: node.data.model || "",
       provider: node.data.provider || "",
-      openai_api_key: node.data.openai_api_key || "",
-      openai_api_base: node.data.openai_api_base || "",
+      api_key: node.data.api_key || "",
+      base_url: node.data.base_url || "",
     },
   });
 
@@ -58,11 +58,11 @@ const LLMNodeProperties: React.FC<LLMNodePropertiesProps> = ({
     if (node && node.data.provider) {
       setValue("provider", node.data.provider);
     }
-    if (node && node.data.openai_api_key) {
-      setValue("openai_api_key", node.data.openai_api_key);
+    if (node && node.data.api_key) {
+      setValue("api_key", node.data.api_key);
     }
-    if (node && node.data.openai_api_base) {
-      setValue("openai_api_base", node.data.openai_api_base);
+    if (node && node.data.base_url) {
+      setValue("base_url", node.data.base_url);
     }
   }, [node, setValue]);
 
@@ -78,14 +78,14 @@ const LLMNodeProperties: React.FC<LLMNodePropertiesProps> = ({
         const providerName = selectedModel.provider.provider_name || "";
 
         onNodeDataChange(node.id, "model", modelName);
-        onNodeDataChange(node.id, "openai_api_key", apiKey);
+        onNodeDataChange(node.id, "api_key", apiKey);
         onNodeDataChange(node.id, "provider", providerName);
-        onNodeDataChange(node.id, "openai_api_base", baseUrl);
+        onNodeDataChange(node.id, "base_url", baseUrl);
 
         setValue("model", modelName);
-        setValue("openai_api_key", apiKey);
+        setValue("api_key", apiKey);
         setValue("provider", providerName);
-        setValue("openai_api_base", baseUrl);
+        setValue("base_url", baseUrl);
       }
     },
     [node.id, models, onNodeDataChange, setValue]

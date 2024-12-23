@@ -83,8 +83,8 @@ def convert_hierarchical_team_to_dict(
             teams[leader_name] = GraphTeam(
                 name=leader_name,
                 model=member.model,
-                openai_api_key=member.openai_api_key,
-                openai_api_base=member.openai_api_base,
+                api_key=member.api_key,
+                base_url=member.base_url,
                 role=member.role,
                 backstory=member.backstory or "",
                 members={},
@@ -123,8 +123,8 @@ def convert_hierarchical_team_to_dict(
                     tools=tools,
                     provider=member.provider,
                     model=member.model,
-                    openai_api_key=member.openai_api_key,
-                    openai_api_base=member.openai_api_base,
+                    api_key=member.api_key,
+                    base_url=member.base_url,
                     temperature=member.temperature,
                     interrupt=member.interrupt,
                 )
@@ -135,8 +135,8 @@ def convert_hierarchical_team_to_dict(
                     role=member.role,
                     provider=member.provider,
                     model=member.model,
-                    openai_api_key=member.openai_api_key,
-                    openai_api_base=member.openai_api_base,
+                    api_key=member.api_key,
+                    base_url=member.base_url,
                     temperature=member.temperature,
                 )
         for nei_id in out_counts[member_id]:
@@ -197,8 +197,8 @@ def convert_sequential_team_to_dict(members: list[Member]) -> Mapping[str, Graph
             tools=tools,
             provider=memberModel.provider,
             model=memberModel.model,
-            openai_api_key=memberModel.openai_api_key,
-            openai_api_base=memberModel.openai_api_base,
+            api_key=memberModel.api_key,
+            base_url=memberModel.base_url,
             temperature=memberModel.temperature,
             interrupt=memberModel.interrupt,
         )
@@ -260,8 +260,8 @@ def convert_chatbot_chatrag_team_to_dict(
         tools=tools,
         provider=member.provider,
         model=member.model,
-        openai_api_key=member.openai_api_key,
-        openai_api_base=member.openai_api_base,
+        api_key=member.api_key,
+        base_url=member.base_url,
         temperature=member.temperature,
         interrupt=member.interrupt,
     )
@@ -370,8 +370,8 @@ def create_hierarchical_graph(
             LeaderNode(
                 teams[leader_name].provider,
                 teams[leader_name].model,
-                security_manager.decrypt_api_key(teams[leader_name].openai_api_key),
-                teams[leader_name].openai_api_base,
+                security_manager.decrypt_api_key(teams[leader_name].api_key),
+                teams[leader_name].base_url,
                 teams[leader_name].temperature,
             ).delegate  # type: ignore[arg-type]
         ),
@@ -382,8 +382,8 @@ def create_hierarchical_graph(
             SummariserNode(
                 teams[leader_name].provider,
                 teams[leader_name].model,
-                security_manager.decrypt_api_key(teams[leader_name].openai_api_key),
-                teams[leader_name].openai_api_base,
+                security_manager.decrypt_api_key(teams[leader_name].api_key),
+                teams[leader_name].base_url,
                 teams[leader_name].temperature,
             ).summarise  # type: ignore[arg-type]
         ),
@@ -398,8 +398,8 @@ def create_hierarchical_graph(
                     WorkerNode(
                         provider=member.provider,
                         model=member.model,
-                        openai_api_key=security_manager.decrypt_api_key(teams[leader_name].openai_api_key),
-                        openai_api_base=teams[leader_name].openai_api_base,
+                        api_key=security_manager.decrypt_api_key(teams[leader_name].api_key),
+                        base_url=teams[leader_name].base_url,
                         temperature=member.temperature,
                     ).work  # type: ignore[arg-type]
                 ),
@@ -487,8 +487,8 @@ def create_sequential_graph(
                 SequentialWorkerNode(
                     provider=member.provider,
                     model=member.model,
-                    openai_api_key=security_manager.decrypt_api_key(member.openai_api_key),
-                    openai_api_base=member.openai_api_base,
+                    api_key=security_manager.decrypt_api_key(member.api_key),
+                    base_url=member.base_url,
                     temperature=member.temperature,
                 ).work  # type: ignore[arg-type]
             ),
@@ -562,7 +562,7 @@ def create_chatbot_ragbot_graph(
     member = next(iter(team.values()))
     graph = StateGraph(TeamState)
     # Create a list to store member names that require human intervention before tool calling
-    
+
     interrupt_member_names = []
     graph.add_node(
         member.name,
@@ -571,8 +571,8 @@ def create_chatbot_ragbot_graph(
                 provider=member.provider,
                 model=member.model,
                 temperature=member.temperature,
-                openai_api_key=security_manager.decrypt_api_key(member.openai_api_key),           
-                openai_api_base=member.openai_api_base,
+                api_key=security_manager.decrypt_api_key(member.api_key),           
+                base_url=member.base_url,
             ).work  # type: ignore[arg-type]
         ),
     )
@@ -685,8 +685,8 @@ async def generator(
                         provider=first_member.provider,
                         model=first_member.model,
                         temperature=first_member.temperature,
-                        openai_api_key=first_member.openai_api_key,
-                        openai_api_base=first_member.openai_api_base,
+                        api_key=first_member.api_key,
+                        base_url=first_member.base_url,
                     ),
                     "messages": [],
                     "next": first_member.name,
@@ -709,8 +709,8 @@ async def generator(
                         provider=first_member.provider,
                         model=first_member.model,
                         temperature=first_member.temperature,
-                        openai_api_key=first_member.openai_api_key,
-                        openai_api_base=first_member.openai_api_base,
+                        api_key=first_member.api_key,
+                        base_url=first_member.base_url,
                     ),
                     "messages": [],
                     "next": first_member.name,
@@ -734,8 +734,8 @@ async def generator(
                         provider=first_member.provider,
                         model=first_member.model,
                         temperature=first_member.temperature,
-                        openai_api_key=first_member.openai_api_key,
-                        openai_api_base=first_member.openai_api_base,
+                        api_key=first_member.api_key,
+                        base_url=first_member.base_url,
                     ),
                     "messages": [],
                     "next": first_member.name,

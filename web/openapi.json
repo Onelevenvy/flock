@@ -4223,15 +4223,27 @@
             "title": "Model",
             "default": ""
           },
-          "openai_api_key": {
-            "type": "string",
-            "title": "Openai Api Key",
-            "default": ""
+          "api_key": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Api Key"
           },
-          "openai_api_base": {
-            "type": "string",
-            "title": "Openai Api Base",
-            "default": "https://open.bigmodel.cn/api/paas/v4"
+          "base_url": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Base Url"
           },
           "temperature": {
             "type": "number",
@@ -4320,15 +4332,27 @@
             "title": "Model",
             "default": ""
           },
-          "openai_api_key": {
-            "type": "string",
-            "title": "Openai Api Key",
-            "default": ""
+          "api_key": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Api Key"
           },
-          "openai_api_base": {
-            "type": "string",
-            "title": "Openai Api Base",
-            "default": "https://open.bigmodel.cn/api/paas/v4"
+          "base_url": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Base Url"
           },
           "temperature": {
             "type": "number",
@@ -4491,7 +4515,7 @@
             ],
             "title": "Model"
           },
-          "openai_api_key": {
+          "api_key": {
             "anyOf": [
               {
                 "type": "string"
@@ -4500,9 +4524,9 @@
                 "type": "null"
               }
             ],
-            "title": "Openai Api Key"
+            "title": "Api Key"
           },
-          "openai_api_base": {
+          "base_url": {
             "anyOf": [
               {
                 "type": "string"
@@ -4511,7 +4535,7 @@
                 "type": "null"
               }
             ],
-            "title": "Openai Api Base"
+            "title": "Base Url"
           },
           "temperature": {
             "anyOf": [

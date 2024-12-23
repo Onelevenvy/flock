@@ -12,6 +12,7 @@ from langchain_core.runnables import (
     RunnableSerializable,
 )
 from langchain_core.tools import BaseTool
+from langchain_google_genai import ChatGoogleGenerativeAI
 from langchain_ollama import ChatOllama
 from langchain_openai import ChatOpenAI
 from langgraph.graph import add_messages
@@ -60,9 +61,9 @@ class GraphPerson(BaseModel):
     provider: str = Field(description="The provider for the llm model")
     model: str = Field(description="The llm model to use for this person")
 
-    openai_api_key: str = Field(description="The openai_api_key")
+    api_key: str | None = Field(description="The api key")
 
-    openai_api_base: str = Field(description="The openai_api_base")
+    base_url: str | None = Field(description="The base url")
 
     temperature: float = Field(description="The temperature of the llm model")
     backstory: str = Field(
@@ -101,9 +102,9 @@ class GraphTeam(BaseModel):
     provider: str = Field(description="The provider of the team leader's llm model")
     model: str = Field(description="The llm model to use for this team leader")
 
-    openai_api_key: str = Field(description="The openai_api_key")
+    api_key: str = Field(description="The api key")
 
-    openai_api_base: str = Field(description="The openai_api_base")
+    base_url: str = Field(description="The base url")
     temperature: float = Field(
         description="The temperature of the team leader's llm model"
     )
@@ -121,9 +122,6 @@ def add_or_replace_messages(
         return []
     else:
         return add_messages(messages, new_messages)  # type: ignore[return-value, arg-type]
-
-
-
 
 
 class TeamState(TypedDict):
@@ -155,58 +153,68 @@ class BaseNode:
         self,
         provider: str,
         model: str,
-        openai_api_key: str,
-        openai_api_base: str,
+        api_key: str,
+        base_url: str,
         temperature: float,
     ):
-
-        if provider in ["zhipuai"] and openai_api_base:
+        
+        if provider in ["zhipuai", "siliconflow", "qwen"] and api_key and base_url:
 
             self.model = ChatOpenAI(
                 model=model,
                 streaming=True,
-                openai_api_key=openai_api_key,
-                openai_api_base=openai_api_base,
+                api_key=api_key,
+                base_url=base_url,
                 temperature=temperature,
             )
             self.final_answer_model = ChatOpenAI(
                 model=model,
                 streaming=True,
-                openai_api_key=openai_api_key,
-                openai_api_base=openai_api_base,
+                api_key=api_key,
+                base_url=base_url,
                 temperature=0,
             )
+        elif provider in ["google"] and api_key:
 
-        elif provider in ["openai"] and openai_api_base:
+            self.model = ChatGoogleGenerativeAI(
+                model=model,
+                temperature=temperature,
+                google_api_key=api_key,
+            )
+            self.final_answer_model = ChatGoogleGenerativeAI(
+                model=model,
+                temperature=0,
+                google_api_key=api_key,
+            )
+
+        elif provider in ["openai"] and base_url:
             self.model = init_chat_model(
                 model,
                 model_provider=provider,
-                base_url=openai_api_base,
+                base_url=base_url,
                 temperature=temperature,
             )
             self.final_answer_model = ChatOpenAI(
                 model=model,
                 temperature=0,
                 streaming=True,
-                openai_api_key=openai_api_key,
-                openai_api_base=openai_api_base,
+                api_key=api_key,
+                base_url=base_url,
             )
         elif provider == "ollama":
             self.model = ChatOllama(
                 model=model,
                 temperature=temperature,
                 base_url=(
-                    openai_api_base
-                    if openai_api_base
-                    else "http://host.docker.internal:11434"
+                    base_url if base_url else "http://host.docker.internal:11434"
                 ),
             )
             self.final_answer_model = ChatOllama(
                 model=model,
                 temperature=0,
                 streaming=True,
-                openai_api_key=openai_api_key,
-                openai_api_base=openai_api_base,
+                api_key=api_key,
+                base_url=base_url,
             )
         else:
             self.model = init_chat_model(
@@ -214,16 +222,16 @@ class BaseNode:
                 model_provider=provider,
                 temperature=temperature,
                 streaming=True,
-                openai_api_key=openai_api_key,
-                openai_api_base=openai_api_base,
+                api_key=api_key,
+                base_url=base_url,
             )
             self.final_answer_model = init_chat_model(
                 model,
                 model_provider=provider,
                 temperature=temperature,
                 streaming=True,
-                openai_api_key=openai_api_key,
-                openai_api_base=openai_api_base,
+                api_key=api_key,
+                base_url=base_url,
             )
 
     def tag_with_name(self, ai_message: AIMessage, name: str) -> AIMessage:
@@ -238,16 +246,16 @@ class BaseNode:
         return ",".join(list(team_members))
 
     async def _handle_messages(
-        self, 
-        state: dict[str, Any], 
+        self,
+        state: dict[str, Any],
         config: RunnableConfig,
-        chain: RunnableSerializable[Any, Any]
+        chain: RunnableSerializable[Any, Any],
     ) -> AIMessage:
         """Handle both regular messages and image messages in a unified way"""
         all_messages = state.get("all_messages", [])
-        
+
         if (
-            all_messages 
+            all_messages
             and isinstance(all_messages[-1].content, list)
             and any(
                 isinstance(item, dict)
@@ -257,9 +265,10 @@ class BaseNode:
             )
         ):
             from langchain_core.messages import HumanMessage
+
             temp_state = [HumanMessage(content=all_messages[-1].content, name="user")]
             return await self.model.ainvoke(temp_state, config)
-        
+
         return await chain.ainvoke(state, config)
 
 
@@ -311,9 +320,9 @@ class WorkerNode(BaseNode):
         work_chain: RunnableSerializable[dict[str, Any], Any] = chain | RunnableLambda(
             self.tag_with_name  # type: ignore[arg-type]
         ).bind(name=member.name)
-        
+
         result: AIMessage = await self._handle_messages(state, config, work_chain)
-        
+
         if result.tool_calls:
             return {"messages": [result]}
         else:
@@ -376,9 +385,9 @@ class SequentialWorkerNode(WorkerNode):
         work_chain: RunnableSerializable[dict[str, Any], Any] = chain | RunnableLambda(
             self.tag_with_name  # type: ignore[arg-type]
         ).bind(name=member.name)
-        
+
         result: AIMessage = await self._handle_messages(state, config, work_chain)
-        
+
         next: str | None
         if result.tool_calls:
             next = name
@@ -494,9 +503,9 @@ class LeaderNode(BaseNode):
             | bind_tool
             | JsonOutputKeyToolsParser(key_name="route", first_tool_only=True)
         )
-        
+
         result: AIMessage = await self._handle_messages(state, config, delegate_chain)
-        
+
         if not result or result.get("next") is None or result["next"] == "FINISH":
             return {
                 "next": "FINISH",
@@ -596,9 +605,9 @@ class ChatBotNode(BaseNode):
         work_chain: RunnableSerializable[dict[str, Any], Any] = chain | RunnableLambda(
             self.tag_with_name  # type: ignore[arg-type]
         ).bind(name=member.name)
-        
+
         result: AIMessage = await self._handle_messages(state, config, work_chain)
-        
+
         if result.tool_calls:
             return {"messages": [result]}
         else:
@@ -654,9 +663,9 @@ class RAGBotNode(BaseNode):
         work_chain: RunnableSerializable[dict[str, Any], Any] = chain | RunnableLambda(
             self.tag_with_name  # type: ignore[arg-type]
         ).bind(name=member.name)
-        
+
         result: AIMessage = await self._handle_messages(state, config, work_chain)
-        
+
         if result.tool_calls:
             return {"messages": [result]}
         else:

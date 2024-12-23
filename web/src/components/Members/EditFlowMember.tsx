@@ -446,21 +446,21 @@ export function EditFlowMember({
               }}
             />
             {modelProvider !== "openai" && (
-              <FormControl mt={2} isInvalid={!!errors.openai_api_base}>
+              <FormControl mt={2} isInvalid={!!errors.api_key}>
                 <FormLabel htmlFor="model">Proxy Provider</FormLabel>
                 <Input
-                  id="openai_api_base"
-                  {...register("openai_api_base")}
+                  id="base_url"
+                  {...register("base_url")}
                   placeholder="Base URL"
                 />
               </FormControl>
             )}
 
-            <FormControl mt={2} isRequired isInvalid={!!errors.openai_api_key}>
-              <FormLabel htmlFor="openai_api_key">OpenAI API Key</FormLabel>
+            <FormControl mt={2} isRequired isInvalid={!!errors.api_key}>
+              <FormLabel htmlFor="api_key">API Key</FormLabel>
               <Input
-                id="openai_api_key"
-                {...register("openai_api_key", { required: true })}
+                id="api_key"
+                {...register("api_key", { required: true })}
                 type={showPassword ? "text" : "password"}
               />
               <ButtonGroup size="sm" position="absolute" right="4" top="8">
@@ -471,7 +471,7 @@ export function EditFlowMember({
                 />
               </ButtonGroup>
               <FormErrorMessage>
-                {errors.openai_api_key?.message}
+                {errors.api_key?.message}
               </FormErrorMessage>
             </FormControl>
 

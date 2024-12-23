@@ -155,9 +155,9 @@ const EditNormalMember = forwardRef<HTMLFormElement, EditAgentProps>(
       );
 
       setValue("model", modelName);
-      setValue("openai_api_key", selectedModel?.provider.api_key);
+      setValue("api_key", selectedModel?.provider.api_key);
       setValue("provider", selectedModel?.provider.provider_name);
-      setValue("openai_api_base", selectedModel?.provider.base_url);
+      setValue("base_url", selectedModel?.provider.base_url);
     };
 
     return (

@@ -55,8 +55,8 @@ class LLMBaseNode:
                 self.model = ChatOpenAI(
                     model=model,
                     temperature=temperature,
-                    openai_api_key=api_key,
-                    openai_api_base=base_url,
+                    api_key=api_key,
+                    base_url=base_url,
                 )
                 if len(tools) >= 1:
                     self.model = self.model.bind_tools(tools)

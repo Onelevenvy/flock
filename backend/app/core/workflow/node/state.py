@@ -48,9 +48,9 @@ class GraphPerson(BaseModel):
     provider: str = Field(description="The provider for the llm model")
     model: str = Field(description="The llm model to use for this person")
 
-    openai_api_key: str = Field(description="The openai_api_key")
+    api_key: str = Field(description="The api key")
 
-    openai_api_base: str = Field(description="The openai_api_base")
+    base_url: str = Field(description="The base url")
 
     temperature: float = Field(description="The temperature of the llm model")
     backstory: str = Field(
@@ -89,9 +89,9 @@ class GraphTeam(BaseModel):
     provider: str = Field(description="The provider of the team leader's llm model")
     model: str = Field(description="The llm model to use for this team leader")
 
-    openai_api_key: str = Field(description="The openai_api_key")
+    api_key: str = Field(description="The api key")
 
-    openai_api_base: str = Field(description="The openai_api_base")
+    base_url: str = Field(description="The base url")
     temperature: float = Field(
         description="The temperature of the team leader's llm model"
     )

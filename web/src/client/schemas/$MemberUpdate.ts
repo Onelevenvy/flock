@@ -85,7 +85,7 @@ export const $MemberUpdate = {
                 type: 'null',
             }],
         },
-        openai_api_key: {
+        api_key: {
             type: 'any-of',
             contains: [{
                 type: 'string',
@@ -93,7 +93,7 @@ export const $MemberUpdate = {
                 type: 'null',
             }],
         },
-        openai_api_base: {
+        base_url: {
             type: 'any-of',
             contains: [{
                 type: 'string',
