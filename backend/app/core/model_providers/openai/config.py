@@ -8,7 +8,7 @@ PROVIDER_CONFIG = {
     "base_url": "https://api.openai.com/v1",
     "api_key": "",
     "icon": "openai_icon",
-    "description": "OpenAI API provider",
+    "description": "OpenAI 模型",
 }
 
 SUPPORTED_MODELS = [

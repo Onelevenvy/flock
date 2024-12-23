@@ -9,7 +9,7 @@ PROVIDER_CONFIG = {
     "base_url": "https://generativelanguage.googleapis.com/v1beta",
     "api_key": "",
     "icon": "gemini_icon",
-    "description": "Google gemini",
+    "description": "Google提供的Gemini模型",
 }
 
 SUPPORTED_MODELS = [

@@ -7,7 +7,7 @@ PROVIDER_CONFIG = {
     "base_url": "https://api.siliconflow.cn/v1",
     "api_key": "",
     "icon": "siliconflow_icon",
-    "description": "Siliconflow API provider",
+    "description": "SiliconFlow提供的模型",
 }
 
 SUPPORTED_MODELS = [

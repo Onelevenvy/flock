@@ -8,7 +8,7 @@ PROVIDER_CONFIG = {
     "base_url": "http://host.docker.internal:11434",
     "api_key": "",
     "icon": "ollama_icon",
-    "description": "Ollama API provider",
+    "description": "本地部署的Ollama模型",
 }
 
 SUPPORTED_MODELS = [

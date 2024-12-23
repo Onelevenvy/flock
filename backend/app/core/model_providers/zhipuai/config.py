@@ -8,7 +8,7 @@ PROVIDER_CONFIG = {
     "base_url": "https://open.bigmodel.cn/api/paas/v4",
     "api_key": "",
     "icon": "zhipuai_icon",
-    "description": "智谱AI",
+    "description": "智谱AI提供的模型",
 }
 
 SUPPORTED_MODELS = [
