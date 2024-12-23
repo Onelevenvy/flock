@@ -26,27 +26,25 @@ SUPPORTED_MODELS = [
 ]
 
 
-def init_model(
-    model: str, temperature: float, openai_api_key: str, openai_api_base: str, **kwargs
-):
+def init_model(model: str, temperature: float, api_key: str, base_url: str, **kwargs):
     model_info = next((m for m in SUPPORTED_MODELS if m["name"] == model), None)
     if model_info and ModelCategory.CHAT in model_info["categories"]:
         return ChatGoogleGenerativeAI(
             model=model,
             temperature=temperature,
-            google_api_key=openai_api_key,
+            google_api_key=api_key,
         )
     else:
         raise ValueError(f"Model {model} is not supported as a chat model.")
 
 
-def init_crewai_model(model: str, openai_api_key: str, openai_api_base: str, **kwargs):
+def init_crewai_model(model: str, api_key: str, base_url: str, **kwargs):
     model_info = next((m for m in SUPPORTED_MODELS if m["name"] == model), None)
     if model_info and ModelCategory.CHAT in model_info["categories"]:
         return LLM(
             model=f"gemini/{model}",  # CrewAI 格式：provider/model  zhipuai采用openai
-            base_url=openai_api_base,
-            api_key=openai_api_key,
+            base_url=base_url,
+            api_key=api_key,
             **kwargs,
         )
     else:

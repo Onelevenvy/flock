@@ -20,8 +20,8 @@ Even though you don't perform tasks by yourself, you have a lot of experience in
         agents_config: List[Dict[str, Any]],
         tasks_config: List[Dict[str, Any]],
         process_type: str = "sequential",
-        openai_api_key: str = "",
-        openai_api_base: str = "",
+        api_key: str = "",
+        base_url: str = "",
         manager_config: Dict[str, Any] = {},
         config: dict[str, Any] = {},
     ):
@@ -35,8 +35,8 @@ Even though you don't perform tasks by yourself, you have a lot of experience in
         self.llm = model_provider_manager.init_crewai_model(
             provider_name=provider,
             model=model,
-            openai_api_key=openai_api_key,
-            openai_api_base=openai_api_base,
+            api_key=api_key,
+            base_url=base_url,
         )
 
         # Initialize manager agent for hierarchical process
@@ -51,7 +51,7 @@ Even though you don't perform tasks by yourself, you have a lot of experience in
                     "allow_delegation": True,
                 },
             )
-            
+
             # Parse variables in manager config
             if "role" in manager_agent_config:
                 manager_agent_config["role"] = parse_variables(
@@ -112,7 +112,7 @@ Even though you don't perform tasks by yourself, you have a lot of experience in
         """Create a task from configuration with variable parsing"""
         # Parse variables in task configuration
         description = parse_variables(task_config["description"], state["node_outputs"])
-        
+
         # 确保 expected_output 始终是字符串
         expected_output = ""
         if task_config.get("expected_output"):

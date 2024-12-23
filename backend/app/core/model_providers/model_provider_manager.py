@@ -52,16 +52,14 @@ class ModelProviderManager:
         provider_name: str,
         model: str,
         temperature: float,
-        openai_api_key: str,
-        openai_api_base: str,
+        api_key: str,
+        base_url: str,
         **kwargs,
     ):
         init_function = self.init_functions.get(provider_name)
         if init_function:
 
-            return init_function(
-                model, temperature, openai_api_key, openai_api_base, **kwargs
-            )
+            return init_function(model, temperature, api_key, base_url, **kwargs)
         else:
             raise ValueError(
                 f"No initialization function found for provider: {provider_name}"
@@ -71,13 +69,13 @@ class ModelProviderManager:
         self,
         provider_name: str,
         model: str,
-        openai_api_key: str,
-        openai_api_base: str,
+        api_key: str,
+        base_url: str,
         **kwargs,
     ):
         init_function = self.init_crewai_functions.get(provider_name)
         if init_function:
-            return init_function(model, openai_api_key, openai_api_base, **kwargs)
+            return init_function(model, api_key, base_url, **kwargs)
         else:
             raise ValueError(
                 f"No crewai initialization function found for provider: {provider_name}"

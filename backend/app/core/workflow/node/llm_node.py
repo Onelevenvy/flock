@@ -26,8 +26,8 @@ class LLMBaseNode:
         provider: str,
         model: str,
         tools: Sequence[BaseTool],
-        openai_api_key: str,
-        openai_api_base: str,
+        api_key: str,
+        base_url: str,
         temperature: float,
         system_prompt: str,
         agent_name: str,
@@ -38,7 +38,7 @@ class LLMBaseNode:
 
         try:
             self.model = model_provider_manager.init_model(
-                provider, model, temperature, openai_api_key, openai_api_base
+                provider, model, temperature, api_key, base_url
             )
 
             if len(tools) >= 1 and hasattr(self.model, "bind_tools"):
@@ -46,7 +46,7 @@ class LLMBaseNode:
 
             # 为最终答案设置一个单独的模型实例
             self.final_answer_model = model_provider_manager.init_model(
-                provider, model, 0, openai_api_key, openai_api_base
+                provider, model, 0, api_key, base_url
             )
 
         except ValueError:
@@ -55,8 +55,8 @@ class LLMBaseNode:
                 self.model = ChatOpenAI(
                     model=model,
                     temperature=temperature,
-                    openai_api_key=openai_api_key,
-                    openai_api_base=openai_api_base,
+                    openai_api_key=api_key,
+                    openai_api_base=base_url,
                 )
                 if len(tools) >= 1:
                     self.model = self.model.bind_tools(tools)
@@ -81,9 +81,7 @@ class LLMBaseNode:
                     model=model,
                     temperature=temperature,
                     base_url=(
-                        openai_api_base
-                        if openai_api_base
-                        else "http://host.docker.internal:11434"
+                        base_url if base_url else "http://host.docker.internal:11434"
                     ),
                 )
                 if len(tools) >= 1:
@@ -96,8 +94,8 @@ class LLMBaseNode:
                     model_provider=provider,
                     temperature=temperature,
                     streaming=True,
-                    openai_api_key=openai_api_key,
-                    openai_api_base=openai_api_base,
+                    api_key=api_key,
+                    base_url=base_url,
                 )
                 if len(tools) >= 1:
                     self.model = self.model.bind_tools(tools)

@@ -424,8 +424,8 @@ def _add_llm_node(
                     provider=model_info["provider_name"],
                     model=model_info["ai_model_name"],
                     tools=tools_to_bind,
-                    openai_api_key=model_info["api_key"],
-                    openai_api_base=model_info["base_url"],
+                    api_key=model_info["api_key"],
+                    base_url=model_info["base_url"],
                     temperature=node_data["temperature"],
                     system_prompt=node_data.get("systemMessage", None),
                     agent_name=node_data.get("label", node_id),
@@ -534,11 +534,10 @@ def _add_edge(graph_builder, edge, nodes, conditional_edges):
             graph_builder.add_edge(edge["source"], END)
         else:
             graph_builder.add_edge(edge["source"], edge["target"])
-    # elif source_node["type"] == "classifier":   #   classifier  必定是conditional_edges  不会有普通边，if else node也一样
-    #     if target_node["type"] == "end":
-    #         graph_builder.add_edge(edge["source"], END)
-    #     if edge["type"] == "default":
-    #         graph_builder.add_edge(edge["source"], edge["target"])
+    elif source_node["type"] in ["classifier", "ifelse"]:  # classifier 必定是conditional_edges 不会有普通边，if else node也一样
+        if target_node["type"] == "end":
+            graph_builder.add_edge(edge["source"], END)
+       
 
 
 def _add_conditional_edges(graph_builder, conditional_edges, nodes):
@@ -582,8 +581,8 @@ def _add_crewai_node(graph_builder, node_id, node_type, node_data):
         agents_config=node_data["agents"],
         tasks_config=node_data["tasks"],
         process_type=process_type,
-        openai_api_key=model_info["api_key"],
-        openai_api_base=model_info["base_url"],
+        api_key=model_info["api_key"],
+        base_url=model_info["base_url"],
         manager_config=node_data.get("manager_config", {}),
         config=node_data.get("config", {}),
     )
@@ -632,8 +631,8 @@ def _add_classifier_node(graph_builder, node_id, node_data):
             model=model_info["ai_model_name"],
             categories=node_data["categories"],
             input=node_data.get("input", ""),
-            openai_api_key=model_info["api_key"],
-            openai_api_base=model_info["base_url"],
+            api_key=model_info["api_key"],
+            base_url=model_info["base_url"],
         ).work,
     )
 

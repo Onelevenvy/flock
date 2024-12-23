@@ -50,16 +50,16 @@ class ClassifierNode:
         model: str,
         categories: list[Dict[str, str]],
         input: str = "",
-        openai_api_key: str = "",
-        openai_api_base: str = "",
+        api_key: str = "",
+        base_url: str = "",
     ):
         self.node_id = node_id
         self.provider = provider
         self.model = model
         self.categories = categories
         self.input = input
-        self.openai_api_key = openai_api_key
-        self.openai_api_base = openai_api_base
+        self.api_key = api_key
+        self.base_url = base_url
 
     async def work(self, state: TeamState, config: RunnableConfig) -> ReturnTeamState:
         """Execute classification work"""
@@ -78,8 +78,8 @@ class ClassifierNode:
             provider_name=self.provider,
             model=self.model,
             temperature=0.1,
-            openai_api_key=self.openai_api_key,
-            openai_api_base=self.openai_api_base,
+            api_key=self.api_key,
+            base_url=self.base_url,
         )
 
         # Prepare categories list and input in JSON format
@@ -112,18 +112,18 @@ class ClassifierNode:
             except Exception as e:
                 print(f"Error normalizing result: {e}")
                 return self.categories[0]["category_name"]  # 出错时使用默认分类
-            
+
         result = await chain.ainvoke(input_json)
         print("classifier result:", result)
-        
+
         # Ensure categories is not empty and has valid format
         if not self.categories or not isinstance(self.categories, list):
             print("Invalid categories format")
             return {"node_outputs": state.get("node_outputs", {})}
-            
+
         # Get normalized category name
         category_name = normalize_category_result(result)
-        
+
         try:
             # Find matching category and get its ID
             matched_category = next(
@@ -140,10 +140,11 @@ class ClassifierNode:
         except Exception as e:
             print(f"Error matching category: {e}")
             # 确保至少有一个有效的分类可用
-            matched_category = self.categories[0] if self.categories else {
-                "category_id": "default",
-                "category_name": "Default Category"
-            }
+            matched_category = (
+                self.categories[0]
+                if self.categories
+                else {"category_id": "default", "category_name": "Default Category"}
+            )
 
         # Create response message
         # result_message = AIMessage(content=matched_category["category_name"])
