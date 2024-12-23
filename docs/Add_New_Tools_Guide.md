@@ -54,7 +54,7 @@ __all__ = ["your_tool_instance"]
 
 #### 2.2. `your_tool.py`
 ```python
-from langchain.pydantic_v1 import BaseModel, Field
+from pydantic import BaseModel, Field
 from langchain.tools import StructuredTool
 
 class YourToolInput(BaseModel):
@@ -141,7 +141,7 @@ Here's a complete example of a simple weather tool:
 
 ```python
 import requests
-from langchain.pydantic_v1 import BaseModel, Field
+from pydantic import BaseModel, Field
 from langchain.tools import StructuredTool
 from app.core.tools.utils import get_credential_value
 

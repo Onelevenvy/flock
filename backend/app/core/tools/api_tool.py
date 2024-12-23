@@ -4,7 +4,7 @@ from enum import Enum
 from typing import Any
 
 import requests
-from langchain.pydantic_v1 import Field, create_model
+from pydantic import Field, create_model
 from langchain.tools import StructuredTool
 from langchain_core.tools import ToolException
 from pydantic import BaseModel, ValidationError, field_validator
