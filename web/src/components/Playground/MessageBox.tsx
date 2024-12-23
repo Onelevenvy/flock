@@ -31,6 +31,8 @@ import { GrFormNextLink } from "react-icons/gr";
 import { VscSend } from "react-icons/vsc";
 import { throttle } from "lodash";
 
+import "katex/dist/katex.min.css";
+
 import useWorkflowStore from "@/stores/workflowStore";
 
 import type { ChatResponse, InterruptDecision } from "../../client";

@@ -7,12 +7,26 @@ import {
   HStack,
 } from "@chakra-ui/react";
 import "highlight.js/styles/atom-one-dark.css";
+import "katex/dist/katex.min.css";
 import { Terminal } from "lucide-react";
 import ReactMarkdown from "react-markdown";
 import rehypeHighlight from "rehype-highlight";
+import remarkMath from "remark-math";
+import rehypeKatex from "rehype-katex";
 import { v4 } from "uuid";
 
 import CopyButton from "./CopyButton";
+
+const preprocessLaTeX = (content: string) => {
+  if (typeof content !== "string") return content;
+  return content
+    .replace(/\\\[(.*?)\\\]/g, (_, equation) => `$$${equation}$$`)
+    .replace(/\\\((.*?)\\\)/g, (_, equation) => `$$${equation}$$`)
+    .replace(
+      /(^|[^\\])\$(.+?)\$/g,
+      (_, prefix, equation) => `${prefix}$${equation}$`
+    );
+};
 
 const Markdown = ({ content }: { content: any }) => {
   const textColor = useColorModeValue("gray.700", "gray.200");
@@ -21,15 +35,18 @@ const Markdown = ({ content }: { content: any }) => {
   const borderColor = useColorModeValue("gray.200", "gray.600");
   const inlineCodeBg = useColorModeValue("gray.100", "gray.700");
 
+  const latexContent = preprocessLaTeX(content);
+
   return (
     <>
       {content && !content.startsWith("data:image") ? (
         <ReactMarkdown
-          rehypePlugins={[rehypeHighlight]}
+          remarkPlugins={[remarkMath]}
+          rehypePlugins={[rehypeHighlight, rehypeKatex]}
           components={{
             pre: ({ children }) => (
-              <Box 
-                as="pre" 
+              <Box
+                as="pre"
                 overflow="auto"
                 sx={{
                   "&::-webkit-scrollbar": {
@@ -78,16 +95,8 @@ const Markdown = ({ content }: { content: any }) => {
                       borderColor={borderColor}
                     >
                       <HStack spacing={3}>
-                        <Icon 
-                          as={Terminal} 
-                          boxSize={4} 
-                          color="gray.500"
-                        />
-                        <Text 
-                          fontSize="sm" 
-                          color="gray.600"
-                          fontWeight="500"
-                        >
+                        <Icon as={Terminal} boxSize={4} color="gray.500" />
+                        <Text fontSize="sm" color="gray.600" fontWeight="500">
                           {match[1].toUpperCase()}
                         </Text>
                       </HStack>
@@ -149,8 +158,8 @@ const Markdown = ({ content }: { content: any }) => {
             },
             img: ({ alt, src, title }) => {
               return (
-                <Box 
-                  as="figure" 
+                <Box
+                  as="figure"
                   my={6}
                   transition="all 0.2s"
                   _hover={{
@@ -187,7 +196,7 @@ const Markdown = ({ content }: { content: any }) => {
           }}
           className="prose prose-zinc max-w-2xl dark:prose-invert"
         >
-          {content}
+          {latexContent}
         </ReactMarkdown>
       ) : (
         <Box
