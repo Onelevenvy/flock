@@ -372,12 +372,53 @@ const QwenIcon = createIcon({
     </svg>
   ),
 });
+
+const GoogleGeminiIcon = createIcon({
+  displayName: "GoogleGeminiIcon",
+
+  path: (
+    <svg
+      width="24"
+      height="24"
+      viewBox="0 0 24 24"
+      fill="none"
+      xmlns="http://www.w3.org/2000/svg"
+    >
+      <rect
+        width="24"
+        height="24"
+        rx="6"
+        fill="url(#paint0_linear_7301_16076)"
+      />
+      <path
+        d="M20 12.0116C15.7043 12.42 12.3692 15.757 11.9995 20C11.652 15.8183 8.20301 12.361 4 12.0181C8.21855 11.6991 11.6656 8.1853 12.006 4C12.2833 8.19653 15.8057 11.7005 20 12.0116Z"
+        fill="white"
+        fill-opacity="0.88"
+      />
+      <defs>
+        <linearGradient
+          id="paint0_linear_7301_16076"
+          x1="-9"
+          y1="29.5"
+          x2="19.4387"
+          y2="1.43791"
+          gradientUnits="userSpaceOnUse"
+        >
+          <stop offset="0.192878" stop-color="#1C7DFF" />
+          <stop offset="0.520213" stop-color="#1C69FF" />
+          <stop offset="1" stop-color="#F0DCD6" />
+        </linearGradient>
+      </defs>
+    </svg>
+  ),
+});
 const iconMap: { [key: string]: React.FC } = {
   openai: OpenAIIcon,
   zhipuai: ZhipuAIIcon,
   ollama: OllamaIcon,
   siliconflow: SiliconFlowIcon,
   qwen: QwenIcon,
+  google: GoogleGeminiIcon,
   default: OpenAIIcon,
 };
 
@@ -389,6 +430,7 @@ const getProviderFromModelName = (modelName: string): string => {
   if (lowerModelName.includes("llama")) return "ollama";
   if (lowerModelName.includes("qwen")) return "qwen";
   if (lowerModelName.includes("/")) return "siliconflow";
+  if (lowerModelName.includes("gemini")) return "google";
 
   // 添加更多模型名称到提供商的映射
   return "default";
