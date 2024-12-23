@@ -9,6 +9,11 @@
 
 > [!NOTE]
 
+> ### 🎉 What's New 2024/12/23
+>
+> - **Multimodal Chat Support**: Added support for multimodal chat (currently only supports image modality, with more modalities coming soon)!
+ <img src="assets/gemini.png" alt="multimodal" width="500" />
+
 > ### 🎉 What's New 2024/12/18
 >
 > - **If-Else Node**: Added If-Else node to support conditional logic in workflows! The node supports various condition types including Contains, Not contains, Start with, End with, Is, Is not, Is empty, and Is not empty. Multiple conditions can be combined using AND/OR operators for complex conditional logic, allowing you to create sophisticated branching workflows based on your data.
