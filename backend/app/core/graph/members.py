@@ -23,6 +23,7 @@ from app.core.rag.qdrant import QdrantStore
 from app.core.tools import managed_tools
 from app.core.tools.api_tool import dynamic_api_tool
 from app.core.tools.retriever_tool import create_retriever_tool_custom_modified
+from app.core.model_providers.model_provider_manager import model_provider_manager
 
 
 class GraphSkill(BaseModel):
@@ -157,82 +158,26 @@ class BaseNode:
         base_url: str,
         temperature: float,
     ):
-        
-        if provider in ["zhipuai", "siliconflow", "qwen"] and api_key and base_url:
-
-            self.model = ChatOpenAI(
-                model=model,
-                streaming=True,
-                api_key=api_key,
-                base_url=base_url,
-                temperature=temperature,
-            )
-            self.final_answer_model = ChatOpenAI(
-                model=model,
-                streaming=True,
-                api_key=api_key,
-                base_url=base_url,
-                temperature=0,
-            )
-        elif provider in ["google"] and api_key:
-
-            self.model = ChatGoogleGenerativeAI(
+        try:
+            self.model = model_provider_manager.init_model(
+                provider_name=provider,
                 model=model,
                 temperature=temperature,
-                google_api_key=api_key,
-            )
-            self.final_answer_model = ChatGoogleGenerativeAI(
-                model=model,
-                temperature=0,
-                google_api_key=api_key,
+                api_key=api_key,
+                base_url=base_url,
             )
 
-        elif provider in ["openai"] and base_url:
-            self.model = init_chat_model(
-                model,
-                model_provider=provider,
-                base_url=base_url,
-                temperature=temperature,
-            )
-            self.final_answer_model = ChatOpenAI(
+            # 初始化 final_answer_model 时使用温度为 0
+            self.final_answer_model = model_provider_manager.init_model(
+                provider_name=provider,
                 model=model,
                 temperature=0,
-                streaming=True,
                 api_key=api_key,
                 base_url=base_url,
             )
-        elif provider == "ollama":
-            self.model = ChatOllama(
-                model=model,
-                temperature=temperature,
-                base_url=(
-                    base_url if base_url else "http://host.docker.internal:11434"
-                ),
-            )
-            self.final_answer_model = ChatOllama(
-                model=model,
-                temperature=0,
-                streaming=True,
-                api_key=api_key,
-                base_url=base_url,
-            )
-        else:
-            self.model = init_chat_model(
-                model,
-                model_provider=provider,
-                temperature=temperature,
-                streaming=True,
-                api_key=api_key,
-                base_url=base_url,
-            )
-            self.final_answer_model = init_chat_model(
-                model,
-                model_provider=provider,
-                temperature=temperature,
-                streaming=True,
-                api_key=api_key,
-                base_url=base_url,
-            )
+
+        except ValueError:
+            raise ValueError(f"Model {model} is not supported as a chat model.")
 
     def tag_with_name(self, ai_message: AIMessage, name: str) -> AIMessage:
         """Tag a name to the AI message"""
