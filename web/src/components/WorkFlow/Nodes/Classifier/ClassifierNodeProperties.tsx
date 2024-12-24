@@ -50,16 +50,25 @@ const ClassifierNodeProperties: React.FC<ClassifierNodePropertiesProps> = ({
     };
 
     const currentCategories = node.data.categories || [];
+    const othersCategory = currentCategories.find(
+      (c: ClassifierCategory) => c.category_id === "others_category"
+    );
+    const regularCategories = currentCategories.filter(
+      (c: ClassifierCategory) => c.category_id !== "others_category"
+    );
+
     onNodeDataChange(node.id, "categories", [
-      ...currentCategories,
+      ...regularCategories,
       newCategory,
+      othersCategory!,
     ]);
   }, [node.id, node.data.categories, onNodeDataChange]);
 
   const handleRemoveCategory = useCallback(
     (categoryId: string) => {
       const currentCategories = node.data.categories || [];
-      if (currentCategories.length <= 2) return;
+      if (categoryId === "others_category" || currentCategories.length <= 3)
+        return;
       onNodeDataChange(
         node.id,
         "categories",
@@ -73,6 +82,8 @@ const ClassifierNodeProperties: React.FC<ClassifierNodePropertiesProps> = ({
 
   const handleCategoryNameChange = useCallback(
     (categoryId: string, newName: string) => {
+      if (categoryId === "others_category") return;
+
       const currentCategories = node.data.categories || [];
       const updatedCategories = currentCategories.map(
         (category: ClassifierCategory) =>
@@ -155,7 +166,6 @@ const ClassifierNodeProperties: React.FC<ClassifierNodePropertiesProps> = ({
                   )}
                   size="sm"
                   bg="ui.inputbgcolor"
-                  
                   _hover={{ borderColor: "blue.200" }}
                   _focus={{
                     borderColor: "blue.50",

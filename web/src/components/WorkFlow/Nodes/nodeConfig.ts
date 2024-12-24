@@ -72,8 +72,8 @@ export const nodeConfig: Record<string, NodeConfigItem> = {
     colorScheme: "blue",
     properties: LLMNodeProperties,
     allowedConnections: {
-      sources: ["left","right"],
-      targets: ["left","right"],
+      sources: ["left", "right"],
+      targets: ["left", "right"],
     },
     initialData: {
       model: "glm-4-flash",
@@ -181,8 +181,8 @@ export const nodeConfig: Record<string, NodeConfigItem> = {
     inputVariables: ["Input"],
     initialData: {
       categories: [
-        { category_id: "1", category_name: "" },
-        { category_id: "2", category_name: "" },
+        { category_id: uuidv4(), category_name: "" },
+        { category_id: "others_category", category_name: "其它" },
       ],
       model: "glm-4-flash",
     },
