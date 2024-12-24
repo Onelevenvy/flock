@@ -108,10 +108,12 @@ class ClassifierNode:
                     return result
                 else:
                     print(f"Unexpected result format: {result}")
-                    return self.categories[0]["category_name"]  # 使用默认分类
+                    # 使用 others 分类作为默认
+                    return "Others Intent"
             except Exception as e:
                 print(f"Error normalizing result: {e}")
-                return self.categories[0]["category_name"]  # 出错时使用默认分类
+                # 出错时使用 others 分类
+                return "Others Intent"
 
         result = await chain.ainvoke(input_json)
         print("classifier result:", result)
@@ -132,30 +134,38 @@ class ClassifierNode:
                     for cat in self.categories
                     if isinstance(cat, dict)
                     and "category_name" in cat
-                    and "category_id" in cat  # 确保必要的键存在
+                    and "category_id" in cat
                     and cat["category_name"].lower() == category_name.lower()
                 ),
-                self.categories[0],  # Default to first category if no match found
+                next(  # 如果没找到匹配的类别，使用 others 类别
+                    (
+                        cat
+                        for cat in self.categories
+                        if cat["category_id"] == "others_category"
+                    ),
+                    {
+                        "category_id": "others_category",
+                        "category_name": "Others Intent",
+                    },  # 最后的 fallback
+                ),
             )
         except Exception as e:
             print(f"Error matching category: {e}")
-            # 确保至少有一个有效的分类可用
-            matched_category = (
-                self.categories[0]
-                if self.categories
-                else {"category_id": "default", "category_name": "Default Category"}
+            # 确保使用 others 类别作为 fallback
+            matched_category = next(
+                (
+                    cat
+                    for cat in self.categories
+                    if cat["category_id"] == "others_category"
+                ),
+                {"category_id": "others_category", "category_name": "Others Intent"},
             )
 
-        # Create response message
-        # result_message = AIMessage(content=matched_category["category_name"])
-
-        # Update node outputs with both category_name and category_id
+        # Update node outputs with both category_id and category_name
         new_output = {
             self.node_id: {
-                "category_id": matched_category["category_id"],  # 更语义化的键名
-                "category_name": matched_category[
-                    "category_name"
-                ],  # 保存分类名称供参考
+                "category_id": matched_category["category_id"],
+                "category_name": matched_category["category_name"],
             }
         }
         state["node_outputs"] = update_node_outputs(state["node_outputs"], new_output)
