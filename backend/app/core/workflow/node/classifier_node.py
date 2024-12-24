@@ -116,7 +116,7 @@ class ClassifierNode:
                 return "Others Intent"
 
         result = await chain.ainvoke(input_json)
-        print("classifier result:", result)
+        
 
         # Ensure categories is not empty and has valid format
         if not self.categories or not isinstance(self.categories, list):
@@ -160,7 +160,7 @@ class ClassifierNode:
                 ),
                 {"category_id": "others_category", "category_name": "Others Intent"},
             )
-
+        print("matched_category:", matched_category)
         # Update node outputs with both category_id and category_name
         new_output = {
             self.node_id: {

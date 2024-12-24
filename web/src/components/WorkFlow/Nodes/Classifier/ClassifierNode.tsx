@@ -79,9 +79,13 @@ const ClassifierNode: React.FC<NodeProps<ClassifierNodeData>> = (props) => {
           >
             <Text fontSize="xs" fontWeight="500">
               {category.category_id === "others_category"
-                ? t("workflow.nodes.classifier.othersCategory")
-                : category.category_name ||
-                  `${t("workflow.nodes.classifier.category")} ${index + 1}`}
+                ? `${t("workflow.nodes.classifier.category")} ${index + 1}: ${t(
+                    "workflow.nodes.classifier.othersCategory"
+                  )}`
+                : `${t("workflow.nodes.classifier.category")} ${index + 1}: ${
+                    category.category_name ||
+                    t("workflow.nodes.classifier.untitled")
+                  }`}
             </Text>
             <Handle
               type="source"
