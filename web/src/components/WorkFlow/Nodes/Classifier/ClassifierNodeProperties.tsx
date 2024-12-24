@@ -67,8 +67,14 @@ const ClassifierNodeProperties: React.FC<ClassifierNodePropertiesProps> = ({
   const handleRemoveCategory = useCallback(
     (categoryId: string) => {
       const currentCategories = node.data.categories || [];
-      if (categoryId === "others_category" || currentCategories.length <= 3)
+      if (
+        categoryId === "others_category" ||
+        categoryId === currentCategories[0].category_id ||
+        currentCategories.length <= 2
+      ) {
         return;
+      }
+
       onNodeDataChange(
         node.id,
         "categories",
@@ -136,43 +142,55 @@ const ClassifierNodeProperties: React.FC<ClassifierNodePropertiesProps> = ({
               >
                 <HStack justify="space-between" mb={2}>
                   <Text fontSize="sm" fontWeight="500" color="gray.900">
-                    {t("workflow.nodes.classifier.category")} {index + 1}
+                    {category.category_id === "others_category"
+                      ? t("workflow.nodes.classifier.others")
+                      : `${t("workflow.nodes.classifier.category")} ${index + 1}`}
                   </Text>
-                  {node.data.categories.length > 2 && (
-                    <IconButton
-                      aria-label={t("workflow.common.delete")}
-                      icon={<FaTrash />}
-                      size="xs"
-                      colorScheme="gray"
-                      variant="ghost"
-                      transition="all 0.2s"
-                      _hover={{
-                        transform: "scale(1.1)",
-                      }}
-                      onClick={() => handleRemoveCategory(category.category_id)}
-                    />
-                  )}
+                  {category.category_id !== "others_category" &&
+                    category.category_id !==
+                      node.data.categories[0].category_id && (
+                      <IconButton
+                        aria-label={t("workflow.common.delete")}
+                        icon={<FaTrash />}
+                        size="xs"
+                        colorScheme="gray"
+                        variant="ghost"
+                        transition="all 0.2s"
+                        _hover={{
+                          transform: "scale(1.1)",
+                        }}
+                        onClick={() =>
+                          handleRemoveCategory(category.category_id)
+                        }
+                      />
+                    )}
                 </HStack>
-                <Input
-                  value={category.category_name}
-                  onChange={(e) =>
-                    handleCategoryNameChange(
-                      category.category_id,
-                      e.target.value
-                    )
-                  }
-                  placeholder={String(
-                    t("workflow.nodes.classifier.placeholder")
-                  )}
-                  size="sm"
-                  bg="ui.inputbgcolor"
-                  _hover={{ borderColor: "blue.200" }}
-                  _focus={{
-                    borderColor: "blue.50",
-                    boxShadow: "0 0 0 1px var(--chakra-colors-blue-500)",
-                  }}
-                  transition="all 0.2s"
-                />
+                {category.category_id === "others_category" ? (
+                  <Text fontSize="sm" color="gray.600">
+                    {category.category_name}
+                  </Text>
+                ) : (
+                  <Input
+                    value={category.category_name}
+                    onChange={(e) =>
+                      handleCategoryNameChange(
+                        category.category_id,
+                        e.target.value
+                      )
+                    }
+                    placeholder={String(
+                      t("workflow.nodes.classifier.placeholder")
+                    )}
+                    size="sm"
+                    bg="ui.inputbgcolor"
+                    _hover={{ borderColor: "blue.200" }}
+                    _focus={{
+                      borderColor: "blue.50",
+                      boxShadow: "0 0 0 1px var(--chakra-colors-blue-500)",
+                    }}
+                    transition="all 0.2s"
+                  />
+                )}
               </Box>
             )
           )}
