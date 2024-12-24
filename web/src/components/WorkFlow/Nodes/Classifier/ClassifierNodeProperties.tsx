@@ -143,7 +143,7 @@ const ClassifierNodeProperties: React.FC<ClassifierNodePropertiesProps> = ({
                 <HStack justify="space-between" mb={2}>
                   <Text fontSize="sm" fontWeight="500" color="gray.900">
                     {category.category_id === "others_category"
-                      ? t("workflow.nodes.classifier.others")
+                      ? t("workflow.nodes.classifier.othersCategory")
                       : `${t("workflow.nodes.classifier.category")} ${index + 1}`}
                   </Text>
                   {category.category_id !== "others_category" &&

@@ -95,6 +95,7 @@ const translation = {
         category: "Category",
         addCategory: "Add Category",
         placeholder: "Enter category name",
+        othersCategory: "Others Intent",
       },
       crewai: {
         model: "Model",

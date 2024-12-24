@@ -182,7 +182,7 @@ export const nodeConfig: Record<string, NodeConfigItem> = {
     initialData: {
       categories: [
         { category_id: uuidv4(), category_name: "" },
-        { category_id: "others_category", category_name: "其它" },
+        { category_id: "others_category", category_name: "Others Intent" },
       ],
       model: "glm-4-flash",
     },

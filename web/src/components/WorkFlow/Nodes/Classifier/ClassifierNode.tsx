@@ -79,7 +79,7 @@ const ClassifierNode: React.FC<NodeProps<ClassifierNodeData>> = (props) => {
           >
             <Text fontSize="xs" fontWeight="500">
               {category.category_id === "others_category"
-                ? t("workflow.nodes.classifier.others") || "其它"
+                ? t("workflow.nodes.classifier.othersCategory") || "Others Intent"
                 : category.category_name ||
                   `${t("workflow.nodes.classifier.category")} ${index + 1}`}
             </Text>

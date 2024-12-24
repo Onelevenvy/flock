@@ -93,6 +93,7 @@ const translation = {
         category: "类别",
         addCategory: "添加类别",
         placeholder: "请输入类别名称",
+        othersCategory: "其它意图",
       },
       crewai: {
         model: "模型",
