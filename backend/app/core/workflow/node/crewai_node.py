@@ -1,4 +1,5 @@
 from typing import Any, Dict, List
+from app.core.workflow.utils.db_utils import get_model_info
 from langchain_core.runnables import RunnableConfig
 from .state import ReturnTeamState, TeamState, update_node_outputs, parse_variables
 from langchain_core.messages import AIMessage
@@ -15,13 +16,10 @@ Even though you don't perform tasks by yourself, you have a lot of experience in
     def __init__(
         self,
         node_id: str,
-        provider: str,
-        model: str,
+        model_name: str,
         agents_config: List[Dict[str, Any]],
         tasks_config: List[Dict[str, Any]],
         process_type: str = "sequential",
-        api_key: str = "",
-        base_url: str = "",
         manager_config: Dict[str, Any] = {},
         config: dict[str, Any] = {},
     ):
@@ -31,12 +29,13 @@ Even though you don't perform tasks by yourself, you have a lot of experience in
         self.process_type = process_type
         self.config = config
 
+        self.model_info = get_model_info(model_name)
         # 初始化 LLM
         self.llm = model_provider_manager.init_crewai_model(
-            provider_name=provider,
-            model=model,
-            api_key=api_key,
-            base_url=base_url,
+            provider_name=self.model_info["provider_name"],
+            model=self.model_info["ai_model_name"],
+            api_key=self.model_info["api_key"],
+            base_url=self.model_info["base_url"],
         )
 
         # Initialize manager agent for hierarchical process

@@ -1,4 +1,5 @@
 from typing import Any, Dict
+from app.core.workflow.utils.db_utils import get_model_info
 from langchain_core.messages import AIMessage
 from langchain_core.runnables import RunnableConfig
 from langchain_core.output_parsers import JsonOutputParser
@@ -46,20 +47,16 @@ class ClassifierNode:
     def __init__(
         self,
         node_id: str,
-        provider: str,
-        model: str,
+        model_name: str,
         categories: list[Dict[str, str]],
         input: str = "",
-        api_key: str = "",
-        base_url: str = "",
     ):
         self.node_id = node_id
-        self.provider = provider
-        self.model = model
+
         self.categories = categories
         self.input = input
-        self.api_key = api_key
-        self.base_url = base_url
+
+        self.model_info = get_model_info(model_name)
 
     async def work(self, state: TeamState, config: RunnableConfig) -> ReturnTeamState:
         """Execute classification work"""
@@ -75,11 +72,11 @@ class ClassifierNode:
 
         # Initialize LLM with provider info
         llm = model_provider_manager.init_model(
-            provider_name=self.provider,
-            model=self.model,
+            provider_name=self.model_info["provider_name"],
+            model=self.model_info["ai_model_name"],
             temperature=0.1,
-            api_key=self.api_key,
-            base_url=self.base_url,
+            api_key=self.model_info["api_key"],
+            base_url=self.model_info["base_url"],
         )
 
         # Prepare categories list and input in JSON format
@@ -116,7 +113,6 @@ class ClassifierNode:
                 return "Others Intent"
 
         result = await chain.ainvoke(input_json)
-        
 
         # Ensure categories is not empty and has valid format
         if not self.categories or not isinstance(self.categories, list):

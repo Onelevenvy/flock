@@ -2,8 +2,6 @@ import time
 from functools import lru_cache
 from typing import Any, Dict
 
-from app.core.model_providers import model_provider_manager
-from app.models import ModelProvider, Models
 from langchain.tools import BaseTool
 from langchain.tools.retriever import create_retriever_tool
 from langchain_core.messages import AIMessage, AnyMessage
@@ -15,8 +13,7 @@ from langgraph.prebuilt import ToolNode
 
 from app.core.rag.qdrant import QdrantStore
 from app.core.tools import managed_tools
-from app.core.workflow.utils.db_utils import get_all_models_helper, get_db_session
-from sqlmodel import select
+
 
 from .node.answer_node import AnswerNode
 from .node.input_node import InputNode
@@ -398,7 +395,6 @@ def _add_llm_node(
     llm_children,
 ):
     model_name = node_data["model"]
-    model_info = get_model_info(model_name)
 
     if is_sequential:
         node_class = LLMNode
@@ -421,11 +417,8 @@ def _add_llm_node(
             RunnableLambda(
                 node_class(
                     node_id,
-                    provider=model_info["provider_name"],
-                    model=model_info["ai_model_name"],
+                    model_name=model_name,
                     tools=tools_to_bind,
-                    api_key=model_info["api_key"],
-                    base_url=model_info["base_url"],
                     temperature=node_data["temperature"],
                     system_prompt=node_data.get("systemMessage", None),
                     agent_name=node_data.get("label", node_id),
@@ -534,10 +527,12 @@ def _add_edge(graph_builder, edge, nodes, conditional_edges):
             graph_builder.add_edge(edge["source"], END)
         else:
             graph_builder.add_edge(edge["source"], edge["target"])
-    elif source_node["type"] in ["classifier", "ifelse"]:  # classifier 必定是conditional_edges 不会有普通边，if else node也一样
+    elif source_node["type"] in [
+        "classifier",
+        "ifelse",
+    ]:  # classifier 必定是conditional_edges 不会有普通边，if else node也一样
         if target_node["type"] == "end":
             graph_builder.add_edge(edge["source"], END)
-       
 
 
 def _add_conditional_edges(graph_builder, conditional_edges, nodes):
@@ -569,20 +564,15 @@ def _add_crewai_node(graph_builder, node_id, node_type, node_data):
     if not llm_config.get("model"):
         raise ValueError("CrewAI node requires llm model configuration")
 
-    model_info = get_model_info(llm_config["model"])
-
     process_type = node_data.get("process_type", "sequential")
 
     # 创建 CrewAI 节点
     crewai_node = CrewAINode(
         node_id=node_id,
-        provider=model_info["provider_name"],
-        model=model_info["ai_model_name"],
+        model_name=llm_config["model"],
         agents_config=node_data["agents"],
         tasks_config=node_data["tasks"],
         process_type=process_type,
-        api_key=model_info["api_key"],
-        base_url=model_info["base_url"],
         manager_config=node_data.get("manager_config", {}),
         config=node_data.get("config", {}),
     )
@@ -597,42 +587,16 @@ def _add_crewai_node(graph_builder, node_id, node_type, node_data):
         raise ValueError("Hierarchical process requires manager agent configuration")
 
 
-def get_model_info(model_name: str) -> Dict[str, str]:
-    """
-    Get model information from all available models.
-    """
-    with get_db_session() as session:
-        # 直接从数据库查询 Models 和关联的 ModelProvider
-        model = session.exec(
-            select(Models).join(ModelProvider).where(Models.ai_model_name == model_name)
-        ).first()
-
-        if not model:
-            raise ValueError(f"Model {model_name} not supported now.")
-
-        return {
-            "ai_model_name": model.ai_model_name,
-            "provider_name": model.provider.provider_name,
-            "base_url": model.provider.base_url,
-            "api_key": model.provider.decrypted_api_key,  # 现在可以使用decrypted_api_key
-        }
-
-
 def _add_classifier_node(graph_builder, node_id, node_data):
     """Add classifier node to graph"""
-    # 获取模型信息
-    model_info = get_model_info(node_data["model"])
 
     graph_builder.add_node(
         node_id,
         ClassifierNode(
             node_id=node_id,
-            provider=model_info["provider_name"],
-            model=model_info["ai_model_name"],
+            model_name=node_data["model"],
             categories=node_data["categories"],
             input=node_data.get("input", ""),
-            api_key=model_info["api_key"],
-            base_url=model_info["base_url"],
         ).work,
     )
 

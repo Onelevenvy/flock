@@ -1,13 +1,12 @@
 from collections.abc import Sequence
 from typing import Any
 
-from langchain.chat_models import init_chat_model
+from app.core.workflow.utils.db_utils import get_model_info
 from langchain_core.messages import AIMessage, AnyMessage
 from langchain_core.prompts import ChatPromptTemplate, MessagesPlaceholder
 from langchain_core.runnables import RunnableConfig, RunnableSerializable
 from langchain_core.tools import BaseTool
-from langchain_ollama import ChatOllama
-from langchain_openai import ChatOpenAI
+
 
 from app.core.model_providers.model_provider_manager import model_provider_manager
 from app.core.workflow.node.state import (
@@ -23,11 +22,8 @@ class LLMBaseNode:
     def __init__(
         self,
         node_id: str,
-        provider: str,
-        model: str,
+        model_name: str,
         tools: Sequence[BaseTool],
-        api_key: str,
-        base_url: str,
         temperature: float,
         system_prompt: str,
         agent_name: str,
@@ -35,71 +31,21 @@ class LLMBaseNode:
         self.node_id = node_id
         self.system_prompt = system_prompt
         self.agent_name = agent_name
-
+        self.model_info = get_model_info(model_name)
         try:
             self.model = model_provider_manager.init_model(
-                provider, model, temperature, api_key, base_url
+                provider_name=self.model_info["provider_name"],
+                model=self.model_info["ai_model_name"],
+                temperature=temperature,
+                api_key=self.model_info["api_key"],
+                base_url=self.model_info["base_url"],
             )
 
             if len(tools) >= 1 and hasattr(self.model, "bind_tools"):
                 self.model = self.model.bind_tools(tools)
 
-            # 为最终答案设置一个单独的模型实例
-            self.final_answer_model = model_provider_manager.init_model(
-                provider, model, 0, api_key, base_url
-            )
-
         except ValueError:
-            # 如果 model_provider_manager 无法初始化模型，回退到原来的初始化方法
-            if provider in ["zhipuai", "siliconflow"]:
-                self.model = ChatOpenAI(
-                    model=model,
-                    temperature=temperature,
-                    api_key=api_key,
-                    base_url=base_url,
-                )
-                if len(tools) >= 1:
-                    self.model = self.model.bind_tools(tools)
-                self.final_answer_model = self.model
-
-            elif provider in ["openai"]:
-                self.model = init_chat_model(
-                    model,
-                    model_provider=provider,
-                    temperature=temperature,
-                )
-                self.final_answer_model = ChatOpenAI(
-                    model=model,
-                    temperature=0,
-                    streaming=True,
-                )
-                if len(tools) >= 1:
-                    self.model = self.model.bind_tools(tools)
-                self.final_answer_model = self.model
-            elif provider == "ollama":
-                self.model = ChatOllama(
-                    model=model,
-                    temperature=temperature,
-                    base_url=(
-                        base_url if base_url else "http://host.docker.internal:11434"
-                    ),
-                )
-                if len(tools) >= 1:
-                    self.model = self.model.bind_tools(tools)
-                self.final_answer_model = self.model
-
-            else:
-                self.model = init_chat_model(
-                    model,
-                    model_provider=provider,
-                    temperature=temperature,
-                    streaming=True,
-                    api_key=api_key,
-                    base_url=base_url,
-                )
-                if len(tools) >= 1:
-                    self.model = self.model.bind_tools(tools)
-                self.final_answer_model = self.model
+            raise ValueError(f"Model {model_name} is not supported as a chat model.")
 
 
 class LLMNode(LLMBaseNode):
