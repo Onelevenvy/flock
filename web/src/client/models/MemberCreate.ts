@@ -14,8 +14,6 @@ export type MemberCreate = {
     source?: (number | null);
     provider?: string;
     model?: string;
-    api_key?: (string | null);
-    base_url?: (string | null);
     temperature?: number;
     interrupt?: boolean;
 };

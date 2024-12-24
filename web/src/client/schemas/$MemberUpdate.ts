@@ -85,22 +85,6 @@ export const $MemberUpdate = {
                 type: 'null',
             }],
         },
-        api_key: {
-            type: 'any-of',
-            contains: [{
-                type: 'string',
-            }, {
-                type: 'null',
-            }],
-        },
-        base_url: {
-            type: 'any-of',
-            contains: [{
-                type: 'string',
-            }, {
-                type: 'null',
-            }],
-        },
         temperature: {
             type: 'any-of',
             contains: [{

@@ -56,22 +56,6 @@ export const $MemberOut = {
         model: {
             type: 'string',
         },
-        api_key: {
-            type: 'any-of',
-            contains: [{
-                type: 'string',
-            }, {
-                type: 'null',
-            }],
-        },
-        base_url: {
-            type: 'any-of',
-            contains: [{
-                type: 'string',
-            }, {
-                type: 'null',
-            }],
-        },
         temperature: {
             type: 'number',
         },

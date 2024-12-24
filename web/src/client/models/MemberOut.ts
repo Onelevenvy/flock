@@ -17,8 +17,6 @@ export type MemberOut = {
     source?: (number | null);
     provider?: string;
     model?: string;
-    api_key?: (string | null);
-    base_url?: (string | null);
     temperature?: number;
     interrupt?: boolean;
     id: number;

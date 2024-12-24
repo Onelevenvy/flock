@@ -25,8 +25,6 @@ interface ClassifierNodePropertiesProps {
 interface FormValues {
   model: string;
   provider: string;
-  api_key: string;
-  base_url: string;
 }
 
 const ClassifierNodeProperties: React.FC<ClassifierNodePropertiesProps> = ({
@@ -39,8 +37,6 @@ const ClassifierNodeProperties: React.FC<ClassifierNodePropertiesProps> = ({
     defaultValues: {
       model: node.data.model || "",
       provider: "",
-      api_key: "",
-      base_url: "",
     },
   });
   const handleAddCategory = useCallback(() => {

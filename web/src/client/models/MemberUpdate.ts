@@ -17,8 +17,6 @@ export type MemberUpdate = {
     source?: (number | null);
     provider?: (string | null);
     model?: (string | null);
-    api_key?: (string | null);
-    base_url?: (string | null);
     temperature?: (number | null);
     interrupt?: (boolean | null);
     belongs_to?: (number | null);

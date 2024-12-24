@@ -2,6 +2,7 @@ from collections.abc import Mapping, Sequence
 from typing import Annotated, Any
 
 from app.core.workflow.node.state import format_messages
+from app.core.workflow.utils.db_utils import get_model_info
 from langchain.chat_models import init_chat_model
 from langchain_core.messages import AIMessage, AnyMessage
 from langchain_core.output_parsers.openai_tools import JsonOutputKeyToolsParser
@@ -62,10 +63,6 @@ class GraphPerson(BaseModel):
     provider: str = Field(description="The provider for the llm model")
     model: str = Field(description="The llm model to use for this person")
 
-    api_key: str | None = Field(description="The api key")
-
-    base_url: str | None = Field(description="The base url")
-
     temperature: float = Field(description="The temperature of the llm model")
     backstory: str = Field(
         description="Description of the person's experience, motives and concerns."
@@ -103,9 +100,6 @@ class GraphTeam(BaseModel):
     provider: str = Field(description="The provider of the team leader's llm model")
     model: str = Field(description="The llm model to use for this team leader")
 
-    api_key: str = Field(description="The api key")
-
-    base_url: str = Field(description="The base url")
     temperature: float = Field(
         description="The temperature of the team leader's llm model"
     )
@@ -154,17 +148,16 @@ class BaseNode:
         self,
         provider: str,
         model: str,
-        api_key: str,
-        base_url: str,
         temperature: float,
     ):
         try:
+            self.model_info = get_model_info(model)
             self.model = model_provider_manager.init_model(
                 provider_name=provider,
                 model=model,
                 temperature=temperature,
-                api_key=api_key,
-                base_url=base_url,
+                api_key=self.model_info["api_key"],
+                base_url=self.model_info["base_url"],
             )
 
             # 初始化 final_answer_model 时使用温度为 0
@@ -172,8 +165,8 @@ class BaseNode:
                 provider_name=provider,
                 model=model,
                 temperature=0,
-                api_key=api_key,
-                base_url=base_url,
+                api_key=self.model_info["api_key"],
+                base_url=self.model_info["base_url"],
             )
 
         except ValueError:

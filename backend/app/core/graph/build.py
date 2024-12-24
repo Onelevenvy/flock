@@ -83,8 +83,6 @@ def convert_hierarchical_team_to_dict(
             teams[leader_name] = GraphTeam(
                 name=leader_name,
                 model=member.model,
-                api_key=member.api_key,
-                base_url=member.base_url,
                 role=member.role,
                 backstory=member.backstory or "",
                 members={},
@@ -123,8 +121,6 @@ def convert_hierarchical_team_to_dict(
                     tools=tools,
                     provider=member.provider,
                     model=member.model,
-                    api_key=member.api_key,
-                    base_url=member.base_url,
                     temperature=member.temperature,
                     interrupt=member.interrupt,
                 )
@@ -135,8 +131,6 @@ def convert_hierarchical_team_to_dict(
                     role=member.role,
                     provider=member.provider,
                     model=member.model,
-                    api_key=member.api_key,
-                    base_url=member.base_url,
                     temperature=member.temperature,
                 )
         for nei_id in out_counts[member_id]:
@@ -197,8 +191,6 @@ def convert_sequential_team_to_dict(members: list[Member]) -> Mapping[str, Graph
             tools=tools,
             provider=memberModel.provider,
             model=memberModel.model,
-            api_key=memberModel.api_key,
-            base_url=memberModel.base_url,
             temperature=memberModel.temperature,
             interrupt=memberModel.interrupt,
         )
@@ -260,8 +252,6 @@ def convert_chatbot_chatrag_team_to_dict(
         tools=tools,
         provider=member.provider,
         model=member.model,
-        api_key=member.api_key,
-        base_url=member.base_url,
         temperature=member.temperature,
         interrupt=member.interrupt,
     )
@@ -368,11 +358,9 @@ def create_hierarchical_graph(
         leader_name,
         RunnableLambda(
             LeaderNode(
-                teams[leader_name].provider,
-                teams[leader_name].model,
-                security_manager.decrypt_api_key(teams[leader_name].api_key),
-                teams[leader_name].base_url,
-                teams[leader_name].temperature,
+                provider=teams[leader_name].provider,
+                model=teams[leader_name].model,
+                temperature=teams[leader_name].temperature,
             ).delegate  # type: ignore[arg-type]
         ),
     )
@@ -380,11 +368,9 @@ def create_hierarchical_graph(
         "FinalAnswer",
         RunnableLambda(
             SummariserNode(
-                teams[leader_name].provider,
-                teams[leader_name].model,
-                security_manager.decrypt_api_key(teams[leader_name].api_key),
-                teams[leader_name].base_url,
-                teams[leader_name].temperature,
+                provider=teams[leader_name].provider,
+                model=teams[leader_name].model,
+                temperature=teams[leader_name].temperature,
             ).summarise  # type: ignore[arg-type]
         ),
     )
@@ -398,8 +384,6 @@ def create_hierarchical_graph(
                     WorkerNode(
                         provider=member.provider,
                         model=member.model,
-                        api_key=security_manager.decrypt_api_key(teams[leader_name].api_key),
-                        base_url=teams[leader_name].base_url,
                         temperature=member.temperature,
                     ).work  # type: ignore[arg-type]
                 ),
@@ -487,8 +471,6 @@ def create_sequential_graph(
                 SequentialWorkerNode(
                     provider=member.provider,
                     model=member.model,
-                    api_key=security_manager.decrypt_api_key(member.api_key),
-                    base_url=member.base_url,
                     temperature=member.temperature,
                 ).work  # type: ignore[arg-type]
             ),
@@ -571,8 +553,6 @@ def create_chatbot_ragbot_graph(
                 provider=member.provider,
                 model=member.model,
                 temperature=member.temperature,
-                api_key=security_manager.decrypt_api_key(member.api_key),           
-                base_url=member.base_url,
             ).work  # type: ignore[arg-type]
         ),
     )
@@ -640,14 +620,21 @@ async def generator(
 ) -> AsyncGenerator[Any, Any]:
     """Create the graph and stream responses as JSON."""
     formatted_messages = [
-        HumanMessage(
-            content=[
-                {"type": "text", "text": message.content},
-                {"type": "image_url", "image_url": {"url": message.imgdata}}
-            ] if message.imgdata else message.content,
-            name="user"
-        ) if message.type == "human"
-        else AIMessage(content=message.content)
+        (
+            HumanMessage(
+                content=(
+                    [
+                        {"type": "text", "text": message.content},
+                        {"type": "image_url", "image_url": {"url": message.imgdata}},
+                    ]
+                    if message.imgdata
+                    else message.content
+                ),
+                name="user",
+            )
+            if message.type == "human"
+            else AIMessage(content=message.content)
+        )
         for message in messages
     ]
 
@@ -685,8 +672,6 @@ async def generator(
                         provider=first_member.provider,
                         model=first_member.model,
                         temperature=first_member.temperature,
-                        api_key=first_member.api_key,
-                        base_url=first_member.base_url,
                     ),
                     "messages": [],
                     "next": first_member.name,
@@ -709,8 +694,6 @@ async def generator(
                         provider=first_member.provider,
                         model=first_member.model,
                         temperature=first_member.temperature,
-                        api_key=first_member.api_key,
-                        base_url=first_member.base_url,
                     ),
                     "messages": [],
                     "next": first_member.name,
@@ -734,8 +717,6 @@ async def generator(
                         provider=first_member.provider,
                         model=first_member.model,
                         temperature=first_member.temperature,
-                        api_key=first_member.api_key,
-                        base_url=first_member.base_url,
                     ),
                     "messages": [],
                     "next": first_member.name,

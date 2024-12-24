@@ -140,7 +140,8 @@ const EditTeamMember = forwardRef<HTMLFormElement, EditTeamMemberProps>(
     const queryClient = useQueryClient();
     const showToast = useCustomToast();
     const [showTooltip, setShowTooltip] = useState(false);
-    const [selectedModelProvider, setSelectedModelProvider] = useState<string>("openai");
+    const [selectedModelProvider, setSelectedModelProvider] =
+      useState<string>("openai");
     const {
       data: skills,
       isLoading: isLoadingSkills,
@@ -234,7 +235,7 @@ const EditTeamMember = forwardRef<HTMLFormElement, EditTeamMemberProps>(
           // Remove 'ask-human' tool if 'enableHumanTool' is false
           .filter(
             (skill) =>
-              skill.name !== "ask-human" || memberConfig.enableHumanTool,
+              skill.name !== "ask-human" || memberConfig.enableHumanTool
           )
           .map((skill) => ({
             ...skill,
@@ -253,16 +254,14 @@ const EditTeamMember = forwardRef<HTMLFormElement, EditTeamMemberProps>(
 
     const onModelSelect = (modelName: string) => {
       const selectedModel = models?.data.find(
-        (model) => model.ai_model_name === modelName,
+        (model) => model.ai_model_name === modelName
       );
-      
-    
 
       if (selectedModel) {
         setValue("model", modelName);
-        setValue("api_key", selectedModel?.provider.api_key);
+
         setValue("provider", selectedModel?.provider.provider_name);
-        setValue("base_url", selectedModel?.provider.base_url);
+
         setSelectedModelProvider(selectedModel.provider.provider_name);
       }
     };
@@ -668,7 +667,7 @@ const EditTeamMember = forwardRef<HTMLFormElement, EditTeamMemberProps>(
         </ModalOverlay>
       </Modal>
     );
-  },
+  }
 );
 
 EditTeamMember.displayName = "EditTeamMember";

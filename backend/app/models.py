@@ -282,8 +282,7 @@ class MemberBase(SQLModel):
     source: int | None = None
     provider: str = ""
     model: str = ""
-    api_key: str | None = None
-    base_url: str | None = None
+    
 
     temperature: float = 0.1
     interrupt: bool = False
@@ -305,8 +304,7 @@ class MemberUpdate(MemberBase):
     uploads: list["Upload"] | None = None
     provider: str | None = None  # type: ignore[assignment]
     model: str | None = None  # type: ignore[assignment]
-    api_key: str | None = None
-    base_url: str | None = None
+ 
 
     temperature: float | None = None  # type: ignore[assignment]
     interrupt: bool | None = None  # type: ignore[assignment]

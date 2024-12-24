@@ -13,8 +13,6 @@ import { useForm } from "react-hook-form";
 interface FormValues {
   model: string;
   provider: string;
-  api_key: string;
-  base_url: string;
 }
 
 interface LLMNodePropertiesProps {
@@ -38,8 +36,6 @@ const LLMNodeProperties: React.FC<LLMNodePropertiesProps> = ({
     defaultValues: {
       model: node.data.model || "",
       provider: node.data.provider || "",
-      api_key: node.data.api_key || "",
-      base_url: node.data.base_url || "",
     },
   });
 
@@ -58,12 +54,6 @@ const LLMNodeProperties: React.FC<LLMNodePropertiesProps> = ({
     if (node && node.data.provider) {
       setValue("provider", node.data.provider);
     }
-    if (node && node.data.api_key) {
-      setValue("api_key", node.data.api_key);
-    }
-    if (node && node.data.base_url) {
-      setValue("base_url", node.data.base_url);
-    }
   }, [node, setValue]);
 
   const onModelSelect = useCallback(
@@ -73,19 +63,15 @@ const LLMNodeProperties: React.FC<LLMNodePropertiesProps> = ({
       );
 
       if (selectedModel) {
-        const apiKey = selectedModel.provider.api_key || "";
-        const baseUrl = selectedModel.provider.base_url || "";
         const providerName = selectedModel.provider.provider_name || "";
 
         onNodeDataChange(node.id, "model", modelName);
-        onNodeDataChange(node.id, "api_key", apiKey);
+
         onNodeDataChange(node.id, "provider", providerName);
-        onNodeDataChange(node.id, "base_url", baseUrl);
 
         setValue("model", modelName);
-        setValue("api_key", apiKey);
+
         setValue("provider", providerName);
-        setValue("base_url", baseUrl);
       }
     },
     [node.id, models, onNodeDataChange, setValue]
@@ -113,12 +99,7 @@ const LLMNodeProperties: React.FC<LLMNodePropertiesProps> = ({
   return (
     <VStack align="stretch" spacing={4}>
       <Box>
-        <Text 
-          fontWeight="500" 
-          fontSize="sm" 
-          color="gray.700"
-          mb={2}
-        >
+        <Text fontWeight="500" fontSize="sm" color="gray.700" mb={2}>
           {t("workflow.nodes.llm.model")}:
         </Text>
         <ModelSelect<FormValues>
@@ -132,12 +113,7 @@ const LLMNodeProperties: React.FC<LLMNodePropertiesProps> = ({
       </Box>
 
       <Box>
-        <Text 
-          fontWeight="500" 
-          fontSize="sm" 
-          color="gray.700"
-          mb={2}
-        >
+        <Text fontWeight="500" fontSize="sm" color="gray.700" mb={2}>
           {t("workflow.nodes.llm.temperature")}:
         </Text>
         <Input
@@ -150,15 +126,15 @@ const LLMNodeProperties: React.FC<LLMNodePropertiesProps> = ({
             onNodeDataChange(node.id, "temperature", numValue);
           }}
           size="sm"
-           bg="ui.inputbgcolor"
+          bg="ui.inputbgcolor"
           borderRadius="lg"
           borderColor="gray.200"
           _hover={{
-            borderColor: "blue.200"
+            borderColor: "blue.200",
           }}
           _focus={{
             borderColor: "blue.500",
-            boxShadow: "0 0 0 1px var(--chakra-colors-blue-500)"
+            boxShadow: "0 0 0 1px var(--chakra-colors-blue-500)",
           }}
           transition="all 0.2s"
           step={0.1}

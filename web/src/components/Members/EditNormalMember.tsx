@@ -155,9 +155,9 @@ const EditNormalMember = forwardRef<HTMLFormElement, EditAgentProps>(
       );
 
       setValue("model", modelName);
-      setValue("api_key", selectedModel?.provider.api_key);
+
       setValue("provider", selectedModel?.provider.provider_name);
-      setValue("base_url", selectedModel?.provider.base_url);
+ 
     };
 
     return (
