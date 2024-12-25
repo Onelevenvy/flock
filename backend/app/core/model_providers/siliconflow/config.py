@@ -1,5 +1,6 @@
-from langchain_openai import ChatOpenAI
 from crewai import LLM
+from langchain_openai import ChatOpenAI
+
 from app.models import ModelCategory
 
 PROVIDER_CONFIG = {

@@ -1,10 +1,10 @@
 from contextlib import contextmanager
-from typing import Callable, TypeVar, Dict
-from sqlmodel import Session
+from typing import Callable, Dict, TypeVar
+
+from sqlmodel import Session, select
+
 from app.core.database import get_session
 from app.models import ModelProvider, Models
-
-from sqlmodel import select
 
 T = TypeVar("T")
 

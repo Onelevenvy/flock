@@ -2,10 +2,10 @@ import importlib
 import os
 from typing import Any, Dict
 
-from pydantic import BaseModel
 from langchain.tools import BaseTool
 from langchain_community.tools import DuckDuckGoSearchRun, WikipediaQueryRun
 from langchain_community.utilities.wikipedia import WikipediaAPIWrapper
+from pydantic import BaseModel
 
 
 class ToolInfo(BaseModel):

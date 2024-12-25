@@ -1,16 +1,18 @@
 from typing import Any, Dict
-from app.core.workflow.utils.db_utils import get_model_info
-from langchain_core.messages import AIMessage
-from langchain_core.runnables import RunnableConfig
+
 from langchain_core.output_parsers import JsonOutputParser
+from langchain_core.prompts import ChatPromptTemplate
+from langchain_core.runnables import RunnableConfig
+
+from app.core.model_providers.model_provider_manager import model_provider_manager
+from app.core.workflow.utils.db_utils import get_model_info
+
 from ...state import (
     ReturnWorkflowTeamState,
     WorkflowTeamState,
     parse_variables,
     update_node_outputs,
 )
-from app.core.model_providers.model_provider_manager import model_provider_manager
-from langchain_core.prompts import ChatPromptTemplate
 
 CLASSIFIER_SYSTEM_PROMPT = """
 ### Job Description

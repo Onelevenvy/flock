@@ -5,7 +5,7 @@ from uuid import UUID
 from fastapi import APIRouter, HTTPException
 from sqlmodel import col, func, select
 
-from app.api.deps import CurrentUser, SessionDep, CurrentTeam
+from app.api.deps import CurrentTeam, CurrentUser, SessionDep
 from app.core.graph.checkpoint.utils import (
     convert_checkpoint_tuple_to_messages,
     get_checkpoint_tuples,
@@ -219,7 +219,6 @@ def delete_thread(
     return Message(message="Thread deleted successfully")
 
 
-
 @router.get("/public/{thread_id}", response_model=ThreadRead)
 async def read_thread_public(
     session: SessionDep,
@@ -251,4 +250,3 @@ async def read_thread_public(
         messages=messages,
         updated_at=thread.updated_at,
     )
-

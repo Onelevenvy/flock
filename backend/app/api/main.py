@@ -1,6 +1,7 @@
 from fastapi import APIRouter
 
 from app.api.routes import (
+    apikeys,
     graphs,
     login,
     members,
@@ -12,7 +13,6 @@ from app.api.routes import (
     uploads,
     users,
     utils,
-    apikeys,
 )
 
 api_router = APIRouter()

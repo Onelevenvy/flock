@@ -1,4 +1,4 @@
-from typing import Optional, List, Dict, Any
+from typing import Any, Dict, List, Optional
 
 from sqlmodel import Session, select
 
@@ -8,8 +8,8 @@ from ..models import (
     ModelProviderCreate,
     ModelProviderUpdate,
     ModelProviderWithModelsListOut,
-    ProvidersListWithModelsOut,
     Models,
+    ProvidersListWithModelsOut,
 )
 
 
@@ -23,10 +23,10 @@ def create_model_provider(
         icon=model_provider.icon,
         description=model_provider.description,
     )
-    
+
     # 使用 set_api_key 方法设置并加密 api_key
     db_model_provider.set_api_key(model_provider.api_key)
-    
+
     session.add(db_model_provider)
     session.commit()
     session.refresh(db_model_provider)
@@ -47,16 +47,16 @@ def update_model_provider(
     db_model_provider = get_model_provider(session, model_provider_id)
     if db_model_provider:
         update_data = model_provider_update.model_dump(exclude_unset=True)
-        
+
         # 特殊处理 api_key，使用 set_api_key 方法进行加密
         if "api_key" in update_data:
             api_key = update_data.pop("api_key")  # 从更新数据中移除
             db_model_provider.set_api_key(api_key)  # 使用方法加密并设置
-            
+
         # 更新其他字段
         for key, value in update_data.items():
             setattr(db_model_provider, key, value)
-            
+
         session.add(db_model_provider)
         session.commit()
         session.refresh(db_model_provider)
@@ -167,9 +167,7 @@ def get_model_provider_list_with_models(
 
 
 def sync_provider_models(
-    session: Session, 
-    provider_id: int, 
-    config_models: List[Dict[str, Any]]
+    session: Session, provider_id: int, config_models: List[Dict[str, Any]]
 ) -> List[Models]:
     """
     同步配置文件中的模型到数据库
@@ -179,17 +177,17 @@ def sync_provider_models(
         select(Models).where(Models.provider_id == provider_id)
     ).all()
     existing_model_names = {model.ai_model_name for model in existing_models}
-    
+
     synced_models = []
-    
+
     for config_model in config_models:
         model_name = config_model["name"]
-        
+
         # 准备模型元数据
         meta_ = {}
         if "dimension" in config_model:
             meta_["dimension"] = config_model["dimension"]
-            
+
         if model_name in existing_model_names:
             # 更新现有模型
             model = next(m for m in existing_models if m.ai_model_name == model_name)
@@ -203,11 +201,11 @@ def sync_provider_models(
                 provider_id=provider_id,
                 categories=config_model["categories"],
                 capabilities=config_model.get("capabilities", []),
-                meta_=meta_
+                meta_=meta_,
             )
             session.add(model)
-            
+
         synced_models.append(model)
-    
+
     session.commit()
     return synced_models

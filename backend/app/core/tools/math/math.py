@@ -1,8 +1,8 @@
 # This is an example showing how to create a simple calculator skill
 
 import numexpr as ne
-from pydantic import BaseModel, Field
 from langchain.tools import StructuredTool
+from pydantic import BaseModel, Field
 
 
 class MathInput(BaseModel):

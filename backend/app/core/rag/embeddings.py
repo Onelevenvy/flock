@@ -5,15 +5,14 @@ from typing import List
 import requests
 from langchain_community.embeddings import HuggingFaceEmbeddings
 from langchain_core.embeddings import Embeddings
-from pydantic import BaseModel
 from langchain_openai import OpenAIEmbeddings
+from pydantic import BaseModel
 from sqlmodel import select
 
-
 from app.core.config import settings
+from app.core.model_providers.model_provider_manager import model_provider_manager
 from app.core.workflow.utils.db_utils import db_operation
 from app.models import ModelProvider, Models
-from app.core.model_providers.model_provider_manager import model_provider_manager
 
 logger = logging.getLogger(__name__)
 
@@ -25,9 +24,10 @@ def get_api_key(provider_name: str) -> str:
         ).first()
         if not provider:
             raise ValueError(f"Provider {provider_name} not found")
-        print("aaaaaaa",provider.decrypted_api_key)
+        print("aaaaaaa", provider.decrypted_api_key)
         return provider.decrypted_api_key
-    print("bbbbbbb",db_operation(_get_api_key))
+
+    print("bbbbbbb", db_operation(_get_api_key))
     return db_operation(_get_api_key)
 
 

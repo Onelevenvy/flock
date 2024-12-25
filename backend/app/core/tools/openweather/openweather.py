@@ -1,8 +1,8 @@
 import json
 
 import requests
-from pydantic import BaseModel, Field
 from langchain.tools import StructuredTool
+from pydantic import BaseModel, Field
 
 from app.core.tools.utils import get_credential_value
 

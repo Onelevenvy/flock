@@ -4,8 +4,9 @@ from typing import Any
 from uuid import UUID, uuid4
 from zoneinfo import ZoneInfo
 
-from pydantic import BaseModel, model_validator
+from pydantic import BaseModel
 from pydantic import Field as PydanticField
+from pydantic import model_validator
 from sqlalchemy import ARRAY, JSON, Column, DateTime
 from sqlalchemy import Enum as SQLEnum
 from sqlalchemy import PrimaryKeyConstraint, String, UniqueConstraint, func
@@ -282,7 +283,6 @@ class MemberBase(SQLModel):
     source: int | None = None
     provider: str = ""
     model: str = ""
-    
 
     temperature: float = 0.1
     interrupt: bool = False
@@ -304,7 +304,6 @@ class MemberUpdate(MemberBase):
     uploads: list["Upload"] | None = None
     provider: str | None = None  # type: ignore[assignment]
     model: str | None = None  # type: ignore[assignment]
- 
 
     temperature: float | None = None  # type: ignore[assignment]
     interrupt: bool | None = None  # type: ignore[assignment]

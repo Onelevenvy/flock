@@ -1,15 +1,6 @@
 from collections.abc import Mapping, Sequence
 from typing import Annotated, Any
 
-from app.core.state import (
-    GraphLeader,
-    GraphMember,
-    GraphTeam,
-    add_or_replace_messages,
-    format_messages,
-)
-from app.core.workflow.utils.db_utils import get_model_info
-
 from langchain_core.messages import AIMessage, AnyMessage
 from langchain_core.output_parsers.openai_tools import JsonOutputKeyToolsParser
 from langchain_core.prompts import ChatPromptTemplate, MessagesPlaceholder
@@ -19,14 +10,19 @@ from langchain_core.runnables import (
     RunnableSerializable,
 )
 from langchain_core.tools import BaseTool
-
 from langchain_openai import ChatOpenAI
 from langgraph.graph import add_messages
-
 from typing_extensions import NotRequired, TypedDict
 
-
 from app.core.model_providers.model_provider_manager import model_provider_manager
+from app.core.state import (
+    GraphLeader,
+    GraphMember,
+    GraphTeam,
+    add_or_replace_messages,
+    format_messages,
+)
+from app.core.workflow.utils.db_utils import get_model_info
 
 
 class GraphTeamState(TypedDict):

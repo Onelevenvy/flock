@@ -1,6 +1,5 @@
-from langchain_google_genai import ChatGoogleGenerativeAI
-
 from crewai import LLM
+from langchain_google_genai import ChatGoogleGenerativeAI
 
 from app.models import ModelCapability, ModelCategory
 

@@ -1,10 +1,13 @@
+import secrets
 from datetime import datetime, timedelta
 from typing import Any
-import secrets
+
 import jwt
-from passlib.context import CryptContext
 from cryptography.fernet import Fernet
+from passlib.context import CryptContext
+
 from app.core.config import settings
+
 
 class SecurityManager:
     def __init__(self):
@@ -13,14 +16,20 @@ class SecurityManager:
         # JWT算法
         self.jwt_algorithm = "HS256"
         # Fernet加密实例
-        self._key = settings.MODEL_PROVIDER_ENCRYPTION_KEY.encode() if settings.MODEL_PROVIDER_ENCRYPTION_KEY else Fernet.generate_key()
+        self._key = (
+            settings.MODEL_PROVIDER_ENCRYPTION_KEY.encode()
+            if settings.MODEL_PROVIDER_ENCRYPTION_KEY
+            else Fernet.generate_key()
+        )
         self._fernet = Fernet(self._key)
 
     def create_access_token(self, subject: str | Any, expires_delta: timedelta) -> str:
         """创建JWT访问令牌"""
         expire = datetime.utcnow() + expires_delta
         to_encode = {"exp": expire, "sub": str(subject)}
-        encoded_jwt = jwt.encode(to_encode, settings.SECRET_KEY, algorithm=self.jwt_algorithm)
+        encoded_jwt = jwt.encode(
+            to_encode, settings.SECRET_KEY, algorithm=self.jwt_algorithm
+        )
         return encoded_jwt
 
     def verify_password(self, plain_password: str, hashed_password: str) -> bool:
@@ -53,6 +62,7 @@ class SecurityManager:
             return self._fernet.decrypt(encrypted_data.encode()).decode()
         except Exception as e:
             raise ValueError("Decryption failed,Invalid API key Token") from e
+
 
 # 创建单例实例
 security_manager = SecurityManager()

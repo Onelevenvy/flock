@@ -8,8 +8,8 @@ from urllib.parse import urlencode
 from wsgiref.handlers import format_date_time
 
 import requests
-from pydantic import BaseModel, Field
 from langchain.tools import StructuredTool
+from pydantic import BaseModel, Field
 
 from app.core.tools.utils import get_credential_value
 from app.core.workflow.utils.db_utils import db_operation
@@ -146,6 +146,6 @@ spark_img_generation = StructuredTool.from_function(
     func=img_generation,
     name="Spark Image Generation",
     description="Spark Image Generation is a tool that can generate images from text prompts using the Spark API.",
-    args_schema=Text2ImageInput,  
+    args_schema=Text2ImageInput,
     return_direct=True,
 )

@@ -1,10 +1,15 @@
 from typing import Any
+
 from fastapi import APIRouter, HTTPException
 from sqlmodel import func, select
+
 from app.api.deps import CurrentUser, SessionDep
 from app.core.security import generate_apikey, generate_short_apikey, get_password_hash
 from app.models import ApiKey, ApiKeyCreate, ApiKeyOut, ApiKeysOutPublic, Message, Team
+
 router = APIRouter()
+
+
 @router.get("/", response_model=ApiKeysOutPublic)
 def read_api_keys(
     session: SessionDep,
@@ -38,6 +43,8 @@ def read_api_keys(
         )
         apikeys = session.exec(statement).all()
     return ApiKeysOutPublic(data=apikeys, count=count)
+
+
 @router.post("/", response_model=ApiKeyOut)
 def create_api_key(
     session: SessionDep,
@@ -76,6 +83,8 @@ def create_api_key(
         key=key,
         created_at=apikey.created_at,
     )
+
+
 @router.delete("/{id}")
 def delete_api_key(
     session: SessionDep, current_user: CurrentUser, team_id: int, id: int

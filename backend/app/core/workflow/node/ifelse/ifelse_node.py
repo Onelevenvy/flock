@@ -1,5 +1,7 @@
-from typing import Dict, Any
+from typing import Any, Dict
+
 from langchain_core.runnables import RunnableConfig
+
 from ....state import (
     ReturnWorkflowTeamState,
     WorkflowTeamState,

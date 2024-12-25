@@ -1,16 +1,19 @@
 from typing import Any, Dict, List
-from app.core.workflow.utils.db_utils import get_model_info
+
+from crewai import Agent, Crew, Process, Task
+from langchain_core.messages import AIMessage
 from langchain_core.runnables import RunnableConfig
+
+from app.core.model_providers.model_provider_manager import model_provider_manager
+from app.core.tools.tool_manager import managed_tools
+from app.core.workflow.utils.db_utils import get_model_info
+
 from ...state import (
     ReturnWorkflowTeamState,
     WorkflowTeamState,
-    update_node_outputs,
     parse_variables,
+    update_node_outputs,
 )
-from langchain_core.messages import AIMessage
-from crewai import Agent, Crew, Task, Process
-from app.core.model_providers.model_provider_manager import model_provider_manager
-from app.core.tools.tool_manager import managed_tools
 
 
 class CrewAINode:

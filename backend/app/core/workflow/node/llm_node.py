@@ -1,12 +1,10 @@
 from collections.abc import Sequence
 from typing import Any
 
-from app.core.workflow.utils.db_utils import get_model_info
 from langchain_core.messages import AIMessage, AnyMessage
 from langchain_core.prompts import ChatPromptTemplate, MessagesPlaceholder
 from langchain_core.runnables import RunnableConfig, RunnableSerializable
 from langchain_core.tools import BaseTool
-
 
 from app.core.model_providers.model_provider_manager import model_provider_manager
 from app.core.state import (
@@ -16,6 +14,7 @@ from app.core.state import (
     parse_variables,
     update_node_outputs,
 )
+from app.core.workflow.utils.db_utils import get_model_info
 
 
 class LLMBaseNode:

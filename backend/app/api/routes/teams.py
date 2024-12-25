@@ -1,23 +1,24 @@
-from typing import Any
 from datetime import datetime
+from typing import Any
+
 from fastapi import APIRouter, Depends, HTTPException
 from fastapi.responses import StreamingResponse
 from fastapi.security import APIKeyHeader
 from sqlmodel import col, func, select
 
-from app.api.deps import CurrentUser, SessionDep, CurrentTeam
+from app.api.deps import CurrentTeam, CurrentUser, SessionDep
 from app.core.graph.build import generator
 from app.models import (
     Member,
     Message,
     Team,
     TeamChat,
+    TeamChatPublic,
     TeamCreate,
     TeamOut,
     TeamsOut,
     TeamUpdate,
     Thread,
-    TeamChatPublic,
 )
 
 router = APIRouter()
@@ -253,7 +254,6 @@ async def stream(
         generator(team, members, team_chat.messages, thread_id, team_chat.interrupt),
         media_type="text/event-stream",
     )
-
 
 
 @router.post("/{team_id}/stream-public/{thread_id}")

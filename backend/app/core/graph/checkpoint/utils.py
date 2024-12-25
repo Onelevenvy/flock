@@ -34,7 +34,7 @@ def convert_checkpoint_tuple_to_messages(
         if isinstance(message, HumanMessage):
             content = ""
             imgdata = None
-            
+
             if isinstance(message.content, list):
                 for c in message.content:
                     if isinstance(c, dict):
@@ -44,14 +44,14 @@ def convert_checkpoint_tuple_to_messages(
                             imgdata = c.get("image_url", {}).get("url")
             else:
                 content = message.content
-                
+
             formatted_messages.append(
                 ChatResponse(
                     type="human",
                     id=message.id,
                     name=message.name,
                     content=content,
-                    imgdata=imgdata
+                    imgdata=imgdata,
                 )
             )
         elif (

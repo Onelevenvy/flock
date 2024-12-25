@@ -1,5 +1,5 @@
-from langchain_ollama import ChatOllama
 from crewai import LLM
+from langchain_ollama import ChatOllama
 
 from app.models import ModelCategory
 
