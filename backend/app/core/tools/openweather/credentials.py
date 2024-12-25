@@ -1,4 +1,4 @@
-from typing import Any, Dict
+from typing import Any
 
 OPENWEATHER_CREDENTIALS = {
     "OPEN_WEATHER_API_KEY": {
@@ -9,5 +9,5 @@ OPENWEATHER_CREDENTIALS = {
 }
 
 
-def get_credentials() -> Dict[str, Any]:
+def get_credentials() -> dict[str, Any]:
     return OPENWEATHER_CREDENTIALS

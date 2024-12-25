@@ -1,4 +1,4 @@
-from typing import Any, Dict
+from typing import Any
 
 SERPER_CREDENTIALS = {
     "SERPER_API_KEY": {
@@ -9,5 +9,5 @@ SERPER_CREDENTIALS = {
 }
 
 
-def get_credentials() -> Dict[str, Any]:
+def get_credentials() -> dict[str, Any]:
     return SERPER_CREDENTIALS

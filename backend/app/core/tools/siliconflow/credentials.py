@@ -1,4 +1,4 @@
-from typing import Any, Dict
+from typing import Any
 
 SILICONFLOW_CREDENTIALS = {
     "SILICONFLOW_API_KEY": {
@@ -9,5 +9,5 @@ SILICONFLOW_CREDENTIALS = {
 }
 
 
-def get_credentials() -> Dict[str, Any]:
+def get_credentials() -> dict[str, Any]:
     return SILICONFLOW_CREDENTIALS

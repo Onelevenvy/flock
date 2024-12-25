@@ -1,4 +1,4 @@
-from typing import Any, Dict
+from typing import Any
 
 from langgraph.graph import StateGraph
 
@@ -10,7 +10,7 @@ class SubgraphNode:
         self.subgraph = subgraph
 
     async def work(
-        self, state: WorkflowTeamState, config: Dict[str, Any]
+        self, state: WorkflowTeamState, config: dict[str, Any]
     ) -> ReturnWorkflowTeamState:
         # 转换输入状态
         subgraph_input = self._transform_input(state)

@@ -2,7 +2,7 @@ import logging
 import math
 import re
 from collections import Counter
-from typing import Callable, List
+from collections.abc import Callable
 
 from langchain_core.documents import Document
 from langchain_qdrant import QdrantVectorStore
@@ -210,7 +210,7 @@ class QdrantStore:
         if callback:
             callback()
 
-    def search(self, user_id: int, upload_ids: List[int], query: str) -> List[Document]:
+    def search(self, user_id: int, upload_ids: list[int], query: str) -> list[Document]:
 
         query_vector = self.embedding_model.embed_query(query)
 
@@ -285,7 +285,7 @@ class QdrantStore:
     def vector_search(
         self,
         user_id: int,
-        upload_ids: List[int],
+        upload_ids: list[int],
         query: str,
         top_k: int = 5,
         score_threshold: float = 0.5,
@@ -309,7 +309,7 @@ class QdrantStore:
     def fulltext_search(
         self,
         user_id: int,
-        upload_ids: List[int],
+        upload_ids: list[int],
         query: str,
         top_k: int = 5,
         score_threshold: float = 0.5,
@@ -393,7 +393,7 @@ class QdrantStore:
     def hybrid_search(
         self,
         user_id: int,
-        upload_ids: List[int],
+        upload_ids: list[int],
         query: str,
         top_k: int = 5,
         score_threshold: float = 0.5,

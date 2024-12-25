@@ -1,4 +1,4 @@
-from typing import Any, Dict
+from typing import Any
 
 SPARK_CREDENTIALS = {
     "SPARK_APPID": {
@@ -19,5 +19,5 @@ SPARK_CREDENTIALS = {
 }
 
 
-def get_credentials() -> Dict[str, Any]:
+def get_credentials() -> dict[str, Any]:
     return SPARK_CREDENTIALS

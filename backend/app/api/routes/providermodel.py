@@ -1,4 +1,4 @@
-from typing import Any, Dict
+from typing import Any
 
 from fastapi import APIRouter, HTTPException
 
@@ -17,7 +17,7 @@ router = APIRouter()
 
 # 新增一个用于创建模型的请求模型
 class ModelCreate(ModelsBase):
-    meta_: Dict[str, Any] | None = None
+    meta_: dict[str, Any] | None = None
 
 
 # 新增一个用于更新模型的请求模型
@@ -26,7 +26,7 @@ class ModelUpdate(ModelsBase):
     provider_id: int | None = None
     categories: list | None = None
     capabilities: list | None = None
-    meta_: Dict[str, Any] | None = None
+    meta_: dict[str, Any] | None = None
 
 
 @router.post("/", response_model=Models)
@@ -66,7 +66,7 @@ def update_model(model_id: int, model_update: ModelUpdate, session: SessionDep):
 # 新增一个用于更新模型元数据的端点
 @router.patch("/{model_id}/metadata", response_model=Models)
 async def update_model_metadata(
-    model_id: int, metadata_update: Dict[str, Any], session: SessionDep
+    model_id: int, metadata_update: dict[str, Any], session: SessionDep
 ):
     model = session.get(Models, model_id)
     if model is None:

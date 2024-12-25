@@ -1,4 +1,4 @@
-from typing import Any, Dict, List
+from typing import Any
 
 from crewai import Agent, Crew, Process, Task
 from langchain_core.messages import AIMessage
@@ -25,10 +25,10 @@ Even though you don't perform tasks by yourself, you have a lot of experience in
         self,
         node_id: str,
         model_name: str,
-        agents_config: List[Dict[str, Any]],
-        tasks_config: List[Dict[str, Any]],
+        agents_config: list[dict[str, Any]],
+        tasks_config: list[dict[str, Any]],
         process_type: str = "sequential",
-        manager_config: Dict[str, Any] = {},
+        manager_config: dict[str, Any] = {},
         config: dict[str, Any] = {},
     ):
         self.node_id = node_id
@@ -90,7 +90,7 @@ Even though you don't perform tasks by yourself, you have a lot of experience in
         return None
 
     def _create_agent(
-        self, agent_config: Dict[str, Any], state: WorkflowTeamState
+        self, agent_config: dict[str, Any], state: WorkflowTeamState
     ) -> Agent:
         """Create an agent from configuration with variable parsing"""
         tools = []
@@ -117,8 +117,8 @@ Even though you don't perform tasks by yourself, you have a lot of experience in
 
     def _create_task(
         self,
-        task_config: Dict[str, Any],
-        agents: Dict[str, Agent],
+        task_config: dict[str, Any],
+        agents: dict[str, Agent],
         state: WorkflowTeamState,
     ) -> Task:
         """Create a task from configuration with variable parsing"""

@@ -1,6 +1,5 @@
 # 导入自定义响应模型
 import uuid
-from typing import List, Optional
 
 from langchain_core.messages import AIMessage
 from langgraph.prebuilt import ToolNode
@@ -16,8 +15,8 @@ class ToolMessages(BaseModel):
 
 
 class ToolInvokeResponse(BaseModel):
-    messages: List[ToolMessages]
-    error: Optional[str] = None  # 可选的错误信息
+    messages: list[ToolMessages]
+    error: str | None = None  # 可选的错误信息
 
 
 def invoke_tool(tool_name: str, args: dict) -> ToolInvokeResponse:

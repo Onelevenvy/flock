@@ -6,7 +6,6 @@ import threading
 import time
 import uuid
 from textwrap import dedent
-from typing import List, Optional
 
 import docker
 from langchain_core.messages import ToolMessage
@@ -166,29 +165,29 @@ class CodeTemplate:
             f"""
             # 用户定义的函数
             {cls._code_placeholder}
-            
+
             import json, ast
-            
+
             def find_function_name(code):
                 tree = ast.parse(code)
                 for node in ast.walk(tree):
                     if isinstance(node, ast.FunctionDef):
                         return node.name
                 return None
-            
+
             # 分析代码获取函数名
             code = '''{cls._code_placeholder}'''
             function_name = find_function_name(code)
-            
+
             if not function_name:
                 raise Exception("No function found in the code")
-            
+
             # 执行代码
             exec(code)
-            
+
             # 执行函数并获取结果
             result = eval(f"{{function_name}}()")
-            
+
             # 转换结果为JSON并打印
             output_json = json.dumps(result, indent=4)
             print(f'<<RESULT>>{{output_json}}<<RESULT>>')
@@ -278,7 +277,7 @@ class CodeExecutor:
             self.client.images.build(path=dockerfile_path, tag=self.image_tag, rm=True)
 
     def _install_libraries(
-        self, container: docker.models.containers.Container, libraries: List[str]
+        self, container: docker.models.containers.Container, libraries: list[str]
     ) -> None:
         """Install required libraries in container"""
         # 过滤掉内置库和预装库
@@ -296,7 +295,7 @@ class CodeExecutor:
         else:
             print("All required libraries are pre-installed or built-in")
 
-    def execute(self, code: str, libraries: List[str]) -> str:
+    def execute(self, code: str, libraries: list[str]) -> str:
         """Execute code in Docker container with safety measures"""
         print(f"\nStarting code execution with {len(libraries)} libraries")
         if libraries:
@@ -376,7 +375,7 @@ class CodeNode:
         self,
         node_id: str,
         code: str,
-        libraries: Optional[List[str]] = None,
+        libraries: list[str] | None = None,
         timeout: int = 30,
         memory_limit: str = "256m",
     ):

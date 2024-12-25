@@ -1,4 +1,4 @@
-from typing import Any, Dict, List, Optional
+from typing import Any
 
 from sqlmodel import Session, select
 
@@ -35,7 +35,7 @@ def create_model_provider(
 
 def get_model_provider(
     session: Session, model_provider_id: int
-) -> Optional[ModelProvider]:
+) -> ModelProvider | None:
     return session.exec(
         select(ModelProvider).where(ModelProvider.id == model_provider_id)
     ).first()
@@ -43,7 +43,7 @@ def get_model_provider(
 
 def update_model_provider(
     session: Session, model_provider_id: int, model_provider_update: ModelProviderUpdate
-) -> Optional[ModelProvider]:
+) -> ModelProvider | None:
     db_model_provider = get_model_provider(session, model_provider_id)
     if db_model_provider:
         update_data = model_provider_update.model_dump(exclude_unset=True)
@@ -65,7 +65,7 @@ def update_model_provider(
 
 def delete_model_provider(
     session: Session, model_provider_id: int
-) -> Optional[ModelProvider]:
+) -> ModelProvider | None:
     try:
         # 先查询要删除的 ModelProvider
         model_provider = session.get(ModelProvider, model_provider_id)
@@ -167,8 +167,8 @@ def get_model_provider_list_with_models(
 
 
 def sync_provider_models(
-    session: Session, provider_id: int, config_models: List[Dict[str, Any]]
-) -> List[Models]:
+    session: Session, provider_id: int, config_models: list[dict[str, Any]]
+) -> list[Models]:
     """
     同步配置文件中的模型到数据库
     """

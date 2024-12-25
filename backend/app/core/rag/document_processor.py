@@ -1,5 +1,4 @@
 import logging
-from typing import List
 
 from langchain_community.document_loaders import (
     PyMuPDFLoader,
@@ -23,7 +22,7 @@ def load_and_split_document(
     upload_id: int,
     chunk_size: int = 500,
     chunk_overlap: int = 50,
-) -> List[Document]:
+) -> list[Document]:
     logger.debug(f"Loading document from: {file_path}")
 
     if file_path.startswith("http://") or file_path.startswith("https://"):

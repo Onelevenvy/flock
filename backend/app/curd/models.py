@@ -1,4 +1,3 @@
-from typing import Optional
 
 from sqlmodel import Session, func, select
 
@@ -96,7 +95,7 @@ def get_all_models(session: Session) -> ModelsOut:
     return ModelsOut(data=model_outs, count=total_count)
 
 
-def _delete_model(session: Session, model_id: int) -> Optional[Models]:
+def _delete_model(session: Session, model_id: int) -> Models | None:
     db_model = session.exec(select(Models).where(Models.id == model_id)).first()
     if db_model:
         session.delete(db_model)
@@ -106,7 +105,7 @@ def _delete_model(session: Session, model_id: int) -> Optional[Models]:
 
 def _update_model(
     session: Session, model_id: int, model_update: ModelsBase
-) -> Optional[Models]:
+) -> Models | None:
     db_model = session.exec(select(Models).where(Models.id == model_id)).first()
     if db_model:
         update_data = model_update.model_dump(exclude_unset=True)

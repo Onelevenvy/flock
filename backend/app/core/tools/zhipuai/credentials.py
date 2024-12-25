@@ -1,4 +1,4 @@
-from typing import Any, Dict
+from typing import Any
 
 ZHIPUAI_CREDENTIALS = {
     "ZHIPUAI_API_KEY": {
@@ -9,6 +9,6 @@ ZHIPUAI_CREDENTIALS = {
 }
 
 
-def get_credentials() -> Dict[str, Any]:
+def get_credentials() -> dict[str, Any]:
 
     return ZHIPUAI_CREDENTIALS

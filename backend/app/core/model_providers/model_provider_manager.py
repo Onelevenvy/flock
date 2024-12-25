@@ -1,14 +1,15 @@
 import importlib
 import os
-from typing import Any, Callable, Dict, List
+from collections.abc import Callable
+from typing import Any
 
 
 class ModelProviderManager:
     def __init__(self):
-        self.providers: Dict[str, Dict[str, Any]] = {}
-        self.models: Dict[str, List[str]] = {}
-        self.init_functions: Dict[str, Callable] = {}
-        self.init_crewai_functions: Dict[str, Callable] = {}
+        self.providers: dict[str, dict[str, Any]] = {}
+        self.models: dict[str, list[str]] = {}
+        self.init_functions: dict[str, Callable] = {}
+        self.init_crewai_functions: dict[str, Callable] = {}
         self.load_providers()
 
     def load_providers(self):
@@ -35,16 +36,16 @@ class ModelProviderManager:
                 except ImportError as e:
                     print(f"Failed to load provider config for {item}: {e}")
 
-    def get_provider_config(self, provider_name: str) -> Dict[str, Any]:
+    def get_provider_config(self, provider_name: str) -> dict[str, Any]:
         return self.providers.get(provider_name, {})
 
-    def get_supported_models(self, provider_name: str) -> List[str]:
+    def get_supported_models(self, provider_name: str) -> list[str]:
         return self.models.get(provider_name, [])
 
-    def get_all_providers(self) -> Dict[str, Dict[str, Any]]:
+    def get_all_providers(self) -> dict[str, dict[str, Any]]:
         return self.providers
 
-    def get_all_models(self) -> Dict[str, List[str]]:
+    def get_all_models(self) -> dict[str, list[str]]:
         return self.models
 
     def init_model(

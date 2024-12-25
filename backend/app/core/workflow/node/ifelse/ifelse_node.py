@@ -1,4 +1,4 @@
-from typing import Any, Dict
+from typing import Any
 
 from langchain_core.runnables import RunnableConfig
 
@@ -13,12 +13,12 @@ from ....state import (
 class IfElseNode:
     """Node for handling conditional logic in workflow"""
 
-    def __init__(self, node_id: str, cases: list[Dict[str, Any]]):
+    def __init__(self, node_id: str, cases: list[dict[str, Any]]):
         self.node_id = node_id
         self.cases = cases
 
     def _evaluate_condition(
-        self, condition: Dict[str, Any], state: WorkflowTeamState
+        self, condition: dict[str, Any], state: WorkflowTeamState
     ) -> bool:
         """Evaluate a single condition"""
         # 解析变量
@@ -60,7 +60,7 @@ class IfElseNode:
                     f"Unknown operator: {condition['comparison_operator']}"
                 )
 
-    def _evaluate_case(self, case: Dict[str, Any], state: WorkflowTeamState) -> bool:
+    def _evaluate_case(self, case: dict[str, Any], state: WorkflowTeamState) -> bool:
         """Evaluate all conditions in a case"""
         if case["case_id"] == "false_else" or not case["conditions"]:
             return False

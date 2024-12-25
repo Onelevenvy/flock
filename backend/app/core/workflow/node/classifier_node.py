@@ -1,4 +1,4 @@
-from typing import Any, Dict
+from typing import Any
 
 from langchain_core.output_parsers import JsonOutputParser
 from langchain_core.prompts import ChatPromptTemplate
@@ -55,7 +55,7 @@ class ClassifierNode:
         self,
         node_id: str,
         model_name: str,
-        categories: list[Dict[str, str]],
+        categories: list[dict[str, str]],
         input: str = "",
     ):
         self.node_id = node_id

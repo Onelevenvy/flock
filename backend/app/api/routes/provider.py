@@ -1,4 +1,4 @@
-from typing import Any, List
+from typing import Any
 
 from fastapi import APIRouter, HTTPException
 from sqlmodel import select
@@ -110,7 +110,7 @@ def delete_provider(model_provider_id: int, session: SessionDep):
 
 
 # 新增：同步提供者的模型配置到数据库
-@router.post("/{provider_name}/sync", response_model=List[str])
+@router.post("/{provider_name}/sync", response_model=list[str])
 async def sync_provider(
     provider_name: str,
     session: SessionDep,

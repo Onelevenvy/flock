@@ -1,5 +1,5 @@
 import json
-from typing import Any, Dict, List, Literal
+from typing import Any, Literal
 
 from langchain.tools import StructuredTool
 from pydantic import BaseModel, Field
@@ -31,7 +31,7 @@ class QingyanAssistantInput(BaseModel):
     ] = Field(description="Type of assistant to use", default="ai_search")
 
 
-def process_response(response: Any) -> Dict[str, Any]:
+def process_response(response: Any) -> dict[str, Any]:
     processed = {"role": "", "content": "", "tool_calls": []}
 
     if hasattr(response, "choices") and response.choices:
@@ -124,7 +124,7 @@ def qingyan_assistant_query(query: str, assistant_type: str = "ai_search") -> st
             metadata=None,
         )
 
-        full_response: List[Dict[str, Any]] = []
+        full_response: list[dict[str, Any]] = []
         for chunk in response:
             processed = process_response(chunk)
             if (

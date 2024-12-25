@@ -4,12 +4,19 @@ from typing import Any
 from uuid import UUID, uuid4
 from zoneinfo import ZoneInfo
 
-from pydantic import BaseModel
+from pydantic import BaseModel, model_validator
 from pydantic import Field as PydanticField
-from pydantic import model_validator
-from sqlalchemy import ARRAY, JSON, Column, DateTime
+from sqlalchemy import (
+    ARRAY,
+    JSON,
+    Column,
+    DateTime,
+    PrimaryKeyConstraint,
+    String,
+    UniqueConstraint,
+    func,
+)
 from sqlalchemy import Enum as SQLEnum
-from sqlalchemy import PrimaryKeyConstraint, String, UniqueConstraint, func
 from sqlalchemy.dialects.postgresql import JSONB
 from sqlmodel import Field, Relationship, SQLModel
 

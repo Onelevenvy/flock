@@ -1,5 +1,6 @@
+from collections.abc import Callable
 from contextlib import contextmanager
-from typing import Callable, Dict, TypeVar
+from typing import TypeVar
 
 from sqlmodel import Session, select
 
@@ -41,7 +42,7 @@ def get_models_by_provider_helper(provider_id: int):
 
 
 # 可以根据需要添加更多辅助函数
-def get_model_info(model_name: str) -> Dict[str, str]:
+def get_model_info(model_name: str) -> dict[str, str]:
     """
     Get model information from all available models.
     """

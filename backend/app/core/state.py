@@ -1,5 +1,5 @@
 import re
-from typing import Annotated, Any, Dict
+from typing import Annotated, Any
 
 from langchain_core.messages import AIMessage, AnyMessage, ToolMessage
 from langchain_core.tools import BaseTool
@@ -138,8 +138,8 @@ def format_messages(messages: list[AnyMessage]) -> str:
 
 
 def update_node_outputs(
-    node_outputs: Dict[str, Any], new_outputs: Dict[str, Any]
-) -> Dict[str, Any]:
+    node_outputs: dict[str, Any], new_outputs: dict[str, Any]
+) -> dict[str, Any]:
     """Update node_outputs with new outputs. If new_outputs is empty, return the original node_outputs."""
     if not new_outputs:
         return node_outputs
@@ -155,7 +155,7 @@ class WorkflowTeamState(TypedDict):
     next: str
     main_task: list[AnyMessage]
     task: list[AnyMessage]
-    node_outputs: Annotated[Dict[str, Any], update_node_outputs]  # 修改这一行
+    node_outputs: Annotated[dict[str, Any], update_node_outputs]  # 修改这一行
 
 
 # When returning teamstate, is it possible to exclude fields that you dont want to update
@@ -166,10 +166,10 @@ class ReturnWorkflowTeamState(TypedDict):
     team: NotRequired[GraphTeam]
     next: NotRequired[str | None]  # Returning None is valid for sequential graphs only
     task: NotRequired[list[AnyMessage]]
-    node_outputs: Annotated[Dict[str, Any], update_node_outputs]
+    node_outputs: Annotated[dict[str, Any], update_node_outputs]
 
 
-def parse_variables(text: str, node_outputs: Dict, is_code: bool = False) -> str:
+def parse_variables(text: str, node_outputs: dict, is_code: bool = False) -> str:
     def replace_variable(match):
         var_path = match.group(1).split(".")
         value = node_outputs

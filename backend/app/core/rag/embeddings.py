@@ -1,6 +1,5 @@
 import json
 import logging
-from typing import List
 
 import requests
 from langchain_community.embeddings import HuggingFaceEmbeddings
@@ -78,7 +77,7 @@ class ZhipuAIEmbeddings(BaseModel, Embeddings):
     class Config:
         extra = "forbid"
 
-    def embed_documents(self, texts: List[str]) -> List[List[float]]:
+    def embed_documents(self, texts: list[str]) -> list[list[float]]:
         from zhipuai import ZhipuAI
 
         client = ZhipuAI(api_key=self.api_key)
@@ -88,7 +87,7 @@ class ZhipuAIEmbeddings(BaseModel, Embeddings):
             self.dimension = len(embeddings[0])
         return embeddings
 
-    def embed_query(self, text: str) -> List[float]:
+    def embed_query(self, text: str) -> list[float]:
         return self.embed_documents([text])[0]
 
 
@@ -104,7 +103,7 @@ class SiliconFlowEmbeddings(BaseModel, Embeddings):
     class Config:
         extra = "forbid"
 
-    def embed_documents(self, texts: List[str]) -> List[List[float]]:
+    def embed_documents(self, texts: list[str]) -> list[list[float]]:
         url = "https://api.siliconflow.cn/v1/embeddings"
         headers = {
             "accept": "application/json",
@@ -131,7 +130,7 @@ class SiliconFlowEmbeddings(BaseModel, Embeddings):
 
         return embeddings
 
-    def embed_query(self, text: str) -> List[float]:
+    def embed_query(self, text: str) -> list[float]:
         return self.embed_documents([text])[0]
 
 

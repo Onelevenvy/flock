@@ -1,5 +1,5 @@
 from enum import Enum
-from typing import Any, Union
+from typing import Any
 
 from pydantic import BaseModel
 
@@ -17,7 +17,7 @@ class ToolInvokeMessage(BaseModel):
     """
         plain text, image url or link url
     """
-    message: Union[str, bytes, dict] = None
+    message: str | bytes | dict = None
     meta: dict[str, Any] = None
     save_as: str = ""
 
