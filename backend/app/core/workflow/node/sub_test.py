@@ -5,13 +5,13 @@ from langchain_core.runnables import RunnableLambda
 from langgraph.graph import END, StateGraph
 
 from app.core.workflow.node.llm_node import LLMNode
-from app.core.workflow.node.state import ReturnTeamState, TeamState
+from app.core.state import ReturnWorkflowTeamState, WorkflowTeamState
 from app.core.workflow.node.subgraph_node import SubgraphNode
 
 
 # 1. 创建子图配置和节点
 def create_subgraph_from_config(config: Dict[str, Any]) -> StateGraph:
-    subgraph = StateGraph(TeamState)
+    subgraph = StateGraph(WorkflowTeamState)
 
     # 添加节点
     for node in config["nodes"]:
@@ -70,7 +70,7 @@ async def test_subgraph_node():
     subgraph_node = SubgraphNode(subgraph)
 
     # 3. 模拟工作流程
-    initial_state: TeamState = {
+    initial_state: WorkflowTeamState = {
         "messages": [
             {"role": "user", "content": "Let's play a word game,我先来恭喜发财"}
         ],
@@ -82,7 +82,7 @@ async def test_subgraph_node():
     config: Dict[str, Any] = {}  # 这里可以添加任何必要的配置
 
     # 运行SubgraphNode
-    result: ReturnTeamState = await subgraph_node.work(initial_state, config)
+    result: ReturnWorkflowTeamState = await subgraph_node.work(initial_state, config)
 
     # 打印结果
     print("Subgraph Node Result:")

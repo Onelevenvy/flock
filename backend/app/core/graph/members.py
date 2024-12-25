@@ -1,9 +1,15 @@
 from collections.abc import Mapping, Sequence
 from typing import Annotated, Any
 
-from app.core.workflow.node.state import format_messages
+from app.core.state import (
+    GraphLeader,
+    GraphMember,
+    GraphTeam,
+    add_or_replace_messages,
+    format_messages,
+)
 from app.core.workflow.utils.db_utils import get_model_info
-from langchain.chat_models import init_chat_model
+
 from langchain_core.messages import AIMessage, AnyMessage
 from langchain_core.output_parsers.openai_tools import JsonOutputKeyToolsParser
 from langchain_core.prompts import ChatPromptTemplate, MessagesPlaceholder
@@ -13,113 +19,17 @@ from langchain_core.runnables import (
     RunnableSerializable,
 )
 from langchain_core.tools import BaseTool
-from langchain_google_genai import ChatGoogleGenerativeAI
-from langchain_ollama import ChatOllama
+
 from langchain_openai import ChatOpenAI
 from langgraph.graph import add_messages
-from pydantic import BaseModel, Field
+
 from typing_extensions import NotRequired, TypedDict
 
-from app.core.rag.qdrant import QdrantStore
-from app.core.tools import managed_tools
-from app.core.tools.api_tool import dynamic_api_tool
-from app.core.tools.retriever_tool import create_retriever_tool_custom_modified
+
 from app.core.model_providers.model_provider_manager import model_provider_manager
 
 
-class GraphSkill(BaseModel):
-    name: str = Field(description="The name of the skill")
-    definition: dict[str, Any] | None = Field(
-        description="The skill definition. For api tool calling. Optional."
-    )
-    managed: bool = Field("Whether the skill is managed or user created.")
-
-    @property
-    def tool(self) -> BaseTool:
-        if self.managed:
-            return managed_tools[self.name].tool
-        elif self.definition:
-            return dynamic_api_tool(self.definition)
-        else:
-            raise ValueError("Skill is not managed and no definition provided.")
-
-
-class GraphUpload(BaseModel):
-    name: str = Field(description="Name of the upload")
-    description: str = Field(description="Description of the upload")
-    owner_id: int = Field(description="Id of the user that owns this upload")
-    upload_id: int = Field(description="Id of the upload")
-
-    @property
-    def tool(self) -> BaseTool:
-        qdrant_store = QdrantStore()
-        retriever = qdrant_store.retriever(self.owner_id, self.upload_id)
-        return create_retriever_tool_custom_modified(retriever)
-
-
-class GraphPerson(BaseModel):
-    name: str = Field(description="The name of the person")
-    role: str = Field(description="Role of the person")
-    provider: str = Field(description="The provider for the llm model")
-    model: str = Field(description="The llm model to use for this person")
-
-    temperature: float = Field(description="The temperature of the llm model")
-    backstory: str = Field(
-        description="Description of the person's experience, motives and concerns."
-    )
-
-    @property
-    def persona(self) -> str:
-        return f"<persona>\nName: {self.name}\nRole: {self.role}\nBackstory: {self.backstory}\n</persona>"
-
-
-class GraphMember(GraphPerson):
-    tools: list[GraphSkill | GraphUpload] = Field(
-        description="The list of tools that the person can use."
-    )
-    interrupt: bool = Field(
-        default=False,
-        description="Whether to interrupt the person or not before skill use",
-    )
-
-
-# Create a Leader class so we can pass leader as a team member for team within team
-class GraphLeader(GraphPerson):
-    pass
-
-
-class GraphTeam(BaseModel):
-    name: str = Field(description="The name of the team")
-    role: str = Field(description="Role of the team leader")
-    backstory: str = Field(
-        description="Description of the team leader's experience, motives and concerns."
-    )
-    members: dict[str, GraphMember | GraphLeader] = Field(
-        description="The members of the team"
-    )
-    provider: str = Field(description="The provider of the team leader's llm model")
-    model: str = Field(description="The llm model to use for this team leader")
-
-    temperature: float = Field(
-        description="The temperature of the team leader's llm model"
-    )
-
-    @property
-    def persona(self) -> str:
-        return f"Name: {self.name}\nRole: {self.role}\nBackstory: {self.backstory}\n"
-
-
-def add_or_replace_messages(
-    messages: list[AnyMessage], new_messages: list[AnyMessage]
-) -> list[AnyMessage]:
-    """Add new messages to the state. If new_messages list is empty, clear messages instead."""
-    if not new_messages:
-        return []
-    else:
-        return add_messages(messages, new_messages)  # type: ignore[return-value, arg-type]
-
-
-class TeamState(TypedDict):
+class GraphTeamState(TypedDict):
     all_messages: Annotated[
         list[AnyMessage], add_messages
     ]  # Stores all messages in this thread
@@ -134,7 +44,7 @@ class TeamState(TypedDict):
 
 
 # When returning teamstate, is it possible to exclude fields that you dont want to update
-class ReturnTeamState(TypedDict):
+class ReturnGraphTeamState(TypedDict):
     all_messages: NotRequired[list[AnyMessage]]
     messages: NotRequired[list[AnyMessage]]
     history: NotRequired[list[AnyMessage]]
@@ -235,7 +145,9 @@ class WorkerNode(BaseNode):
         output = agent_output["output"]
         return AIMessage(content=output)
 
-    async def work(self, state: TeamState, config: RunnableConfig) -> ReturnTeamState:
+    async def work(
+        self, state: GraphTeamState, config: RunnableConfig
+    ) -> ReturnGraphTeamState:
         name = state["next"]
         member = state["team"].members[name]
         assert isinstance(member, GraphMember), "member is unexpectedly not a Member"
@@ -304,7 +216,9 @@ class SequentialWorkerNode(WorkerNode):
         else:
             return None
 
-    async def work(self, state: TeamState, config: RunnableConfig) -> ReturnTeamState:
+    async def work(
+        self, state: GraphTeamState, config: RunnableConfig
+    ) -> ReturnGraphTeamState:
         team = state["team"]  # This is actually the first member masked as a team.
         name = state["next"]
         member = team.members[name]
@@ -416,7 +330,7 @@ class LeaderNode(BaseNode):
         }
 
     async def delegate(
-        self, state: TeamState, config: RunnableConfig
+        self, state: GraphTeamState, config: RunnableConfig
     ) -> dict[str, Any]:
         team = state["team"]  # This is the current node
         team_members_name = self.get_team_members_name(team.members)
@@ -456,7 +370,9 @@ class LeaderNode(BaseNode):
             result["all_messages"] = tasks
             return result
 
-    async def work(self, state: TeamState, config: RunnableConfig) -> ReturnTeamState:
+    async def work(
+        self, state: GraphTeamState, config: RunnableConfig
+    ) -> ReturnGraphTeamState:
         # 这个方法应该包含 delegate 方法的逻辑
         return await self.delegate(state, config)
 
@@ -480,7 +396,7 @@ class SummariserNode(BaseNode):
     )
 
     async def summarise(
-        self, state: TeamState, config: RunnableConfig
+        self, state: GraphTeamState, config: RunnableConfig
     ) -> dict[str, list[AnyMessage]]:
         team = state["team"]
         team_members_name = self.get_team_members_name(team.members)
@@ -524,7 +440,9 @@ class ChatBotNode(BaseNode):
         output = agent_output["output"]
         return AIMessage(content=output)
 
-    async def work(self, state: TeamState, config: RunnableConfig) -> ReturnTeamState:
+    async def work(
+        self, state: GraphTeamState, config: RunnableConfig
+    ) -> ReturnGraphTeamState:
         name = state["next"]
         member = state["team"].members[name]
         assert isinstance(member, GraphMember), "member is unexpectedly not a Member"
@@ -582,7 +500,9 @@ class RAGBotNode(BaseNode):
         output = agent_output["output"]
         return AIMessage(content=output)
 
-    async def work(self, state: TeamState, config: RunnableConfig) -> ReturnTeamState:
+    async def work(
+        self, state: GraphTeamState, config: RunnableConfig
+    ) -> ReturnGraphTeamState:
         name = state["next"]
         member = state["team"].members[name]
         assert isinstance(member, GraphMember), "member is unexpectedly not a Member"

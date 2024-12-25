@@ -1,6 +1,11 @@
 from typing import Dict, Any
 from langchain_core.runnables import RunnableConfig
-from ..state import ReturnTeamState, TeamState, parse_variables, update_node_outputs
+from ....state import (
+    ReturnWorkflowTeamState,
+    WorkflowTeamState,
+    parse_variables,
+    update_node_outputs,
+)
 
 
 class IfElseNode:
@@ -10,7 +15,9 @@ class IfElseNode:
         self.node_id = node_id
         self.cases = cases
 
-    def _evaluate_condition(self, condition: Dict[str, Any], state: TeamState) -> bool:
+    def _evaluate_condition(
+        self, condition: Dict[str, Any], state: WorkflowTeamState
+    ) -> bool:
         """Evaluate a single condition"""
         # 解析变量
         field_value = (
@@ -51,7 +58,7 @@ class IfElseNode:
                     f"Unknown operator: {condition['comparison_operator']}"
                 )
 
-    def _evaluate_case(self, case: Dict[str, Any], state: TeamState) -> bool:
+    def _evaluate_case(self, case: Dict[str, Any], state: WorkflowTeamState) -> bool:
         """Evaluate all conditions in a case"""
         if case["case_id"] == "false_else" or not case["conditions"]:
             return False
@@ -64,7 +71,9 @@ class IfElseNode:
         else:  # "or"
             return any(results)
 
-    async def work(self, state: TeamState, config: RunnableConfig) -> ReturnTeamState:
+    async def work(
+        self, state: WorkflowTeamState, config: RunnableConfig
+    ) -> ReturnWorkflowTeamState:
         """Execute the if-else logic"""
         if "node_outputs" not in state:
             state["node_outputs"] = {}
@@ -82,11 +91,11 @@ class IfElseNode:
             result_case_id = "false_else"  # 如果没有匹配的case，使用ELSE
 
         # 更新节点输出
-      
+
         new_output = {self.node_id: {"result": result_case_id}}
         state["node_outputs"] = update_node_outputs(state["node_outputs"], new_output)
 
-        return_state: ReturnTeamState = {
+        return_state: ReturnWorkflowTeamState = {
             "node_outputs": state["node_outputs"],
         }
         return return_state

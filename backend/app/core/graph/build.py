@@ -26,7 +26,7 @@ from app.core.graph.members import (
     LeaderNode,
     SequentialWorkerNode,
     SummariserNode,
-    TeamState,
+    GraphTeamState,
     WorkerNode,
 )
 from app.core.graph.messages import ChatResponse, event_to_response
@@ -260,11 +260,11 @@ def convert_chatbot_chatrag_team_to_dict(
     return team_dict
 
 
-def router(state: TeamState) -> str:
+def router(state: GraphTeamState) -> str:
     return state["next"]
 
 
-def enter_chain(state: TeamState, team: GraphTeam) -> dict[str, Any]:
+def enter_chain(state: GraphTeamState, team: GraphTeam) -> dict[str, Any]:
     """
     Initialise the sub-graph state.
     This makes it so that the states of each graph don't get intermixed.
@@ -278,7 +278,7 @@ def enter_chain(state: TeamState, team: GraphTeam) -> dict[str, Any]:
     return results
 
 
-def exit_chain(state: TeamState) -> dict[str, list[AnyMessage]]:
+def exit_chain(state: GraphTeamState) -> dict[str, list[AnyMessage]]:
     """
     Pass the final response back to the top-level graph's state.
     """
@@ -286,7 +286,7 @@ def exit_chain(state: TeamState) -> dict[str, list[AnyMessage]]:
     return {"history": [answer], "all_messages": state["all_messages"]}
 
 
-def should_continue(state: TeamState) -> str:
+def should_continue(state: GraphTeamState) -> str:
     """Determine if graph should go to tool node or not. For tool calling agents."""
     messages: list[AnyMessage] = state["messages"]
     if messages and isinstance(messages[-1], AIMessage) and messages[-1].tool_calls:
@@ -326,7 +326,7 @@ def create_tools_condition(
     return mapping
 
 
-def ask_human(state: TeamState) -> None:
+def ask_human(state: GraphTeamState) -> None:
     """Dummy node for ask human tool"""
 
 
@@ -348,7 +348,7 @@ def create_hierarchical_graph(
     Returns:
         dict: A dictionary representing the graph of teams.
     """
-    build = StateGraph(TeamState)
+    build = StateGraph(GraphTeamState)
     # List to store members that require human intervention before tool calling
     interrupt_member_names = (
         []
@@ -459,7 +459,7 @@ def create_sequential_graph(
     Returns:
         CompiledGraph: The compiled graph representing the sequential workflow.
     """
-    graph = StateGraph(TeamState)
+    graph = StateGraph(GraphTeamState)
     # List to store members that require human intervention before it is called
     interrupt_member_names = []
     members = list(team.values())
@@ -542,7 +542,7 @@ def create_chatbot_ragbot_graph(
         raise ValueError("Team can only have one GraphMember.")
 
     member = next(iter(team.values()))
-    graph = StateGraph(TeamState)
+    graph = StateGraph(GraphTeamState)
     # Create a list to store member names that require human intervention before tool calling
 
     interrupt_member_names = []

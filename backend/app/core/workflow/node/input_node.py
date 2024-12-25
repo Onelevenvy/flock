@@ -1,7 +1,7 @@
-from .state import TeamState
+from ...state import WorkflowTeamState
 
 
-def InputNode(state: TeamState):
+def InputNode(state: WorkflowTeamState):
     if "node_outputs" not in state:
         state["node_outputs"] = {}
     if isinstance(state, list):

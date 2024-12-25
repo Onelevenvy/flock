@@ -4,7 +4,12 @@ import uuid
 from langchain_core.messages import AIMessage, ToolMessage
 from langchain_core.runnables import RunnableConfig
 import docker
-from ..state import ReturnTeamState, TeamState, parse_variables, update_node_outputs
+from ....state import (
+    ReturnWorkflowTeamState,
+    WorkflowTeamState,
+    parse_variables,
+    update_node_outputs,
+)
 import threading
 import queue
 import time
@@ -378,19 +383,22 @@ class CodeNode:
         self.libraries = libraries or []
         self.executor = CodeExecutor(timeout=timeout, memory_limit=memory_limit)
 
-    async def work(self, state: TeamState, config: RunnableConfig) -> ReturnTeamState:
+    async def work(
+        self, state: WorkflowTeamState, config: RunnableConfig
+    ) -> ReturnWorkflowTeamState:
         """Execute code and update state"""
         if "node_outputs" not in state:
             state["node_outputs"] = {}
 
         try:
             # Parse variables in code
-            parsed_code = parse_variables(self.code, state["node_outputs"],is_code=True)
+            parsed_code = parse_variables(
+                self.code, state["node_outputs"], is_code=True
+            )
 
-        
             # Execute code
             code_execution_result = self.executor.execute(parsed_code, self.libraries)
-         
+
             if isinstance(code_execution_result, str):
                 # If code_result is a string, return it as it is
                 code_result = code_execution_result
@@ -415,7 +423,7 @@ class CodeNode:
                 state["node_outputs"], new_output
             )
 
-            return_state: ReturnTeamState = {
+            return_state: ReturnWorkflowTeamState = {
                 "history": state.get("history", []) + [result],
                 "messages": [result],
                 "all_messages": state.get("all_messages", []) + [result],
@@ -436,7 +444,7 @@ class CodeNode:
             state["node_outputs"] = update_node_outputs(
                 state["node_outputs"], new_output
             )
-            return_state: ReturnTeamState = {
+            return_state: ReturnWorkflowTeamState = {
                 "history": state.get("history", []) + [result],
                 "messages": [result],
                 "all_messages": state.get("all_messages", []) + [result],

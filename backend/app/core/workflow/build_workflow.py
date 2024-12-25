@@ -19,7 +19,7 @@ from .node.answer_node import AnswerNode
 from .node.input_node import InputNode
 from .node.llm_node import LLMNode
 from .node.retrieval_node import RetrievalNode
-from .node.state import TeamState
+from ..state import WorkflowTeamState
 from .node.subgraph_node import SubgraphNode
 from .node.crewai_node import CrewAINode
 from .node.classifier_node import ClassifierNode
@@ -28,7 +28,7 @@ from .node.ifelse.ifelse_node import IfElseNode
 
 
 def create_subgraph(subgraph_config: Dict[str, Any]) -> CompiledGraph:
-    subgraph_builder = StateGraph(TeamState)
+    subgraph_builder = StateGraph(WorkflowTeamState)
 
     # 添加subgraph的节点
     for node in subgraph_config["nodes"]:
@@ -86,7 +86,7 @@ def get_retrieval_tool(tool_name: str, description: str, owner_id: int, kb_id: i
 tool_name_to_node_id: Dict[str, str] = {}
 
 
-def should_continue_tools(state: TeamState) -> str:
+def should_continue_tools(state: WorkflowTeamState) -> str:
     messages: list[AnyMessage] = state["messages"]
     if messages and isinstance(messages[-1], AIMessage) and messages[-1].tool_calls:
         for tool_call in messages[-1].tool_calls:
@@ -100,7 +100,7 @@ def should_continue_tools(state: TeamState) -> str:
     return "default"
 
 
-def should_continue_classifier(state: TeamState) -> str:
+def should_continue_classifier(state: WorkflowTeamState) -> str:
     """专门处理分类器节点的条件判断"""
     if "node_outputs" in state:
         for node_id, outputs in state["node_outputs"].items():
@@ -109,7 +109,7 @@ def should_continue_classifier(state: TeamState) -> str:
     return "default"
 
 
-def should_continue_ifelse(state: TeamState) -> str:
+def should_continue_ifelse(state: WorkflowTeamState) -> str:
     """处理 if-else 节点的条件判断"""
     if "node_outputs" in state:
         for node_id, outputs in state["node_outputs"].items():
@@ -208,7 +208,7 @@ def initialize_graph(
         raise ValueError("Invalid configuration structure")
 
     try:
-        graph_builder = StateGraph(TeamState)
+        graph_builder = StateGraph(WorkflowTeamState)
         nodes = build_config["nodes"]
         edges = build_config["edges"]
 

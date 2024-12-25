@@ -9,9 +9,9 @@ from langchain_core.tools import BaseTool
 
 
 from app.core.model_providers.model_provider_manager import model_provider_manager
-from app.core.workflow.node.state import (
-    ReturnTeamState,
-    TeamState,
+from app.core.state import (
+    ReturnWorkflowTeamState,
+    WorkflowTeamState,
     format_messages,
     parse_variables,
     update_node_outputs,
@@ -51,7 +51,9 @@ class LLMBaseNode:
 class LLMNode(LLMBaseNode):
     """Perform LLM Node actions"""
 
-    async def work(self, state: TeamState, config: RunnableConfig) -> ReturnTeamState:
+    async def work(
+        self, state: WorkflowTeamState, config: RunnableConfig
+    ) -> ReturnWorkflowTeamState:
 
         if "node_outputs" not in state:
             state["node_outputs"] = {}
@@ -133,7 +135,7 @@ class LLMNode(LLMBaseNode):
         new_output = {self.node_id: {"response": result.content}}
         state["node_outputs"] = update_node_outputs(state["node_outputs"], new_output)
 
-        return_state: ReturnTeamState = {
+        return_state: ReturnWorkflowTeamState = {
             "history": history + [result],
             "messages": [result] if result.tool_calls else [],
             "all_messages": messages + [result],
