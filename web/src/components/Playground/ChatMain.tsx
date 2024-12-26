@@ -334,19 +334,17 @@ const ChatMain = ({ isPlayground }: { isPlayground?: boolean }) => {
       return;
     }
 
-    // 只有在非中断情况下才添加用户消息
-    if (!data.interrupt) {
-      setMessages((prev: ChatResponse[]) => [
-        ...prev,
-        {
-          type: "human",
-          id: v4(),
-          content: input,
-          imgdata: imageData,
-          name: "user",
-        },
-      ]);
-    }
+    setMessages((prev: ChatResponse[]) => [
+      ...prev,
+      {
+        type: "human",
+        // id: self.crypto.randomUUID(),
+        id: v4(),
+        content: data.messages[0].content,
+        imgdata: imageData,
+        name: "user",
+      },
+    ]);
 
     await stream(teamId, currentThreadId, data);
   };
@@ -401,17 +399,6 @@ const ChatMain = ({ isPlayground }: { isPlayground?: boolean }) => {
    */
   const onResumeHandler = useCallback(
     (decision: InterruptDecision, tool_message?: string | null) => {
-      // 在mutation之前，先添加用户的响应消息
-      setMessages((prev) => [
-        ...prev,
-        {
-          type: "human",
-          id: v4(),
-          content: tool_message || decision,
-          name: "user",
-        },
-      ]);
-
       mutation.mutate({
         messages: [
           {
@@ -422,7 +409,7 @@ const ChatMain = ({ isPlayground }: { isPlayground?: boolean }) => {
         interrupt: { decision, tool_message },
       });
     },
-    [mutation, setMessages]
+    [mutation]
   );
 
   return (
