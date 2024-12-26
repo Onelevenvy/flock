@@ -641,5 +641,10 @@ def _add_human_node(graph_builder, node_id: str, node_data: dict[str, Any]):
     """Add human node to graph"""
     graph_builder.add_node(
         node_id,
-        HumanNode(node_id=node_id).work,
+        HumanNode(
+            node_id=node_id,
+            routes=node_data.get("routes", {}),  # 从配置中获取路由信息
+            title=node_data.get("title"),  # 可选的标题
+            options=node_data.get("options"),  # 可选的操作列表
+        ).work,
     )

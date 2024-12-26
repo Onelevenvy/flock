@@ -11,20 +11,36 @@ from ...state import ReturnWorkflowTeamState, WorkflowTeamState, update_node_out
 class HumanNode:
     """通用的人机交互节点，支持审批、拒绝和反馈等交互模式"""
 
-    def __init__(self, node_id: str):
+    def __init__(
+        self,
+        node_id: str,
+        routes: dict[str, str] | None = None,  # 添加路由配置
+        title: str | None = None,  # 自定义标题
+        options: list[str] | None = None,  # 自定义选项
+    ):
+        """
+        初始化人机交互节点
+
+        Args:
+            node_id: 节点ID
+            routes: 不同操作的路由配置，格式如:
+                {
+                    "human_approve": "next_node_id",
+                    "human_reject": "reject_node_id",
+                    "human_feedback": "feedback_node_id"
+                }
+            title: 交互界面的标题
+            options: 可选的操作列表，默认为 ["human_approve", "human_reject", "human_feedback"]
+        """
         self.node_id = node_id
+        self.routes = routes or {}
+        self.title = title or "Human Review Required"
+        self.options = options or ["human_approve", "human_reject", "human_feedback"]
 
     async def work(
         self, state: WorkflowTeamState, config: RunnableConfig
     ) -> ReturnWorkflowTeamState | Command[str]:
-        """
-        处理人机交互工作流
-
-        支持三种交互模式:
-        1. human_approve - 人工审批，可以继续执行或修改后执行
-        2. human_reject - 人工拒绝，可以终止流程或返回上一步
-        3. human_feedback - 人工反馈，提供额外信息或建议
-        """
+        """处理人机交互工作流"""
         if "node_outputs" not in state:
             state["node_outputs"] = {}
 
@@ -45,18 +61,17 @@ class HumanNode:
         # 使用 interrupt 等待人工输入
         human_response = interrupt(
             {
-                "title": "Human Review Required",
+                "title": self.title,
                 "context": interaction_data,
-                "options": ["approve", "reject", "feedback"],
+                "options": self.options,
             }
         )
 
         action = human_response.get("action")
         content = human_response.get("content", "")
-        next_node = human_response.get("next_node", None)
 
         match action:
-            case "approve":
+            case "human_approve":
                 # 如果是工具调用的审批
                 if last_message and hasattr(last_message, "tool_calls"):
                     tool_message = ToolMessage(
@@ -76,7 +91,7 @@ class HumanNode:
                     }
                 }
 
-            case "reject":
+            case "human_reject":
                 reject_message = HumanMessage(
                     content=f"Rejected by human reviewer: {content}"
                 )
@@ -88,7 +103,7 @@ class HumanNode:
                     }
                 }
 
-            case "feedback":
+            case "human_feedback":
                 feedback_message = HumanMessage(content=f"Human feedback: {content}")
                 messages = [feedback_message]
                 new_output = {
@@ -104,7 +119,8 @@ class HumanNode:
         # 更新节点输出
         state["node_outputs"] = update_node_outputs(state["node_outputs"], new_output)
 
-        # 如果指定了下一个节点，使用 Command 进行跳转
+        # 根据action获取下一个节点
+        next_node = self.routes.get(action)
         if next_node:
             return Command(
                 goto=next_node,
@@ -116,7 +132,7 @@ class HumanNode:
                 },
             )
 
-        # 否则返回正常的状态更新
+        # 如果没有配置路由，返回正常的状态更新
         return_state: ReturnWorkflowTeamState = {
             "messages": messages,
             "history": state.get("history", []) + messages,

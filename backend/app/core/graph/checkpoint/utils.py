@@ -96,7 +96,7 @@ def convert_checkpoint_tuple_to_messages(
     if last_message.type == "ai" and last_message.tool_calls:
         # Check if any tool in last message is asking for human input
         for tool_call in last_message.tool_calls:
-            if tool_call["name"] == "ask_human":
+            if tool_call["name"] == "ask-human":
                 formatted_messages.append(
                     ChatResponse(
                         type="interrupt",
