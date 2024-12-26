@@ -31,6 +31,7 @@ from app.core.graph.messages import ChatResponse, event_to_response
 from app.core.state import GraphSkill, GraphUpload
 from app.core.workflow.build_workflow import initialize_graph
 from app.models import ChatMessage, Interrupt, InterruptDecision, Member, Team
+from app.core.workflow.node.human_node import HumanInteractionType
 
 
 def convert_hierarchical_team_to_dict(
@@ -790,13 +791,31 @@ async def generator(
                             }
                     # 处理新的 human node 交互逻辑
                     else:
+                        # 根据交互类型和决策设置相应的动作
                         action_mapping = {
-                            InterruptDecision.APPROVED: "human_approve",
-                            InterruptDecision.REJECTED: "human_reject",
-                            InterruptDecision.REPLIED: "human_feedback",
+                            (
+                                HumanInteractionType.APPROVAL,
+                                InterruptDecision.APPROVED,
+                            ): "human_approve",
+                            (
+                                HumanInteractionType.APPROVAL,
+                                InterruptDecision.REJECTED,
+                            ): "human_reject",
+                            (
+                                HumanInteractionType.FEEDBACK,
+                                InterruptDecision.REPLIED,
+                            ): "human_feedback",
                         }
 
-                        if interrupt.decision in action_mapping:
+                        # 从当前状态获取交互类型
+                        interaction_type = current_values.values.get(
+                            "interaction_type", HumanInteractionType.APPROVAL
+                        )
+                        action = action_mapping.get(
+                            (interaction_type, interrupt.decision)
+                        )
+
+                        if action:
                             state = {
                                 "messages": [
                                     HumanMessage(
@@ -809,7 +828,7 @@ async def generator(
                                         id=str(uuid4()),
                                     )
                                 ],
-                                "action": action_mapping[interrupt.decision],
+                                "action": action,
                             }
 
             async for event in root.astream_events(state, version="v2", config=config):
@@ -844,9 +863,14 @@ async def generator(
                         )
                 # 处理 human node 的中断
                 else:
+                    # 从状态中获取交互类型
+                    interaction_type = snapshot.values.get(
+                        "interaction_type", HumanInteractionType.APPROVAL
+                    )
+
                     response = ChatResponse(
                         type="interrupt",
-                        name="human_interaction",  # 使用新的名称区分
+                        name=f"human_{interaction_type.value}",  # 使用交互类型作为名称
                         content=message.content,
                         id=str(uuid4()),
                     )
