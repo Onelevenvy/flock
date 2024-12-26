@@ -89,9 +89,10 @@ function DebugPreview({
         bottom={0}
         left={0}
         right={0}
-        overflowY="auto"
+        overflowY="hidden"
         display="flex"
         p={4}
+       
         sx={{
           "&::-webkit-scrollbar": {
             width: "4px",
