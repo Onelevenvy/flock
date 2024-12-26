@@ -291,7 +291,7 @@ def should_continue(state: GraphTeamState) -> str:
     if messages and isinstance(messages[-1], AIMessage) and messages[-1].tool_calls:
         # TODO: what if multiple tool_calls?
         for tool_call in messages[-1].tool_calls:
-            if tool_call["name"] == "ask_human":
+            if tool_call["name"] == "ask-human":
                 return "call_human"
         else:
             return "call_tools"
@@ -325,7 +325,7 @@ def create_tools_condition(
     return mapping
 
 
-def ask_human(state: GraphTeamState) -> None:
+def askhuman_node(state: GraphTeamState) -> None:
     """Dummy node for ask human tool"""
 
 
@@ -394,7 +394,7 @@ def create_hierarchical_graph(
                     if tool.name == "ask-human":
                         # Handling Ask-Human tool
                         interrupt_member_names.append(f"{name}_askHuman_tool")
-                        build.add_node(f"{name}_askHuman_tool", ask_human)
+                        build.add_node(f"{name}_askHuman_tool", askhuman_node)
                         build.add_edge(f"{name}_askHuman_tool", name)
                     else:
                         normal_tools.append(tool.tool)
@@ -481,7 +481,7 @@ def create_sequential_graph(
                 if tool.name == "ask-human":
                     # Handling Ask-Human tool
                     interrupt_member_names.append(f"{member.name}_askHuman_tool")
-                    graph.add_node(f"{member.name}_askHuman_tool", ask_human)
+                    graph.add_node(f"{member.name}_askHuman_tool", askhuman_node)
                     graph.add_edge(f"{member.name}_askHuman_tool", member.name)
                 else:
                     normal_tools.append(tool.tool)
@@ -564,7 +564,7 @@ def create_chatbot_ragbot_graph(
             if tool.name == "ask-human":
                 # Handling Ask-Human tool
                 interrupt_member_names.append(f"{member.name}_askHuman_tool")
-                graph.add_node(f"{member.name}_askHuman_tool", ask_human)
+                graph.add_node(f"{member.name}_askHuman_tool", askhuman_node)
                 graph.add_edge(f"{member.name}_askHuman_tool", member.name)
             else:
                 normal_tools.append(tool.tool)
@@ -778,10 +778,10 @@ async def generator(
                             ToolMessage(
                                 tool_call_id=tool_call["id"],
                                 content=interrupt.tool_message,
-                                name="ask_human",
+                                name="ask-human",
                             )
                             for tool_call in tool_calls
-                            if tool_call["name"] == "ask_human"
+                            if tool_call["name"] == "ask-human"
                         ]
                     }
             async for event in root.astream_events(state, version="v2", config=config):
@@ -798,7 +798,7 @@ async def generator(
                     return
                 # Determine if should return default or askhuman interrupt based on whether AskHuman tool was called.
                 for tool_call in message.tool_calls:
-                    if tool_call["name"] == "ask_human":
+                    if tool_call["name"] == "ask-human":
                         response = ChatResponse(
                             type="interrupt",
                             name="human",
