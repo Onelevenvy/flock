@@ -24,6 +24,7 @@ from .node.input_node import InputNode
 from .node.llm_node import LLMNode
 from .node.retrieval_node import RetrievalNode
 from .node.subgraph_node import SubgraphNode
+from .node.human_node import HumanNode
 
 
 def create_subgraph(subgraph_config: dict[str, Any]) -> CompiledGraph:
@@ -89,8 +90,8 @@ def should_continue_tools(state: WorkflowTeamState) -> str:
     messages: list[AnyMessage] = state["messages"]
     if messages and isinstance(messages[-1], AIMessage) and messages[-1].tool_calls:
         for tool_call in messages[-1].tool_calls:
-            if tool_call["name"] == "ask_human":
-                return "call_human"
+            if tool_call["name"] == "ask-human":
+                return "ask-human"
             # 使用工具名称到节点ID的映射
             tool_name = tool_call["name"].lower()
             for node_id, tools in tool_name_to_node_id.items():
@@ -257,6 +258,8 @@ def initialize_graph(
                 _add_code_node(graph_builder, node_id, node_data)
             elif node_type == "ifelse":
                 _add_ifelse_node(graph_builder, node_id, node_data)
+            elif node_type == "human":
+                _add_human_node(graph_builder, node_id, node_data)
 
         # Add edges
         for edge in edges:
@@ -351,7 +354,7 @@ def _create_llm_children_dict(nodes, edges):
 
 def _create_conditional_edges_dict(nodes):
     return {
-        node["id"]: {"default": {}, "call_tools": {}, "call_human": {}}
+        node["id"]: {"default": {}, "call_tools": {}, "ask-human": {}}
         for node in nodes
         if node["type"] == "llm"
     }
@@ -532,6 +535,11 @@ def _add_edge(graph_builder, edge, nodes, conditional_edges):
     ]:  # classifier 必定是conditional_edges 不会有普通边，if else node也一样
         if target_node["type"] == "end":
             graph_builder.add_edge(edge["source"], END)
+    elif source_node["type"] == "human":
+        if target_node["type"] == "end":
+            graph_builder.add_edge(edge["source"], END)
+        else:
+            graph_builder.add_edge(edge["source"], edge["target"])
 
 
 def _add_conditional_edges(graph_builder, conditional_edges, nodes):
@@ -542,8 +550,8 @@ def _add_conditional_edges(graph_builder, conditional_edges, nodes):
             **conditions["call_tools"],
         }
 
-        if conditions["call_human"]:
-            edges_dict["call_human"] = next(iter(conditions["call_human"].values()))
+        if conditions["ask-human"]:
+            edges_dict["ask-human"] = next(iter(conditions["ask-human"].values()))
 
         if edges_dict != {"default": END}:
             graph_builder.add_conditional_edges(
@@ -626,4 +634,12 @@ def _add_ifelse_node(graph_builder, node_id: str, node_data: dict[str, Any]):
             node_id=node_id,
             cases=node_data["cases"],
         ).work,
+    )
+
+
+def _add_human_node(graph_builder, node_id: str, node_data: dict[str, Any]):
+    """Add human node to graph"""
+    graph_builder.add_node(
+        node_id,
+        HumanNode(node_id=node_id).work,
     )
