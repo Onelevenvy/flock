@@ -292,7 +292,7 @@ def should_continue(state: GraphTeamState) -> str:
     if messages and isinstance(messages[-1], AIMessage) and messages[-1].tool_calls:
         # TODO: what if multiple tool_calls?
         for tool_call in messages[-1].tool_calls:
-            if tool_call["name"] == "ask_human":
+            if tool_call["name"] == "ask-human":
                 return "call_human"
         else:
             return "call_tools"
@@ -326,7 +326,7 @@ def create_tools_condition(
     return mapping
 
 
-def ask_human(state: GraphTeamState) -> None:
+def askhuman_node(state: GraphTeamState) -> None:
     """Dummy node for ask human tool"""
 
 
@@ -395,7 +395,7 @@ def create_hierarchical_graph(
                     if tool.name == "ask-human":
                         # Handling Ask-Human tool
                         interrupt_member_names.append(f"{name}_askHuman_tool")
-                        build.add_node(f"{name}_askHuman_tool", ask_human)
+                        build.add_node(f"{name}_askHuman_tool", askhuman_node)
                         build.add_edge(f"{name}_askHuman_tool", name)
                     else:
                         normal_tools.append(tool.tool)
@@ -482,7 +482,7 @@ def create_sequential_graph(
                 if tool.name == "ask-human":
                     # Handling Ask-Human tool
                     interrupt_member_names.append(f"{member.name}_askHuman_tool")
-                    graph.add_node(f"{member.name}_askHuman_tool", ask_human)
+                    graph.add_node(f"{member.name}_askHuman_tool", askhuman_node)
                     graph.add_edge(f"{member.name}_askHuman_tool", member.name)
                 else:
                     normal_tools.append(tool.tool)
@@ -565,7 +565,7 @@ def create_chatbot_ragbot_graph(
             if tool.name == "ask-human":
                 # Handling Ask-Human tool
                 interrupt_member_names.append(f"{member.name}_askHuman_tool")
-                graph.add_node(f"{member.name}_askHuman_tool", ask_human)
+                graph.add_node(f"{member.name}_askHuman_tool", askhuman_node)
                 graph.add_edge(f"{member.name}_askHuman_tool", member.name)
             else:
                 normal_tools.append(tool.tool)
@@ -746,91 +746,44 @@ async def generator(
                 messages = current_values.values["messages"]
 
                 if messages and isinstance(messages[-1], AIMessage):
-                    tool_calls = (
-                        messages[-1].tool_calls
-                        if hasattr(messages[-1], "tool_calls")
-                        else None
-                    )
-
-                    # 处理原有的 ask-human 工具调用逻辑
-                    if tool_calls and any(
-                        call["name"] == "ask_human" for call in tool_calls
-                    ):
-                        if interrupt.decision == InterruptDecision.APPROVED:
-                            state = None  # 继续执行
-                        elif interrupt.decision == InterruptDecision.REJECTED:
-                            state = {
-                                "messages": [
-                                    ToolMessage(
-                                        tool_call_id=tool_call["id"],
-                                        content="Rejected by user. Continue assisting.",
-                                    )
-                                    for tool_call in tool_calls
-                                ]
-                            }
-                            if interrupt.tool_message:
-                                state["messages"].append(
-                                    HumanMessage(
-                                        content=interrupt.tool_message,
-                                        name="user",
-                                        id=str(uuid4()),
-                                    )
-                                )
-                    elif interrupt.decision == InterruptDecision.REPLIED:
-                        if interrupt.tool_message:
-                            state = {
-                                "messages": [
-                                    ToolMessage(
-                                        tool_call_id=tool_call["id"],
-                                        content=interrupt.tool_message,
-                                        name="ask_human",
-                                    )
-                                    for tool_call in tool_calls
-                                    if tool_call["name"] == "ask_human"
-                                ]
-                            }
-                    # 处理新的 human node 交互逻辑
-                    else:
-                        # 根据交互类型和决策设置相应的动作
-                        action_mapping = {
-                            (
-                                HumanInteractionType.APPROVAL,
-                                InterruptDecision.APPROVED,
-                            ): "human_approve",
-                            (
-                                HumanInteractionType.APPROVAL,
-                                InterruptDecision.REJECTED,
-                            ): "human_reject",
-                            (
-                                HumanInteractionType.FEEDBACK,
-                                InterruptDecision.REPLIED,
-                            ): "human_feedback",
-                        }
-
-                        # 从当前状态获取交互类型
-                        interaction_type = current_values.values.get(
-                            "interaction_type", HumanInteractionType.APPROVAL
+                    tool_calls = messages[-1].tool_calls
+                    state = {
+                        "messages": [
+                            ToolMessage(
+                                tool_call_id=tool_call["id"],
+                                content="Rejected by user. Continue assisting.",
+                            )
+                            for tool_call in tool_calls
+                        ]
+                    }
+                    if interrupt.tool_message:
+                        state["messages"].append(
+                            HumanMessage(
+                                content=interrupt.tool_message,
+                                name="user",
+                                id=str(uuid4()),
+                            )
                         )
-                        action = action_mapping.get(
-                            (interaction_type, interrupt.decision)
-                        )
-
-                        if action:
-                            state = {
-                                "messages": [
-                                    HumanMessage(
-                                        content=(
-                                            interrupt.tool_message
-                                            if interrupt.tool_message
-                                            else ""
-                                        ),
-                                        name="user",
-                                        id=str(uuid4()),
-                                    )
-                                ],
-                                "action": action,
-                            }
-
+            elif interrupt and interrupt.decision == InterruptDecision.REPLIED:
+                current_values = await root.aget_state(config)
+                messages = current_values.values["messages"]
+                if (
+                    messages
+                    and isinstance(messages[-1], AIMessage)
+                    and interrupt.tool_message
+                ):
+                    tool_calls = messages[-1].tool_calls
+                    state = {
+                        "messages": [
+                            ToolMessage(
+                                tool_call_id=tool_call["id"],
+                                content=interrupt.tool_message,
+                                name="ask-human",
+                            )
+                            for tool_call in tool_calls
+                            if tool_call["name"] == "ask-human"
+                        ]
+                    }
             async for event in root.astream_events(state, version="v2", config=config):
                 response = event_to_response(event)
                 if response:
@@ -842,39 +795,23 @@ async def generator(
                 message = snapshot.values["messages"][-1]
                 if not isinstance(message, AIMessage):
                     return
-
-                # 检查是否是 ask-human 工具调用
-                if hasattr(message, "tool_calls"):
-                    for tool_call in message.tool_calls:
-                        if tool_call["name"] == "ask_human":
-                            response = ChatResponse(
-                                type="interrupt",
-                                name="human",
-                                tool_calls=message.tool_calls,
-                                id=str(uuid4()),
-                            )
-                            break
-                    else:
+                # Determine if should return default or askhuman interrupt based on whether AskHuman tool was called.
+                for tool_call in message.tool_calls:
+                    if tool_call["name"] == "ask-human":
                         response = ChatResponse(
                             type="interrupt",
-                            name="interrupt",
+                            name="human",
                             tool_calls=message.tool_calls,
                             id=str(uuid4()),
                         )
-                # 处理 human node 的中断
+                        break
                 else:
-                    # 从状态中获取交互类型
-                    interaction_type = snapshot.values.get(
-                        "interaction_type", HumanInteractionType.APPROVAL
-                    )
-
                     response = ChatResponse(
                         type="interrupt",
-                        name=f"human_{interaction_type.value}",  # 使用交互类型作为名称
-                        content=message.content,
+                        name="interrupt",
+                        tool_calls=message.tool_calls,
                         id=str(uuid4()),
                     )
-
                 formatted_output = f"data: {response.model_dump_json()}\n\n"
                 yield formatted_output
     except Exception as e:
