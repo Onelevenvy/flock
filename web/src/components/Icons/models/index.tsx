@@ -393,7 +393,7 @@ const GoogleGeminiIcon = createIcon({
       <path
         d="M20 12.0116C15.7043 12.42 12.3692 15.757 11.9995 20C11.652 15.8183 8.20301 12.361 4 12.0181C8.21855 11.6991 11.6656 8.1853 12.006 4C12.2833 8.19653 15.8057 11.7005 20 12.0116Z"
         fill="white"
-        fill-opacity="0.88"
+        fillOpacity="0.88"
       />
       <defs>
         <linearGradient
@@ -404,9 +404,9 @@ const GoogleGeminiIcon = createIcon({
           y2="1.43791"
           gradientUnits="userSpaceOnUse"
         >
-          <stop offset="0.192878" stop-color="#1C7DFF" />
-          <stop offset="0.520213" stop-color="#1C69FF" />
-          <stop offset="1" stop-color="#F0DCD6" />
+          <stop offset="0.192878" stopColor="#1C7DFF" />
+          <stop offset="0.520213" stopColor="#1C69FF" />
+          <stop offset="1" stopColor="#F0DCD6" />
         </linearGradient>
       </defs>
     </svg>
