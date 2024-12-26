@@ -25,6 +25,7 @@ from .node.llm_node import LLMNode
 from .node.retrieval_node import RetrievalNode
 from .node.subgraph_node import SubgraphNode
 from .node.human_node import HumanNode
+from .node.human_node import HumanInteractionType
 
 
 def create_subgraph(subgraph_config: dict[str, Any]) -> CompiledGraph:
@@ -639,12 +640,16 @@ def _add_ifelse_node(graph_builder, node_id: str, node_data: dict[str, Any]):
 
 def _add_human_node(graph_builder, node_id: str, node_data: dict[str, Any]):
     """Add human node to graph"""
+    interaction_type = HumanInteractionType(
+        node_data.get("interaction_type", "approval")
+    )
+
     graph_builder.add_node(
         node_id,
         HumanNode(
             node_id=node_id,
-            routes=node_data.get("routes", {}),  # 从配置中获取路由信息
-            title=node_data.get("title"),  # 可选的标题
-            options=node_data.get("options"),  # 可选的操作列表
+            interaction_type=interaction_type,
+            routes=node_data.get("routes", {}),
+            title=node_data.get("title"),
         ).work,
     )

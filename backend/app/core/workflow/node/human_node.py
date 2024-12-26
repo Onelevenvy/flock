@@ -1,3 +1,4 @@
+from enum import Enum
 from typing import Any, Literal
 from uuid import uuid4
 
@@ -8,34 +9,75 @@ from langgraph.types import Command, interrupt
 from ...state import ReturnWorkflowTeamState, WorkflowTeamState, update_node_outputs
 
 
+class HumanInteractionType(str, Enum):
+    """人机交互类型"""
+
+    APPROVAL = "approval"  # 审批流程（包含批准和拒绝）
+    FEEDBACK = "feedback"  # 反馈流程
+
+
 class HumanNode:
-    """通用的人机交互节点，支持审批、拒绝和反馈等交互模式"""
+    """通用的人机交互节点，支持审批流程和反馈流程"""
+
+    # 定义固定的交互选项
+    HUMAN_APPROVE = "human_approve"
+    HUMAN_REJECT = "human_reject"
+    HUMAN_FEEDBACK = "human_feedback"
 
     def __init__(
         self,
         node_id: str,
-        routes: dict[str, str] | None = None,  # 添加路由配置
+        interaction_type: HumanInteractionType,  # 新增：交互类型
+        routes: dict[str, str],  # 路由配置
         title: str | None = None,  # 自定义标题
-        options: list[str] | None = None,  # 自定义选项
     ):
         """
         初始化人机交互节点
 
         Args:
             node_id: 节点ID
-            routes: 不同操作的路由配置，格式如:
+            interaction_type: 交互类型（APPROVAL 或 FEEDBACK）
+            routes: 不同操作的路由配置
+                对于 APPROVAL 类型:
                 {
-                    "human_approve": "next_node_id",
-                    "human_reject": "reject_node_id",
+                    "human_approve": "approved_node_id",
+                    "human_reject": "rejected_node_id"
+                }
+                对于 FEEDBACK 类型:
+                {
                     "human_feedback": "feedback_node_id"
                 }
             title: 交互界面的标题
-            options: 可选的操作列表，默认为 ["human_approve", "human_reject", "human_feedback"]
         """
         self.node_id = node_id
-        self.routes = routes or {}
-        self.title = title or "Human Review Required"
-        self.options = options or ["human_approve", "human_reject", "human_feedback"]
+        self.interaction_type = interaction_type
+        self.routes = routes
+        self.title = title or (
+            "Human Approval Required"
+            if interaction_type == HumanInteractionType.APPROVAL
+            else "Human Feedback Required"
+        )
+
+        # 验证路由配置
+        if interaction_type == HumanInteractionType.APPROVAL:
+            if not (self.HUMAN_APPROVE in routes and self.HUMAN_REJECT in routes):
+                raise ValueError(
+                    f"Approval flow requires both '{self.HUMAN_APPROVE}' and '{self.HUMAN_REJECT}' routes"
+                )
+            invalid_routes = set(routes.keys()) - {
+                self.HUMAN_APPROVE,
+                self.HUMAN_REJECT,
+            }
+            if invalid_routes:
+                raise ValueError(f"Invalid routes for approval flow: {invalid_routes}")
+        else:  # FEEDBACK
+            if self.HUMAN_FEEDBACK not in routes:
+                raise ValueError(
+                    f"Feedback flow requires '{self.HUMAN_FEEDBACK}' route"
+                )
+            invalid_routes = set(routes.keys()) - {self.HUMAN_FEEDBACK}
+            if invalid_routes:
+                raise ValueError(f"Invalid routes for feedback flow: {invalid_routes}")
 
     async def work(
         self, state: WorkflowTeamState, config: RunnableConfig
@@ -58,12 +100,20 @@ class HumanNode:
             ),
         }
 
+        # 根据交互类型设置可用选项
+        options = (
+            [self.HUMAN_APPROVE, self.HUMAN_REJECT]
+            if self.interaction_type == HumanInteractionType.APPROVAL
+            else [self.HUMAN_FEEDBACK]
+        )
+
         # 使用 interrupt 等待人工输入
         human_response = interrupt(
             {
                 "title": self.title,
                 "context": interaction_data,
-                "options": self.options,
+                "options": options,
+                "interaction_type": self.interaction_type,  # 添加交互类型信息
             }
         )
 
@@ -71,8 +121,7 @@ class HumanNode:
         content = human_response.get("content", "")
 
         match action:
-            case "human_approve":
-                # 如果是工具调用的审批
+            case self.HUMAN_APPROVE:
                 if last_message and hasattr(last_message, "tool_calls"):
                     tool_message = ToolMessage(
                         content="Approved by human reviewer",
@@ -81,7 +130,6 @@ class HumanNode:
                     )
                     messages = [tool_message]
                 else:
-                    # 普通消息审批
                     messages = [AIMessage(content="Approved by human reviewer")]
 
                 new_output = {
@@ -91,7 +139,7 @@ class HumanNode:
                     }
                 }
 
-            case "human_reject":
+            case self.HUMAN_REJECT:
                 reject_message = HumanMessage(
                     content=f"Rejected by human reviewer: {content}"
                 )
@@ -103,7 +151,7 @@ class HumanNode:
                     }
                 }
 
-            case "human_feedback":
+            case self.HUMAN_FEEDBACK:
                 feedback_message = HumanMessage(content=f"Human feedback: {content}")
                 messages = [feedback_message]
                 new_output = {
@@ -132,7 +180,6 @@ class HumanNode:
                 },
             )
 
-        # 如果没有配置路由，返回正常的状态更新
         return_state: ReturnWorkflowTeamState = {
             "messages": messages,
             "history": state.get("history", []) + messages,
