@@ -7,6 +7,7 @@ import {
   FaDatabase,
   FaCode,
   FaCodeBranch,
+  FaUserCog,
 } from "react-icons/fa";
 import { FaBookAtlas, FaPeopleGroup } from "react-icons/fa6";
 import { TfiGithub } from "react-icons/tfi";
@@ -26,6 +27,7 @@ import { LuBrainCircuit } from "react-icons/lu";
 import CodeNodeProperties from "./Code/CodeNodeProperties";
 import IfElseNodeProperties from "./IfElse/IfElseNodeProperties";
 import { LogicalOperator } from "../types";
+import HumanNodeProperties from "./Human/HumanNodeProperties";
 
 interface NodeConfigItem {
   display: string;
@@ -243,6 +245,26 @@ export const nodeConfig: Record<string, NodeConfigItem> = {
     },
     inputVariables: [],
     outputVariables: ["result"],
+  },
+  human: {
+    display: "Human Interaction",
+    icon: FaUserCog,
+    colorScheme: "purple",
+    properties: HumanNodeProperties,
+    allowedConnections: {
+      sources: ["right"],
+      targets: ["left"],
+    },
+    inputVariables: [],
+    outputVariables: ["response", "action"],
+    initialData: {
+      interaction_type: "HUMAN_NODE_APPROVAL",
+      routes: {
+        human_approve: "",
+        human_reject: "",
+      },
+      title: "",
+    },
   },
 };
 

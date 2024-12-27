@@ -12,7 +12,7 @@ import ToolNode from "./Tool/ToolNode";
 import ClassifierNode from "./Classifier/ClassifierNode";
 import CodeNode from "./Code/CodeNode";
 import IfElseNode from "./IfElse/IfElseNode";
-
+import HumanNode from "./Human/HumanNode";
 export const nodeTypes: NodeTypes = {
   start: StartNode,
   end: EndNode,
@@ -26,4 +26,5 @@ export const nodeTypes: NodeTypes = {
   answer: AnswerNode,
   code: CodeNode,
   ifelse: IfElseNode,
+  human: HumanNode,
 };

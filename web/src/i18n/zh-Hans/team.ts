@@ -161,6 +161,18 @@ const translation = {
           selectVariable: "选择变量",
         },
       },
+      human: {
+        nodeTitle: "人工节点",
+        interactionType: "交互类型",
+        approval: "审批流程",
+        feedback: "反馈流程",
+        title: "标题",
+        titlePlaceholder: "请输入标题",
+        routes: "路由配置",
+        approveRoute: "通过路由",
+        rejectRoute: "拒绝路由",
+        feedbackRoute: "反馈路由",
+      },
     },
     common: {
       add: "添加",

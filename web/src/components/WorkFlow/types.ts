@@ -97,3 +97,14 @@ export interface IfElseCase {
 export interface IfElseNodeData extends NodeData {
   cases: IfElseCase[];
 }
+
+export interface HumanNodeData {
+  label: string;
+  interaction_type: "HUMAN_NODE_APPROVAL" | "HUMAN_NODE_FEEDBACK";
+  routes: {
+    human_approve?: string;
+    human_reject?: string;
+    human_feedback?: string;
+  };
+  title?: string;
+}

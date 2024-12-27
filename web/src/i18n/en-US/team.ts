@@ -166,6 +166,18 @@ const translation = {
           selectVariable: "Select variable",
         },
       },
+      human: {
+        nodeTitle: "Human Node",
+        interactionType: "Interaction Type",
+        approval: "Approval Process",
+        feedback: "Feedback Process",
+        title: "Title",
+        titlePlaceholder: "Enter title",
+        routes: "Routes",
+        approveRoute: "Approve Route",
+        rejectRoute: "Reject Route",
+        feedbackRoute: "Feedback Route",
+      },
     },
     common: {
       add: "Add",
