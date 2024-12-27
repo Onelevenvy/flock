@@ -86,10 +86,10 @@ const HumanNodeProperties: React.FC<HumanNodePropertiesProps> = ({
           borderColor="gray.200"
           _hover={{ borderColor: "purple.200" }}
         >
-          <option value="HUMAN_NODE_APPROVAL">
+          <option value="human_node_approval">
             {t("workflow.nodes.human.approval")}
           </option>
-          <option value="HUMAN_NODE_FEEDBACK">
+          <option value="human_node_feedback">
             {t("workflow.nodes.human.feedback")}
           </option>
         </Select>
@@ -114,7 +114,7 @@ const HumanNodeProperties: React.FC<HumanNodePropertiesProps> = ({
           {t("workflow.nodes.human.routes")}
         </Text>
         <VStack spacing={3} align="stretch">
-          {data.interaction_type === "HUMAN_NODE_APPROVAL" ? (
+          {data.interaction_type === "human_node_approval" ? (
             <>
               <FormControl>
                 <FormLabel fontSize="sm" color="gray.600">

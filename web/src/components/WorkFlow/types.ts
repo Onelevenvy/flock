@@ -100,7 +100,7 @@ export interface IfElseNodeData extends NodeData {
 
 export interface HumanNodeData {
   label: string;
-  interaction_type: "HUMAN_NODE_APPROVAL" | "HUMAN_NODE_FEEDBACK";
+  interaction_type: "human_node_approval" | "human_node_feedback";
   routes: {
     human_approve?: string;
     human_reject?: string;

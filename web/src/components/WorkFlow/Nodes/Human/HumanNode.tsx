@@ -49,7 +49,7 @@ const HumanNode: React.FC<NodeProps<HumanNodeData>> = (props) => {
           }}
         >
           <Text fontSize="xs" color="gray.700" fontWeight="500">
-            {interaction_type === "HUMAN_NODE_APPROVAL"
+            {interaction_type === "human_node_approval"
               ? "Approval"
               : "Feedback"}
           </Text>
