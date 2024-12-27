@@ -1,19 +1,21 @@
-from enum import Enum
 from typing import Any, Literal
 from uuid import uuid4
-
+from langgraph.graph import END
 from langchain_core.messages import AIMessage, HumanMessage, ToolMessage
-from langchain_core.runnables import RunnableConfig
-from langgraph.types import Command, interrupt
+from langchain_core.runnables import RunnableConfig, RunnableLambda
+from langchain_core.runnables.config import (
+    get_config_list,
+    merge_configs,
+    var_child_runnable_config,
+)
+
 from app.models import InterruptDecision
-from ...state import ReturnWorkflowTeamState, WorkflowTeamState, update_node_outputs
-
-
-# class HumanInteractionType(str, Enum):
-#     """人机交互类型"""
-
-#     APPROVAL = "approval"  # 审批流程（包含批准和拒绝）
-#     FEEDBACK = "feedback"  # 反馈流程
+from app.core.state import (
+    ReturnWorkflowTeamState,
+    WorkflowTeamState,
+    update_node_outputs,
+)
+from langgraph.types import Command, interrupt
 
 
 class HumanNode:
@@ -27,7 +29,7 @@ class HumanNode:
     def __init__(
         self,
         node_id: str,
-        interaction_type: InterruptDecision, 
+        interaction_type: InterruptDecision,
         routes: dict[str, str],  # 路由配置
         title: str | None = None,  # 自定义标题
     ):
@@ -79,6 +81,49 @@ class HumanNode:
             if invalid_routes:
                 raise ValueError(f"Invalid routes for feedback flow: {invalid_routes}")
 
+    def _create_interrupt_data(
+        self, interaction_data: dict, options: list[str]
+    ) -> dict:
+        """创建中断数据"""
+        return {
+            "title": self.title,
+            "context": interaction_data,
+            "options": options,
+            "interaction_type": self.interaction_type,
+        }
+
+    async def _handle_messages(
+        self,
+        state: dict[str, Any],
+        config: RunnableConfig,
+        interrupt_data: dict,
+    ) -> dict:
+        """处理消息并执行中断"""
+        # 设置必要的上下文信息
+        var_child_runnable_config.set(
+            {
+                "configurable": {
+                    "thread_id": config.get("configurable", {}).get(
+                        "thread_id", str(uuid4())
+                    ),
+                    "__pregel_scratchpad": {},
+                    "__pregel_task_id": str(uuid4()),
+                    "checkpoint_ns": f"{self.node_id}:{str(uuid4())}",
+                    "__pregel_resuming": False,
+                    "__pregel_writes": [],
+                    "__pregel_send": lambda x: None,
+                    "__pregel_store": None,
+                    "__pregel_checkpointer": None,
+                }
+            }
+        )
+
+        try:
+            return interrupt(interrupt_data)
+        finally:
+            # 清理上下文
+            var_child_runnable_config.set({})
+
     async def work(
         self, state: WorkflowTeamState, config: RunnableConfig
     ) -> ReturnWorkflowTeamState | Command[str]:
@@ -107,15 +152,11 @@ class HumanNode:
             else [self.HUMAN_FEEDBACK]
         )
 
-        # 使用 interrupt 等待人工输入
-        human_response = interrupt(
-            {
-                "title": self.title,
-                "context": interaction_data,
-                "options": options,
-                "interaction_type": self.interaction_type,  # 添加交互类型信息
-            }
-        )
+        # 创建中断数据
+        interrupt_data = self._create_interrupt_data(interaction_data, options)
+
+        # 处理消息并获取响应
+        human_response = await self._handle_messages(state, config, interrupt_data)
 
         action = human_response.get("action")
         content = human_response.get("content", "")

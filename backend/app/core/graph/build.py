@@ -793,7 +793,10 @@ async def generator(
 
             if snapshot.next:
                 # Interrupt occured
-                message = snapshot.values["messages"][-1]
+                try:
+                    message = snapshot.values["messages"][-1]
+                except Exception as e:
+                    message = snapshot.values["all_messages"][-1]
                 if not isinstance(message, AIMessage):
                     return
                 # Determine if should return default or askhuman interrupt based on whether AskHuman tool was called.
