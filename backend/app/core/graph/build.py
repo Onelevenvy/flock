@@ -31,7 +31,6 @@ from app.core.graph.messages import ChatResponse, event_to_response
 from app.core.state import GraphSkill, GraphUpload
 from app.core.workflow.build_workflow import initialize_graph
 from app.models import ChatMessage, Interrupt, InterruptDecision, Member, Team
-from app.core.workflow.node.human_node import HumanInteractionType
 
 
 def convert_hierarchical_team_to_dict(
@@ -741,10 +740,11 @@ async def generator(
                 "recursion_limit": settings.RECURSION_LIMIT,
             }
             # Handle interrupt logic by orriding state
-            if interrupt:
+            if interrupt and interrupt.decision == InterruptDecision.APPROVED:
+                state = None
+            elif interrupt and interrupt.decision == InterruptDecision.REJECTED:
                 current_values = await root.aget_state(config)
                 messages = current_values.values["messages"]
-
                 if messages and isinstance(messages[-1], AIMessage):
                     tool_calls = messages[-1].tool_calls
                     state = {
@@ -792,6 +792,7 @@ async def generator(
             snapshot = await root.aget_state(config)
 
             if snapshot.next:
+                # Interrupt occured
                 message = snapshot.values["messages"][-1]
                 if not isinstance(message, AIMessage):
                     return

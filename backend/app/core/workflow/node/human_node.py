@@ -5,15 +5,15 @@ from uuid import uuid4
 from langchain_core.messages import AIMessage, HumanMessage, ToolMessage
 from langchain_core.runnables import RunnableConfig
 from langgraph.types import Command, interrupt
-
+from app.models import InterruptDecision
 from ...state import ReturnWorkflowTeamState, WorkflowTeamState, update_node_outputs
 
 
-class HumanInteractionType(str, Enum):
-    """人机交互类型"""
+# class HumanInteractionType(str, Enum):
+#     """人机交互类型"""
 
-    APPROVAL = "approval"  # 审批流程（包含批准和拒绝）
-    FEEDBACK = "feedback"  # 反馈流程
+#     APPROVAL = "approval"  # 审批流程（包含批准和拒绝）
+#     FEEDBACK = "feedback"  # 反馈流程
 
 
 class HumanNode:
@@ -27,7 +27,7 @@ class HumanNode:
     def __init__(
         self,
         node_id: str,
-        interaction_type: HumanInteractionType,  # 新增：交互类型
+        interaction_type: InterruptDecision, 
         routes: dict[str, str],  # 路由配置
         title: str | None = None,  # 自定义标题
     ):
@@ -54,12 +54,12 @@ class HumanNode:
         self.routes = routes
         self.title = title or (
             "Human Approval Required"
-            if interaction_type == HumanInteractionType.APPROVAL
+            if interaction_type == InterruptDecision.HUMAN_NODE_APPROVAL
             else "Human Feedback Required"
         )
 
         # 验证路由配置
-        if interaction_type == HumanInteractionType.APPROVAL:
+        if interaction_type == InterruptDecision.HUMAN_NODE_APPROVAL:
             if not (self.HUMAN_APPROVE in routes and self.HUMAN_REJECT in routes):
                 raise ValueError(
                     f"Approval flow requires both '{self.HUMAN_APPROVE}' and '{self.HUMAN_REJECT}' routes"
@@ -103,7 +103,7 @@ class HumanNode:
         # 根据交互类型设置可用选项
         options = (
             [self.HUMAN_APPROVE, self.HUMAN_REJECT]
-            if self.interaction_type == HumanInteractionType.APPROVAL
+            if self.interaction_type == InterruptDecision.HUMAN_NODE_APPROVAL
             else [self.HUMAN_FEEDBACK]
         )
 

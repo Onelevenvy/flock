@@ -139,10 +139,12 @@ class ChatMessage(BaseModel):
     imgdata: str | None = None  # 添加 imgdata 字段
 
 
-class InterruptDecision(Enum):
+class InterruptDecision(str, Enum):
     APPROVED = "approved"
     REJECTED = "rejected"
     REPLIED = "replied"
+    HUMAN_NODE_APPROVAL = "human_node_approval"
+    HUMAN_NODE_FEEDBACK = "human_node_feedback"
 
 
 class Interrupt(BaseModel):

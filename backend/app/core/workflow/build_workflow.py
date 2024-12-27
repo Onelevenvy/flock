@@ -25,7 +25,7 @@ from .node.llm_node import LLMNode
 from .node.retrieval_node import RetrievalNode
 from .node.subgraph_node import SubgraphNode
 from .node.human_node import HumanNode
-from .node.human_node import HumanInteractionType
+from app.models import InterruptDecision
 
 
 def create_subgraph(subgraph_config: dict[str, Any]) -> CompiledGraph:
@@ -91,9 +91,7 @@ def should_continue_tools(state: WorkflowTeamState) -> str:
     messages: list[AnyMessage] = state["messages"]
     if messages and isinstance(messages[-1], AIMessage) and messages[-1].tool_calls:
         for tool_call in messages[-1].tool_calls:
-            if tool_call["name"] == "ask-human":
-                return "ask-human"
-            # 使用工具名称到节点ID的映射
+
             tool_name = tool_call["name"].lower()
             for node_id, tools in tool_name_to_node_id.items():
                 if tool_name in tools:
@@ -292,6 +290,7 @@ def initialize_graph(
         interrupt_after = hitl_config.get("interrupt_after", [])
         graph = graph_builder.compile(
             checkpointer=checkpointer,
+            # interrupt_before=["tool-4"],  # 测试 interrupt ok
             interrupt_before=interrupt_before,
             interrupt_after=interrupt_after,
         )
@@ -640,9 +639,7 @@ def _add_ifelse_node(graph_builder, node_id: str, node_data: dict[str, Any]):
 
 def _add_human_node(graph_builder, node_id: str, node_data: dict[str, Any]):
     """Add human node to graph"""
-    interaction_type = HumanInteractionType(
-        node_data.get("interaction_type", "approval")
-    )
+    interaction_type = InterruptDecision(node_data.get("interaction_type", "feedback"))
 
     graph_builder.add_node(
         node_id,
