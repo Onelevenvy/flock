@@ -4,14 +4,12 @@ import {
   FormLabel,
   Select,
   Input,
-
   Box,
   Text,
- 
 } from "@chakra-ui/react";
-import React, { useCallback } from "react";
-
+import React, { useCallback, useMemo } from "react";
 import { useTranslation } from "react-i18next";
+import { useReactFlow } from "reactflow";
 
 import { HumanNodeData } from "../../types";
 import { VariableReference } from "../../FlowVis/variableSystem";
@@ -28,6 +26,18 @@ const HumanNodeProperties: React.FC<HumanNodePropertiesProps> = ({
 }) => {
   const { t } = useTranslation();
   const data = node.data as HumanNodeData;
+  const { getNodes } = useReactFlow();
+
+  // 获取所有可用的目标节点(排除当前节点和开始节点)
+  const availableNodes = useMemo(() => {
+    return getNodes()
+      .filter((n) => n.id !== node.id && n.type !== "start")
+      .map((n) => ({
+        id: n.id,
+        label: n.data.label || n.id,
+        type: n.type,
+      }));
+  }, [getNodes, node.id]);
 
   const handleInteractionTypeChange = useCallback(
     (value: string) => {
@@ -110,27 +120,45 @@ const HumanNodeProperties: React.FC<HumanNodePropertiesProps> = ({
                 <FormLabel fontSize="sm" color="gray.600">
                   {t("workflow.nodes.human.approveRoute")}
                 </FormLabel>
-                <Input
+                <Select
                   value={data.routes?.human_approve || ""}
                   onChange={(e) =>
                     handleRouteChange("human_approve", e.target.value)
                   }
-                  placeholder="approved_node_id"
                   size="sm"
-                />
+                  bg="ui.inputbgcolor"
+                  borderColor="gray.200"
+                  _hover={{ borderColor: "purple.200" }}
+                >
+                  <option value="">Select node</option>
+                  {availableNodes.map((n) => (
+                    <option key={n.id} value={n.id}>
+                      {n.label} ({n.type})
+                    </option>
+                  ))}
+                </Select>
               </FormControl>
               <FormControl>
                 <FormLabel fontSize="sm" color="gray.600">
                   {t("workflow.nodes.human.rejectRoute")}
                 </FormLabel>
-                <Input
+                <Select
                   value={data.routes?.human_reject || ""}
                   onChange={(e) =>
                     handleRouteChange("human_reject", e.target.value)
                   }
-                  placeholder="rejected_node_id"
                   size="sm"
-                />
+                  bg="ui.inputbgcolor"
+                  borderColor="gray.200"
+                  _hover={{ borderColor: "purple.200" }}
+                >
+                  <option value="">Select node</option>
+                  {availableNodes.map((n) => (
+                    <option key={n.id} value={n.id}>
+                      {n.label} ({n.type})
+                    </option>
+                  ))}
+                </Select>
               </FormControl>
             </>
           ) : (
@@ -138,14 +166,23 @@ const HumanNodeProperties: React.FC<HumanNodePropertiesProps> = ({
               <FormLabel fontSize="sm" color="gray.600">
                 {t("workflow.nodes.human.feedbackRoute")}
               </FormLabel>
-              <Input
+              <Select
                 value={data.routes?.human_feedback || ""}
                 onChange={(e) =>
                   handleRouteChange("human_feedback", e.target.value)
                 }
-                placeholder="feedback_node_id"
                 size="sm"
-              />
+                bg="ui.inputbgcolor"
+                borderColor="gray.200"
+                _hover={{ borderColor: "purple.200" }}
+              >
+                <option value="">Select node</option>
+                {availableNodes.map((n) => (
+                  <option key={n.id} value={n.id}>
+                    {n.label} ({n.type})
+                  </option>
+                ))}
+              </Select>
             </FormControl>
           )}
         </VStack>
