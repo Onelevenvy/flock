@@ -820,30 +820,43 @@ async def generator(
             snapshot = await root.aget_state(config)
 
             if snapshot.next:
-                # Interrupt occured
                 try:
                     message = snapshot.values["messages"][-1]
-                except Exception as e:
+                except Exception:
                     message = snapshot.values["all_messages"][-1]
-                if not isinstance(message, AIMessage):
-                    return
-                # Determine if should return default or askhuman interrupt based on whether AskHuman tool was called.
-                for tool_call in message.tool_calls:
-                    if tool_call["name"] == "ask-human":
+
+               
+
+                # 非workflow类型的处理
+                if team.workflow != "workflow":
+                    # Determine if should return default or askhuman interrupt based on whether AskHuman tool was called.
+                    if not isinstance(message, AIMessage):
+                        return
+                    for tool_call in message.tool_calls:
+                        if tool_call["name"] == "ask-human":
+                            response = ChatResponse(
+                                type="interrupt",
+                                name="human",
+                                tool_calls=message.tool_calls,
+                                id=str(uuid4()),
+                            )
+                            break
+                    else:
                         response = ChatResponse(
                             type="interrupt",
-                            name="human",
+                            name="interrupt",
                             tool_calls=message.tool_calls,
                             id=str(uuid4()),
                         )
-                        break
+                # workflow类型的处理
                 else:
                     response = ChatResponse(
                         type="interrupt",
-                        name="interrupt",
-                        tool_calls=message.tool_calls,
+                        name="tool_review",  # 使用特定的名称标识工具审查中断
+                        content=message.content,
                         id=str(uuid4()),
                     )
+
                 formatted_output = f"data: {response.model_dump_json()}\n\n"
                 yield formatted_output
     except Exception as e:

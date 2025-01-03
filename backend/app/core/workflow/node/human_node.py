@@ -25,7 +25,7 @@ class HumanNode:
         title: str | None = None,  # 自定义标题
     ):
         self.node_id = node_id
-   
+
         self.routes = routes
         self.title = title or "Review Tool Call"
 
@@ -73,7 +73,7 @@ class HumanNode:
             human_review = interrupt(interrupt_data)
 
             # 从中断响应中获取action和data
-            action = human_review.get("action")  # 使用 action
+            action = self.routes.get("action")  # 使用 action
             review_data = human_review.get("data")  # 使用 data
 
             match action:
@@ -115,6 +115,6 @@ class HumanNode:
                 case _:
                     raise ValueError(f"Unknown action: {action}")
 
-        finally:
-            # 清理上下文
-            var_child_runnable_config.set({})
+        except Exception as e:
+            print(e)
+            raise e

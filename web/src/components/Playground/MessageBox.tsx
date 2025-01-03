@@ -60,8 +60,8 @@ const MessageBox = ({ message, onResume, isPlayground }: MessageBoxProps) => {
   const [toolMessage, setToolMessage] = useState<string | null>(null);
   const { isOpen: showClipboardIcon, onOpen, onClose } = useDisclosure();
   const { activeNodeName } = useWorkflowStore();
-
   const [userScrolling, setUserScrolling] = useState(false);
+  console.log(message);
   const scrollTimeout = useRef<NodeJS.Timeout>();
 
   const onDecisionHandler = (decision: InterruptDecision) => {
@@ -480,7 +480,7 @@ const MessageBox = ({ message, onResume, isPlayground }: MessageBoxProps) => {
                 )}
 
                 {name === "interrupt" && !decision && (
-                  <HStack spacing={4}>
+                  <HStack spacing={4} wrap="wrap">
                     <Button
                       leftIcon={<FaCheck />}
                       colorScheme="green"

@@ -131,6 +131,7 @@ class TeamUpdate(TeamBase):
 class ChatMessageType(str, Enum):
     human = "human"
     ai = "ai"
+    
 
 
 class ChatMessage(BaseModel):
