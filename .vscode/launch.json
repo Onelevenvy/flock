@@ -5,6 +5,14 @@
   "version": "0.2.0",
   "configurations": [
     {
+      "name": "Python: Launch File",
+      "type": "debugpy",
+      "request": "launch",
+      "program": "${file}",
+      "justMyCode": false,
+      "console": "integratedTerminal"
+    },
+    {
         "name": "debugpy: Celery Worker",
         "type": "debugpy",
         "request": "launch",

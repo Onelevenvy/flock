@@ -143,8 +143,9 @@ class InterruptDecision(str, Enum):
     APPROVED = "approved"
     REJECTED = "rejected"
     REPLIED = "replied"
-    HUMAN_NODE_APPROVAL = "human_node_approval"
-    HUMAN_NODE_FEEDBACK = "human_node_feedback"
+    CONTINUE = "continue"
+    UPDATE = "update"
+    FEEDBACK = "feedback"
 
 
 class Interrupt(BaseModel):
@@ -490,7 +491,7 @@ class Write(SQLModel, table=True):
 class UploadBase(SQLModel):
     name: str
     description: str
-    file_type: str  # 新��字段，用于储文件类型
+    file_type: str  # 新字段，用于储文件类型
     web_url: str | None = None  # 新增字段，用于存储网页 URL
 
 

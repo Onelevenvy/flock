@@ -784,6 +784,34 @@ async def generator(
                             if tool_call["name"] == "ask-human"
                         ]
                     }
+            # 添加新的工具审查相关的中断处理
+            elif interrupt and interrupt.decision == InterruptDecision.CONTINUE:
+                config["configurable"]["resume"] = {"action": "continue", "data": None}
+                state = None
+            elif interrupt and interrupt.decision == InterruptDecision.UPDATE:
+                current_values = await root.aget_state(config)
+                messages = current_values.values["messages"]
+                if messages and isinstance(messages[-1], AIMessage):
+                    tool_calls = messages[-1].tool_calls
+                    if interrupt.tool_message:  # 使用人工修改的参数
+                        config["configurable"]["resume"] = {
+                            "action": "update",
+                            "data": interrupt.tool_message,  # 这里应该是工具调用的参数
+                        }
+                        state = None
+            elif interrupt and interrupt.decision == InterruptDecision.FEEDBACK:
+                current_values = await root.aget_state(config)
+                messages = current_values.values["messages"]
+                if (
+                    messages
+                    and isinstance(messages[-1], AIMessage)
+                    and interrupt.tool_message
+                ):
+                    config["configurable"]["resume"] = {
+                        "action": "feedback",
+                        "data": interrupt.tool_message,  # 这里是反馈消息
+                    }
+                    state = None
             async for event in root.astream_events(state, version="v2", config=config):
                 response = event_to_response(event)
                 if response:

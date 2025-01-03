@@ -2,29 +2,21 @@ from typing import Any, Literal
 from uuid import uuid4
 from langgraph.graph import END
 from langchain_core.messages import AIMessage, HumanMessage, ToolMessage
-from langchain_core.runnables import RunnableConfig, RunnableLambda
-from langchain_core.runnables.config import (
-    get_config_list,
-    merge_configs,
-    var_child_runnable_config,
-)
+from langchain_core.runnables import RunnableConfig
+from langchain_core.runnables.config import var_child_runnable_config
 
 from app.models import InterruptDecision
-from app.core.state import (
-    ReturnWorkflowTeamState,
-    WorkflowTeamState,
-    update_node_outputs,
-)
+from app.core.state import ReturnWorkflowTeamState, WorkflowTeamState
 from langgraph.types import Command, interrupt
 
 
 class HumanNode:
-    """通用的人机交互节点，支持审批流程和反馈流程"""
+    """专门用于工具调用审查的人机交互节点"""
 
     # 定义固定的交互选项
-    HUMAN_APPROVE = "human_approve"
-    HUMAN_REJECT = "human_reject"
-    HUMAN_FEEDBACK = "human_feedback"
+    CONTINUE = "continue"  # 批准工具调用
+    UPDATE = "update"  # 修改工具调用
+    FEEDBACK = "feedback"  # 提供反馈
 
     def __init__(
         self,
@@ -33,72 +25,23 @@ class HumanNode:
         routes: dict[str, str],  # 路由配置
         title: str | None = None,  # 自定义标题
     ):
-        """
-        初始化人机交互节点
-
-        Args:
-            node_id: 节点ID
-            interaction_type: 交互类型（APPROVAL 或 FEEDBACK）
-            routes: 不同操作的路由配置
-                对于 APPROVAL 类型:
-                {
-                    "human_approve": "approved_node_id",
-                    "human_reject": "rejected_node_id"
-                }
-                对于 FEEDBACK 类型:
-                {
-                    "human_feedback": "feedback_node_id"
-                }
-            title: 交互界面的标题
-        """
         self.node_id = node_id
         self.interaction_type = interaction_type
         self.routes = routes
-        self.title = title or (
-            "Human Approval Required"
-            if interaction_type == InterruptDecision.HUMAN_NODE_APPROVAL
-            else "Human Feedback Required"
-        )
+        self.title = title or "Review Tool Call"
 
-        # 验证路由配置
-        if interaction_type == InterruptDecision.HUMAN_NODE_APPROVAL:
-            if not (self.HUMAN_APPROVE in routes and self.HUMAN_REJECT in routes):
-                raise ValueError(
-                    f"Approval flow requires both '{self.HUMAN_APPROVE}' and '{self.HUMAN_REJECT}' routes"
-                )
-            invalid_routes = set(routes.keys()) - {
-                self.HUMAN_APPROVE,
-                self.HUMAN_REJECT,
-            }
-            if invalid_routes:
-                raise ValueError(f"Invalid routes for approval flow: {invalid_routes}")
-        else:  # FEEDBACK
-            if self.HUMAN_FEEDBACK not in routes:
-                raise ValueError(
-                    f"Feedback flow requires '{self.HUMAN_FEEDBACK}' route"
-                )
-            invalid_routes = set(routes.keys()) - {self.HUMAN_FEEDBACK}
-            if invalid_routes:
-                raise ValueError(f"Invalid routes for feedback flow: {invalid_routes}")
+    async def work(
+        self, state: WorkflowTeamState, config: RunnableConfig
+    ) -> ReturnWorkflowTeamState | Command[str]:
+        """处理工具调用审查流程"""
 
-    def _create_interrupt_data(
-        self, interaction_data: dict, options: list[str]
-    ) -> dict:
-        """创建中断数据"""
-        return {
-            "title": self.title,
-            "context": interaction_data,
-            "options": options,
-            "interaction_type": self.interaction_type,
-        }
+        # 获取最后一条消息和工具调用
+        last_message = state["all_messages"][-1]
+        if not hasattr(last_message, "tool_calls") or not last_message.tool_calls:
+            return {"messages": [], "all_messages": state["all_messages"]}
 
-    async def _handle_messages(
-        self,
-        state: dict[str, Any],
-        config: RunnableConfig,
-        interrupt_data: dict,
-    ) -> dict:
-        """处理消息并执行中断"""
+        tool_call = last_message.tool_calls[-1]
+
         # 设置必要的上下文信息
         var_child_runnable_config.set(
             {
@@ -119,113 +62,60 @@ class HumanNode:
         )
 
         try:
-            return interrupt(interrupt_data)
+            # 创建中断数据
+            interrupt_data = {
+                "title": self.title,
+                "question": "请审查此工具调用:",
+                "tool_call": tool_call,
+                "options": [self.CONTINUE, self.UPDATE, self.FEEDBACK],
+            }
+
+            # 执行中断
+            human_review = interrupt(interrupt_data)
+
+            # 从中断响应中获取action和data
+            action = human_review.get("action")  # 使用 action
+            review_data = human_review.get("data")  # 使用 data
+
+            match action:
+                case self.CONTINUE:
+                    # 批准工具调用,直接执行
+                    next_node = self.routes.get("continue", "run_tool")
+                    return Command(goto=next_node)
+
+                case self.UPDATE:
+                    # 更新工具调用参数
+                    updated_message = {
+                        "role": "ai",
+                        "content": last_message.content,
+                        "tool_calls": [
+                            {
+                                "id": tool_call["id"],
+                                "name": tool_call["name"],
+                                "args": review_data,  # 使用 review_data
+                            }
+                        ],
+                        "id": last_message.id,
+                    }
+                    next_node = self.routes.get("update", "run_tool")
+                    return Command(
+                        goto=next_node, update={"messages": [updated_message]}
+                    )
+
+                case self.FEEDBACK:
+                    # 添加反馈消息
+                    tool_message = {
+                        "role": "tool",
+                        "content": review_data,  # 使用 review_data
+                        "name": tool_call["name"],
+                        "tool_call_id": tool_call["id"],
+                    }
+                    next_node = self.routes.get("feedback", "call_llm")
+                    return Command(goto=next_node, update={"messages": [tool_message]})
+
+                case _:
+                    raise ValueError(f"Unknown action: {action}")
+
         finally:
             # 清理上下文
             var_child_runnable_config.set({})
-
-    async def work(
-        self, state: WorkflowTeamState, config: RunnableConfig
-    ) -> ReturnWorkflowTeamState | Command[str]:
-        """处理人机交互工作流"""
-        if "node_outputs" not in state:
-            state["node_outputs"] = {}
-
-        # 获取最后一条消息用于展示
-        last_message = None
-        if state.get("all_messages"):
-            last_message = state["all_messages"][-1]
-
-        # 准备交互数据
-        interaction_data = {
-            "message": last_message.content if last_message else "",
-            "type": last_message.type if last_message else "none",
-            "tool_calls": (
-                last_message.tool_calls if hasattr(last_message, "tool_calls") else None
-            ),
-        }
-
-        # 根据交互类型设置可用选项
-        options = (
-            [self.HUMAN_APPROVE, self.HUMAN_REJECT]
-            if self.interaction_type == InterruptDecision.HUMAN_NODE_APPROVAL
-            else [self.HUMAN_FEEDBACK]
-        )
-
-        # 创建中断数据
-        interrupt_data = self._create_interrupt_data(interaction_data, options)
-
-        # 处理消息并获取响应
-        human_response = await self._handle_messages(state, config, interrupt_data)
-
-        action = human_response.get("action")
-        content = human_response.get("content", "")
-
-        match action:
-            case self.HUMAN_APPROVE:
-                if last_message and hasattr(last_message, "tool_calls"):
-                    tool_message = ToolMessage(
-                        content="Approved by human reviewer",
-                        name=last_message.tool_calls[0]["name"],
-                        tool_call_id=last_message.tool_calls[0]["id"],
-                    )
-                    messages = [tool_message]
-                else:
-                    messages = [AIMessage(content="Approved by human reviewer")]
-
-                new_output = {
-                    self.node_id: {
-                        "action": "approve",
-                        "response": "Approved by human reviewer",
-                    }
-                }
-
-            case self.HUMAN_REJECT:
-                reject_message = HumanMessage(
-                    content=f"Rejected by human reviewer: {content}"
-                )
-                messages = [reject_message]
-                new_output = {
-                    self.node_id: {
-                        "action": "reject",
-                        "response": f"Rejected: {content}",
-                    }
-                }
-
-            case self.HUMAN_FEEDBACK:
-                feedback_message = HumanMessage(content=f"Human feedback: {content}")
-                messages = [feedback_message]
-                new_output = {
-                    self.node_id: {
-                        "action": "feedback",
-                        "response": content,
-                    }
-                }
-
-            case _:
-                raise ValueError(f"Unknown action: {action}")
-
-        # 更新节点输出
-        state["node_outputs"] = update_node_outputs(state["node_outputs"], new_output)
-
-        # 根据action获取下一个节点
-        next_node = self.routes.get(action)
-        if next_node:
-            return Command(
-                goto=next_node,
-                update={
-                    "messages": messages,
-                    "history": state.get("history", []) + messages,
-                    "all_messages": state.get("all_messages", []) + messages,
-                    "node_outputs": state["node_outputs"],
-                },
-            )
-
-        return_state: ReturnWorkflowTeamState = {
-            "messages": messages,
-            "history": state.get("history", []) + messages,
-            "all_messages": state.get("all_messages", []) + messages,
-            "node_outputs": state["node_outputs"],
-        }
-
-        return return_state
