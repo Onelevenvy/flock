@@ -21,12 +21,11 @@ class HumanNode:
     def __init__(
         self,
         node_id: str,
-        interaction_type: InterruptDecision,
         routes: dict[str, str],  # 路由配置
         title: str | None = None,  # 自定义标题
     ):
         self.node_id = node_id
-        self.interaction_type = interaction_type
+   
         self.routes = routes
         self.title = title or "Review Tool Call"
 

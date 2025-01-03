@@ -23,9 +23,10 @@ import {
   FaCheck,
   FaHandPaper,
   FaRobot,
-  FaTimes,
   FaTools,
   FaUser,
+  FaCommentDots,
+  FaTimes,
 } from "react-icons/fa";
 import { GrFormNextLink } from "react-icons/gr";
 import { VscSend } from "react-icons/vsc";
@@ -510,6 +511,52 @@ const MessageBox = ({ message, onResume, isPlayground }: MessageBoxProps) => {
                           onClick={() => onDecisionHandler("rejected")}
                           size="sm"
                         />
+                      </InputRightElement>
+                    </InputGroup>
+
+                    <Button
+                      leftIcon={<FaCheck />}
+                      colorScheme="blue"
+                      variant="solid"
+                      onClick={() => onDecisionHandler("continue")}
+                      size="sm"
+                    >
+                      Continue
+                    </Button>
+
+                    <InputGroup size="md">
+                      <Input
+                        placeholder="Enter feedback or update instructions..."
+                        bg="white"
+                        borderRadius="lg"
+                        onChange={(e) => setToolMessage(e.target.value)}
+                        _focus={{
+                          borderColor: "purple.400",
+                          boxShadow:
+                            "0 0 0 1px var(--chakra-colors-purple-400)",
+                        }}
+                      />
+                      <InputRightElement>
+                        <HStack spacing={1} pr={2}>
+                          <IconButton
+                            icon={<FaTools />}
+                            aria-label="Update"
+                            variant="ghost"
+                            colorScheme="blue"
+                            onClick={() => onDecisionHandler("update")}
+                            size="sm"
+                            isDisabled={!toolMessage?.trim().length}
+                          />
+                          <IconButton
+                            icon={<FaCommentDots />}
+                            aria-label="Feedback"
+                            variant="ghost"
+                            colorScheme="purple"
+                            onClick={() => onDecisionHandler("feedback")}
+                            size="sm"
+                            isDisabled={!toolMessage?.trim().length}
+                          />
+                        </HStack>
                       </InputRightElement>
                     </InputGroup>
                   </HStack>

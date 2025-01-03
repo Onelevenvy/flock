@@ -639,13 +639,11 @@ def _add_ifelse_node(graph_builder, node_id: str, node_data: dict[str, Any]):
 
 def _add_human_node(graph_builder, node_id: str, node_data: dict[str, Any]):
     """Add human node to graph"""
-    interaction_type = InterruptDecision(node_data.get("interaction_type", "feedback"))
 
     graph_builder.add_node(
         node_id,
         HumanNode(
             node_id=node_id,
-            interaction_type=interaction_type,
             routes=node_data.get("routes", {}),
             title=node_data.get("title"),
         ).work,
