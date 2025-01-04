@@ -73,8 +73,8 @@ class HumanNode:
             human_review = interrupt(interrupt_data)
 
             # 从中断响应中获取action和data
-            action = self.routes.get("action")  # 使用 action
-            review_data = human_review.get("data")  # 使用 data
+            action = human_review["action"]  # 使用 action
+            review_data = human_review["data"]  # 使用 data
 
             match action:
                 case self.CONTINUE:

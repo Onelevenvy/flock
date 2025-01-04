@@ -23,10 +23,9 @@ import {
   FaCheck,
   FaHandPaper,
   FaRobot,
+  FaTimes,
   FaTools,
   FaUser,
-  FaCommentDots,
-  FaTimes,
 } from "react-icons/fa";
 import { GrFormNextLink } from "react-icons/gr";
 import { VscSend } from "react-icons/vsc";
@@ -60,8 +59,8 @@ const MessageBox = ({ message, onResume, isPlayground }: MessageBoxProps) => {
   const [toolMessage, setToolMessage] = useState<string | null>(null);
   const { isOpen: showClipboardIcon, onOpen, onClose } = useDisclosure();
   const { activeNodeName } = useWorkflowStore();
+
   const [userScrolling, setUserScrolling] = useState(false);
-  console.log(message);
   const scrollTimeout = useRef<NodeJS.Timeout>();
 
   const onDecisionHandler = (decision: InterruptDecision) => {
@@ -480,7 +479,7 @@ const MessageBox = ({ message, onResume, isPlayground }: MessageBoxProps) => {
                 )}
 
                 {name === "interrupt" && !decision && (
-                  <HStack spacing={4} wrap="wrap">
+                  <HStack spacing={4}>
                     <Button
                       leftIcon={<FaCheck />}
                       colorScheme="green"
@@ -513,10 +512,14 @@ const MessageBox = ({ message, onResume, isPlayground }: MessageBoxProps) => {
                         />
                       </InputRightElement>
                     </InputGroup>
+                  </HStack>
+                )}
 
+                {name === "tool_review" && !decision && (
+                  <VStack spacing={4} align="stretch">
                     <Button
                       leftIcon={<FaCheck />}
-                      colorScheme="blue"
+                      colorScheme="green"
                       variant="solid"
                       onClick={() => onDecisionHandler("continue")}
                       size="sm"
@@ -526,40 +529,53 @@ const MessageBox = ({ message, onResume, isPlayground }: MessageBoxProps) => {
 
                     <InputGroup size="md">
                       <Input
-                        placeholder="Enter feedback or update instructions..."
+                        placeholder="Enter update instructions..."
                         bg="white"
                         borderRadius="lg"
                         onChange={(e) => setToolMessage(e.target.value)}
                         _focus={{
-                          borderColor: "purple.400",
+                          borderColor: "orange.400",
                           boxShadow:
-                            "0 0 0 1px var(--chakra-colors-purple-400)",
+                            "0 0 0 1px var(--chakra-colors-orange-400)",
                         }}
                       />
                       <InputRightElement>
-                        <HStack spacing={1} pr={2}>
-                          <IconButton
-                            icon={<FaTools />}
-                            aria-label="Update"
-                            variant="ghost"
-                            colorScheme="blue"
-                            onClick={() => onDecisionHandler("update")}
-                            size="sm"
-                            isDisabled={!toolMessage?.trim().length}
-                          />
-                          <IconButton
-                            icon={<FaCommentDots />}
-                            aria-label="Feedback"
-                            variant="ghost"
-                            colorScheme="purple"
-                            onClick={() => onDecisionHandler("feedback")}
-                            size="sm"
-                            isDisabled={!toolMessage?.trim().length}
-                          />
-                        </HStack>
+                        <IconButton
+                          icon={<FaTimes />}
+                          aria-label="Update"
+                          variant="ghost"
+                          colorScheme="orange"
+                          onClick={() => onDecisionHandler("update")}
+                          size="sm"
+                          isDisabled={!toolMessage?.trim().length}
+                        />
                       </InputRightElement>
                     </InputGroup>
-                  </HStack>
+
+                    <InputGroup size="md">
+                      <Input
+                        placeholder="Enter feedback..."
+                        bg="white"
+                        borderRadius="lg"
+                        onChange={(e) => setToolMessage(e.target.value)}
+                        _focus={{
+                          borderColor: "blue.400",
+                          boxShadow: "0 0 0 1px var(--chakra-colors-blue-400)",
+                        }}
+                      />
+                      <InputRightElement>
+                        <IconButton
+                          icon={<VscSend />}
+                          aria-label="Send feedback"
+                          variant="ghost"
+                          colorScheme="blue"
+                          onClick={() => onDecisionHandler("feedback")}
+                          size="sm"
+                          isDisabled={!toolMessage?.trim().length}
+                        />
+                      </InputRightElement>
+                    </InputGroup>
+                  </VStack>
                 )}
               </Box>
             )}

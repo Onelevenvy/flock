@@ -154,6 +154,7 @@ class Interrupt(BaseModel):
     tool_message: str | None = None
 
 
+
 class TeamChat(BaseModel):
     messages: list[ChatMessage]
     interrupt: Interrupt | None = None
