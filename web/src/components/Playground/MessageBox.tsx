@@ -16,8 +16,16 @@ import {
   VStack,
   useDisclosure,
   HStack,
+  FormControl,
+  FormLabel,
 } from "@chakra-ui/react";
-import { useEffect, useRef, useState, useLayoutEffect } from "react";
+import {
+  useEffect,
+  useRef,
+  useState,
+  useLayoutEffect,
+  useCallback,
+} from "react";
 import {
   FaBook,
   FaCheck,
@@ -26,6 +34,7 @@ import {
   FaTimes,
   FaTools,
   FaUser,
+  FaEdit,
 } from "react-icons/fa";
 import { GrFormNextLink } from "react-icons/gr";
 import { VscSend } from "react-icons/vsc";
@@ -40,11 +49,15 @@ import Markdown from "../Markdown/Markdown";
 
 interface MessageBoxProps {
   message: ChatResponse;
-  onResume: (decision: InterruptDecision, toolMessage: string | null) => void;
+  onResume: (decision: InterruptDecision, message?: string | null) => void;
   isPlayground?: boolean;
 }
 
-const MessageBox = ({ message, onResume, isPlayground }: MessageBoxProps) => {
+const MessageBox: React.FC<MessageBoxProps> = ({
+  message,
+  onResume,
+  isPlayground,
+}) => {
   const {
     type,
     name,
@@ -63,10 +76,22 @@ const MessageBox = ({ message, onResume, isPlayground }: MessageBoxProps) => {
   const [userScrolling, setUserScrolling] = useState(false);
   const scrollTimeout = useRef<NodeJS.Timeout>();
 
-  const onDecisionHandler = (decision: InterruptDecision) => {
-    setDecision(decision);
-    onResume(decision, toolMessage);
-  };
+  const [toolParams, setToolParams] = useState<Record<string, any>>({});
+  const [feedbackMessage, setFeedbackMessage] = useState("");
+  const [reviewMessage, setReviewMessage] = useState("");
+  const [currentMessage, setCurrentMessage] = useState("");
+  const [contextMessage, setContextMessage] = useState("");
+
+  const onDecisionHandler = useCallback(
+    (decision: InterruptDecision, payload?: string | Record<string, any>) => {
+      setDecision(decision);
+      onResume(
+        decision,
+        typeof payload === "string" ? payload : JSON.stringify(payload)
+      );
+    },
+    [onResume]
+  );
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const contentRef = useRef<HTMLDivElement>(null);
@@ -517,47 +542,79 @@ const MessageBox = ({ message, onResume, isPlayground }: MessageBoxProps) => {
 
                 {name === "tool_review" && !decision && (
                   <VStack spacing={4} align="stretch">
-                    <Button
-                      leftIcon={<FaCheck />}
-                      colorScheme="green"
-                      variant="solid"
-                      onClick={() => onDecisionHandler("continue")}
-                      size="sm"
-                    >
-                      Continue
-                    </Button>
+                    <HStack spacing={2}>
+                      <Button
+                        leftIcon={<FaCheck />}
+                        colorScheme="green"
+                        variant="solid"
+                        onClick={() => onDecisionHandler("approve")}
+                        size="sm"
+                      >
+                        批准
+                      </Button>
+                      <Button
+                        leftIcon={<FaTimes />}
+                        colorScheme="red"
+                        variant="solid"
+                        onClick={() => onDecisionHandler("reject")}
+                        size="sm"
+                      >
+                        拒绝
+                      </Button>
+                    </HStack>
 
-                    <InputGroup size="md">
-                      <Input
-                        placeholder="Enter update instructions..."
-                        bg="white"
-                        borderRadius="lg"
-                        onChange={(e) => setToolMessage(e.target.value)}
-                        _focus={{
-                          borderColor: "orange.400",
-                          boxShadow:
-                            "0 0 0 1px var(--chakra-colors-orange-400)",
-                        }}
-                      />
-                      <InputRightElement>
-                        <IconButton
-                          icon={<FaTimes />}
-                          aria-label="Update"
-                          variant="ghost"
-                          colorScheme="orange"
-                          onClick={() => onDecisionHandler("update")}
+                    {/* 工具参数编辑区域 */}
+                    {toolParams && (
+                      <VStack
+                        spacing={2}
+                        align="stretch"
+                        bg="gray.50"
+                        p={3}
+                        borderRadius="md"
+                      >
+                        <Text fontSize="sm" fontWeight="500" color="gray.700">
+                          工具参数
+                        </Text>
+                        {Object.entries(toolParams).map(([key, value]) => (
+                          <FormControl key={key} size="sm">
+                            <FormLabel fontSize="xs" mb={1}>
+                              {key}
+                            </FormLabel>
+                            <InputGroup size="sm">
+                              <Input
+                                defaultValue={value as string}
+                                onChange={(e) => {
+                                  const updatedParams = {
+                                    ...toolParams,
+                                    [key]: e.target.value,
+                                  };
+                                  setToolParams(updatedParams);
+                                }}
+                                bg="white"
+                              />
+                            </InputGroup>
+                          </FormControl>
+                        ))}
+                        <Button
                           size="sm"
-                          isDisabled={!toolMessage?.trim().length}
-                        />
-                      </InputRightElement>
-                    </InputGroup>
+                          colorScheme="orange"
+                          onClick={() =>
+                            onDecisionHandler("update", toolParams)
+                          }
+                          leftIcon={<FaEdit />}
+                        >
+                          更新参数
+                        </Button>
+                      </VStack>
+                    )}
 
+                    {/* 反馈输入框 */}
                     <InputGroup size="md">
                       <Input
-                        placeholder="Enter feedback..."
+                        placeholder="输入反馈信息..."
                         bg="white"
                         borderRadius="lg"
-                        onChange={(e) => setToolMessage(e.target.value)}
+                        onChange={(e) => setFeedbackMessage(e.target.value)}
                         _focus={{
                           borderColor: "blue.400",
                           boxShadow: "0 0 0 1px var(--chakra-colors-blue-400)",
@@ -569,18 +626,112 @@ const MessageBox = ({ message, onResume, isPlayground }: MessageBoxProps) => {
                           aria-label="Send feedback"
                           variant="ghost"
                           colorScheme="blue"
-                          onClick={() => onDecisionHandler("feedback")}
+                          onClick={() =>
+                            onDecisionHandler("feedback", feedbackMessage)
+                          }
                           size="sm"
-                          isDisabled={!toolMessage?.trim().length}
+                          isDisabled={!feedbackMessage?.trim().length}
                         />
                       </InputRightElement>
                     </InputGroup>
                   </VStack>
                 )}
+
+                {name === "output_review" && !decision && (
+                  <VStack spacing={4} align="stretch">
+                    {/* 审核输入框 */}
+                    <InputGroup size="md">
+                      <Input
+                        placeholder="输入审核意见..."
+                        bg="white"
+                        borderRadius="lg"
+                        onChange={(e) => setReviewMessage(e.target.value)}
+                        _focus={{
+                          borderColor: "green.400",
+                          boxShadow: "0 0 0 1px var(--chakra-colors-green-400)",
+                        }}
+                      />
+                      <InputRightElement>
+                        <IconButton
+                          icon={<VscSend />}
+                          aria-label="Send review"
+                          variant="ghost"
+                          colorScheme="green"
+                          onClick={() =>
+                            onDecisionHandler("review", reviewMessage)
+                          }
+                          size="sm"
+                          isDisabled={!reviewMessage?.trim().length}
+                        />
+                      </InputRightElement>
+                    </InputGroup>
+
+                    {/* 内容编辑区域 */}
+                    <VStack
+                      spacing={2}
+                      align="stretch"
+                      bg="gray.50"
+                      p={3}
+                      borderRadius="md"
+                    >
+                      <Text fontSize="sm" fontWeight="500" color="gray.700">
+                        编辑内容
+                      </Text>
+                      <Input
+                        as="textarea"
+                        minH="100px"
+                        value={currentMessage || ""}
+                        onChange={(e) => setCurrentMessage(e.target.value)}
+                        bg="white"
+                      />
+                      <Button
+                        size="sm"
+                        colorScheme="blue"
+                        onClick={() =>
+                          onDecisionHandler("edit", currentMessage)
+                        }
+                        leftIcon={<FaEdit />}
+                      >
+                        更新内容
+                      </Button>
+                    </VStack>
+                  </VStack>
+                )}
+
+                {name === "context_input" && !decision && (
+                  <VStack spacing={4} align="stretch">
+                    <InputGroup size="md">
+                      <Input
+                        placeholder="请输入补充信息..."
+                        bg="white"
+                        borderRadius="lg"
+                        onChange={(e) => setContextMessage(e.target.value)}
+                        _focus={{
+                          borderColor: "purple.400",
+                          boxShadow:
+                            "0 0 0 1px var(--chakra-colors-purple-400)",
+                        }}
+                      />
+                      <InputRightElement>
+                        <IconButton
+                          icon={<VscSend />}
+                          aria-label="Send context"
+                          variant="ghost"
+                          colorScheme="purple"
+                          onClick={() =>
+                            onDecisionHandler("continue", contextMessage)
+                          }
+                          size="sm"
+                          isDisabled={!contextMessage?.trim().length}
+                        />
+                      </InputRightElement>
+                    </InputGroup>
+                  </VStack>
+                )}
+
+                <Box ref={messagesEndRef} pb="5" />
               </Box>
             )}
-
-            <Box ref={messagesEndRef} pb="5" />
           </Box>
         </Box>
       </Box>

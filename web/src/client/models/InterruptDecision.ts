@@ -3,4 +3,14 @@
 /* tslint:disable */
 /* eslint-disable */
 
-export type InterruptDecision = 'approved' | 'rejected' | 'replied' | 'update' | 'feedback' | 'continue';
+export type InterruptDecision =
+  | "approved"
+  | "rejected"
+  | "replied"
+  | "approve"
+  | "reject"
+  | "update"
+  | "feedback"
+  | "review"
+  | "edit"
+  | "continue";
