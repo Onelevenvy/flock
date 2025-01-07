@@ -84,6 +84,7 @@ const HumanNodeProperties: React.FC<HumanNodePropertiesProps> = ({
             };
           case "output_review":
             return {
+              approved: "",
               review: "",
               edit: "",
             };
@@ -194,6 +195,27 @@ const HumanNodeProperties: React.FC<HumanNodePropertiesProps> = ({
       case "output_review":
         return (
           <>
+            <FormControl>
+              <FormLabel fontSize="sm" color="gray.600">
+                {t("workflow.nodes.human.approveRoute")}
+              </FormLabel>
+              <Select
+                value={data.routes?.approved || ""}
+                onChange={(e) => handleRouteChange("approved", e.target.value)}
+                size="sm"
+                bg="ui.inputbgcolor"
+                borderColor="gray.200"
+                _hover={{ borderColor: "purple.200" }}
+              >
+                <option value="">Select node</option>
+                {availableNodes.map((n) => (
+                  <option key={n.id} value={n.id}>
+                    {n.label} ({n.type})
+                  </option>
+                ))}
+              </Select>
+            </FormControl>
+
             <FormControl>
               <FormLabel fontSize="sm" color="gray.600">
                 {t("workflow.nodes.human.reviewRoute")}

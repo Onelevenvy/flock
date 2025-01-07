@@ -132,6 +132,10 @@ class HumanNode:
         self, action: str, review_data: Any, last_message: Any
     ) -> Command[str]:
         match action:
+            case "approved":  # 对应 APPROVED
+                next_node = self.routes.get("approved", END)
+                return Command(goto=next_node)
+
             case "review":
                 feedback_message = {
                     "role": "human",

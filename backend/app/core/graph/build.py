@@ -739,11 +739,13 @@ async def generator(
                 "configurable": {"thread_id": thread_id},
                 "recursion_limit": settings.RECURSION_LIMIT,
             }
+
+           
             # Handle interrupt logic by orriding state
-            if team.workflow != "workflow":
-                if interrupt and interrupt.decision == InterruptDecision.APPROVED :
+            if interrupt and interrupt.interrupt_type is None:
+                if interrupt.decision == InterruptDecision.APPROVED:
                     state = None
-                elif interrupt and interrupt.decision == InterruptDecision.REJECTED:
+                elif interrupt.decision == InterruptDecision.REJECTED:
                     current_values = await root.aget_state(config)
                     messages = current_values.values["messages"]
                     if messages and isinstance(messages[-1], AIMessage):
@@ -765,7 +767,7 @@ async def generator(
                                     id=str(uuid4()),
                                 )
                             )
-                elif interrupt and interrupt.decision == InterruptDecision.REPLIED:
+                elif interrupt.decision == InterruptDecision.REPLIED:
                     current_values = await root.aget_state(config)
                     messages = current_values.values["messages"]
                     if (
@@ -785,27 +787,84 @@ async def generator(
                                 if tool_call["name"] == "ask-human"
                             ]
                         }
-            else:
+            elif interrupt and interrupt.interrupt_type is not None:
                 # 添加新的工具审查相关的中断处理
-                if interrupt and interrupt.decision == InterruptDecision.CONTINUE:
+                if interrupt.interrupt_type == "tool_review":
+                    if interrupt.decision == InterruptDecision.APPROVED:
+                        # 批准工具调用,继续执行
+                        from langgraph.types import Command
 
-                    from langgraph.types import Command
+                        state = Command(resume={"action": "approved"})
 
-                    state = Command(resume={"action": "continue"})
-                elif interrupt and interrupt.decision == InterruptDecision.UPDATE:
-                    from langgraph.types import Command
+                    elif interrupt.decision == InterruptDecision.REJECTED:
+                        # 拒绝工具调用,添加拒绝消息
+                        from langgraph.types import Command
 
-                    state = Command(
-                        resume={"action": "update", "data": {"city": interrupt.tool_message}}
-                    )
-                elif interrupt and interrupt.decision == InterruptDecision.FEEDBACK:
-                    from langgraph.types import Command
+                        reject_message = (
+                            interrupt.tool_message
+                            if interrupt.tool_message
+                            else "Tool call rejected"
+                        )
+                        state = Command(
+                            resume={"action": "rejected", "data": reject_message}
+                        )
 
-                    state = Command(
-                        resume={
-                            "action": "feedback",
-                            "data": "User requested changes: use <city, country> format for location",
-                        }
+                    elif interrupt.decision == InterruptDecision.UPDATE:
+                        # 更新工具调用参数
+                        from langgraph.types import Command
+
+                        state = Command(
+                            resume={"action": "update", "data": interrupt.tool_message}
+                        )
+
+                    elif interrupt.decision == InterruptDecision.FEEDBACK:
+                        # 添加反馈消息
+                        from langgraph.types import Command
+
+                        state = Command(
+                            resume={
+                                "action": "feedback",
+                                "data": interrupt.tool_message,
+                            }
+                        )
+
+                elif interrupt.interrupt_type == "output_review":
+                    # 处理输出审查
+                    if interrupt.decision == InterruptDecision.APPROVED:
+                        # 批准输出,继续执行
+                        state = Command(resume={"action": "approved"})
+                    elif interrupt.decision == InterruptDecision.REVIEW:
+                        # 需要修改输出,添加反馈
+                        state = Command(
+                            resume={"action": "review", "data": interrupt.tool_message}
+                        )
+                    elif interrupt.decision == InterruptDecision.EDIT:
+                        # 直接编辑输出内容
+                        state = Command(
+                            resume={"action": "edit", "data": interrupt.tool_message}
+                        )
+                    else:
+                        raise ValueError(
+                            f"Unsupported decision for output review: {interrupt.decision}"
+                        )
+
+                elif interrupt.interrupt_type == "context_input":
+                    # 处理上下文输入,添加用户提供的额外信息
+                    if interrupt.decision == InterruptDecision.CONTINUE:
+                        state = Command(
+                            resume={
+                                "action": "continue",
+                                "data": interrupt.tool_message,
+                            }
+                        )
+                    else:
+                        raise ValueError(
+                            f"Unsupported decision for context input: {interrupt.decision}"
+                        )
+
+                else:
+                    raise ValueError(
+                        f"Unsupported interrupt type: {interrupt.interrupt_type}"
                     )
             async for event in root.astream_events(state, version="v2", config=config):
                 response = event_to_response(event)
@@ -843,11 +902,12 @@ async def generator(
                         )
                 # workflow类型的处理
                 else:
+                    
                     response = ChatResponse(
                         type="interrupt",
-                        # name="tool_review",  # 使用特定的名称标识工具审查中断
-                        # name="context_input",  # 使用特定的名称标识工具审查中断
-                        name="output_review",  # 使用特定的名称标识工具审查中断
+                        name="context_input", 
+                        # name= "tool_review"
+                        # name="output_review"
                         content=message.content,
                         id=str(uuid4()),
                     )
