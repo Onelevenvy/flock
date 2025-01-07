@@ -40,7 +40,7 @@ export const $ToolCall = {
             isRequired: true,
         },
         type: {
-            type: 'Enum',
+            type: 'string',
         },
     },
 } as const;

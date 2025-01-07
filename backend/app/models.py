@@ -155,6 +155,7 @@ class InterruptDecision(str, Enum):
 
 
 class Interrupt(BaseModel):
+    interrupt_type: InterruptType | None = None
     decision: InterruptDecision
     tool_message: str | None = None
 

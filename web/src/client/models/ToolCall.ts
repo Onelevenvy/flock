@@ -23,6 +23,6 @@
         name: string;
         args: Record<string, any>;
         id: (string | null);
-        type?: 'tool_call';
+        type?: string;
     };
 

@@ -4,6 +4,14 @@
 /* eslint-disable */
 export const $Interrupt = {
     properties: {
+        interrupt_type: {
+            type: 'any-of',
+            contains: [{
+                type: 'InterruptType',
+            }, {
+                type: 'null',
+            }],
+        },
         decision: {
             type: 'InterruptDecision',
             isRequired: true,

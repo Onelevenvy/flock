@@ -2,5 +2,6 @@
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
-
-export type InterruptDecision = 'approved' | 'rejected' | 'replied' | 'update' | 'feedback' | 'review' | 'edit' | 'continue';
+export const $InterruptType = {
+    type: 'Enum',
+} as const;
