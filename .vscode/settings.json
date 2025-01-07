@@ -10,5 +10,11 @@
             "username": "postgres",
             "password": "flock123456"
         }
-    ]
+    ],
+    "python.debugging.justMyCode": false,
+    "python.testing.pytestEnabled": true,
+    "debug.allowBreakpointsEverywhere": true,
+
 }
+
+
