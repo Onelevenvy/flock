@@ -131,7 +131,6 @@ class TeamUpdate(TeamBase):
 class ChatMessageType(str, Enum):
     human = "human"
     ai = "ai"
-    
 
 
 class ChatMessage(BaseModel):
@@ -139,20 +138,25 @@ class ChatMessage(BaseModel):
     content: str
     imgdata: str | None = None  # 添加 imgdata 字段
 
+class InterruptType(str, Enum):
+    TOOL_REVIEW = "tool_review"
+    OUTPUT_REVIEW = "output_review"
+    CONTEXT_INPUT = "context_input"
 
 class InterruptDecision(str, Enum):
     APPROVED = "approved"
     REJECTED = "rejected"
     REPLIED = "replied"
-    CONTINUE = "continue"
     UPDATE = "update"
     FEEDBACK = "feedback"
+    REVIEW = "review"
+    EDIT = "edit"
+    CONTINUE = "continue"
 
 
 class Interrupt(BaseModel):
     decision: InterruptDecision
     tool_message: str | None = None
-
 
 
 class TeamChat(BaseModel):
@@ -783,3 +787,6 @@ class ApiKeyOutPublic(ApiKeyBase):
 class ApiKeysOutPublic(SQLModel):
     data: list[ApiKeyOutPublic]
     count: int
+
+
+

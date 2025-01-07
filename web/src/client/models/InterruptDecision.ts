@@ -7,8 +7,6 @@ export type InterruptDecision =
   | "approved"
   | "rejected"
   | "replied"
-  | "approve"
-  | "reject"
   | "update"
   | "feedback"
   | "review"

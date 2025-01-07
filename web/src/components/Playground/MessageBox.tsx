@@ -547,7 +547,7 @@ const MessageBox: React.FC<MessageBoxProps> = ({
                         leftIcon={<FaCheck />}
                         colorScheme="green"
                         variant="solid"
-                        onClick={() => onDecisionHandler("approve")}
+                        onClick={() => onDecisionHandler("approved")}
                         size="sm"
                       >
                         批准
@@ -556,7 +556,7 @@ const MessageBox: React.FC<MessageBoxProps> = ({
                         leftIcon={<FaTimes />}
                         colorScheme="red"
                         variant="solid"
-                        onClick={() => onDecisionHandler("reject")}
+                        onClick={() => onDecisionHandler("rejected")}
                         size="sm"
                       >
                         拒绝

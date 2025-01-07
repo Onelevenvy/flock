@@ -77,8 +77,8 @@ const HumanNodeProperties: React.FC<HumanNodePropertiesProps> = ({
         switch (value) {
           case "tool_review":
             return {
-              approve: "",
-              reject: "",
+              approved: "",
+              rejected: "",
               update: "",
               feedback: "",
             };
@@ -111,7 +111,7 @@ const HumanNodeProperties: React.FC<HumanNodePropertiesProps> = ({
                 {t("workflow.nodes.human.approveRoute")}
               </FormLabel>
               <Select
-                value={data.routes?.approve ?? ""}
+                value={data.routes?.approved ?? ""}
                 onChange={(e) => handleRouteChange("approve", e.target.value)}
                 size="sm"
                 bg="ui.inputbgcolor"
@@ -132,8 +132,8 @@ const HumanNodeProperties: React.FC<HumanNodePropertiesProps> = ({
                 {t("workflow.nodes.human.rejectRoute")}
               </FormLabel>
               <Select
-                value={data.routes?.reject || ""}
-                onChange={(e) => handleRouteChange("reject", e.target.value)}
+                value={data.routes?.rejected || ""}
+                onChange={(e) => handleRouteChange("rejected", e.target.value)}
                 size="sm"
                 bg="ui.inputbgcolor"
                 borderColor="gray.200"

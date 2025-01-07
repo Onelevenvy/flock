@@ -102,8 +102,8 @@ export interface HumanNodeData extends NodeData {
   interaction_type: "tool_review" | "output_review" | "context_input";
   routes: {
     // Tool Review routes
-    approve?: string;
-    reject?: string;
+    approved?: string;
+    rejected?: string;
     update?: string;
     feedback?: string;
     // Output Review routes
