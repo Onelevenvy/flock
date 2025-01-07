@@ -85,12 +85,17 @@ const MessageBox: React.FC<MessageBoxProps> = ({
   const onDecisionHandler = useCallback(
     (decision: InterruptDecision, payload?: string | Record<string, any>) => {
       setDecision(decision);
-      onResume(
-        decision,
-        typeof payload === "string" ? payload : JSON.stringify(payload)
-      );
+
+      const message =
+        payload !== undefined
+          ? typeof payload === "string"
+            ? payload
+            : JSON.stringify(payload)
+          : toolMessage;
+
+      onResume(decision, message);
     },
-    [onResume]
+    [onResume, toolMessage]
   );
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
