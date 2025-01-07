@@ -27,94 +27,67 @@ class HumanNode:
         self.node_id = node_id
 
         self.routes = routes
-        self.title = title or "Review Tool Call"
+        self.title = title
 
     async def work(
         self, state: WorkflowTeamState, config: RunnableConfig
     ) -> ReturnWorkflowTeamState | Command[str]:
-        """处理工具调用审查流程"""
 
-        # 获取最后一条消息和工具调用
+        # 获取最后一条消息
         last_message = state["all_messages"][-1]
-        if not hasattr(last_message, "tool_calls") or not last_message.tool_calls:
-            return {"messages": [], "all_messages": state["all_messages"]}
+        # if not hasattr(last_message, "tool_calls") or not last_message.tool_calls:
+        #     return {"messages": [], "all_messages": state["all_messages"]}
 
-        tool_call = last_message.tool_calls[-1]
+        # tool_call = last_message.tool_calls[-1]
 
-        # 设置必要的上下文信息
-        var_child_runnable_config.set(
-            {
-                "configurable": {
-                    "thread_id": config.get("configurable", {}).get(
-                        "thread_id", str(uuid4())
-                    ),
-                    "__pregel_scratchpad": {},
-                    "__pregel_task_id": str(uuid4()),
-                    "checkpoint_ns": f"{self.node_id}:{str(uuid4())}",
-                    "__pregel_resuming": False,
-                    "__pregel_writes": [],
-                    "__pregel_send": lambda x: None,
-                    "__pregel_store": None,
-                    "__pregel_checkpointer": None,
+        # 创建中断数据
+        interrupt_data = {
+            "title": self.title,
+            "question": "请审查此工具调用:",
+            # "tool_call": tool_call,
+            "options": [self.CONTINUE, self.UPDATE, self.FEEDBACK],
+        }
+
+        # 执行中断
+        human_review = interrupt(interrupt_data)
+
+        # 从中断响应中获取action和data
+        action = human_review["action"]  # 使用 action
+        review_data = human_review.get("data", None)  # 使用 data
+
+        match action:
+            case self.CONTINUE:
+                # 批准工具调用,直接执行
+                next_node = self.routes.get("continue", "run_tool")
+                return Command(goto=next_node)
+
+            case self.UPDATE:
+                # 更新工具调用参数
+                updated_message = {
+                    "role": "ai",
+                    "content": last_message.content,
+                    "tool_calls": [
+                        {
+                            "id": str(uuid4()),
+                            "name": "interrupt",
+                            "args": review_data,  # 使用 review_data
+                        }
+                    ],
+                    "id": last_message.id,
                 }
-            }
-        )
+                next_node = self.routes.get("update", "run_tool")
+                return Command(goto=next_node, update={"messages": [updated_message]})
 
-        try:
-            # 创建中断数据
-            interrupt_data = {
-                "title": self.title,
-                "question": "请审查此工具调用:",
-                "tool_call": tool_call,
-                "options": [self.CONTINUE, self.UPDATE, self.FEEDBACK],
-            }
+            case self.FEEDBACK:
+                # 添加反馈消息
+                tool_message = {
+                    "role": "tool",
+                    "content": review_data,  # 使用 review_data
+                    "name": "interrupt",
+                    "tool_call_id": str(uuid4()),
+                }
+                next_node = self.routes.get("feedback", "call_llm")
+                return Command(goto=next_node, update={"messages": [tool_message]})
 
-            # 执行中断
-            human_review = interrupt(interrupt_data)
-
-            # 从中断响应中获取action和data
-            action = human_review["action"]  # 使用 action
-            review_data = human_review["data"]  # 使用 data
-
-            match action:
-                case self.CONTINUE:
-                    # 批准工具调用,直接执行
-                    next_node = self.routes.get("continue", "run_tool")
-                    return Command(goto=next_node)
-
-                case self.UPDATE:
-                    # 更新工具调用参数
-                    updated_message = {
-                        "role": "ai",
-                        "content": last_message.content,
-                        "tool_calls": [
-                            {
-                                "id": tool_call["id"],
-                                "name": tool_call["name"],
-                                "args": review_data,  # 使用 review_data
-                            }
-                        ],
-                        "id": last_message.id,
-                    }
-                    next_node = self.routes.get("update", "run_tool")
-                    return Command(
-                        goto=next_node, update={"messages": [updated_message]}
-                    )
-
-                case self.FEEDBACK:
-                    # 添加反馈消息
-                    tool_message = {
-                        "role": "tool",
-                        "content": review_data,  # 使用 review_data
-                        "name": tool_call["name"],
-                        "tool_call_id": tool_call["id"],
-                    }
-                    next_node = self.routes.get("feedback", "call_llm")
-                    return Command(goto=next_node, update={"messages": [tool_message]})
-
-                case _:
-                    raise ValueError(f"Unknown action: {action}")
-
-        except Exception as e:
-            print(e)
-            raise e
+            case _:
+                raise ValueError(f"Unknown action: {action}")
