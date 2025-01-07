@@ -25,7 +25,7 @@ from .node.llm_node import LLMNode
 from .node.retrieval_node import RetrievalNode
 from .node.subgraph_node import SubgraphNode
 from .node.human_node import HumanNode
-from app.models import InterruptDecision
+from app.models import InterruptDecision, InterruptType
 
 
 def create_subgraph(subgraph_config: dict[str, Any]) -> CompiledGraph:
@@ -641,12 +641,14 @@ def _add_ifelse_node(graph_builder, node_id: str, node_data: dict[str, Any]):
 
 def _add_human_node(graph_builder, node_id: str, node_data: dict[str, Any]):
     """Add human node to graph"""
-
     graph_builder.add_node(
         node_id,
         HumanNode(
             node_id=node_id,
             routes=node_data.get("routes", {}),
             title=node_data.get("title"),
+            interaction_type=node_data.get(
+                "interaction_type", InterruptType.TOOL_REVIEW
+            ),
         ).work,
     )
