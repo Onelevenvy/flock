@@ -1,6 +1,6 @@
 import { type DefaultEdgeOptions, type Node, type NodeTypes } from "reactflow";
 
-import type { GraphsOut } from "@/client";
+import type { GraphsOut, InterruptType } from "@/client";
 
 export interface NodeData {
   label: string;
@@ -99,18 +99,9 @@ export interface IfElseNodeData extends NodeData {
 }
 
 export interface HumanNodeData extends NodeData {
-  interaction_type: "tool_review" | "output_review" | "context_input";
-  routes: {
-    // Tool Review routes
-    approved?: string;
-    rejected?: string;
-    update?: string;
-    feedback?: string;
-    // Output Review routes
-    review?: string;
-    edit?: string;
-    // Context Input routes
-    continue?: string;
+  interaction_type: InterruptType;
+  routes?: {
+    [key: string]: string;
   };
   title?: string;
 }

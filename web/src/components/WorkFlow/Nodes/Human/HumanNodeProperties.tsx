@@ -10,7 +10,7 @@ import {
 import React, { useCallback, useMemo } from "react";
 import { useTranslation } from "react-i18next";
 import { useReactFlow, Node } from "reactflow";
-
+import { type InterruptType } from "@/client";
 import { HumanNodeData, NodeData } from "../../types";
 
 interface HumanNodePropertiesProps {
@@ -71,7 +71,7 @@ const HumanNodeProperties: React.FC<HumanNodePropertiesProps> = ({
   );
 
   const handleInteractionTypeChange = useCallback(
-    (value: string) => {
+    (value: InterruptType) => {
       onNodeDataChange(node.id, "interaction_type", value);
       const initialRoutes = (() => {
         switch (value) {
@@ -289,7 +289,9 @@ const HumanNodeProperties: React.FC<HumanNodePropertiesProps> = ({
         </FormLabel>
         <Select
           value={data.interaction_type || ""}
-          onChange={(e) => handleInteractionTypeChange(e.target.value)}
+          onChange={(e) =>
+            handleInteractionTypeChange(e.target.value as InterruptType)
+          }
           bg="ui.inputbgcolor"
           borderColor="gray.200"
           _hover={{ borderColor: "purple.200" }}

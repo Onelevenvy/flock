@@ -844,8 +844,8 @@ async def generator(
                     response = ChatResponse(
                         type="interrupt",
                         # name="tool_review",  # 使用特定的名称标识工具审查中断
-                        name="context_input",  # 使用特定的名称标识工具审查中断
-                        # name="output_review",  # 使用特定的名称标识工具审查中断
+                        # name="context_input",  # 使用特定的名称标识工具审查中断
+                        name="output_review",  # 使用特定的名称标识工具审查中断
                         content=message.content,
                         id=str(uuid4()),
                     )
