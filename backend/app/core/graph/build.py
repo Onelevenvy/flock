@@ -740,71 +740,73 @@ async def generator(
                 "recursion_limit": settings.RECURSION_LIMIT,
             }
             # Handle interrupt logic by orriding state
-            if interrupt and interrupt.decision == InterruptDecision.APPROVED:
-                state = None
-            elif interrupt and interrupt.decision == InterruptDecision.REJECTED:
-                current_values = await root.aget_state(config)
-                messages = current_values.values["messages"]
-                if messages and isinstance(messages[-1], AIMessage):
-                    tool_calls = messages[-1].tool_calls
-                    state = {
-                        "messages": [
-                            ToolMessage(
-                                tool_call_id=tool_call["id"],
-                                content="Rejected by user. Continue assisting.",
+            if team.workflow != "workflow":
+                if interrupt and interrupt.decision == InterruptDecision.APPROVED :
+                    state = None
+                elif interrupt and interrupt.decision == InterruptDecision.REJECTED:
+                    current_values = await root.aget_state(config)
+                    messages = current_values.values["messages"]
+                    if messages and isinstance(messages[-1], AIMessage):
+                        tool_calls = messages[-1].tool_calls
+                        state = {
+                            "messages": [
+                                ToolMessage(
+                                    tool_call_id=tool_call["id"],
+                                    content="Rejected by user. Continue assisting.",
+                                )
+                                for tool_call in tool_calls
+                            ]
+                        }
+                        if interrupt.tool_message:
+                            state["messages"].append(
+                                HumanMessage(
+                                    content=interrupt.tool_message,
+                                    name="user",
+                                    id=str(uuid4()),
+                                )
                             )
-                            for tool_call in tool_calls
-                        ]
-                    }
-                    if interrupt.tool_message:
-                        state["messages"].append(
-                            HumanMessage(
-                                content=interrupt.tool_message,
-                                name="user",
-                                id=str(uuid4()),
-                            )
-                        )
-            elif interrupt and interrupt.decision == InterruptDecision.REPLIED:
-                current_values = await root.aget_state(config)
-                messages = current_values.values["messages"]
-                if (
-                    messages
-                    and isinstance(messages[-1], AIMessage)
-                    and interrupt.tool_message
-                ):
-                    tool_calls = messages[-1].tool_calls
-                    state = {
-                        "messages": [
-                            ToolMessage(
-                                tool_call_id=tool_call["id"],
-                                content=interrupt.tool_message,
-                                name="ask-human",
-                            )
-                            for tool_call in tool_calls
-                            if tool_call["name"] == "ask-human"
-                        ]
-                    }
-            # 添加新的工具审查相关的中断处理
-            elif interrupt and interrupt.decision == InterruptDecision.CONTINUE:
+                elif interrupt and interrupt.decision == InterruptDecision.REPLIED:
+                    current_values = await root.aget_state(config)
+                    messages = current_values.values["messages"]
+                    if (
+                        messages
+                        and isinstance(messages[-1], AIMessage)
+                        and interrupt.tool_message
+                    ):
+                        tool_calls = messages[-1].tool_calls
+                        state = {
+                            "messages": [
+                                ToolMessage(
+                                    tool_call_id=tool_call["id"],
+                                    content=interrupt.tool_message,
+                                    name="ask-human",
+                                )
+                                for tool_call in tool_calls
+                                if tool_call["name"] == "ask-human"
+                            ]
+                        }
+            else:
+                # 添加新的工具审查相关的中断处理
+                if interrupt and interrupt.decision == InterruptDecision.CONTINUE:
 
-                from langgraph.types import Command
+                    from langgraph.types import Command
 
-                state = Command(resume={"action": "continue"})
-            elif interrupt and interrupt.decision == InterruptDecision.UPDATE:
-                from langgraph.types import Command
+                    state = Command(resume={"action": "continue"})
+                elif interrupt and interrupt.decision == InterruptDecision.UPDATE:
+                    from langgraph.types import Command
 
-                state = Command(
-                    resume={"action": "update", "data": {"city": interrupt.tool_message}}
-                )
-            elif interrupt and interrupt.decision == InterruptDecision.FEEDBACK:
-                from langgraph.types import Command
+                    state = Command(
+                        resume={"action": "update", "data": {"city": interrupt.tool_message}}
+                    )
+                elif interrupt and interrupt.decision == InterruptDecision.FEEDBACK:
+                    from langgraph.types import Command
 
-                state = Command(
-                    resume={
-                        "action": "feedback",
-                        "data": "User requested changes: use <city, country> format for location",
-                    }
-                )
+                    state = Command(
+                        resume={
+                            "action": "feedback",
+                            "data": "User requested changes: use <city, country> format for location",
+                        }
+                    )
             async for event in root.astream_events(state, version="v2", config=config):
                 response = event_to_response(event)
                 if response:

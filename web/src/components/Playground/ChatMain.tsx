@@ -28,6 +28,7 @@ import {
   type ThreadUpdate,
   ThreadsService,
   type ChatMessageType,
+  type InterruptType,
 } from "../../client";
 import type { ApiRequestOptions } from "../../client/core/ApiRequestOptions";
 import {
@@ -398,7 +399,11 @@ const ChatMain = ({ isPlayground }: { isPlayground?: boolean }) => {
    * Submit the interrupt decision and optional tool message
    */
   const onResumeHandler = useCallback(
-    (decision: InterruptDecision, tool_message?: string | null) => {
+    (
+      decision: InterruptDecision,
+      tool_message?: string | null,
+      interrupt_type?: InterruptType | null
+    ) => {
       mutation.mutate({
         messages: [
           {
@@ -406,7 +411,11 @@ const ChatMain = ({ isPlayground }: { isPlayground?: boolean }) => {
             content: tool_message || decision,
           },
         ],
-        interrupt: { decision, tool_message },
+        interrupt: {
+          decision,
+          tool_message,
+          interrupt_type,
+        },
       });
     },
     [mutation]

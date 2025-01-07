@@ -44,12 +44,20 @@ import "katex/dist/katex.min.css";
 
 import useWorkflowStore from "@/stores/workflowStore";
 
-import type { ChatResponse, InterruptDecision } from "../../client";
+import type {
+  ChatResponse,
+  InterruptDecision,
+  InterruptType,
+} from "../../client";
 import Markdown from "../Markdown/Markdown";
 
 interface MessageBoxProps {
   message: ChatResponse;
-  onResume: (decision: InterruptDecision, message?: string | null) => void;
+  onResume: (
+    decision: InterruptDecision,
+    message?: string | null,
+    interrupt_type?: InterruptType | null
+  ) => void;
   isPlayground?: boolean;
 }
 
@@ -93,9 +101,18 @@ const MessageBox: React.FC<MessageBoxProps> = ({
             : JSON.stringify(payload)
           : toolMessage;
 
-      onResume(decision, message);
+      let interruptType: InterruptType | null = null;
+      if (name === "tool_review") {
+        interruptType = "tool_review";
+      } else if (name === "output_review") {
+        interruptType = "output_review";
+      } else if (name === "context_input") {
+        interruptType = "context_input";
+      }
+
+      onResume(decision, message, interruptType);
     },
-    [onResume, toolMessage]
+    [onResume, toolMessage, name]
   );
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
