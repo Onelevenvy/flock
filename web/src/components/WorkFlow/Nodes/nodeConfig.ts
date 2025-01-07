@@ -259,7 +259,12 @@ export const nodeConfig: Record<string, NodeConfigItem> = {
     outputVariables: ["response", "action"],
     initialData: {
       interaction_type: "tool_review",
-      routes: {},
+      routes: {
+        approve: "",
+        reject: "",
+        update: "",
+        feedback: "",
+      },
       title: "",
     },
   },

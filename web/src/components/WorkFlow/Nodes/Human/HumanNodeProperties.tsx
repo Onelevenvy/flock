@@ -38,7 +38,10 @@ const HumanNodeProperties: React.FC<HumanNodePropertiesProps> = ({
 
   const handleRouteChange = useCallback(
     (routeKey: string, value: string) => {
-      const newRoutes = { ...data.routes, [routeKey]: value };
+      const newRoutes = {
+        ...(data.routes || {}),
+        [routeKey]: value,
+      };
       onNodeDataChange(node.id, "routes", newRoutes);
     },
     [node.id, data.routes, onNodeDataChange]
@@ -70,6 +73,29 @@ const HumanNodeProperties: React.FC<HumanNodePropertiesProps> = ({
   const handleInteractionTypeChange = useCallback(
     (value: string) => {
       onNodeDataChange(node.id, "interaction_type", value);
+      const initialRoutes = (() => {
+        switch (value) {
+          case "tool_review":
+            return {
+              approve: "",
+              reject: "",
+              update: "",
+              feedback: "",
+            };
+          case "output_review":
+            return {
+              review: "",
+              edit: "",
+            };
+          case "context_input":
+            return {
+              continue: "",
+            };
+          default:
+            return {};
+        }
+      })();
+      onNodeDataChange(node.id, "routes", initialRoutes);
       onNodeDataChange(node.id, "title", getDefaultTitle(value));
     },
     [node.id, onNodeDataChange, getDefaultTitle]
@@ -85,7 +111,7 @@ const HumanNodeProperties: React.FC<HumanNodePropertiesProps> = ({
                 {t("workflow.nodes.human.approveRoute")}
               </FormLabel>
               <Select
-                value={data.routes?.approve || ""}
+                value={data.routes?.approve ?? ""}
                 onChange={(e) => handleRouteChange("approve", e.target.value)}
                 size="sm"
                 bg="ui.inputbgcolor"
