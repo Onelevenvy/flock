@@ -187,6 +187,11 @@ const translation = {
         editRoute: "Route After Edit",
         // Context Input routes
         continueRoute: "Route After Input",
+        defaultTitles: {
+          toolReview: "Please Review Tool Call Request",
+          outputReview: "Please Review AI Generated Content",
+          contextInput: "Additional Information Needed",
+        },
       },
     },
     common: {

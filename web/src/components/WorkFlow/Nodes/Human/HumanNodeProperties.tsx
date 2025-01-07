@@ -51,25 +51,28 @@ const HumanNodeProperties: React.FC<HumanNodePropertiesProps> = ({
     [node.id, onNodeDataChange]
   );
 
-  const getDefaultTitle = (type: string) => {
-    switch (type) {
-      case "tool_review":
-        return "请审核工具调用请求";
-      case "output_review":
-        return "请审核AI生成的内容";
-      case "context_input":
-        return "需要您的补充信息";
-      default:
-        return "";
-    }
-  };
+  const getDefaultTitle = useCallback(
+    (type: string) => {
+      switch (type) {
+        case "tool_review":
+          return t("workflow.nodes.human.defaultTitles.toolReview");
+        case "output_review":
+          return t("workflow.nodes.human.defaultTitles.outputReview");
+        case "context_input":
+          return t("workflow.nodes.human.defaultTitles.contextInput");
+        default:
+          return "";
+      }
+    },
+    [t]
+  );
 
   const handleInteractionTypeChange = useCallback(
     (value: string) => {
       onNodeDataChange(node.id, "interaction_type", value);
       onNodeDataChange(node.id, "title", getDefaultTitle(value));
     },
-    [node.id, onNodeDataChange]
+    [node.id, onNodeDataChange, getDefaultTitle]
   );
 
   const renderRoutesByType = () => {
@@ -235,6 +238,22 @@ const HumanNodeProperties: React.FC<HumanNodePropertiesProps> = ({
         return null;
     }
   };
+
+  React.useEffect(() => {
+    if (!data.title && data.interaction_type) {
+      onNodeDataChange(
+        node.id,
+        "title",
+        getDefaultTitle(data.interaction_type)
+      );
+    }
+  }, [
+    data.title,
+    data.interaction_type,
+    node.id,
+    onNodeDataChange,
+    getDefaultTitle,
+  ]);
 
   return (
     <VStack spacing={4} align="stretch">

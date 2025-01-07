@@ -182,6 +182,11 @@ const translation = {
         editRoute: "修改内容后跳转到",
         // Context Input routes
         continueRoute: "提供信息后继续到",
+        defaultTitles: {
+          toolReview: "请审核工具调用请求",
+          outputReview: "请审核AI生成的内容",
+          contextInput: "需要您的补充信息",
+        },
       },
     },
     common: {
