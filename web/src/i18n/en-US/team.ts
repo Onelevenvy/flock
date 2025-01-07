@@ -171,22 +171,22 @@ const translation = {
         interactionType: "Interaction Type",
         types: {
           toolReview: "Tool Call Review",
-          outputReview: "Output Review",
-          contextInput: "Context Input",
+          outputReview: "Content Review",
+          contextInput: "Additional Input",
         },
         title: "Title",
-        titlePlaceholder: "Enter title",
-        routes: "Routes",
+        titlePlaceholder: "Please enter node title",
+        routes: "Route Configuration",
         // Tool Review routes
-        approveRoute: "Approve Route",
-        rejectRoute: "Reject Route",
-        updateRoute: "Update Parameters Route",
-        feedbackRoute: "Feedback Route",
+        approveRoute: "Route After Approval",
+        rejectRoute: "Route After Rejection",
+        updateRoute: "Route After Parameter Update",
+        feedbackRoute: "Route After Feedback",
         // Output Review routes
-        reviewRoute: "Review Route",
-        editRoute: "Edit Route",
+        reviewRoute: "Route After Review",
+        editRoute: "Route After Edit",
         // Context Input routes
-        continueRoute: "Continue Route",
+        continueRoute: "Route After Input",
       },
     },
     common: {

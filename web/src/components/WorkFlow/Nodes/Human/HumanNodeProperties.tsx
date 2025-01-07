@@ -51,6 +51,27 @@ const HumanNodeProperties: React.FC<HumanNodePropertiesProps> = ({
     [node.id, onNodeDataChange]
   );
 
+  const getDefaultTitle = (type: string) => {
+    switch (type) {
+      case "tool_review":
+        return "请审核工具调用请求";
+      case "output_review":
+        return "请审核AI生成的内容";
+      case "context_input":
+        return "需要您的补充信息";
+      default:
+        return "";
+    }
+  };
+
+  const handleInteractionTypeChange = useCallback(
+    (value: string) => {
+      onNodeDataChange(node.id, "interaction_type", value);
+      onNodeDataChange(node.id, "title", getDefaultTitle(value));
+    },
+    [node.id, onNodeDataChange]
+  );
+
   const renderRoutesByType = () => {
     switch (data.interaction_type) {
       case "tool_review":
@@ -223,9 +244,7 @@ const HumanNodeProperties: React.FC<HumanNodePropertiesProps> = ({
         </FormLabel>
         <Select
           value={data.interaction_type || ""}
-          onChange={(e) =>
-            onNodeDataChange(node.id, "interaction_type", e.target.value)
-          }
+          onChange={(e) => handleInteractionTypeChange(e.target.value)}
           bg="ui.inputbgcolor"
           borderColor="gray.200"
           _hover={{ borderColor: "purple.200" }}

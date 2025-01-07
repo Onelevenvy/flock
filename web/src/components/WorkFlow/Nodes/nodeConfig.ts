@@ -260,7 +260,7 @@ export const nodeConfig: Record<string, NodeConfigItem> = {
     initialData: {
       interaction_type: "tool_review",
       routes: {},
-      title: "",
+      title: "请审核工具调用请求",
     },
   },
 };
