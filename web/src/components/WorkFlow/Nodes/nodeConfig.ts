@@ -258,11 +258,8 @@ export const nodeConfig: Record<string, NodeConfigItem> = {
     inputVariables: [],
     outputVariables: ["response", "action"],
     initialData: {
-      interaction_type: "HUMAN_NODE_APPROVAL",
-      routes: {
-        human_approve: "",
-        human_reject: "",
-      },
+      interaction_type: "tool_review",
+      routes: {},
       title: "",
     },
   },

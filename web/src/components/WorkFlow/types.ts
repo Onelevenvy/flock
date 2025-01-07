@@ -98,12 +98,19 @@ export interface IfElseNodeData extends NodeData {
   cases: IfElseCase[];
 }
 
-export interface HumanNodeData {
-  label: string;
+export interface HumanNodeData extends NodeData {
+  interaction_type: "tool_review" | "output_review" | "context_input";
   routes: {
-    continue?: string;
+    // Tool Review routes
+    approve?: string;
+    reject?: string;
     update?: string;
     feedback?: string;
+    // Output Review routes
+    review?: string;
+    edit?: string;
+    // Context Input routes
+    continue?: string;
   };
   title?: string;
 }

@@ -169,14 +169,24 @@ const translation = {
       human: {
         nodeTitle: "Human Node",
         interactionType: "Interaction Type",
-        approval: "Approval Process",
-        feedback: "Feedback Process",
+        types: {
+          toolReview: "Tool Call Review",
+          outputReview: "Output Review",
+          contextInput: "Context Input",
+        },
         title: "Title",
         titlePlaceholder: "Enter title",
         routes: "Routes",
+        // Tool Review routes
         approveRoute: "Approve Route",
         rejectRoute: "Reject Route",
+        updateRoute: "Update Parameters Route",
         feedbackRoute: "Feedback Route",
+        // Output Review routes
+        reviewRoute: "Review Route",
+        editRoute: "Edit Route",
+        // Context Input routes
+        continueRoute: "Continue Route",
       },
     },
     common: {

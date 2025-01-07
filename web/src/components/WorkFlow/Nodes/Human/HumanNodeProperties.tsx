@@ -9,12 +9,12 @@ import {
 } from "@chakra-ui/react";
 import React, { useCallback, useMemo } from "react";
 import { useTranslation } from "react-i18next";
-import { useReactFlow } from "reactflow";
+import { useReactFlow, Node } from "reactflow";
 
-import { HumanNodeData } from "../../types";
+import { HumanNodeData, NodeData } from "../../types";
 
 interface HumanNodePropertiesProps {
-  node: any;
+  node: Node<HumanNodeData>;
   onNodeDataChange: (nodeId: string, key: string, value: any) => void;
 }
 
@@ -23,7 +23,7 @@ const HumanNodeProperties: React.FC<HumanNodePropertiesProps> = ({
   onNodeDataChange,
 }) => {
   const { t } = useTranslation();
-  const data = node.data as HumanNodeData;
+  const data = node.data;
   const { getNodes } = useReactFlow();
 
   const availableNodes = useMemo(() => {
@@ -31,7 +31,7 @@ const HumanNodeProperties: React.FC<HumanNodePropertiesProps> = ({
       .filter((n) => n.id !== node.id && n.type !== "start")
       .map((n) => ({
         id: n.id,
-        label: n.data.label || n.id,
+        label: (n.data as NodeData).label || n.id,
         type: n.type,
       }));
   }, [getNodes, node.id]);
@@ -51,27 +51,144 @@ const HumanNodeProperties: React.FC<HumanNodePropertiesProps> = ({
     [node.id, onNodeDataChange]
   );
 
-  return (
-    <VStack spacing={4} align="stretch">
-      <FormControl>
-        <FormLabel fontWeight="500" color="gray.700">
-          {t("workflow.nodes.human.title")}
-        </FormLabel>
-        <Input
-          value={data.title || ""}
-          onChange={(e) => handleTitleChange(e.target.value)}
-          placeholder={t("workflow.nodes.human.titlePlaceholder") as string}
-          bg="ui.inputbgcolor"
-          borderColor="gray.200"
-          _hover={{ borderColor: "purple.200" }}
-        />
-      </FormControl>
+  const renderRoutesByType = () => {
+    switch (data.interaction_type) {
+      case "tool_review":
+        return (
+          <>
+            <FormControl>
+              <FormLabel fontSize="sm" color="gray.600">
+                {t("workflow.nodes.human.approveRoute")}
+              </FormLabel>
+              <Select
+                value={data.routes?.approve || ""}
+                onChange={(e) => handleRouteChange("approve", e.target.value)}
+                size="sm"
+                bg="ui.inputbgcolor"
+                borderColor="gray.200"
+                _hover={{ borderColor: "purple.200" }}
+              >
+                <option value="">Select node</option>
+                {availableNodes.map((n) => (
+                  <option key={n.id} value={n.id}>
+                    {n.label} ({n.type})
+                  </option>
+                ))}
+              </Select>
+            </FormControl>
 
-      <Box>
-        <Text fontWeight="500" color="gray.700" mb={2}>
-          {t("workflow.nodes.human.routes")}
-        </Text>
-        <VStack spacing={3} align="stretch">
+            <FormControl>
+              <FormLabel fontSize="sm" color="gray.600">
+                {t("workflow.nodes.human.rejectRoute")}
+              </FormLabel>
+              <Select
+                value={data.routes?.reject || ""}
+                onChange={(e) => handleRouteChange("reject", e.target.value)}
+                size="sm"
+                bg="ui.inputbgcolor"
+                borderColor="gray.200"
+                _hover={{ borderColor: "purple.200" }}
+              >
+                <option value="">Select node</option>
+                {availableNodes.map((n) => (
+                  <option key={n.id} value={n.id}>
+                    {n.label} ({n.type})
+                  </option>
+                ))}
+              </Select>
+            </FormControl>
+
+            <FormControl>
+              <FormLabel fontSize="sm" color="gray.600">
+                {t("workflow.nodes.human.updateRoute")}
+              </FormLabel>
+              <Select
+                value={data.routes?.update || ""}
+                onChange={(e) => handleRouteChange("update", e.target.value)}
+                size="sm"
+                bg="ui.inputbgcolor"
+                borderColor="gray.200"
+                _hover={{ borderColor: "purple.200" }}
+              >
+                <option value="">Select node</option>
+                {availableNodes.map((n) => (
+                  <option key={n.id} value={n.id}>
+                    {n.label} ({n.type})
+                  </option>
+                ))}
+              </Select>
+            </FormControl>
+
+            <FormControl>
+              <FormLabel fontSize="sm" color="gray.600">
+                {t("workflow.nodes.human.feedbackRoute")}
+              </FormLabel>
+              <Select
+                value={data.routes?.feedback || ""}
+                onChange={(e) => handleRouteChange("feedback", e.target.value)}
+                size="sm"
+                bg="ui.inputbgcolor"
+                borderColor="gray.200"
+                _hover={{ borderColor: "purple.200" }}
+              >
+                <option value="">Select node</option>
+                {availableNodes.map((n) => (
+                  <option key={n.id} value={n.id}>
+                    {n.label} ({n.type})
+                  </option>
+                ))}
+              </Select>
+            </FormControl>
+          </>
+        );
+      case "output_review":
+        return (
+          <>
+            <FormControl>
+              <FormLabel fontSize="sm" color="gray.600">
+                {t("workflow.nodes.human.reviewRoute")}
+              </FormLabel>
+              <Select
+                value={data.routes?.review || ""}
+                onChange={(e) => handleRouteChange("review", e.target.value)}
+                size="sm"
+                bg="ui.inputbgcolor"
+                borderColor="gray.200"
+                _hover={{ borderColor: "purple.200" }}
+              >
+                <option value="">Select node</option>
+                {availableNodes.map((n) => (
+                  <option key={n.id} value={n.id}>
+                    {n.label} ({n.type})
+                  </option>
+                ))}
+              </Select>
+            </FormControl>
+
+            <FormControl>
+              <FormLabel fontSize="sm" color="gray.600">
+                {t("workflow.nodes.human.editRoute")}
+              </FormLabel>
+              <Select
+                value={data.routes?.edit || ""}
+                onChange={(e) => handleRouteChange("edit", e.target.value)}
+                size="sm"
+                bg="ui.inputbgcolor"
+                borderColor="gray.200"
+                _hover={{ borderColor: "purple.200" }}
+              >
+                <option value="">Select node</option>
+                {availableNodes.map((n) => (
+                  <option key={n.id} value={n.id}>
+                    {n.label} ({n.type})
+                  </option>
+                ))}
+              </Select>
+            </FormControl>
+          </>
+        );
+      case "context_input":
+        return (
           <FormControl>
             <FormLabel fontSize="sm" color="gray.600">
               {t("workflow.nodes.human.continueRoute")}
@@ -92,48 +209,59 @@ const HumanNodeProperties: React.FC<HumanNodePropertiesProps> = ({
               ))}
             </Select>
           </FormControl>
+        );
+      default:
+        return null;
+    }
+  };
 
-          <FormControl>
-            <FormLabel fontSize="sm" color="gray.600">
-              {t("workflow.nodes.human.updateRoute")}
-            </FormLabel>
-            <Select
-              value={data.routes?.update || ""}
-              onChange={(e) => handleRouteChange("update", e.target.value)}
-              size="sm"
-              bg="ui.inputbgcolor"
-              borderColor="gray.200"
-              _hover={{ borderColor: "purple.200" }}
-            >
-              <option value="">Select node</option>
-              {availableNodes.map((n) => (
-                <option key={n.id} value={n.id}>
-                  {n.label} ({n.type})
-                </option>
-              ))}
-            </Select>
-          </FormControl>
+  return (
+    <VStack spacing={4} align="stretch">
+      <FormControl>
+        <FormLabel fontWeight="500" color="gray.700">
+          {t("workflow.nodes.human.interactionType")}
+        </FormLabel>
+        <Select
+          value={data.interaction_type || ""}
+          onChange={(e) =>
+            onNodeDataChange(node.id, "interaction_type", e.target.value)
+          }
+          bg="ui.inputbgcolor"
+          borderColor="gray.200"
+          _hover={{ borderColor: "purple.200" }}
+        >
+          <option value="tool_review">
+            {t("workflow.nodes.human.types.toolReview")}
+          </option>
+          <option value="output_review">
+            {t("workflow.nodes.human.types.outputReview")}
+          </option>
+          <option value="context_input">
+            {t("workflow.nodes.human.types.contextInput")}
+          </option>
+        </Select>
+      </FormControl>
 
-          <FormControl>
-            <FormLabel fontSize="sm" color="gray.600">
-              {t("workflow.nodes.human.feedbackRoute")}
-            </FormLabel>
-            <Select
-              value={data.routes?.feedback || ""}
-              onChange={(e) => handleRouteChange("feedback", e.target.value)}
-              size="sm"
-              bg="ui.inputbgcolor"
-              borderColor="gray.200"
-              _hover={{ borderColor: "purple.200" }}
-            >
-              <option value="">Select node</option>
-              {availableNodes.map((n) => (
-                <option key={n.id} value={n.id}>
-                  {n.label} ({n.type})
-                </option>
-              ))}
-            </Select>
-          </FormControl>
+      <FormControl>
+        <FormLabel fontWeight="500" color="gray.700">
+          {t("workflow.nodes.human.title")}
+        </FormLabel>
+        <Input
+          value={data.title || ""}
+          onChange={(e) => handleTitleChange(e.target.value)}
+          placeholder={t("workflow.nodes.human.titlePlaceholder") as string}
+          bg="ui.inputbgcolor"
+          borderColor="gray.200"
+          _hover={{ borderColor: "purple.200" }}
+        />
+      </FormControl>
+
+      <Box>
+        <Text fontWeight="500" color="gray.700" mb={2}>
+          {t("workflow.nodes.human.routes")}
+        </Text>
+        <VStack spacing={3} align="stretch">
+          {renderRoutesByType()}
         </VStack>
       </Box>
     </VStack>

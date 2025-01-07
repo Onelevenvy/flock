@@ -164,14 +164,24 @@ const translation = {
       human: {
         nodeTitle: "人工节点",
         interactionType: "交互类型",
-        approval: "审批流程",
-        feedback: "反馈流程",
+        types: {
+          toolReview: "工具调用审核",
+          outputReview: "输出内容审核",
+          contextInput: "上下文输入",
+        },
         title: "标题",
         titlePlaceholder: "请输入标题",
         routes: "路由配置",
-        approveRoute: "通过路由",
+        // Tool Review routes
+        approveRoute: "批准路由",
         rejectRoute: "拒绝路由",
+        updateRoute: "更新参数路由",
         feedbackRoute: "反馈路由",
+        // Output Review routes
+        reviewRoute: "审核路由",
+        editRoute: "编辑路由",
+        // Context Input routes
+        continueRoute: "继续路由",
       },
     },
     common: {
