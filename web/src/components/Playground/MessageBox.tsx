@@ -602,7 +602,7 @@ const MessageBox: React.FC<MessageBoxProps> = ({
                     </HStack>
 
                     {/* 工具参数编辑区域 */}
-                    {toolParams && (
+                    {tool_calls?.[0]?.args && (
                       <VStack
                         spacing={2}
                         align="stretch"
@@ -613,26 +613,28 @@ const MessageBox: React.FC<MessageBoxProps> = ({
                         <Text fontSize="sm" fontWeight="500" color="gray.700">
                           工具参数
                         </Text>
-                        {Object.entries(toolParams).map(([key, value]) => (
-                          <FormControl key={key} size="sm">
-                            <FormLabel fontSize="xs" mb={1}>
-                              {key}
-                            </FormLabel>
-                            <InputGroup size="sm">
-                              <Input
-                                defaultValue={value as string}
-                                onChange={(e) => {
-                                  const updatedParams = {
-                                    ...toolParams,
-                                    [key]: e.target.value,
-                                  };
-                                  setToolParams(updatedParams);
-                                }}
-                                bg="white"
-                              />
-                            </InputGroup>
-                          </FormControl>
-                        ))}
+                        {Object.entries(tool_calls[0].args).map(
+                          ([key, value]) => (
+                            <FormControl key={key} size="sm">
+                              <FormLabel fontSize="xs" mb={1}>
+                                {key}
+                              </FormLabel>
+                              <InputGroup size="sm">
+                                <Input
+                                  defaultValue={value as string}
+                                  onChange={(e) => {
+                                    const updatedParams = {
+                                      ...tool_calls[0].args,
+                                      [key]: e.target.value,
+                                    };
+                                    setToolParams(updatedParams);
+                                  }}
+                                  bg="white"
+                                />
+                              </InputGroup>
+                            </FormControl>
+                          )
+                        )}
                         <Button
                           size="sm"
                           colorScheme="orange"

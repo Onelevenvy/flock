@@ -172,7 +172,7 @@ const translation = {
         types: {
           toolReview: "Tool Call Review",
           outputReview: "Content Review",
-          contextInput: "Additional Input",
+          contextInput: "Ask Human for Information",
         },
         title: "Title",
         titlePlaceholder: "Please enter node title",

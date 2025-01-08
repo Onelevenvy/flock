@@ -167,7 +167,7 @@ const translation = {
         types: {
           toolReview: "工具调用审核",
           outputReview: "内容审核",
-          contextInput: "补充信息",
+          contextInput: "询问人类补充信息",
         },
         title: "标题",
         titlePlaceholder: "请输入节点标题",

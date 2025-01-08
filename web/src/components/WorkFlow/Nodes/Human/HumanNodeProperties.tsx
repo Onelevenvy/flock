@@ -75,22 +75,22 @@ const HumanNodeProperties: React.FC<HumanNodePropertiesProps> = ({
       onNodeDataChange(node.id, "interaction_type", value);
       const initialRoutes = (() => {
         switch (value) {
+          case "context_input":
+            return {
+              continue: "",
+            };
           case "tool_review":
             return {
               approved: "",
               rejected: "",
               update: "",
-              feedback: "",
             };
           case "output_review":
             return {
               approved: "",
               review: "",
             };
-          case "context_input":
-            return {
-              continue: "",
-            };
+
           default:
             return {};
         }
@@ -103,6 +103,29 @@ const HumanNodeProperties: React.FC<HumanNodePropertiesProps> = ({
 
   const renderRoutesByType = () => {
     switch (data.interaction_type) {
+      case "context_input":
+        return (
+          <FormControl>
+            <FormLabel fontSize="sm" color="gray.600">
+              {t("workflow.nodes.human.continueRoute")}
+            </FormLabel>
+            <Select
+              value={data.routes?.continue || ""}
+              onChange={(e) => handleRouteChange("continue", e.target.value)}
+              size="sm"
+              bg="ui.inputbgcolor"
+              borderColor="gray.200"
+              _hover={{ borderColor: "purple.200" }}
+            >
+              <option value="">Select node</option>
+              {availableNodes.map((n) => (
+                <option key={n.id} value={n.id}>
+                  {n.label} ({n.type})
+                </option>
+              ))}
+            </Select>
+          </FormControl>
+        );
       case "tool_review":
         return (
           <>
@@ -111,7 +134,7 @@ const HumanNodeProperties: React.FC<HumanNodePropertiesProps> = ({
                 {t("workflow.nodes.human.approveRoute")}
               </FormLabel>
               <Select
-                value={data.routes?.approved ?? ""}
+                value={data.routes?.approved || ""}
                 onChange={(e) => handleRouteChange("approved", e.target.value)}
                 size="sm"
                 bg="ui.inputbgcolor"
@@ -155,27 +178,6 @@ const HumanNodeProperties: React.FC<HumanNodePropertiesProps> = ({
               <Select
                 value={data.routes?.update || ""}
                 onChange={(e) => handleRouteChange("update", e.target.value)}
-                size="sm"
-                bg="ui.inputbgcolor"
-                borderColor="gray.200"
-                _hover={{ borderColor: "purple.200" }}
-              >
-                <option value="">Select node</option>
-                {availableNodes.map((n) => (
-                  <option key={n.id} value={n.id}>
-                    {n.label} ({n.type})
-                  </option>
-                ))}
-              </Select>
-            </FormControl>
-
-            <FormControl>
-              <FormLabel fontSize="sm" color="gray.600">
-                {t("workflow.nodes.human.feedbackRoute")}
-              </FormLabel>
-              <Select
-                value={data.routes?.feedback || ""}
-                onChange={(e) => handleRouteChange("feedback", e.target.value)}
                 size="sm"
                 bg="ui.inputbgcolor"
                 borderColor="gray.200"
@@ -237,29 +239,7 @@ const HumanNodeProperties: React.FC<HumanNodePropertiesProps> = ({
             </FormControl>
           </>
         );
-      case "context_input":
-        return (
-          <FormControl>
-            <FormLabel fontSize="sm" color="gray.600">
-              {t("workflow.nodes.human.continueRoute")}
-            </FormLabel>
-            <Select
-              value={data.routes?.continue || ""}
-              onChange={(e) => handleRouteChange("continue", e.target.value)}
-              size="sm"
-              bg="ui.inputbgcolor"
-              borderColor="gray.200"
-              _hover={{ borderColor: "purple.200" }}
-            >
-              <option value="">Select node</option>
-              {availableNodes.map((n) => (
-                <option key={n.id} value={n.id}>
-                  {n.label} ({n.type})
-                </option>
-              ))}
-            </Select>
-          </FormControl>
-        );
+
       default:
         return null;
     }
@@ -296,14 +276,14 @@ const HumanNodeProperties: React.FC<HumanNodePropertiesProps> = ({
           borderColor="gray.200"
           _hover={{ borderColor: "purple.200" }}
         >
+          <option value="context_input">
+            {t("workflow.nodes.human.types.contextInput")}
+          </option>
           <option value="tool_review">
             {t("workflow.nodes.human.types.toolReview")}
           </option>
           <option value="output_review">
             {t("workflow.nodes.human.types.outputReview")}
-          </option>
-          <option value="context_input">
-            {t("workflow.nodes.human.types.contextInput")}
           </option>
         </Select>
       </FormControl>
