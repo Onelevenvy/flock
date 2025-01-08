@@ -661,6 +661,17 @@ const MessageBox: React.FC<MessageBoxProps> = ({
 
                 {name === "output_review" && !decision && (
                   <VStack spacing={4} align="stretch">
+                    {/* 添加批准按钮 */}
+                    <Button
+                      leftIcon={<FaCheck />}
+                      colorScheme="green"
+                      variant="solid"
+                      onClick={() => onDecisionHandler("approved")}
+                      size="sm"
+                    >
+                      批准
+                    </Button>
+
                     {/* 审核输入框 */}
                     <InputGroup size="md">
                       <Input
