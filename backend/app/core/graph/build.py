@@ -803,7 +803,7 @@ async def generator(
                         reject_message = (
                             interrupt.tool_message
                             if interrupt.tool_message
-                            else "Tool call rejected"
+                            else None
                         )
                         state = Command(
                             resume={"action": "rejected", "data": reject_message}
@@ -816,15 +816,7 @@ async def generator(
                             resume={"action": "update", "data": interrupt.tool_message}
                         )
 
-                    elif interrupt.decision == InterruptDecision.FEEDBACK:
-                        # 添加反馈消息
-
-                        state = Command(
-                            resume={
-                                "action": "feedback",
-                                "data": interrupt.tool_message,
-                            }
-                        )
+                   
 
                 elif interrupt.interaction_type == "output_review":
                     # 处理输出审查

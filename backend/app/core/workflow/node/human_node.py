@@ -94,15 +94,15 @@ class HumanNode:
         match action:
             case InterruptDecision.APPROVED:
                 # 批准工具调用,直接执行
-                
+
                 next_node = self.routes.get("approved", "run_tool")
                 return Command(goto=next_node)
 
             case InterruptDecision.REJECTED:
                 # 拒绝工具调用,添加拒绝消息
-                result = {}
+
                 tool_calls = self.last_message.tool_calls
-                result["messages"] = [
+                result = [
                     ToolMessage(
                         tool_call_id=tool_call["id"],
                         content="Rejected by user. Continue assisting.",
@@ -110,14 +110,14 @@ class HumanNode:
                     for tool_call in tool_calls
                 ]
                 if review_data:
-                    result["messages"].append(
+                    result.append(
                         HumanMessage(content=review_data, name="user", id=str(uuid4()))
                     )
 
                 return_state: ReturnWorkflowTeamState = {
-                    "history": self.history + [result],
-                    "messages": result["messages"],
-                    "all_messages": self.all_messages + [result],
+                    "history": self.history + result,
+                    "messages": result,
+                    "all_messages": self.all_messages + result,
                 }
                 next_node = self.routes.get("rejected", "call_llm")
                 return Command(goto=next_node, update=return_state)
@@ -139,21 +139,6 @@ class HumanNode:
                 next_node = self.routes.get("update", "run_tool")
                 return Command(goto=next_node, update={"messages": [updated_message]})
 
-            case InterruptDecision.FEEDBACK:
-                # 添加反馈消息
-                tool_message = {
-                    "role": "tool",
-                    "content": review_data,
-                    "name": "feedback",
-                    "tool_call_id": str(uuid4()),
-                }
-                next_node = self.routes.get("feedback", "call_llm")
-                # return Command(goto=next_node, update={"messages": [tool_message]})s
-                return_state: ReturnWorkflowTeamState = {
-                    "messages": [tool_message],
-                }
-                return Command(goto=next_node, update=return_state)
-
             case _:
                 raise ValueError(f"Unknown action for tool review: {action}")
 
@@ -163,7 +148,7 @@ class HumanNode:
         match action:
             case InterruptDecision.APPROVED:
                 next_node = self.routes.get("approved", "")
-                
+
                 return Command(goto=next_node)
 
             case InterruptDecision.REVIEW:
@@ -172,7 +157,9 @@ class HumanNode:
                 #     "content": review_data,
                 #     "id": str(uuid4()),
                 # }
-                feedback_message = HumanMessage(content=review_data, name="user", id=str(uuid4()))
+                feedback_message = HumanMessage(
+                    content=review_data, name="user", id=str(uuid4())
+                )
                 next_node = self.routes.get("review", "call_llm")
                 return_state: ReturnWorkflowTeamState = {
                     "messages": [feedback_message],
@@ -180,7 +167,7 @@ class HumanNode:
                 return Command(goto=next_node, update=return_state)
 
             case InterruptDecision.EDIT:
-                
+
                 edited_message = AIMessage(content=review_data, id=last_message.id)
                 next_node = self.routes.get("edit", "call_llm")
                 return_state: ReturnWorkflowTeamState = {
@@ -193,7 +180,9 @@ class HumanNode:
 
     def _handle_context_input(self, action: str, review_data: Any) -> Command[str]:
         if action == InterruptDecision.CONTINUE:
-            context_message = HumanMessage(content=review_data, name="user", id=str(uuid4()))
+            context_message = HumanMessage(
+                content=review_data, name="user", id=str(uuid4())
+            )
             next_node = self.routes.get("continue", "call_llm")
             return_state: ReturnWorkflowTeamState = {
                 "messages": [context_message],

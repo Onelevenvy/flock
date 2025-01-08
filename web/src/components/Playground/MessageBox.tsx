@@ -564,7 +564,7 @@ const MessageBox: React.FC<MessageBoxProps> = ({
 
                 {name === "tool_review" && !decision && (
                   <VStack spacing={4} align="stretch">
-                    <HStack spacing={2}>
+                    <HStack spacing={4}>
                       <Button
                         leftIcon={<FaCheck />}
                         colorScheme="green"
@@ -574,15 +574,31 @@ const MessageBox: React.FC<MessageBoxProps> = ({
                       >
                         批准
                       </Button>
-                      <Button
-                        leftIcon={<FaTimes />}
-                        colorScheme="red"
-                        variant="solid"
-                        onClick={() => onDecisionHandler("rejected")}
-                        size="sm"
-                      >
-                        拒绝
-                      </Button>
+
+                      <InputGroup size="md">
+                        <Input
+                          placeholder="输入拒绝原因..."
+                          bg="white"
+                          borderRadius="lg"
+                          onChange={(e) => setFeedbackMessage(e.target.value)}
+                          _focus={{
+                            borderColor: "red.400",
+                            boxShadow: "0 0 0 1px var(--chakra-colors-red-400)",
+                          }}
+                        />
+                        <InputRightElement>
+                          <IconButton
+                            icon={<FaTimes />}
+                            aria-label="Reject"
+                            variant="ghost"
+                            colorScheme="red"
+                            onClick={() =>
+                              onDecisionHandler("rejected", feedbackMessage)
+                            }
+                            size="sm"
+                          />
+                        </InputRightElement>
+                      </InputGroup>
                     </HStack>
 
                     {/* 工具参数编辑区域 */}
@@ -629,33 +645,6 @@ const MessageBox: React.FC<MessageBoxProps> = ({
                         </Button>
                       </VStack>
                     )}
-
-                    {/* 反馈输入框 */}
-                    <InputGroup size="md">
-                      <Input
-                        placeholder="输入反馈信息..."
-                        bg="white"
-                        borderRadius="lg"
-                        onChange={(e) => setFeedbackMessage(e.target.value)}
-                        _focus={{
-                          borderColor: "blue.400",
-                          boxShadow: "0 0 0 1px var(--chakra-colors-blue-400)",
-                        }}
-                      />
-                      <InputRightElement>
-                        <IconButton
-                          icon={<VscSend />}
-                          aria-label="Send feedback"
-                          variant="ghost"
-                          colorScheme="blue"
-                          onClick={() =>
-                            onDecisionHandler("feedback", feedbackMessage)
-                          }
-                          size="sm"
-                          isDisabled={!feedbackMessage?.trim().length}
-                        />
-                      </InputRightElement>
-                    </InputGroup>
                   </VStack>
                 )}
 
@@ -700,7 +689,7 @@ const MessageBox: React.FC<MessageBoxProps> = ({
                     </InputGroup>
 
                     {/* 内容编辑区域 */}
-                    <VStack
+                    {/* <VStack
                       spacing={2}
                       align="stretch"
                       bg="gray.50"
@@ -727,7 +716,7 @@ const MessageBox: React.FC<MessageBoxProps> = ({
                       >
                         更新内容
                       </Button>
-                    </VStack>
+                    </VStack> */}
                   </VStack>
                 )}
 
@@ -735,7 +724,7 @@ const MessageBox: React.FC<MessageBoxProps> = ({
                   <VStack spacing={4} align="stretch">
                     <InputGroup size="md">
                       <Input
-                        placeholder="请输入补充信息..."
+                        placeholder="请输入您的补充信息..."
                         bg="white"
                         borderRadius="lg"
                         onChange={(e) => setContextMessage(e.target.value)}
