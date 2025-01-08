@@ -9,6 +9,13 @@
 
 > [!TIP]
 >
+> ### �� 最新アップデート 2025/1/8
+>
+> - **ヒューマンノード**: 新しいヒューマン・イン・ザ・ループノードを追加し、以下の主要なシナリオをサポート：
+>   - 🛠️ ツール呼び出しレビュー：LLM が要求するツール呼び出しの人間によるレビュー、編集、承認
+>   - ✅ LLM 出力の検証：LLM が生成したコンテンツの人間によるレビュー、編集、承認
+>   - 💡 コンテキスト提供：LLM が明確化や追加情報のために人間の入力を要求可能
+>
 > ### 🎉 最新アップデート 2024/12/23
 >
 > - **モルチモーダルチャットサポート**: マルチモーダルチャット機能を追加しました（現在は画像モダリティのみサポート、今後他のモダリティも順次追加予定）！
@@ -61,7 +68,7 @@
 
 Flock は、大規模言語モデル（LLM）アプリケーションを開発するためのオープンソースプラットフォームを目指しています。これは、LangChain と LangGraph の概念を利用した LLM ベースのアプリケーションです。チャットボット、RAG アプリケーション、エージェント、およびマルチエージェントシステムをサポートする LLMOps ソリューションのスイートを作成し、オフライン操作の機能を備えることを目指しています。
 
-[StreetLamb](https://github.com/StreetLamb)プロジェクトおよびその[tribe](https://github.com/StreetLamb/tribe)プロジェクトに触発され、Flock は多くのアプローチとコードを採用しています。この基盤の上に、新しい機能と方向性を導 ��� しています。
+[StreetLamb](https://github.com/StreetLamb)プロジェクトおよびその[tribe](https://github.com/StreetLamb/tribe)プロジェクトに触発され、Flock は多くのアプローチとコードを採用しています。この基盤の上に、新しい機能と方向性を導入しています。
 
 このプロジェクトのレイアウトの一部は、[Lobe-chat](https://github.com/lobehub/lobe-chat)、[Dify](https://github.com/langgenius/dify)、および[fastgpt](https://github.com/labring/FastGPT)を参考にしています。これらはすべて優れたオープンソースプロジェクトであり、感謝しています 🙇‍。
 
@@ -202,28 +209,6 @@ python /app/app/initial_data.py
 
 ##### 2.4 celery を実行（rag 機能を使用する場合のみ）
 
-```bash
-poetry run celery -A app.core.celery_app.celery_app worker --loglevel=debug
 ```
 
-#### 3. フロントエンドを実行
-
-##### 3.1 web ディレクトリに移動して依存関係をインストール
-
-```bash
-cd web
-pnpm install
 ```
-
-##### 3.2 web サービスを起動
-
-```bash
-cd web
-pnpm dev
-
-# または pnpm build してから pnpm start
-```
-
-## Star History
-
-[![Star History Chart](https://api.star-history.com/svg?repos=Onelevenvy/flock&type=Date)](https://star-history.com/#Onelevenvy/flock&Date)
