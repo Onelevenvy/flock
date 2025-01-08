@@ -23,12 +23,20 @@ class HumanNode:
         self.routes = routes
         self.title = title
         self.interaction_type = interaction_type
+        self.history = None
+        self.messages = None
+        self.all_messages = None
+        self.last_message = None
 
     async def work(
         self, state: WorkflowTeamState, config: RunnableConfig
     ) -> ReturnWorkflowTeamState | Command[str]:
+        self.history = state.get("history", [])
+        self.messages = state.get("messages", [])
+        self.all_messages = state.get("all_messages", [])
+
         # 获取最后一条消息
-        last_message = state["all_messages"][-1]
+        self.last_message = state["all_messages"][-1]
 
         # 根据不同的交互类型构建中断数据
         interrupt_data = {
@@ -37,9 +45,12 @@ class HumanNode:
         }
 
         if self.interaction_type == InterruptType.TOOL_REVIEW:
-            if not hasattr(last_message, "tool_calls") or not last_message.tool_calls:
-                return {"messages": [], "all_messages": state["all_messages"]}
-            tool_call = last_message.tool_calls[-1]
+            if (
+                not hasattr(self.last_message, "tool_calls")
+                or not self.last_message.tool_calls
+            ):
+                return state
+            tool_call = self.last_message.tool_calls
             interrupt_data.update(
                 {
                     "question": "请审查此工具调用:",
@@ -50,7 +61,7 @@ class HumanNode:
             interrupt_data.update(
                 {
                     "question": "请审查此输出:",
-                    "content": last_message.content,
+                    "content": self.last_message.content,
                 }
             )
         elif self.interaction_type == InterruptType.CONTEXT_INPUT:
@@ -69,9 +80,9 @@ class HumanNode:
 
         # 根据不同的交互类型处理响应
         if self.interaction_type == InterruptType.TOOL_REVIEW:
-            return self._handle_tool_review(action, review_data, last_message)
+            return self._handle_tool_review(action, review_data, self.last_message)
         elif self.interaction_type == InterruptType.OUTPUT_REVIEW:
-            return self._handle_output_review(action, review_data, last_message)
+            return self._handle_output_review(action, review_data, self.last_message)
         elif self.interaction_type == InterruptType.CONTEXT_INPUT:
             return self._handle_context_input(action, review_data)
         else:
@@ -83,18 +94,33 @@ class HumanNode:
         match action:
             case InterruptDecision.APPROVED:
                 # 批准工具调用,直接执行
+                
                 next_node = self.routes.get("approved", "run_tool")
                 return Command(goto=next_node)
 
             case InterruptDecision.REJECTED:
                 # 拒绝工具调用,添加拒绝消息
-                reject_message = {
-                    "role": "human",
-                    "content": review_data if review_data else "Tool call rejected",
-                    "id": str(uuid4()),
+                result = {}
+                tool_calls = self.last_message.tool_calls
+                result["messages"] = [
+                    ToolMessage(
+                        tool_call_id=tool_call["id"],
+                        content="Rejected by user. Continue assisting.",
+                    )
+                    for tool_call in tool_calls
+                ]
+                if review_data:
+                    result["messages"].append(
+                        HumanMessage(content=review_data, name="user", id=str(uuid4()))
+                    )
+
+                return_state: ReturnWorkflowTeamState = {
+                    "history": self.history + [result],
+                    "messages": result["messages"],
+                    "all_messages": self.all_messages + [result],
                 }
                 next_node = self.routes.get("rejected", "call_llm")
-                return Command(goto=next_node, update={"messages": [reject_message]})
+                return Command(goto=next_node, update=return_state)
 
             case InterruptDecision.UPDATE:
                 # 更新工具调用参数
@@ -122,7 +148,11 @@ class HumanNode:
                     "tool_call_id": str(uuid4()),
                 }
                 next_node = self.routes.get("feedback", "call_llm")
-                return Command(goto=next_node, update={"messages": [tool_message]})
+                # return Command(goto=next_node, update={"messages": [tool_message]})s
+                return_state: ReturnWorkflowTeamState = {
+                    "messages": [tool_message],
+                }
+                return Command(goto=next_node, update=return_state)
 
             case _:
                 raise ValueError(f"Unknown action for tool review: {action}")
@@ -131,39 +161,43 @@ class HumanNode:
         self, action: str, review_data: Any, last_message: Any
     ) -> Command[str]:
         match action:
-            case InterruptDecision.APPROVED:  
-                next_node = self.routes.get("approved", END)
+            case InterruptDecision.APPROVED:
+                next_node = self.routes.get("approved", "")
+                
                 return Command(goto=next_node)
 
             case InterruptDecision.REVIEW:
-                feedback_message = {
-                    "role": "human",
-                    "content": review_data,
-                    "id": str(uuid4()),
-                }
+                # feedback_message = {
+                #     "role": "human",
+                #     "content": review_data,
+                #     "id": str(uuid4()),
+                # }
+                feedback_message = HumanMessage(content=review_data, name="user", id=str(uuid4()))
                 next_node = self.routes.get("review", "call_llm")
-                return Command(goto=next_node, update={"messages": [feedback_message]})
+                return_state: ReturnWorkflowTeamState = {
+                    "messages": [feedback_message],
+                }
+                return Command(goto=next_node, update=return_state)
 
             case InterruptDecision.EDIT:
-                edited_message = {
-                    "role": "ai",
-                    "content": review_data,
-                    "id": last_message.id,
-                }
+                
+                edited_message = AIMessage(content=review_data, id=last_message.id)
                 next_node = self.routes.get("edit", "call_llm")
-                return Command(goto=next_node, update={"messages": [edited_message]})
+                return_state: ReturnWorkflowTeamState = {
+                    "messages": [edited_message],
+                }
+                return Command(goto=next_node, update=return_state)
 
             case _:
                 raise ValueError(f"Unknown action for output review: {action}")
 
     def _handle_context_input(self, action: str, review_data: Any) -> Command[str]:
         if action == InterruptDecision.CONTINUE:
-            context_message = {
-                "role": "human",
-                "content": review_data,
-                "id": str(uuid4()),
-            }
+            context_message = HumanMessage(content=review_data, name="user", id=str(uuid4()))
             next_node = self.routes.get("continue", "call_llm")
-            return Command(goto=next_node, update={"messages": [context_message]})
+            return_state: ReturnWorkflowTeamState = {
+                "messages": [context_message],
+            }
+            return Command(goto=next_node, update=return_state)
         else:
             raise ValueError(f"Unknown action for context input: {action}")

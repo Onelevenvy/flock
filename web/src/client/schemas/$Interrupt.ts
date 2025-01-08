@@ -4,7 +4,7 @@
 /* eslint-disable */
 export const $Interrupt = {
     properties: {
-        interrupt_type: {
+        interaction_type: {
             type: 'any-of',
             contains: [{
                 type: 'InterruptType',

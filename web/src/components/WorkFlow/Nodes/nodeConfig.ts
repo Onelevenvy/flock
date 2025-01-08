@@ -260,8 +260,8 @@ export const nodeConfig: Record<string, NodeConfigItem> = {
     initialData: {
       interaction_type: "tool_review",
       routes: {
-        approve: "",
-        reject: "",
+        approved: "",
+        rejected: "",
         update: "",
         feedback: "",
       },

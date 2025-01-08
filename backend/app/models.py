@@ -138,10 +138,12 @@ class ChatMessage(BaseModel):
     content: str
     imgdata: str | None = None  # 添加 imgdata 字段
 
+
 class InterruptType(str, Enum):
     TOOL_REVIEW = "tool_review"
     OUTPUT_REVIEW = "output_review"
     CONTEXT_INPUT = "context_input"
+
 
 class InterruptDecision(str, Enum):
     APPROVED = "approved"
@@ -155,7 +157,7 @@ class InterruptDecision(str, Enum):
 
 
 class Interrupt(BaseModel):
-    interrupt_type: InterruptType | None = None
+    interaction_type: InterruptType | None = None
     decision: InterruptDecision
     tool_message: str | None = None
 
@@ -788,6 +790,3 @@ class ApiKeyOutPublic(ApiKeyBase):
 class ApiKeysOutPublic(SQLModel):
     data: list[ApiKeyOutPublic]
     count: int
-
-
-

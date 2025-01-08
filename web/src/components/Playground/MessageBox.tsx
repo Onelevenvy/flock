@@ -56,7 +56,7 @@ interface MessageBoxProps {
   onResume: (
     decision: InterruptDecision,
     message?: string | null,
-    interrupt_type?: InterruptType | null
+    interaction_type?: InterruptType | null
   ) => void;
   isPlayground?: boolean;
 }

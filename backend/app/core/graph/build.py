@@ -618,6 +618,7 @@ async def generator(
     interrupt: Interrupt | None = None,
 ) -> AsyncGenerator[Any, Any]:
     """Create the graph and stream responses as JSON."""
+
     formatted_messages = [
         (
             HumanMessage(
@@ -723,9 +724,11 @@ async def generator(
                 }
             elif team.workflow in ["workflow"]:
 
-                config = team.graphs[0].config
+                graph_config = team.graphs[0].config
 
-                root = initialize_graph(config, checkpointer, save_graph_img=False)
+                root = initialize_graph(
+                    graph_config, checkpointer, save_graph_img=False
+                )
 
                 state = {
                     "history": formatted_messages,
@@ -741,7 +744,7 @@ async def generator(
             }
 
             # Handle interrupt logic by orriding state
-            if interrupt and interrupt.interrupt_type is None:
+            if interrupt and interrupt.interaction_type is None:
                 if interrupt.decision == InterruptDecision.APPROVED:
                     state = None
                 elif interrupt.decision == InterruptDecision.REJECTED:
@@ -786,9 +789,9 @@ async def generator(
                                 if tool_call["name"] == "ask-human"
                             ]
                         }
-            elif interrupt and interrupt.interrupt_type is not None:
+            elif interrupt and interrupt.interaction_type is not None:
                 # 添加新的工具审查相关的中断处理
-                if interrupt.interrupt_type == "tool_review":
+                if interrupt.interaction_type == "tool_review":
                     if interrupt.decision == InterruptDecision.APPROVED:
                         # 批准工具调用,继续执行
 
@@ -823,7 +826,7 @@ async def generator(
                             }
                         )
 
-                elif interrupt.interrupt_type == "output_review":
+                elif interrupt.interaction_type == "output_review":
                     # 处理输出审查
                     if interrupt.decision == InterruptDecision.APPROVED:
                         # 批准输出,继续执行
@@ -843,7 +846,7 @@ async def generator(
                             f"Unsupported decision for output review: {interrupt.decision}"
                         )
 
-                elif interrupt.interrupt_type == "context_input":
+                elif interrupt.interaction_type == "context_input":
                     # 处理上下文输入,添加用户提供的额外信息
                     if interrupt.decision == InterruptDecision.CONTINUE:
                         state = Command(
@@ -859,7 +862,7 @@ async def generator(
 
                 else:
                     raise ValueError(
-                        f"Unsupported interrupt type: {interrupt.interrupt_type}"
+                        f"Unsupported interrupt type: {interrupt.interaction_type}"
                     )
             async for event in root.astream_events(state, version="v2", config=config):
                 response = event_to_response(event)
@@ -897,12 +900,15 @@ async def generator(
                         )
                 # workflow类型的处理
                 else:
+                    next_node = snapshot.next[0]
+                    for node in graph_config["nodes"]:
+                        if node["id"] == next_node:
+                            interrupt_name = node["data"]["interaction_type"]
+                            break
 
                     response = ChatResponse(
                         type="interrupt",
-                        name="context_input",
-                        # name= "tool_review"
-                        # name="output_review"
+                        name=interrupt_name,
                         content=message.content,
                         id=str(uuid4()),
                     )

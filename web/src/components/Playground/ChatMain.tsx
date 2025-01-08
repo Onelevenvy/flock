@@ -402,7 +402,7 @@ const ChatMain = ({ isPlayground }: { isPlayground?: boolean }) => {
     (
       decision: InterruptDecision,
       tool_message?: string | null,
-      interrupt_type?: InterruptType | null
+      interaction_type?: InterruptType | null
     ) => {
       mutation.mutate({
         messages: [
@@ -414,7 +414,7 @@ const ChatMain = ({ isPlayground }: { isPlayground?: boolean }) => {
         interrupt: {
           decision,
           tool_message,
-          interrupt_type,
+          interaction_type,
         },
       });
     },

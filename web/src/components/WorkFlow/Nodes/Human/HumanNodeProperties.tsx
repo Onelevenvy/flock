@@ -113,7 +113,7 @@ const HumanNodeProperties: React.FC<HumanNodePropertiesProps> = ({
               </FormLabel>
               <Select
                 value={data.routes?.approved ?? ""}
-                onChange={(e) => handleRouteChange("approve", e.target.value)}
+                onChange={(e) => handleRouteChange("approved", e.target.value)}
                 size="sm"
                 bg="ui.inputbgcolor"
                 borderColor="gray.200"

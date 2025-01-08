@@ -1,6 +1,7 @@
 import re
 from typing import Annotated, Any
 
+from app.models import InterruptType
 from langchain_core.messages import AIMessage, AnyMessage, ToolMessage
 from langchain_core.tools import BaseTool
 from langgraph.graph import add_messages
@@ -156,6 +157,7 @@ class WorkflowTeamState(TypedDict):
     main_task: list[AnyMessage]
     task: list[AnyMessage]
     node_outputs: Annotated[dict[str, Any], update_node_outputs]  # 修改这一行
+  
 
 
 # When returning teamstate, is it possible to exclude fields that you dont want to update
@@ -167,7 +169,7 @@ class ReturnWorkflowTeamState(TypedDict):
     next: NotRequired[str | None]  # Returning None is valid for sequential graphs only
     task: NotRequired[list[AnyMessage]]
     node_outputs: Annotated[dict[str, Any], update_node_outputs]
-
+    
 
 def parse_variables(text: str, node_outputs: dict, is_code: bool = False) -> str:
     def replace_variable(match):

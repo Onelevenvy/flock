@@ -4127,7 +4127,7 @@
       },
       "Interrupt": {
         "properties": {
-          "interrupt_type": {
+          "interaction_type": {
             "anyOf": [
               {
                 "$ref": "#/components/schemas/InterruptType"
