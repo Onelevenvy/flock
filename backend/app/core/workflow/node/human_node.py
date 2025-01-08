@@ -152,11 +152,6 @@ class HumanNode:
                 return Command(goto=next_node)
 
             case InterruptDecision.REVIEW:
-                # feedback_message = {
-                #     "role": "human",
-                #     "content": review_data,
-                #     "id": str(uuid4()),
-                # }
                 feedback_message = HumanMessage(
                     content=review_data, name="user", id=str(uuid4())
                 )
@@ -180,12 +175,14 @@ class HumanNode:
 
     def _handle_context_input(self, action: str, review_data: Any) -> Command[str]:
         if action == InterruptDecision.CONTINUE:
-            context_message = HumanMessage(
+            result =[HumanMessage(
                 content=review_data, name="user", id=str(uuid4())
-            )
+            )]
             next_node = self.routes.get("continue", "call_llm")
             return_state: ReturnWorkflowTeamState = {
-                "messages": [context_message],
+                "history": self.history + result,
+                "messages": result,
+                "all_messages": self.all_messages + result,
             }
             return Command(goto=next_node, update=return_state)
         else:

@@ -687,36 +687,6 @@ const MessageBox: React.FC<MessageBoxProps> = ({
                         />
                       </InputRightElement>
                     </InputGroup>
-
-                    {/* 内容编辑区域 */}
-                    {/* <VStack
-                      spacing={2}
-                      align="stretch"
-                      bg="gray.50"
-                      p={3}
-                      borderRadius="md"
-                    >
-                      <Text fontSize="sm" fontWeight="500" color="gray.700">
-                        编辑内容
-                      </Text>
-                      <Input
-                        as="textarea"
-                        minH="100px"
-                        value={currentMessage || ""}
-                        onChange={(e) => setCurrentMessage(e.target.value)}
-                        bg="white"
-                      />
-                      <Button
-                        size="sm"
-                        colorScheme="blue"
-                        onClick={() =>
-                          onDecisionHandler("edit", currentMessage)
-                        }
-                        leftIcon={<FaEdit />}
-                      >
-                        更新内容
-                      </Button>
-                    </VStack> */}
                   </VStack>
                 )}
 
