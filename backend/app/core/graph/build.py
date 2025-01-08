@@ -801,9 +801,7 @@ async def generator(
                         # 拒绝工具调用,添加拒绝消息
 
                         reject_message = (
-                            interrupt.tool_message
-                            if interrupt.tool_message
-                            else None
+                            interrupt.tool_message if interrupt.tool_message else None
                         )
                         state = Command(
                             resume={"action": "rejected", "data": reject_message}
@@ -815,8 +813,6 @@ async def generator(
                         state = Command(
                             resume={"action": "update", "data": interrupt.tool_message}
                         )
-
-                   
 
                 elif interrupt.interaction_type == "output_review":
                     # 处理输出审查
@@ -897,13 +893,27 @@ async def generator(
                         if node["id"] == next_node:
                             interrupt_name = node["data"]["interaction_type"]
                             break
-
-                    response = ChatResponse(
-                        type="interrupt",
-                        name=interrupt_name,
-                        content=message.content,
-                        id=str(uuid4()),
-                    )
+                    if interrupt_name == "context_input":
+                        response = ChatResponse(
+                            type="interrupt",
+                            name=interrupt_name,
+                            content=f"LLM的输出如下：\n\n`{message.content}`\n\n请输入您的补充信息",
+                            id=str(uuid4()),
+                        )
+                    elif interrupt_name == "tool_review":
+                        response = ChatResponse(
+                            type="interrupt",
+                            name=interrupt_name,
+                            content=f"Tools 的参数如下：\n\n`{message.content}`\n\n请批准，或者拒绝（可以输入拒绝的原因）",
+                            id=str(uuid4()),
+                        )
+                    elif interrupt_name == "output_review":
+                        response = ChatResponse(
+                            type="interrupt",
+                            name=interrupt_name,
+                            content=f"LLM的输出如下：\n\n`{message.content}`\n\n请批准，或者输入您的审批意见",
+                            id=str(uuid4()),
+                        )
 
                 formatted_output = f"data: {response.model_dump_json()}\n\n"
                 yield formatted_output
