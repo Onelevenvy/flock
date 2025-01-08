@@ -3,7 +3,6 @@ from uuid import uuid4
 from langgraph.graph import END
 from langchain_core.messages import AIMessage, HumanMessage, ToolMessage
 from langchain_core.runnables import RunnableConfig
-from langchain_core.runnables.config import var_child_runnable_config
 
 from app.models import InterruptDecision, InterruptType
 from app.core.state import ReturnWorkflowTeamState, WorkflowTeamState
@@ -82,12 +81,12 @@ class HumanNode:
         self, action: str, review_data: Any, last_message: Any
     ) -> Command[str]:
         match action:
-            case "approved":
+            case InterruptDecision.APPROVED:
                 # 批准工具调用,直接执行
                 next_node = self.routes.get("approved", "run_tool")
                 return Command(goto=next_node)
 
-            case "rejected":
+            case InterruptDecision.REJECTED:
                 # 拒绝工具调用,添加拒绝消息
                 reject_message = {
                     "role": "human",
@@ -97,7 +96,7 @@ class HumanNode:
                 next_node = self.routes.get("rejected", "call_llm")
                 return Command(goto=next_node, update={"messages": [reject_message]})
 
-            case "update":
+            case InterruptDecision.UPDATE:
                 # 更新工具调用参数
                 updated_message = {
                     "role": "ai",
@@ -114,7 +113,7 @@ class HumanNode:
                 next_node = self.routes.get("update", "run_tool")
                 return Command(goto=next_node, update={"messages": [updated_message]})
 
-            case "feedback":
+            case InterruptDecision.FEEDBACK:
                 # 添加反馈消息
                 tool_message = {
                     "role": "tool",
@@ -132,11 +131,11 @@ class HumanNode:
         self, action: str, review_data: Any, last_message: Any
     ) -> Command[str]:
         match action:
-            case "approved":  # 对应 APPROVED
+            case InterruptDecision.APPROVED:  
                 next_node = self.routes.get("approved", END)
                 return Command(goto=next_node)
 
-            case "review":
+            case InterruptDecision.REVIEW:
                 feedback_message = {
                     "role": "human",
                     "content": review_data,
@@ -145,7 +144,7 @@ class HumanNode:
                 next_node = self.routes.get("review", "call_llm")
                 return Command(goto=next_node, update={"messages": [feedback_message]})
 
-            case "edit":
+            case InterruptDecision.EDIT:
                 edited_message = {
                     "role": "ai",
                     "content": review_data,
@@ -158,7 +157,7 @@ class HumanNode:
                 raise ValueError(f"Unknown action for output review: {action}")
 
     def _handle_context_input(self, action: str, review_data: Any) -> Command[str]:
-        if action == "continue":
+        if action == InterruptDecision.CONTINUE:
             context_message = {
                 "role": "human",
                 "content": review_data,

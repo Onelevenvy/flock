@@ -15,7 +15,7 @@ from langgraph.graph import END, StateGraph
 from langgraph.graph.graph import CompiledGraph
 from langgraph.prebuilt import ToolNode
 from psycopg import AsyncConnection
-
+from langgraph.types import Command
 from app.core.config import settings
 from app.core.graph.members import (
     GraphLeader,
@@ -740,7 +740,6 @@ async def generator(
                 "recursion_limit": settings.RECURSION_LIMIT,
             }
 
-           
             # Handle interrupt logic by orriding state
             if interrupt and interrupt.interrupt_type is None:
                 if interrupt.decision == InterruptDecision.APPROVED:
@@ -792,13 +791,11 @@ async def generator(
                 if interrupt.interrupt_type == "tool_review":
                     if interrupt.decision == InterruptDecision.APPROVED:
                         # 批准工具调用,继续执行
-                        from langgraph.types import Command
 
                         state = Command(resume={"action": "approved"})
 
                     elif interrupt.decision == InterruptDecision.REJECTED:
                         # 拒绝工具调用,添加拒绝消息
-                        from langgraph.types import Command
 
                         reject_message = (
                             interrupt.tool_message
@@ -811,7 +808,6 @@ async def generator(
 
                     elif interrupt.decision == InterruptDecision.UPDATE:
                         # 更新工具调用参数
-                        from langgraph.types import Command
 
                         state = Command(
                             resume={"action": "update", "data": interrupt.tool_message}
@@ -819,7 +815,6 @@ async def generator(
 
                     elif interrupt.decision == InterruptDecision.FEEDBACK:
                         # 添加反馈消息
-                        from langgraph.types import Command
 
                         state = Command(
                             resume={
@@ -902,10 +897,10 @@ async def generator(
                         )
                 # workflow类型的处理
                 else:
-                    
+
                     response = ChatResponse(
                         type="interrupt",
-                        name="context_input", 
+                        name="context_input",
                         # name= "tool_review"
                         # name="output_review"
                         content=message.content,
