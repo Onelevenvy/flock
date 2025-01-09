@@ -76,6 +76,7 @@ const MessageBox: React.FC<MessageBoxProps> = ({
     tool_output,
     documents,
   } = message;
+
   const [decision, setDecision] = useState<InterruptDecision | null>(null);
   const [toolMessage, setToolMessage] = useState<string | null>(null);
   const { isOpen: showClipboardIcon, onOpen, onClose } = useDisclosure();

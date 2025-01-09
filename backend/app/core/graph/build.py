@@ -904,7 +904,7 @@ async def generator(
                         response = ChatResponse(
                             type="interrupt",
                             name=interrupt_name,
-                            content=f"Tools 的参数如下：\n\n`{message.content}`\n\n请批准，或者拒绝（可以输入拒绝的原因）",
+                            tool_calls=message.tool_calls,
                             id=str(uuid4()),
                         )
                     elif interrupt_name == "output_review":

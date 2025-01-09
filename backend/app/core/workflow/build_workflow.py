@@ -431,25 +431,46 @@ def _add_llm_node(
 
 def _get_tools_to_bind(node_id, edges, nodes):
     tools_to_bind = []
-    for edge in edges:
-        if edge["source"] == node_id:
-            target_node = next((n for n in nodes if n["id"] == edge["target"]), None)
-            if target_node and target_node["type"] == "tool":
-                tools_to_bind.extend(
-                    [get_tool(tool_name) for tool_name in target_node["data"]["tools"]]
+    # 存储已处理过的节点，避免循环
+    processed_nodes = set()
+
+    def get_connected_tools(current_node_id, processed):
+        if current_node_id in processed:
+            return
+        processed.add(current_node_id)
+
+        for edge in edges:
+            if edge["source"] == current_node_id:
+                target_node = next(
+                    (n for n in nodes if n["id"] == edge["target"]), None
                 )
-            if target_node and target_node["type"] == "toolretrieval":
-                tools_to_bind.extend(
-                    [
-                        get_retrieval_tool(
-                            tool["name"],
-                            tool["description"],
-                            tool["usr_id"],
-                            tool["kb_id"],
+                if target_node:
+                    # 如果是工具节点，添加工具
+                    if target_node["type"] == "tool":
+                        tools_to_bind.extend(
+                            [
+                                get_tool(tool_name)
+                                for tool_name in target_node["data"]["tools"]
+                            ]
                         )
-                        for tool in target_node["data"]["tools"]
-                    ]
-                )
+                    elif target_node["type"] == "toolretrieval":
+                        tools_to_bind.extend(
+                            [
+                                get_retrieval_tool(
+                                    tool["name"],
+                                    tool["description"],
+                                    tool["usr_id"],
+                                    tool["kb_id"],
+                                )
+                                for tool in target_node["data"]["tools"]
+                            ]
+                        )
+                    # 如果是human节点，继续遍历其后续节点
+                    elif target_node["type"] == "human":
+                        get_connected_tools(target_node["id"], processed)
+
+    # 从起始节点开始遍历
+    get_connected_tools(node_id, processed_nodes)
     return tools_to_bind
 
 

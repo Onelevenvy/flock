@@ -3,6 +3,7 @@ from uuid import uuid4
 from langgraph.graph import END
 from langchain_core.messages import AIMessage, HumanMessage, ToolMessage
 from langchain_core.runnables import RunnableConfig
+import json
 
 from app.models import InterruptDecision, InterruptType
 from app.core.state import ReturnWorkflowTeamState, WorkflowTeamState
@@ -109,8 +110,11 @@ class HumanNode:
                 ]
                 if review_data:
                     result.append(
-                        HumanMessage(content=review_data, name="user", id=str(uuid4()))
+                        HumanMessage(content=review_data, name="user", id=str(uuid4())),
                     )
+                result.append(
+                    AIMessage(content="I understand your concern. Let's try again.")
+                )
 
                 return_state: ReturnWorkflowTeamState = {
                     "history": self.history + result,
@@ -123,20 +127,32 @@ class HumanNode:
             case InterruptDecision.UPDATE:
                 # 更新工具调用参数
 
-                updated_message = {
-                    "role": "ai",
-                    "content": self.last_message.content,
-                    "tool_calls": [
+                # 确保 review_data 是字典类型
+                args = (
+                    review_data
+                    if isinstance(review_data, dict)
+                    else json.loads(review_data)
+                )
+
+                updated_message = AIMessage(
+                    content=self.last_message.content,
+                    tool_calls=[
                         {
                             "id": tool_call["id"],
                             "name": tool_call["name"],
-                            "args": review_data,
+                            "args": args,  # 现在确保是字典类型
                         }
                     ],
-                    "id": self.last_message.id,
+                    id=self.last_message.id,
+                )
+
+                return_state: ReturnWorkflowTeamState = {
+                    "history": self.history + [updated_message],
+                    "messages": [updated_message],
+                    "all_messages": self.all_messages + [updated_message],
                 }
                 next_node = self.routes.get("update", "run_tool")
-                return Command(goto=next_node, update={"messages": [updated_message]})
+                return Command(goto=next_node, update=return_state)
 
             case _:
                 raise ValueError(f"Unknown action for tool review: {action}")

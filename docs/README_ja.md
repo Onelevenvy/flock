@@ -209,6 +209,29 @@ python /app/app/initial_data.py
 
 ##### 2.4 celery を実行（rag 機能を使用する場合のみ）
 
+
+```bash
+poetry run celery -A app.core.celery_app.celery_app worker --loglevel=debug
 ```
 
+#### 3. フロントエンドを実行
+
+##### 3.1 web ディレクトリに移動して依存関係をインストール
+
+```bash
+cd web
+pnpm install
 ```
+
+##### 3.2 web サービスを起動
+
+```bash
+cd web
+pnpm dev
+
+# または pnpm build してから pnpm start
+```
+
+## Star History
+
+[![Star History Chart](https://api.star-history.com/svg?repos=Onelevenvy/flock&type=Date)](https://star-history.com/#Onelevenvy/flock&Date)
