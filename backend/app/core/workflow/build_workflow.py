@@ -23,45 +23,9 @@ from .node.ifelse.ifelse_node import IfElseNode
 from .node.input_node import InputNode
 from .node.llm_node import LLMNode
 from .node.retrieval_node import RetrievalNode
-from .node.subgraph_node import SubgraphNode
 from .node.human_node import HumanNode
-from app.models import InterruptDecision, InterruptType
-
-
-def create_subgraph(subgraph_config: dict[str, Any]) -> CompiledGraph:
-    subgraph_builder = StateGraph(WorkflowTeamState)
-
-    # 添加subgraph的节点
-    for node in subgraph_config["nodes"]:
-        node_id = node["id"]
-        node_type = node["type"]
-        node_data = node["data"]
-
-        if node_type == "answer":
-            _add_answer_node(subgraph_builder, node_id, node_data)
-        elif node_type == "retrieval":
-            _add_retrieval_node(subgraph_builder, node_id, node_data)
-        elif node_type == "llm":
-            _add_llm_node(
-                subgraph_builder,
-                node_id,
-                node_data,
-                subgraph_config["nodes"],
-                subgraph_config["edges"],
-                False,
-                False,
-                {},
-            )
-        elif node_type in ["tool", "toolretrieval"]:
-            _add_tool_node(subgraph_builder, node_id, node_type, node_data)
-
-    # 添加subgraph的边
-    for edge in subgraph_config["edges"]:
-        _add_edge(subgraph_builder, edge, subgraph_config["nodes"], {})
-
-    # 设置入口点并编译subgraph
-    subgraph_builder.set_entry_point("InputNode")
-    return subgraph_builder.compile()
+from app.models import InterruptType
+from .node.subgraph_node import SubgraphNode
 
 
 def validate_config(config: dict[str, Any]) -> bool:
@@ -232,8 +196,7 @@ def initialize_graph(
             if node_type == "crewai":
                 _add_crewai_node(graph_builder, node_id, node_type, node_data)
             elif node_type == "subgraph":
-                subgraph = create_subgraph(node_data)
-                graph_builder.add_node(node_id, subgraph)
+                _add_subgraph_node(graph_builder, node_id, node_data)
             elif node_type == "answer":
                 _add_answer_node(graph_builder, node_id, node_data)
             elif node_type == "retrieval":
@@ -411,8 +374,7 @@ def _add_llm_node(
     tools_to_bind = _get_tools_to_bind(node_id, edges, nodes)
 
     if node_data.get("type") == "subgraph":
-        subgraph = create_subgraph(node_data["subgraph_config"])
-        graph_builder.add_node(node_id, SubgraphNode(subgraph).work)
+        pass
     else:
         graph_builder.add_node(
             node_id,
@@ -544,7 +506,10 @@ def _add_edge(graph_builder, edge, nodes, conditional_edges):
         else:
             graph_builder.add_edge(edge["source"], edge["target"])
     elif source_node["type"] == "subgraph":
-        graph_builder.add_edge(edge["source"], edge["target"])
+        if target_node["type"] == "end":
+            graph_builder.add_edge(edge["source"], END)
+        else:
+            graph_builder.add_edge(edge["source"], edge["target"])
     elif target_node["type"] == "subgraph":
         graph_builder.add_edge(edge["source"], edge["target"])
     elif source_node["type"] == "code":
@@ -671,5 +636,16 @@ def _add_human_node(graph_builder, node_id: str, node_data: dict[str, Any]):
             interaction_type=node_data.get(
                 "interaction_type", InterruptType.TOOL_REVIEW
             ),
+        ).work,
+    )
+
+
+def _add_subgraph_node(graph_builder, node_id: str, node_data: dict):
+    """Add a subgraph node to the parent graph"""
+    graph_builder.add_node(
+        node_id,
+        SubgraphNode(
+            node_id=node_id,
+            subgraph_config=node_data,
         ).work,
     )
