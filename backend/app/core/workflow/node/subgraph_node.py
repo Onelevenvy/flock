@@ -2,7 +2,12 @@ from typing import Any
 from langchain_core.runnables import RunnableConfig
 from langgraph.graph import END, StateGraph
 
-from app.core.state import ReturnWorkflowTeamState, WorkflowTeamState
+from app.core.state import (
+    ReturnWorkflowTeamState,
+    WorkflowTeamState,
+    parse_variables,
+    update_node_outputs,
+)
 
 
 class SubgraphNode:
@@ -12,9 +17,11 @@ class SubgraphNode:
         self,
         node_id: str,
         subgraph_config: dict[str, Any],
+        input: str = "",
     ):
         self.node_id = node_id
         self.subgraph_config = subgraph_config
+        self.input = input
         # 初始化时编译子图
         self.subgraph = self._build_subgraph()
 
@@ -36,8 +43,19 @@ class SubgraphNode:
         if "node_outputs" not in state:
             state["node_outputs"] = {}
 
+        # Parse input variable if exists
+        input_text = (
+            parse_variables(self.input, state["node_outputs"]) if self.input else ""
+        )
+        if not input_text and state.get("all_messages"):
+            input_text = state["all_messages"][-1].content
+
         # 获取子图的状态
         subgraph_state = self._get_subgraph_state(state)
+
+        # 如果有输入文本，添加到子图状态
+        if input_text:
+            subgraph_state["input"] = input_text
 
         try:
             # 执行子图
@@ -45,6 +63,18 @@ class SubgraphNode:
 
             # 更新父图状态
             self._update_parent_state(state, result)
+
+            # 更新当前节点的输出
+            new_output = {
+                self.node_id: {
+                    "result": result.get("node_outputs", {}),
+                    "input": input_text,
+                    "status": "success",
+                }
+            }
+            state["node_outputs"] = update_node_outputs(
+                state["node_outputs"], new_output
+            )
 
             return_state: ReturnWorkflowTeamState = {
                 "history": state.get("history", []) + result.get("history", []),
@@ -59,6 +89,12 @@ class SubgraphNode:
             # 处理子图执行错误
             error_message = f"Subgraph execution failed: {str(e)}"
             print(f"Error in subgraph {self.node_id}: {error_message}")
+
+            # 更新错误状态到node_outputs
+            new_output = {self.node_id: {"error": error_message, "status": "error"}}
+            state["node_outputs"] = update_node_outputs(
+                state["node_outputs"], new_output
+            )
             raise
 
     def _get_subgraph_state(self, parent_state: WorkflowTeamState) -> WorkflowTeamState:
