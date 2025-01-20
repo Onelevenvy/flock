@@ -366,7 +366,7 @@ const FlowVisualizer: React.FC<FlowVisualizerProps> = ({
 
       let newNode: CustomNode;
 
-      if (type !== "plugin") {
+      if (type !== "plugin" && type !== "subgraph") {
         const baseLabel = `${nodeConfig[type].display}`;
         const uniqueName = generateUniqueName(baseLabel);
 
@@ -382,8 +382,8 @@ const FlowVisualizer: React.FC<FlowVisualizerProps> = ({
             ...nodeConfig[type].initialData,
           },
         };
-      } else {
-        // 处理其他类型的节点（如 tools）
+      } else if (type === "plugin") {
+        // 处理插件类型的节点
         newNode = {
           id: `${tool.display_name}-${nodes.length + 1}`, // 确保每个插件节点唯一
           type: "plugin",
@@ -392,6 +392,19 @@ const FlowVisualizer: React.FC<FlowVisualizerProps> = ({
             label: tool.display_name,
             toolName: tool.display_name,
             args: {},
+            ...tool.initialData,
+          },
+        };
+      } else {
+        // 处理 subgraph 类型的节点
+        newNode = {
+          id: `subgraph-${nodes.length + 1}`,
+          type: "subgraph",
+          position,
+          data: {
+            label: tool.name,
+            subgraphId: tool.id,
+            config: tool.config,
             ...tool.initialData,
           },
         };

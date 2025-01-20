@@ -13,6 +13,8 @@ import ClassifierNode from "./Classifier/ClassifierNode";
 import CodeNode from "./Code/CodeNode";
 import IfElseNode from "./IfElse/IfElseNode";
 import HumanNode from "./Human/HumanNode";
+import SubgraphNode from "./Subgraph/SubgraphNode";
+
 export const nodeTypes: NodeTypes = {
   start: StartNode,
   end: EndNode,
@@ -27,4 +29,5 @@ export const nodeTypes: NodeTypes = {
   code: CodeNode,
   ifelse: IfElseNode,
   human: HumanNode,
+  subgraph: SubgraphNode,
 };

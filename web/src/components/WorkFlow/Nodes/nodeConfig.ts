@@ -8,6 +8,7 @@ import {
   FaCode,
   FaCodeBranch,
   FaUserCog,
+  FaProjectDiagram,
 } from "react-icons/fa";
 import { FaBookAtlas, FaPeopleGroup } from "react-icons/fa6";
 import { TfiGithub } from "react-icons/tfi";
@@ -28,6 +29,7 @@ import CodeNodeProperties from "./Code/CodeNodeProperties";
 import IfElseNodeProperties from "./IfElse/IfElseNodeProperties";
 import { LogicalOperator } from "../types";
 import HumanNodeProperties from "./Human/HumanNodeProperties";
+import SubgraphNodeProperties from "./Subgraph/SubgraphNodeProperties";
 
 interface NodeConfigItem {
   display: string;
@@ -267,6 +269,22 @@ export const nodeConfig: Record<string, NodeConfigItem> = {
       },
       title: "",
     },
+  },
+  subgraph: {
+    display: "Subgraph",
+    icon: FaProjectDiagram,
+    colorScheme: "teal",
+    properties: SubgraphNodeProperties,
+    allowedConnections: {
+      sources: ["right"],
+      targets: ["left"],
+    },
+    initialData: {
+      subgraphId: "",
+      config: {},
+    },
+    inputVariables: [],
+    outputVariables: ["response"],
   },
 };
 
