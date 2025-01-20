@@ -3988,7 +3988,7 @@
           },
           "metadata_": {
             "type": "object",
-            "title": "Metadata "
+            "title": "Metadata"
           },
           "created_at": {
             "type": "string",
@@ -4033,7 +4033,7 @@
           },
           "metadata_": {
             "type": "object",
-            "title": "Metadata "
+            "title": "Metadata"
           },
           "id": {
             "type": "integer",
@@ -4077,7 +4077,7 @@
           },
           "metadata_": {
             "type": "object",
-            "title": "Metadata "
+            "title": "Metadata"
           },
           "updated_at": {
             "type": "string",
@@ -4127,6 +4127,16 @@
       },
       "Interrupt": {
         "properties": {
+          "interaction_type": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/InterruptType"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
           "decision": {
             "$ref": "#/components/schemas/InterruptDecision"
           },
@@ -4153,9 +4163,23 @@
         "enum": [
           "approved",
           "rejected",
-          "replied"
+          "replied",
+          "update",
+          "feedback",
+          "review",
+          "edit",
+          "continue"
         ],
         "title": "InterruptDecision"
+      },
+      "InterruptType": {
+        "type": "string",
+        "enum": [
+          "tool_review",
+          "output_review",
+          "context_input"
+        ],
+        "title": "InterruptType"
       },
       "MemberCreate": {
         "properties": {
@@ -4575,7 +4599,6 @@
         "enum": [
           "vision"
         ],
-        "const": "vision",
         "title": "ModelCapability"
       },
       "ModelCategory": {
@@ -4626,7 +4649,7 @@
                 "type": "null"
               }
             ],
-            "title": "Meta "
+            "title": "Meta"
           }
         },
         "type": "object",
@@ -5092,7 +5115,7 @@
                 "type": "null"
               }
             ],
-            "title": "Meta "
+            "title": "Meta"
           }
         },
         "type": "object",
@@ -5137,7 +5160,7 @@
           },
           "meta_": {
             "type": "object",
-            "title": "Meta "
+            "title": "Meta"
           }
         },
         "type": "object",
@@ -5896,9 +5919,6 @@
           },
           "type": {
             "type": "string",
-            "enum": [
-              "tool_call"
-            ],
             "const": "tool_call",
             "title": "Type"
           }
