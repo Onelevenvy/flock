@@ -13,14 +13,13 @@ const NodePalette: React.FC = () => {
     <Box
       position="relative"
       display="flex"
-      h="full"
-      maxH="full"
+      minH="calc(100vh - 10px)"
+      h="calc(100vh - 10px)"
+      maxH="calc(100vh - 10px)"
       transition="all 0.3s ease"
     >
       {/* 主面板 */}
       <Box
-        h="full"
-        maxH="full"
         bg="white"
         borderRadius="xl"
         transition="all 0.3s ease"
@@ -35,8 +34,8 @@ const NodePalette: React.FC = () => {
         }}
       >
         <Box
-          overflow="hidden"
-          h="full"
+          h="calc(100vh - 100px)"
+          maxH="calc(100vh - 100px)"
           opacity={isCollapsed ? 0 : 1}
           visibility={isCollapsed ? "hidden" : "visible"}
           transition="all 0.3s ease"
@@ -71,7 +70,7 @@ const NodePalette: React.FC = () => {
           bg="white"
           color="gray.600"
           transition="all 0.2s"
-          _hover={{ 
+          _hover={{
             bg: "gray.50",
             transform: "scale(1.1)",
             color: "ui.main",

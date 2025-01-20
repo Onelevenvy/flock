@@ -57,12 +57,8 @@ const SharedNodeMenu: React.FC<SharedNodeMenuProps> = ({
     <Box
       width="200px"
       bg="white"
-      borderRadius="xl"
-      boxShadow="sm"
       h="full"
-      border="1px solid"
-      borderColor="gray.100"
-      overflow="hidden"
+      maxH="full"
       display="flex"
       flexDirection="column"
     >
@@ -73,17 +69,9 @@ const SharedNodeMenu: React.FC<SharedNodeMenuProps> = ({
         display="flex"
         flexDirection="column"
         h="full"
+        maxH="full"
       >
-        <TabList
-          mb={0}
-          position="sticky"
-          top={0}
-          bg="white"
-          zIndex={1}
-          p={2}
-          borderBottom="1px solid"
-          borderColor="gray.100"
-        >
+        <TabList mb={0} bg="white" p={2}>
           <Tab
             _selected={{
               bg: "blue.50",
@@ -106,8 +94,8 @@ const SharedNodeMenu: React.FC<SharedNodeMenuProps> = ({
           </Tab>
         </TabList>
 
-        <TabPanels flex="1" overflow="auto">
-          <TabPanel h="full" overflow="auto">
+        <TabPanels h="full" maxH="full" overflowY="auto" overflowX="hidden">
+          <TabPanel p={2}>
             <VStack spacing={2} align="stretch">
               {Object.entries(nodeConfig).map(
                 ([nodeType, { display, icon: Icon, colorScheme }]) =>
@@ -173,8 +161,8 @@ const SharedNodeMenu: React.FC<SharedNodeMenuProps> = ({
             </VStack>
           </TabPanel>
 
-          <TabPanel h="full" overflow="auto">
-            <VStack spacing={4} align="stretch" minH="full">
+          <TabPanel p={2}>
+            <VStack spacing={4} align="stretch" maxH="full">
               <Box>
                 <Text fontSize="sm" fontWeight="500" color="gray.600" mb={2}>
                   {t("workflow.nodeMenu.tools")}
