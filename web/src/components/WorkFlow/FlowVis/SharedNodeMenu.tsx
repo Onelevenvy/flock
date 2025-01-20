@@ -57,14 +57,9 @@ const SharedNodeMenu: React.FC<SharedNodeMenuProps> = ({
     <Box
       width="200px"
       bg="white"
-      borderRadius="xl"
-      boxShadow="sm"
-      h="100%"
-      maxH="100%"
-      border="1px solid"
-      borderColor="gray.100"
-      overflowY="auto"
-      overflowX="hidden"
+      h="calc(100vh - 100px)"
+      maxH="calc(100vh - 100px)"
+      overflow="hidden"
       display="flex"
       flexDirection="column"
     >
@@ -74,6 +69,9 @@ const SharedNodeMenu: React.FC<SharedNodeMenuProps> = ({
         colorScheme="blue"
         display="flex"
         flexDirection="column"
+        h="full"
+        maxH="full"
+        overflow="hidden"
       >
         <TabList mb={0} bg="white" p={2}>
           <Tab
@@ -98,7 +96,7 @@ const SharedNodeMenu: React.FC<SharedNodeMenuProps> = ({
           </Tab>
         </TabList>
 
-        <TabPanels>
+        <TabPanels overflowY="auto" overflowX="hidden">
           <TabPanel p={2}>
             <VStack spacing={2} align="stretch">
               {Object.entries(nodeConfig).map(

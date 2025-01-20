@@ -13,9 +13,9 @@ const NodePalette: React.FC = () => {
     <Box
       position="relative"
       display="flex"
-      h="100%"
-      maxH="100%"
-      overflow="hidden"
+      h="full"
+      maxH="full"
+      transition="all 0.3s ease"
     >
       {/* 主面板 */}
       <Box
@@ -39,8 +39,7 @@ const NodePalette: React.FC = () => {
           visibility={isCollapsed ? "hidden" : "visible"}
           transition="all 0.3s ease"
           pointerEvents={isCollapsed ? "none" : "auto"}
-          overflowY="auto"
-          overflowX="hidden"
+          overflow="hidden"
         >
           <SharedNodeMenu onNodeSelect={onNodeSelect} isDraggable={true} />
         </Box>
