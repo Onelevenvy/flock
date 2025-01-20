@@ -140,4 +140,30 @@ export class SubgraphsService {
         });
     }
 
+    /**
+     * Read All Public Subgraphs
+     * Retrieve all public subgraphs.
+     * @returns SubgraphsOut Successful Response
+     * @throws ApiError
+     */
+    public static readAllPublicSubgraphs({
+        skip,
+        limit = 100,
+    }: {
+        skip?: number,
+        limit?: number,
+    }): CancelablePromise<SubgraphsOut> {
+        return __request(OpenAPI, {
+            method: 'GET',
+            url: '/api/v1/subgraphs/all',
+            query: {
+                'skip': skip,
+                'limit': limit,
+            },
+            errors: {
+                422: `Validation Error`,
+            },
+        });
+    }
+
 }

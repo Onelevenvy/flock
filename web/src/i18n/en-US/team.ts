@@ -247,6 +247,8 @@ const translation = {
       plugins: "Plugins",
       loading: "Loading tools...",
       error: "Error loading tools",
+      tools: "Tools",
+      subgraphs: "Subgraphs",
     },
     variableSelector: {
       availableVariables: "Available Variables",

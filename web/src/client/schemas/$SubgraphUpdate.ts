@@ -50,5 +50,13 @@ export const $SubgraphUpdate = {
                 type: 'null',
             }],
         },
+        team_id: {
+            type: 'any-of',
+            contains: [{
+                type: 'number',
+            }, {
+                type: 'null',
+            }],
+        },
     },
 } as const;

@@ -14,7 +14,8 @@ from app.models import (
     Team,
 )
 
-router = APIRouter()
+# 创建一个新的路由组，专门用于不需要team_id的操作
+public_router = APIRouter()
 
 
 async def validate_name_on_create(
@@ -51,6 +52,29 @@ async def validate_name_on_update(
         raise HTTPException(
             status_code=400, detail="Subgraph name already exists in this team"
         )
+
+
+@public_router.get("/all", response_model=SubgraphsOut)
+def read_all_public_subgraphs(
+    session: SessionDep,
+    skip: int = 0,
+    limit: int = 100,
+) -> Any:
+    """
+    Retrieve all public subgraphs.
+    """
+    conditions = [Subgraph.is_public == True]  # noqa: E712
+
+    count_statement = select(func.count()).select_from(Subgraph).where(*conditions)
+    statement = select(Subgraph).where(*conditions).offset(skip).limit(limit)
+
+    count = session.exec(count_statement).one()
+    subgraphs = session.exec(statement).all()
+    return SubgraphsOut(data=subgraphs, count=count)
+
+
+# 原有的路由保持不变
+router = APIRouter()
 
 
 @router.get("/", response_model=SubgraphsOut)

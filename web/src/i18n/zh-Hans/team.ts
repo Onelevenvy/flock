@@ -242,6 +242,8 @@ const translation = {
       plugins: "插件",
       loading: "加载工具中...",
       error: "加载工具失败",
+      tools: "工具",
+      subgraphs: "子图",
     },
     variableSelector: {
       availableVariables: "可用变量",

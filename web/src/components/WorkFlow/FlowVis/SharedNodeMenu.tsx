@@ -16,6 +16,8 @@ import { useTranslation } from "react-i18next";
 import { useSkillsQuery } from "@/hooks/useSkillsQuery";
 import ToolsIcon from "../../Icons/Tools";
 import { nodeConfig, type NodeType } from "../Nodes/nodeConfig";
+import { SubgraphsService } from "@/client/services/SubgraphsService";
+import { useQuery } from "react-query";
 
 interface SharedNodeMenuProps {
   onNodeSelect: (nodeType: NodeType | string, tool?: any) => void;
@@ -28,6 +30,16 @@ const SharedNodeMenu: React.FC<SharedNodeMenuProps> = ({
 }) => {
   const { t } = useTranslation();
   const { data: tools, isLoading, isError } = useSkillsQuery();
+
+  const {
+    data: subgraphs,
+    isLoading: isSubgraphsLoading,
+    isError: isSubgraphsError,
+  } = useQuery({
+    queryKey: "subgraphs",
+    queryFn: () =>
+      SubgraphsService.readAllPublicSubgraphs({ skip: 0, limit: 100 }),
+  });
 
   const handleNodeInteraction =
     (nodeType: NodeType | string, tool?: any) =>
@@ -54,14 +66,20 @@ const SharedNodeMenu: React.FC<SharedNodeMenuProps> = ({
       borderRadius="xl"
       boxShadow="sm"
       h="full"
-      minH="full"
       border="1px solid"
       borderColor="gray.100"
       overflow="hidden"
     >
-      <Tabs isLazy variant="soft-rounded" colorScheme="blue">
+      <Tabs
+        isLazy
+        variant="soft-rounded"
+        colorScheme="blue"
+        display="flex"
+        flexDirection="column"
+        h="full"
+      >
         <TabList
-          mb={4}
+          mb={0}
           position="sticky"
           top={0}
           bg="white"
@@ -92,8 +110,8 @@ const SharedNodeMenu: React.FC<SharedNodeMenuProps> = ({
           </Tab>
         </TabList>
 
-        <TabPanels>
-          <TabPanel h="full" overflowY="auto" px={3} py={2} minH="400px">
+        <TabPanels flex="1" overflow="hidden">
+          <TabPanel h="full" overflowY="auto">
             <VStack spacing={2} align="stretch">
               {Object.entries(nodeConfig).map(
                 ([nodeType, { display, icon: Icon, colorScheme }]) =>
@@ -159,73 +177,162 @@ const SharedNodeMenu: React.FC<SharedNodeMenuProps> = ({
             </VStack>
           </TabPanel>
 
-          <TabPanel h="full" overflowY="auto" px={3} py={2} minH="400px">
-            <VStack spacing={2} align="stretch">
-              {isLoading ? (
-                <Text color="gray.600">{t("workflow.nodeMenu.loading")}</Text>
-              ) : isError ? (
-                <Text color="red.500">{t("workflow.nodeMenu.error")}</Text>
-              ) : (
-                tools?.data.map((tool) => (
-                  <Box
-                    key={tool.display_name}
-                    border="1px solid"
-                    borderColor="gray.200"
-                    borderRadius="lg"
-                    p={3}
-                    cursor={isDraggable ? "move" : "pointer"}
-                    onClick={
-                      !isDraggable
-                        ? handleNodeInteraction("plugin", tool)
-                        : undefined
-                    }
-                    onDragStart={
-                      isDraggable
-                        ? handleNodeInteraction("plugin", tool)
-                        : undefined
-                    }
-                    draggable={isDraggable}
-                    transition="all 0.2s"
-                    _hover={{
-                      bg: "gray.50",
-                      transform: "translateY(-1px)",
-                      boxShadow: "sm",
-                      borderColor: "gray.300",
-                    }}
-                    _active={{
-                      transform: "translateY(0)",
-                    }}
-                  >
-                    <HStack spacing={3} overflow="hidden">
+          <TabPanel h="full" overflowY="auto">
+            <VStack spacing={4} align="stretch">
+              <Box>
+                <Text fontSize="sm" fontWeight="500" color="gray.600" mb={2}>
+                  {t("workflow.nodeMenu.tools")}
+                </Text>
+                <VStack spacing={2} align="stretch">
+                  {isLoading ? (
+                    <Text color="gray.600">
+                      {t("workflow.nodeMenu.loading")}
+                    </Text>
+                  ) : isError ? (
+                    <Text color="red.500">{t("workflow.nodeMenu.error")}</Text>
+                  ) : (
+                    tools?.data.map((tool) => (
                       <Box
-                        as={IconButton}
+                        key={tool.display_name}
+                        border="1px solid"
+                        borderColor="gray.200"
                         borderRadius="lg"
-                        bg="blue.50"
-                        flexShrink={0}
-                        size={"sm"}
+                        p={3}
+                        cursor={isDraggable ? "move" : "pointer"}
+                        onClick={
+                          !isDraggable
+                            ? handleNodeInteraction("plugin", tool)
+                            : undefined
+                        }
+                        onDragStart={
+                          isDraggable
+                            ? handleNodeInteraction("plugin", tool)
+                            : undefined
+                        }
+                        draggable={isDraggable}
+                        transition="all 0.2s"
+                        _hover={{
+                          bg: "gray.50",
+                          transform: "translateY(-1px)",
+                          boxShadow: "sm",
+                          borderColor: "gray.300",
+                        }}
+                        _active={{
+                          transform: "translateY(0)",
+                        }}
                       >
-                        <ToolsIcon
-                          tools_name={tool.display_name!.replace(/ /g, "_")}
-                          color="blue.500"
-                          boxSize={4}
-                        />
+                        <HStack spacing={3} overflow="hidden">
+                          <Box
+                            as={IconButton}
+                            borderRadius="lg"
+                            bg="blue.50"
+                            flexShrink={0}
+                            size={"sm"}
+                          >
+                            <ToolsIcon
+                              tools_name={tool.display_name!.replace(/ /g, "_")}
+                              color="blue.500"
+                              boxSize={4}
+                            />
+                          </Box>
+                          <Text
+                            fontSize="xs"
+                            fontWeight="500"
+                            color="gray.700"
+                            noOfLines={1}
+                            overflow="hidden"
+                            textOverflow="ellipsis"
+                            whiteSpace="nowrap"
+                            title={tool.display_name!}
+                          >
+                            {tool.display_name}
+                          </Text>
+                        </HStack>
                       </Box>
-                      <Text
-                        fontSize="xs"
-                        fontWeight="500"
-                        color="gray.700"
-                        noOfLines={1}
-                        overflow="hidden"
-                        textOverflow="ellipsis"
-                        whiteSpace="nowrap"
-                        title={tool.display_name!}
+                    ))
+                  )}
+                </VStack>
+              </Box>
+
+              <Box>
+                <Text fontSize="sm" fontWeight="500" color="gray.600" mb={2}>
+                  {t("workflow.nodeMenu.subgraphs")}
+                </Text>
+                <VStack spacing={2} align="stretch">
+                  {isSubgraphsLoading ? (
+                    <Text color="gray.600">
+                      {t("workflow.nodeMenu.loading")}
+                    </Text>
+                  ) : isSubgraphsError ? (
+                    <Text color="red.500">{t("workflow.nodeMenu.error")}</Text>
+                  ) : subgraphs?.data && subgraphs.data.length > 0 ? (
+                    subgraphs.data.map((subgraph) => (
+                      <Box
+                        key={subgraph.id}
+                        border="1px solid"
+                        borderColor="gray.200"
+                        borderRadius="lg"
+                        p={3}
+                        cursor={isDraggable ? "move" : "pointer"}
+                        onClick={
+                          !isDraggable
+                            ? handleNodeInteraction("subgraph", subgraph)
+                            : undefined
+                        }
+                        onDragStart={
+                          isDraggable
+                            ? handleNodeInteraction("subgraph", subgraph)
+                            : undefined
+                        }
+                        draggable={isDraggable}
+                        transition="all 0.2s"
+                        _hover={{
+                          bg: "gray.50",
+                          transform: "translateY(-1px)",
+                          boxShadow: "sm",
+                          borderColor: "gray.300",
+                        }}
+                        _active={{
+                          transform: "translateY(0)",
+                        }}
                       >
-                        {tool.display_name}
-                      </Text>
-                    </HStack>
-                  </Box>
-                ))
-              )}
+                        <HStack spacing={3} overflow="hidden">
+                          <Box
+                            as={IconButton}
+                            borderRadius="lg"
+                            bg="purple.50"
+                            flexShrink={0}
+                            size="sm"
+                            aria-label="Subgraph"
+                          >
+                            <ToolsIcon
+                              tools_name="workflow"
+                              color="purple.500"
+                              boxSize={4}
+                            />
+                          </Box>
+                          <Text
+                            fontSize="xs"
+                            fontWeight="500"
+                            color="gray.700"
+                            noOfLines={1}
+                            overflow="hidden"
+                            textOverflow="ellipsis"
+                            whiteSpace="nowrap"
+                            title={subgraph.name}
+                          >
+                            {subgraph.name}
+                          </Text>
+                        </HStack>
+                      </Box>
+                    ))
+                  ) : (
+                    <Text color="gray.500" fontSize="sm">
+                      {t("workflow.common.noResults")}
+                    </Text>
+                  )}
+                </VStack>
+              </Box>
             </VStack>
           </TabPanel>
         </TabPanels>

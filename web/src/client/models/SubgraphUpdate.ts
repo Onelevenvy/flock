@@ -11,5 +11,6 @@ export type SubgraphUpdate = {
     is_public?: boolean;
     updated_at: string;
     id?: (number | null);
+    team_id?: (number | null);
 };
 

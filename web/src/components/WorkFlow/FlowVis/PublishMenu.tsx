@@ -16,8 +16,9 @@ import {
   Textarea,
   useDisclosure,
   VStack,
+  MenuDivider,
 } from "@chakra-ui/react";
-import { MdPublish } from "react-icons/md";
+import { MdKey, MdPublish, MdShare } from "react-icons/md";
 import { useState } from "react";
 import { useMutation, useQuery } from "react-query";
 import { SubgraphsService } from "@/client";
@@ -149,7 +150,7 @@ const PublishMenu: React.FC<PublishMenuProps> = ({
 
   return (
     <>
-      <Menu>
+      <Menu placement="bottom" offset={[0, 4]} gutter={0}>
         <MenuButton
           as={CustomButton}
           text={t("workflow.flowVisualizer.actions.publish")}
@@ -157,8 +158,13 @@ const PublishMenu: React.FC<PublishMenuProps> = ({
           rightIcon={<MdPublish />}
         />
         <MenuList>
-          <MenuItem onClick={onApiKeyOpen}>Manage API Keys</MenuItem>
-          <MenuItem onClick={onPublishOpen}>Publish as Subgraph</MenuItem>
+          <MenuItem icon={<MdKey />} onClick={onApiKeyOpen}>
+            API Keys
+          </MenuItem>
+          <MenuDivider />
+          <MenuItem icon={<MdShare />} onClick={onPublishOpen}>
+            Publish as Subgraph
+          </MenuItem>
         </MenuList>
       </Menu>
 
