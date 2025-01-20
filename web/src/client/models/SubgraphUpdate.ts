@@ -10,5 +10,6 @@ export type SubgraphUpdate = {
     metadata_?: Record<string, any>;
     is_public?: boolean;
     updated_at: string;
+    id?: (number | null);
 };
 

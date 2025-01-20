@@ -25,15 +25,17 @@ export class SubgraphsService {
         skip,
         limit = 100,
     }: {
-        teamId?: (number | null),
+        teamId: (number | null),
         skip?: number,
         limit?: number,
     }): CancelablePromise<SubgraphsOut> {
         return __request(OpenAPI, {
             method: 'GET',
-            url: '/api/v1/subgraphs/',
-            query: {
+            url: '/api/v1/teams/{team_id}/subgraphs/',
+            path: {
                 'team_id': teamId,
+            },
+            query: {
                 'skip': skip,
                 'limit': limit,
             },
@@ -56,7 +58,7 @@ export class SubgraphsService {
     }): CancelablePromise<SubgraphOut> {
         return __request(OpenAPI, {
             method: 'POST',
-            url: '/api/v1/subgraphs/',
+            url: '/api/v1/teams/{team_id}/subgraphs/',
             body: requestBody,
             mediaType: 'application/json',
             errors: {
@@ -78,7 +80,7 @@ export class SubgraphsService {
     }): CancelablePromise<SubgraphOut> {
         return __request(OpenAPI, {
             method: 'GET',
-            url: '/api/v1/subgraphs/{id}',
+            url: '/api/v1/teams/{team_id}/subgraphs/{id}',
             path: {
                 'id': id,
             },
@@ -103,7 +105,7 @@ export class SubgraphsService {
     }): CancelablePromise<SubgraphOut> {
         return __request(OpenAPI, {
             method: 'PUT',
-            url: '/api/v1/subgraphs/{id}',
+            url: '/api/v1/teams/{team_id}/subgraphs/{id}',
             path: {
                 'id': id,
             },
@@ -128,7 +130,7 @@ export class SubgraphsService {
     }): CancelablePromise<Message> {
         return __request(OpenAPI, {
             method: 'DELETE',
-            url: '/api/v1/subgraphs/{id}',
+            url: '/api/v1/teams/{team_id}/subgraphs/{id}',
             path: {
                 'id': id,
             },

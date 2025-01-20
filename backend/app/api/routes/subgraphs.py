@@ -11,6 +11,7 @@ from app.models import (
     SubgraphOut,
     SubgraphsOut,
     SubgraphUpdate,
+    Team,
 )
 
 router = APIRouter()
@@ -36,9 +37,13 @@ async def validate_name_on_update(
     """Validate that subgraph name is unique within the team"""
     if not subgraph_in.name:
         return
+    existing_subgraph = session.get(Subgraph, id)
+    if not existing_subgraph:
+        raise HTTPException(status_code=404, detail="Subgraph not found")
+
     statement = select(Subgraph).where(
         Subgraph.name == subgraph_in.name,
-        Subgraph.team_id == subgraph_in.team_id,
+        Subgraph.team_id == existing_subgraph.team_id,
         Subgraph.id != id,
     )
     subgraph = session.exec(statement).first()

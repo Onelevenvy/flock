@@ -3517,7 +3517,7 @@
         }
       }
     },
-    "/api/v1/subgraphs/": {
+    "/api/v1/teams/{team_id}/subgraphs/": {
       "get": {
         "tags": [
           "subgraphs"
@@ -3533,8 +3533,8 @@
         "parameters": [
           {
             "name": "team_id",
-            "in": "query",
-            "required": false,
+            "in": "path",
+            "required": true,
             "schema": {
               "anyOf": [
                 {
@@ -3637,7 +3637,7 @@
         }
       }
     },
-    "/api/v1/subgraphs/{id}": {
+    "/api/v1/teams/{team_id}/subgraphs/{id}": {
       "get": {
         "tags": [
           "subgraphs"
@@ -5983,6 +5983,17 @@
             "type": "string",
             "format": "date-time",
             "title": "Updated At"
+          },
+          "id": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Id"
           }
         },
         "type": "object",

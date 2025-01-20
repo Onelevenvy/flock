@@ -819,6 +819,8 @@ class SubgraphCreate(SubgraphBase):
 class SubgraphUpdate(SubgraphBase):
     name: str | None = None
     updated_at: datetime
+    id: int | None = None
+    team_id: int | None = None
 
 
 class Subgraph(SubgraphBase, table=True):

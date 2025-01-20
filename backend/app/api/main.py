@@ -40,4 +40,6 @@ api_router.include_router(
 api_router.include_router(
     apikeys.router, prefix="/teams/{team_id}/api-keys", tags=["api-keys"]
 )
-api_router.include_router(subgraphs.router, prefix="/subgraphs", tags=["subgraphs"])
+api_router.include_router(
+    subgraphs.router, prefix="/teams/{team_id}/subgraphs", tags=["subgraphs"]
+)

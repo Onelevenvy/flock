@@ -19,7 +19,7 @@ import {
 } from "@chakra-ui/react";
 import { MdPublish } from "react-icons/md";
 import { useState } from "react";
-import { useMutation } from "react-query";
+import { useMutation, useQuery } from "react-query";
 import { SubgraphsService } from "@/client";
 import useCustomToast from "@/hooks/useCustomToast";
 import CustomButton from "@/components/Common/CustomButton";
@@ -127,31 +127,76 @@ const PublishMenu: React.FC<PublishMenuProps> = ({
     };
   };
 
-  const publishMutation = useMutation(
-    (data: { name: string; description: string }) =>
-      SubgraphsService.createSubgraph({
-        requestBody: {
-          name: data.name,
-          description: data.description,
-          config: generateConfig(),
-          team_id: parseInt(teamId),
-          created_at: new Date().toISOString(),
-          updated_at: new Date().toISOString(),
-          is_public: false,
-          metadata_: {},
-        },
+  // 修改查询逻辑
+  const { data: subgraphsData } = useQuery(
+    ["subgraph", teamId],
+    () =>
+      SubgraphsService.readSubgraphs({
+        teamId: parseInt(teamId),
       }),
     {
-      onSuccess: () => {
-        showToast("Success", "Workflow published successfully", "success");
-        onPublishClose();
+      enabled: !!teamId,
+      onSuccess: (data) => {
+        // 如果有数据，使用现有子图的信息
+        if (data?.data?.[0]) {
+          const subgraph = data.data[0];
+          setName(subgraph.name || "");
+          setDescription(subgraph.description || "");
+        }
       },
       onError: (error: any) => {
         showToast(
           "Error",
-          error.body?.detail || "Failed to publish workflow",
+          error.message || "Failed to fetch subgraph data",
           "error"
         );
+      },
+    }
+  );
+
+  const existingSubgraph = subgraphsData?.data?.[0];
+
+  const publishMutation = useMutation(
+    (data: { name: string; description: string }) => {
+      const subgraphData = {
+        name: data.name,
+        description: data.description,
+        config: generateConfig(),
+        team_id: parseInt(teamId),
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+        is_public: false,
+        metadata_: {},
+      };
+
+      // 如果存在现有子图，则更新
+      if (existingSubgraph) {
+        return SubgraphsService.updateSubgraph({
+          id: existingSubgraph.id,
+          requestBody: subgraphData,
+        });
+      }
+
+      // 否则创建新的子图
+      return SubgraphsService.createSubgraph({
+        requestBody: subgraphData,
+      });
+    },
+    {
+      onSuccess: () => {
+        showToast(
+          "Success",
+          existingSubgraph
+            ? "Workflow updated successfully"
+            : "Workflow published successfully",
+          "success"
+        );
+        onPublishClose();
+      },
+      onError: (error: any) => {
+        const errorMessage =
+          error?.body?.detail || error?.message || "Failed to publish workflow";
+        showToast("Error", errorMessage, "error");
       },
     }
   );
@@ -188,7 +233,11 @@ const PublishMenu: React.FC<PublishMenuProps> = ({
       <Modal isOpen={isPublishOpen} onClose={onPublishClose}>
         <ModalOverlay />
         <ModalContent>
-          <ModalHeader>Publish Workflow as Subgraph</ModalHeader>
+          <ModalHeader>
+            {existingSubgraph
+              ? "Update Subgraph"
+              : "Publish Workflow as Subgraph"}
+          </ModalHeader>
           <ModalCloseButton />
           <ModalBody>
             <VStack spacing={4}>
@@ -218,7 +267,7 @@ const PublishMenu: React.FC<PublishMenuProps> = ({
               onClick={onPublishClose}
             />
             <CustomButton
-              text="Publish"
+              text={existingSubgraph ? "Update" : "Publish"}
               variant="blue"
               onClick={handlePublish}
               isLoading={publishMutation.isLoading}
