@@ -43,7 +43,17 @@ const SharedNodeMenu: React.FC<SharedNodeMenuProps> = ({
         dragEvent.dataTransfer.setData(
           "application/reactflow",
           JSON.stringify({
-            tool: nodeType === "plugin" ? tool : nodeType,
+            tool:
+              nodeType === "subgraph"
+                ? {
+                    name: tool.name,
+                    id: tool.id,
+                    config: tool.config,
+                    description: tool.description,
+                  }
+                : nodeType === "plugin"
+                  ? tool
+                  : nodeType,
             type: nodeType,
           })
         );

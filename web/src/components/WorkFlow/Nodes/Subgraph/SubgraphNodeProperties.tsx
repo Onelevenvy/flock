@@ -1,6 +1,5 @@
 import { Text, VStack } from "@chakra-ui/react";
 import type React from "react";
-import { useSubgraphsQuery } from "@/hooks/useSubgraphsQuery";
 
 interface SubgraphNodePropertiesProps {
   node: any;
@@ -10,33 +9,6 @@ interface SubgraphNodePropertiesProps {
 const SubgraphNodeProperties: React.FC<SubgraphNodePropertiesProps> = ({
   node,
 }) => {
-  const { data: subgraphs, isLoading, error } = useSubgraphsQuery();
-
-  console.log("Node data:", node.data);
-  console.log("Subgraphs data:", subgraphs?.data);
-
-  const subgraph = subgraphs?.data.find(
-    (subgraph) => subgraph.id === node.data.subgraphId
-  );
-
-  console.log("Found subgraph:", subgraph);
-
-  if (isLoading) {
-    return (
-      <VStack align="stretch" spacing={4}>
-        <Text>Loading...</Text>
-      </VStack>
-    );
-  }
-
-  if (error) {
-    return (
-      <VStack align="stretch" spacing={4}>
-        <Text color="red.500">Error loading subgraph data</Text>
-      </VStack>
-    );
-  }
-
   return (
     <VStack align="stretch" spacing={4}>
       <VStack align="stretch" spacing={2}>
@@ -66,7 +38,7 @@ const SubgraphNodeProperties: React.FC<SubgraphNodePropertiesProps> = ({
           borderRadius="md"
           whiteSpace="pre-wrap"
         >
-          {subgraph?.description || "No description available"}
+          {node.data.description || "No description available"}
         </Text>
       </VStack>
 
@@ -81,7 +53,7 @@ const SubgraphNodeProperties: React.FC<SubgraphNodePropertiesProps> = ({
           p={2}
           borderRadius="md"
         >
-          {subgraph?.id || "Not found"}
+          {node.data.subgraphId}
         </Text>
       </VStack>
     </VStack>

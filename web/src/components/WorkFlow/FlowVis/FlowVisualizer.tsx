@@ -405,6 +405,7 @@ const FlowVisualizer: React.FC<FlowVisualizerProps> = ({
             label: tool.name,
             subgraphId: tool.id,
             config: tool.config || {},
+            description: tool.description,
           },
         };
       }
