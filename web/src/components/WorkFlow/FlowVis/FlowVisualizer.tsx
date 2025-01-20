@@ -404,8 +404,7 @@ const FlowVisualizer: React.FC<FlowVisualizerProps> = ({
           data: {
             label: tool.name,
             subgraphId: tool.id,
-            config: tool.config,
-            ...tool.initialData,
+            config: tool.config || {},
           },
         };
       }

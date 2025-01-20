@@ -10,10 +10,32 @@ interface SubgraphNodePropertiesProps {
 const SubgraphNodeProperties: React.FC<SubgraphNodePropertiesProps> = ({
   node,
 }) => {
-  const { data: subgraphs } = useSubgraphsQuery();
+  const { data: subgraphs, isLoading, error } = useSubgraphsQuery();
+
+  console.log("Node data:", node.data);
+  console.log("Subgraphs data:", subgraphs?.data);
+
   const subgraph = subgraphs?.data.find(
-    (subgraph) => subgraph.name === node.data.label
+    (subgraph) => subgraph.id === node.data.subgraphId
   );
+
+  console.log("Found subgraph:", subgraph);
+
+  if (isLoading) {
+    return (
+      <VStack align="stretch" spacing={4}>
+        <Text>Loading...</Text>
+      </VStack>
+    );
+  }
+
+  if (error) {
+    return (
+      <VStack align="stretch" spacing={4}>
+        <Text color="red.500">Error loading subgraph data</Text>
+      </VStack>
+    );
+  }
 
   return (
     <VStack align="stretch" spacing={4}>
@@ -28,7 +50,7 @@ const SubgraphNodeProperties: React.FC<SubgraphNodePropertiesProps> = ({
           p={2}
           borderRadius="md"
         >
-          {subgraph?.name || node.data.label}
+          {node.data.label}
         </Text>
       </VStack>
 
@@ -59,7 +81,7 @@ const SubgraphNodeProperties: React.FC<SubgraphNodePropertiesProps> = ({
           p={2}
           borderRadius="md"
         >
-          {node.data.subgraphId}
+          {subgraph?.id || "Not found"}
         </Text>
       </VStack>
     </VStack>
