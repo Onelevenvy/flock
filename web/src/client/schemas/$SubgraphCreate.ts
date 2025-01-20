@@ -44,5 +44,9 @@ export const $SubgraphCreate = {
             isRequired: true,
             format: 'date-time',
         },
+        team_id: {
+            type: 'number',
+            isRequired: true,
+        },
     },
 } as const;

@@ -11,5 +11,6 @@ export type SubgraphCreate = {
     is_public?: boolean;
     created_at: string;
     updated_at: string;
+    team_id: number;
 };
 

@@ -813,6 +813,7 @@ class SubgraphBase(SQLModel):
 class SubgraphCreate(SubgraphBase):
     created_at: datetime
     updated_at: datetime
+    team_id: int
 
 
 class SubgraphUpdate(SubgraphBase):

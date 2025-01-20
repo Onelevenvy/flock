@@ -137,6 +137,8 @@ const PublishMenu: React.FC<PublishMenuProps> = ({
           team_id: parseInt(teamId),
           created_at: new Date().toISOString(),
           updated_at: new Date().toISOString(),
+          is_public: false,
+          metadata_: {},
         },
       }),
     {

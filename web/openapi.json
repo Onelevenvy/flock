@@ -5862,13 +5862,18 @@
             "type": "string",
             "format": "date-time",
             "title": "Updated At"
+          },
+          "team_id": {
+            "type": "integer",
+            "title": "Team Id"
           }
         },
         "type": "object",
         "required": [
           "name",
           "created_at",
-          "updated_at"
+          "updated_at",
+          "team_id"
         ],
         "title": "SubgraphCreate"
       },
