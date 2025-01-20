@@ -21,9 +21,11 @@ export class SubgraphsService {
      * @throws ApiError
      */
     public static readSubgraphs({
+        teamId,
         skip,
         limit = 100,
     }: {
+        teamId?: (number | null),
         skip?: number,
         limit?: number,
     }): CancelablePromise<SubgraphsOut> {
@@ -31,6 +33,7 @@ export class SubgraphsService {
             method: 'GET',
             url: '/api/v1/subgraphs/',
             query: {
+                'team_id': teamId,
                 'skip': skip,
                 'limit': limit,
             },

@@ -42,6 +42,10 @@ export const $SubgraphOut = {
             type: 'number',
             isRequired: true,
         },
+        team_id: {
+            type: 'number',
+            isRequired: true,
+        },
         created_at: {
             type: 'string',
             isRequired: true,

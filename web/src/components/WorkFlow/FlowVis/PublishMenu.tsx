@@ -134,6 +134,7 @@ const PublishMenu: React.FC<PublishMenuProps> = ({
           name: data.name,
           description: data.description,
           config: generateConfig(),
+          team_id: parseInt(teamId),
           created_at: new Date().toISOString(),
           updated_at: new Date().toISOString(),
         },

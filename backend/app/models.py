@@ -195,6 +195,9 @@ class Team(TeamBase, table=True):
     graphs: list["Graph"] = Relationship(
         back_populates="team", sa_relationship_kwargs={"cascade": "delete"}
     )
+    subgraphs: list["Subgraph"] = Relationship(
+        back_populates="team", sa_relationship_kwargs={"cascade": "delete"}
+    )
     apikeys: list["ApiKey"] = Relationship(
         back_populates="team", sa_relationship_kwargs={"cascade": "delete"}
     )
@@ -821,6 +824,8 @@ class Subgraph(SubgraphBase, table=True):
     id: int | None = Field(default=None, primary_key=True)
     owner_id: int | None = Field(default=None, foreign_key="user.id", nullable=False)
     owner: User | None = Relationship(back_populates="subgraphs")
+    team_id: int = Field(foreign_key="team.id", nullable=False)
+    team: Team = Relationship(back_populates="subgraphs")
     created_at: datetime | None = Field(
         sa_column=Column(
             DateTime(timezone=True),
@@ -843,6 +848,7 @@ class Subgraph(SubgraphBase, table=True):
 class SubgraphOut(SubgraphBase):
     id: int
     owner_id: int
+    team_id: int
     created_at: datetime
     updated_at: datetime
 

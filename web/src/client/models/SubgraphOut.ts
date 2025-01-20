@@ -11,6 +11,7 @@ export type SubgraphOut = {
     is_public?: boolean;
     id: number;
     owner_id: number;
+    team_id: number;
     created_at: string;
     updated_at: string;
 };

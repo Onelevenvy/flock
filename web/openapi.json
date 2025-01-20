@@ -3532,6 +3532,22 @@
         ],
         "parameters": [
           {
+            "name": "team_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Team Id"
+            }
+          },
+          {
             "name": "skip",
             "in": "query",
             "required": false,
@@ -5895,6 +5911,10 @@
             "type": "integer",
             "title": "Owner Id"
           },
+          "team_id": {
+            "type": "integer",
+            "title": "Team Id"
+          },
           "created_at": {
             "type": "string",
             "format": "date-time",
@@ -5911,6 +5931,7 @@
           "name",
           "id",
           "owner_id",
+          "team_id",
           "created_at",
           "updated_at"
         ],

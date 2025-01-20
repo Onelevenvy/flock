@@ -19,60 +19,71 @@ router = APIRouter()
 async def validate_name_on_create(
     session: SessionDep, subgraph_in: SubgraphCreate
 ) -> None:
-    """Validate that subgraph name is unique"""
-    statement = select(Subgraph).where(Subgraph.name == subgraph_in.name)
+    """Validate that subgraph name is unique within the team"""
+    statement = select(Subgraph).where(
+        Subgraph.name == subgraph_in.name, Subgraph.team_id == subgraph_in.team_id
+    )
     subgraph = session.exec(statement).first()
     if subgraph:
-        raise HTTPException(status_code=400, detail="Subgraph name already exists")
+        raise HTTPException(
+            status_code=400, detail="Subgraph name already exists in this team"
+        )
 
 
 async def validate_name_on_update(
     session: SessionDep, subgraph_in: SubgraphUpdate, id: int
 ) -> None:
-    """Validate that subgraph name is unique"""
+    """Validate that subgraph name is unique within the team"""
+    if not subgraph_in.name:
+        return
     statement = select(Subgraph).where(
-        Subgraph.name == subgraph_in.name, Subgraph.id != id
+        Subgraph.name == subgraph_in.name,
+        Subgraph.team_id == subgraph_in.team_id,
+        Subgraph.id != id,
     )
     subgraph = session.exec(statement).first()
     if subgraph:
-        raise HTTPException(status_code=400, detail="Subgraph name already exists")
+        raise HTTPException(
+            status_code=400, detail="Subgraph name already exists in this team"
+        )
 
 
 @router.get("/", response_model=SubgraphsOut)
 def read_subgraphs(
     session: SessionDep,
     current_user: CurrentUser,
+    team_id: int | None = None,
     skip: int = 0,
     limit: int = 100,
 ) -> Any:
     """
     Retrieve subgraphs.
     """
-    if current_user.is_superuser:
-        count_statement = select(func.count()).select_from(Subgraph)
-        count = session.exec(count_statement).one()
-        statement = select(Subgraph).offset(skip).limit(limit)
-        subgraphs = session.exec(statement).all()
-    else:
-        # 普通用户只能看到自己的和公开的子图
-        count_statement = (
-            select(func.count())
-            .select_from(Subgraph)
-            .where(
-                (Subgraph.owner_id == current_user.id) | (Subgraph.is_public == True)
-            )  # noqa: E712
+    conditions = []
+    if not current_user.is_superuser:
+        conditions.append(
+            (Subgraph.owner_id == current_user.id)
+            | (Subgraph.is_public == True)  # noqa: E712
         )
-        count = session.exec(count_statement).one()
-        statement = (
-            select(Subgraph)
-            .where(
-                (Subgraph.owner_id == current_user.id) | (Subgraph.is_public == True)
-            )  # noqa: E712
-            .offset(skip)
-            .limit(limit)
-        )
-        subgraphs = session.exec(statement).all()
 
+    if team_id is not None:
+        conditions.append(Subgraph.team_id == team_id)
+
+    where_clause = None
+    if conditions:
+        where_clause = conditions[0]
+        for condition in conditions[1:]:
+            where_clause = where_clause & condition
+
+    if current_user.is_superuser and not team_id:
+        count_statement = select(func.count()).select_from(Subgraph)
+        statement = select(Subgraph).offset(skip).limit(limit)
+    else:
+        count_statement = select(func.count()).select_from(Subgraph).where(where_clause)
+        statement = select(Subgraph).where(where_clause).offset(skip).limit(limit)
+
+    count = session.exec(count_statement).one()
+    subgraphs = session.exec(statement).all()
     return SubgraphsOut(data=subgraphs, count=count)
 
 
@@ -108,6 +119,32 @@ def create_subgraph(
     """
     Create new subgraph.
     """
+    # 验证team_id是否存在
+    if not subgraph_in.team_id:
+        raise HTTPException(status_code=400, detail="team_id is required")
+
+    # 检查是否已存在同名subgraph在同一team中
+    existing = session.exec(
+        select(Subgraph).where(
+            Subgraph.name == subgraph_in.name, Subgraph.team_id == subgraph_in.team_id
+        )
+    ).first()
+
+    if existing:
+        # 如果存在且用户有权限,则更新
+        if existing.owner_id == current_user.id or current_user.is_superuser:
+            update_dict = subgraph_in.model_dump(exclude_unset=True)
+            existing.sqlmodel_update(update_dict)
+            session.add(existing)
+            session.commit()
+            session.refresh(existing)
+            return existing
+        else:
+            raise HTTPException(
+                status_code=403,
+                detail="A subgraph with this name already exists in this team",
+            )
+
     subgraph = Subgraph.model_validate(
         subgraph_in, update={"owner_id": current_user.id}
     )
