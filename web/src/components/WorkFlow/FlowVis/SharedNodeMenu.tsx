@@ -48,7 +48,6 @@ const SharedNodeMenu: React.FC<SharedNodeMenuProps> = ({
                 ? {
                     name: tool.name,
                     id: tool.id,
-                    config: tool.config,
                     description: tool.description,
                   }
                 : nodeType === "plugin"
@@ -113,7 +112,8 @@ const SharedNodeMenu: React.FC<SharedNodeMenuProps> = ({
                 ([nodeType, { display, icon: Icon, colorScheme }]) =>
                   nodeType !== "plugin" &&
                   nodeType !== "start" &&
-                  nodeType !== "end" && (
+                  nodeType !== "end" &&
+                  nodeType !== "subgraph" && (
                     <Box
                       key={nodeType}
                       border="1px solid"

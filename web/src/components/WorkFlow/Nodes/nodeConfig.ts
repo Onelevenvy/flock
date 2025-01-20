@@ -281,7 +281,7 @@ export const nodeConfig: Record<string, NodeConfigItem> = {
     },
     initialData: {
       subgraphId: "",
-      config: {},
+      description: "",
     },
     inputVariables: [],
     outputVariables: ["response"],
