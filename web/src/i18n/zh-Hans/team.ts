@@ -224,7 +224,7 @@ const translation = {
       },
       actions: {
         debug: "调试",
-        deploy: "部署",
+        publish: "发布",
         apiKey: "API密钥",
         save: "保存",
         saving: "保存中...",

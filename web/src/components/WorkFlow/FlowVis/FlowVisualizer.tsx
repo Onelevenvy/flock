@@ -56,9 +56,9 @@ import SharedNodeMenu from "./SharedNodeMenu";
 
 import useWorkflowStore from "@/stores/workflowStore";
 import CustomButton from "@/components/Common/CustomButton";
-import ApiKeyButton from "@/components/Teams/Apikey/ApiKeyManageButton";
 import { useTranslation } from "react-i18next";
 import { FiEye, FiEyeOff } from "react-icons/fi";
+import PublishMenu from "./PublishMenu";
 
 const FlowVisualizer: React.FC<FlowVisualizerProps> = ({
   nodeTypes,
@@ -1015,14 +1015,20 @@ const FlowVisualizer: React.FC<FlowVisualizerProps> = ({
             rightIcon={<VscDebugAlt />}
             onClick={() => setShowDebugPreview(true)}
           />
-          <ApiKeyButton teamId={teamId.toString()} />
           <CustomButton
-            text={t("workflow.flowVisualizer.actions.deploy")}
+            text={t("workflow.flowVisualizer.actions.save")}
             variant="blue"
             rightIcon={<MdBuild />}
             onClick={onSave}
             isLoading={isSaving}
             loadingText={t("workflow.flowVisualizer.actions.saving")}
+          />
+          <PublishMenu
+            teamId={teamId.toString()}
+            workflowConfig={{
+              nodes,
+              edges,
+            }}
           />
         </Box>
       </Box>
@@ -1030,9 +1036,21 @@ const FlowVisualizer: React.FC<FlowVisualizerProps> = ({
       {/* 属性面板 */}
       {selectedNodeId && (
         <Box
-          w={selectedNode?.type === "code" || selectedNode?.type === "ifelse" ? "450px" : "330px"}
-          minW={selectedNode?.type === "code" || selectedNode?.type === "ifelse" ? "450px" : "330px"}
-          maxW={selectedNode?.type === "code" || selectedNode?.type === "ifelse" ? "450px" : "330px"}
+          w={
+            selectedNode?.type === "code" || selectedNode?.type === "ifelse"
+              ? "450px"
+              : "330px"
+          }
+          minW={
+            selectedNode?.type === "code" || selectedNode?.type === "ifelse"
+              ? "450px"
+              : "330px"
+          }
+          maxW={
+            selectedNode?.type === "code" || selectedNode?.type === "ifelse"
+              ? "450px"
+              : "330px"
+          }
           bg="white"
           p={6}
           borderRadius="xl"

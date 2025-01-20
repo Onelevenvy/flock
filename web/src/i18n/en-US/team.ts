@@ -229,7 +229,7 @@ const translation = {
       },
       actions: {
         debug: "Debug",
-        deploy: "Deploy",
+        publish: "Publish",
         apiKey: "API Key",
         save: "Save",
         saving: "Saving...",
