@@ -1015,6 +1015,14 @@ const FlowVisualizer: React.FC<FlowVisualizerProps> = ({
             rightIcon={<VscDebugAlt />}
             onClick={() => setShowDebugPreview(true)}
           />
+
+          <PublishMenu
+            teamId={teamId.toString()}
+            workflowConfig={{
+              nodes,
+              edges,
+            }}
+          />
           <CustomButton
             text={t("workflow.flowVisualizer.actions.save")}
             variant="blue"
@@ -1022,13 +1030,6 @@ const FlowVisualizer: React.FC<FlowVisualizerProps> = ({
             onClick={onSave}
             isLoading={isSaving}
             loadingText={t("workflow.flowVisualizer.actions.saving")}
-          />
-          <PublishMenu
-            teamId={teamId.toString()}
-            workflowConfig={{
-              nodes,
-              edges,
-            }}
           />
         </Box>
       </Box>
