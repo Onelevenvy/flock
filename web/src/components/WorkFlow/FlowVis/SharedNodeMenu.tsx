@@ -57,8 +57,8 @@ const SharedNodeMenu: React.FC<SharedNodeMenuProps> = ({
     <Box
       width="200px"
       bg="white"
-      h="calc(100vh - 100px)"
-      maxH="calc(100vh - 100px)"
+      h="full"
+      maxH="full"
       overflow="hidden"
       display="flex"
       flexDirection="column"

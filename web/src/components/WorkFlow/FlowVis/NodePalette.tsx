@@ -34,12 +34,13 @@ const NodePalette: React.FC = () => {
         }}
       >
         <Box
-          h="100%"
           opacity={isCollapsed ? 0 : 1}
           visibility={isCollapsed ? "hidden" : "visible"}
           transition="all 0.3s ease"
           pointerEvents={isCollapsed ? "none" : "auto"}
           overflow="hidden"
+          h="calc(100vh - 100px)"
+          maxH="calc(100vh - 100px)"
         >
           <SharedNodeMenu onNodeSelect={onNodeSelect} isDraggable={true} />
         </Box>

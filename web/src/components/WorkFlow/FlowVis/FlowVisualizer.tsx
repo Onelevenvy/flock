@@ -1141,6 +1141,8 @@ const FlowVisualizer: React.FC<FlowVisualizerProps> = ({
           border="1px solid"
           borderColor="gray.100"
           transition="all 0.2s"
+          h="calc(100vh - 300px)"
+          maxH="calc(100vh - 300px)"
         >
           <SharedNodeMenu onNodeSelect={addNodeToEdge} isDraggable={false} />
         </Box>
