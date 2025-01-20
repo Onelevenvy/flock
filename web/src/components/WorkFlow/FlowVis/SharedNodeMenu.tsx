@@ -14,10 +14,9 @@ import React from "react";
 import { useTranslation } from "react-i18next";
 
 import { useSkillsQuery } from "@/hooks/useSkillsQuery";
+import { useSubgraphsQuery } from "@/hooks/useSubgraphsQuery";
 import ToolsIcon from "../../Icons/Tools";
 import { nodeConfig, type NodeType } from "../Nodes/nodeConfig";
-import { SubgraphsService } from "@/client/services/SubgraphsService";
-import { useQuery } from "react-query";
 
 interface SharedNodeMenuProps {
   onNodeSelect: (nodeType: NodeType | string, tool?: any) => void;
@@ -30,16 +29,11 @@ const SharedNodeMenu: React.FC<SharedNodeMenuProps> = ({
 }) => {
   const { t } = useTranslation();
   const { data: tools, isLoading, isError } = useSkillsQuery();
-
   const {
     data: subgraphs,
     isLoading: isSubgraphsLoading,
     isError: isSubgraphsError,
-  } = useQuery({
-    queryKey: "subgraphs",
-    queryFn: () =>
-      SubgraphsService.readAllPublicSubgraphs({ skip: 0, limit: 100 }),
-  });
+  } = useSubgraphsQuery();
 
   const handleNodeInteraction =
     (nodeType: NodeType | string, tool?: any) =>
@@ -69,6 +63,8 @@ const SharedNodeMenu: React.FC<SharedNodeMenuProps> = ({
       border="1px solid"
       borderColor="gray.100"
       overflow="hidden"
+      display="flex"
+      flexDirection="column"
     >
       <Tabs
         isLazy
@@ -110,8 +106,8 @@ const SharedNodeMenu: React.FC<SharedNodeMenuProps> = ({
           </Tab>
         </TabList>
 
-        <TabPanels flex="1" overflow="hidden">
-          <TabPanel h="full" overflowY="auto">
+        <TabPanels flex="1" overflow="auto">
+          <TabPanel h="full" overflow="auto">
             <VStack spacing={2} align="stretch">
               {Object.entries(nodeConfig).map(
                 ([nodeType, { display, icon: Icon, colorScheme }]) =>
@@ -177,8 +173,8 @@ const SharedNodeMenu: React.FC<SharedNodeMenuProps> = ({
             </VStack>
           </TabPanel>
 
-          <TabPanel h="full" overflowY="auto">
-            <VStack spacing={4} align="stretch">
+          <TabPanel h="full" overflow="auto">
+            <VStack spacing={4} align="stretch" minH="full">
               <Box>
                 <Text fontSize="sm" fontWeight="500" color="gray.600" mb={2}>
                   {t("workflow.nodeMenu.tools")}

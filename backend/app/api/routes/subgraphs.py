@@ -63,7 +63,8 @@ def read_all_public_subgraphs(
     """
     Retrieve all public subgraphs.
     """
-    conditions = [Subgraph.is_public == True]  # noqa: E712
+    # conditions = [Subgraph.is_public == True]  # noqa: E712
+    conditions = []  # 移除is_public过滤条件
 
     count_statement = select(func.count()).select_from(Subgraph).where(*conditions)
     statement = select(Subgraph).where(*conditions).offset(skip).limit(limit)
