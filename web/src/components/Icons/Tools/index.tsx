@@ -1,6 +1,7 @@
 import { Icon, type IconProps, createIcon } from "@chakra-ui/icons";
 
 import { SiliconFlowIcon, ZhipuAIIcon } from "../models";
+import { FaProjectDiagram } from "react-icons/fa";
 
 const Serper = createIcon({
   displayName: "Serper",
@@ -395,23 +396,6 @@ const spark = createIcon({
   ),
 });
 
-const WorkflowIcon = createIcon({
-  displayName: "workflow",
-  viewBox: "0 0 12 12",
-  path: (
-    <svg
-      xmlns="http://www.w3.org/2000/svg"
-      width="12"
-      height="12"
-      viewBox="0 0 24 24"
-    >
-      <path
-        fill="#8cc16a"
-        d="M5 22q-1.25 0-2.125-.875T2 19q0-.975.563-1.75T4 16.175V14q0-1.25.875-2.125T7 11h4V7.825q-.875-.3-1.437-1.075T9 5q0-1.25.875-2.125T12 2t2.125.875T15 5q0 .975-.562 1.75T13 7.825V11h4q1.25 0 2.125.875T20 14v2.175q.875.3 1.438 1.075T22 19q0 1.25-.875 2.125T19 22t-2.125-.875T16 19q0-.975.563-1.75T18 16.175V14q0-.425-.288-.712T17 13h-4v3.175q.875.3 1.438 1.075T15 19q0 1.25-.875 2.125T12 22t-2.125-.875T9 19q0-.975.563-1.75T11 16.175V13H7q-.425 0-.712.288T6 14v2.175q.875.3 1.438 1.075T8 19q0 1.25-.875 2.125T5 22m0-2q.425 0 .713-.288T6 19t-.288-.712T5 18t-.712.288T4 19t.288.713T5 20m7 0q.425 0 .713-.288T13 19t-.288-.712T12 18t-.712.288T11 19t.288.713T12 20m7 0q.425 0 .713-.288T20 19t-.288-.712T19 18t-.712.288T18 19t.288.713T19 20M12 6q.425 0 .713-.288T13 5t-.288-.712T12 4t-.712.288T11 5t.288.713T12 6"
-      />
-    </svg>
-  ),
-});
 const iconMap: { [key: string]: React.FC } = {
   open_weather: OpenWeather,
   google_translate: GoogleTranslate,
@@ -425,7 +409,7 @@ const iconMap: { [key: string]: React.FC } = {
   qingyan_assistant: ZhipuAIIcon,
   web_search_pro: ZhipuAIIcon,
   serper_search: Serper,
-  workflow: WorkflowIcon,
+  workflow: FaProjectDiagram,
 };
 
 const DefaultIcon = Wikipedia;

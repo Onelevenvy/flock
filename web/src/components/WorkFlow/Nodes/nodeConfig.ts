@@ -13,7 +13,7 @@ import {
 import { FaBookAtlas, FaPeopleGroup } from "react-icons/fa6";
 import { TfiGithub } from "react-icons/tfi";
 import { v4 as uuidv4 } from "uuid";
-
+import { LuBrainCircuit } from "react-icons/lu";
 import AnswerNodeProperties from "./Answer/AnswerNodeProperties";
 import EndNodeProperties from "./End/EndNodeProperties";
 import LLMNodeProperties from "./LLM/LLMNodeProperties";
@@ -24,7 +24,7 @@ import StartNodeProperties from "./Start/StartNodeProperties";
 import ToolNodeProperties from "./Tool/ToolNodeProperties";
 import CrewAINodeProperties from "./CrewAI/CrewAINodeProperties";
 import ClassifierNodeProperties from "./Classifier/ClassifierNodeProperties";
-import { LuBrainCircuit } from "react-icons/lu";
+
 import CodeNodeProperties from "./Code/CodeNodeProperties";
 import IfElseNodeProperties from "./IfElse/IfElseNodeProperties";
 import { LogicalOperator } from "../types";
