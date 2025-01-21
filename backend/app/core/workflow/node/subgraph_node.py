@@ -8,7 +8,7 @@ from app.core.state import (
     parse_variables,
     update_node_outputs,
 )
-
+from app.core.workflow.utils.db_utils import get_subgraph_config_by_id
 
 class SubgraphNode:
     """Node for executing subgraph workflows"""
@@ -16,14 +16,19 @@ class SubgraphNode:
     def __init__(
         self,
         node_id: str,
-        subgraph_config: dict[str, Any],
+        subgraph_data: dict[str, Any],
         input: str = "",
     ):
         self.node_id = node_id
-        self.subgraph_config = subgraph_config
+        self.subgraph_data = subgraph_data
         self.input = input
         # 初始化时编译子图
+        self.subgraph_config = self._get_subgraph_config()
         self.subgraph = self._build_subgraph()
+
+    def _get_subgraph_config(self):
+        """Get subgraph config"""
+        return get_subgraph_config_by_id(self.subgraph_data["subgraphId"])
 
     def _build_subgraph(self):
         """Build and compile subgraph"""
@@ -45,7 +50,7 @@ class SubgraphNode:
 
         # Parse input variable if exists
         input_text = (
-            parse_variables(self.input, state["node_outputs"]) if self.input else ""
+            parse_variables(self.input, state["node_outputs"]) if self.input else None
         )
         if not input_text and state.get("all_messages"):
             input_text = state["all_messages"][-1].content
@@ -55,7 +60,7 @@ class SubgraphNode:
 
         # 如果有输入文本，添加到子图状态
         if input_text:
-            subgraph_state["input"] = input_text
+            subgraph_state["messages"] = input_text
 
         try:
             # 执行子图

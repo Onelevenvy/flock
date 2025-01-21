@@ -1,11 +1,11 @@
 from collections.abc import Callable
 from contextlib import contextmanager
-from typing import TypeVar
+from typing import Any, TypeVar
 
 from sqlmodel import Session, select
 
 from app.core.database import get_session
-from app.models import ModelProvider, Models
+from app.models import ModelProvider, Models, Subgraph
 
 T = TypeVar("T")
 
@@ -61,3 +61,13 @@ def get_model_info(model_name: str) -> dict[str, str]:
             "base_url": model.provider.base_url,
             "api_key": model.provider.decrypted_api_key,  # 现在可以使用decrypted_api_key
         }
+
+def get_subgraph_config_by_id(subgraph_id: int) -> dict[str, Any]:
+    """
+    Get subgraph config by ID.
+    """
+    with get_db_session() as session:
+        subgraph = session.get(Subgraph, subgraph_id)
+        if not subgraph:
+            raise ValueError(f"Subgraph {subgraph_id} not found")
+        return subgraph.config

@@ -74,7 +74,7 @@ class ClassifierNode:
 
         # Parse input variable if exists
         input_text = (
-            parse_variables(self.input, state["node_outputs"]) if self.input else ""
+            parse_variables(self.input, state["node_outputs"]) if self.input else None
         )
         if not input_text and state.get("all_messages"):
             input_text = state["all_messages"][-1].content

@@ -646,6 +646,6 @@ def _add_subgraph_node(graph_builder, node_id: str, node_data: dict):
         node_id,
         SubgraphNode(
             node_id=node_id,
-            subgraph_config=node_data,
+            subgraph_data=node_data,
         ).work,
     )
