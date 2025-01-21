@@ -81,6 +81,23 @@ def should_continue_ifelse(state: WorkflowTeamState) -> str:
     return "false_else"  # 默认返回 ELSE 分支
 
 
+def _add_tools_conditional_edges(graph_builder, conditional_edges, nodes):
+    """Add conditional edges to graph"""
+    for node_id, conditions in conditional_edges.items():
+        edges_dict = {
+            "default": next(iter(conditions["default"].values()), END),
+            **conditions["call_tools"],
+        }
+
+        if conditions["ask-human"]:
+            edges_dict["ask-human"] = next(iter(conditions["ask-human"].values()))
+
+        if edges_dict != {"default": END}:
+            graph_builder.add_conditional_edges(
+                node_id, should_continue_tools, edges_dict
+            )
+
+
 def _add_classifier_conditional_edges(
     graph_builder, classifier_node_id: str, nodes: list, edges: list
 ):
@@ -228,7 +245,7 @@ def initialize_graph(
             _add_edge(graph_builder, edge, nodes, conditional_edges)
 
         # Add conditional edges
-        _add_conditional_edges(graph_builder, conditional_edges, nodes)
+        _add_tools_conditional_edges(graph_builder, conditional_edges, nodes)
 
         # 添加分类器节点的条件边
         classifier_nodes = [
@@ -510,8 +527,7 @@ def _add_edge(graph_builder, edge, nodes, conditional_edges):
             graph_builder.add_edge(edge["source"], END)
         else:
             graph_builder.add_edge(edge["source"], edge["target"])
-    elif target_node["type"] == "subgraph":
-        graph_builder.add_edge(edge["source"], edge["target"])
+
     elif source_node["type"] == "code":
         if target_node["type"] == "end":
             graph_builder.add_edge(edge["source"], END)
@@ -528,23 +544,6 @@ def _add_edge(graph_builder, edge, nodes, conditional_edges):
             graph_builder.add_edge(edge["source"], END)
         else:
             graph_builder.add_edge(edge["source"], edge["target"])
-
-
-def _add_conditional_edges(graph_builder, conditional_edges, nodes):
-    """Add conditional edges to graph"""
-    for node_id, conditions in conditional_edges.items():
-        edges_dict = {
-            "default": next(iter(conditions["default"].values()), END),
-            **conditions["call_tools"],
-        }
-
-        if conditions["ask-human"]:
-            edges_dict["ask-human"] = next(iter(conditions["ask-human"].values()))
-
-        if edges_dict != {"default": END}:
-            graph_builder.add_conditional_edges(
-                node_id, should_continue_tools, edges_dict
-            )
 
 
 def _add_crewai_node(graph_builder, node_id, node_type, node_data):
