@@ -74,9 +74,7 @@ Flock's workflow system consists of various node types, each serving a specific 
 
 Future planned nodes include:
 
-- Conditional Branch Node (If-Else)
 - File Upload Node
-- Code Execution Node
 - Parameter Extraction Node
 
 These nodes can be combined to create powerful and flexible workflows suitable for various complex business needs and application scenarios.
