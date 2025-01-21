@@ -279,11 +279,12 @@ export const nodeConfig: Record<string, NodeConfigItem> = {
       sources: ["right"],
       targets: ["left"],
     },
+
     initialData: {
       subgraphId: "",
       description: "",
     },
-    inputVariables: [],
+    inputVariables: ["Input"],
     outputVariables: ["response"],
   },
 };

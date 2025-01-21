@@ -16,11 +16,11 @@ class SubgraphNode:
     def __init__(
         self,
         node_id: str,
-        subgraph_data: dict[str, Any],
+        subgraph_id: int,
         input: str = "",
     ):
         self.node_id = node_id
-        self.subgraph_data = subgraph_data
+        self.subgraph_id = subgraph_id
         self.input = input
         # 初始化时编译子图
         self.subgraph_config = self._get_subgraph_config()
@@ -28,7 +28,7 @@ class SubgraphNode:
 
     def _get_subgraph_config(self):
         """Get subgraph config"""
-        return get_subgraph_config_by_id(self.subgraph_data["subgraphId"])
+        return get_subgraph_config_by_id(self.subgraph_id)
 
     def _build_subgraph(self):
         """Build and compile subgraph"""

@@ -591,7 +591,7 @@ def _add_classifier_node(graph_builder, node_id, node_data):
             node_id=node_id,
             model_name=node_data["model"],
             categories=node_data["categories"],
-            input=node_data.get("input", ""),
+            input=node_data["Input"],
         ).work,
     )
 
@@ -646,6 +646,7 @@ def _add_subgraph_node(graph_builder, node_id: str, node_data: dict):
         node_id,
         SubgraphNode(
             node_id=node_id,
-            subgraph_data=node_data,
+            subgraph_id=node_data["subgraphId"],
+            input=node_data["Input"],
         ).work,
     )
