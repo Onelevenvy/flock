@@ -4,7 +4,6 @@ import type { GraphsOut, InterruptType } from "@/client";
 
 export interface NodeData {
   label: string;
-  customName?: string;
   onChange?: (key: string, value: any) => void;
   model?: string;
   temperature?: number;

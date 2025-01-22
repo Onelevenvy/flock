@@ -375,8 +375,7 @@ const FlowVisualizer: React.FC<FlowVisualizerProps> = ({
           type: type,
           position,
           data: {
-            label: uniqueName, // 使用生成的唯一名称
-            customName: uniqueName,
+            label: uniqueName,
             onChange: (key: string, value: any) =>
               onNodeDataChange(`${type}-${nodes.length + 1}`, key, value),
             ...nodeConfig[type].initialData,
@@ -574,9 +573,6 @@ const FlowVisualizer: React.FC<FlowVisualizerProps> = ({
           position: { x: newNodeX, y: newNodeY },
           data: {
             label: generateUniqueName(nodeConfig[nodeType as NodeType].display),
-            customName: generateUniqueName(
-              nodeConfig[nodeType as NodeType].display
-            ),
             onChange: (key: string, value: any) =>
               onNodeDataChange(newNodeId, key, value),
             ...nodeConfig[nodeType as NodeType].initialData,
