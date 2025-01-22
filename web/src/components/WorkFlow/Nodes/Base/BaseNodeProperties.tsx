@@ -59,7 +59,22 @@ const BaseProperties: React.FC<BasePropertiesProps> = ({
           />
           <Input
             value={nodeName}
-            onChange={(e) => onNameChange(e.target.value)}
+            onChange={(e) => {
+              const newValue = e.target.value.trim();
+              if (!newValue) {
+                onNameChange("");
+                return;
+              }
+              onNameChange(newValue);
+            }}
+            onBlur={(e) => {
+              const value = e.target.value.trim();
+              if (!value) {
+                onNameChange(nodeName);
+              }
+            }}
+            isInvalid={!nodeName.trim()}
+            placeholder="请输入节点名称"
             size="sm"
             fontWeight="500"
             w="75%"
@@ -76,12 +91,12 @@ const BaseProperties: React.FC<BasePropertiesProps> = ({
             }}
           />
         </HStack>
-        <FormErrorMessage>{nameError}</FormErrorMessage>
+        <FormErrorMessage>{nameError || "节点名称不能为空"}</FormErrorMessage>
       </FormControl>
 
       {inputVariables.map((varName) => (
         <FormControl key={varName}>
-          <Text fontWeight="bold"  color="gray.700" mb={1}>
+          <Text fontWeight="bold" color="gray.700" mb={1}>
             {varName}:
           </Text>
           <Select
