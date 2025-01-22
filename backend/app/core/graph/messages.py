@@ -1,5 +1,5 @@
 import json
-from typing import Any
+from typing import Any, Dict
 
 from langchain_core.documents import Document
 from langchain_core.messages import (
@@ -13,6 +13,16 @@ from langchain_core.messages import (
 )
 from langchain_core.runnables.schema import StreamEvent
 from pydantic import BaseModel
+
+
+def get_node_label(node_id: str, nodes: list[Dict[str, Any]] | None = None) -> str:
+    """Get node label from node id"""
+    if not nodes:
+        return node_id
+    for node in nodes:
+        if node["id"] == node_id:
+            return node["data"].get("label", node_id)
+    return node_id
 
 
 class ChatResponse(BaseModel):
@@ -39,22 +49,17 @@ def get_message_type(message: Any) -> str | None:
         return None
 
 
-def event_to_response(event: StreamEvent) -> ChatResponse | None:
+def event_to_response(
+    event: StreamEvent, nodes: list[Dict[str, Any]] | None = None
+) -> ChatResponse | None:
     """Convert event to ChatResponse"""
 
     kind = event["event"]
     id = event["run_id"]
 
-    # node_name = event.get("metadata", {}).get("langgraph_node", "")
-    # name = event.get("name", "")
-    # print("---------------------------")
-
-    # print("event kind:", kind)
-    # print("name:", name)
-    # print("node_name data:", node_name)
-
     if kind == "on_chat_model_stream":
-        name = event["metadata"]["langgraph_node"]
+        node_id = event["metadata"]["langgraph_node"]
+        name = get_node_label(node_id, nodes) if nodes else node_id
         message_chunk: AIMessageChunk = event["data"]["chunk"]
         type = get_message_type(message_chunk)
         content: str = ""
@@ -74,7 +79,8 @@ def event_to_response(event: StreamEvent) -> ChatResponse | None:
             )
     elif kind == "on_chat_model_end":
         message: AIMessage = event["data"]["output"]
-        name = event["metadata"]["langgraph_node"]
+        node_id = event["metadata"]["langgraph_node"]
+        name = get_node_label(node_id, nodes) if nodes else node_id
         tool_calls = message.tool_calls
         if tool_calls:
             return ChatResponse(
@@ -87,14 +93,13 @@ def event_to_response(event: StreamEvent) -> ChatResponse | None:
     elif kind == "on_tool_end":
         tool_output: ToolMessage | None = event["data"].get("output")
         tool_name = event["name"]
-        # If tool is , KnowledgeBase then serialise the documents in artifact
+        # If tool is KnowledgeBase then serialise the documents in artifact
         documents: list[dict[str, Any]] = []
         if tool_output and tool_output.name == "KnowledgeBase":
             docs: list[Document] = tool_output.artifact
             for doc in docs:
                 documents.append(
                     {
-                        # "score": doc.metadata["score"],
                         "content": doc.page_content,
                     }
                 )
@@ -107,24 +112,13 @@ def event_to_response(event: StreamEvent) -> ChatResponse | None:
                 documents=json.dumps(documents),
             )
 
-    # elif kind == "on_parser_end":
-    #     content: str = event["data"]["output"].get("task")
-    #     next = event["data"]["output"].get("next")
-    #     name = event["metadata"]["langgraph_node"]
-    #     return ChatResponse(
-    #         type=get_message_type(event["data"]["input"]),
-    #         id=id,
-    #         name=name,
-    #         content=content,
-    #         next=next,
-    #     )
-
     elif kind == "on_chain_end":
         output = event["data"]["output"]
+        node_id = event.get("name", "")
+        name = get_node_label(node_id, nodes) if nodes else node_id
 
         # 只处理 AnswerNode 的输出
-        name = event.get("name", "")
-        if name and name.startswith("answer"):
+        if node_id and node_id.startswith("answer"):
             if isinstance(output, dict):
                 if "messages" in output and output["messages"]:
                     last_message = output["messages"][-1]
@@ -136,7 +130,6 @@ def event_to_response(event: StreamEvent) -> ChatResponse | None:
                             content=last_message.content,
                         )
             elif isinstance(output, AIMessage):
-                # 这里可能需要额外的逻辑来确定是否应该返回这个消息　　ＴＯＤＯ
                 return ChatResponse(
                     type="ai",
                     id=id,
@@ -145,9 +138,10 @@ def event_to_response(event: StreamEvent) -> ChatResponse | None:
                 )
     elif kind == "on_chain_stream":
         output = event["data"]["chunk"]
-        # 只处理 Retrieval Node 的输出
-        name = event.get("name", "")
-        if name and name.startswith("retrieval"):
+        node_id = event.get("name", "")
+        name = get_node_label(node_id, nodes) if nodes else node_id
+
+        if node_id and node_id.startswith("retrieval"):
             if isinstance(output, dict):
                 if "messages" in output and output["messages"]:
                     last_message = output["messages"][-1]
@@ -161,14 +155,13 @@ def event_to_response(event: StreamEvent) -> ChatResponse | None:
                             ),
                         )
             elif isinstance(output, AIMessage):
-                # 这里可能需要额外的逻辑来确定是否应该返回这个消息　Ｔ���ＤＯ
                 return ChatResponse(
                     type="tool",
                     id=id,
                     name=name,
                     content=output.content,
                 )
-        elif name and name.startswith("crewai"):
+        elif node_id and node_id.startswith("crewai"):
             if isinstance(output, dict):
                 if "messages" in output and output["messages"]:
                     last_message = output["messages"][-1]
@@ -180,7 +173,6 @@ def event_to_response(event: StreamEvent) -> ChatResponse | None:
                             content=last_message.content,
                         )
             elif isinstance(output, AIMessage):
-                # 这里可能需要额外的逻辑来确定是否应该返回这个消息　　ＴＯＤＯ
                 return ChatResponse(
                     type="ai",
                     id=id,
@@ -188,8 +180,8 @@ def event_to_response(event: StreamEvent) -> ChatResponse | None:
                     content=output.content,
                 )
         elif (
-            name
-            and name.startswith("classifier")
+            node_id
+            and node_id.startswith("classifier")
             and isinstance(output, dict)
             and "node_outputs" in output
         ):
@@ -202,7 +194,7 @@ def event_to_response(event: StreamEvent) -> ChatResponse | None:
                         name=name,
                         content=f"用户意图：{res}",
                     )
-        elif name and name.startswith("code"):
+        elif node_id and node_id.startswith("code"):
             if isinstance(output, dict):
                 if "messages" in output and output["messages"]:
                     last_message = output["messages"][-1]
@@ -216,7 +208,6 @@ def event_to_response(event: StreamEvent) -> ChatResponse | None:
                             ),
                         )
             elif isinstance(output, AIMessage):
-                # 这里可能需要额外的逻辑来确定是否应该返回这个消息　ＴＯＤＯ
                 return ChatResponse(
                     type="tool",
                     id=id,

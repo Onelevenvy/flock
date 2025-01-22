@@ -853,7 +853,13 @@ async def generator(
                         f"Unsupported interrupt type: {interrupt.interaction_type}"
                     )
             async for event in root.astream_events(state, version="v2", config=config):
-                response = event_to_response(event)
+                # 如果是workflow类型且有graph_config，则传入nodes参数
+                nodes = (
+                    graph_config["nodes"]
+                    if team.workflow == "workflow" and "nodes" in graph_config
+                    else None
+                )
+                response = event_to_response(event, nodes=nodes)
                 if response:
                     formatted_output = f"data: {response.model_dump_json()}\n\n"
                     yield formatted_output
