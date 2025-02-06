@@ -61,6 +61,16 @@ SUPPORTED_MODELS = [
         "capabilities": [],
         "dimension": 768,
     },
+    {
+        "name": "deepseek-ai/DeepSeek-R1-Distill-Llama-8B",
+        "categories": [ModelCategory.LLM, ModelCategory.CHAT],
+        "capabilities": [],
+    },
+    {
+        "name": "deepseek-ai/DeepSeek-R1-Distill-Qwen-7B",
+        "categories": [ModelCategory.LLM, ModelCategory.CHAT],
+        "capabilities": [],
+    },
 ]
 
 

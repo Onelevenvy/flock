@@ -11,6 +11,7 @@ import {
   MenuList,
   Spinner,
   Text,
+  Tooltip,
 } from "@chakra-ui/react";
 import React, { useState, useEffect } from "react";
 import { type Control, Controller, FieldValues, Path } from "react-hook-form";
@@ -82,34 +83,45 @@ function ModelSelect<T extends FieldValues>({
             render={({ field }) => {
               return (
                 <Menu autoSelect={false}>
-                  <MenuButton
-                    as={Button}
-                    leftIcon={
-                      <ModelProviderIcon
-                        modelprovider_name={effectiveProvider}
-                        w={5}
-                        h={5}
-                      />
-                    }
-                    rightIcon={<ChevronDownIcon w={4} h={4} />}
-                    w="full"
-                    textAlign="left"
-                    bg="ui.inputbgcolor"
-                    border="1px solid"
-                    borderColor="gray.200"
-                    borderRadius="lg"
-                    transition="all 0.2s"
-                    _hover={{
-                      borderColor: "gray.300",
-                      transform: "translateY(-1px)",
-                      boxShadow: "sm",
-                    }}
-                    _active={{
-                      transform: "translateY(0)",
-                    }}
+                  <Tooltip
+                    label={field.value || value || "选择一个模型"}
+                    placement="top"
+                    hasArrow
                   >
-                    {field.value || value || "选择一个模型"}
-                  </MenuButton>
+                    <MenuButton
+                      as={Button}
+                      leftIcon={
+                        <ModelProviderIcon
+                          modelprovider_name={effectiveProvider}
+                          w={5}
+                          h={5}
+                          flexShrink={0}
+                        />
+                      }
+                      rightIcon={<ChevronDownIcon w={4} h={4} flexShrink={0} />}
+                      w="full"
+                      textAlign="left"
+                      bg="ui.inputbgcolor"
+                      border="1px solid"
+                      borderColor="gray.200"
+                      borderRadius="lg"
+                      transition="all 0.2s"
+                      _hover={{
+                        borderColor: "gray.300",
+                        transform: "translateY(-1px)",
+                        boxShadow: "sm",
+                      }}
+                      _active={{
+                        transform: "translateY(0)",
+                      }}
+                      display="flex"
+                      alignItems="center"
+                    >
+                      <Text isTruncated flex="1" maxW="calc(100% - 1px)">
+                        {field.value || value || "选择一个模型"}
+                      </Text>
+                    </MenuButton>
+                  </Tooltip>
                   <MenuList
                     py={2}
                     border="1px solid"
@@ -157,16 +169,29 @@ function ModelSelect<T extends FieldValues>({
                             justifyContent="space-between"
                             alignItems="center"
                           >
-                            <Box display="flex" alignItems="center" flex="1">
+                            <Box
+                              display="flex"
+                              alignItems="center"
+                              flex="1"
+                              minW="0"
+                            >
                               <ModelProviderIcon
                                 modelprovider_name={providerName}
                                 mr={3}
                                 w={5}
                                 h={5}
+                                flexShrink={0}
                               />
-                              <Text isTruncated maxW="200px">
-                                {model.ai_model_name}
-                              </Text>
+                              <Tooltip label={model.ai_model_name}>
+                                <Text
+                                  isTruncated
+                                  maxW="200px"
+                                  flex="1"
+                                  overflow="hidden"
+                                >
+                                  {model.ai_model_name}
+                                </Text>
+                              </Tooltip>
                             </Box>
                             {model.capabilities?.includes("vision") && (
                               <FaEye

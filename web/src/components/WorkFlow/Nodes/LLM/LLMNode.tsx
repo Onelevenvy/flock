@@ -10,10 +10,9 @@ import { nodeConfig } from "../nodeConfig";
 const { icon: Icon, colorScheme } = nodeConfig.llm;
 
 const LLMNode: React.FC<NodeProps> = (props) => {
-  const [providerName, setProviderName] = useState<string>(props.data.model);
-
+  const [providerName, setProviderName] = useState<string>(props.data.provider);
   useEffect(() => {
-    setProviderName(props.data.model);
+    setProviderName(props.data.provider);
   }, [props.data]);
 
   const memoizedIcon = useMemo(
