@@ -4,6 +4,7 @@ services:
       context: ../web
       dockerfile: Dockerfile
       target: production
+    image: flock-frontend
     deploy:
       resources:
         limits:
@@ -168,7 +169,7 @@ services:
     build:
       context: ./code-interpreter
       dockerfile: Dockerfile
-    image: code-interpreter:latest
+    image: flock-code-interpreter:latest
     deploy:
       resources:
         limits:

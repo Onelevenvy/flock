@@ -125,19 +125,37 @@ Flock 的工作流系统由各种类型的节点组成，每种节点都有特�
 
 ### 如何开始
 
-#### 1. 准备工作
+#### 1. 使用 Docker Compose 部署
 
-##### 1.1 克隆代码
+```bash
+# 克隆仓库  
+git clone https://github.com/Onelevenvy/flock.git
+
+# 导航到 docker 目录
+cd flock/docker
+
+# 复制环境配置文件
+cp ../.env.example .env
+# 构建镜像
+docker compose build
+# 启动 docker compose
+docker compose  up -d
+```
+#### 2. 使用本地源码部署
+
+##### 2.1 准备工作
+
+##### 2.1.1 克隆代码
 
 git clone https://github.com/Onelevenvy/flock.git
 
-##### 1.2 复制环境配置文件
+##### 2.1.2 复制环境配置文件
 
 ```bash
 cp .env.example .env
 ```
 
-##### 1.3 生成密钥
+##### 2.1.3 生成密钥
 
 .env 文件中的一些环境变量默认值为 changethis。
 您必须将它们更改为密钥，要生成密钥，可以运行以下命令：
@@ -148,16 +166,16 @@ python -c "import secrets; print(secrets.token_urlsafe(32))"
 
 复制内容并将其用作密码/密钥。再次运行该命令以生成另一个安全密钥。
 
-##### 1.3 安装 postgres、qdrant、redis
+##### 2.1.4 安装 postgres、qdrant、redis
 
 ```bash
 cd docker
 docker compose  --env-file ../.env up -d
 ```
 
-#### 2.运行后端
+####  2.2 运行后端
 
-##### 2.1 安装基本环境
+##### 2.2.1 安装基本环境
 
 服务器启动需要 Python 3.10.x。建议使用 pyenv 快速安装 Python 环境。
 
@@ -187,41 +205,37 @@ poetry env use 3.10
 poetry install
 ```
 
-##### 2.2 初始化数据
+##### 2.2.2 初始化数据
 
 ```bash
-# 让数据库启动
-python /app/app/backend_pre_start.py
 
-# 运行迁移
+# 迁移数据库
 alembic upgrade head
 
-# 在数库中创建初始数据
-python /app/app/initial_data.py
 ```
 
-##### 2.3 运行 unicorn
+##### 2.2.3 运行 unicorn
 
 ```bash
  uvicorn app.main:app --reload --log-level debug
 ```
 
-##### 2.4 运行 celery（非必需，除非您想使用 rag 功能）
+##### 2.2.4 运行 celery（非必需，除非您想使用 rag 功能）
 
 ```bash
 poetry run celery -A app.core.celery_app.celery_app worker --loglevel=debug
 ```
 
-#### 3.运行前端
+#### 2.3 运行前端
 
-##### 3.1 进入 web 目录并安装依赖
+##### 2.3.1 进入 web 目录并安装依赖
 
 ```bash
 cd web
 pnpm install
 ```
 
-##### 3.2 启动 web 服务
+##### 2.3.2 启动 web 服务
 
 ```bash
 cd web

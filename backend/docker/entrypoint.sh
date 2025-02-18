@@ -2,10 +2,6 @@
 
 set -e
 
-if [[ "${MIGRATION_ENABLED}" == "true" ]]; then
-    echo "Running database migrations"
-    poetry run alembic upgrade head
-fi
 
 if [[ "${MODE}" == "worker" ]]; then
     # Get the number of available CPU cores
@@ -22,8 +18,10 @@ if [[ "${MODE}" == "worker" ]]; then
 
 else
     if [[ "${DEBUG}" == "true" ]]; then
+        poetry run alembic upgrade head
         exec poetry run uvicorn app.main:app --host=${HOST:-0.0.0.0} --port=${PORT:-8000} --reload --log-level debug
     else
+        poetry run alembic upgrade head
         exec poetry run gunicorn \
             --bind "${HOST:-0.0.0.0}:${PORT:-8000}" \
             --workers ${SERVER_WORKER_AMOUNT:-1} \
