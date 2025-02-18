@@ -154,19 +154,37 @@ Project tech stack: LangChain + LangGraph + React + Next.js + Chakra UI + Postgr
 
 ### How to get started
 
-#### 1. Preparation
+#### 0 Deploy with Docker Compose
 
-##### 1.1 Clone the Code
+```bash
+# Clone the repository  
+git clone https://github.com/Onelevenvy/flock.git
+
+# Navigate to the docker directory
+cd flock/docker
+
+# Copy the environment configuration file
+cp ../.env.example .env
+
+# Start the services
+docker compose  up -d
+```
+
+#### 1. Start with Local Source Code
+
+#### 1.1 Preparation
+
+##### 1.1.1 Clone the Code
 
 git clone https://github.com/Onelevenvy/flock.git
 
-##### 1.2 Copy Environment Configuration File
+##### 1.1.2 Copy Environment Configuration File
 
 ```bash
 cp .env.example .env
 ```
 
-##### 1.3 Generate Secret Keys
+##### 1.1.3 Generate Secret Keys
 
 Some environment variables in the .env file have a default value of changethis.
 You have to change them with a secret key, to generate secret keys you can run the following command:
@@ -177,16 +195,16 @@ python -c "import secrets; print(secrets.token_urlsafe(32))"
 
 Copy the content and use that as password / secret key. And run that again to generate another secure key.
 
-##### 1.3 Insatll postgres，qdrant,redis
+##### 1.1.4 Install postgres,qdrant,redis
 
 ```bash
 cd docker
-docker compose  --env-file ../.env up -d
+docker compose -f docker-compose.middleware.yml up -d
 ```
 
-#### 2.Run Backend
+#### 1.2 Run Backend
 
-##### 2.1 Installation of the basic environment
+##### 1.2.1 Installation of the basic environment
 
 Server startup requires Python 3.10.x. It is recommended to use pyenv for quick installation of the Python environment.
 
@@ -216,7 +234,7 @@ poetry env use 3.10
 poetry install
 ```
 
-##### 2.2 initiral data
+##### 1.2.2 initiral data
 
 ```bash
 # Let the DB start
@@ -229,28 +247,28 @@ alembic upgrade head
 python /app/app/initial_data.py
 ```
 
-##### 2.3 run unicorn
+##### 1.2.3 run unicorn
 
 ```bash
  uvicorn app.main:app --reload --log-level debug
 ```
 
-##### 2.4 run celery (Not necessary, unless you want to use the rag function)
+##### 1.2.4 run celery (Not necessary, unless you want to use the rag function)
 
 ```bash
 poetry run celery -A app.core.celery_app.celery_app worker --loglevel=debug
 ```
 
-#### 3.Run Frontend
+#### 1.3 Run Frontend
 
-##### 3.1 Enter the web directory and install the dependencies
+##### 1.3.1 Enter the web directory and install the dependencies
 
 ```bash
 cd web
 pnpm install
 ```
 
-##### 3.2 Start the web service
+##### 1.3.2 Start the web service
 
 ```bash
 cd web
