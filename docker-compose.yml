@@ -1,0 +1,189 @@
+services:
+  frontend:
+    build:
+      context: ./web
+      dockerfile: Dockerfile
+      target: production
+    deploy:
+      resources:
+        limits:
+          memory: 1G
+        reservations:
+          memory: 256M
+    networks:
+      - docker_default
+    ports:
+      - 3000:3000
+    environment:
+      - NODE_ENV=production
+      - API_URL=http://backend:8000
+      - TZ=UTC
+    labels:
+      - traefik.enable=true
+      - traefik.docker.network=docker_default
+      - traefik.constraint-label=docker_default
+      - traefik.http.routers.${STACK_NAME}-frontend-http.rule=Host(`${DOMAIN}`)
+      - traefik.http.routers.${STACK_NAME}-frontend-http.entrypoints=http
+      - traefik.http.routers.${STACK_NAME}-frontend-http.middlewares=https-redirect
+      - traefik.http.routers.${STACK_NAME}-frontend-https.rule=Host(`${DOMAIN}`)
+      - traefik.http.routers.${STACK_NAME}-frontend-https.entrypoints=https
+      - traefik.http.routers.${STACK_NAME}-frontend-https.tls=true
+      - traefik.http.routers.${STACK_NAME}-frontend-https.tls.certresolver=le
+      - traefik.http.services.${STACK_NAME}-frontend.loadbalancer.server.port=3000
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3000"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+    depends_on:
+      - api
+
+  api:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+      target: production
+    image: flock-backend
+    deploy:
+      resources:
+        limits:
+          memory: 2G
+        reservations:
+          memory: 512M
+    networks:
+      - docker_default
+    ports:
+      - 8000:8000
+    environment:
+      - MIGRATION_ENABLED=false
+      - DEBUG=true
+      - SERVER_WORKER_AMOUNT=2
+      - GUNICORN_TIMEOUT=120
+      - TZ=UTC
+      - POSTGRES_SERVER=postgres
+      - QDRANT_URL=http://qdrant:6333
+      - CELERY_BROKER_URL=redis://redis:6379/0
+      - CELERY_RESULT_BACKEND=redis://redis:6379/0
+      - HOME=/app/data
+    env_file:
+      - .env
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+    volumes:
+      - app-upload-data:/app/upload
+      - app-backend-model-cache:/app/model_cache
+      - app-data:/app/data
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      qdrant:
+        condition: service_healthy
+
+  celery_worker:
+    image: flock-backend
+    deploy:
+      resources:
+        limits:
+          memory: 2G
+        reservations:
+          memory: 512M
+    networks:
+      - docker_default
+    environment:
+      - MODE=worker
+      - CELERY_AUTO_SCALE=true
+      - CELERY_MAX_WORKERS=4
+      - CELERY_MIN_WORKERS=1
+      - LOG_LEVEL=INFO
+      - TZ=UTC
+      - POSTGRES_SERVER=postgres
+      - QDRANT_URL=http://qdrant:6333
+      - CELERY_BROKER_URL=redis://redis:6379/0
+      - CELERY_RESULT_BACKEND=redis://redis:6379/0
+      - HOME=/app/data
+    env_file:
+      - .env
+    volumes:
+      - app-upload-data:/app/upload
+      - app-backend-model-cache:/app/model_cache
+      - app-data:/app/data
+    depends_on:
+      - redis
+      - db
+      - qdrant
+
+  db:
+    image: postgres:12
+    restart: always
+    networks:
+      - docker_default
+    ports:
+      - 5432:5432
+    volumes:
+      - app-db-data:/var/lib/postgresql/data/pgdata
+    environment:
+      - PGDATA=/var/lib/postgresql/data/pgdata
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+      - POSTGRES_USER=${POSTGRES_USER}
+      - POSTGRES_DB=${POSTGRES_DB}
+      - TZ=UTC
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+
+  redis:
+    image: redis:alpine
+    restart: always
+    networks:
+      - docker_default
+    ports:
+      - 6379:6379
+    volumes:
+      - app-redis-data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+
+  qdrant:
+    image: qdrant/qdrant
+    restart: always
+    networks:
+      - docker_default
+    ports:
+      - 6333:6333
+      - 6334:6334
+    volumes:
+      - app-qdrant-data:/qdrant/storage
+    environment:
+      - QDRANT_SERVICE_API_KEY=${QDRANT_SERVICE_API_KEY}
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:6333/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+
+networks:
+  docker_default:
+    external: true
+
+volumes:
+  app-db-data:
+  app-redis-data:
+  app-qdrant-data:
+  app-backend-model-cache:
+  app-upload-data:
+  app-data:

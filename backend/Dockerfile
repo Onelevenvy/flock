@@ -1,40 +1,82 @@
-FROM tiangolo/uvicorn-gunicorn-fastapi:python3.10
+FROM python:3.12-slim AS base
 
-WORKDIR /app/
+# 构建参数
+ARG POETRY_VERSION=2.0.1
+ARG ENVIRONMENT=production
 
-# Install Poetry
-RUN curl -sSL https://install.python-poetry.org | POETRY_HOME=/opt/poetry python && \
-    cd /usr/local/bin && \
-    ln -s /opt/poetry/bin/poetry && \
-    poetry config virtualenvs.create false
+# Poetry 配置
+ENV POETRY_VERSION=${POETRY_VERSION}
+ENV POETRY_HOME=/opt/poetry
+ENV POETRY_CACHE_DIR=/tmp/poetry_cache
+ENV POETRY_NO_INTERACTION=1
+ENV POETRY_VIRTUALENVS_IN_PROJECT=true
+ENV POETRY_VIRTUALENVS_CREATE=true
+ENV POETRY_REQUESTS_TIMEOUT=15
 
-# Copy poetry.lock* in case it doesn't exist in the repo
-COPY ./pyproject.toml ./poetry.lock* /app/
+# 安装 Poetry
+RUN pip install --no-cache-dir poetry==${POETRY_VERSION}
 
-# Allow installing dev dependencies to run tests
-ARG INSTALL_DEV=false
-RUN bash -c "if [ $INSTALL_DEV == 'true' ] ; then poetry install --no-root ; else poetry install --no-root --only main ; fi"
+# 构建依赖阶段
+FROM base AS builder
 
+# 安装构建依赖
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends \
+    gcc g++ libc-dev libffi-dev \
+    && rm -rf /var/lib/apt/lists/*
+
+WORKDIR /app
+
+# 安装Python依赖
+COPY pyproject.toml poetry.lock ./
+RUN if [ "$ENVIRONMENT" = "production" ]; then \
+        poetry install --sync --no-cache --no-root --without dev; \
+    else \
+        poetry install --sync --no-cache --no-root; \
+    fi
+
+# 生产环境阶段
+FROM base AS production
+
+# 设置工作目录和环境变量
+WORKDIR /app
+ENV TZ=UTC
 ENV PYTHONPATH=/app
+ENV PYTHONUNBUFFERED=1
 
-COPY ./scripts/ /app/
+# 安装系统依赖
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends \
+        curl \
+        libffi-dev \
+        fonts-noto-cjk \
+    && apt-get clean \
+    && rm -rf /var/lib/apt/lists/* \
+    && mkdir -p /app/upload /app/model_cache /app/data \
+    && mkdir -p /app/data/.local/share/app \
+    && chown -R nobody:nogroup /app \
+    && chmod -R u+rwX,go+rX,go-w /app \
+    && chmod 777 /app/data/.local/share/app
 
-COPY ./alembic.ini /app/
+# 复制Python环境
+ENV VIRTUAL_ENV=/app/.venv
+COPY --from=builder ${VIRTUAL_ENV} ${VIRTUAL_ENV}
+ENV PATH="${VIRTUAL_ENV}/bin:${PATH}"
 
-COPY ./prestart.sh /app/
+# 复制应用代码
+COPY . /app/
 
-COPY ./tests-start.sh /app/
+# 复制启动脚本
+COPY docker/entrypoint.sh /entrypoint.sh
+RUN chmod +x /entrypoint.sh
 
-COPY ./app /app/app
+# 创建非root用户
+USER nobody
 
-# Create a non-root user and group
-RUN addgroup --system celery && adduser --system --ingroup celery celery
+# 健康检查
+HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
+    CMD curl -f http://localhost:8000/health || exit 1
 
-# Create necessary directories
-RUN mkdir -p /app/.cache/huggingface /app/cache/ /app/upload-data/
+EXPOSE 8000
 
-# Set HuggingFace cache directory environment variable
-ENV HF_HOME=/app/.cache/huggingface
-
-# Set the ownership and permissions for the /app directory and its contents
-RUN chown -R celery:celery /app
+ENTRYPOINT ["/bin/bash", "/entrypoint.sh"]

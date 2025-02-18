@@ -1,0 +1,20 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "flock-provider-openai"
+version = "1.0.0"
+description = "OpenAI provider plugin for Flock"
+readme = "README.md"
+requires-python = ">=3.8"
+license = "MIT"
+authors = [
+    { name = "Flock Team", email = "team@flock.com" }
+]
+dependencies = [
+    "openai>=1.0.0",
+]
+
+[project.entry-points."flock.model_providers"]
+openai = "flock_provider_openai.provider:OpenAIProviderPlugin" 

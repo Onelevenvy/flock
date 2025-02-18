@@ -1,0 +1,12 @@
+{
+  "apps": [
+    {
+      "name": "flock-web",
+      "script": "/app/web/server.js",
+      "cwd": "/app/web",
+      "exec_mode": "cluster",
+      "instances": 2,
+      "max_memory_restart": "500M"
+    }
+  ]
+} 
