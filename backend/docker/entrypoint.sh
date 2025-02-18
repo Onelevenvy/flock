@@ -2,13 +2,10 @@
 
 set -e
 
-# if [[ "${MIGRATION_ENABLED}" == "true" ]]; then
-#     echo "Running database migrations"
-#     poetry run alembic upgrade head
-    
-#     echo "Creating initial data"
-#     poetry run python app/initial_data.py
-# fi
+if [[ "${MIGRATION_ENABLED}" == "true" ]]; then
+    echo "Running database migrations"
+    poetry run alembic upgrade head
+fi
 
 if [[ "${MODE}" == "worker" ]]; then
     # Get the number of available CPU cores

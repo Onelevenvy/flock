@@ -1,0 +1,101 @@
+services:
+  db:
+    image: postgres:12
+    restart: always
+    networks:
+      - docker_default
+    volumes:
+      - app-db-data:/var/lib/postgresql/data/pgdata
+    env_file:
+      - .env
+    environment:
+      - PGDATA=/var/lib/postgresql/data/pgdata
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD?Variable not set}
+      - POSTGRES_USER=${POSTGRES_USER?Variable not set}
+      - POSTGRES_DB=${POSTGRES_DB?Variable not set}
+    ports:
+      - 5432:5432
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+
+  qdrant:
+    image: qdrant/qdrant
+    restart: always
+    networks:
+      - docker_default
+    volumes:
+      - app-qdrant-data:/qdrant/storage
+    environment:
+      - QDRANT_SERVICE_API_KEY=${QDRANT_SERVICE_API_KEY?Variable not set}
+    ports:
+      - 6334:6334
+      - 6333:6333
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:6333/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 30s
+
+  redis:
+    image: redis:alpine
+    restart: always
+    networks:
+      - docker_default
+    ports:
+      - 6379:6379
+    volumes:
+      - app-redis-data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+
+  code-interpreter:
+    build:
+      context: ./code-interpreter
+      dockerfile: Dockerfile
+    image: code-interpreter:latest
+    deploy:
+      resources:
+        limits:
+          memory: 1G
+        reservations:
+          memory: 256M
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+    networks:
+      - docker_default
+    volumes:
+      - app-code-workspace:/workspace
+    environment:
+      - PYTHONUNBUFFERED=1
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+    healthcheck:
+      test: ["CMD", "python3", "/opt/code-interpreter/scripts/healthcheck.py"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+
+networks:
+  docker_default:
+    external: true
+
+volumes:
+  app-db-data:
+  app-redis-data:
+  app-qdrant-data:
+  app-code-workspace:

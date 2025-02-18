@@ -1,7 +1,7 @@
 services:
   frontend:
     build:
-      context: ./web
+      context: ../web
       dockerfile: Dockerfile
       target: production
     deploy:
@@ -41,7 +41,7 @@ services:
 
   api:
     build:
-      context: ./backend
+      context: ../backend
       dockerfile: Dockerfile
       target: production
     image: flock-backend
@@ -56,35 +56,27 @@ services:
     ports:
       - 8000:8000
     environment:
-      - MIGRATION_ENABLED=false
       - DEBUG=true
       - SERVER_WORKER_AMOUNT=2
       - GUNICORN_TIMEOUT=120
       - TZ=UTC
-      - POSTGRES_SERVER=postgres
+      - POSTGRES_SERVER=db
       - QDRANT_URL=http://qdrant:6333
       - CELERY_BROKER_URL=redis://redis:6379/0
       - CELERY_RESULT_BACKEND=redis://redis:6379/0
       - HOME=/app/data
     env_file:
-      - .env.docker
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-      start_period: 10s
+      - .env
+
     volumes:
       - app-upload-data:/app/upload
       - app-backend-model-cache:/app/model_cache
       - app-data:/app/data
     depends_on:
-      db:
-        condition: service_healthy
-      redis:
-        condition: service_healthy
-      qdrant:
-        condition: service_healthy
+      - db
+      - redis
+      - qdrant
+    restart: always
 
   celery_worker:
     image: flock-backend
@@ -98,6 +90,7 @@ services:
       - docker_default
     environment:
       - MODE=worker
+      - MIGRATION_ENABLED=true
       - CELERY_AUTO_SCALE=true
       - CELERY_MAX_WORKERS=4
       - CELERY_MIN_WORKERS=1
@@ -109,7 +102,7 @@ services:
       - CELERY_RESULT_BACKEND=redis://redis:6379/0
       - HOME=/app/data
     env_file:
-      - .env.docker
+      - .env
     volumes:
       - app-upload-data:/app/upload
       - app-backend-model-cache:/app/model_cache
@@ -124,22 +117,36 @@ services:
     restart: always
     networks:
       - docker_default
-    ports:
-      - 5432:5432
     volumes:
       - app-db-data:/var/lib/postgresql/data/pgdata
+    env_file:
+      - .env
     environment:
       - PGDATA=/var/lib/postgresql/data/pgdata
-      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
-      - POSTGRES_USER=${POSTGRES_USER}
-      - POSTGRES_DB=${POSTGRES_DB}
-      - TZ=UTC
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD?Variable not set}
+      - POSTGRES_USER=${POSTGRES_USER?Variable not set}
+      - POSTGRES_DB=${POSTGRES_DB?Variable not set}
+    ports:
+      - 5432:5432
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
       interval: 10s
       timeout: 5s
       retries: 5
       start_period: 10s
+
+  qdrant:
+    image: qdrant/qdrant
+    restart: always
+    networks:
+      - docker_default
+    volumes:
+      - app-qdrant-data:/qdrant/storage
+    environment:
+      - QDRANT_SERVICE_API_KEY=${QDRANT_SERVICE_API_KEY?Variable not set}
+    ports:
+      - 6334:6334
+      - 6333:6333
 
   redis:
     image: redis:alpine
@@ -157,23 +164,37 @@ services:
       retries: 5
       start_period: 10s
 
-  qdrant:
-    image: qdrant/qdrant
-    restart: always
+  code-interpreter:
+    build:
+      context: ./code-interpreter
+      dockerfile: Dockerfile
+    image: code-interpreter:latest
+    deploy:
+      resources:
+        limits:
+          memory: 1G
+        reservations:
+          memory: 256M
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
     networks:
       - docker_default
-    ports:
-      - 6333:6333
-      - 6334:6334
     volumes:
-      - app-qdrant-data:/qdrant/storage
+      - app-code-workspace:/workspace
     environment:
-      - QDRANT_SERVICE_API_KEY=${QDRANT_SERVICE_API_KEY}
+      - PYTHONUNBUFFERED=1
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:6333/health"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
+      test: ["CMD", "python3", "/opt/code-interpreter/scripts/healthcheck.py"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
       start_period: 10s
 
 networks:
@@ -184,6 +205,7 @@ volumes:
   app-db-data:
   app-redis-data:
   app-qdrant-data:
-  app-backend-model-cache:
+  app-code-workspace:
   app-upload-data:
+  app-backend-model-cache:
   app-data:
