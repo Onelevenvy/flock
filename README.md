@@ -156,8 +156,10 @@ Project tech stack: LangChain + LangGraph + React + Next.js + Chakra UI + Postgr
 
 #### 1. Deploy with Docker Compose
 
+##### 1.1 Method 1: Pull Frontend and Backend Images from Docker Hub
+
 ```bash
-# Clone the repository  
+# Clone the repository
 git clone https://github.com/Onelevenvy/flock.git
 
 # Navigate to the docker directory
@@ -165,10 +167,30 @@ cd flock/docker
 
 # Copy the environment configuration file
 cp ../.env.example .env
-# build the images
-docker compose build
+
 # Start the docker compose
 docker compose  up -d
+
+```
+
+#### 1.2 Method 2: Locally Build Frontend and Backend Images
+
+```bash
+# Clone the repository
+git clone https://github.com/Onelevenvy/flock.git
+
+# Navigate to the docker directory
+cd flock/docker
+
+# Copy the environment configuration file
+cp ../.env.example .env
+
+# First, build the frontend and backend images
+docker compose -f docker-compose.localbuild.yml build
+
+# Then, start Docker Compose
+docker compose -f docker-compose.localbuild.yml up -d
+
 ```
 
 #### 2. Start with Local Source Code

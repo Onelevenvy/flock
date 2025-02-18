@@ -23,10 +23,8 @@ def get_api_key(provider_name: str) -> str:
         ).first()
         if not provider:
             raise ValueError(f"Provider {provider_name} not found")
-        print("aaaaaaa", provider.decrypted_api_key)
         return provider.decrypted_api_key
 
-    print("bbbbbbb", db_operation(_get_api_key))
     return db_operation(_get_api_key)
 
 

@@ -1,6 +1,10 @@
 services:
   frontend:
-    image: jimmy1211/flock-frontend
+    build:
+      context: ../web
+      dockerfile: Dockerfile
+      target: production
+    image: flock-frontend
     deploy:
       resources:
         limits:
@@ -37,7 +41,11 @@ services:
       - api
 
   api:
-    image: jimmy1211/flock-backend
+    build:
+      context: ../backend
+      dockerfile: Dockerfile
+      target: production
+    image: flock-backend
     deploy:
       resources:
         limits:
@@ -72,7 +80,7 @@ services:
     restart: always
 
   celery_worker:
-    image: jimmy1211/flock-backend
+    image: flock-backend
     deploy:
       resources:
         limits:
@@ -158,7 +166,10 @@ services:
       start_period: 10s
 
   code-interpreter:
-    image: jimmy1211/flock-code-interpreter:latest
+    build:
+      context: ./code-interpreter
+      dockerfile: Dockerfile
+    image: flock-code-interpreter:latest
     deploy:
       resources:
         limits:
