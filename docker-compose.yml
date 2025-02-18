@@ -67,7 +67,7 @@ services:
       - CELERY_RESULT_BACKEND=redis://redis:6379/0
       - HOME=/app/data
     env_file:
-      - .env
+      - .env.docker
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
       interval: 30s
@@ -109,7 +109,7 @@ services:
       - CELERY_RESULT_BACKEND=redis://redis:6379/0
       - HOME=/app/data
     env_file:
-      - .env
+      - .env.docker
     volumes:
       - app-upload-data:/app/upload
       - app-backend-model-cache:/app/model_cache
