@@ -253,7 +253,7 @@ class CodeExecutor:
         self,
         timeout: int = 30,
         memory_limit: str = "256m",
-        image_tag: str = "code-interpreter:latest",
+        image_tag: str = "flock-code-interpreter:latest",
         pool_size: int = 3,
     ):
         if not hasattr(self, "initialized"):
