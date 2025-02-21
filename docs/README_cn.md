@@ -197,18 +197,18 @@ docker compose  --env-file ../.env up -d
 
 ##### 2.2.1 安装基本环境
 
-服务器启动需要 Python 3.10.x。建议使用 pyenv 快速安装 Python 环境。
+服务器启动需要 Python 3.12.x。建议使用 pyenv 快速安装 Python 环境。
 
 要安装其他 Python 版本，请使用 pyenv install。
 
 ```bash
-pyenv install 3.10
+pyenv install 3.12
 ```
 
-要切换到 "3.10" Python 环境，请使用以下命令：
+要切换到 "3.12" Python 环境，请使用以下命令：
 
 ```bash
-pyenv global 3.10
+pyenv global 3.12
 ```
 
 按照以下步骤操作：
@@ -221,7 +221,7 @@ cd backend
 激活环境。
 
 ```bash
-poetry env use 3.10
+poetry env use 3.12
 poetry install
 ```
 

@@ -229,18 +229,18 @@ docker compose -f docker-compose.middleware.yml up -d
 
 ##### 2.2.1 Installation of the basic environment
 
-Server startup requires Python 3.10.x. It is recommended to use pyenv for quick installation of the Python environment.
+Server startup requires Python 3.12.x. It is recommended to use pyenv for quick installation of the Python environment.
 
 To install additional Python versions, use pyenv install.
 
 ```bash
-pyenv install 3.10
+pyenv install 3.12
 ```
 
-To switch to the "3.10" Python environment, use the following command:
+To switch to the "3.12" Python environment, use the following command:
 
 ```bash
-pyenv global 3.10
+pyenv global 3.12
 ```
 
 Follow these steps :
@@ -253,7 +253,7 @@ cd backend
 activate the environment.
 
 ```bash
-poetry env use 3.10
+poetry env use 3.12
 poetry install
 ```
 

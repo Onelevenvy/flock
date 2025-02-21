@@ -167,18 +167,18 @@ docker compose  --env-file ../.env up -d
 
 ##### 2.1 基本環境のインストール
 
-サーバーの起動には Python 3.10.x が必要です。Python 環境を迅速にインストールするには、pyenv を使用することをお勧めします。
+サーバーの起動には Python 3.12.x が必要です。Python 環境を迅速にインストールするには、pyenv を使用することをお勧めします。
 
 追加の Python ージョンをインストールするには、pyenv install を使用します。
 
 ```bash
-pyenv install 3.10
+pyenv install 3.12
 ```
 
-"3.10" Python 環境に切り替えるには、次コマンドを使用します：
+"3.12" Python 環境に切り替えるには、次コマンドを使用します：
 
 ```bash
-pyenv global 3.10
+pyenv global 3.12
 ```
 
 次の手順に従います：
@@ -191,7 +191,7 @@ cd backend
 環境をアクティブにします。
 
 ```bash
-poetry env use 3.10
+poetry env use 3.12
 poetry install
 ```
 
