@@ -33,11 +33,11 @@ The input text is in the variable text_field. Parameter schema is provided in JS
 ### Example
 Here is an example between human and assistant, inside <example></example> XML tags.
 <example>
-User: {"text": "I want to book a flight from New York to London on July 15th, economy class", "schema": {"departure": "string", "destination": "string", "date": "string", "class": "string"}}
-Assistant: {"departure": "New York", "destination": "London", "date": "July 15th", "class": "economy"}
+User: {{"text": "I want to book a flight from New York to London on July 15th, economy class", "schema": {{"departure": "string", "destination": "string", "date": "string", "class": "string"}}}}
+Assistant: {{"departure": "New York", "destination": "London", "date": "July 15th", "class": "economy"}}
 
-User: {"text": "The temperature is 25 degrees and humidity is 60%", "schema": {"temperature": "number", "humidity": "number"}}
-Assistant: {"temperature": 25, "humidity": 60}
+User: {{"text": "The temperature is 25 degrees and humidity is 60%", "schema": {{"temperature": "number", "humidity": "number"}}}}
+Assistant: {{"temperature": 25, "humidity": 60}}
 </example>
 """
 
@@ -51,6 +51,7 @@ Please extract the parameters from the text according to the schema.
 Return only the parameters in JSON format, nothing else.
 """
 
+
 class ParameterExtractorNode:
     """Parameter Extractor Node for extracting structured parameters from text"""
 
@@ -60,11 +61,13 @@ class ParameterExtractorNode:
         model_name: str,
         parameter_schema: dict[str, str],
         input: str = "",
+        instruction: str = "",
     ):
         self.node_id = node_id
         self.parameter_schema = parameter_schema
         self.input = input
         self.model_info = get_model_info(model_name)
+        self.instruction = instruction
 
     async def work(
         self, state: WorkflowTeamState, config: RunnableConfig
@@ -92,7 +95,7 @@ class ParameterExtractorNode:
         # Prepare input in JSON format
         input_json = {
             "input_text": input_text,
-            "parameter_schema": self.parameter_schema
+            "parameter_schema": self.parameter_schema,
         }
 
         # Prepare prompt and get extraction result
@@ -105,42 +108,12 @@ class ParameterExtractorNode:
         outputparser = JsonOutputParser()
         chain = prompt | llm | outputparser
 
-        # Add helper function to normalize result
-        def normalize_parameters(result: Any) -> dict:
-            """Normalize parameter extraction result"""
-            try:
-                if isinstance(result, dict):
-                    normalized = {}
-                    for key, value in result.items():
-                        if key in self.parameter_schema:
-                            param_type = self.parameter_schema[key]
-                            if param_type == "number":
-                                try:
-                                    normalized[key] = float(value)
-                                except (ValueError, TypeError):
-                                    normalized[key] = 0
-                            elif param_type == "string":
-                                normalized[key] = str(value) if value else ""
-                            else:
-                                normalized[key] = value
-                        print(normalized,"-------===================")
-                    return normalized
-                else:
-                    print(f"Unexpected result format: {result}")
-                    return {}
-            except Exception as e:
-                print(f"Error normalizing parameters: {e}")
-                return {}
-
         result = await chain.ainvoke(input_json)
 
-        # Normalize and validate parameters
-        parameters = normalize_parameters(result)
+        parameters = result
 
         # Update node outputs
-        new_output = {
-            self.node_id: parameters
-        }
+        new_output = {self.node_id: parameters}
         state["node_outputs"] = update_node_outputs(state["node_outputs"], new_output)
 
         return_state: ReturnWorkflowTeamState = {

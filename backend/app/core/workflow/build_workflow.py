@@ -667,5 +667,6 @@ def _add_parameter_extractor_node(graph_builder, node_id, node_data):
             model_name=node_data["model"],
             parameter_schema=node_data["parameters"],
             input=node_data["Input"],
+            instruction=node_data.get("instruction", ""),
         ).work,
     )
