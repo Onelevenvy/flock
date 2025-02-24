@@ -14,6 +14,7 @@ import CodeNode from "./Code/CodeNode";
 import IfElseNode from "./IfElse/IfElseNode";
 import HumanNode from "./Human/HumanNode";
 import SubgraphNode from "./Subgraph/SubgraphNode";
+import ParameterExtractorNode from "./ParameterExtractor/ParameterExtractorNode";
 
 export const nodeTypes: NodeTypes = {
   start: StartNode,
@@ -30,4 +31,5 @@ export const nodeTypes: NodeTypes = {
   ifelse: IfElseNode,
   human: HumanNode,
   subgraph: SubgraphNode,
+  parameterExtractor: ParameterExtractorNode,
 };

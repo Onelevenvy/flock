@@ -104,3 +104,16 @@ export interface HumanNodeData extends NodeData {
   };
   title?: string;
 }
+
+export interface Parameter {
+  parameter_id: string;
+  name: string;
+  type: string;
+  required: boolean;
+}
+
+export interface ParameterExtractorNodeData {
+  model: string;
+  parameters: Parameter[];
+  toolImport: any | null;
+}
