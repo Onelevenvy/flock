@@ -16,6 +16,7 @@
     "debug.allowBreakpointsEverywhere": true,
     "workbench.activityBar.orientation": "vertical",
     "workbench.editor.splitInGroupLayout": "vertical",
+    "files.autoSave": "afterDelay",
 
 }
 

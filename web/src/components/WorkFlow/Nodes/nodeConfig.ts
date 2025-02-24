@@ -9,6 +9,7 @@ import {
   FaCodeBranch,
   FaUserCog,
   FaProjectDiagram,
+  FaCrosshairs ,
 } from "react-icons/fa";
 import { FaBookAtlas, FaPeopleGroup } from "react-icons/fa6";
 import { TfiGithub } from "react-icons/tfi";
@@ -290,7 +291,7 @@ export const nodeConfig: Record<string, NodeConfigItem> = {
   },
   parameterExtractor: {
     display: "Parameter Extractor",
-    icon: LuBrainCircuit,
+    icon: FaCrosshairs,
     colorScheme: "cyan",
     properties: ParameterExtractorNodeProperties,
     allowedConnections: {

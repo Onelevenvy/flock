@@ -13,3 +13,4 @@ backend/poetry.lock
 
 docker/push_to_dockerhub.sh
 docker/build_images.sh
+.vscode/settings.json
