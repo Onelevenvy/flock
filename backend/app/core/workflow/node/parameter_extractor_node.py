@@ -123,6 +123,7 @@ class ParameterExtractorNode:
                                 normalized[key] = str(value) if value else ""
                             else:
                                 normalized[key] = value
+                        print(normalized,"-------===================")
                     return normalized
                 else:
                     print(f"Unexpected result format: {result}")

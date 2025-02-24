@@ -10,9 +10,10 @@ import { nodeConfig } from "../nodeConfig";
 const { icon: Icon, colorScheme } = nodeConfig.llm;
 
 const LLMNode: React.FC<NodeProps> = (props) => {
-  const [providerName, setProviderName] = useState<string>(props.data.provider);
+  const [providerName, setProviderName] = useState<string>(props.data.model!);
+
   useEffect(() => {
-    setProviderName(props.data.provider);
+    setProviderName(props.data.model!);
   }, [props.data]);
 
   const memoizedIcon = useMemo(
@@ -21,7 +22,6 @@ const LLMNode: React.FC<NodeProps> = (props) => {
     ),
     [providerName]
   );
-
   const handleStyle = {
     background: "var(--chakra-colors-ui-wfhandlecolor)",
     width: 8,

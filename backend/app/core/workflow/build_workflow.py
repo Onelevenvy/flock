@@ -2,6 +2,7 @@ import time
 from functools import cache
 from typing import Any
 
+from app.core.workflow.node.parameter_extractor_node import ParameterExtractorNode
 from langchain.tools import BaseTool
 from langchain.tools.retriever import create_retriever_tool
 from langchain_core.messages import AIMessage, AnyMessage
@@ -239,6 +240,8 @@ def initialize_graph(
                 _add_ifelse_node(graph_builder, node_id, node_data)
             elif node_type == "human":
                 _add_human_node(graph_builder, node_id, node_data)
+            elif node_type == "parameterExtractor":
+                _add_parameter_extractor_node(graph_builder, node_id, node_data)
 
         # Add edges
         for edge in edges:
@@ -544,6 +547,11 @@ def _add_edge(graph_builder, edge, nodes, conditional_edges):
             graph_builder.add_edge(edge["source"], END)
         else:
             graph_builder.add_edge(edge["source"], edge["target"])
+    elif source_node["type"] == "parameterExtractor":
+        if target_node["type"] == "end":
+            graph_builder.add_edge(edge["source"], END)
+        else:
+            graph_builder.add_edge(edge["source"], edge["target"])
 
 
 def _add_crewai_node(graph_builder, node_id, node_type, node_data):
@@ -646,6 +654,18 @@ def _add_subgraph_node(graph_builder, node_id: str, node_data: dict):
         SubgraphNode(
             node_id=node_id,
             subgraph_id=node_data["subgraphId"],
+            input=node_data["Input"],
+        ).work,
+    )
+
+
+def _add_parameter_extractor_node(graph_builder, node_id, node_data):
+    graph_builder.add_node(
+        node_id,
+        ParameterExtractorNode(
+            node_id=node_id,
+            model_name=node_data["model"],
+            parameter_schema=node_data["parameters"],
             input=node_data["Input"],
         ).work,
     )

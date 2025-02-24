@@ -83,23 +83,25 @@ const ParameterExtractorNodeProperties: React.FC<ParameterExtractorNodePropertie
 
   const handleSaveParameter = useCallback(
     (parameter: Parameter) => {
-      const currentParameters = node.data.parameters || [];
+      const currentParameters = Array.isArray(node.data.parameters) ? node.data.parameters : [];
       let updatedParameters;
 
       if (parameter.parameter_id) {
-        // Edit existing parameter
+        // 编辑已存在的参数
         updatedParameters = currentParameters.map((p: Parameter) =>
           p.parameter_id === parameter.parameter_id ? parameter : p
         );
       } else {
-        // Add new parameter
-        updatedParameters = [
-          ...currentParameters,
-          { ...parameter, parameter_id: uuidv4() },
-        ];
+        // 添加新参数
+        const newParameter = {
+          ...parameter,
+          parameter_id: uuidv4()
+        };
+        updatedParameters = [...currentParameters, newParameter];
       }
 
       onNodeDataChange(node.id, "parameters", updatedParameters);
+      setIsModalOpen(false);
     },
     [node.id, node.data.parameters, onNodeDataChange]
   );

@@ -36,10 +36,28 @@ const ParameterExtractorNode: React.FC<NodeProps<ParameterExtractorNodeData>> = 
 
   return (
     <BaseNode {...props} icon={<Icon />} colorScheme={colorScheme}>
-      <Handle
+   <Handle
         type="target"
         position={Position.Left}
-        id="input"
+        id="left"
+        style={handleStyle}
+      />
+      <Handle
+        type="target"
+        position={Position.Right}
+        id="right"
+        style={handleStyle}
+      />
+      <Handle
+        type="source"
+        position={Position.Left}
+        id="left"
+        style={handleStyle}
+      />
+      <Handle
+        type="source"
+        position={Position.Right}
+        id="right"
         style={handleStyle}
       />
 
@@ -85,12 +103,7 @@ const ParameterExtractorNode: React.FC<NodeProps<ParameterExtractorNodeData>> = 
         ))}
       </VStack>
 
-      <Handle
-        type="source"
-        position={Position.Right}
-        id="output"
-        style={handleStyle}
-      />
+  
     </BaseNode>
   );
 };

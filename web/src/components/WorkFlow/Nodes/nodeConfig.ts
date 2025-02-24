@@ -310,7 +310,7 @@ export const nodeConfig: Record<string, NodeConfigItem> = {
       ],
       toolImport: null
     },
-    inputVariables: ["input"],
+    inputVariables: ["Input"],
     outputVariables: ["parameters"],
   },
 };
