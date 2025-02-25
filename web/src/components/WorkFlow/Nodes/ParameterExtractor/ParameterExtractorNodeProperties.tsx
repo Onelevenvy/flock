@@ -1,21 +1,23 @@
 import {
   Box,
-  Button,
   HStack,
   IconButton,
   Text,
   VStack,
   Textarea,
+  Tooltip,
 } from "@chakra-ui/react";
 import React, { useCallback, useState } from "react";
-import { FaPlus, FaTrash, FaEdit } from "react-icons/fa";
+import { FaPlus, FaTrash, FaEdit, FaFileImport } from "react-icons/fa";
 import { useTranslation } from "react-i18next";
 
 import ModelSelect from "@/components/Common/ModelProvider";
 import { useModelQuery } from "@/hooks/useModelQuery";
+import { useSkillsQuery } from "@/hooks/useSkillsQuery";
 import { ParameterSchema } from "../../types";
 import { useForm } from "react-hook-form";
 import ParameterModal from "./ParameterModal";
+import ToolsList from "../Tool/ToolsListModal";
 
 interface ParameterExtractorNodePropertiesProps {
   node: any;
@@ -28,6 +30,7 @@ const ParameterExtractorNodeProperties: React.FC<ParameterExtractorNodePropertie
 }) => {
   const { t } = useTranslation();
   const { data: models, isLoading: isLoadingModel } = useModelQuery();
+  const { data: skills } = useSkillsQuery();
   const { control } = useForm<{ model: string; provider: string }>({
     defaultValues: {
       model: node.data.model || "",
@@ -36,6 +39,7 @@ const ParameterExtractorNodeProperties: React.FC<ParameterExtractorNodePropertie
   });
 
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isToolsModalOpen, setIsToolsModalOpen] = useState(false);
   const [editingParameter, setEditingParameter] = useState<ParameterSchema | undefined>();
 
   const handleAddParameter = useCallback(() => {
@@ -88,6 +92,40 @@ const ParameterExtractorNodeProperties: React.FC<ParameterExtractorNodePropertie
     [node.id, node.data.parameters, onNodeDataChange, editingParameter]
   );
 
+  const handleImportFromTool = useCallback(() => {
+    setIsToolsModalOpen(true);
+  }, []);
+
+  const handleToolSelect = useCallback((toolName: string) => {
+    const selectedTool = skills?.data.find(
+      (skill) => skill.display_name === toolName
+    );
+    
+    if (!selectedTool?.input_parameters) return;
+
+    const newParameters = Object.entries(selectedTool.input_parameters).map(([key, value]: [string, any]) => ({
+      [key]: {
+        type: value.type,
+        required: value.required || false,
+        description: value.description || "",
+      }
+    }));
+
+    // 合并现有参数和新参数，避免重复
+    const existingParamNames = (node.data.parameters || []).map((p: ParameterSchema) => Object.keys(p)[0]);
+    const uniqueNewParams = newParameters.filter((param) => {
+      const paramName = Object.keys(param)[0];
+      return !existingParamNames.includes(paramName);
+    });
+
+    onNodeDataChange(node.id, "parameters", [
+      ...(node.data.parameters || []),
+      ...uniqueNewParams
+    ]);
+    
+    setIsToolsModalOpen(false);
+  }, [skills?.data, node.id, node.data.parameters, onNodeDataChange]);
+
   return (
     <VStack spacing={4} align="stretch">
       <Box>
@@ -111,15 +149,28 @@ const ParameterExtractorNodeProperties: React.FC<ParameterExtractorNodePropertie
           <Text fontWeight="bold" color="gray.700">
             {t("workflow.nodes.parameterExtractor.parameters")}:
           </Text>
-          <Button
-            leftIcon={<FaPlus />}
-            onClick={handleAddParameter}
-            colorScheme="blue"
-            variant="ghost"
-            size="sm"
-          >
-            {t("workflow.nodes.parameterExtractor.addParameter")}
-          </Button>
+          <HStack spacing={2}>
+            <Tooltip label={t("workflow.nodes.parameterExtractor.importFromTool")}>
+              <IconButton
+                aria-label="Import from tool"
+                icon={<FaFileImport />}
+                onClick={handleImportFromTool}
+                colorScheme="blue"
+                variant="ghost"
+                size="sm"
+              />
+            </Tooltip>
+            <Tooltip label={t("workflow.nodes.parameterExtractor.addParameter")}>
+              <IconButton
+                aria-label="Add parameter"
+                icon={<FaPlus />}
+                onClick={handleAddParameter}
+                colorScheme="blue"
+                variant="ghost"
+                size="sm"
+              />
+            </Tooltip>
+          </HStack>
         </HStack>
         <VStack spacing={4} align="stretch">
           {node.data.parameters?.map((parameter: ParameterSchema) => {
@@ -199,6 +250,15 @@ const ParameterExtractorNodeProperties: React.FC<ParameterExtractorNodePropertie
         isEdit={!!editingParameter}
         existingParameters={node.data.parameters || []}
       />
+
+      {isToolsModalOpen && (
+        <ToolsList
+          skills={skills?.data || []}
+          onClose={() => setIsToolsModalOpen(false)}
+          onAddTool={handleToolSelect}
+          selectedTools={[]}
+        />
+      )}
     </VStack>
   );
 };

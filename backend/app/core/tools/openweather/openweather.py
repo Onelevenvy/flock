@@ -10,7 +10,7 @@ from app.core.tools.utils import get_credential_value
 class WeatherSearchInput(BaseModel):
     """Input for the weather search tool."""
 
-    city: str = Field(description="city name")
+    city: str = Field(description="city name,please provide city name in English,for example: Beijing")
 
 
 def open_weather_qry(city: str) -> str:

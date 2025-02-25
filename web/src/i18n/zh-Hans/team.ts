@@ -110,6 +110,7 @@ const translation = {
         untitled: "未命名",
         extractionInstruction: "提取指令",
         instructionPlaceholder: "输入额外的指令来帮助参数提取器理解如何提取参数（可选）",
+        importFromTool: "从工具导入",
         modal: {
           title: "参数配置",
           addTitle: "添加参数",

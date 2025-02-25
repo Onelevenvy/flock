@@ -112,6 +112,7 @@ const translation = {
         untitled: "Untitled",
         extractionInstruction: "Extraction Instruction",
         instructionPlaceholder: "Enter additional instructions to help the parameter extractor understand how to extract parameters (optional)",
+        importFromTool: "Import from Tool",
         modal: {
           title: "Parameter Configuration",
           addTitle: "Add Parameter",
