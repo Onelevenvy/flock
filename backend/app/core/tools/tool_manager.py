@@ -29,7 +29,13 @@ class ToolManager:
         input_parameters = {}
 
         for key, value in inputs_dict.items():
-            input_parameters[key] = value["type"]
+
+            # Convert from OpenAPI-style schema to our format
+            input_parameters[key] = {
+                "type": value.get("type", "string"),
+                "required": value.get("required", True),
+                "description": value.get("description", f"Parameter: {key}"),
+            }
 
         return input_parameters
 
@@ -107,14 +113,14 @@ class ToolManager:
                 description="Searches the web using DuckDuckGo.",
                 tool=DuckDuckGoSearchRun(),
                 display_name="DuckDuckGo",
-                input_parameters={"query": "str"},
+                input_parameters={"query": {"type": "string", "required": True, "description": "The query to search for"}},
                 credentials={},
             ),
             "wikipedia": ToolInfo(
                 description="Searches Wikipedia.",
                 tool=WikipediaQueryRun(api_wrapper=WikipediaAPIWrapper()),
                 display_name="Wikipedia",
-                input_parameters={"query": "str"},
+                input_parameters={"query": {"type": "string", "required": True, "description": "The query to search for"}},
                 credentials={},
             ),
             # "tavilysearch": ToolInfo(

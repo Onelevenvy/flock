@@ -47,10 +47,10 @@ The output must:
 ### Example Output
 To illustrate, here are some examples of valid parameter extraction:
 <example>
-User: {{"text": "Book a flight from NYC to London on July 15th", "schema": {{"name":"departure","type":"string","required":true,"description":"The departure city"}},{{"name":"destination","type":"string","required":true,"description":"The destination city"}},{{"name":"date","type":"string","required":true,"description":"The date of the flight"}}}}
+User: {{"text": "Book a flight from NYC to London on July 15th", "schema": {{"departure": {{"type": "string", "required": true, "description": "The departure city"}}, "destination": {{"type": "string", "required": true, "description": "The destination city"}}, "date": {{"type": "string", "required": true, "description": "The date of the flight"}}}}}
 Assistant: {{"departure": "NYC", "destination": "London", "date": "July 15th"}}
 
-User: {{"text": "Room temperature is 23.5°C with 45 percent humidity", "schema": {{"name":"temperature","type":"number","required":true,"description":"The temperature in degrees Celsius"}},{{"name":"humidity","type":"number","required":true,"description":"The humidity in percent"}}}}
+User: {{"text": "Room temperature is 23.5°C with 45 percent humidity", "schema": {{"temperature": {{"type": "number", "required": true, "description": "The temperature in degrees Celsius"}}, "humidity": {{"type": "number", "required": true, "description": "The humidity in percent"}}}}}
 Assistant: {{"temperature": 23.5, "humidity": 45}}
 </example>
 

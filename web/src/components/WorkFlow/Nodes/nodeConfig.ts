@@ -300,14 +300,7 @@ export const nodeConfig: Record<string, NodeConfigItem> = {
     },
     initialData: {
       model: "glm-4-flash",
-      parameters: [
-        { 
-          parameter_id: uuidv4(),
-          name: "",
-          type: "string",
-          required: true
-        }
-      ],
+      parameters: [],
       toolImport: null
     },
     inputVariables: ["Input"],

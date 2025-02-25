@@ -5,7 +5,7 @@ import { useTranslation } from "react-i18next";
 
 import { BaseNode } from "../Base/BaseNode";
 import { nodeConfig } from "../nodeConfig";
-import { ParameterExtractorNodeData } from "../../types";
+import { ParameterExtractorNodeData, ParameterSchema } from "../../types";
 import ModelProviderIcon from "@/components/Icons/models";
 
 const ParameterExtractorNode: React.FC<NodeProps<ParameterExtractorNodeData>> = (props) => {
@@ -36,7 +36,7 @@ const ParameterExtractorNode: React.FC<NodeProps<ParameterExtractorNodeData>> = 
 
   return (
     <BaseNode {...props} icon={<Icon />} colorScheme={colorScheme}>
-   <Handle
+      <Handle
         type="target"
         position={Position.Left}
         id="left"
@@ -83,27 +83,29 @@ const ParameterExtractorNode: React.FC<NodeProps<ParameterExtractorNodeData>> = 
             </Text>
           </Box>
         </VStack>
-        {parameters.map((param) => (
-          <Box
-            key={param.parameter_id}
-            position="relative"
-            bg="ui.inputbgcolor"
-            p={1}
-            borderRadius="md"
-            transition="all 0.2s"
-            _hover={{
-              bg: "gray.100",
-            }}
-          >
-            <Text fontSize="xs" fontWeight="500">
-              {param.name || t("workflow.nodes.parameterExtractor.untitled")} ({param.type})
-              {param.required && <Text as="span" color="red.500">*</Text>}
-            </Text>
-          </Box>
-        ))}
+        {parameters.map((param: ParameterSchema) => {
+          const paramName = Object.keys(param)[0];
+          const paramData = param[paramName];
+          return (
+            <Box
+              key={paramName}
+              position="relative"
+              bg="ui.inputbgcolor"
+              p={1}
+              borderRadius="md"
+              transition="all 0.2s"
+              _hover={{
+                bg: "gray.100",
+              }}
+            >
+              <Text fontSize="xs" fontWeight="500">
+                {paramName} ({paramData.type})
+                {paramData.required && <Text as="span" color="red.500">*</Text>}
+              </Text>
+            </Box>
+          );
+        })}
       </VStack>
-
-  
     </BaseNode>
   );
 };

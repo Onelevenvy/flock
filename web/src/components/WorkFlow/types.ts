@@ -105,17 +105,17 @@ export interface HumanNodeData extends NodeData {
   title?: string;
 }
 
-export interface Parameter {
-  parameter_id: string;
-  name: string;
-  type: string;
-  description: string;
-  required: boolean;
+export interface ParameterSchema {
+  [key: string]: {
+    type: string;  // "str" | "number"
+    required: boolean;
+    description: string;
+  }
 }
 
 export interface ParameterExtractorNodeData {
   model: string;
-  parameters: Parameter[];
+  parameters: ParameterSchema[];
   toolImport: any | null;
   instruction?: string;
 }

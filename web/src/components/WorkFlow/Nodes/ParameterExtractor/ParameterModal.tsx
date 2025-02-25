@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import {
   Modal,
   ModalOverlay,
@@ -15,25 +15,31 @@ import {
   Checkbox,
   VStack,
   Textarea,
+  Text,
 } from "@chakra-ui/react";
 import { useTranslation } from "react-i18next";
-import { Parameter } from "../../types";
+import { ParameterSchema } from "../../types";
 
 interface ParameterModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onSave: (parameter: Parameter) => void;
-  parameter?: Parameter;
+  onSave: (parameter: ParameterSchema) => void;
+  parameter?: ParameterSchema;
   isEdit?: boolean;
+  existingParameters?: ParameterSchema[];
 }
 
 const PARAMETER_TYPES = [
-  "string",
-  "number",
-  "boolean",
-  "array[string]",
-  "array[number]",
-  "array[object]"
+  {
+    type: "str",
+    label: "String",
+    description: "A text value"
+  },
+  {
+    type: "number",
+    label: "Number",
+    description: "A numeric value"
+  }
 ];
 
 const ParameterModal: React.FC<ParameterModalProps> = ({
@@ -42,34 +48,73 @@ const ParameterModal: React.FC<ParameterModalProps> = ({
   onSave,
   parameter,
   isEdit = false,
+  existingParameters = [],
 }) => {
   const { t } = useTranslation();
-  const [formData, setFormData] = React.useState<Parameter>({
-    parameter_id: parameter?.parameter_id || "",
-    name: parameter?.name || "",
-    type: parameter?.type || "string",
-    description: parameter?.description || "",
-    required: parameter?.required ?? true,
+  
+  const [parameterName, setParameterName] = useState("");
+  const [formData, setFormData] = useState({
+    type: "str",
+    required: true,
+    description: "",
   });
+  const [nameError, setNameError] = useState("");
 
-  React.useEffect(() => {
-    if (parameter) {
-      setFormData(parameter);
+  const validateParameterName = (name: string) => {
+    if (!name) {
+      setNameError("Parameter name is required");
+      return;
     }
-  }, [parameter]);
+    
+    const exists = existingParameters.some(p => {
+      const existingName = Object.keys(p)[0];
+      return existingName === name && (!isEdit || existingName !== Object.keys(parameter || {})[0]);
+    });
 
-  const handleChange = (
-    field: keyof Parameter,
-    value: string | boolean
-  ) => {
-    setFormData((prev) => ({
-      ...prev,
-      [field]: value,
-    }));
+    if (exists) {
+      setNameError("A parameter with this name already exists");
+    } else {
+      setNameError("");
+    }
   };
 
+  const handleNameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const newName = e.target.value;
+    setParameterName(newName);
+    validateParameterName(newName);
+  };
+
+  React.useEffect(() => {
+    if (isOpen) {
+      if (isEdit && parameter) {
+        const paramName = Object.keys(parameter)[0];
+        const paramData = parameter[paramName];
+        setParameterName(paramName);
+        setFormData(paramData);
+      } else {
+        setParameterName("");
+        setFormData({
+          type: "str",
+          required: true,
+          description: "",
+        });
+      }
+    }
+  }, [isOpen, isEdit, parameter]);
+
   const handleSave = () => {
-    onSave(formData);
+    if (!parameterName || nameError) {
+      return;
+    }
+
+    const parameter: ParameterSchema = {
+      [parameterName]: {
+        type: formData.type,
+        required: formData.required,
+        description: formData.description
+      }
+    };
+    onSave(parameter);
     onClose();
   };
 
@@ -84,56 +129,52 @@ const ParameterModal: React.FC<ParameterModalProps> = ({
         </ModalHeader>
         <ModalCloseButton />
         <ModalBody>
-          <VStack spacing={4}>
-            <FormControl isRequired>
-              <FormLabel>
-                {t("workflow.nodes.parameterExtractor.parameterName")}
-              </FormLabel>
+          <VStack spacing={4} align="stretch">
+            <FormControl isRequired isInvalid={!!nameError}>
+              <FormLabel>Parameter Name</FormLabel>
               <Input
-                value={formData.name}
-                onChange={(e) => handleChange("name", e.target.value)}
-                placeholder={t(
-                  "workflow.nodes.parameterExtractor.namePlaceholder"
-                )!}
+                value={parameterName}
+                onChange={handleNameChange}
+                placeholder="Enter parameter name"
               />
+              {nameError && (
+                <Text color="red.500" fontSize="sm">
+                  {nameError}
+                </Text>
+              )}
             </FormControl>
 
             <FormControl isRequired>
-              <FormLabel>
-                {t("workflow.nodes.parameterExtractor.parameterType")}
-              </FormLabel>
+              <FormLabel>Type</FormLabel>
               <Select
                 value={formData.type}
-                onChange={(e) => handleChange("type", e.target.value)}
+                onChange={(e) => setFormData(prev => ({...prev, type: e.target.value}))}
               >
                 {PARAMETER_TYPES.map((type) => (
-                  <option key={type} value={type}>
-                    {type}
+                  <option key={type.type} value={type.type}>
+                    {type.label}
                   </option>
                 ))}
               </Select>
             </FormControl>
 
             <FormControl>
-              <FormLabel>
-                {t("workflow.nodes.parameterExtractor.parameterDescription")}
-              </FormLabel>
+              <FormLabel>Description</FormLabel>
               <Textarea
                 value={formData.description}
-                onChange={(e) => handleChange("description", e.target.value)}
-                placeholder={t(
-                  "workflow.nodes.parameterExtractor.descriptionPlaceholder"
-                )!}
-                rows={3}
+                onChange={(e) => setFormData(prev => ({...prev, description: e.target.value}))}
+                placeholder="Enter parameter description"
               />
             </FormControl>
 
-            <Checkbox
-              isChecked={formData.required}
-              onChange={(e) => handleChange("required", e.target.checked)}
-            >
-              {t("workflow.nodes.parameterExtractor.required")}
-            </Checkbox>
+            <FormControl>
+              <Checkbox
+                isChecked={formData.required}
+                onChange={(e) => setFormData(prev => ({...prev, required: e.target.checked}))}
+              >
+                Required
+              </Checkbox>
+            </FormControl>
           </VStack>
         </ModalBody>
 
@@ -141,7 +182,11 @@ const ParameterModal: React.FC<ParameterModalProps> = ({
           <Button variant="ghost" mr={3} onClick={onClose}>
             {t("workflow.nodes.parameterExtractor.modal.cancel")}
           </Button>
-          <Button colorScheme="blue" onClick={handleSave}>
+          <Button 
+            colorScheme="blue" 
+            onClick={handleSave}
+            isDisabled={!parameterName || !!nameError}
+          >
             {t("workflow.nodes.parameterExtractor.modal.save")}
           </Button>
         </ModalFooter>
