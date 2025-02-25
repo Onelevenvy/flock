@@ -62,6 +62,7 @@ def get_model_info(model_name: str) -> dict[str, str]:
             "api_key": model.provider.decrypted_api_key,  # 现在可以使用decrypted_api_key
         }
 
+
 def get_subgraph_by_id(subgraph_id: int) -> dict[str, Any]:
     """
     Get subgraph config by ID.
@@ -70,4 +71,4 @@ def get_subgraph_by_id(subgraph_id: int) -> dict[str, Any]:
         subgraph = session.get(Subgraph, subgraph_id)
         if not subgraph:
             raise ValueError(f"Subgraph {subgraph_id} not found")
-        return subgraph.config,subgraph.name
+        return subgraph.config, subgraph.name

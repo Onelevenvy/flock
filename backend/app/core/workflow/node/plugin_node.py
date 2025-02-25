@@ -1,7 +1,7 @@
-from app.core.tools.tool_invoker import invoke_tool,ToolInvokeResponse,ToolMessages
-from langchain_core.runnables import RunnableConfig
-import json
 import ast
+import json
+
+from langchain_core.runnables import RunnableConfig
 
 from app.core.state import (
     ReturnWorkflowTeamState,
@@ -9,6 +9,7 @@ from app.core.state import (
     parse_variables,
     update_node_outputs,
 )
+from app.core.tools.tool_invoker import ToolInvokeResponse, ToolMessages, invoke_tool
 
 
 def convert_str_to_dict(s: str) -> dict:
@@ -37,13 +38,18 @@ class PluginNode:
             state["node_outputs"] = {}
 
         if self.args:
-            parsed_tool_args = parse_variables(
-                self.args, state["node_outputs"]
-            )
+            parsed_tool_args = parse_variables(self.args, state["node_outputs"])
             parsed_tool_args_dict = convert_str_to_dict(parsed_tool_args)
             tool_result = invoke_tool(self.tool_name, parsed_tool_args_dict)
         else:
-            tool_result = ToolInvokeResponse(messages=[ToolMessages(content="No args provided", name=self.tool_name, tool_call_id="")], error="No args provided")
+            tool_result = ToolInvokeResponse(
+                messages=[
+                    ToolMessages(
+                        content="No args provided", name=self.tool_name, tool_call_id=""
+                    )
+                ],
+                error="No args provided",
+            )
 
         new_output = {self.node_id: {"response": tool_result.messages[0].content}}
         state["node_outputs"] = update_node_outputs(state["node_outputs"], new_output)

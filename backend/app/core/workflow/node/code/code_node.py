@@ -7,9 +7,10 @@ import time
 import uuid
 from textwrap import dedent
 
-import docker
 from langchain_core.messages import ToolMessage
 from langchain_core.runnables import RunnableConfig
+
+import docker
 
 from ....state import (
     ReturnWorkflowTeamState,

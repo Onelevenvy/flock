@@ -59,10 +59,11 @@ class LLMNode(LLMBaseNode):
 
         if self.system_prompt:
             # First parse variables, then escape any remaining curly braces
-            parsed_system_prompt = parse_variables(
-                self.system_prompt,
-                state["node_outputs"]
-            ).replace("{", "{{").replace("}", "}}")
+            parsed_system_prompt = (
+                parse_variables(self.system_prompt, state["node_outputs"])
+                .replace("{", "{{")
+                .replace("}", "}}")
+            )
 
             llm_node_prompts = ChatPromptTemplate.from_messages(
                 [

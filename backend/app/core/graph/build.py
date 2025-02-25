@@ -14,8 +14,9 @@ from langgraph.checkpoint.postgres.aio import AsyncPostgresSaver
 from langgraph.graph import END, StateGraph
 from langgraph.graph.graph import CompiledGraph
 from langgraph.prebuilt import ToolNode
-from psycopg import AsyncConnection
 from langgraph.types import Command
+from psycopg import AsyncConnection
+
 from app.core.config import settings
 from app.core.graph.members import (
     GraphLeader,

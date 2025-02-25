@@ -11,7 +11,6 @@ from app.models import (
     SubgraphOut,
     SubgraphsOut,
     SubgraphUpdate,
-    Team,
 )
 
 # 创建一个新的路由组，专门用于不需要team_id的操作

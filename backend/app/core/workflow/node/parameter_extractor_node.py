@@ -1,5 +1,3 @@
-from typing import Any, Optional
-
 from langchain_core.output_parsers import JsonOutputParser
 from langchain_core.prompts import ChatPromptTemplate
 from langchain_core.runnables import RunnableConfig
@@ -139,8 +137,6 @@ class ParameterExtractorNode:
         chain = prompt | llm | outputparser
 
         result = await chain.ainvoke(input_json)
-
-        
 
         # Update node outputs
         new_output = {self.node_id: {"parameters": result}}
