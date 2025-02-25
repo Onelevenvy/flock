@@ -39,9 +39,9 @@ const PluginNodeProperties: React.FC<PluginNodePropertiesProps> = ({
   // 添加一个函数来格式化输入参数
   const formatInputSchema = useCallback(() => {
     if (!tool?.input_parameters) return null;
-    return Object.entries(tool.input_parameters).map(([key, type]) => (
+    return Object.entries(tool.input_parameters).map(([key, value]) => (
       <Text key={key} ml={4} fontSize="sm" color="gray.600">
-        {key}: {type}
+        {key}: {(value as any).type}
       </Text>
     ));
   }, [tool?.input_parameters]);
