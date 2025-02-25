@@ -1,12 +1,26 @@
-from app.core.tools.tool_invoker import invoke_tool
+from app.core.tools.tool_invoker import invoke_tool,ToolInvokeResponse
 from langchain_core.runnables import RunnableConfig
-
+import json
+import ast
 from app.core.state import (
     ReturnWorkflowTeamState,
     WorkflowTeamState,
     parse_variables,
     update_node_outputs,
 )
+
+
+def convert_str_to_dict(s: str) -> dict:
+    """Convert a string representation of a Python dictionary to a dictionary object."""
+    try:
+        # First try json.loads
+        return json.loads(s)
+    except json.JSONDecodeError:
+        try:
+            # If json.loads fails, try ast.literal_eval
+            return ast.literal_eval(s)
+        except (ValueError, SyntaxError):
+            raise ValueError(f"Failed to convert string to dictionary: {s}")
 
 
 class PluginNode:
@@ -25,9 +39,10 @@ class PluginNode:
             parsed_tool_args = parse_variables(
                 self.args, state["node_outputs"]
             )
-            tool_result = invoke_tool(self.tool_name, parsed_tool_args)
+            parsed_tool_args_dict = convert_str_to_dict(parsed_tool_args)
+            tool_result = invoke_tool(self.tool_name, parsed_tool_args_dict)
         else:
-            tool_result = invoke_tool(self.tool_name, {})
+            tool_result = ToolInvokeResponse(messages=[], error="No args provided")
 
         new_output = {self.node_id: tool_result}
         state["node_outputs"] = update_node_outputs(state["node_outputs"], new_output)

@@ -390,7 +390,7 @@ const FlowVisualizer: React.FC<FlowVisualizerProps> = ({
           data: {
             label: tool.display_name,
             toolName: tool.display_name,
-            args: {},
+            args: "",
             ...tool.initialData,
           },
         };
@@ -560,7 +560,7 @@ const FlowVisualizer: React.FC<FlowVisualizerProps> = ({
           data: {
             label: tool.display_name,
             toolName: tool.display_name,
-            args: {},
+            args: "",
             ...tool.initialData,
           },
         };

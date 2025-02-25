@@ -111,7 +111,7 @@ export const nodeConfig: Record<string, NodeConfigItem> = {
     properties: PluginNodeProperties,
     initialData: {
       toolName: "",
-      args: {},
+      args: "",
     },
     allowedConnections: {
       sources: ["right"],

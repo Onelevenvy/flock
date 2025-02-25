@@ -26,28 +26,16 @@ const PluginNodeProperties: React.FC<PluginNodePropertiesProps> = ({
   const [loading, setLoading] = useState(false);
 
   const handleInputChange = useCallback(
-    (key: string, value: string) => {
-      onNodeDataChange(node.id, "args", {
-        ...node.data.args,
-        [key]: value,
-      });
+    (value: string) => {
+      onNodeDataChange(node.id, "args", value);
     },
-    [node.id, node.data.args, onNodeDataChange]
+    [node.id, onNodeDataChange]
   );
 
-  const variableInsertionHooks: {
-    [key: string]: ReturnType<typeof useVariableInsertion<HTMLTextAreaElement>>;
-  } = {};
-
-  if (tool?.input_parameters) {
-    Object.keys(tool.input_parameters).forEach((key) => {
-      // eslint-disable-next-line react-hooks/rules-of-hooks
-      variableInsertionHooks[key] = useVariableInsertion<HTMLTextAreaElement>({
-        onValueChange: (value) => handleInputChange(key, value),
-        availableVariables,
-      });
-    });
-  }
+  const variableInsertionHook = useVariableInsertion<HTMLTextAreaElement>({
+    onValueChange: handleInputChange,
+    availableVariables,
+  });
 
   const handleInvoke = async () => {
     setLoading(true);
@@ -69,22 +57,18 @@ const PluginNodeProperties: React.FC<PluginNodePropertiesProps> = ({
       <Text fontWeight="bold" mb={2} color="gray.700">
         Input Parameters:
       </Text>
-      {tool?.input_parameters &&
-        Object.entries(tool.input_parameters).map(([key]) => (
-          <VariableSelector
-            key={key}
-            label={key}
-            value={node.data.args[key] || ""}
-            onChange={(value) => handleInputChange(key, value)}
-            showVariables={variableInsertionHooks[key]?.showVariables}
-            setShowVariables={variableInsertionHooks[key]?.setShowVariables}
-            inputRef={variableInsertionHooks[key]?.inputRef}
-            handleKeyDown={variableInsertionHooks[key]?.handleKeyDown}
-            insertVariable={variableInsertionHooks[key]?.insertVariable}
-            availableVariables={availableVariables}
-            minHeight="80px"
-          />
-        ))}
+      <VariableSelector
+        label="Args"
+        value={node.data.args || ""}
+        onChange={handleInputChange}
+        showVariables={variableInsertionHook.showVariables}
+        setShowVariables={variableInsertionHook.setShowVariables}
+        inputRef={variableInsertionHook.inputRef}
+        handleKeyDown={variableInsertionHook.handleKeyDown}
+        insertVariable={variableInsertionHook.insertVariable}
+        availableVariables={availableVariables}
+        minHeight="80px"
+      />
       <Button
         onClick={handleInvoke}
         isLoading={loading}
