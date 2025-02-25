@@ -14,41 +14,69 @@ from ...state import (
     update_node_outputs,
 )
 
-PARAMETER_EXTRACTOR_SYSTEM_PROMPT = """
-### Job Description
-You are a parameter extraction engine that analyzes text data and extracts specific parameters based on predefined schema.
+PARAMETER_EXTRACTOR_SYSTEM_PROMPT = """You are a helpful assistant tasked with extracting structured information based on specific criteria provided. Follow the guidelines below to ensure consistency and accuracy.
 
 ### Task
-Your task is to extract parameters from the input text according to the provided parameter schema. You must ensure each parameter matches its defined type and constraints.
+Always extract parameters from the input text according to the provided schema. Your output must be a valid JSON object that matches the schema requirements.
 
-### Format
-The input text is in the variable text_field. Parameter schema is provided in JSON format.
+### Instructions
+Some additional information is provided below. Always adhere to these instructions as closely as possible:
+<instruction>
+{instruction}
+</instruction>
 
-### Constraint
-- Extract ONLY the parameters defined in the schema
-- Ensure parameter types match the schema definition
-- Return parameters in JSON format
-- DO NOT include any explanations or additional text
+Steps:
+1. Review the input text carefully and understand the schema requirements
+2. Extract relevant parameters based on the schema definition
+3. Ensure extracted values match the required data types
+4. Generate a well-formatted JSON output
+5. Do not include any explanations or additional text in the output
+6. Return ONLY the JSON object, no XML tags in the output
 
-### Example
-Here is an example between human and assistant, inside <example></example> XML tags.
+### Structure
+Here is the structure of the expected output, you MUST always follow this output structure:
+{{
+    "parameter_name1": "value matching schema type",
+    "parameter_name2": "value matching schema type",
+    ...
+}}
+The output must:
+1. Contain all required parameters defined in the schema
+2. Match the exact data types specified in the schema
+3. Be a valid JSON object without any additional text or XML tags
+4. Follow the exact parameter names from the schema
+
+### Example Output
+To illustrate, here are some examples of valid parameter extraction:
 <example>
-User: {{"text": "I want to book a flight from New York to London on July 15th, economy class", "schema": {{"departure": "string", "destination": "string", "date": "string", "class": "string"}}}}
-Assistant: {{"departure": "New York", "destination": "London", "date": "July 15th", "class": "economy"}}
+User: {{"text": "Book a flight from NYC to London on July 15th", "schema": {{"name":"departure","type":"string","required":true,"description":"The departure city"}},{{"name":"destination","type":"string","required":true,"description":"The destination city"}},{{"name":"date","type":"string","required":true,"description":"The date of the flight"}}}}
+Assistant: {{"departure": "NYC", "destination": "London", "date": "July 15th"}}
 
-User: {{"text": "The temperature is 25 degrees and humidity is 60%", "schema": {{"temperature": "number", "humidity": "number"}}}}
-Assistant: {{"temperature": 25, "humidity": 60}}
+User: {{"text": "Room temperature is 23.5°C with 45 percent humidity", "schema": {{"name":"temperature","type":"number","required":true,"description":"The temperature in degrees Celsius"}},{{"name":"humidity","type":"number","required":true,"description":"The humidity in percent"}}}}
+Assistant: {{"temperature": 23.5, "humidity": 45}}
 </example>
+
+### Final Output
+Produce well-formatted JSON object without XML tags, strictly following the schema structure.
 """
 
-PARAMETER_EXTRACTOR_USER_PROMPT = """
-### Input
-Text: {input_text}
-Parameter Schema: {parameter_schema}
+PARAMETER_EXTRACTOR_USER_PROMPT = """Extract structured parameters from the input text inside <text></text> XML tags according to the schema inside <schema></schema> XML tags.
+
+### Input Text
+<text>
+{input_text}
+</text>
+
+### Parameter Schema
+<schema>
+{parameter_schema}
+</schema>
 
 ### Task
-Please extract the parameters from the text according to the schema.
-Return only the parameters in JSON format, nothing else.
+1. Extract all required parameters from the input text
+2. Format them according to the schema definition
+3. Return only a valid JSON object containing the extracted parameters
+4. Do not include any explanations or XML tags in the output
 """
 
 
@@ -96,6 +124,8 @@ class ParameterExtractorNode:
         input_json = {
             "input_text": input_text,
             "parameter_schema": self.parameter_schema,
+            "instruction": self.instruction,
+            # "histories": state.get("all_messages", []),
         }
 
         # Prepare prompt and get extraction result
