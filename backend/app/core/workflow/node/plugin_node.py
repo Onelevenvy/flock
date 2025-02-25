@@ -1,7 +1,8 @@
-from app.core.tools.tool_invoker import invoke_tool,ToolInvokeResponse
+from app.core.tools.tool_invoker import invoke_tool,ToolInvokeResponse,ToolMessages
 from langchain_core.runnables import RunnableConfig
 import json
 import ast
+
 from app.core.state import (
     ReturnWorkflowTeamState,
     WorkflowTeamState,
@@ -42,9 +43,9 @@ class PluginNode:
             parsed_tool_args_dict = convert_str_to_dict(parsed_tool_args)
             tool_result = invoke_tool(self.tool_name, parsed_tool_args_dict)
         else:
-            tool_result = ToolInvokeResponse(messages=[], error="No args provided")
+            tool_result = ToolInvokeResponse(messages=[ToolMessages(content="No args provided", name=self.tool_name, tool_call_id="")], error="No args provided")
 
-        new_output = {self.node_id: tool_result}
+        new_output = {self.node_id: {"response": tool_result.messages[0].content}}
         state["node_outputs"] = update_node_outputs(state["node_outputs"], new_output)
 
         return_state: ReturnWorkflowTeamState = {
