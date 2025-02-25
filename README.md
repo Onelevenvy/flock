@@ -9,6 +9,10 @@
 
 > [!NOTE]
 >
+> ### 🎉 What's New 2025/2/25
+>
+> - **Parameter Extractor Node**: Added parameter extraction node that can automatically extract structured information from text and output in JSON format!
+>
 > ### 🎉 What's New 2025/1/21
 >
 > - **Subgraph Node Support**: Added subgraph node that allows you to encapsulate and reuse complete sub-workflows!
