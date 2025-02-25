@@ -42,7 +42,7 @@ QUESTION_CLASSIFIER_USER_PROMPT = """
  ### Input
     input_text: {input_text},
     categories: {categories},
-   ### Assistant Output
+ ### Assistant Output
     Please classify the above text into exactly one of the listed categories.
     Return only the category name, nothing else.
 """
