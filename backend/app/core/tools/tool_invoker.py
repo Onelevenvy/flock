@@ -1,11 +1,12 @@
 # 导入自定义响应模型
 import uuid
 
+from app.core.workflow.utils.tools_utils import get_tool
 from langchain_core.messages import AIMessage
 from langgraph.prebuilt import ToolNode
 from pydantic import BaseModel
 
-from app.core.workflow.build_workflow import get_tool
+
 
 
 class ToolMessages(BaseModel):

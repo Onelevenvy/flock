@@ -171,7 +171,20 @@ class ReturnWorkflowTeamState(TypedDict):
     node_outputs: Annotated[dict[str, Any], update_node_outputs]
     
 
-def parse_variables(text: str, node_outputs: dict, is_code: bool = False) -> str:
+def parse_variables(text: str | dict, node_outputs: dict, is_code: bool = False) -> str | dict:
+    def convert_fullwidth_to_halfwidth(s: str) -> str:
+        # 全角字符范围是 0xFF01 到 0xFF5E
+        # 半角字符范围是 0x0021 到 0x007E
+        result = []
+        for char in str(s):
+            code = ord(char)
+            if 0xFF01 <= code <= 0xFF5E:
+                # 转换全角字符到半角字符
+                result.append(chr(code - 0xFEE0))
+            else:
+                result.append(char)
+        return "".join(result)
+
     def replace_variable(match):
         var_path = match.group(1).split(".")
         value = node_outputs
@@ -180,20 +193,6 @@ def parse_variables(text: str, node_outputs: dict, is_code: bool = False) -> str
                 value = value[key]
             else:
                 return match.group(0)  # 如果找不到变量，保持原样
-
-        # 转换全角字符为半角字符
-        def convert_fullwidth_to_halfwidth(s: str) -> str:
-            # 全角字符范围是 0xFF01 到 0xFF5E
-            # 半角字符范围是 0x0021 到 0x007E
-            result = []
-            for char in str(s):
-                code = ord(char)
-                if 0xFF01 <= code <= 0xFF5E:
-                    # 转换全角字符到半角字符
-                    result.append(chr(code - 0xFEE0))
-                else:
-                    result.append(char)
-            return "".join(result)
 
         str_value = str(value)
         if is_code:
@@ -205,4 +204,13 @@ def parse_variables(text: str, node_outputs: dict, is_code: bool = False) -> str
         else:
             return str_value
 
-    return re.sub(r"\{([^}]+)\}", replace_variable, text)
+    def process_value(value: Any) -> Any:
+        if isinstance(value, str):
+            return re.sub(r"\{([^}]+)\}", replace_variable, value)
+        elif isinstance(value, dict):
+            return {k: process_value(v) for k, v in value.items()}
+        elif isinstance(value, list):
+            return [process_value(item) for item in value]
+        return value
+
+    return process_value(text)

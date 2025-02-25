@@ -3,8 +3,9 @@ from functools import cache
 from typing import Any
 
 from app.core.workflow.node.parameter_extractor_node import ParameterExtractorNode
-from langchain.tools import BaseTool
-from langchain.tools.retriever import create_retriever_tool
+from app.core.workflow.node.plugin_node import PluginNode
+
+from app.core.workflow.utils.tools_utils import get_retrieval_tool, get_tool
 from langchain_core.messages import AIMessage, AnyMessage
 from langchain_core.runnables import RunnableLambda
 from langgraph.checkpoint.base import BaseCheckpointSaver
@@ -12,8 +13,6 @@ from langgraph.graph import END, START, StateGraph
 from langgraph.graph.graph import CompiledGraph
 from langgraph.prebuilt import ToolNode
 
-from app.core.rag.qdrant import QdrantStore
-from app.core.tools import managed_tools
 
 from ..state import WorkflowTeamState
 from .node.answer_node import AnswerNode
@@ -34,18 +33,6 @@ def validate_config(config: dict[str, Any]) -> bool:
     return all(key in config for key in required_keys)
 
 
-@cache
-def get_tool(tool_name: str) -> BaseTool:
-    for _, tool in managed_tools.items():
-        if tool.display_name == tool_name:
-            return tool.tool
-    raise ValueError(f"Unknown tool: {tool_name}")
-
-
-@cache
-def get_retrieval_tool(tool_name: str, description: str, owner_id: int, kb_id: int):
-    retriever = QdrantStore().retriever(owner_id, kb_id)
-    return create_retriever_tool(retriever, name=tool_name, description=description)
 
 
 # 添加一个全局变量来存储工具名称到节点ID的映射
@@ -212,7 +199,7 @@ def initialize_graph(
             node_data = node["data"]
 
             if node_type == "crewai":
-                _add_crewai_node(graph_builder, node_id, node_type, node_data)
+                _add_crewai_node(graph_builder, node_id, node_data)
             elif node_type == "subgraph":
                 _add_subgraph_node(graph_builder, node_id, node_data)
             elif node_type == "answer":
@@ -242,6 +229,8 @@ def initialize_graph(
                 _add_human_node(graph_builder, node_id, node_data)
             elif node_type == "parameterExtractor":
                 _add_parameter_extractor_node(graph_builder, node_id, node_data)
+            elif node_type == "plugin":
+                _add_plugin_node(graph_builder, node_id, node_data)
 
         # Add edges
         for edge in edges:
@@ -552,9 +541,14 @@ def _add_edge(graph_builder, edge, nodes, conditional_edges):
             graph_builder.add_edge(edge["source"], END)
         else:
             graph_builder.add_edge(edge["source"], edge["target"])
+    elif source_node["type"] == "plugin":
+        if target_node["type"] == "end":
+            graph_builder.add_edge(edge["source"], END)
+        else:
+            graph_builder.add_edge(edge["source"], edge["target"])
 
 
-def _add_crewai_node(graph_builder, node_id, node_type, node_data):
+def _add_crewai_node(graph_builder, node_id, node_data):
     """Add a CrewAI node to the graph"""
     # 确保必要的配置存在
     if not node_data.get("agents"):
@@ -669,4 +663,10 @@ def _add_parameter_extractor_node(graph_builder, node_id, node_data):
             input=node_data["Input"],
             instruction=node_data.get("instruction", ""),
         ).work,
+    )
+
+
+def _add_plugin_node(graph_builder, node_id, node_data):
+    graph_builder.add_node(
+        node_id, PluginNode(node_id, node_data["toolName"], node_data["args"]).work
     )
