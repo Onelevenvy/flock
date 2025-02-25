@@ -47,11 +47,11 @@ The output must:
 ### Example Output
 To illustrate, here are some examples of valid parameter extraction:
 <example>
-User: {{"text": "Book a flight from NYC to London on July 15th", "schema": {{"departure": {{"type": "string", "required": true, "description": "The departure city"}}, "destination": {{"type": "string", "required": true, "description": "The destination city"}}, "date": {{"type": "string", "required": true, "description": "The date of the flight"}}}}}
-Assistant: {{"departure": "NYC", "destination": "London", "date": "July 15th"}}
+Input: {{"text": "Book a flight from NYC to London on July 15th", "schema": {{"departure": {{"type": "string", "required": true, "description": "The departure city"}}, "destination": {{"type": "string", "required": true, "description": "The destination city"}}, "date": {{"type": "string", "required": true, "description": "The date of the flight"}}}}}}
+Output: {{"departure": "NYC", "destination": "London", "date": "July 15th"}}
 
-User: {{"text": "Room temperature is 23.5°C with 45 percent humidity", "schema": {{"temperature": {{"type": "number", "required": true, "description": "The temperature in degrees Celsius"}}, "humidity": {{"type": "number", "required": true, "description": "The humidity in percent"}}}}}
-Assistant: {{"temperature": 23.5, "humidity": 45}}
+Input: {{"text": "Room temperature is 23.5°C with 45 percent humidity", "schema": {{"temperature": {{"type": "number", "required": true, "description": "The temperature in degrees Celsius"}}, "humidity": {{"type": "number", "required": true, "description": "The humidity in percent"}}}}}}
+Output: {{"temperature": 23.5, "humidity": 45}}
 </example>
 
 ### Final Output
@@ -85,15 +85,37 @@ class ParameterExtractorNode:
         self,
         node_id: str,
         model_name: str,
-        parameter_schema: dict[str, str],
+        parameter_schema: list[dict],
         input: str = "",
         instruction: str = "",
     ):
         self.node_id = node_id
-        self.parameter_schema = parameter_schema
+        self.parameter_schema = self._convert_schema_format(parameter_schema)
         self.input = input
         self.model_info = get_model_info(model_name)
         self.instruction = instruction
+
+    def _convert_schema_format(self, schema_list: list[dict]) -> dict:
+        """Convert schema from list format to single object format
+        
+        Args:
+            schema_list: List of schema objects from frontend
+            e.g. [
+                {"name": {"type": "str", "required": true, "description": "名字"}},
+                {"age": {"type": "str", "required": true, "description": "年龄"}}
+            ]
+        
+        Returns:
+            Combined schema object
+            e.g. {
+                "name": {"type": "str", "required": true, "description": "名字"},
+                "age": {"type": "str", "required": true, "description": "年龄"}
+            }
+        """
+        combined_schema = {}
+        for item in schema_list:
+            combined_schema.update(item)
+        return combined_schema
 
     async def work(
         self, state: WorkflowTeamState, config: RunnableConfig
@@ -106,6 +128,8 @@ class ParameterExtractorNode:
         input_text = (
             parse_variables(self.input, state["node_outputs"]) if self.input else None
         )
+
+        parsed_instruction = parse_variables(self.instruction, state["node_outputs"]) if self.instruction else None
         if not input_text and state.get("all_messages"):
             input_text = state["all_messages"][-1].content
 
@@ -122,7 +146,7 @@ class ParameterExtractorNode:
         input_json = {
             "input_text": input_text,
             "parameter_schema": self.parameter_schema,
-            "instruction": self.instruction,
+            "instruction": parsed_instruction,
             # "histories": state.get("all_messages", []),
         }
 

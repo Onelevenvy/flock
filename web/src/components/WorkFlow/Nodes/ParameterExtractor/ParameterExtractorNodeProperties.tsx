@@ -63,26 +63,26 @@ const ParameterExtractorNodeProperties: React.FC<ParameterExtractorNodePropertie
   const handleSaveParameter = useCallback(
     (parameter: ParameterSchema) => {
       const currentParameters = Array.isArray(node.data.parameters) ? node.data.parameters : [];
-      const paramName = Object.keys(parameter)[0];
+      const newParamName = Object.keys(parameter)[0];
       
-      const existingParamIndex = currentParameters.findIndex(
-        (p: ParameterSchema) => Object.keys(p)[0] === paramName
-      );
-      
-      if (existingParamIndex !== -1 && !editingParameter) {
-        alert("A parameter with this name already exists!");
-        return;
-      }
-
-      let updatedParameters;
-      if (existingParamIndex !== -1) {
-        updatedParameters = [...currentParameters];
-        updatedParameters[existingParamIndex] = parameter;
+      if (editingParameter) {
+        // 编辑模式：替换现有参数
+        const oldParamName = Object.keys(editingParameter)[0];
+        const updatedParameters = currentParameters.map((p: ParameterSchema) => {
+          const paramName = Object.keys(p)[0];
+          return paramName === oldParamName ? parameter : p;
+        });
+        onNodeDataChange(node.id, "parameters", updatedParameters);
       } else {
-        updatedParameters = [...currentParameters, parameter];
+        // 新增模式：检查重名并添加
+        const exists = currentParameters.some((p: ParameterSchema) => Object.keys(p)[0] === newParamName);
+        if (exists) {
+          alert("A parameter with this name already exists!");
+          return;
+        }
+        onNodeDataChange(node.id, "parameters", [...currentParameters, parameter]);
       }
-
-      onNodeDataChange(node.id, "parameters", updatedParameters);
+      
       setIsModalOpen(false);
     },
     [node.id, node.data.parameters, onNodeDataChange, editingParameter]
