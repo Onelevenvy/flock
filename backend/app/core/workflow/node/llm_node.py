@@ -10,7 +10,6 @@ from app.core.model_providers.model_provider_manager import model_provider_manag
 from app.core.state import (
     ReturnWorkflowTeamState,
     WorkflowTeamState,
-    format_messages,
     parse_variables,
     update_node_outputs,
 )
@@ -56,7 +55,9 @@ class LLMNode(LLMBaseNode):
 
         if "node_outputs" not in state:
             state["node_outputs"] = {}
-
+        history = state.get("history", [])
+        messages = state.get("messages", [])
+        all_messages = state.get("all_messages", [])
         if self.system_prompt:
             # First parse variables, then escape any remaining curly braces
             parsed_system_prompt = (
@@ -64,54 +65,17 @@ class LLMNode(LLMBaseNode):
                 .replace("{", "{{")
                 .replace("}", "}}")
             )
-
-            llm_node_prompts = ChatPromptTemplate.from_messages(
+            prompt = ChatPromptTemplate.from_messages(
                 [
-                    (
-                        "system",
-                        "Perform the task given to you.\n"
-                        "If you are unable to perform the task, that's OK, you can ask human for help, or just say that you are unable to perform the task."
-                        "Execute what you can to make progress. "
-                        "And your role is:" + parsed_system_prompt + "\n"
-                        "And your name is:"
-                        + self.agent_name
-                        + "\n"
-                        + "please remember your name\n"
-                        "Stay true to your role and use your tools if necessary.\n\n",
-                    ),
-                    (
-                        "human",
-                        "Here is the previous conversation: \n\n {history_string} \n\n Provide your response.",
-                    ),
+                    ("system", parsed_system_prompt),
                     MessagesPlaceholder(variable_name="messages"),
                 ]
             )
-
+            chain: RunnableSerializable[dict[str, Any], AnyMessage] = (
+                prompt | self.model
+            )
         else:
-            llm_node_prompts = ChatPromptTemplate.from_messages(
-                [
-                    (
-                        "system",
-                        (
-                            "Perform the task given to you.\n"
-                            "If you are unable to perform the task, that's OK, you can ask human for help, or just say that you are unable to perform the task."
-                            "Execute what you can to make progress. "
-                            "Stay true to your role and use your tools if necessary.\n\n"
-                        ),
-                    ),
-                    (
-                        "human",
-                        "Here is the previous conversation: \n\n {history_string} \n\n Provide your response.",
-                    ),
-                    MessagesPlaceholder(variable_name="messages"),
-                ]
-            )
-        history = state.get("history", [])
-        messages = state.get("messages", [])
-        all_messages = state.get("all_messages", [])
-        prompt = llm_node_prompts.partial(history_string=format_messages(history))
-        chain: RunnableSerializable[dict[str, Any], AnyMessage] = prompt | self.model
-
+            chain: RunnableSerializable[dict[str, Any], AnyMessage] = self.model
         # 检查消息是否包含图片
         if (
             all_messages
@@ -132,7 +96,7 @@ class LLMNode(LLMBaseNode):
             result: AIMessage = await self.model.ainvoke(temp_state, config)
         else:
             # 普通消息保持原有处理方式
-            result: AIMessage = await chain.ainvoke(state, config)
+            result: AIMessage = await chain.ainvoke(all_messages, config)
 
         # 更新 node_outputs
         new_output = {self.node_id: {"response": result.content}}
