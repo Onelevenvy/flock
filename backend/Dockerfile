@@ -19,9 +19,15 @@ RUN pip install --no-cache-dir poetry==${POETRY_VERSION}
 # 构建依赖阶段
 FROM base AS builder
 
+# 配置apt镜像源
+RUN echo "deb https://mirrors.aliyun.com/debian/ bookworm main contrib non-free non-free-firmware" > /etc/apt/sources.list && \
+    echo "deb https://mirrors.aliyun.com/debian-security/ bookworm-security main contrib non-free non-free-firmware" >> /etc/apt/sources.list && \
+    echo "deb https://mirrors.aliyun.com/debian/ bookworm-updates main contrib non-free non-free-firmware" >> /etc/apt/sources.list
+
 # 安装构建依赖
-RUN apt-get update \
-    && apt-get install -y --no-install-recommends \
+RUN set -eux; \
+    apt-get update -y && \
+    apt-get install -y --no-install-recommends \
     gcc g++ libc-dev libffi-dev \
     && rm -rf /var/lib/apt/lists/*
 
@@ -38,6 +44,11 @@ RUN if [ "$ENVIRONMENT" = "production" ]; then \
 # 生产环境阶段
 FROM base AS production
 
+# 配置apt镜像源
+RUN echo "deb https://mirrors.aliyun.com/debian/ bookworm main contrib non-free non-free-firmware" > /etc/apt/sources.list && \
+    echo "deb https://mirrors.aliyun.com/debian-security/ bookworm-security main contrib non-free non-free-firmware" >> /etc/apt/sources.list && \
+    echo "deb https://mirrors.aliyun.com/debian/ bookworm-updates main contrib non-free non-free-firmware" >> /etc/apt/sources.list
+
 # 设置工作目录和环境变量
 WORKDIR /app
 ENV TZ=UTC
@@ -45,8 +56,9 @@ ENV PYTHONPATH=/app
 ENV PYTHONUNBUFFERED=1
 
 # 安装系统依赖
-RUN apt-get update \
-    && apt-get install -y --no-install-recommends \
+RUN set -eux; \
+    apt-get update -y && \
+    apt-get install -y --no-install-recommends \
         curl \
         libffi-dev \
         fonts-noto-cjk \
