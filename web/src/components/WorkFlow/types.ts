@@ -119,3 +119,24 @@ export interface ParameterExtractorNodeData {
   toolImport: any | null;
   instruction?: string;
 }
+
+export interface MCPToolConfig {
+  command: "python" | "node";  // node暂不支持
+  args: string[];
+  transport: "stdio";
+}
+
+export interface MCPSSEConfig {
+  url: string;
+  transport: "sse";
+}
+
+export interface MCPServerConfig {
+  [serverName: string]: MCPToolConfig | MCPSSEConfig;
+}
+
+export interface MCPNodeData extends NodeData {
+  model: string;
+  input: string;
+  mcp_config: MCPServerConfig;
+}

@@ -15,6 +15,7 @@ import IfElseNode from "./IfElse/IfElseNode";
 import HumanNode from "./Human/HumanNode";
 import SubgraphNode from "./Subgraph/SubgraphNode";
 import ParameterExtractorNode from "./ParameterExtractor/ParameterExtractorNode";
+import MCPNode from "./MCPTool/MCPNode";
 
 export const nodeTypes: NodeTypes = {
   start: StartNode,
@@ -32,4 +33,5 @@ export const nodeTypes: NodeTypes = {
   human: HumanNode,
   subgraph: SubgraphNode,
   parameterExtractor: ParameterExtractorNode,
+  mcpTool: MCPNode,
 };

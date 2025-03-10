@@ -9,7 +9,8 @@ import {
   FaCodeBranch,
   FaUserCog,
   FaProjectDiagram,
-  FaCrosshairs ,
+  FaCrosshairs,
+  FaMicrochip,
 } from "react-icons/fa";
 import { FaBookAtlas, FaPeopleGroup } from "react-icons/fa6";
 import { TfiGithub } from "react-icons/tfi";
@@ -32,6 +33,7 @@ import { LogicalOperator } from "../types";
 import HumanNodeProperties from "./Human/HumanNodeProperties";
 import SubgraphNodeProperties from "./Subgraph/SubgraphNodeProperties";
 import ParameterExtractorNodeProperties from "./ParameterExtractor/ParameterExtractorNodeProperties";
+import MCPNodeProperties from './MCPTool/MCPNodeProperties';
 
 interface NodeConfigItem {
   display: string;
@@ -305,6 +307,23 @@ export const nodeConfig: Record<string, NodeConfigItem> = {
     },
     inputVariables: ["Input"],
     outputVariables: ["parameters"],
+  },
+  mcpTool: {
+    display: "MCP Tool",
+    icon: FaMicrochip,
+    colorScheme: "cyan",
+    properties: MCPNodeProperties,
+    allowedConnections: {
+      sources: ["right"],
+      targets: ["left"],
+    },
+    initialData: {
+      model: "glm-4",
+      input: "",
+      mcp_config: {},
+    },
+    inputVariables: [],
+    outputVariables: ["response"],
   },
 };
 
