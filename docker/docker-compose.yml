@@ -60,16 +60,18 @@ services:
       - HOME=/app/data
     env_file:
       - .env
-
     volumes:
-      - app-upload-data:/app/upload
+      - app-upload-data:/app
       - app-backend-model-cache:/app/model_cache
       - app-data:/app/data
+      - ./entrypoint.sh:/app/docker-entrypoint-mount.sh
+    entrypoint: [ 'sh', '-c', "cp /app/docker-entrypoint-mount.sh /app/docker-entrypoint.sh && sed -i 's/\r$$//' /app/docker-entrypoint.sh && chmod +x /app/docker-entrypoint.sh && /app/docker-entrypoint.sh" ]
     depends_on:
       - db
       - redis
       - qdrant
     restart: always
+    user: root
 
   celery_worker:
     image: jimmy1211/flock-backend
@@ -97,7 +99,7 @@ services:
     env_file:
       - .env
     volumes:
-      - app-upload-data:/app/upload
+      - app-upload-data:/app
       - app-backend-model-cache:/app/model_cache
       - app-data:/app/data
     depends_on:
