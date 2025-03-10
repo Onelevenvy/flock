@@ -9,6 +9,15 @@
 
 > [!NOTE]
 >
+> ### 🎉 What's New 2025/3/10
+>
+> - **MCP Tools Support**: Added MCP Node with support for Model Context Protocol (MCP) tools, enabling seamless integration with MCP servers! Key features:
+>   - 🛠️ Convert MCP tools into LangChain tools for use with LangGraph agents
+>   - 📦 Connect to multiple MCP servers and dynamically load tools from them
+>   - 🔄 Support both stdio and SSE transport modes for flexible communication
+>   - 🔗 Seamless integration with existing LangChain workflows
+>   <img src="assets/mcp.png" alt="mcp" width="500" />
+>
 > ### 🎉 What's New 2025/2/25
 >
 > - **Parameter Extractor Node**: Added parameter extraction node that can automatically extract structured information from text and output in JSON format!

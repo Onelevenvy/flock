@@ -9,6 +9,15 @@
 
 > [!TIP]
 >
+> ### 🎉 最新更新 2025/3/10
+>
+> - **MCP工具支持**: 新增MCP Node，增加了对MCP（Model Context Protocol）工具的支持，实现与MCP服务器的无缝集成！主要特性：
+>   - 🛠️ 将MCP工具转换为LangChain工具，可用于LangGraph Agent
+>   - 📦 支持连接多个MCP服务器并动态加载其工具
+>   - 🔄 支持stdio和SSE两种传输模式实现灵活通信
+>   - 🔗 与现有LangGraph工作流无缝集成
+>   <img src="../assets/mcp.png" alt="mcp" width="500" />
+>
 > ### 🎉 最新更新 2025/2/25
 >
 > - **参数提取节点**: 新增参数提取节点，可以自动从文本中提取结构化信息,以json的形式输出！
