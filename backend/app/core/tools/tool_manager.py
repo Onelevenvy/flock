@@ -113,14 +113,26 @@ class ToolManager:
                 description="Searches the web using DuckDuckGo.",
                 tool=DuckDuckGoSearchRun(),
                 display_name="DuckDuckGo",
-                input_parameters={"query": {"type": "string", "required": True, "description": "The query to search for"}},
+                input_parameters={
+                    "query": {
+                        "type": "string",
+                        "required": True,
+                        "description": "The query to search for",
+                    }
+                },
                 credentials={},
             ),
             "wikipedia": ToolInfo(
                 description="Searches Wikipedia.",
                 tool=WikipediaQueryRun(api_wrapper=WikipediaAPIWrapper()),
                 display_name="Wikipedia",
-                input_parameters={"query": {"type": "string", "required": True, "description": "The query to search for"}},
+                input_parameters={
+                    "query": {
+                        "type": "string",
+                        "required": True,
+                        "description": "The query to search for",
+                    }
+                },
                 credentials={},
             ),
             # "tavilysearch": ToolInfo(

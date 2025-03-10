@@ -97,14 +97,14 @@ class ParameterExtractorNode:
 
     def _convert_schema_format(self, schema_list: list[dict]) -> dict:
         """Convert schema from list format to single object format
-        
+
         Args:
             schema_list: List of schema objects from frontend
             e.g. [
                 {"name": {"type": "str", "required": true, "description": "名字"}},
                 {"age": {"type": "str", "required": true, "description": "年龄"}}
             ]
-        
+
         Returns:
             Combined schema object
             e.g. {
@@ -129,7 +129,11 @@ class ParameterExtractorNode:
             parse_variables(self.input, state["node_outputs"]) if self.input else None
         )
 
-        parsed_instruction = parse_variables(self.instruction, state["node_outputs"]) if self.instruction else None
+        parsed_instruction = (
+            parse_variables(self.instruction, state["node_outputs"])
+            if self.instruction
+            else None
+        )
         if not input_text and state.get("all_messages"):
             input_text = state["all_messages"][-1].content
 

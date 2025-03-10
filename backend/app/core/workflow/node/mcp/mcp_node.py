@@ -1,19 +1,17 @@
+from pathlib import Path
 from typing import Any, Dict, Optional
-from langchain_core.messages import AIMessage
+
 from langchain_core.runnables import RunnableConfig
-from langchain_openai import ChatOpenAI
 from langchain_mcp_adapters.client import MultiServerMCPClient
 from langgraph.prebuilt import create_react_agent
-import asyncio
-from pathlib import Path
 
+from app.core.model_providers.model_provider_manager import model_provider_manager
 from app.core.state import (
     ReturnWorkflowTeamState,
     WorkflowTeamState,
-    update_node_outputs,
     parse_variables,
+    update_node_outputs,
 )
-from app.core.model_providers.model_provider_manager import model_provider_manager
 from app.core.workflow.utils.db_utils import get_model_info
 
 
@@ -139,7 +137,7 @@ class MCPNode(MCPBaseNode):
 
         history = state.get("history", [])
         messages = state.get("messages", [])
-        all_messages = state.get("all_messages", [])
+        state.get("all_messages", [])
 
         input_text = (
             parse_variables(self.input, state["node_outputs"]) if self.input else None

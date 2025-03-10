@@ -22,9 +22,9 @@ from .node.human_node import HumanNode
 from .node.ifelse.ifelse_node import IfElseNode
 from .node.input_node import InputNode
 from .node.llm_node import LLMNode
+from .node.mcp.mcp_node import MCPNode
 from .node.retrieval_node import RetrievalNode
 from .node.subgraph_node import SubgraphNode
-from .node.mcp.mcp_node import MCPNode
 
 
 def validate_config(config: dict[str, Any]) -> bool:
