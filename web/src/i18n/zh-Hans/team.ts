@@ -220,6 +220,37 @@ const translation = {
           contextInput: "需要您的补充信息",
         },
       },
+      mcp: {
+        title: "MCP工具",
+        model: "模型",
+        input: "输入",
+        inputPlaceholder: "请输入内容",
+        servers: "服务器配置",
+        addServer: "添加服务器",
+        removeServer: "移除服务器",
+        serverName: "服务器名称",
+        transport: "传输类型",
+        command: "命令",
+        scriptPath: "脚本路径",
+        sseUrl: "SSE URL",
+        noServers: "暂无服务器配置",
+        editServer: "编辑服务器",
+        deleteServer: "删除服务器",
+        serverType: {
+          stdio: "标准输入输出",
+          sse: "服务器发送事件"
+        },
+        modal: {
+          title: "服务器配置",
+          addTitle: "添加服务器",
+          editTitle: "编辑服务器",
+          save: "保存",
+          cancel: "取消",
+          deleteConfirm: "确认删除",
+          deleteMessage: "确定要删除此服务器配置吗？",
+          confirm: "确认",
+        }
+      },
     },
     common: {
       add: "添加",

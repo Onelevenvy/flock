@@ -225,6 +225,37 @@ const translation = {
           contextInput: "Additional Information Needed",
         },
       },
+      mcp: {
+        title: "MCP Tool",
+        model: "Model",
+        input: "Input",
+        inputPlaceholder: "Please enter content",
+        servers: "Server Configuration",
+        addServer: "Add Server",
+        removeServer: "Remove Server",
+        serverName: "Server Name",
+        transport: "Transport Type",
+        command: "Command",
+        scriptPath: "Script Path",
+        sseUrl: "SSE URL",
+        noServers: "No servers configured",
+        editServer: "Edit Server",
+        deleteServer: "Delete Server",
+        serverType: {
+          stdio: "Standard IO",
+          sse: "Server-Sent Events"
+        },
+        modal: {
+          title: "Server Configuration",
+          addTitle: "Add Server",
+          editTitle: "Edit Server",
+          save: "Save",
+          deleteConfirm: "Confirm Delete",
+          deleteMessage: "Are you sure you want to delete this server configuration?",
+          confirm: "Confirm",
+          cancel: "Cancel"
+        }
+      },
     },
     common: {
       add: "Add",

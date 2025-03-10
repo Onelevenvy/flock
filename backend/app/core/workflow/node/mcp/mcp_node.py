@@ -160,9 +160,9 @@ class MCPNode(MCPBaseNode):
             )
 
             return_state: ReturnWorkflowTeamState = {
-                "history": history + [result["messages"]],
-                "messages": [result["messages"]],
-                "all_messages": messages + [result["messages"]],
+                "history": history + result["messages"],
+                "messages": result["messages"],
+                "all_messages": messages + result["messages"],
                 "node_outputs": state["node_outputs"],
             }
 

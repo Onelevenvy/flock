@@ -1,7 +1,7 @@
-import { Box, Text, VStack, Input, Select, Button, useToast } from "@chakra-ui/react";
-import React, { useCallback, useState, useEffect } from "react";
+import { Box, Text, VStack, useToast, Button, useDisclosure, HStack, IconButton, AlertDialog, AlertDialogBody, AlertDialogFooter, AlertDialogHeader, AlertDialogContent, AlertDialogOverlay, Badge } from "@chakra-ui/react";
+import React, { useCallback, useState, useEffect, useRef } from "react";
 import { useTranslation } from "react-i18next";
-import { AddIcon, DeleteIcon } from "@chakra-ui/icons";
+import { AddIcon, EditIcon, DeleteIcon } from "@chakra-ui/icons";
 
 import ModelSelect from "@/components/Common/ModelProvider";
 import { useVariableInsertion } from "@/hooks/graphs/useVariableInsertion";
@@ -9,6 +9,7 @@ import { useModelQuery } from "@/hooks/useModelQuery";
 import { VariableReference } from "../../FlowVis/variableSystem";
 import VariableSelector from "../../Common/VariableSelector";
 import { useForm } from "react-hook-form";
+import ServerModal from "./ServerModal";
 
 interface ServerConfig {
   name: string;
@@ -29,6 +30,131 @@ interface MCPNodePropertiesProps {
   availableVariables: VariableReference[];
 }
 
+const formatScriptPath = (path: string) => {
+  const parts = path.split('/');
+  if (parts.length <= 3) return path;
+  
+  return '.../' + parts.slice(-3).join('/');
+};
+
+const ServerCard: React.FC<{
+  server: ServerConfig;
+  onEdit: () => void;
+  onDelete: () => void;
+}> = ({ server, onEdit, onDelete }) => {
+  const { t } = useTranslation();
+  const transportType = server.transport === "stdio" ? t("workflow.nodes.mcp.serverType.stdio") : t("workflow.nodes.mcp.serverType.sse");
+
+  const getServerDetails = () => {
+    if (server.transport === "stdio") {
+      const scriptPath = server.args?.[0] || "";
+      const formattedPath = formatScriptPath(scriptPath);
+      return (
+        <VStack spacing={2} align="stretch">
+          <HStack spacing={2}>
+            <Text fontSize="xs" color="gray.500" width="100px">
+              {t("workflow.nodes.mcp.serverName")}:
+            </Text>
+            <Text fontSize="xs" fontWeight="500">
+              {server.name}
+            </Text>
+          </HStack>
+          <HStack spacing={2}>
+            <Text fontSize="xs" color="gray.500" width="100px">
+              {t("workflow.nodes.mcp.transport")}:
+            </Text>
+            <Badge colorScheme="green" fontSize="xs">
+              {transportType}
+            </Badge>
+          </HStack>
+          <HStack spacing={2} alignItems="flex-start">
+            <Text fontSize="xs" color="gray.500" width="100px">
+              {t("workflow.nodes.mcp.scriptPath")}:
+            </Text>
+            <VStack spacing={1} align="stretch">
+              <Text fontSize="xs" fontWeight="500">
+                {server.command}
+              </Text>
+              <Text fontSize="xs" color="gray.600" isTruncated title={scriptPath}>
+                {formattedPath}
+              </Text>
+            </VStack>
+          </HStack>
+        </VStack>
+      );
+    }
+    return (
+      <VStack spacing={2} align="stretch">
+        <HStack spacing={2}>
+          <Text fontSize="xs" color="gray.500" width="100px">
+            {t("workflow.nodes.mcp.serverName")}:
+          </Text>
+          <Text fontSize="xs" fontWeight="500">
+            {server.name}
+          </Text>
+        </HStack>
+        <HStack spacing={2}>
+          <Text fontSize="xs" color="gray.500" width="100px">
+            {t("workflow.nodes.mcp.transport")}:
+          </Text>
+          <Badge colorScheme="purple" fontSize="xs">
+            {transportType}
+          </Badge>
+        </HStack>
+        <HStack spacing={2} alignItems="flex-start">
+          <Text fontSize="xs" color="gray.500" width="100px">
+            {t("workflow.nodes.mcp.sseUrl")}:
+          </Text>
+          <Text fontSize="xs" color="gray.600" isTruncated title={server.url}>
+            {server.url}
+          </Text>
+        </HStack>
+      </VStack>
+    );
+  };
+
+  return (
+    <Box
+      p={4}
+      borderWidth={1}
+      borderRadius="md"
+      borderColor="gray.200"
+      transition="all 0.2s"
+      _hover={{
+        borderColor: "blue.200",
+        shadow: "sm",
+      }}
+    >
+      <VStack spacing={3} align="stretch">
+        <HStack justify="flex-end">
+          <IconButton
+            aria-label={t("workflow.nodes.mcp.editServer")!}
+            icon={<EditIcon />}
+            size="sm"
+            variant="ghost"
+            onClick={(e) => {
+              e.stopPropagation();
+              onEdit();
+            }}
+          />
+          <IconButton
+            aria-label={t("workflow.nodes.mcp.deleteServer")!}
+            icon={<DeleteIcon />}
+            size="sm"
+            variant="ghost"
+            colorScheme="red"
+            onClick={(e) => {
+              e.stopPropagation();
+              onDelete();
+            }}
+          />
+        </HStack>
+        {getServerDetails()}
+      </VStack>
+    </Box>
+  );
+};
+
 const MCPNodeProperties: React.FC<MCPNodePropertiesProps> = ({
   node,
   onNodeDataChange,
@@ -38,6 +164,11 @@ const MCPNodeProperties: React.FC<MCPNodePropertiesProps> = ({
   const toast = useToast();
   const [servers, setServers] = useState<ServerConfig[]>([]);
   const [inputText, setInputText] = useState("");
+  const { isOpen, onOpen, onClose } = useDisclosure();
+  const { isOpen: isDeleteOpen, onOpen: onDeleteOpen, onClose: onDeleteClose } = useDisclosure();
+  const [editingServer, setEditingServer] = useState<ServerConfig | undefined>();
+  const [deletingServer, setDeletingServer] = useState<ServerConfig | undefined>();
+  const cancelRef = useRef<HTMLButtonElement>(null);
 
   const { control, setValue } = useForm<FormValues>({
     mode: "onBlur",
@@ -129,24 +260,38 @@ const MCPNodeProperties: React.FC<MCPNodePropertiesProps> = ({
     onNodeDataChange(node.id, "mcp_config", mcp_config);
   }, [node.id, onNodeDataChange]);
 
-  const addServer = useCallback(() => {
-    const newServers = [...servers, { name: '', transport: 'stdio' as const }];
-    setServers(newServers);
-    updateMCPConfig(newServers);
-  }, [servers, updateMCPConfig]);
+  const handleAddServer = () => {
+    setEditingServer(undefined);
+    onOpen();
+  };
 
-  const removeServer = useCallback((index: number) => {
-    const newServers = servers.filter((_, i) => i !== index);
-    setServers(newServers);
-    updateMCPConfig(newServers);
-  }, [servers, updateMCPConfig]);
+  const handleEditServer = (server: ServerConfig) => {
+    setEditingServer(server);
+    onOpen();
+  };
 
-  const updateServer = useCallback((index: number, updates: Partial<ServerConfig>) => {
-    const newServers = [...servers];
-    newServers[index] = { ...newServers[index], ...updates };
+  const handleSaveServer = (serverData: ServerConfig) => {
+    const newServers = editingServer
+      ? servers.map((s) => (s.name === editingServer.name ? serverData : s))
+      : [...servers, serverData];
     setServers(newServers);
     updateMCPConfig(newServers);
-  }, [servers, updateMCPConfig]);
+  };
+
+  const handleDeleteServer = (server: ServerConfig) => {
+    setDeletingServer(server);
+    onDeleteOpen();
+  };
+
+  const confirmDelete = () => {
+    if (deletingServer) {
+      const newServers = servers.filter((s) => s.name !== deletingServer.name);
+      setServers(newServers);
+      updateMCPConfig(newServers);
+      onDeleteClose();
+      setDeletingServer(undefined);
+    }
+  };
 
   return (
     <VStack align="stretch" spacing={4}>
@@ -183,76 +328,24 @@ const MCPNodeProperties: React.FC<MCPNodePropertiesProps> = ({
           {t("workflow.nodes.mcp.servers")}:
         </Text>
         <VStack spacing={4} align="stretch">
-          {servers.map((server, index) => (
-            <Box
-              key={index}
-              p={4}
-              borderWidth={1}
-              borderRadius="md"
-              borderColor="gray.200"
-            >
-              <VStack spacing={3} align="stretch">
-                <Input
-                  placeholder={t("workflow.nodes.mcp.serverName")!}
-                  value={server.name}
-                  onChange={(e) => updateServer(index, { name: e.target.value })}
-                  size="sm"
-                />
-
-                <Select
-                  value={server.transport}
-                  onChange={(e) => updateServer(index, { transport: e.target.value as 'stdio' | 'sse' })}
-                  size="sm"
-                >
-                  <option value="stdio">Stdio</option>
-                  <option value="sse">SSE</option>
-                </Select>
-
-                {server.transport === 'stdio' && (
-                  <>
-                    <Select
-                      value={server.command}
-                      onChange={(e) => updateServer(index, { command: e.target.value as 'python' | 'node' })}
-                      size="sm"
-                    >
-                      <option value="python">Python</option>
-                      <option value="node" disabled>Node.js (Not supported yet)</option>
-                    </Select>
-
-                    <Input
-                      placeholder={t("workflow.nodes.mcp.scriptPath")!}
-                      value={server.args?.[0] || ''}
-                      onChange={(e) => updateServer(index, { args: [e.target.value] })}
-                      size="sm"
-                    />
-                  </>
-                )}
-
-                {server.transport === 'sse' && (
-                  <Input
-                    placeholder={t("workflow.nodes.mcp.sseUrl")!}
-                    value={server.url || ''}
-                    onChange={(e) => updateServer(index, { url: e.target.value })}
-                    size="sm"
-                  />
-                )}
-
-                <Button
-                  leftIcon={<DeleteIcon />}
-                  colorScheme="red"
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => removeServer(index)}
-                >
-                  {t("workflow.nodes.mcp.removeServer")}
-                </Button>
-              </VStack>
-            </Box>
-          ))}
+          {servers.length === 0 ? (
+            <Text fontSize="sm" color="gray.500" textAlign="center" py={4}>
+              {t("workflow.nodes.mcp.noServers")}
+            </Text>
+          ) : (
+            servers.map((server, index) => (
+              <ServerCard
+                key={index}
+                server={server}
+                onEdit={() => handleEditServer(server)}
+                onDelete={() => handleDeleteServer(server)}
+              />
+            ))
+          )}
 
           <Button
             leftIcon={<AddIcon />}
-            onClick={addServer}
+            onClick={handleAddServer}
             size="sm"
             variant="outline"
           >
@@ -260,6 +353,40 @@ const MCPNodeProperties: React.FC<MCPNodePropertiesProps> = ({
           </Button>
         </VStack>
       </Box>
+
+      <ServerModal
+        isOpen={isOpen}
+        onClose={onClose}
+        onSave={handleSaveServer}
+        initialData={editingServer}
+      />
+
+      <AlertDialog
+        isOpen={isDeleteOpen}
+        leastDestructiveRef={cancelRef}
+        onClose={onDeleteClose}
+      >
+        <AlertDialogOverlay>
+          <AlertDialogContent>
+            <AlertDialogHeader fontSize="lg" fontWeight="bold">
+              {t("workflow.nodes.mcp.modal.deleteConfirm")}
+            </AlertDialogHeader>
+
+            <AlertDialogBody>
+              {t("workflow.nodes.mcp.modal.deleteMessage")}
+            </AlertDialogBody>
+
+            <AlertDialogFooter>
+              <Button ref={cancelRef} onClick={onDeleteClose}>
+                {t("workflow.nodes.mcp.modal.cancel")}
+              </Button>
+              <Button colorScheme="red" onClick={confirmDelete} ml={3}>
+                {t("workflow.nodes.mcp.modal.confirm")}
+              </Button>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialogOverlay>
+      </AlertDialog>
     </VStack>
   );
 };

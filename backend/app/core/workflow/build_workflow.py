@@ -228,7 +228,7 @@ def initialize_graph(
                 _add_parameter_extractor_node(graph_builder, node_id, node_data)
             elif node_type == "plugin":
                 _add_plugin_node(graph_builder, node_id, node_data)
-            elif node_type == "mcp":
+            elif node_type == "mcpTool":
                 _add_mcp_node(graph_builder, node_id, node_data)
 
         # Add edges
@@ -545,7 +545,7 @@ def _add_edge(graph_builder, edge, nodes, conditional_edges):
             graph_builder.add_edge(edge["source"], END)
         else:
             graph_builder.add_edge(edge["source"], edge["target"])
-    elif source_node["type"] == "mcp":
+    elif source_node["type"] == "mcpTool":
         if target_node["type"] == "end":
             graph_builder.add_edge(edge["source"], END)
         else:

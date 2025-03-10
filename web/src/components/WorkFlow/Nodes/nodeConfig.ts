@@ -318,7 +318,7 @@ export const nodeConfig: Record<string, NodeConfigItem> = {
       targets: ["left"],
     },
     initialData: {
-      model: "glm-4",
+      model: "glm-4-flash",
       input: "",
       mcp_config: {},
     },
