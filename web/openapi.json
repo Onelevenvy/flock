@@ -1815,6 +1815,49 @@
         }
       }
     },
+    "/api/v1/tools/mcp/tools": {
+      "post": {
+        "tags": [
+          "tools"
+        ],
+        "summary": "Get Mcp Tools",
+        "description": "获取MCP服务器的工具列表",
+        "operationId": "get_mcp_tools",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "title": "Mcp Config"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "title": "Response Tools-Get Mcp Tools"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/v1/teams/{team_id}/threads/": {
       "get": {
         "tags": [

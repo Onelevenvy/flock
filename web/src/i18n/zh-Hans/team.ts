@@ -240,6 +240,10 @@ const translation = {
           stdio: "标准输入输出",
           sse: "服务器发送事件"
         },
+        toolsList: "可用工具",
+        loadingTools: "加载工具中...",
+        noToolsAvailable: "暂无可用工具",
+        noTools: "未找到工具",
         modal: {
           title: "服务器配置",
           addTitle: "添加服务器",

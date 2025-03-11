@@ -212,4 +212,26 @@ export class ToolsService {
         });
     }
 
+    /**
+     * Get Mcp Tools
+     * 获取MCP服务器的工具列表
+     * @returns any Successful Response
+     * @throws ApiError
+     */
+    public static getMcpTools({
+        requestBody,
+    }: {
+        requestBody: Record<string, any>,
+    }): CancelablePromise<any> {
+        return __request(OpenAPI, {
+            method: 'POST',
+            url: '/api/v1/tools/mcp/tools',
+            body: requestBody,
+            mediaType: 'application/json',
+            errors: {
+                422: `Validation Error`,
+            },
+        });
+    }
+
 }

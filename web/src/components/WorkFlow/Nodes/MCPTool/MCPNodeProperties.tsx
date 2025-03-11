@@ -10,6 +10,7 @@ import { VariableReference } from "../../FlowVis/variableSystem";
 import VariableSelector from "../../Common/VariableSelector";
 import { useForm } from "react-hook-form";
 import ServerModal from "./ServerModal";
+import { ToolsService } from "@/client/services/ToolsService";
 
 interface ServerConfig {
   name: string;
@@ -17,6 +18,7 @@ interface ServerConfig {
   command?: 'python' | 'node';
   args?: string[];
   url?: string;
+  tools?: any[];
 }
 
 interface FormValues {
@@ -41,14 +43,14 @@ const ServerCard: React.FC<{
   server: ServerConfig;
   onEdit: () => void;
   onDelete: () => void;
-}> = ({ server, onEdit, onDelete }) => {
+  tools: any[];
+  isLoadingTools: boolean;
+}> = ({ server, onEdit, onDelete, tools, isLoadingTools }) => {
   const { t } = useTranslation();
   const transportType = server.transport === "stdio" ? t("workflow.nodes.mcp.serverType.stdio") : t("workflow.nodes.mcp.serverType.sse");
 
   const getServerDetails = () => {
     if (server.transport === "stdio") {
-      const scriptPath = server.args?.[0] || "";
-      const formattedPath = formatScriptPath(scriptPath);
       return (
         <VStack spacing={2} align="stretch">
           <HStack spacing={2}>
@@ -69,17 +71,45 @@ const ServerCard: React.FC<{
           </HStack>
           <HStack spacing={2} alignItems="flex-start">
             <Text fontSize="xs" color="gray.500" width="100px">
-              {t("workflow.nodes.mcp.scriptPath")}:
+              {t("workflow.nodes.mcp.command")}:
             </Text>
-            <VStack spacing={1} align="stretch">
-              <Text fontSize="xs" fontWeight="500">
-                {server.command}
-              </Text>
-              <Text fontSize="xs" color="gray.600" isTruncated title={scriptPath}>
-                {formattedPath}
-              </Text>
-            </VStack>
+            <Text fontSize="xs" fontWeight="500">
+              {server.command}
+            </Text>
           </HStack>
+          <Box mt={2}>
+            <Text fontSize="xs" color="gray.500" mb={2}>
+              {t("workflow.nodes.mcp.toolsList")}:
+            </Text>
+            {isLoadingTools ? (
+              <Text fontSize="xs" color="gray.500">
+                {t("workflow.nodes.mcp.loadingTools")}
+              </Text>
+            ) : tools.length > 0 ? (
+              <VStack spacing={2} align="stretch">
+                {tools.map((tool, index) => (
+                  <Box
+                    key={index}
+                    p={2}
+                    borderWidth={1}
+                    borderRadius="sm"
+                    borderColor="gray.200"
+                  >
+                    <Text fontSize="xs" fontWeight="500">
+                      {tool.name}
+                    </Text>
+                    <Text fontSize="xs" color="gray.600">
+                      {tool.description}
+                    </Text>
+                  </Box>
+                ))}
+              </VStack>
+            ) : (
+              <Text fontSize="xs" color="gray.500">
+                {t("workflow.nodes.mcp.noToolsAvailable")}
+              </Text>
+            )}
+          </Box>
         </VStack>
       );
     }
@@ -109,6 +139,39 @@ const ServerCard: React.FC<{
             {server.url}
           </Text>
         </HStack>
+        <Box mt={2}>
+          <Text fontSize="xs" color="gray.500" mb={2}>
+            {t("workflow.nodes.mcp.toolsList")}:
+          </Text>
+          {isLoadingTools ? (
+            <Text fontSize="xs" color="gray.500">
+              {t("workflow.nodes.mcp.loadingTools")}
+            </Text>
+          ) : tools.length > 0 ? (
+            <VStack spacing={2} align="stretch">
+              {tools.map((tool, index) => (
+                <Box
+                  key={index}
+                  p={2}
+                  borderWidth={1}
+                  borderRadius="sm"
+                  borderColor="gray.200"
+                >
+                  <Text fontSize="xs" fontWeight="500">
+                    {tool.name}
+                  </Text>
+                  <Text fontSize="xs" color="gray.600">
+                    {tool.description}
+                  </Text>
+                </Box>
+              ))}
+            </VStack>
+          ) : (
+            <Text fontSize="xs" color="gray.500">
+              {t("workflow.nodes.mcp.noToolsAvailable")}
+            </Text>
+          )}
+        </Box>
       </VStack>
     );
   };
@@ -169,7 +232,7 @@ const MCPNodeProperties: React.FC<MCPNodePropertiesProps> = ({
   const [editingServer, setEditingServer] = useState<ServerConfig | undefined>();
   const [deletingServer, setDeletingServer] = useState<ServerConfig | undefined>();
   const cancelRef = useRef<HTMLButtonElement>(null);
-  const [tools, setTools] = useState<any[]>([]);
+  const [isLoadingTools, setIsLoadingTools] = useState<Record<string, boolean>>({});
 
   const { control, setValue } = useForm<FormValues>({
     mode: "onBlur",
@@ -181,6 +244,76 @@ const MCPNodeProperties: React.FC<MCPNodePropertiesProps> = ({
   });
 
   const { data: models, isLoading: isLoadingModel } = useModelQuery();
+
+  const updateMCPConfig = useCallback((newServers: ServerConfig[]) => {
+    const mcp_config = newServers.reduce((acc, server) => {
+      if (!server.name) return acc;
+      
+      if (server.transport === 'stdio') {
+        acc[server.name] = {
+          command: server.command || 'python',
+          args: server.args || [],
+          transport: 'stdio'
+        };
+      } else {
+        acc[server.name] = {
+          url: server.url || '',
+          transport: 'sse'
+        };
+      }
+      return acc;
+    }, {} as Record<string, any>);
+
+    onNodeDataChange(node.id, "mcp_config", mcp_config);
+  }, [node.id, onNodeDataChange]);
+
+  const fetchTools = useCallback(async (serverConfig: ServerConfig) => {
+    setIsLoadingTools(prev => ({ ...prev, [serverConfig.name]: true }));
+    try {
+      const mcp_config = {
+        [serverConfig.name]: serverConfig.transport === 'stdio' 
+          ? {
+              command: serverConfig.command || 'python',
+              args: serverConfig.args || [],
+              transport: 'stdio'
+            }
+          : {
+              url: serverConfig.url || '',
+              transport: 'sse'
+            }
+      };
+
+      const data = await ToolsService.getMcpTools({
+        requestBody: mcp_config
+      });
+      
+      if (data && data.tools) {
+        const newServers = servers.map(s => 
+          s.name === serverConfig.name 
+            ? { ...s, tools: data.tools }
+            : s
+        );
+        setServers(newServers);
+        updateMCPConfig(newServers);
+        const serverTools = newServers.reduce((acc, server) => {
+          if (server.tools) {
+            acc[server.name] = server.tools;
+          }
+          return acc;
+        }, {} as Record<string, any>);
+        onNodeDataChange(node.id, "server_tools", serverTools);
+      }
+    } catch (error) {
+      console.error('Error fetching tools:', error);
+      toast({
+        title: t("workflow.nodes.mcp.toolsFetchError"),
+        status: "error",
+        duration: 3000,
+      });
+    } finally {
+      setIsLoadingTools(prev => ({ ...prev, [serverConfig.name]: false }));
+    }
+  }, [servers, node.id, onNodeDataChange, t, toast, updateMCPConfig]);
 
   useEffect(() => {
     if (node && node.data.input !== undefined) {
@@ -200,6 +333,7 @@ const MCPNodeProperties: React.FC<MCPNodePropertiesProps> = ({
           } : {
             url: config.url,
           }),
+          tools: node.data.server_tools?.[name] || []
         })
       );
       setServers(serverConfigs);
@@ -239,28 +373,6 @@ const MCPNodeProperties: React.FC<MCPNodePropertiesProps> = ({
     availableVariables,
   });
 
-  const updateMCPConfig = useCallback((newServers: ServerConfig[]) => {
-    const mcp_config = newServers.reduce((acc, server) => {
-      if (!server.name) return acc;
-      
-      if (server.transport === 'stdio') {
-        acc[server.name] = {
-          command: server.command || 'python',
-          args: server.args || [],
-          transport: 'stdio'
-        };
-      } else {
-        acc[server.name] = {
-          url: server.url || '',
-          transport: 'sse'
-        };
-      }
-      return acc;
-    }, {} as Record<string, any>);
-
-    onNodeDataChange(node.id, "mcp_config", mcp_config);
-  }, [node.id, onNodeDataChange]);
-
   const handleAddServer = () => {
     setEditingServer(undefined);
     onOpen();
@@ -277,6 +389,7 @@ const MCPNodeProperties: React.FC<MCPNodePropertiesProps> = ({
       : [...servers, serverData];
     setServers(newServers);
     updateMCPConfig(newServers);
+    fetchTools(serverData);
   };
 
   const handleDeleteServer = (server: ServerConfig) => {
@@ -293,56 +406,6 @@ const MCPNodeProperties: React.FC<MCPNodePropertiesProps> = ({
       setDeletingServer(undefined);
     }
   };
-
-  const fetchTools = useCallback(async (serverConfigs: ServerConfig[]) => {
-    try {
-      const mcp_config = serverConfigs.reduce((acc, server) => {
-        if (!server.name) return acc;
-        
-        if (server.transport === 'stdio') {
-          acc[server.name] = {
-            command: server.command || 'python',
-            args: server.args || [],
-            transport: 'stdio'
-          };
-        } else {
-          acc[server.name] = {
-            url: server.url || '',
-            transport: 'sse'
-          };
-        }
-        return acc;
-      }, {} as Record<string, any>);
-
-      const response = await fetch('/api/v1/mcp/tools', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ mcp_config }),
-      });
-      
-      if (!response.ok) throw new Error('Failed to fetch tools');
-      
-      const data = await response.json();
-      setTools(data.tools);
-    } catch (error) {
-      console.error('Error fetching tools:', error);
-      toast({
-        title: t("workflow.nodes.mcp.toolsFetchError"),
-        status: "error",
-        duration: 3000,
-      });
-    }
-  }, [t,toast]);
-
-  useEffect(() => {
-    if (servers.length > 0) {
-      fetchTools(servers);
-    } else {
-      setTools([]);
-    }
-  }, [servers, fetchTools]);
 
   return (
     <VStack align="stretch" spacing={4}>
@@ -390,6 +453,8 @@ const MCPNodeProperties: React.FC<MCPNodePropertiesProps> = ({
                 server={server}
                 onEdit={() => handleEditServer(server)}
                 onDelete={() => handleDeleteServer(server)}
+                tools={server.tools || []}
+                isLoadingTools={isLoadingTools[server.name] || false}
               />
             ))
           )}
@@ -438,34 +503,6 @@ const MCPNodeProperties: React.FC<MCPNodePropertiesProps> = ({
           </AlertDialogContent>
         </AlertDialogOverlay>
       </AlertDialog>
-
-      <Box>
-        <Text fontWeight="500" fontSize="sm" color="gray.700" mb={2}>
-          {t("workflow.nodes.mcp.availableTools")}:
-        </Text>
-        {tools.length > 0 ? (
-          <VStack spacing={2} align="stretch">
-            {tools.map((tool, index) => (
-              <Box
-                key={index}
-                p={3}
-                borderWidth={1}
-                borderRadius="md"
-                borderColor="gray.200"
-              >
-                <Text fontWeight="500">{tool.name}</Text>
-                <Text fontSize="sm" color="gray.600">{tool.description}</Text>
-              </Box>
-            ))}
-          </VStack>
-        ) : (
-          <Text fontSize="sm" color="gray.500" textAlign="center" py={4}>
-            {servers.length > 0 
-              ? t("workflow.nodes.mcp.loadingTools")
-              : t("workflow.nodes.mcp.noTools")}
-          </Text>
-        )}
-      </Box>
     </VStack>
   );
 };
