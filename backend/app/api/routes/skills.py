@@ -16,6 +16,7 @@ from app.models import (
     SkillUpdate,
     ToolDefinitionValidate,
 )
+from langchain_mcp_adapters.client import MultiServerMCPClient
 
 router = APIRouter()
 
@@ -214,3 +215,21 @@ def update_skill_credentials(
     session.refresh(skill)
 
     return skill
+
+@router.post("/mcp/tools")
+async def get_mcp_tools(mcp_config: dict[str, Any]) -> Any:
+    """
+    获取MCP服务器的工具列表
+    """
+    try:
+        async with MultiServerMCPClient(mcp_config) as client:
+            tools = client.get_tools()
+            # 只返回工具的基本信息
+            tools_info = [{
+                "name": tool.name,
+                "description": tool.description,
+                "parameters": tool.parameters
+            } for tool in tools]
+            return {"tools": tools_info}
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=str(e))

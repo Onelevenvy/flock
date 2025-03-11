@@ -11,7 +11,7 @@ async def main():
     model = ChatOpenAI(
         model="glm-4-flash",
         temperature=0.01,
-        openai_api_key="9953866f9b7fac2fd6d564842d8bcc79.AbXduj53KA3SDSMs",
+        openai_api_key="your_api_key",
         openai_api_base="https://open.bigmodel.cn/api/paas/v4/",
     )
 

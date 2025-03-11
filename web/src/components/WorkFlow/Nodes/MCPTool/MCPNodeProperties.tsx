@@ -169,6 +169,7 @@ const MCPNodeProperties: React.FC<MCPNodePropertiesProps> = ({
   const [editingServer, setEditingServer] = useState<ServerConfig | undefined>();
   const [deletingServer, setDeletingServer] = useState<ServerConfig | undefined>();
   const cancelRef = useRef<HTMLButtonElement>(null);
+  const [tools, setTools] = useState<any[]>([]);
 
   const { control, setValue } = useForm<FormValues>({
     mode: "onBlur",
@@ -293,6 +294,56 @@ const MCPNodeProperties: React.FC<MCPNodePropertiesProps> = ({
     }
   };
 
+  const fetchTools = useCallback(async (serverConfigs: ServerConfig[]) => {
+    try {
+      const mcp_config = serverConfigs.reduce((acc, server) => {
+        if (!server.name) return acc;
+        
+        if (server.transport === 'stdio') {
+          acc[server.name] = {
+            command: server.command || 'python',
+            args: server.args || [],
+            transport: 'stdio'
+          };
+        } else {
+          acc[server.name] = {
+            url: server.url || '',
+            transport: 'sse'
+          };
+        }
+        return acc;
+      }, {} as Record<string, any>);
+
+      const response = await fetch('/api/v1/mcp/tools', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ mcp_config }),
+      });
+      
+      if (!response.ok) throw new Error('Failed to fetch tools');
+      
+      const data = await response.json();
+      setTools(data.tools);
+    } catch (error) {
+      console.error('Error fetching tools:', error);
+      toast({
+        title: t("workflow.nodes.mcp.toolsFetchError"),
+        status: "error",
+        duration: 3000,
+      });
+    }
+  }, [t,toast]);
+
+  useEffect(() => {
+    if (servers.length > 0) {
+      fetchTools(servers);
+    } else {
+      setTools([]);
+    }
+  }, [servers, fetchTools]);
+
   return (
     <VStack align="stretch" spacing={4}>
       <Box>
@@ -387,6 +438,34 @@ const MCPNodeProperties: React.FC<MCPNodePropertiesProps> = ({
           </AlertDialogContent>
         </AlertDialogOverlay>
       </AlertDialog>
+
+      <Box>
+        <Text fontWeight="500" fontSize="sm" color="gray.700" mb={2}>
+          {t("workflow.nodes.mcp.availableTools")}:
+        </Text>
+        {tools.length > 0 ? (
+          <VStack spacing={2} align="stretch">
+            {tools.map((tool, index) => (
+              <Box
+                key={index}
+                p={3}
+                borderWidth={1}
+                borderRadius="md"
+                borderColor="gray.200"
+              >
+                <Text fontWeight="500">{tool.name}</Text>
+                <Text fontSize="sm" color="gray.600">{tool.description}</Text>
+              </Box>
+            ))}
+          </VStack>
+        ) : (
+          <Text fontSize="sm" color="gray.500" textAlign="center" py={4}>
+            {servers.length > 0 
+              ? t("workflow.nodes.mcp.loadingTools")
+              : t("workflow.nodes.mcp.noTools")}
+          </Text>
+        )}
+      </Box>
     </VStack>
   );
 };
