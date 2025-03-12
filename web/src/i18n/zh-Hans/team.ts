@@ -237,8 +237,8 @@ const translation = {
         editServer: "编辑服务器",
         deleteServer: "删除服务器",
         serverType: {
-          stdio: "标准输入输出",
-          sse: "服务器发送事件"
+          stdio: "STDIO",
+          sse: "SSE"
         },
         toolsList: "可用工具",
         loadingTools: "加载工具中...",
