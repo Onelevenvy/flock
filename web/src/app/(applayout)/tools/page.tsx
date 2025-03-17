@@ -82,7 +82,7 @@ function Skills() {
     defaultTab: "all",
   });
 
-  const filteredSkills = skills?.filter((skill) => skill.name !== "ask-human");
+  const filteredSkills = skills?.filter((skill) => skill.name !== "ask-human" && (activeTab=='all' || activeTab=='managed' && skill.managed || activeTab=='def' && !skill.managed));
   const [selectedSkill, setSelectedSkill] = useState<SkillOut | null>(null);
 
   return (
