@@ -1,6 +1,6 @@
 services:
   frontend:
-    image: jimmy1211/flock-frontend
+    image: jimmy1211/flock-frontend:0.0.5
     deploy:
       resources:
         limits:
@@ -37,7 +37,7 @@ services:
       - api
 
   api:
-    image: jimmy1211/flock-backend
+    image: jimmy1211/flock-backend:0.0.5
     deploy:
       resources:
         limits:
@@ -74,7 +74,7 @@ services:
     user: root
 
   celery_worker:
-    image: jimmy1211/flock-backend
+    image: jimmy1211/flock-backend:0.0.5
     deploy:
       resources:
         limits:
