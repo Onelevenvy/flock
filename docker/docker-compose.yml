@@ -1,6 +1,6 @@
 services:
   frontend:
-    image: jimmy1211/flock-frontend:0.0.5
+    image: jimmy1211/flock-frontend:0.0.5.1
     deploy:
       resources:
         limits:
@@ -13,8 +13,9 @@ services:
       - 3000:3000
     environment:
       - NODE_ENV=production
-      - API_URL=http://backend:8000
       - TZ=UTC
+    env_file:
+      - .env
     labels:
       - traefik.enable=true
       - traefik.docker.network=docker_default
