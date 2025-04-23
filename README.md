@@ -181,9 +181,14 @@ cd flock/docker
 # Copy the environment configuration file
 cp ../.env.example .env
 
-# Start the docker compose
-docker compose  up -d
+# Modify environment variables in .env file as needed
+# If deploying locally, you can keep the default values
+# If deploying on a server, modify API_URL and NEXT_PUBLIC_API_URL values, for example:
+API_URL=http://192.168.1.166:8000 
+NEXT_PUBLIC_API_URL=http://192.168.1.166:8000
 
+# Start docker compose
+docker compose up -d
 ```
 
 #### 1.2 Method 2: Locally Build Frontend and Backend Images
@@ -200,15 +205,13 @@ cp ../.env.example .env
 
 # First, build the frontend and backend images
 docker compose -f docker-compose.localbuild.yml build
-
-# Then, start Docker Compose
+# Then start docker compose
 docker compose -f docker-compose.localbuild.yml up -d
-
 ```
 
 #### 2. Start with Local Source Code
 
-#### 2.1 Preparation
+##### 2.1 Preparation
 
 ##### 2.1.1 Clone the Code
 
@@ -218,33 +221,34 @@ git clone https://github.com/Onelevenvy/flock.git
 
 ```bash
 cp .env.example .env
+# Modify environment variables in .env file as needed
 ```
 
 ##### 2.1.3 Generate Secret Keys
 
-Some environment variables in the .env file have a default value of changethis.
-You have to change them with a secret key, to generate secret keys you can run the following command:
+Some environment variables in the .env file have default values set to 'changethis'.
+You must change these to secret keys. To generate a secret key, you can run the following command:
 
 ```bash
 python -c "import secrets; print(secrets.token_urlsafe(32))"
 ```
 
-Copy the content and use that as password / secret key. And run that again to generate another secure key.
+Copy the output and use it as your password/key. Run the command again to generate another secure key.
 
-##### 2.1.4 Install postgres,qdrant,redis
+##### 2.1.4 Install postgres, qdrant, redis
 
 ```bash
 cd docker
-docker compose -f docker-compose.middleware.yml up -d
+docker compose --env-file ../.env up -d
 ```
 
 #### 2.2 Run Backend
 
-##### 2.2.1 Installation of the basic environment
+##### 2.2.1 Install Basic Environment
 
-Server startup requires Python 3.12.x. It is recommended to use pyenv for quick installation of the Python environment.
+Server startup requires Python 3.12.x. It's recommended to use pyenv for quick Python environment installation.
 
-To install additional Python versions, use pyenv install.
+To install additional Python versions, use pyenv install:
 
 ```bash
 pyenv install 3.12
@@ -256,36 +260,34 @@ To switch to the "3.12" Python environment, use the following command:
 pyenv global 3.12
 ```
 
-Follow these steps :
-Navigate to the "backen" directory:
+Follow these steps:
+Navigate to the "backend" directory:
 
 ```bash
 cd backend
 ```
 
-activate the environment.
+Activate the environment:
 
 ```bash
 poetry env use 3.12
 poetry install
 ```
 
-##### 2.2.2 initiral data
+##### 2.2.2 Initialize Data
 
 ```bash
-
-# Run migrations
+# Migrate database
 alembic upgrade head
-
 ```
 
-##### 2.2.3 run unicorn
+##### 2.2.3 Run unicorn
 
 ```bash
- uvicorn app.main:app --reload --log-level debug
+uvicorn app.main:app --reload --log-level debug
 ```
 
-##### 2.2.4 run celery (Not necessary, unless you want to use the rag function)
+##### 2.2.4 Run celery (not required unless you want to use rag functionality)
 
 ```bash
 poetry run celery -A app.core.celery_app.celery_app worker --loglevel=debug
@@ -293,14 +295,14 @@ poetry run celery -A app.core.celery_app.celery_app worker --loglevel=debug
 
 #### 2.3 Run Frontend
 
-##### 2.3.1 Enter the web directory and install the dependencies
+##### 2.3.1 Enter web directory and install dependencies
 
 ```bash
 cd web
 pnpm install
 ```
 
-##### 2.3.2 Start the web service
+##### 2.3.2 Start web service
 
 ```bash
 cd web

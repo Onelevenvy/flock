@@ -152,6 +152,13 @@ cd flock/docker
 
 # 复制环境配置文件
 cp ../.env.example .env
+
+# 按需修改 .env 文件中的环境变量
+# 如果您是本机部署，可以保持默认值
+# 如果您是服务器部署，请修改 API_URL 和 NEXT_PUBLIC_API_URL 的值，例如
+API_URL=http://192.168.1.166:8000 
+NEXT_PUBLIC_API_URL=http://192.168.1.166:8000
+
 # 启动 docker compose
 docker compose  up -d
 
@@ -187,11 +194,12 @@ git clone https://github.com/Onelevenvy/flock.git
 
 ```bash
 cp .env.example .env
+# 并按需修改 .env 文件中的环境变量
 ```
 
 ##### 2.1.3 生成密钥
 
-.env 文件中的一些环境变量默认值为 changethis。
+.env 文件中的一些环境变量默认值为 "changethis"。
 您必须将它们更改为密钥，要生成密钥，可以运行以下命令：
 
 ```bash
