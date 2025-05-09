@@ -25,7 +25,7 @@ from .node.llm_node import LLMNode
 from .node.mcp.mcp_node import MCPNode
 from .node.retrieval_node import RetrievalNode
 from .node.subgraph_node import SubgraphNode
-
+from .node.agent_node import AgentNode
 
 def validate_config(config: dict[str, Any]) -> bool:
     required_keys = ["id", "name", "nodes", "edges", "metadata"]
@@ -230,6 +230,8 @@ def initialize_graph(
                 _add_plugin_node(graph_builder, node_id, node_data)
             elif node_type == "mcpTool":
                 _add_mcp_node(graph_builder, node_id, node_data)
+            elif node_type == "agent":
+                _add_agent_node(graph_builder, node_id, node_data)
 
         # Add edges
         for edge in edges:
@@ -550,6 +552,11 @@ def _add_edge(graph_builder, edge, nodes, conditional_edges):
             graph_builder.add_edge(edge["source"], END)
         else:
             graph_builder.add_edge(edge["source"], edge["target"])
+    elif source_node["type"] == "agent":
+        if target_node["type"] == "end":
+            graph_builder.add_edge(edge["source"], END)
+        else:
+            graph_builder.add_edge(edge["source"], edge["target"])
 
 
 def _add_crewai_node(graph_builder, node_id, node_data):
@@ -686,3 +693,20 @@ def _add_mcp_node(graph_builder, node_id, node_data):
             mcp_config=node_data["mcp_config"],
         ).work,
     )
+
+def _add_agent_node(graph_builder, node_id, node_data):
+    """Add agent node to graph"""
+    graph_builder.add_node(
+        node_id,
+        AgentNode(
+            node_id=node_id,
+            model_name=node_data["model"],
+            temperature=node_data["temperature"],
+            system_message=node_data["systemMessage"],
+            user_message=node_data["userMessage"],
+            tools=node_data["tools"],
+            retrieval_tools=node_data["retrievalTools"],
+            agent_name=node_data["label"],
+        ).work,
+    )
+
