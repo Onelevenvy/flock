@@ -167,7 +167,7 @@ def dynamic_api_tool(tool_definition: dict[str, Any]) -> StructuredTool:
         name=name,
         description=description,
         args_schema=DynamicInput,
-        return_direct=True,
+        return_direct=False,
         handle_tool_error=True,
     )
 

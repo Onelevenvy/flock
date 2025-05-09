@@ -24,5 +24,5 @@ math = StructuredTool.from_function(
     name="Math Calculator",
     description=" A tool for evaluating an math expression, calculated locally with NumExpr.",
     args_schema=MathInput,
-    return_direct=True,
+    return_direct=False,
 )

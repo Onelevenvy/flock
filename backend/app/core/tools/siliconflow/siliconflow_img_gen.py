@@ -56,5 +56,5 @@ siliconflow_img_generation = StructuredTool.from_function(
     name="Image Generation",
     description="Siliconflow Image Generation is a tool that can generate images from text prompts using the Siliconflow API.",
     args_schema=Text2ImageInput,
-    return_direct=True,
+    return_direct=False,
 )

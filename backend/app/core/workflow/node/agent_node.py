@@ -177,36 +177,25 @@ class AgentNode:
             agent_input = {
                 "messages": [{"role": "user", "content": all_messages[-1].content}]}  # 最后一条用户类型的消息
             
-        print(agent_input)
         # 创建React Agent
         self.agent = create_react_agent(
                 model=self.llm,
                 tools=self.tools_list,
-                prompt=prompt
+                messages_modifier=prompt,
             )
         # 调用Agent
         agent_result = await self.agent.ainvoke(agent_input)
         
-        # 检查是否有工具调用但没有最终回复
+        # 获取最终回复
         messages = agent_result["messages"]
-        last_message = messages[-1]
-        
-        # 如果最后一个消息是工具消息，需要再次调用模型获取最终回复
-        if last_message.type == "tool":
-            # 再次调用模型获取最终回复
-            final_response = await self.llm.ainvoke(messages)
-            # 将最终回复添加到消息列表
-            messages.append(final_response)
-            result = final_response
+        # 从后往前找第一个不带工具调用的AI消息
+        for msg in reversed(messages):
+            if msg.type == "ai" and not hasattr(msg, "tool_calls"):
+                result = msg
+                break
         else:
-            # 从后往前找第一个不带工具调用的AI消息
-            for msg in reversed(messages):
-                if msg.type == "ai" and not hasattr(msg, "tool_calls"):
-                    result = msg
-                    break
-            else:
-                # 如果没有找到合适的AIMessage，使用最后一个消息
-                result = messages[-1]
+            # 如果没有找到合适的AIMessage，使用最后一个消息
+            result = messages[-1]
         
         # 更新 node_outputs
         new_output = {self.node_id: {"response": result.content}}

@@ -53,5 +53,5 @@ openweather = StructuredTool.from_function(
     name="Open Weather",
     description="Useful for when you need to get weather information. Please provide city name in English.",
     args_schema=WeatherSearchInput,
-    return_direct=True,
+    return_direct=False,
 )

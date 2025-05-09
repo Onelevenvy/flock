@@ -34,5 +34,5 @@ googletranslate = StructuredTool.from_function(
     name="Google Translate",
     description="Useful for when you neet to translate.",
     args_schema=GoogleTranslateInput,
-    return_direct=True,
+    return_direct=False,
 )

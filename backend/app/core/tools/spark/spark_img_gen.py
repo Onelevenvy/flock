@@ -145,5 +145,5 @@ spark_img_generation = StructuredTool.from_function(
     name="Spark Image Generation",
     description="Spark Image Generation is a tool that can generate images from text prompts using the Spark API.",
     args_schema=Text2ImageInput,
-    return_direct=True,
+    return_direct=False,
 )

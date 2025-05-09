@@ -76,5 +76,5 @@ websearch = StructuredTool.from_function(
     name="Web Search Pro",
     description="Useful for when you need to search for information on the web. Please provide a search query.",
     args_schema=WebSearchInput,
-    return_direct=True,
+    return_direct=False,
 )

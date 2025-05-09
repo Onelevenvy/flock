@@ -58,5 +58,5 @@ img_understanding = StructuredTool.from_function(
     name="Image Understanding",
     description="Users input an image and a question, and the LLM can identify objects, scenes, and other information in the image to answer the user's question.",
     args_schema=ImageUnderstandingInput,
-    return_direct=True,
+    return_direct=False,
 )

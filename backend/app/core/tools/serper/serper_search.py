@@ -67,5 +67,5 @@ serper = StructuredTool.from_function(
     name="Serper Search",
     description="A tool that can be used to search the internet. Input should be a search query.",
     args_schema=SerperDevToolSchema,
-    return_direct=True,
+    return_direct=False,
 )

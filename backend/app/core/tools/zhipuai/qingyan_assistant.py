@@ -156,5 +156,5 @@ qingyan_assistant = StructuredTool.from_function(
     name="Qingyan Assistant",
     description="A versatile AI assistant that can help with various tasks including data analysis, creating flowcharts, mind maps, prompt engineering, AI drawing, and AI search.",
     args_schema=QingyanAssistantInput,
-    return_direct=True,
+    return_direct=False,
 )
