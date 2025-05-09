@@ -1,6 +1,7 @@
 import { NodeTypes } from "reactflow";
 
 import AnswerNode from "./Answer/AnswerNode";
+import AgentNode from "./Agent/AgentNode";
 import CrewAINode from "./CrewAI/CrewAINode";
 import EndNode from "./End/EndNode";
 import LLMNode from "./LLM/LLMNode";
@@ -34,4 +35,5 @@ export const nodeTypes: NodeTypes = {
   subgraph: SubgraphNode,
   parameterExtractor: ParameterExtractorNode,
   mcpTool: MCPNode,
+  agent: AgentNode,
 };

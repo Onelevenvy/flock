@@ -11,6 +11,16 @@ export interface NodeData {
   [key: string]: any;
 }
 
+export interface AgentNodeData extends NodeData {
+  model: string;
+  provider?: string;
+  temperature: number;
+  systemMessage?: string;
+  userMessage?: string;
+  tools: string[];
+  retrievalTools: (string | { name: string; description: string; usr_id: number; kb_id: number; })[];
+}
+
 export interface AgentConfig {
   id: string;
   name: string;
