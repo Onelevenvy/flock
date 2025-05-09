@@ -9,6 +9,14 @@
 
 > [!NOTE]
 >
+> ### 🎉 What's New 2025/5/9
+>
+> - **Agent Node Support**: Added dedicated Agent Node for seamless agent integration in workflows! Key features:
+>   - 🧠 Create autonomous agents that can reason, plan, and execute tasks
+>   - 🔄 Support for multiple agent types and architectures
+>   - 🛠️ Easy configuration of agent tools, and behaviors
+>   - 🔗 Seamless integration with other workflow nodes
+>
 > ### 🎉 What's New 2025/3/10
 >
 > - **MCP Tools Support**: Added MCP Node with support for Model Context Protocol (MCP) tools, enabling seamless integration with MCP servers! Key features:
