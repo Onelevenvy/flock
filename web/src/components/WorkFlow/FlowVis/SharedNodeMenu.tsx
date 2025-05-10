@@ -119,7 +119,8 @@ const SharedNodeMenu: React.FC<SharedNodeMenuProps> = ({
                       border="1px solid"
                       borderColor="gray.200"
                       borderRadius="lg"
-                      p={3}
+                      px={3}
+                      py={2}
                       cursor={isDraggable ? "move" : "pointer"}
                       onClick={
                         !isDraggable

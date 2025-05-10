@@ -93,6 +93,26 @@ export const nodeConfig: Record<string, NodeConfigItem> = {
     inputVariables: [],
     outputVariables: ["response"],
   },
+  agent: {
+    display: "Agent",
+    icon: FaUserAstronaut,
+    colorScheme: "yellow",
+    properties: AgentNodeProperties,
+    allowedConnections: {
+      sources: ["left", "right"],
+      targets: ["left", "right"],
+    },
+    outputVariables: ["response"],
+    inputVariables: [],
+    initialData: {
+      model: "glm-4-flash",
+      temperature: 0.1,
+      systemMessage: "",
+      userMessage: "",
+      tools: [],
+      retrievalTools: [],
+    }
+  },
   tool: {
     display: "Tools",
     icon: FaTools,
@@ -327,26 +347,7 @@ export const nodeConfig: Record<string, NodeConfigItem> = {
       mcp_config: {},
     }
   },
-  agent: {
-    display: "Agent",
-    icon: FaUserAstronaut,
-    colorScheme: "yellow",
-    properties: AgentNodeProperties,
-    allowedConnections: {
-      sources: ["left", "right"],
-      targets: ["left", "right"],
-    },
-    outputVariables: ["response"],
-    inputVariables: [],
-    initialData: {
-      model: "glm-4-flash",
-      temperature: 0.1,
-      systemMessage: "",
-      userMessage: "",
-      tools: [],
-      retrievalTools: [],
-    }
-  },
+  
 };
 
 export type NodeType = keyof typeof nodeConfig;
