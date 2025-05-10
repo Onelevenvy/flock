@@ -501,6 +501,7 @@ def _add_edge(graph_builder, edge, nodes, conditional_edges):
                 )
     elif source_node["type"].startswith("tool") and target_node["type"] == "llm":
         graph_builder.add_edge(edge["source"], edge["target"])
+    
     elif source_node["type"].startswith("tool") and target_node["type"] == "human":
         graph_builder.add_edge(edge["source"], edge["target"])
     elif source_node["type"] == "retrieval":
