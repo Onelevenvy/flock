@@ -1,3 +1,5 @@
+[![MseeP.ai Security Assessment Badge](https://mseep.net/pr/onelevenvy-flock-badge.png)](https://mseep.ai/app/onelevenvy-flock)
+
 ## 📃 Flock (Flexible Low-code Orchestrating Collaborative-agent Kits)
 
 <p align="center">
