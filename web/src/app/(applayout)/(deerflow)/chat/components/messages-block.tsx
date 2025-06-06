@@ -86,16 +86,28 @@ export function MessagesBlock({ className }: { className?: string }) {
   }, [fastForwarding]);
   return (
     <Flex direction="column" h="full" className={className}>
-      <MessageListView
-        className="flex flex-grow"
-        onFeedback={handleFeedback}
-        onSendMessage={handleSend}
-      />
+      <Box flex="1" overflow="auto" minH="0" pb="6">
+        <MessageListView
+          className="flex flex-grow"
+          onFeedback={handleFeedback}
+          onSendMessage={handleSend}
+        />
+      </Box>
       {!isReplay ? (
-        <Box position="relative" h="150px" flexShrink={0} pb={4}>
+        <Box 
+          position="relative" 
+          h="168px" 
+          flexShrink={0}
+          bg="white"
+          borderWidth="1px"
+          borderColor="gray.100"
+          rounded="lg"
+          shadow="sm"
+          p="4"
+        >
           {!responding && messageCount === 0 && (
             <ConversationStarter
-              className="absolute top-[-218px] left-0"
+              className="absolute top-[-288px] left-0"
               onSend={handleSend}
             />
           )}

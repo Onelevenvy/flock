@@ -43,6 +43,7 @@ export default function ChatPage() {
         borderBottom="1px" 
         borderColor="gray.100"
         bg="white"
+        flexShrink={0}
       >
         <Flex gap="2">
           {/* <ThemeToggle /> */}
@@ -51,7 +52,7 @@ export default function ChatPage() {
           </Suspense>
         </Flex>
       </Flex>
-      <Box flex="1" p="4">
+      <Box flex="1" p="4" overflow="hidden" >
         <Main />
       </Box>
     </Box>
