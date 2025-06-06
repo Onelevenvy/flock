@@ -1,6 +1,7 @@
 // Copyright (c) 2025 Bytedance Ltd. and/or its affiliates
 // SPDX-License-Identifier: MIT
 
+import { Box, Flex } from "@chakra-ui/react";
 import { motion } from "framer-motion";
 import { FastForward, Play } from "lucide-react";
 import { useCallback, useRef, useState } from "react";
@@ -84,14 +85,14 @@ export function MessagesBlock({ className }: { className?: string }) {
     fastForwardReplay(!fastForwarding);
   }, [fastForwarding]);
   return (
-    <div className={cn("flex h-full flex-col", className)}>
+    <Flex direction="column" h="full" className={className}>
       <MessageListView
         className="flex flex-grow"
         onFeedback={handleFeedback}
         onSendMessage={handleSend}
       />
       {!isReplay ? (
-        <div className="relative flex h-42 shrink-0 pb-4">
+        <Box position="relative" h="150px" flexShrink={0} pb={4}>
           {!responding && messageCount === 0 && (
             <ConversationStarter
               className="absolute top-[-218px] left-0"
@@ -106,17 +107,20 @@ export function MessagesBlock({ className }: { className?: string }) {
             onCancel={handleCancel}
             onRemoveFeedback={handleRemoveFeedback}
           />
-        </div>
+        </Box>
       ) : (
         <>
-          <div
+          <Box
+            position="fixed"
+            bottom="calc(50vh + 80px)"
+            left={0}
+            transition="all 0.5s ease-out"
             className={cn(
-              "fixed bottom-[calc(50vh+80px)] left-0 transition-all duration-500 ease-out",
               replayStarted && "pointer-events-none scale-150 opacity-0",
             )}
           >
             <Welcome />
-          </div>
+          </Box>
           <motion.div
             className="mb-4 h-fit w-full items-center justify-center"
             initial={{ opacity: 0, y: "20vh" }}
@@ -129,8 +133,8 @@ export function MessagesBlock({ className }: { className?: string }) {
                 !replayStarted && "translate-y-[-40vh]",
               )}
             >
-              <div className="flex items-center justify-between">
-                <div className="flex flex-grow items-center">
+              <Flex alignItems="center" justifyContent="space-between">
+                <Flex flexGrow={1} alignItems="center">
                   {responding && (
                     <motion.div
                       className="ml-3"
@@ -165,9 +169,9 @@ export function MessagesBlock({ className }: { className?: string }) {
                       </RainbowText>
                     </CardDescription>
                   </CardHeader>
-                </div>
+                </Flex>
                 {!replayHasError && (
-                  <div className="pr-4">
+                  <Box pr={4}>
                     {responding && (
                       <Button
                         className={cn(fastForwarding && "animate-pulse")}
@@ -184,28 +188,29 @@ export function MessagesBlock({ className }: { className?: string }) {
                         Play
                       </Button>
                     )}
-                  </div>
+                  </Box>
                 )}
-              </div>
+              </Flex>
             </Card>
             {!replayStarted && env.NEXT_PUBLIC_STATIC_WEBSITE_ONLY && (
-              <div className="text-muted-foreground w-full text-center text-xs">
+              <Box textAlign="center" fontSize="xs" color="gray.500" w="full">
                 * This site is for demo purposes only. If you want to try your
                 own question, please{" "}
-                <a
-                  className="underline"
+                <Box
+                  as="a"
                   href="https://github.com/bytedance/deer-flow"
                   target="_blank"
                   rel="noopener noreferrer"
+                  textDecoration="underline"
                 >
                   click here
-                </a>{" "}
+                </Box>{" "}
                 to clone it locally and run it.
-              </div>
+              </Box>
             )}
           </motion.div>
         </>
       )}
-    </div>
+    </Flex>
   );
 }

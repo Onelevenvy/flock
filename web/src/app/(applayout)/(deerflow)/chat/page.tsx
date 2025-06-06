@@ -4,7 +4,10 @@
 "use client";
 
 import dynamic from "next/dynamic";
-import { Box } from "@chakra-ui/react";
+import { Box, Flex } from "@chakra-ui/react";
+import { Suspense } from "react";
+
+import { SettingsDialog } from "../settings/dialogs/settings-dialog";
 
 const Main = dynamic(() => import("./main"), {
   ssr: false,
@@ -28,12 +31,28 @@ export default function ChatPage() {
       h="full" 
       w="full" 
       bg="ui.bgMain" 
-      p={4}
       display="flex"
       flexDirection="column"
       overflow="hidden"
     >
-      <Main />
+      <Flex 
+        h="12" 
+        px="4" 
+        alignItems="center" 
+        justifyContent="flex-end" 
+        borderBottom="1px" 
+        borderColor="gray.100"
+        bg="white"
+      >
+        <Flex gap="2">
+          <Suspense>
+            <SettingsDialog />
+          </Suspense>
+        </Flex>
+      </Flex>
+      <Box flex="1" p="4">
+        <Main />
+      </Box>
     </Box>
   );
 }

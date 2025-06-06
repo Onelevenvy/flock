@@ -1,6 +1,7 @@
 // Copyright (c) 2025 Bytedance Ltd. and/or its affiliates
 // SPDX-License-Identifier: MIT
 
+import { Box, Flex } from "@chakra-ui/react";
 import { Check, Copy, Headphones, Pencil, Undo2, X } from "lucide-react";
 import { useCallback, useEffect, useState } from "react";
 
@@ -76,14 +77,14 @@ export function ResearchBlock({
   }, [hasReport, researchId]);
 
   return (
-    <div className={cn("h-full w-full", className)}>
+    <Box h="full" w="full" className={className}>
       <Card className={cn("relative h-full w-full pt-4", className)}>
-        <div className="absolute right-4 flex h-9 items-center justify-center">
+        <Box position="absolute" right={4} display="flex" h={9} alignItems="center" justifyContent="center">
           {hasReport && !reportStreaming && (
             <>
               <Tooltip title="Generate podcast">
                 <Button
-                  className="text-gray-400"
+                  className="text-gray-600"
                   size="icon"
                   variant="ghost"
                   disabled={isReplay}
@@ -94,7 +95,7 @@ export function ResearchBlock({
               </Tooltip>
               <Tooltip title="Edit">
                 <Button
-                  className="text-gray-400"
+                  className="text-gray-600"
                   size="icon"
                   variant="ghost"
                   disabled={isReplay}
@@ -105,7 +106,7 @@ export function ResearchBlock({
               </Tooltip>
               <Tooltip title="Copy">
                 <Button
-                  className="text-gray-400"
+                  className="text-gray-600"
                   size="icon"
                   variant="ghost"
                   onClick={handleCopy}
@@ -117,7 +118,7 @@ export function ResearchBlock({
           )}
           <Tooltip title="Close">
             <Button
-              className="text-gray-400"
+              className="text-gray-600"
               size="sm"
               variant="ghost"
               onClick={() => {
@@ -127,14 +128,14 @@ export function ResearchBlock({
               <X />
             </Button>
           </Tooltip>
-        </div>
+        </Box>
         <Tabs
           className="flex h-full w-full flex-col"
           value={activeTab}
           onValueChange={(value) => setActiveTab(value)}
         >
-          <div className="flex w-full justify-center">
-            <TabsList className="">
+          <Flex w="full" justifyContent="center">
+            <TabsList>
               <TabsTrigger
                 className="px-8"
                 value="report"
@@ -146,7 +147,7 @@ export function ResearchBlock({
                 Activities
               </TabsTrigger>
             </TabsList>
-          </div>
+          </Flex>
           <TabsContent
             className="h-full min-h-0 flex-grow px-8"
             value="report"
@@ -155,7 +156,7 @@ export function ResearchBlock({
           >
             <ScrollContainer
               className="px-5pb-20 h-full"
-              scrollShadowColor="var(--card)"
+              scrollShadowColor="var(--chakra-colors-white)"
               autoScrollToBottom={!hasReport || reportStreaming}
             >
               {reportId && researchId && (
@@ -176,7 +177,7 @@ export function ResearchBlock({
           >
             <ScrollContainer
               className="h-full"
-              scrollShadowColor="var(--card)"
+              scrollShadowColor="var(--chakra-colors-white)"
               autoScrollToBottom={!hasReport || reportStreaming}
             >
               {researchId && (
@@ -189,6 +190,6 @@ export function ResearchBlock({
           </TabsContent>
         </Tabs>
       </Card>
-    </div>
+    </Box>
   );
 }
