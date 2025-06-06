@@ -14,6 +14,7 @@ from app.api.routes import (
     uploads,
     users,
     utils,
+    langmanus,
 )
 
 api_router = APIRouter()
@@ -47,4 +48,9 @@ api_router.include_router(
 # 新增的公共路由
 api_router.include_router(
     subgraphs.public_router, prefix="/subgraphs", tags=["subgraphs"]
+)
+
+# 添加langmanus路由
+api_router.include_router(
+    langmanus.router, prefix="/langmanus", tags=["langmanus"]
 )
