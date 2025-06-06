@@ -11,7 +11,7 @@
 >
 > ### 🎉 最新アップデート 2025/6/6
 >
-> - **LangManus統合**: LangManusのサポートを追加し、より強力なエージェント編成機能を実現！オープンソースのLangManusとdeer-flow (@ttps://github.com/bytedance/deer-flow)に感謝いたします！主な機能：
+> - **LangManus統合**: LangManusのサポートを追加し、より強力なエージェント編成機能を実現！オープンソースのLangManusと[deer-flow ](https://github.com/bytedance/deer-flow)に感謝いたします！主な機能：
 >   - 🧠 強化されたエージェント調整とワークフロー管理
 >   - 🔄 既存のワークフローノードとのシームレスな統合
 >   - 🛠️ 高度なエージェント相互作用パターン

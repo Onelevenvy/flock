@@ -11,9 +11,9 @@
 
 > [!NOTE]
 >
-> ### �� What's New 2025/6/6
+> ### 🎉 What's New 2025/6/6
 >
-> - **LangManus Integration**: Added support for LangManus, enabling more powerful agent orchestration capabilities! Special thanks to the open-source LangManus and deer-flow (@ttps://github.com/bytedance/deer-flow)! Key features:
+> - **LangManus Integration**: Added support for LangManus, enabling more powerful agent orchestration capabilities! Special thanks to the open-source LangManus and [deer-flow ](https://github.com/bytedance/deer-flow)! Key features:
 >   - 🧠 Enhanced agent coordination and workflow management
 >   - 🔄 Seamless integration with existing workflow nodes
 >   - 🛠️ Advanced agent interaction patterns
