@@ -13,3 +13,5 @@ backend/fastembed_cache
 docker/push_to_dockerhub.sh
 docker/build_images.sh
 .vscode/settings.json
+
+conf.yaml

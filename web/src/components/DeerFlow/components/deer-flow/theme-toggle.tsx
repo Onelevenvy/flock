@@ -18,7 +18,7 @@ import { cn } from "@/components/DeerFlow/lib/utils";
 import { Tooltip } from "./tooltip";
 
 export function ThemeToggle() {
-  const { theme = "system", setTheme } = useTheme();
+  const { theme = "light", setTheme } = useTheme();
 
   return (
     <DropdownMenu>
