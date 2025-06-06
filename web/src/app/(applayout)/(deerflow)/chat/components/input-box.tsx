@@ -130,7 +130,7 @@ export function InputBox({
                 setEnableBackgroundInvestigation(!backgroundInvestigation)
               }
             >
-              <Detective /> Investigation
+              <Detective className="mr-2 h-4 w-4" /> Investigation
             </Button>
           </Tooltip>
         </div>
