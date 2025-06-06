@@ -18,9 +18,9 @@ export function ThemeProviderWrapper({
   return (
     <ThemeProvider
       attribute="class"
-      defaultTheme={"dark"}
+      defaultTheme={"light"}
       enableSystem={isChatPage}
-      forcedTheme={isChatPage ? undefined : "dark"}
+      forcedTheme={isChatPage ? undefined : "light"}
       disableTransitionOnChange
     >
       {children}

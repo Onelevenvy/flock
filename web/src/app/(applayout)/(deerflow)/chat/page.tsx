@@ -6,7 +6,7 @@
 import dynamic from "next/dynamic";
 import { Box, Flex } from "@chakra-ui/react";
 import { Suspense } from "react";
-
+// import { ThemeToggle } from "@/components/DeerFlow/components/deer-flow/theme-toggle";
 import { SettingsDialog } from "../settings/dialogs/settings-dialog";
 
 const Main = dynamic(() => import("./main"), {
@@ -45,6 +45,7 @@ export default function ChatPage() {
         bg="white"
       >
         <Flex gap="2">
+          {/* <ThemeToggle /> */}
           <Suspense>
             <SettingsDialog />
           </Suspense>
