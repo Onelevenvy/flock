@@ -212,8 +212,7 @@ cd backend
 環境をアクティブにします。
 
 ```bash
-poetry env use 3.12
-poetry install
+uv sync --python 3.12  
 ```
 
 ##### 2.2 初期データの設定

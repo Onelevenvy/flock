@@ -251,8 +251,7 @@ cd backend
 激活环境。
 
 ```bash
-poetry env use 3.12
-poetry install
+uv sync --python 3.12  
 ```
 
 ##### 2.2.2 初始化数据
