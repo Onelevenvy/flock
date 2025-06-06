@@ -116,12 +116,6 @@ extend-exclude = '''
 ^/build/
 '''
 
-[tool.isort]
-multi_line_output = 3
-include_trailing_comma = true
-force_grid_wrap = 0
-line_length = 88
-
 [tool.mypy]
 strict = true
 exclude = ["venv", "alembic"]
@@ -129,6 +123,7 @@ exclude = ["venv", "alembic"]
 [tool.ruff]
 target-version = "py310"
 exclude = ["alembic"]
+line-length = 88
 
 [tool.ruff.lint]
 select = [
@@ -147,8 +142,15 @@ ignore = [
     "B904",  # Allow raising exceptions without from e, for HTTPException
 ]
 
-[tool.ruff.lint.pyupgrade]
-keep-runtime-typing = true
+[tool.ruff.lint.isort]
+combine-as-imports = true
+force-wrap-aliases = true
+
+[tool.ruff.format]
+quote-style = "double"
+indent-style = "space"
+skip-magic-trailing-comma = false
+line-ending = "auto"
 
 [[project.source]]
 name = "mirrors"
