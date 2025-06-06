@@ -295,7 +295,7 @@ importers:
         specifier: ^0.5.7
         version: 0.5.8(tailwindcss@4.1.8)
       '@tailwindcss/postcss':
-        specifier: ^4.0.15
+        specifier: ^4.1.8
         version: 4.1.8
       '@tanstack/router-devtools':
         specifier: 1.19.1

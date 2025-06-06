@@ -1,4 +1,4 @@
-@import "tailwindcss";
+@import "@tailwindcss/postcss";
 @import "tw-animate-css";
 @plugin "@tailwindcss/typography";
 

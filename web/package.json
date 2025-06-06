@@ -4,7 +4,7 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
-    "build": "next build",
+    "build": "next build --turbo",
     "start": "next start",
     "generate-client": "openapi --input ./openapi.json --useOptions --useUnionTypes --output ./src/client --client axios --exportSchemas true",
     "lint": "eslint . --ext .js,.jsx,.ts,.tsx",
@@ -108,7 +108,7 @@
     "@biomejs/biome": "1.6.1",
     "@eslint/eslintrc": "^3.3.1",
     "@tailwindcss/forms": "^0.5.7",
-    "@tailwindcss/postcss": "^4.0.15",
+    "@tailwindcss/postcss": "^4.1.8",
     "@tailwindcss/typography": "^0.5.14",
     "@tanstack/router-devtools": "1.19.1",
     "@tanstack/router-vite-plugin": "1.19.0",
