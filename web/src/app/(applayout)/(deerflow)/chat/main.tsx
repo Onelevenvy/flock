@@ -4,6 +4,7 @@
 "use client";
 
 import { useMemo } from "react";
+import { Box } from "@chakra-ui/react";
 
 import { useStore } from "@/components/DeerFlow/core/store";
 import { cn } from "@/components/DeerFlow/lib/utils";
@@ -18,28 +19,37 @@ export default function Main() {
     [openResearchId],
   );
   return (
-    <div
+    <Box
       className={cn(
-        "flex h-full w-full justify-center-safe px-4 pt-12 pb-4",
+        "flex h-full w-full justify-center-safe",
         doubleColumnMode && "gap-8",
       )}
     >
-      <MessagesBlock
+      <Box
         className={cn(
-          "shrink-0 transition-all duration-300 ease-out rounded-lg border border-[var(--component-border)] bg-card shadow-sm",
+          "shrink-0 transition-all duration-300 ease-out rounded-lg shadow-sm",
           !doubleColumnMode &&
             `w-[768px] translate-x-[min(max(calc((100vw-538px)*0.75),575px)/2,960px/2)]`,
           doubleColumnMode && `w-[538px]`,
         )}
-      />
-      <ResearchBlock
+        bg="white"
+        borderWidth="1px"
+        borderColor="gray.100"
+      >
+        <MessagesBlock />
+      </Box>
+      <Box
         className={cn(
-          "w-[min(max(calc((100vw-538px)*0.75),575px),960px)] pb-4 transition-all duration-300 ease-out rounded-lg border border-[var(--component-border)] bg-card shadow-sm",
+          "w-[min(max(calc((100vw-538px)*0.75),575px),960px)] pb-4 transition-all duration-300 ease-out rounded-lg shadow-sm",
           !doubleColumnMode && "scale-0",
           doubleColumnMode && "",
         )}
-        researchId={openResearchId}
-      />
-    </div>
+        bg="white"
+        borderWidth="1px"
+        borderColor="gray.100"
+      >
+        <ResearchBlock researchId={openResearchId} />
+      </Box>
+    </Box>
   );
 }
