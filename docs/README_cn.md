@@ -11,7 +11,7 @@
 >
 > ### 🎉 最新更新 2025/6/6
 >
-> - **LangManus集成**: 新增对LangManus的支持，实现更强大的代理编排能力！特别感谢开源的LangManus和deer-flow (@ttps://github.com/bytedance/deer-flow)！主要特性：
+> - **LangManus集成**: 新增对LangManus的支持，实现更强大的代理编排能力！特别感谢开源的LangManus和[deer-flow ](https://github.com/bytedance/deer-flow)！主要特性：
 >   - 🧠 增强的代理协调和工作流管理
 >   - 🔄 与现有工作流节点无缝集成
 >   - 🛠️ 高级代理交互模式
