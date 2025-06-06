@@ -60,10 +60,10 @@ def get_llm_by_type(
         return _llm_cache[llm_type]
 
     conf = load_yaml_config(
-        # str((Path(__file__).parent.parent.parent / "conf.yaml").resolve())
-        # 'conf.yaml'
-        '/home/tqx/llm/flock/conf.yaml'
-
+        os.getenv(
+            "FLOCK_CONFIG_PATH",
+            str((Path(__file__).parent.parent.parent.parent.parent / "conf.yaml").resolve())
+        )
     )
 
     llm = _create_llm_use_conf(llm_type, conf)
