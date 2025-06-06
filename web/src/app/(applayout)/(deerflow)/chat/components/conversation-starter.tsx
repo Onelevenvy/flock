@@ -5,7 +5,7 @@ import { motion } from "framer-motion";
 
 import { cn } from "@/components/DeerFlow/lib/utils";
 
-import { Welcome } from "./welcome";
+// import { Welcome } from "./welcome";
 
 const questions = [
   "How many times taller is the Eiffel Tower than the tallest building in the world?",
@@ -23,7 +23,7 @@ export function ConversationStarter({
   return (
     <div className={cn("flex flex-col items-center", className)}>
       <div className="pointer-events-none fixed inset-0 flex items-center justify-center">
-        <Welcome className="pointer-events-auto mb-15 w-[75%] -translate-y-24" />
+        {/* <Welcome className="pointer-events-auto mb-15 w-[75%] -translate-y-24" /> */}
       </div>
       <ul className="flex flex-wrap">
         {questions.map((question, index) => (

@@ -1,7 +1,7 @@
 // Copyright (c) 2025 Bytedance Ltd. and/or its affiliates
 // SPDX-License-Identifier: MIT
 
-import { Box, Flex } from "@chakra-ui/react";
+import { Box, Flex, TabList, TabPanels, TabPanel, Tab, Tabs } from "@chakra-ui/react";
 import { Check, Copy, Headphones, Pencil, Undo2, X } from "lucide-react";
 import { useCallback, useEffect, useState } from "react";
 
@@ -9,7 +9,6 @@ import { ScrollContainer } from "@/components/DeerFlow/components/deer-flow/scro
 import { Tooltip } from "@/components/DeerFlow/components/deer-flow/tooltip";
 import { Button } from "@/components/DeerFlow/components/ui/button";
 import { Card } from "@/components/DeerFlow/components/ui/card";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/DeerFlow/components/ui/tabs";
 import { useReplay } from "@/components/DeerFlow/core/replay";
 import { closeResearch, listenToPodcast, useStore } from "@/components/DeerFlow/core/store";
 import { cn } from "@/components/DeerFlow/lib/utils";
@@ -130,64 +129,60 @@ export function ResearchBlock({
           </Tooltip>
         </Box>
         <Tabs
-          className="flex h-full w-full flex-col"
-          value={activeTab}
-          onValueChange={(value) => setActiveTab(value)}
+          display="flex"
+          flexDir="column"
+          h="full"
+          w="full"
+          defaultIndex={activeTab === "report" ? 0 : 1}
+          onChange={(index) => setActiveTab(index === 0 ? "report" : "activities")}
+          variant="enclosed"
         >
           <Flex w="full" justifyContent="center">
-            <TabsList>
-              <TabsTrigger
-                className="px-8"
-                value="report"
-                disabled={!hasReport}
-              >
-                Report
-              </TabsTrigger>
-              <TabsTrigger className="px-8" value="activities">
-                Activities
-              </TabsTrigger>
-            </TabsList>
+            <TabList>
+              <Tab isDisabled={!hasReport}>Report</Tab>
+              <Tab>Activities</Tab>
+            </TabList>
           </Flex>
-          <TabsContent
-            className="h-full min-h-0 flex-grow px-8"
-            value="report"
-            forceMount
-            hidden={activeTab !== "report"}
-          >
-            <ScrollContainer
-              className="px-5pb-20 h-full"
-              scrollShadowColor="var(--chakra-colors-white)"
-              autoScrollToBottom={!hasReport || reportStreaming}
+          <TabPanels flex="1" minH="0" overflow="auto">
+            <TabPanel
+              h="full"
+              px={8}
+              hidden={activeTab !== "report"}
             >
-              {reportId && researchId && (
-                <ResearchReportBlock
-                  className="mt-4"
-                  researchId={researchId}
-                  messageId={reportId}
-                  editing={editing}
-                />
-              )}
-            </ScrollContainer>
-          </TabsContent>
-          <TabsContent
-            className="h-full min-h-0 flex-grow px-8"
-            value="activities"
-            forceMount
-            hidden={activeTab !== "activities"}
-          >
-            <ScrollContainer
-              className="h-full"
-              scrollShadowColor="var(--chakra-colors-white)"
-              autoScrollToBottom={!hasReport || reportStreaming}
+              <ScrollContainer
+                className="h-full"
+                scrollShadowColor="var(--chakra-colors-white)"
+                autoScrollToBottom={!hasReport || reportStreaming}
+              >
+                {reportId && researchId && (
+                  <ResearchReportBlock
+                    className="mt-4"
+                    researchId={researchId}
+                    messageId={reportId}
+                    editing={editing}
+                  />
+                )}
+              </ScrollContainer>
+            </TabPanel>
+            <TabPanel
+              h="full"
+              px={8}
+              hidden={activeTab !== "activities"}
             >
-              {researchId && (
-                <ResearchActivitiesBlock
-                  className="mt-4"
-                  researchId={researchId}
-                />
-              )}
-            </ScrollContainer>
-          </TabsContent>
+              <ScrollContainer
+                className="h-full"
+                scrollShadowColor="var(--chakra-colors-white)"
+                autoScrollToBottom={!hasReport || reportStreaming}
+              >
+                {researchId && (
+                  <ResearchActivitiesBlock
+                    className="mt-4"
+                    researchId={researchId}
+                  />
+                )}
+              </ScrollContainer>
+            </TabPanel>
+          </TabPanels>
         </Tabs>
       </Card>
     </Box>
