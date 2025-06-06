@@ -227,29 +227,22 @@ function Dashboard() {
                   </Text>
                   <NextLink
                     href="https://github.com/Onelevenvy/flock"
-                    passHref
-                    legacyBehavior
+                    target="_blank"
+                    rel="noopener noreferrer"
                   >
-                    <Link
-                      as="a"
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      _hover={{ textDecoration: "none" }}
+                    <Button
+                      leftIcon={<FiGithub />}
+                      variant="outline"
+                      colorScheme="gray"
+                      size="lg"
+                      transition="all 0.2s"
+                      _hover={{
+                        transform: "translateY(-1px)",
+                        shadow: "md",
+                      }}
                     >
-                      <Button
-                        leftIcon={<FiGithub />}
-                        variant="outline"
-                        colorScheme="gray"
-                        size="lg"
-                        transition="all 0.2s"
-                        _hover={{
-                          transform: "translateY(-1px)",
-                          shadow: "md",
-                        }}
-                      >
-                        View on GitHub
-                      </Button>
-                    </Link>
+                      View on GitHub
+                    </Button>
                   </NextLink>
                 </VStack>
               </CardBody>
