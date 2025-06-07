@@ -3,7 +3,8 @@ const translation = {
   chat: "Chat",
   team: "Team",
   tools: "Tools",
-  knowledge: "knowledge",
+  knowledge: "Knowledge",
+  research: "Research",
 };
 
 export default translation;
