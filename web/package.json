@@ -4,7 +4,7 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
-    "build": "next build --turbo",
+    "build": "next build",
     "start": "next start",
     "generate-client": "openapi --input ./openapi.json --useOptions --useUnionTypes --output ./src/client --client axios --exportSchemas true",
     "lint": "eslint . --ext .js,.jsx,.ts,.tsx",
