@@ -3,7 +3,7 @@
 
 import { useMemo } from "react";
 
-import { SiteHeader } from "../chat/components/site-header";
+import { SiteHeader } from "../research/components/site-header";
 import { Jumbotron } from "./components/jumbotron";
 import { Ray } from "./components/ray";
 import { CaseStudySection } from "./sections/case-study-section";

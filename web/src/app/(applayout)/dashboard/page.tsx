@@ -110,16 +110,14 @@ function QuickAccessItem({
 }: QuickAccessItemProps) {
   return (
     <ListItem>
-      <NextLink href={href} passHref legacyBehavior>
-        <Link
-          as="a"
+      <NextLink href={href} style={{ textDecoration: 'none' }}>
+        <Box
           display="flex"
           alignItems="center"
           p={3}
           borderRadius="lg"
           transition="all 0.2s"
           _hover={{
-            textDecoration: "none",
             bg: "gray.50",
             transform: "translateX(2px)",
           }}
@@ -128,7 +126,7 @@ function QuickAccessItem({
           <Text ml={2} color="gray.700" fontWeight="500">
             {children}
           </Text>
-        </Link>
+        </Box>
       </NextLink>
     </ListItem>
   );

@@ -13,9 +13,9 @@ import {
 import { LuBookCopy } from "react-icons/lu";
 import { PiToolboxLight } from "react-icons/pi";
 import { RiRobot2Fill, RiRobot2Line } from "react-icons/ri";
-
+import { GiArchiveResearch } from "react-icons/gi";
 import useAuth from "../../../hooks/useAuth";
-
+import { TbDeviceImacSearch } from "react-icons/tb";
 interface SidebarItemsProps {
   onClose?: () => void;
 }
@@ -57,6 +57,13 @@ const SidebarItems = ({ onClose }: SidebarItemsProps) => {
       inactiveIcon: LuBookCopy,
       title: t("sidebar.knowledge"),
       path: "/knowledge",
+    },
+
+    {
+      activeIcon: GiArchiveResearch,
+      inactiveIcon: TbDeviceImacSearch,
+      title: t("sidebar.research"),
+      path: "/research",
     },
   ];
 

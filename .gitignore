@@ -13,3 +13,4 @@ docker/push_to_dockerhub.sh
 docker/build_images.sh
 
 conf.yaml
+.cursor
