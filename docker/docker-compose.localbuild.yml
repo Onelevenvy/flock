@@ -165,39 +165,6 @@ services:
       retries: 5
       start_period: 10s
 
-  code-interpreter:
-    build:
-      context: ./code-interpreter
-      dockerfile: Dockerfile
-    image: flock-code-interpreter:latest
-    deploy:
-      resources:
-        limits:
-          memory: 1G
-        reservations:
-          memory: 256M
-    security_opt:
-      - no-new-privileges:true
-    cap_drop:
-      - ALL
-    networks:
-      - docker_default
-    volumes:
-      - app-code-workspace:/workspace
-    environment:
-      - PYTHONUNBUFFERED=1
-    logging:
-      driver: "json-file"
-      options:
-        max-size: "10m"
-        max-file: "3"
-    healthcheck:
-      test: ["CMD", "python3", "/opt/code-interpreter/scripts/healthcheck.py"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-      start_period: 10s
-
 networks:
   docker_default:
     external: true

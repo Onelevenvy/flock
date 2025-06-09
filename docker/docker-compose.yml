@@ -160,30 +160,6 @@ services:
       retries: 3
       start_period: 30s
 
-  code-interpreter:
-    image: jimmy1211/flock-code-interpreter:latest
-    deploy:
-      resources:
-        limits:
-          memory: 1G
-        reservations:
-          memory: 256M
-    security_opt:
-      - no-new-privileges:true
-    cap_drop:
-      - ALL
-    networks:
-      - docker_default
-    volumes:
-      - app-code-workspace:/workspace
-    environment:
-      - PYTHONUNBUFFERED=1
-    logging:
-      driver: "json-file"
-      options:
-        max-size: "10m"
-        max-file: "3"
-   
 
 networks:
   docker_default:
