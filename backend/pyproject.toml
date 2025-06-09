@@ -51,6 +51,7 @@ dependencies = [
     "langchain-text-splitters>=0.3.2",
     "langgraph-checkpoint>=2.0.9",
     "langgraph-sdk>=0.1.48",
+    "langchain-sandbox>=0.0.6",
     "langsmith>=0.1.141",
     "grandalf>=0.8",
     "wikipedia>=1.4.0",

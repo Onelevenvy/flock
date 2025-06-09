@@ -95,22 +95,23 @@ def event_to_response(
         tool_name = event["name"]
         # If tool is KnowledgeBase then serialise the documents in artifact
         documents: list[dict[str, Any]] = []
-        if tool_output and tool_output.name == "KnowledgeBase":
-            docs: list[Document] = tool_output.artifact
-            for doc in docs:
-                documents.append(
-                    {
-                        "content": doc.page_content,
-                    }
+        if tool_name!= 'python_code_sandbox':
+            if tool_output and tool_output.name == "KnowledgeBase":
+                docs: list[Document] = tool_output.artifact
+                for doc in docs:
+                    documents.append(
+                        {
+                            "content": doc.page_content,
+                        }
+                    )
+            if tool_output:
+                return ChatResponse(
+                    type="tool",
+                    id=id,
+                    name=tool_name,
+                    tool_output=json.dumps(tool_output.content),
+                    documents=json.dumps(documents),
                 )
-        if tool_output:
-            return ChatResponse(
-                type="tool",
-                id=id,
-                name=tool_name,
-                tool_output=json.dumps(tool_output.content),
-                documents=json.dumps(documents),
-            )
 
     elif kind == "on_chain_end":
         output = event["data"]["output"]
