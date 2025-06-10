@@ -14,7 +14,10 @@ from sqlalchemy.dialects.postgresql import JSONB
 from sqlmodel import Field, Relationship, SQLModel
 
 from app.core.graph.messages import ChatResponse
-from app.core.security import security_manager
+
+from typing import TYPE_CHECKING
+if TYPE_CHECKING:
+    from app.core.security import security_manager
 
 
 class Message(SQLModel):

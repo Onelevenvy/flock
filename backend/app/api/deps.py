@@ -10,8 +10,8 @@ from sqlmodel import Session
 
 from app.core.config import settings
 from app.core.db import engine
-from app.core.security import security_manager
-from app.models import Team, TokenPayload, User
+from app.core.security import security_manager, resource_manager
+from app.models import Team, TokenPayload, User, ResourceType, ActionType
 
 reusable_oauth2 = OAuth2PasswordBearer(
     tokenUrl=f"{settings.API_V1_STR}/login/access-token"
@@ -57,6 +57,21 @@ def get_current_active_superuser(current_user: CurrentUser) -> User:
     return current_user
 
 
+def check_team_permission(
+    session: SessionDep,
+    current_user: CurrentUser,
+    resource_type: ResourceType,
+    action_type: ActionType,
+) -> None:
+    """Check if user has permission to perform action on team"""
+    resource_manager.check_permission(
+        session=session,
+        user=current_user,
+        resource_type=resource_type,
+        action_type=action_type,
+    )
+
+
 header_scheme = APIKeyHeader(name="x-api-key")
 
 
@@ -80,3 +95,4 @@ def get_current_team_from_key(
 
 
 CurrentTeam = Annotated[Team, Depends(get_current_team_from_key)]
+TeamPermissionChecker = Annotated[None, Depends(check_team_permission)]

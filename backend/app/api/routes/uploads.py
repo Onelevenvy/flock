@@ -13,8 +13,9 @@ from sqlalchemy import ColumnElement
 from sqlmodel import and_, func, select
 from starlette import status
 
-from app.api.deps import CurrentUser, SessionDep
+from app.api.deps import CurrentUser, SessionDep, check_team_permission
 from app.core.config import settings
+from app.core.security import resource_manager
 from app.models import (
     Message,
     Upload,
@@ -23,6 +24,8 @@ from app.models import (
     UploadsOut,
     UploadStatus,
     UploadUpdate,
+    ResourceType,
+    ActionType,
 )
 from app.tasks.tasks import add_upload, edit_upload, perform_search, remove_upload
 
@@ -98,11 +101,17 @@ def read_uploads(
     """
     Retrieve uploads.
     """
+    # 检查权限
+    check_team_permission(
+        session=session,
+        current_user=current_user,
+        resource_type=ResourceType.UPLOAD,
+        action_type=ActionType.READ,
+    )
+
     filters = []
     if status:
         filters.append(Upload.status == status)
-    if not current_user.is_superuser:
-        filters.append(Upload.owner_id == current_user.id)
 
     filter_conditions: ColumnElement[bool] | bool = and_(*filters) if filters else True
 
@@ -142,6 +151,14 @@ async def create_upload(
     file: UploadFile | None = None,
 ) -> Any:
     """Create upload"""
+    # 检查权限
+    check_team_permission(
+        session=session,
+        current_user=current_user,
+        resource_type=ResourceType.UPLOAD,
+        action_type=ActionType.CREATE,
+    )
+
     logger.info(f"Received upload request: file_type={file_type}, name={name}")
 
     try:
@@ -175,6 +192,15 @@ async def create_upload(
         else:
             actual_file_type = "web"
 
+        # 创建upload对应的resource
+        resource = resource_manager.create_resource(
+            session=session,
+            name=f"upload_{name}",  # 使用upload名称作为resource名称
+            description=description or f"Upload resource for {name}",
+            resource_type=ResourceType.UPLOAD,
+        )
+
+        # 创建upload
         upload = Upload.model_validate(
             UploadCreate(
                 name=name,
@@ -184,7 +210,11 @@ async def create_upload(
                 chunk_size=chunk_size,
                 chunk_overlap=chunk_overlap,
             ),
-            update={"owner_id": current_user.id, "status": UploadStatus.IN_PROGRESS},
+            update={
+                "owner_id": current_user.id,
+                "status": UploadStatus.IN_PROGRESS,
+                "resource_id": resource.id  # 设置resource_id
+            },
         )
         session.add(upload)
         session.commit()
@@ -248,11 +278,17 @@ def update_upload(
     file_size: int = Depends(valid_content_length),
 ) -> Any:
     """Update upload"""
+    # 检查权限
+    check_team_permission(
+        session=session,
+        current_user=current_user,
+        resource_type=ResourceType.UPLOAD,
+        action_type=ActionType.UPDATE,
+    )
+
     upload = session.get(Upload, id)
     if not upload:
         raise HTTPException(status_code=404, detail="Upload not found")
-    if not current_user.is_superuser and upload.owner_id != current_user.id:
-        raise HTTPException(status_code=403, detail="Not enough permissions")
 
     update_data: dict[str, Any] = {}
     if name is not None:
@@ -326,11 +362,19 @@ def update_upload(
 
 @router.delete("/{id}")
 def delete_upload(session: SessionDep, current_user: CurrentUser, id: int) -> Message:
+    """Delete upload"""
+    # 检查权限
+    check_team_permission(
+        session=session,
+        current_user=current_user,
+        resource_type=ResourceType.UPLOAD,
+        action_type=ActionType.DELETE,
+    )
+
     upload = session.get(Upload, id)
     if not upload:
         raise HTTPException(status_code=404, detail="Upload not found")
-    if not current_user.is_superuser and upload.owner_id != current_user.id:
-        raise HTTPException(status_code=403, detail="Not enough permissions")
+
     try:
         # Set upload status to in progress
         upload.status = UploadStatus.IN_PROGRESS
@@ -358,11 +402,17 @@ async def search_upload(
     """
     Initiate an asynchronous search within a specific upload.
     """
+    # 检查权限
+    check_team_permission(
+        session=session,
+        current_user=current_user,
+        resource_type=ResourceType.UPLOAD,
+        action_type=ActionType.READ,
+    )
+
     upload = session.get(Upload, upload_id)
     if not upload:
         raise HTTPException(status_code=404, detail="Upload not found")
-    if not current_user.is_superuser and upload.owner_id != current_user.id:
-        raise HTTPException(status_code=403, detail="Not enough permissions")
 
     search_type = search_params.get("search_type", "vector")
     if search_type not in ["vector", "fulltext", "hybrid"]:
@@ -381,10 +431,23 @@ async def search_upload(
 
 
 @router.get("/{upload_id}/search/{task_id}")
-async def get_search_results(task_id: str):
+async def get_search_results(
+    task_id: str,
+    session: SessionDep,
+    current_user: CurrentUser,
+    upload_id: int,
+):
     """
     Retrieve the results of an asynchronous search task.
     """
+    # 检查权限
+    check_team_permission(
+        session=session,
+        current_user=current_user,
+        resource_type=ResourceType.UPLOAD,
+        action_type=ActionType.READ,
+    )
+
     task_result = AsyncResult(task_id)
     if task_result.ready():
         return {"status": "completed", "results": task_result.result}
