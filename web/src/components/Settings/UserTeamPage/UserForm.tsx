@@ -19,6 +19,12 @@ import {
   Text,
   IconButton,
   HStack,
+  Table,
+  Thead,
+  Tbody,
+  Tr,
+  Th,
+  Td,
 } from "@chakra-ui/react";
 import { type SubmitHandler, useForm, Controller, useFieldArray } from "react-hook-form";
 import { useMutation, useQueryClient, useQuery } from "react-query";
@@ -112,6 +118,7 @@ const UserForm = ({ user, isOpen, onClose }: UserFormProps) => {
     reset,
     getValues,
     control,
+    watch,
     formState: { errors, isSubmitting, isDirty },
   } = useForm<UserFormData>({
     mode: "onBlur",
@@ -123,6 +130,8 @@ const UserForm = ({ user, isOpen, onClose }: UserFormProps) => {
     control,
     name: "groupRolePairs"
   });
+
+  const groupRolePairs = watch("groupRolePairs");
 
   const createUser = async (formData: UserFormData) => {
     const groups: number[] = [];
@@ -382,68 +391,92 @@ const UserForm = ({ user, isOpen, onClose }: UserFormProps) => {
                 fontSize="sm"
                 fontWeight="500"
                 color="gray.700"
+                mb={4}
               >
                 Groups and Roles
               </FormLabel>
-              <VStack spacing={4} align="stretch">
-                {fields.map((field, index) => (
-                  <HStack key={field.id} spacing={4} align="flex-start">
-                    <FormControl flex={1}>
-                      <Controller
-                        name={`groupRolePairs.${index}.group`}
-                        control={control}
-                        render={({ field: { onChange, value } }) => (
-                          <MultiSelect
-                            value={value}
-                            onChange={onChange}
-                            options={groups?.data.map(group => ({
-                              value: group.id,
-                              label: group.name
-                            }))}
-                            placeholder="Select group"
-                            isClearable={false}
-                          />
-                        )}
-                      />
-                    </FormControl>
-                    <FormControl flex={2}>
-                      <Controller
-                        name={`groupRolePairs.${index}.roles`}
-                        control={control}
-                        render={({ field: { onChange, value } }) => (
-                          <MultiSelect
-                            value={value}
-                            onChange={onChange}
-                            isMulti
-                            options={roles?.data
-                              .filter(role => field.group && role.group_id === field.group.value)
-                              .map(role => ({
-                                value: role.id,
-                                label: role.name
-                              }))}
-                            placeholder="Select roles"
-                            isDisabled={!field.group}
-                          />
-                        )}
-                      />
-                    </FormControl>
-                    <IconButton
-                      aria-label="Remove group-role pair"
-                      icon={<DeleteIcon />}
-                      variant="ghost"
-                      colorScheme="red"
-                      isDisabled={fields.length === 1}
-                      onClick={() => remove(index)}
-                    />
-                  </HStack>
-                ))}
-              </VStack>
+              <Table variant="simple" size="sm" mb={4}>
+                <Thead>
+                  <Tr>
+                    <Th>Group</Th>
+                    <Th>Roles</Th>
+                    <Th width="80px">Action</Th>
+                  </Tr>
+                </Thead>
+                <Tbody>
+                  {fields.map((field, index) => (
+                    <Tr key={field.id}>
+                      <Td>
+                        <Controller
+                          name={`groupRolePairs.${index}.group`}
+                          control={control}
+                          render={({ field: { onChange, value } }) => (
+                            <MultiSelect
+                              value={value}
+                              onChange={(newValue: SelectOption | null) => {
+                                onChange(newValue);
+                                // Reset roles when group changes
+                                const currentPairs = getValues("groupRolePairs");
+                                currentPairs[index].roles = [];
+                                // Update the form
+                                reset({ ...getValues(), groupRolePairs: currentPairs });
+                              }}
+                              options={groups?.data
+                                .filter(g => !groupRolePairs.some((pair, i) => 
+                                  i !== index && pair.group?.value === g.id
+                                ))
+                                .map(group => ({
+                                  value: group.id,
+                                  label: group.name
+                                }))}
+                              placeholder="Select group"
+                              isClearable={false}
+                            />
+                          )}
+                        />
+                      </Td>
+                      <Td>
+                        <Controller
+                          name={`groupRolePairs.${index}.roles`}
+                          control={control}
+                          render={({ field: { onChange, value } }) => (
+                            <MultiSelect
+                              value={value}
+                              onChange={onChange}
+                              isMulti
+                              options={roles?.data
+                                .filter(role => field.group && role.group_id === field.group.value)
+                                .map(role => ({
+                                  value: role.id,
+                                  label: role.name
+                                }))}
+                              placeholder="Select roles"
+                              isDisabled={!field.group}
+                            />
+                          )}
+                        />
+                      </Td>
+                      <Td>
+                        <IconButton
+                          aria-label="Remove group-role pair"
+                          icon={<DeleteIcon />}
+                          variant="ghost"
+                          colorScheme="red"
+                          size="sm"
+                          isDisabled={fields.length === 1}
+                          onClick={() => remove(index)}
+                        />
+                      </Td>
+                    </Tr>
+                  ))}
+                </Tbody>
+              </Table>
               <Button
                 leftIcon={<AddIcon />}
                 variant="ghost"
                 size="sm"
-                mt={2}
                 onClick={() => append({ group: null, roles: [] })}
+                isDisabled={groupRolePairs.some(pair => !pair.group)}
               >
                 Add Group
               </Button>
