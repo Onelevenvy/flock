@@ -150,7 +150,8 @@ class GroupBase(SQLModel):
     """Base Group model"""
     name: str = Field(unique=True, index=True)
     description: str | None = None
-    is_system_group: bool = False  # 是否是系统用户组
+    is_system_group: bool = False
+    admin_id: int | None = Field(default=None, foreign_key="user.id")
 
 class Group(GroupBase, table=True):
     """Group model for database"""
@@ -159,6 +160,13 @@ class Group(GroupBase, table=True):
     # Relationships
     users: List["User"] = Relationship(back_populates="groups", link_model=UserGroup)
     resources: List["Resource"] = Relationship(back_populates="groups", link_model=GroupResource)
+    roles: List["Role"] = Relationship(back_populates="group")
+    admin: Optional["User"] = Relationship(
+        sa_relationship_kwargs={
+            "primaryjoin": "Group.admin_id==User.id",
+            "lazy": "joined"
+        }
+    )
 
 class GroupCreate(GroupBase):
     """Schema for creating a group"""
@@ -172,7 +180,8 @@ class GroupUpdate(GroupBase):
 
 class GroupOut(GroupBase):
     """Schema for group output"""
-    id: int 
+    id: int
+    admin_id: int | None
 
 class GroupsOut(SQLModel):
     """Schema for groups output"""
@@ -184,7 +193,8 @@ class RoleBase(SQLModel):
     """Base Role model"""
     name: str = Field(unique=True, index=True)
     description: str | None = None
-    is_system_role: bool = False  # 是否是系统角色
+    is_system_role: bool = False
+    group_id: int | None = Field(default=None, foreign_key="group.id")
 
 class Role(RoleBase, table=True):
     """Role model for database"""
@@ -200,6 +210,7 @@ class Role(RoleBase, table=True):
             "backref": "child_roles"
         }
     )
+    group: "Group" = Relationship(back_populates="roles")
 
 class RoleCreate(RoleBase):
     """Schema for creating a role"""
@@ -213,7 +224,8 @@ class RoleUpdate(RoleBase):
 
 class RoleOut(RoleBase):
     """Schema for role output"""
-    id: int 
+    id: int
+    group_id: int
 
 class RolesOut(SQLModel):
     """Schema for roles output"""

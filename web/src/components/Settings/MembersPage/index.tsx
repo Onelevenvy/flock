@@ -21,6 +21,10 @@ import {
   Tab,
   TabPanels,
   TabPanel,
+  FormControl,
+  FormLabel,
+  Select,
+  VStack,
 } from "@chakra-ui/react";
 import React, { useState } from "react";
 import { useQuery } from "react-query";
@@ -46,6 +50,7 @@ function MembersPage() {
   const { currentUser } = useAuth();
   const [isAddGroupOpen, setIsAddGroupOpen] = useState(false);
   const [selectedGroup, setSelectedGroup] = useState<GroupOut | null>(null);
+  const [selectedGroupForRoles, setSelectedGroupForRoles] = useState<GroupOut | null>(null);
 
   const bgColor = useColorModeValue("white", "gray.800");
   const borderColor = useColorModeValue("gray.100", "gray.700");
@@ -140,6 +145,7 @@ function MembersPage() {
                       <Tr>
                         <Th>Full name</Th>
                         <Th>Email</Th>
+                        <Th>Group</Th>
                         <Th>Role</Th>
                         <Th>Status</Th>
                         <Th>Actions</Th>
@@ -178,6 +184,13 @@ function MembersPage() {
                             <Text color="gray.600">{user.email}</Text>
                           </Td>
                           <Td py={4}>
+                            <Text color="gray.600">
+                              {groups?.data.find(g => 
+                                user.groups?.includes(g.id)
+                              )?.name || "默认用户组"}
+                            </Text>
+                          </Td>
+                          <Td py={4}>
                             <Badge
                               colorScheme={user.is_superuser ? "purple" : "gray"}
                               variant="subtle"
@@ -186,7 +199,7 @@ function MembersPage() {
                               px={2}
                               py={0.5}
                             >
-                              {user.is_superuser ? "Superuser" : "User"}
+                              {user.is_superuser ? "管理员" : "普通用户"}
                             </Badge>
                           </Td>
                           <Td py={4}>
@@ -300,82 +313,112 @@ function MembersPage() {
 
             {/* Roles Tab */}
             <TabPanel p={0}>
-              <Flex justifyContent="flex-end" mb={4}>
-                <Button
-                  leftIcon={<AddIcon />}
-                  colorScheme="blue"
-                  variant="solid"
-                  size="sm"
-                  onClick={() => {/* TODO: Open Add Role Modal */}}
-                >
-                  Add Role
-                </Button>
-              </Flex>
-              <Box
-                bg={bgColor}
-                borderRadius="xl"
-                border="1px solid"
-                borderColor={borderColor}
-                overflow="hidden"
-                transition="all 0.2s"
-                boxShadow="sm"
-                _hover={{
-                  boxShadow: "md",
-                  borderColor: "gray.200",
-                }}
-              >
-                <TableContainer>
-                  <Table fontSize="sm">
-                    <Thead bg={tableHeaderBg}>
-                      <Tr>
-                        <Th>Role Name</Th>
-                        <Th>Description</Th>
-                        <Th>Type</Th>
-                        <Th>Actions</Th>
-                      </Tr>
-                    </Thead>
-                    <Tbody>
-                      {roles?.data.map((role: RoleOut) => (
-                        <Tr 
-                          key={role.id}
-                          transition="all 0.2s"
-                          _hover={{ bg: hoverBg }}
-                        >
-                          <Td py={4}>
-                            <Text fontWeight="500" color="gray.700">
-                              {role.name}
-                            </Text>
-                          </Td>
-                          <Td py={4}>
-                            <Text color="gray.600">
-                              {role.description || "No description"}
-                            </Text>
-                          </Td>
-                          <Td py={4}>
-                            <Badge
-                              colorScheme={role.is_system_role ? "purple" : "blue"}
-                              variant="subtle"
-                              fontSize="xs"
-                              borderRadius="full"
-                              px={2}
-                              py={0.5}
-                            >
-                              {role.is_system_role ? "System" : "Custom"}
-                            </Badge>
-                          </Td>
-                          <Td py={4}>
-                            <ActionsMenu
-                              type="Role"
-                              value={role}
-                              disabled={role.is_system_role}
-                            />
-                          </Td>
-                        </Tr>
-                      ))}
-                    </Tbody>
-                  </Table>
-                </TableContainer>
-              </Box>
+              <VStack spacing={4} align="stretch">
+                <FormControl>
+                  <FormLabel>选择用户组</FormLabel>
+                  <Select 
+                    placeholder="选择要管理角色的用户组"
+                    value={selectedGroupForRoles?.id || ""}
+                    onChange={(e) => {
+                      const groupId = parseInt(e.target.value);
+                      const group = groups?.data.find(g => g.id === groupId) || null;
+                      setSelectedGroupForRoles(group);
+                    }}
+                  >
+                    {groups?.data.map((group) => (
+                      <option key={group.id} value={group.id}>
+                        {group.name} {group.is_system_group ? "(系统)" : ""}
+                      </option>
+                    ))}
+                  </Select>
+                </FormControl>
+
+                {selectedGroupForRoles && (
+                  <>
+                    <Flex justifyContent="space-between" alignItems="center" mb={4}>
+                      <Text fontSize="sm" color="gray.600">
+                        管理员: {users?.data.find(u => u.id === selectedGroupForRoles.admin_id)?.full_name || "未设置"}
+                      </Text>
+                      <Button
+                        leftIcon={<AddIcon />}
+                        colorScheme="blue"
+                        variant="solid"
+                        size="sm"
+                        onClick={() => {/* TODO: Open Add Role Modal */}}
+                      >
+                        添加角色
+                      </Button>
+                    </Flex>
+                    <Box
+                      bg={bgColor}
+                      borderRadius="xl"
+                      border="1px solid"
+                      borderColor={borderColor}
+                      overflow="hidden"
+                      transition="all 0.2s"
+                      boxShadow="sm"
+                      _hover={{
+                        boxShadow: "md",
+                        borderColor: "gray.200",
+                      }}
+                    >
+                      <TableContainer>
+                        <Table fontSize="sm">
+                          <Thead bg={tableHeaderBg}>
+                            <Tr>
+                              <Th>Role Name</Th>
+                              <Th>Description</Th>
+                              <Th>Type</Th>
+                              <Th>Actions</Th>
+                            </Tr>
+                          </Thead>
+                          <Tbody>
+                            {roles?.data
+                              .filter(role => role.group_id === selectedGroupForRoles.id)
+                              .map((role: RoleOut) => (
+                                <Tr 
+                                  key={role.id}
+                                  transition="all 0.2s"
+                                  _hover={{ bg: hoverBg }}
+                                >
+                                  <Td py={4}>
+                                    <Text fontWeight="500" color="gray.700">
+                                      {role.name}
+                                    </Text>
+                                  </Td>
+                                  <Td py={4}>
+                                    <Text color="gray.600">
+                                      {role.description || "No description"}
+                                    </Text>
+                                  </Td>
+                                  <Td py={4}>
+                                    <Badge
+                                      colorScheme={role.is_system_role ? "purple" : "blue"}
+                                      variant="subtle"
+                                      fontSize="xs"
+                                      borderRadius="full"
+                                      px={2}
+                                      py={0.5}
+                                    >
+                                      {role.is_system_role ? "System" : "Custom"}
+                                    </Badge>
+                                  </Td>
+                                  <Td py={4}>
+                                    <ActionsMenu
+                                      type="Role"
+                                      value={role}
+                                      disabled={role.is_system_role}
+                                    />
+                                  </Td>
+                                </Tr>
+                            ))}
+                          </Tbody>
+                        </Table>
+                      </TableContainer>
+                    </Box>
+                  </>
+                )}
+              </VStack>
             </TabPanel>
           </TabPanels>
         </Tabs>

@@ -30,42 +30,54 @@ def init_default_roles_and_groups(session: Session, superuser: User) -> None:
     if not admin_role:
         admin_role = Role(
             name="admin",
-            description="Administrator role with full access",
+            description="管理员角色，拥有所有权限",
             is_system_role=True
         )
         session.add(admin_role)
         
-    normal_role = session.exec(select(Role).where(Role.name == "normal_user")).first()
+    normal_role = session.exec(select(Role).where(Role.name == "普通用户")).first()
     if not normal_role:
         normal_role = Role(
-            name="normal_user",
-            description="Normal user role with basic access",
+            name="普通用户",
+            description="普通用户角色，具有基本访问权限",
             is_system_role=True,
-            parent_role_id=None  # 普通用户角色不继承其他角色
+            parent_role_id=None
         )
         session.add(normal_role)
     
     # 创建默认用户组
-    admin_group = session.exec(select(Group).where(Group.name == "administrators")).first()
+    admin_group = session.exec(select(Group).where(Group.name == "管理员组")).first()
     if not admin_group:
         admin_group = Group(
-            name="administrators",
-            description="Administrator group with full access",
-            is_system_group=True
+            name="管理员组",
+            description="管理员用户组，拥有所有权限",
+            is_system_group=True,
+            admin_id=superuser.id  # 设置超级用户为管理员组的管理员
         )
         session.add(admin_group)
         
-    users_group = session.exec(select(Group).where(Group.name == "users")).first()
-    if not users_group:
-        users_group = Group(
-            name="users",
-            description="Default group for all users",
-            is_system_group=True
+    default_group = session.exec(select(Group).where(Group.name == "默认用户组")).first()
+    if not default_group:
+        default_group = Group(
+            name="默认用户组",
+            description="默认用户组，所有新用户默认加入此组",
+            is_system_group=True,
+            admin_id=superuser.id  # 设置超级用户为默认组的管理员
         )
-        session.add(users_group)
+        session.add(default_group)
     
     session.flush()  # 确保所有对象都有ID
-    
+
+    # 将普通用户角色关联到默认用户组
+    if normal_role and default_group and normal_role.group_id != default_group.id:
+        normal_role.group_id = default_group.id
+        session.add(normal_role)
+
+    # 将管理员角色关联到管理员组
+    if admin_role and admin_group and admin_role.group_id != admin_group.id:
+        admin_role.group_id = admin_group.id
+        session.add(admin_role)
+
     # 创建默认资源类型
     for resource_type in ResourceType:
         resource = session.exec(
