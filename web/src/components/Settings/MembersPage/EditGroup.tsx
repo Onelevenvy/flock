@@ -23,6 +23,7 @@ import {
 } from "@chakra-ui/react";
 import { type SubmitHandler, useForm } from "react-hook-form";
 import { useMutation, useQuery, useQueryClient } from "react-query";
+import React from "react";
 
 import { type GroupUpdate, type GroupOut, GroupsService, UsersService } from "@/client";
 import type { ApiError } from "@/client/core/ApiError";
@@ -55,6 +56,7 @@ const EditGroup = ({ group, isOpen, onClose }: EditGroupProps) => {
     register,
     handleSubmit,
     reset,
+    setValue,
     formState: { errors, isSubmitting, isDirty },
   } = useForm<GroupUpdate>({
     mode: "onBlur",
@@ -65,6 +67,14 @@ const EditGroup = ({ group, isOpen, onClose }: EditGroupProps) => {
       admin_id: group.admin_id || undefined,
     },
   });
+
+  // Update form values when group changes
+  React.useEffect(() => {
+    setValue("name", group.name);
+    setValue("description", group.description);
+    setValue("is_system_group", group.is_system_group);
+    setValue("admin_id", group.admin_id || undefined);
+  }, [group, setValue]);
 
   const updateGroup = async (data: GroupUpdate) => {
     await GroupsService.updateGroup({ groupId: group.id, requestBody: data });
@@ -226,15 +236,7 @@ const EditGroup = ({ group, isOpen, onClose }: EditGroupProps) => {
                       </Select>
                     </FormControl>
 
-                    <FormControl>
-                      <Checkbox 
-                        {...register("is_system_group")} 
-                        colorScheme="blue"
-                        size="lg"
-                      >
-                        System Group
-                      </Checkbox>
-                    </FormControl>
+                
                   </VStack>
                 </ModalBody>
 

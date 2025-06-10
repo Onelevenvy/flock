@@ -25,9 +25,16 @@ import {
   FormLabel,
   Select,
   VStack,
+  IconButton,
+  Menu,
+  MenuButton,
+  MenuList,
+  MenuItem,
 } from "@chakra-ui/react";
 import React, { useState } from "react";
-import { useQuery } from "react-query";
+import { useQuery, useQueryClient } from "react-query";
+import { AddIcon, EditIcon, DeleteIcon } from "@chakra-ui/icons";
+import { BsThreeDotsVertical } from "react-icons/bs";
 
 import { 
   type ApiError, 
@@ -37,20 +44,24 @@ import {
   type GroupOut,
   type RoleOut,
 } from "@/client";
-import ActionsMenu from "@/components/Common/ActionsMenu";
 import useAuth from "@/hooks/useAuth";
 import useCustomToast from "@/hooks/useCustomToast";
-import { AddIcon } from "@chakra-ui/icons";
 import AddGroup from "./AddGroup";
 import EditGroup from "./EditGroup";
+import AddRole from "./AddRole";
+import EditRole from "./EditRole";
+import { useTranslation } from "react-i18next";
 
 function MembersPage() {
   const showToast = useCustomToast();
   const { currentUser } = useAuth();
+  const queryClient = useQueryClient();
   const [isAddGroupOpen, setIsAddGroupOpen] = useState(false);
+  const [isAddRoleOpen, setIsAddRoleOpen] = useState(false);
   const [selectedGroup, setSelectedGroup] = useState<GroupOut | null>(null);
   const [selectedGroupForRoles, setSelectedGroupForRoles] = useState<GroupOut | null>(null);
-
+  const [selectedRole, setSelectedRole] = useState<RoleOut | null>(null);
+  const { t } = useTranslation();
   const bgColor = useColorModeValue("white", "gray.800");
   const borderColor = useColorModeValue("gray.100", "gray.700");
   const tableBgColor = useColorModeValue("white", "gray.800");
@@ -114,16 +125,40 @@ function MembersPage() {
     );
   }
 
+  const handleDeleteGroup = async (group: GroupOut) => {
+    try {
+      await GroupsService.deleteGroup({ groupId: group.id });
+      showToast("Success!", "Group deleted successfully.", "success");
+      queryClient.invalidateQueries("groups");
+    } catch (err) {
+      const errDetail = (err as ApiError).body?.detail;
+      showToast("Something went wrong.", `${errDetail}`, "error");
+    }
+  };
+
+  const handleDeleteRole = async (role: RoleOut) => {
+    try {
+      await RolesService.deleteRole({ roleId: role.id });
+      showToast("Success!", "Role deleted successfully.", "success");
+      queryClient.invalidateQueries("roles");
+    } catch (err) {
+      const errDetail = (err as ApiError).body?.detail;
+      showToast("Something went wrong.", `${errDetail}`, "error");
+    }
+  };
+  
   return (
     <>
       <Container maxW="full">
-      
+        <Flex justifyContent="space-between" mb={6}>
+          <Text fontSize="2xl" fontWeight="bold">Settings</Text>
+        </Flex>
 
         <Tabs>
           <TabList mb={6}>
-            <Tab>Members</Tab>
-            <Tab>Groups</Tab>
-            <Tab>Roles</Tab>
+            <Tab>{t("setting.setting.usermanagement")}</Tab>
+            <Tab>{t("setting.setting.groupmanagement")}</Tab>
+            <Tab>{t("setting.setting.rolemanagement")}</Tab>
           </TabList>
 
           <TabPanels>
@@ -230,11 +265,19 @@ function MembersPage() {
                             </HStack>
                           </Td>
                           <Td py={4}>
-                            <ActionsMenu
-                              type="User"
-                              value={user}
-                              disabled={currentUser?.id === user.id}
-                            />
+                            <Menu>
+                              <MenuButton
+                                as={IconButton}
+                                icon={<BsThreeDotsVertical />}
+                                variant="ghost"
+                                size="sm"
+                                isDisabled={currentUser?.id === user.id}
+                              />
+                              <MenuList>
+                                <MenuItem icon={<EditIcon />}>Edit</MenuItem>
+                                <MenuItem icon={<DeleteIcon />} color="red.500">Delete</MenuItem>
+                              </MenuList>
+                            </Menu>
                           </Td>
                         </Tr>
                       ))}
@@ -316,12 +359,25 @@ function MembersPage() {
                             </Badge>
                           </Td>
                           <Td py={4}>
-                            <ActionsMenu
-                              type="Group"
-                              value={group}
-                              disabled={group.is_system_group}
-                              onEdit={() => setSelectedGroup(group)}
-                            />
+                            <HStack spacing={2}>
+                              <IconButton
+                                aria-label="Edit group"
+                                icon={<EditIcon />}
+                                size="sm"
+                                variant="ghost"
+                                isDisabled={group.is_system_group}
+                                onClick={() => setSelectedGroup(group)}
+                              />
+                              <IconButton
+                                aria-label="Delete group"
+                                icon={<DeleteIcon />}
+                                size="sm"
+                                variant="ghost"
+                                colorScheme="red"
+                                isDisabled={group.is_system_group}
+                                onClick={() => handleDeleteGroup(group)}
+                              />
+                            </HStack>
                           </Td>
                         </Tr>
                       ))}
@@ -364,7 +420,7 @@ function MembersPage() {
                         colorScheme="blue"
                         variant="solid"
                         size="sm"
-                        onClick={() => {/* TODO: Open Add Role Modal */}}
+                        onClick={() => setIsAddRoleOpen(true)}
                       >
                         添加角色
                       </Button>
@@ -424,11 +480,25 @@ function MembersPage() {
                                     </Badge>
                                   </Td>
                                   <Td py={4}>
-                                    <ActionsMenu
-                                      type="Role"
-                                      value={role}
-                                      disabled={role.is_system_role}
-                                    />
+                                    <HStack spacing={2}>
+                                      <IconButton
+                                        aria-label="Edit role"
+                                        icon={<EditIcon />}
+                                        size="sm"
+                                        variant="ghost"
+                                        isDisabled={role.is_system_role}
+                                        onClick={() => setSelectedRole(role)}
+                                      />
+                                      <IconButton
+                                        aria-label="Delete role"
+                                        icon={<DeleteIcon />}
+                                        size="sm"
+                                        variant="ghost"
+                                        colorScheme="red"
+                                        isDisabled={role.is_system_role}
+                                        onClick={() => handleDeleteRole(role)}
+                                      />
+                                    </HStack>
                                   </Td>
                                 </Tr>
                             ))}
@@ -453,6 +523,20 @@ function MembersPage() {
             group={selectedGroup}
             isOpen={!!selectedGroup}
             onClose={() => setSelectedGroup(null)}
+          />
+        )}
+        {selectedGroupForRoles && (
+          <AddRole
+            isOpen={isAddRoleOpen}
+            onClose={() => setIsAddRoleOpen(false)}
+            groupId={selectedGroupForRoles.id}
+          />
+        )}
+        {selectedRole && (
+          <EditRole
+            role={selectedRole}
+            isOpen={!!selectedRole}
+            onClose={() => setSelectedRole(null)}
           />
         )}
       </Container>

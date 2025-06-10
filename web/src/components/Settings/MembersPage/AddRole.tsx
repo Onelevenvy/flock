@@ -14,21 +14,22 @@ import {
   VStack,
   useColorModeValue,
   Checkbox,
-  Select,
 } from "@chakra-ui/react";
 import { type SubmitHandler, useForm } from "react-hook-form";
-import { useMutation, useQueryClient, useQuery } from "react-query";
+import { useMutation, useQueryClient } from "react-query";
+import React from "react";
 
-import { type GroupCreate, GroupsService, UsersService } from "@/client";
+import { type RoleCreate, RolesService } from "@/client";
 import type { ApiError } from "@/client/core/ApiError";
 import useCustomToast from "@/hooks/useCustomToast";
 
-interface AddGroupProps {
+interface AddRoleProps {
   isOpen: boolean;
   onClose: () => void;
+  groupId: number;
 }
 
-const AddGroup = ({ isOpen, onClose }: AddGroupProps) => {
+const AddRole = ({ isOpen, onClose, groupId }: AddRoleProps) => {
   const queryClient = useQueryClient();
   const showToast = useCustomToast();
 
@@ -36,37 +37,34 @@ const AddGroup = ({ isOpen, onClose }: AddGroupProps) => {
   const borderColor = useColorModeValue("gray.100", "gray.700");
   const inputBgColor = useColorModeValue("ui.inputbgcolor", "gray.700");
 
-  // Fetch users for admin selection
-  const { data: users } = useQuery(
-    "users",
-    () => UsersService.readUsers({}),
-    {
-      enabled: isOpen,
-    }
-  );
-
   const {
     register,
     handleSubmit,
     reset,
+    setValue,
     formState: { errors, isSubmitting },
-  } = useForm<GroupCreate>({
+  } = useForm<RoleCreate>({
     mode: "onBlur",
     defaultValues: {
       name: "",
       description: "",
-      is_system_group: false,
-      admin_id: undefined,
+      is_system_role: false,
+      group_id: groupId,
     },
   });
 
-  const addGroup = async (data: GroupCreate) => {
-    await GroupsService.createGroup({ requestBody: data });
+  // Update group_id when it changes
+  React.useEffect(() => {
+    setValue("group_id", groupId);
+  }, [groupId, setValue]);
+
+  const addRole = async (data: RoleCreate) => {
+    await RolesService.createRole({ requestBody: data });
   };
 
-  const mutation = useMutation(addGroup, {
+  const mutation = useMutation(addRole, {
     onSuccess: () => {
-      showToast("Success!", "Group created successfully.", "success");
+      showToast("Success!", "Role created successfully.", "success");
       reset();
       onClose();
     },
@@ -75,11 +73,11 @@ const AddGroup = ({ isOpen, onClose }: AddGroupProps) => {
       showToast("Something went wrong.", `${errDetail}`, "error");
     },
     onSettled: () => {
-      queryClient.invalidateQueries("groups");
+      queryClient.invalidateQueries("roles");
     },
   });
 
-  const onSubmit: SubmitHandler<GroupCreate> = (data) => {
+  const onSubmit: SubmitHandler<RoleCreate> = (data) => {
     mutation.mutate(data);
   };
 
@@ -108,7 +106,7 @@ const AddGroup = ({ isOpen, onClose }: AddGroupProps) => {
           fontSize="lg"
           fontWeight="600"
         >
-          Add Group
+          Add Role
         </ModalHeader>
         
         <ModalCloseButton
@@ -131,13 +129,13 @@ const AddGroup = ({ isOpen, onClose }: AddGroupProps) => {
                 fontWeight="500"
                 color="gray.700"
               >
-                Group Name
+                Role Name
               </FormLabel>
               <Input
                 {...register("name", {
-                  required: "Group name is required",
+                  required: "Role name is required",
                 })}
-                placeholder="Enter group name"
+                placeholder="Enter role name"
                 bg={inputBgColor}
                 border="1px solid"
                 borderColor={borderColor}
@@ -167,7 +165,7 @@ const AddGroup = ({ isOpen, onClose }: AddGroupProps) => {
               </FormLabel>
               <Input
                 {...register("description")}
-                placeholder="Enter group description"
+                placeholder="Enter role description"
                 bg={inputBgColor}
                 border="1px solid"
                 borderColor={borderColor}
@@ -184,35 +182,7 @@ const AddGroup = ({ isOpen, onClose }: AddGroupProps) => {
               />
             </FormControl>
 
-            <FormControl isRequired>
-              <FormLabel
-                fontSize="sm"
-                fontWeight="500"
-                color="gray.700"
-              >
-                Group Admin
-              </FormLabel>
-              <Select
-                {...register("admin_id", {
-                  required: "Group admin is required",
-                  valueAsNumber: true
-                })}
-                placeholder="Select group admin"
-                bg={inputBgColor}
-                border="1px solid"
-                borderColor={borderColor}
-                borderRadius="lg"
-                fontSize="sm"
-              >
-                {users?.data.map((user) => (
-                  <option key={user.id} value={user.id}>
-                    {user.full_name || user.email}
-                  </option>
-                ))}
-              </Select>
-            </FormControl>
-
-      
+            
           </VStack>
         </ModalBody>
 
@@ -252,4 +222,4 @@ const AddGroup = ({ isOpen, onClose }: AddGroupProps) => {
   );
 };
 
-export default AddGroup; 
+export default AddRole; 

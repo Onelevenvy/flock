@@ -14,21 +14,22 @@ import {
   VStack,
   useColorModeValue,
   Checkbox,
-  Select,
 } from "@chakra-ui/react";
 import { type SubmitHandler, useForm } from "react-hook-form";
-import { useMutation, useQueryClient, useQuery } from "react-query";
+import { useMutation, useQueryClient } from "react-query";
+import React from "react";
 
-import { type GroupCreate, GroupsService, UsersService } from "@/client";
+import { type RoleOut, type RoleUpdate, RolesService } from "@/client";
 import type { ApiError } from "@/client/core/ApiError";
 import useCustomToast from "@/hooks/useCustomToast";
 
-interface AddGroupProps {
+interface EditRoleProps {
   isOpen: boolean;
   onClose: () => void;
+  role: RoleOut;
 }
 
-const AddGroup = ({ isOpen, onClose }: AddGroupProps) => {
+const EditRole = ({ isOpen, onClose, role }: EditRoleProps) => {
   const queryClient = useQueryClient();
   const showToast = useCustomToast();
 
@@ -36,37 +37,27 @@ const AddGroup = ({ isOpen, onClose }: AddGroupProps) => {
   const borderColor = useColorModeValue("gray.100", "gray.700");
   const inputBgColor = useColorModeValue("ui.inputbgcolor", "gray.700");
 
-  // Fetch users for admin selection
-  const { data: users } = useQuery(
-    "users",
-    () => UsersService.readUsers({}),
-    {
-      enabled: isOpen,
-    }
-  );
-
   const {
     register,
     handleSubmit,
     reset,
     formState: { errors, isSubmitting },
-  } = useForm<GroupCreate>({
+  } = useForm<RoleUpdate>({
     mode: "onBlur",
     defaultValues: {
-      name: "",
-      description: "",
-      is_system_group: false,
-      admin_id: undefined,
+      name: role.name,
+      description: role.description || "",
+      is_system_role: role.is_system_role,
     },
   });
 
-  const addGroup = async (data: GroupCreate) => {
-    await GroupsService.createGroup({ requestBody: data });
+  const updateRole = async (data: RoleUpdate) => {
+    await RolesService.updateRole({ roleId: role.id, requestBody: data });
   };
 
-  const mutation = useMutation(addGroup, {
+  const mutation = useMutation(updateRole, {
     onSuccess: () => {
-      showToast("Success!", "Group created successfully.", "success");
+      showToast("Success!", "Role updated successfully.", "success");
       reset();
       onClose();
     },
@@ -75,11 +66,11 @@ const AddGroup = ({ isOpen, onClose }: AddGroupProps) => {
       showToast("Something went wrong.", `${errDetail}`, "error");
     },
     onSettled: () => {
-      queryClient.invalidateQueries("groups");
+      queryClient.invalidateQueries("roles");
     },
   });
 
-  const onSubmit: SubmitHandler<GroupCreate> = (data) => {
+  const onSubmit: SubmitHandler<RoleUpdate> = (data) => {
     mutation.mutate(data);
   };
 
@@ -108,7 +99,7 @@ const AddGroup = ({ isOpen, onClose }: AddGroupProps) => {
           fontSize="lg"
           fontWeight="600"
         >
-          Add Group
+          Edit Role
         </ModalHeader>
         
         <ModalCloseButton
@@ -131,13 +122,13 @@ const AddGroup = ({ isOpen, onClose }: AddGroupProps) => {
                 fontWeight="500"
                 color="gray.700"
               >
-                Group Name
+                Role Name
               </FormLabel>
               <Input
                 {...register("name", {
-                  required: "Group name is required",
+                  required: "Role name is required",
                 })}
-                placeholder="Enter group name"
+                placeholder="Enter role name"
                 bg={inputBgColor}
                 border="1px solid"
                 borderColor={borderColor}
@@ -167,7 +158,7 @@ const AddGroup = ({ isOpen, onClose }: AddGroupProps) => {
               </FormLabel>
               <Input
                 {...register("description")}
-                placeholder="Enter group description"
+                placeholder="Enter role description"
                 bg={inputBgColor}
                 border="1px solid"
                 borderColor={borderColor}
@@ -184,35 +175,7 @@ const AddGroup = ({ isOpen, onClose }: AddGroupProps) => {
               />
             </FormControl>
 
-            <FormControl isRequired>
-              <FormLabel
-                fontSize="sm"
-                fontWeight="500"
-                color="gray.700"
-              >
-                Group Admin
-              </FormLabel>
-              <Select
-                {...register("admin_id", {
-                  required: "Group admin is required",
-                  valueAsNumber: true
-                })}
-                placeholder="Select group admin"
-                bg={inputBgColor}
-                border="1px solid"
-                borderColor={borderColor}
-                borderRadius="lg"
-                fontSize="sm"
-              >
-                {users?.data.map((user) => (
-                  <option key={user.id} value={user.id}>
-                    {user.full_name || user.email}
-                  </option>
-                ))}
-              </Select>
-            </FormControl>
-
-      
+           
           </VStack>
         </ModalBody>
 
@@ -222,29 +185,19 @@ const AddGroup = ({ isOpen, onClose }: AddGroupProps) => {
           gap={3}
         >
           <Button
-            variant="primary"
-            type="submit"
-            isLoading={isSubmitting}
-            transition="all 0.2s"
-            _hover={{
-              transform: "translateY(-1px)",
-              boxShadow: "md",
-            }}
-            _active={{
-              transform: "translateY(0)",
-            }}
-          >
-            Create
-          </Button>
-          <Button
-            onClick={onClose}
             variant="ghost"
-            transition="all 0.2s"
-            _hover={{
-              bg: "gray.100",
-            }}
+            onClick={onClose}
+            size="sm"
           >
             Cancel
+          </Button>
+          <Button
+            colorScheme="blue"
+            type="submit"
+            isLoading={isSubmitting}
+            size="sm"
+          >
+            Save Changes
           </Button>
         </ModalFooter>
       </ModalContent>
@@ -252,4 +205,4 @@ const AddGroup = ({ isOpen, onClose }: AddGroupProps) => {
   );
 };
 
-export default AddGroup; 
+export default EditRole; 

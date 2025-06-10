@@ -13,7 +13,7 @@ const translation = {
   setting: {
     workSpace: "Workspace",
     modelProvider: "Model",
-    member: "Members",
+    member: "Teams",
     theme: "Theme",
     account: "Account",
     myAccount: "My Account",
@@ -23,6 +23,9 @@ const translation = {
     hidemodel: "Hide Model",
     themedark: "Dark Mode",
     themelight: "Light Mode",
+    usermanagement:"User Management",
+    groupmanagement:"UserGroup Management",
+    rolemanagement:"Role Management"
   },
 };
 
