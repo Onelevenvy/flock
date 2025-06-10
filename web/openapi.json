@@ -5645,13 +5645,24 @@
           "id": {
             "type": "integer",
             "title": "Id"
+          },
+          "admin": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/UserOut"
+              },
+              {
+                "type": "null"
+              }
+            ]
           }
         },
         "type": "object",
         "required": [
           "name",
           "admin_id",
-          "id"
+          "id",
+          "admin"
         ],
         "title": "GroupOut",
         "description": "Schema for group output"

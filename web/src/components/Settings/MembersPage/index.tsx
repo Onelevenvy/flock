@@ -38,7 +38,6 @@ import {
   type RoleOut,
 } from "@/client";
 import ActionsMenu from "@/components/Common/ActionsMenu";
-import Navbar from "@/components/Common/Navbar";
 import useAuth from "@/hooks/useAuth";
 import useCustomToast from "@/hooks/useCustomToast";
 import { AddIcon } from "@chakra-ui/icons";
@@ -71,7 +70,13 @@ function MembersPage() {
     isLoading: isLoadingGroups,
     isError: isErrorGroups,
     error: errorGroups,
-  } = useQuery("groups", () => GroupsService.readGroups({}));
+  } = useQuery("groups", () => GroupsService.readGroups({}), {
+    onSuccess: (data) => {
+      if (data.data.length > 0 && !selectedGroupForRoles) {
+        setSelectedGroupForRoles(data.data[0]);
+      }
+    }
+  });
 
   const {
     data: roles,
@@ -112,9 +117,7 @@ function MembersPage() {
   return (
     <>
       <Container maxW="full">
-        <Flex justifyContent="flex-end" mb={6}>
-          <Navbar type="User" />
-        </Flex>
+      
 
         <Tabs>
           <TabList mb={6}>
@@ -126,6 +129,17 @@ function MembersPage() {
           <TabPanels>
             {/* Members Tab */}
             <TabPanel p={0}>
+              <Flex justifyContent="flex-end" mb={4}>
+                <Button
+                  leftIcon={<AddIcon />}
+                  colorScheme="blue"
+                  variant="solid"
+                  size="sm"
+                  onClick={() => {/* TODO: Add User Modal */}}
+                >
+                  Add Member
+                </Button>
+              </Flex>
               <Box
                 bg={bgColor}
                 borderRadius="xl"
@@ -262,6 +276,7 @@ function MembersPage() {
                       <Tr>
                         <Th>Group Name</Th>
                         <Th>Description</Th>
+                        <Th>Admin</Th>
                         <Th>Type</Th>
                         <Th>Actions</Th>
                       </Tr>
@@ -281,6 +296,11 @@ function MembersPage() {
                           <Td py={4}>
                             <Text color="gray.600">
                               {group.description || "No description"}
+                            </Text>
+                          </Td>
+                          <Td py={4}>
+                            <Text color="gray.600">
+                              {users?.data.find(u => u.id === group.admin_id)?.full_name || "未设置"}
                             </Text>
                           </Td>
                           <Td py={4}>

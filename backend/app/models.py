@@ -178,15 +178,9 @@ class GroupUpdate(GroupBase):
     description: Optional[str] = None
     is_system_group: Optional[bool] = None
 
-class GroupOut(GroupBase):
-    """Schema for group output"""
-    id: int
-    admin_id: int | None
 
-class GroupsOut(SQLModel):
-    """Schema for groups output"""
-    data: list[GroupOut]
-    count: int 
+
+
 
 # =============ROLE=========================
 class RoleBase(SQLModel):
@@ -292,6 +286,16 @@ class UsersOut(SQLModel):
     data: list[UserOut]
     count: int 
 
+class GroupOut(GroupBase):
+    """Schema for group output"""
+    id: int
+    admin_id: int | None
+    admin: Optional[UserOut]
+
+class GroupsOut(SQLModel):
+    """Schema for groups output"""
+    data: list[GroupOut]
+    count: int 
 # ==============TEAM=========================
 
 

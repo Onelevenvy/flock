@@ -241,7 +241,7 @@ const tavilysearch = createIcon({
         </clipPath>
       </defs>
       <path
-        stroke-linecap="round"
+        strokeLinecap="round"
         transform="matrix(0, -2.578223, 2.578223, 0, 113.745458, 254.140061)"
         fill="none"
         stroke-linejoin="miter"
@@ -252,7 +252,7 @@ const tavilysearch = createIcon({
         stroke-miterlimit="4"
       />
       <path
-        stroke-linecap="round"
+        strokeLinecap="round"
         transform="matrix(0, -2.578223, 2.578223, 0, 113.745458, 254.140061)"
         fill="none"
         stroke-linejoin="round"
@@ -263,7 +263,7 @@ const tavilysearch = createIcon({
         stroke-miterlimit="4"
       />
       <path
-        stroke-linecap="round"
+        strokeLinecap="round"
         transform="matrix(2.578223, -0.000251357, 0.000251357, 2.578223, 126.828174, 239.987372)"
         fill="none"
         stroke-linejoin="miter"
@@ -274,7 +274,7 @@ const tavilysearch = createIcon({
         stroke-miterlimit="4"
       />
       <path
-        stroke-linecap="round"
+        strokeLinecap="round"
         transform="matrix(2.578223, -0.000251357, 0.000251357, 2.578223, 126.828174, 239.987372)"
         fill="none"
         stroke-linejoin="round"
@@ -285,7 +285,7 @@ const tavilysearch = createIcon({
         stroke-miterlimit="4"
       />
       <path
-        stroke-linecap="round"
+        strokeLinecap="round"
         transform="matrix(-1.692446, 1.944957, -1.944957, -1.692446, 134.219043, 258.208373)"
         fill="none"
         stroke-linejoin="miter"
@@ -296,7 +296,7 @@ const tavilysearch = createIcon({
         stroke-miterlimit="4"
       />
       <path
-        stroke-linecap="round"
+        strokeLinecap="round"
         transform="matrix(-1.692446, 1.944957, -1.944957, -1.692446, 134.219043, 258.208373)"
         fill="none"
         stroke-linejoin="round"

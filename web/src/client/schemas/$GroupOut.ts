@@ -33,5 +33,14 @@ export const $GroupOut = {
     type: 'number',
     isRequired: true,
 },
+        admin: {
+    type: 'any-of',
+    contains: [{
+    type: 'UserOut',
+}, {
+    type: 'null',
+}],
+    isRequired: true,
+},
     },
 } as const;

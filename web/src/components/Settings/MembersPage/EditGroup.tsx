@@ -14,23 +14,17 @@ import {
   VStack,
   useColorModeValue,
   Checkbox,
+  Select,
   Tabs,
   TabList,
   Tab,
   TabPanels,
   TabPanel,
-  Table,
-  Thead,
-  Tbody,
-  Tr,
-  Th,
-  Td,
-  Switch,
 } from "@chakra-ui/react";
 import { type SubmitHandler, useForm } from "react-hook-form";
 import { useMutation, useQuery, useQueryClient } from "react-query";
 
-import { type GroupUpdate, type GroupOut, GroupsService, ResourcesService } from "@/client";
+import { type GroupUpdate, type GroupOut, GroupsService, UsersService } from "@/client";
 import type { ApiError } from "@/client/core/ApiError";
 import useCustomToast from "@/hooks/useCustomToast";
 
@@ -48,6 +42,15 @@ const EditGroup = ({ group, isOpen, onClose }: EditGroupProps) => {
   const borderColor = useColorModeValue("gray.100", "gray.700");
   const inputBgColor = useColorModeValue("ui.inputbgcolor", "gray.700");
 
+  // Fetch users for admin selection
+  const { data: users } = useQuery(
+    "users",
+    () => UsersService.readUsers({}),
+    {
+      enabled: isOpen,
+    }
+  );
+
   const {
     register,
     handleSubmit,
@@ -59,17 +62,9 @@ const EditGroup = ({ group, isOpen, onClose }: EditGroupProps) => {
       name: group.name,
       description: group.description,
       is_system_group: group.is_system_group,
+      admin_id: group.admin_id || undefined,
     },
   });
-
-  // Fetch resources for permissions tab
-  const { data: resources } = useQuery(
-    "resources",
-    () => ResourcesService.readResources({}),
-    {
-      enabled: isOpen,
-    }
-  );
 
   const updateGroup = async (data: GroupUpdate) => {
     await GroupsService.updateGroup({ groupId: group.id, requestBody: data });
@@ -136,7 +131,6 @@ const EditGroup = ({ group, isOpen, onClose }: EditGroupProps) => {
         <Tabs>
           <TabList px={6} pt={4}>
             <Tab>Basic Info</Tab>
-            <Tab>Permissions</Tab>
             <Tab>Members</Tab>
           </TabList>
 
@@ -204,6 +198,34 @@ const EditGroup = ({ group, isOpen, onClose }: EditGroupProps) => {
                       />
                     </FormControl>
 
+                    <FormControl isRequired>
+                      <FormLabel
+                        fontSize="sm"
+                        fontWeight="500"
+                        color="gray.700"
+                      >
+                        Group Admin
+                      </FormLabel>
+                      <Select
+                        {...register("admin_id", {
+                          required: "Group admin is required",
+                          valueAsNumber: true
+                        })}
+                        placeholder="Select group admin"
+                        bg={inputBgColor}
+                        border="1px solid"
+                        borderColor={borderColor}
+                        borderRadius="lg"
+                        fontSize="sm"
+                      >
+                        {users?.data.map((user) => (
+                          <option key={user.id} value={user.id}>
+                            {user.full_name || user.email}
+                          </option>
+                        ))}
+                      </Select>
+                    </FormControl>
+
                     <FormControl>
                       <Checkbox 
                         {...register("is_system_group")} 
@@ -249,37 +271,6 @@ const EditGroup = ({ group, isOpen, onClose }: EditGroupProps) => {
                   </Button>
                 </ModalFooter>
               </form>
-            </TabPanel>
-
-            <TabPanel>
-              <Table size="sm">
-                <Thead>
-                  <Tr>
-                    <Th>Resource</Th>
-                    <Th>Type</Th>
-                    <Th>Create</Th>
-                    <Th>Read</Th>
-                    <Th>Update</Th>
-                    <Th>Delete</Th>
-                    <Th>Execute</Th>
-                    <Th>Manage</Th>
-                  </Tr>
-                </Thead>
-                <Tbody>
-                  {resources?.data.map((resource) => (
-                    <Tr key={resource.id}>
-                      <Td>{resource.name}</Td>
-                      <Td>{resource.type}</Td>
-                      <Td><Switch size="sm" /></Td>
-                      <Td><Switch size="sm" /></Td>
-                      <Td><Switch size="sm" /></Td>
-                      <Td><Switch size="sm" /></Td>
-                      <Td><Switch size="sm" /></Td>
-                      <Td><Switch size="sm" /></Td>
-                    </Tr>
-                  ))}
-                </Tbody>
-              </Table>
             </TabPanel>
 
             <TabPanel>

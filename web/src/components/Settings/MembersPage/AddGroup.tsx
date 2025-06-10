@@ -14,11 +14,12 @@ import {
   VStack,
   useColorModeValue,
   Checkbox,
+  Select,
 } from "@chakra-ui/react";
 import { type SubmitHandler, useForm } from "react-hook-form";
-import { useMutation, useQueryClient } from "react-query";
+import { useMutation, useQueryClient, useQuery } from "react-query";
 
-import { type GroupCreate, GroupsService } from "@/client";
+import { type GroupCreate, GroupsService, UsersService } from "@/client";
 import type { ApiError } from "@/client/core/ApiError";
 import useCustomToast from "@/hooks/useCustomToast";
 
@@ -35,6 +36,15 @@ const AddGroup = ({ isOpen, onClose }: AddGroupProps) => {
   const borderColor = useColorModeValue("gray.100", "gray.700");
   const inputBgColor = useColorModeValue("ui.inputbgcolor", "gray.700");
 
+  // Fetch users for admin selection
+  const { data: users } = useQuery(
+    "users",
+    () => UsersService.readUsers({}),
+    {
+      enabled: isOpen,
+    }
+  );
+
   const {
     register,
     handleSubmit,
@@ -46,6 +56,7 @@ const AddGroup = ({ isOpen, onClose }: AddGroupProps) => {
       name: "",
       description: "",
       is_system_group: false,
+      admin_id: undefined,
     },
   });
 
@@ -171,6 +182,34 @@ const AddGroup = ({ isOpen, onClose }: AddGroupProps) => {
                   boxShadow: "0 0 0 1px var(--chakra-colors-ui-main)",
                 }}
               />
+            </FormControl>
+
+            <FormControl isRequired>
+              <FormLabel
+                fontSize="sm"
+                fontWeight="500"
+                color="gray.700"
+              >
+                Group Admin
+              </FormLabel>
+              <Select
+                {...register("admin_id", {
+                  required: "Group admin is required",
+                  valueAsNumber: true
+                })}
+                placeholder="Select group admin"
+                bg={inputBgColor}
+                border="1px solid"
+                borderColor={borderColor}
+                borderRadius="lg"
+                fontSize="sm"
+              >
+                {users?.data.map((user) => (
+                  <option key={user.id} value={user.id}>
+                    {user.full_name || user.email}
+                  </option>
+                ))}
+              </Select>
             </FormControl>
 
             <FormControl>

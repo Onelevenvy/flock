@@ -2,10 +2,11 @@ from typing import Any
 
 from fastapi import APIRouter, Depends, HTTPException
 from sqlmodel import func, select
+from sqlalchemy.orm import selectinload
 
 from app.api.deps import CurrentUser, SessionDep, get_current_active_superuser
 from app.curd import groups
-from app.models import Group, GroupCreate, GroupOut, GroupsOut, GroupUpdate, Message
+from app.models import Group, GroupCreate, GroupOut, GroupsOut, GroupUpdate, Message, User
 
 router = APIRouter()
 
@@ -18,7 +19,7 @@ def read_groups(session: SessionDep, skip: int = 0, limit: int = 100) -> Any:
     count_statement = select(func.count()).select_from(Group)
     count = session.exec(count_statement).one()
 
-    statement = select(Group).offset(skip).limit(limit)
+    statement = select(Group).options(selectinload(Group.admin)).offset(skip).limit(limit)
     groups_list = session.exec(statement).all()
 
     return GroupsOut(data=groups_list, count=count)
@@ -45,7 +46,8 @@ def read_group_by_id(group_id: int, session: SessionDep) -> Any:
     """
     Get a specific group by id.
     """
-    group = session.get(Group, group_id)
+    statement = select(Group).options(selectinload(Group.admin)).where(Group.id == group_id)
+    group = session.exec(statement).first()
     if not group:
         raise HTTPException(
             status_code=404,
