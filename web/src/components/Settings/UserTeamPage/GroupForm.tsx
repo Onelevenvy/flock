@@ -1,7 +1,5 @@
 import {
   Button,
-  Checkbox,
-  Flex,
   FormControl,
   FormErrorMessage,
   FormLabel,
@@ -15,25 +13,23 @@ import {
   ModalOverlay,
   VStack,
   useColorModeValue,
+  Select,
 } from "@chakra-ui/react";
 import { type SubmitHandler, useForm } from "react-hook-form";
-import { useMutation, useQueryClient } from "react-query";
+import { useMutation, useQueryClient, useQuery } from "react-query";
 
-import { type UserCreate, UsersService } from "@/client";
+import { type GroupCreate, type GroupOut, GroupsService, UsersService } from "@/client";
 import type { ApiError } from "@/client/core/ApiError";
 import useCustomToast from "@/hooks/useCustomToast";
-import { emailPattern } from "@/utils";
 
-interface AddUserProps {
+interface GroupFormProps {
+  group?: GroupOut;
   isOpen: boolean;
   onClose: () => void;
 }
 
-interface UserCreateForm extends UserCreate {
-  confirm_password: string;
-}
-
-const AddUser = ({ isOpen, onClose }: AddUserProps) => {
+const GroupForm = ({ group, isOpen, onClose }: GroupFormProps) => {
+  const isEditMode = !!group;
   const queryClient = useQueryClient();
   const showToast = useCustomToast();
 
@@ -41,32 +37,53 @@ const AddUser = ({ isOpen, onClose }: AddUserProps) => {
   const borderColor = useColorModeValue("gray.100", "gray.700");
   const inputBgColor = useColorModeValue("ui.inputbgcolor", "gray.700");
 
+  // Fetch users for admin selection
+  const { data: users } = useQuery(
+    "users",
+    () => UsersService.readUsers({}),
+    {
+      enabled: isOpen,
+    }
+  );
+
   const {
     register,
     handleSubmit,
     reset,
-    getValues,
-    formState: { errors, isSubmitting },
-  } = useForm<UserCreateForm>({
+    formState: { errors, isSubmitting, isDirty },
+  } = useForm<GroupCreate>({
     mode: "onBlur",
-    criteriaMode: "all",
-    defaultValues: {
-      email: "",
-      full_name: "",
-      password: "",
-      confirm_password: "",
-      is_superuser: false,
-      is_active: false,
-    },
+    defaultValues: isEditMode
+      ? {
+          name: group.name,
+          description: group.description,
+          is_system_group: group.is_system_group,
+          admin_id: group.admin_id,
+        }
+      : {
+          name: "",
+          description: "",
+          is_system_group: false,
+          admin_id: undefined,
+        },
   });
 
-  const addUser = async (data: UserCreate) => {
-    await UsersService.createUser({ requestBody: data });
+  const createGroup = async (data: GroupCreate) => {
+    await GroupsService.createGroup({ requestBody: data });
   };
 
-  const mutation = useMutation(addUser, {
+  const updateGroup = async (data: GroupCreate) => {
+    if (!group) return;
+    await GroupsService.updateGroup({ groupId: group.id, requestBody: data });
+  };
+
+  const mutation = useMutation(isEditMode ? updateGroup : createGroup, {
     onSuccess: () => {
-      showToast("Success!", "User created successfully.", "success");
+      showToast(
+        "Success!",
+        `Group ${isEditMode ? "updated" : "created"} successfully.`,
+        "success"
+      );
       reset();
       onClose();
     },
@@ -75,12 +92,17 @@ const AddUser = ({ isOpen, onClose }: AddUserProps) => {
       showToast("Something went wrong.", `${errDetail}`, "error");
     },
     onSettled: () => {
-      queryClient.invalidateQueries("users");
+      queryClient.invalidateQueries("groups");
     },
   });
 
-  const onSubmit: SubmitHandler<UserCreateForm> = (data) => {
+  const onSubmit: SubmitHandler<GroupCreate> = (data) => {
     mutation.mutate(data);
+  };
+
+  const onCancel = () => {
+    reset();
+    onClose();
   };
 
   return (
@@ -108,7 +130,7 @@ const AddUser = ({ isOpen, onClose }: AddUserProps) => {
           fontSize="lg"
           fontWeight="600"
         >
-          Add User
+          {isEditMode ? "Edit Group" : "Add Group"}
         </ModalHeader>
         
         <ModalCloseButton
@@ -125,21 +147,19 @@ const AddUser = ({ isOpen, onClose }: AddUserProps) => {
 
         <ModalBody py={6}>
           <VStack spacing={6}>
-            <FormControl isRequired isInvalid={!!errors.email}>
-              <FormLabel 
+            <FormControl isRequired isInvalid={!!errors.name}>
+              <FormLabel
                 fontSize="sm"
                 fontWeight="500"
                 color="gray.700"
               >
-                Email
+                Group Name
               </FormLabel>
               <Input
-                {...register("email", {
-                  required: "Email is required",
-                  pattern: emailPattern,
+                {...register("name", {
+                  required: "Group name is required",
                 })}
-                placeholder="Email"
-                type="email"
+                placeholder="Enter group name"
                 bg={inputBgColor}
                 border="1px solid"
                 borderColor={borderColor}
@@ -154,8 +174,8 @@ const AddUser = ({ isOpen, onClose }: AddUserProps) => {
                   boxShadow: "0 0 0 1px var(--chakra-colors-ui-main)",
                 }}
               />
-              {errors.email && (
-                <FormErrorMessage>{errors.email.message}</FormErrorMessage>
+              {errors.name && (
+                <FormErrorMessage>{errors.name.message}</FormErrorMessage>
               )}
             </FormControl>
 
@@ -165,12 +185,11 @@ const AddUser = ({ isOpen, onClose }: AddUserProps) => {
                 fontWeight="500"
                 color="gray.700"
               >
-                Full name
+                Description
               </FormLabel>
               <Input
-                {...register("full_name")}
-                placeholder="Full name"
-                type="text"
+                {...register("description")}
+                placeholder="Enter group description"
                 bg={inputBgColor}
                 border="1px solid"
                 borderColor={borderColor}
@@ -187,101 +206,33 @@ const AddUser = ({ isOpen, onClose }: AddUserProps) => {
               />
             </FormControl>
 
-            <FormControl isRequired isInvalid={!!errors.password}>
+            <FormControl isRequired>
               <FormLabel
                 fontSize="sm"
                 fontWeight="500"
                 color="gray.700"
               >
-                Password
+                Group Admin
               </FormLabel>
-              <Input
-                {...register("password", {
-                  required: "Password is required",
-                  minLength: {
-                    value: 8,
-                    message: "Password must be at least 8 characters",
-                  },
+              <Select
+                {...register("admin_id", {
+                  required: "Group admin is required",
+                  valueAsNumber: true
                 })}
-                placeholder="Password"
-                type="password"
+                placeholder="Select group admin"
                 bg={inputBgColor}
                 border="1px solid"
                 borderColor={borderColor}
                 borderRadius="lg"
                 fontSize="sm"
-                transition="all 0.2s"
-                _hover={{
-                  borderColor: "gray.300",
-                }}
-                _focus={{
-                  borderColor: "ui.main",
-                  boxShadow: "0 0 0 1px var(--chakra-colors-ui-main)",
-                }}
-              />
-              {errors.password && (
-                <FormErrorMessage>{errors.password.message}</FormErrorMessage>
-              )}
-            </FormControl>
-
-            <FormControl isRequired isInvalid={!!errors.confirm_password}>
-              <FormLabel
-                fontSize="sm"
-                fontWeight="500"
-                color="gray.700"
               >
-                Confirm Password
-              </FormLabel>
-              <Input
-                {...register("confirm_password", {
-                  required: "Please confirm your password",
-                  validate: (value) =>
-                    value === getValues().password ||
-                    "The passwords do not match",
-                })}
-                placeholder="Confirm password"
-                type="password"
-                bg={inputBgColor}
-                border="1px solid"
-                borderColor={borderColor}
-                borderRadius="lg"
-                fontSize="sm"
-                transition="all 0.2s"
-                _hover={{
-                  borderColor: "gray.300",
-                }}
-                _focus={{
-                  borderColor: "ui.main",
-                  boxShadow: "0 0 0 1px var(--chakra-colors-ui-main)",
-                }}
-              />
-              {errors.confirm_password && (
-                <FormErrorMessage>
-                  {errors.confirm_password.message}
-                </FormErrorMessage>
-              )}
+                {users?.data.map((user) => (
+                  <option key={user.id} value={user.id}>
+                    {user.full_name || user.email}
+                  </option>
+                ))}
+              </Select>
             </FormControl>
-
-            <Flex w="full" gap={8}>
-              <FormControl>
-                <Checkbox 
-                  {...register("is_superuser")} 
-                  colorScheme="blue"
-                  size="lg"
-                >
-                  Is superuser?
-                </Checkbox>
-              </FormControl>
-              <FormControl>
-                <Checkbox 
-                  {...register("is_active")} 
-                  colorScheme="blue"
-                  size="lg"
-                >
-                  Is active?
-                </Checkbox>
-              </FormControl>
-            </Flex>
           </VStack>
         </ModalBody>
 
@@ -294,6 +245,7 @@ const AddUser = ({ isOpen, onClose }: AddUserProps) => {
             variant="primary"
             type="submit"
             isLoading={isSubmitting}
+            isDisabled={isEditMode && !isDirty}
             transition="all 0.2s"
             _hover={{
               transform: "translateY(-1px)",
@@ -303,10 +255,10 @@ const AddUser = ({ isOpen, onClose }: AddUserProps) => {
               transform: "translateY(0)",
             }}
           >
-            Save
+            {isEditMode ? "Save Changes" : "Create"}
           </Button>
           <Button
-            onClick={onClose}
+            onClick={onCancel}
             variant="ghost"
             transition="all 0.2s"
             _hover={{
@@ -321,4 +273,4 @@ const AddUser = ({ isOpen, onClose }: AddUserProps) => {
   );
 };
 
-export default AddUser;
+export default GroupForm; 

@@ -13,23 +13,23 @@ import {
   ModalOverlay,
   VStack,
   useColorModeValue,
-  Checkbox,
 } from "@chakra-ui/react";
 import { type SubmitHandler, useForm } from "react-hook-form";
 import { useMutation, useQueryClient } from "react-query";
-import React from "react";
 
-import { type RoleOut, type RoleUpdate, RolesService } from "@/client";
+import { type RoleCreate, type RoleOut, RolesService } from "@/client";
 import type { ApiError } from "@/client/core/ApiError";
 import useCustomToast from "@/hooks/useCustomToast";
 
-interface EditRoleProps {
+interface RoleFormProps {
+  role?: RoleOut;
+  groupId: number;
   isOpen: boolean;
   onClose: () => void;
-  role: RoleOut;
 }
 
-const EditRole = ({ isOpen, onClose, role }: EditRoleProps) => {
+const RoleForm = ({ role, groupId, isOpen, onClose }: RoleFormProps) => {
+  const isEditMode = !!role;
   const queryClient = useQueryClient();
   const showToast = useCustomToast();
 
@@ -41,23 +41,40 @@ const EditRole = ({ isOpen, onClose, role }: EditRoleProps) => {
     register,
     handleSubmit,
     reset,
-    formState: { errors, isSubmitting },
-  } = useForm<RoleUpdate>({
+    formState: { errors, isSubmitting, isDirty },
+  } = useForm<RoleCreate>({
     mode: "onBlur",
-    defaultValues: {
-      name: role.name,
-      description: role.description || "",
-      is_system_role: role.is_system_role,
-    },
+    defaultValues: isEditMode
+      ? {
+          name: role.name,
+          description: role.description || "",
+          is_system_role: role.is_system_role,
+          group_id: role.group_id,
+        }
+      : {
+          name: "",
+          description: "",
+          is_system_role: false,
+          group_id: groupId,
+        },
   });
 
-  const updateRole = async (data: RoleUpdate) => {
+  const createRole = async (data: RoleCreate) => {
+    await RolesService.createRole({ requestBody: data });
+  };
+
+  const updateRole = async (data: RoleCreate) => {
+    if (!role) return;
     await RolesService.updateRole({ roleId: role.id, requestBody: data });
   };
 
-  const mutation = useMutation(updateRole, {
+  const mutation = useMutation(isEditMode ? updateRole : createRole, {
     onSuccess: () => {
-      showToast("Success!", "Role updated successfully.", "success");
+      showToast(
+        "Success!",
+        `Role ${isEditMode ? "updated" : "created"} successfully.`,
+        "success"
+      );
       reset();
       onClose();
     },
@@ -70,8 +87,13 @@ const EditRole = ({ isOpen, onClose, role }: EditRoleProps) => {
     },
   });
 
-  const onSubmit: SubmitHandler<RoleUpdate> = (data) => {
+  const onSubmit: SubmitHandler<RoleCreate> = (data) => {
     mutation.mutate(data);
+  };
+
+  const onCancel = () => {
+    reset();
+    onClose();
   };
 
   return (
@@ -99,7 +121,7 @@ const EditRole = ({ isOpen, onClose, role }: EditRoleProps) => {
           fontSize="lg"
           fontWeight="600"
         >
-          Edit Role
+          {isEditMode ? "Edit Role" : "Add Role"}
         </ModalHeader>
         
         <ModalCloseButton
@@ -174,8 +196,6 @@ const EditRole = ({ isOpen, onClose, role }: EditRoleProps) => {
                 }}
               />
             </FormControl>
-
-           
           </VStack>
         </ModalBody>
 
@@ -185,19 +205,30 @@ const EditRole = ({ isOpen, onClose, role }: EditRoleProps) => {
           gap={3}
         >
           <Button
-            variant="ghost"
-            onClick={onClose}
-            size="sm"
-          >
-            Cancel
-          </Button>
-          <Button
-            colorScheme="blue"
+            variant="primary"
             type="submit"
             isLoading={isSubmitting}
-            size="sm"
+            isDisabled={isEditMode && !isDirty}
+            transition="all 0.2s"
+            _hover={{
+              transform: "translateY(-1px)",
+              boxShadow: "md",
+            }}
+            _active={{
+              transform: "translateY(0)",
+            }}
           >
-            Save Changes
+            {isEditMode ? "Save Changes" : "Create"}
+          </Button>
+          <Button
+            onClick={onCancel}
+            variant="ghost"
+            transition="all 0.2s"
+            _hover={{
+              bg: "gray.100",
+            }}
+          >
+            Cancel
           </Button>
         </ModalFooter>
       </ModalContent>
@@ -205,4 +236,4 @@ const EditRole = ({ isOpen, onClose, role }: EditRoleProps) => {
   );
 };
 
-export default EditRole; 
+export default RoleForm; 

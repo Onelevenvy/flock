@@ -46,10 +46,9 @@ import {
 } from "@/client";
 import useAuth from "@/hooks/useAuth";
 import useCustomToast from "@/hooks/useCustomToast";
-import AddGroup from "./AddGroup";
-import EditGroup from "./EditGroup";
-import AddRole from "./AddRole";
-import EditRole from "./EditRole";
+// import UserForm from "./UserForm";
+import GroupForm from "./GroupForm";
+import RoleForm from "./RoleForm";
 import { useTranslation } from "react-i18next";
 
 function MembersPage() {
@@ -235,7 +234,7 @@ function MembersPage() {
                           <Td py={4}>
                             <Text color="gray.600">
                               {groups?.data.find(g => 
-                                user.groups?.includes(g.id)
+                                Array.isArray(user.groups) && user.groups.includes(g.id)
                               )?.name || "默认用户组"}
                             </Text>
                           </Td>
@@ -514,27 +513,28 @@ function MembersPage() {
         </Tabs>
 
         {/* Modals */}
-        <AddGroup 
+        <GroupForm 
           isOpen={isAddGroupOpen} 
           onClose={() => setIsAddGroupOpen(false)} 
         />
         {selectedGroup && (
-          <EditGroup
+          <GroupForm
             group={selectedGroup}
             isOpen={!!selectedGroup}
             onClose={() => setSelectedGroup(null)}
           />
         )}
         {selectedGroupForRoles && (
-          <AddRole
+          <RoleForm
             isOpen={isAddRoleOpen}
             onClose={() => setIsAddRoleOpen(false)}
             groupId={selectedGroupForRoles.id}
           />
         )}
         {selectedRole && (
-          <EditRole
+          <RoleForm
             role={selectedRole}
+            groupId={selectedRole.group_id}
             isOpen={!!selectedRole}
             onClose={() => setSelectedRole(null)}
           />

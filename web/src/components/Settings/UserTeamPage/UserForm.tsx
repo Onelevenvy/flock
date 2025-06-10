@@ -23,22 +23,25 @@ import {
   type ApiError,
   type UserOut,
   type UserUpdate,
+  type UserCreate,
   UsersService,
 } from "@/client";
 import useCustomToast from "@/hooks/useCustomToast";
 import { emailPattern } from "@/utils";
 
-interface EditUserProps {
-  user: UserOut;
+interface UserFormProps {
+  user?: UserOut;
   isOpen: boolean;
   onClose: () => void;
 }
 
-interface UserUpdateForm extends UserUpdate {
+interface UserFormData extends Omit<UserCreate, "password"> {
+  password?: string;
   confirm_password: string;
 }
 
-const EditUser = ({ user, isOpen, onClose }: EditUserProps) => {
+const UserForm = ({ user, isOpen, onClose }: UserFormProps) => {
+  const isEditMode = !!user;
   const queryClient = useQueryClient();
   const showToast = useCustomToast();
 
@@ -46,25 +49,50 @@ const EditUser = ({ user, isOpen, onClose }: EditUserProps) => {
   const borderColor = useColorModeValue("gray.100", "gray.700");
   const inputBgColor = useColorModeValue("ui.inputbgcolor", "gray.700");
 
+  const defaultValues = isEditMode
+    ? {
+        ...user,
+        password: "",
+        confirm_password: "",
+      }
+    : {
+        email: "",
+        full_name: "",
+        password: "",
+        confirm_password: "",
+        is_superuser: false,
+        is_active: false,
+      };
+
   const {
     register,
     handleSubmit,
     reset,
     getValues,
     formState: { errors, isSubmitting, isDirty },
-  } = useForm<UserUpdateForm>({
+  } = useForm<UserFormData>({
     mode: "onBlur",
     criteriaMode: "all",
-    defaultValues: user,
+    defaultValues,
   });
 
-  const updateUser = async (data: UserUpdateForm) => {
+  const createUser = async (data: UserCreate) => {
+    await UsersService.createUser({ requestBody: data });
+  };
+
+  const updateUser = async (data: UserUpdate) => {
+    if (!user) return;
     await UsersService.updateUser({ userId: user.id, requestBody: data });
   };
 
-  const mutation = useMutation(updateUser, {
+  const mutation = useMutation(isEditMode ? updateUser : createUser, {
     onSuccess: () => {
-      showToast("Success!", "User updated successfully.", "success");
+      showToast(
+        "Success!",
+        `User ${isEditMode ? "updated" : "created"} successfully.`,
+        "success"
+      );
+      reset();
       onClose();
     },
     onError: (err: ApiError) => {
@@ -76,11 +104,12 @@ const EditUser = ({ user, isOpen, onClose }: EditUserProps) => {
     },
   });
 
-  const onSubmit: SubmitHandler<UserUpdateForm> = async (data) => {
-    if (data.password === "") {
-      data.password = undefined;
+  const onSubmit: SubmitHandler<UserFormData> = async (data) => {
+    const submitData = { ...data };
+    if (isEditMode && submitData.password === "") {
+      delete submitData.password;
     }
-    mutation.mutate(data);
+    mutation.mutate(submitData as UserCreate);
   };
 
   const onCancel = () => {
@@ -113,7 +142,7 @@ const EditUser = ({ user, isOpen, onClose }: EditUserProps) => {
           fontSize="lg"
           fontWeight="600"
         >
-          Edit User
+          {isEditMode ? "Edit User" : "Add User"}
         </ModalHeader>
         
         <ModalCloseButton
@@ -130,7 +159,7 @@ const EditUser = ({ user, isOpen, onClose }: EditUserProps) => {
 
         <ModalBody py={6}>
           <VStack spacing={6}>
-            <FormControl isInvalid={!!errors.email}>
+            <FormControl isRequired={!isEditMode} isInvalid={!!errors.email}>
               <FormLabel
                 fontSize="sm"
                 fontWeight="500"
@@ -140,7 +169,7 @@ const EditUser = ({ user, isOpen, onClose }: EditUserProps) => {
               </FormLabel>
               <Input
                 {...register("email", {
-                  required: "Email is required",
+                  required: !isEditMode && "Email is required",
                   pattern: emailPattern,
                 })}
                 placeholder="Email"
@@ -174,6 +203,7 @@ const EditUser = ({ user, isOpen, onClose }: EditUserProps) => {
               </FormLabel>
               <Input
                 {...register("full_name")}
+                placeholder="Full name"
                 type="text"
                 bg={inputBgColor}
                 border="1px solid"
@@ -191,7 +221,7 @@ const EditUser = ({ user, isOpen, onClose }: EditUserProps) => {
               />
             </FormControl>
 
-            <FormControl isInvalid={!!errors.password}>
+            <FormControl isRequired={!isEditMode} isInvalid={!!errors.password}>
               <FormLabel
                 fontSize="sm"
                 fontWeight="500"
@@ -201,6 +231,7 @@ const EditUser = ({ user, isOpen, onClose }: EditUserProps) => {
               </FormLabel>
               <Input
                 {...register("password", {
+                  required: !isEditMode && "Password is required",
                   minLength: {
                     value: 8,
                     message: "Password must be at least 8 characters",
@@ -227,7 +258,7 @@ const EditUser = ({ user, isOpen, onClose }: EditUserProps) => {
               )}
             </FormControl>
 
-            <FormControl isInvalid={!!errors.confirm_password}>
+            <FormControl isRequired={!isEditMode} isInvalid={!!errors.confirm_password}>
               <FormLabel
                 fontSize="sm"
                 fontWeight="500"
@@ -237,7 +268,9 @@ const EditUser = ({ user, isOpen, onClose }: EditUserProps) => {
               </FormLabel>
               <Input
                 {...register("confirm_password", {
+                  required: !isEditMode && "Please confirm your password",
                   validate: (value) =>
+                    !value ||
                     value === getValues().password ||
                     "The passwords do not match",
                 })}
@@ -296,7 +329,7 @@ const EditUser = ({ user, isOpen, onClose }: EditUserProps) => {
             variant="primary"
             type="submit"
             isLoading={isSubmitting}
-            isDisabled={!isDirty}
+            isDisabled={isEditMode && !isDirty}
             transition="all 0.2s"
             _hover={{
               transform: "translateY(-1px)",
@@ -306,7 +339,7 @@ const EditUser = ({ user, isOpen, onClose }: EditUserProps) => {
               transform: "translateY(0)",
             }}
           >
-            Save
+            {isEditMode ? "Save Changes" : "Create"}
           </Button>
           <Button
             onClick={onCancel}
@@ -324,4 +357,4 @@ const EditUser = ({ user, isOpen, onClose }: EditUserProps) => {
   );
 };
 
-export default EditUser;
+export default UserForm; 
