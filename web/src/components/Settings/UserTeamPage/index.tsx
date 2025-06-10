@@ -43,10 +43,11 @@ import {
   RolesService,
   type GroupOut,
   type RoleOut,
+  type UserOut,
 } from "@/client";
 import useAuth from "@/hooks/useAuth";
 import useCustomToast from "@/hooks/useCustomToast";
-// import UserForm from "./UserForm";
+import UserForm from "./UserForm";
 import GroupForm from "./GroupForm";
 import RoleForm from "./RoleForm";
 import { useTranslation } from "react-i18next";
@@ -55,8 +56,10 @@ function MembersPage() {
   const showToast = useCustomToast();
   const { currentUser } = useAuth();
   const queryClient = useQueryClient();
+  const [isAddUserOpen, setIsAddUserOpen] = useState(false);
   const [isAddGroupOpen, setIsAddGroupOpen] = useState(false);
   const [isAddRoleOpen, setIsAddRoleOpen] = useState(false);
+  const [selectedUser, setSelectedUser] = useState<UserOut | undefined>(undefined);
   const [selectedGroup, setSelectedGroup] = useState<GroupOut | null>(null);
   const [selectedGroupForRoles, setSelectedGroupForRoles] = useState<GroupOut | null>(null);
   const [selectedRole, setSelectedRole] = useState<RoleOut | null>(null);
@@ -145,6 +148,18 @@ function MembersPage() {
       showToast("Something went wrong.", `${errDetail}`, "error");
     }
   };
+
+  const handleDeleteUser = async (userId: number) => {
+    try {
+      await UsersService.deleteUser({ userId });
+      showToast("Success!", "User deleted successfully.", "success");
+      queryClient.invalidateQueries("users");
+    } catch (err) {
+      const error = err as ApiError;
+      const errDetail = error.body?.detail;
+      showToast("Something went wrong.", `${errDetail}`, "error");
+    }
+  };
   
   return (
     <>
@@ -161,7 +176,7 @@ function MembersPage() {
           </TabList>
 
           <TabPanels>
-            {/* Members Tab */}
+            {/* User Tab */}
             <TabPanel p={0}>
               <Flex justifyContent="flex-end" mb={4}>
                 <Button
@@ -169,9 +184,9 @@ function MembersPage() {
                   colorScheme="blue"
                   variant="solid"
                   size="sm"
-                  onClick={() => {/* TODO: Add User Modal */}}
+                  onClick={() => setIsAddUserOpen(true)}
                 >
-                  Add Member
+                  Add User
                 </Button>
               </Flex>
               <Box
@@ -234,7 +249,7 @@ function MembersPage() {
                           <Td py={4}>
                             <Text color="gray.600">
                               {groups?.data.find(g => 
-                                Array.isArray(user.groups) && user.groups.includes(g.id)
+                                Array.isArray(user.groups) && user.groups.some(ug => ug.id === g.id)
                               )?.name || "默认用户组"}
                             </Text>
                           </Td>
@@ -270,11 +285,18 @@ function MembersPage() {
                                 icon={<BsThreeDotsVertical />}
                                 variant="ghost"
                                 size="sm"
-                                isDisabled={currentUser?.id === user.id}
                               />
                               <MenuList>
-                                <MenuItem icon={<EditIcon />}>Edit</MenuItem>
-                                <MenuItem icon={<DeleteIcon />} color="red.500">Delete</MenuItem>
+                                <MenuItem icon={<EditIcon />} onClick={() => setSelectedUser(user)}>
+                                  Edit
+                                </MenuItem>
+                                <MenuItem
+                                  icon={<DeleteIcon />}
+                                  color="red.500"
+                                  onClick={() => handleDeleteUser(user.id)}
+                                >
+                                  Delete
+                                </MenuItem>
                               </MenuList>
                             </Menu>
                           </Td>
@@ -539,6 +561,14 @@ function MembersPage() {
             onClose={() => setSelectedRole(null)}
           />
         )}
+        <UserForm
+          isOpen={isAddUserOpen || !!selectedUser}
+          onClose={() => {
+            setIsAddUserOpen(false);
+            setSelectedUser(undefined);
+          }}
+          user={selectedUser}
+        />
       </Container>
     </>
   );

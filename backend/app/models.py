@@ -281,6 +281,7 @@ class User(UserBase, table=True):
 # Properties to return via API
 class UserOut(UserBase):
     id: int
+    groups: list["Group"] | None = None
 
 class UsersOut(SQLModel):
     data: list[UserOut]

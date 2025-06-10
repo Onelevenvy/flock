@@ -10,4 +10,5 @@ export type UserOut = {
     full_name?: (string | null);
     language?: string;
     id: number;
+    groups?: { id: number }[];
 };

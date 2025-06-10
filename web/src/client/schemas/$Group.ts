@@ -2,19 +2,14 @@
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
-export const $UserOut = {
+export const $Group = {
+    description: `Group model for database`,
     properties: {
-        email: {
+        name: {
     type: 'string',
     isRequired: true,
 },
-        is_active: {
-    type: 'boolean',
-},
-        is_superuser: {
-    type: 'boolean',
-},
-        full_name: {
+        description: {
     type: 'any-of',
     contains: [{
     type: 'string',
@@ -22,20 +17,21 @@ export const $UserOut = {
     type: 'null',
 }],
 },
-        language: {
-    type: 'string',
+        is_system_group: {
+    type: 'boolean',
 },
-        id: {
-    type: 'number',
-    isRequired: true,
-},
-        groups: {
+        admin_id: {
     type: 'any-of',
     contains: [{
-    type: 'array',
-    contains: {
-        type: 'Group',
-    },
+    type: 'number',
+}, {
+    type: 'null',
+}],
+},
+        id: {
+    type: 'any-of',
+    contains: [{
+    type: 'number',
 }, {
     type: 'null',
 }],

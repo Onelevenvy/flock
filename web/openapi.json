@@ -4526,6 +4526,22 @@
               "default": 100,
               "title": "Limit"
             }
+          },
+          {
+            "name": "group_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Group Id"
+            }
           }
         ],
         "responses": {
@@ -5567,6 +5583,58 @@
           "count"
         ],
         "title": "GraphsOut"
+      },
+      "Group": {
+        "properties": {
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "description": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Description"
+          },
+          "is_system_group": {
+            "type": "boolean",
+            "title": "Is System Group",
+            "default": false
+          },
+          "admin_id": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Admin Id"
+          },
+          "id": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Id"
+          }
+        },
+        "type": "object",
+        "required": [
+          "name"
+        ],
+        "title": "Group",
+        "description": "Group model for database"
       },
       "GroupCreate": {
         "properties": {
@@ -8713,6 +8781,20 @@
           "id": {
             "type": "integer",
             "title": "Id"
+          },
+          "groups": {
+            "anyOf": [
+              {
+                "items": {
+                  "$ref": "#/components/schemas/Group"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Groups"
           }
         },
         "type": "object",

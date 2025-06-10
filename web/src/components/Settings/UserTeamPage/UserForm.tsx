@@ -15,16 +15,25 @@ import {
   ModalOverlay,
   VStack,
   useColorModeValue,
+  Box,
+  Text,
+  IconButton,
+  HStack,
 } from "@chakra-ui/react";
-import { type SubmitHandler, useForm } from "react-hook-form";
-import { useMutation, useQueryClient } from "react-query";
-
+import { type SubmitHandler, useForm, Controller, useFieldArray } from "react-hook-form";
+import { useMutation, useQueryClient, useQuery } from "react-query";
+import { Select as MultiSelect } from "chakra-react-select";
+import { AddIcon, DeleteIcon } from "@chakra-ui/icons";
 import {
   type ApiError,
   type UserOut,
   type UserUpdate,
   type UserCreate,
+  type GroupOut,
+  type RoleOut,
   UsersService,
+  GroupsService,
+  RolesService,
 } from "@/client";
 import useCustomToast from "@/hooks/useCustomToast";
 import { emailPattern } from "@/utils";
@@ -35,9 +44,24 @@ interface UserFormProps {
   onClose: () => void;
 }
 
+interface SelectOption {
+  value: number;
+  label: string;
+}
+
+interface GroupRolePair {
+  group: SelectOption | null;
+  roles: SelectOption[];
+}
+
 interface UserFormData extends Omit<UserCreate, "password"> {
   password?: string;
   confirm_password: string;
+  groupRolePairs: GroupRolePair[];
+}
+
+interface ExtendedUserOut extends UserOut {
+  roles?: { id: number; name: string; group_id: number }[];
 }
 
 const UserForm = ({ user, isOpen, onClose }: UserFormProps) => {
@@ -49,11 +73,28 @@ const UserForm = ({ user, isOpen, onClose }: UserFormProps) => {
   const borderColor = useColorModeValue("gray.100", "gray.700");
   const inputBgColor = useColorModeValue("ui.inputbgcolor", "gray.700");
 
+  // Fetch groups and roles
+  const { data: groups } = useQuery<{ data: GroupOut[]; count: number }>("groups", () =>
+    GroupsService.readGroups({ skip: 0, limit: 100 })
+  );
+
+  const { data: roles } = useQuery<{ data: RoleOut[]; count: number }>("roles", () =>
+    RolesService.readRoles({ skip: 0, limit: 100 })
+  );
+
   const defaultValues = isEditMode
     ? {
         ...user,
         password: "",
         confirm_password: "",
+        groupRolePairs: user.groups ? 
+          (user.groups as unknown as Array<{ id: number; name: string }>).map(g => ({
+            group: { value: g.id, label: g.name },
+            roles: (user as ExtendedUserOut).roles
+              ?.filter(r => r.group_id === g.id)
+              .map(r => ({ value: r.id, label: r.name })) || []
+          })) : 
+          [{ group: null, roles: [] }]
       }
     : {
         email: "",
@@ -62,6 +103,7 @@ const UserForm = ({ user, isOpen, onClose }: UserFormProps) => {
         confirm_password: "",
         is_superuser: false,
         is_active: false,
+        groupRolePairs: [{ group: null, roles: [] }]
       };
 
   const {
@@ -69,6 +111,7 @@ const UserForm = ({ user, isOpen, onClose }: UserFormProps) => {
     handleSubmit,
     reset,
     getValues,
+    control,
     formState: { errors, isSubmitting, isDirty },
   } = useForm<UserFormData>({
     mode: "onBlur",
@@ -76,12 +119,49 @@ const UserForm = ({ user, isOpen, onClose }: UserFormProps) => {
     defaultValues,
   });
 
-  const createUser = async (data: UserCreate) => {
+  const { fields, append, remove } = useFieldArray({
+    control,
+    name: "groupRolePairs"
+  });
+
+  const createUser = async (formData: UserFormData) => {
+    const groups: number[] = [];
+    const roles: number[] = [];
+    formData.groupRolePairs.forEach(pair => {
+      if (pair.group) {
+        groups.push(pair.group.value);
+        roles.push(...pair.roles.map(r => r.value));
+      }
+    });
+
+    const data = {
+      ...formData,
+      groups,
+      roles,
+      password: formData.password || "",
+    } as UserCreate;
     await UsersService.createUser({ requestBody: data });
   };
 
-  const updateUser = async (data: UserUpdate) => {
+  const updateUser = async (formData: UserFormData) => {
     if (!user) return;
+    const groups: number[] = [];
+    const roles: number[] = [];
+    formData.groupRolePairs.forEach(pair => {
+      if (pair.group) {
+        groups.push(pair.group.value);
+        roles.push(...pair.roles.map(r => r.value));
+      }
+    });
+
+    const data = {
+      ...formData,
+      groups,
+      roles,
+    } as UserUpdate;
+    if (data.password === "") {
+      delete (data as any).password;
+    }
     await UsersService.updateUser({ userId: user.id, requestBody: data });
   };
 
@@ -107,9 +187,9 @@ const UserForm = ({ user, isOpen, onClose }: UserFormProps) => {
   const onSubmit: SubmitHandler<UserFormData> = async (data) => {
     const submitData = { ...data };
     if (isEditMode && submitData.password === "") {
-      delete submitData.password;
+      submitData.password = undefined;
     }
-    mutation.mutate(submitData as UserCreate);
+    mutation.mutate(submitData);
   };
 
   const onCancel = () => {
@@ -121,7 +201,7 @@ const UserForm = ({ user, isOpen, onClose }: UserFormProps) => {
     <Modal 
       isOpen={isOpen} 
       onClose={onClose} 
-      size={{ base: "sm", md: "md" }}
+      size={{ base: "sm", md: "xl" }}
       isCentered
       motionPreset="slideInBottom"
     >
@@ -296,6 +376,78 @@ const UserForm = ({ user, isOpen, onClose }: UserFormProps) => {
                 </FormErrorMessage>
               )}
             </FormControl>
+
+            <Box w="full">
+              <FormLabel
+                fontSize="sm"
+                fontWeight="500"
+                color="gray.700"
+              >
+                Groups and Roles
+              </FormLabel>
+              <VStack spacing={4} align="stretch">
+                {fields.map((field, index) => (
+                  <HStack key={field.id} spacing={4} align="flex-start">
+                    <FormControl flex={1}>
+                      <Controller
+                        name={`groupRolePairs.${index}.group`}
+                        control={control}
+                        render={({ field: { onChange, value } }) => (
+                          <MultiSelect
+                            value={value}
+                            onChange={onChange}
+                            options={groups?.data.map(group => ({
+                              value: group.id,
+                              label: group.name
+                            }))}
+                            placeholder="Select group"
+                            isClearable={false}
+                          />
+                        )}
+                      />
+                    </FormControl>
+                    <FormControl flex={2}>
+                      <Controller
+                        name={`groupRolePairs.${index}.roles`}
+                        control={control}
+                        render={({ field: { onChange, value } }) => (
+                          <MultiSelect
+                            value={value}
+                            onChange={onChange}
+                            isMulti
+                            options={roles?.data
+                              .filter(role => field.group && role.group_id === field.group.value)
+                              .map(role => ({
+                                value: role.id,
+                                label: role.name
+                              }))}
+                            placeholder="Select roles"
+                            isDisabled={!field.group}
+                          />
+                        )}
+                      />
+                    </FormControl>
+                    <IconButton
+                      aria-label="Remove group-role pair"
+                      icon={<DeleteIcon />}
+                      variant="ghost"
+                      colorScheme="red"
+                      isDisabled={fields.length === 1}
+                      onClick={() => remove(index)}
+                    />
+                  </HStack>
+                ))}
+              </VStack>
+              <Button
+                leftIcon={<AddIcon />}
+                variant="ghost"
+                size="sm"
+                mt={2}
+                onClick={() => append({ group: null, roles: [] })}
+              >
+                Add Group
+              </Button>
+            </Box>
 
             <Flex w="full" gap={8}>
               <FormControl>

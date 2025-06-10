@@ -23,9 +23,11 @@ export class RolesService {
     public static readRoles({
 skip,
 limit = 100,
+groupId,
 }: {
 skip?: number,
 limit?: number,
+groupId?: (number | null),
 }): CancelablePromise<RolesOut> {
         return __request(OpenAPI, {
             method: 'GET',
@@ -33,6 +35,7 @@ limit?: number,
             query: {
                 'skip': skip,
                 'limit': limit,
+                'group_id': groupId,
             },
             errors: {
                 422: `Validation Error`,
