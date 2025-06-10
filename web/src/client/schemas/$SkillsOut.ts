@@ -5,15 +5,15 @@
 export const $SkillsOut = {
     properties: {
         data: {
-            type: 'array',
-            contains: {
-                type: 'SkillOut',
-            },
-            isRequired: true,
-        },
+    type: 'array',
+    contains: {
+        type: 'SkillOut',
+    },
+    isRequired: true,
+},
         count: {
-            type: 'number',
-            isRequired: true,
-        },
+    type: 'number',
+    isRequired: true,
+},
     },
 } as const;

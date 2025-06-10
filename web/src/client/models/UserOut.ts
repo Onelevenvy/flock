@@ -11,4 +11,3 @@ export type UserOut = {
     language?: string;
     id: number;
 };
-

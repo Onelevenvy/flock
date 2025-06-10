@@ -14,4 +14,3 @@ export type ModelOut = {
     capabilities: Array<ModelCapability>;
     provider: ModelProviderOut;
 };
-

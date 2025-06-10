@@ -8,4 +8,3 @@ export type TeamUpdate = {
     description?: (string | null);
     icon?: (string | null);
 };
-

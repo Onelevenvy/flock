@@ -14,4 +14,3 @@ export type ModelProviderWithModelsListOut = {
     description: (string | null);
     models: Array<ModelOutIdWithAndName>;
 };
-

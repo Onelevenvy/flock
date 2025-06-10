@@ -11,4 +11,3 @@ export type ModelProviderOut = {
     icon: (string | null);
     description: (string | null);
 };
-

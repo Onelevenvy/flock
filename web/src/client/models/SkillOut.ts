@@ -13,4 +13,3 @@ export type SkillOut = {
     credentials?: (Record<string, any> | null);
     id: number;
 };
-

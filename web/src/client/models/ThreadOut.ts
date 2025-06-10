@@ -8,4 +8,3 @@ export type ThreadOut = {
     query: string;
     updated_at: string;
 };
-

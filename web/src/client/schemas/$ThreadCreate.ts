@@ -5,8 +5,8 @@
 export const $ThreadCreate = {
     properties: {
         query: {
-            type: 'string',
-            isRequired: true,
-        },
+    type: 'string',
+    isRequired: true,
+},
     },
 } as const;

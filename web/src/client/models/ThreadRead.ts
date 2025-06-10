@@ -11,4 +11,3 @@ export type ThreadRead = {
     updated_at: string;
     messages: Array<ChatResponse>;
 };
-

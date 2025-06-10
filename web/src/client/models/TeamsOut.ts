@@ -9,4 +9,3 @@ export type TeamsOut = {
     data: Array<TeamOut>;
     count: number;
 };
-

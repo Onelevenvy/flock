@@ -11,4 +11,3 @@ export type UserUpdate = {
     language?: string;
     password?: (string | null);
 };
-

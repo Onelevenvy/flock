@@ -173,6 +173,12 @@ class GroupUpdate(GroupBase):
 class GroupOut(GroupBase):
     """Schema for group output"""
     id: int 
+
+class GroupsOut(SQLModel):
+    """Schema for groups output"""
+    data: list[GroupOut]
+    count: int 
+
 # =============ROLE=========================
 class RoleBase(SQLModel):
     """Base Role model"""
@@ -208,6 +214,12 @@ class RoleUpdate(RoleBase):
 class RoleOut(RoleBase):
     """Schema for role output"""
     id: int 
+
+class RolesOut(SQLModel):
+    """Schema for roles output"""
+    data: list[RoleOut]
+    count: int 
+
 # ==============USER=========================
 class UserBase(SQLModel):
     email: str = Field(unique=True, index=True)

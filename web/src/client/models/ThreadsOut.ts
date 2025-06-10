@@ -9,4 +9,3 @@ export type ThreadsOut = {
     data: Array<ThreadOut>;
     count: number;
 };
-

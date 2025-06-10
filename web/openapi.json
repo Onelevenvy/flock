@@ -724,7 +724,7 @@
           "teams"
         ],
         "summary": "Read Teams",
-        "description": "Retrieve teams",
+        "description": "Retrieve teams.",
         "operationId": "read_teams",
         "security": [
           {
@@ -1724,6 +1724,7 @@
             "application/json": {
               "schema": {
                 "type": "object",
+                "additionalProperties": true,
                 "title": "Args"
               }
             }
@@ -1784,7 +1785,8 @@
               "schema": {
                 "type": "object",
                 "additionalProperties": {
-                  "type": "object"
+                  "type": "object",
+                  "additionalProperties": true
                 },
                 "title": "Credentials"
               }
@@ -1827,6 +1829,7 @@
           "content": {
             "application/json": {
               "schema": {
+                "additionalProperties": true,
                 "type": "object",
                 "title": "Mcp Config"
               }
@@ -2411,6 +2414,7 @@
           "uploads"
         ],
         "summary": "Delete Upload",
+        "description": "Delete upload",
         "operationId": "delete_upload",
         "security": [
           {
@@ -2482,6 +2486,7 @@
             "application/json": {
               "schema": {
                 "type": "object",
+                "additionalProperties": true,
                 "title": "Search Params"
               }
             }
@@ -2517,6 +2522,11 @@
         "summary": "Get Search Results",
         "description": "Retrieve the results of an asynchronous search task.",
         "operationId": "get_search_results",
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
         "parameters": [
           {
             "name": "task_id",
@@ -2525,6 +2535,15 @@
             "schema": {
               "type": "string",
               "title": "Task Id"
+            }
+          },
+          {
+            "name": "upload_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Upload Id"
             }
           }
         ],
@@ -3051,6 +3070,7 @@
             "application/json": {
               "schema": {
                 "type": "object",
+                "additionalProperties": true,
                 "title": "Metadata Update"
               }
             }
@@ -3362,7 +3382,9 @@
             "description": "Successful Response",
             "content": {
               "application/json": {
-                "schema": {}
+                "schema": {
+                  "title": "Response Graphs-Delete Graph"
+                }
               }
             }
           },
@@ -3883,6 +3905,842 @@
           }
         }
       }
+    },
+    "/api/v1/langmanus/ask": {
+      "post": {
+        "tags": [
+          "langmanus"
+        ],
+        "summary": "Ask Question",
+        "operationId": "ask_question",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/QuestionRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/langmanus/chat/stream": {
+      "post": {
+        "tags": [
+          "langmanus"
+        ],
+        "summary": "Chat Stream",
+        "operationId": "chat_stream",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ChatRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/langmanus/tts": {
+      "post": {
+        "tags": [
+          "langmanus"
+        ],
+        "summary": "Text To Speech",
+        "description": "Convert text to speech using volcengine TTS API.",
+        "operationId": "text_to_speech",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/TTSRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/langmanus/podcast/generate": {
+      "post": {
+        "tags": [
+          "langmanus"
+        ],
+        "summary": "Generate Podcast",
+        "operationId": "generate_podcast",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/GeneratePodcastRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/langmanus/ppt/generate": {
+      "post": {
+        "tags": [
+          "langmanus"
+        ],
+        "summary": "Generate Ppt",
+        "operationId": "generate_ppt",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/GeneratePPTRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/langmanus/prose/generate": {
+      "post": {
+        "tags": [
+          "langmanus"
+        ],
+        "summary": "Generate Prose",
+        "operationId": "generate_prose",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/GenerateProseRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/langmanus/mcp/server/metadata": {
+      "post": {
+        "tags": [
+          "langmanus"
+        ],
+        "summary": "Mcp Server Metadata",
+        "operationId": "mcp_server_metadata",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/MCPServerMetadataRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MCPServerMetadataResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/langmanus/rag/config": {
+      "get": {
+        "tags": [
+          "langmanus"
+        ],
+        "summary": "Rag Config",
+        "operationId": "rag_config",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RAGConfigResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/langmanus/rag/resources": {
+      "get": {
+        "tags": [
+          "langmanus"
+        ],
+        "summary": "Rag Resources",
+        "operationId": "rag_resources",
+        "parameters": [
+          {
+            "name": "query",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "The query of the resource need to be searched",
+              "title": "Query"
+            },
+            "description": "The query of the resource need to be searched"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RAGResourcesResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/groups/": {
+      "get": {
+        "tags": [
+          "groups"
+        ],
+        "summary": "Read Groups",
+        "description": "Retrieve groups.",
+        "operationId": "read_groups",
+        "parameters": [
+          {
+            "name": "skip",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "default": 0,
+              "title": "Skip"
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "default": 100,
+              "title": "Limit"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GroupsOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "groups"
+        ],
+        "summary": "Create Group",
+        "description": "Create new group.",
+        "operationId": "create_group",
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/GroupCreate"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GroupOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/groups/{group_id}": {
+      "get": {
+        "tags": [
+          "groups"
+        ],
+        "summary": "Read Group By Id",
+        "description": "Get a specific group by id.",
+        "operationId": "read_group_by_id",
+        "parameters": [
+          {
+            "name": "group_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Group Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GroupOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "patch": {
+        "tags": [
+          "groups"
+        ],
+        "summary": "Update Group",
+        "description": "Update a group.",
+        "operationId": "update_group",
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "group_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Group Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/GroupUpdate"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GroupOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "groups"
+        ],
+        "summary": "Delete Group",
+        "description": "Delete a group.",
+        "operationId": "delete_group",
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "group_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Group Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Message"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/roles/": {
+      "get": {
+        "tags": [
+          "roles"
+        ],
+        "summary": "Read Roles",
+        "description": "Retrieve roles.",
+        "operationId": "read_roles",
+        "parameters": [
+          {
+            "name": "skip",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "default": 0,
+              "title": "Skip"
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "default": 100,
+              "title": "Limit"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RolesOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "roles"
+        ],
+        "summary": "Create Role",
+        "description": "Create new role.",
+        "operationId": "create_role",
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RoleCreate"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RoleOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/roles/{role_id}": {
+      "get": {
+        "tags": [
+          "roles"
+        ],
+        "summary": "Read Role By Id",
+        "description": "Get a specific role by id.",
+        "operationId": "read_role_by_id",
+        "parameters": [
+          {
+            "name": "role_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Role Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RoleOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "patch": {
+        "tags": [
+          "roles"
+        ],
+        "summary": "Update Role",
+        "description": "Update a role.",
+        "operationId": "update_role",
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "role_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Role Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RoleUpdate"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RoleOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "roles"
+        ],
+        "summary": "Delete Role",
+        "description": "Delete a role.",
+        "operationId": "delete_role",
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "role_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Role Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Message"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
     }
   },
   "components": {
@@ -4010,7 +4868,7 @@
             "anyOf": [
               {
                 "type": "string",
-                "pattern": "password"
+                "pattern": "^password$"
               },
               {
                 "type": "null"
@@ -4203,16 +5061,62 @@
         "type": "object",
         "title": "Body_uploads-update_upload"
       },
-      "ChatMessage": {
+      "ChatMessageType": {
+        "type": "string",
+        "enum": [
+          "human",
+          "ai"
+        ],
+        "title": "ChatMessageType"
+      },
+      "ChatRequest": {
         "properties": {
-          "type": {
-            "$ref": "#/components/schemas/ChatMessageType"
+          "messages": {
+            "anyOf": [
+              {
+                "items": {
+                  "$ref": "#/components/schemas/app__core__langmanus__server__chat_request__ChatMessage"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Messages",
+            "description": "History of messages between the user and the assistant",
+            "default": []
           },
-          "content": {
-            "type": "string",
-            "title": "Content"
+          "resources": {
+            "anyOf": [
+              {
+                "items": {
+                  "$ref": "#/components/schemas/Resource"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Resources",
+            "description": "Resources to be used for the research",
+            "default": []
           },
-          "imgdata": {
+          "debug": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Debug",
+            "description": "Whether to enable debug logging",
+            "default": false
+          },
+          "thread_id": {
             "anyOf": [
               {
                 "type": "string"
@@ -4221,23 +5125,103 @@
                 "type": "null"
               }
             ],
-            "title": "Imgdata"
+            "title": "Thread Id",
+            "description": "A specific conversation identifier",
+            "default": "__default__"
+          },
+          "max_plan_iterations": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Max Plan Iterations",
+            "description": "The maximum number of plan iterations",
+            "default": 1
+          },
+          "max_step_num": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Max Step Num",
+            "description": "The maximum number of steps in a plan",
+            "default": 3
+          },
+          "max_search_results": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Max Search Results",
+            "description": "The maximum number of search results",
+            "default": 3
+          },
+          "auto_accepted_plan": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Auto Accepted Plan",
+            "description": "Whether to automatically accept the plan",
+            "default": false
+          },
+          "interrupt_feedback": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Interrupt Feedback",
+            "description": "Interrupt feedback from the user on the plan"
+          },
+          "mcp_settings": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Mcp Settings",
+            "description": "MCP settings for the chat request"
+          },
+          "enable_background_investigation": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Enable Background Investigation",
+            "description": "Whether to get background investigation before plan",
+            "default": true
           }
         },
         "type": "object",
-        "required": [
-          "type",
-          "content"
-        ],
-        "title": "ChatMessage"
-      },
-      "ChatMessageType": {
-        "type": "string",
-        "enum": [
-          "human",
-          "ai"
-        ],
-        "title": "ChatMessageType"
+        "title": "ChatRequest"
       },
       "ChatResponse": {
         "properties": {
@@ -4331,6 +5315,105 @@
         ],
         "title": "ChatResponse"
       },
+      "ContentItem": {
+        "properties": {
+          "type": {
+            "type": "string",
+            "title": "Type",
+            "description": "The type of content (text, image, etc.)"
+          },
+          "text": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Text",
+            "description": "The text content if type is 'text'"
+          },
+          "image_url": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Image Url",
+            "description": "The image URL if type is 'image'"
+          }
+        },
+        "type": "object",
+        "required": [
+          "type"
+        ],
+        "title": "ContentItem"
+      },
+      "GeneratePPTRequest": {
+        "properties": {
+          "content": {
+            "type": "string",
+            "title": "Content",
+            "description": "The content of the ppt"
+          }
+        },
+        "type": "object",
+        "required": [
+          "content"
+        ],
+        "title": "GeneratePPTRequest"
+      },
+      "GeneratePodcastRequest": {
+        "properties": {
+          "content": {
+            "type": "string",
+            "title": "Content",
+            "description": "The content of the podcast"
+          }
+        },
+        "type": "object",
+        "required": [
+          "content"
+        ],
+        "title": "GeneratePodcastRequest"
+      },
+      "GenerateProseRequest": {
+        "properties": {
+          "prompt": {
+            "type": "string",
+            "title": "Prompt",
+            "description": "The content of the prose"
+          },
+          "option": {
+            "type": "string",
+            "title": "Option",
+            "description": "The option of the prose writer"
+          },
+          "command": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Command",
+            "description": "The user custom command of the prose writer",
+            "default": ""
+          }
+        },
+        "type": "object",
+        "required": [
+          "prompt",
+          "option"
+        ],
+        "title": "GenerateProseRequest"
+      },
       "GraphCreate": {
         "properties": {
           "name": {
@@ -4350,10 +5433,12 @@
             "title": "Description"
           },
           "config": {
+            "additionalProperties": true,
             "type": "object",
             "title": "Config"
           },
           "metadata_": {
+            "additionalProperties": true,
             "type": "object",
             "title": "Metadata"
           },
@@ -4395,10 +5480,12 @@
             "title": "Description"
           },
           "config": {
+            "additionalProperties": true,
             "type": "object",
             "title": "Config"
           },
           "metadata_": {
+            "additionalProperties": true,
             "type": "object",
             "title": "Metadata"
           },
@@ -4439,10 +5526,12 @@
             "title": "Description"
           },
           "config": {
+            "additionalProperties": true,
             "type": "object",
             "title": "Config"
           },
           "metadata_": {
+            "additionalProperties": true,
             "type": "object",
             "title": "Metadata"
           },
@@ -4478,6 +5567,133 @@
           "count"
         ],
         "title": "GraphsOut"
+      },
+      "GroupCreate": {
+        "properties": {
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "description": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Description"
+          },
+          "is_system_group": {
+            "type": "boolean",
+            "title": "Is System Group",
+            "default": false
+          }
+        },
+        "type": "object",
+        "required": [
+          "name"
+        ],
+        "title": "GroupCreate",
+        "description": "Schema for creating a group"
+      },
+      "GroupOut": {
+        "properties": {
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "description": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Description"
+          },
+          "is_system_group": {
+            "type": "boolean",
+            "title": "Is System Group",
+            "default": false
+          },
+          "id": {
+            "type": "integer",
+            "title": "Id"
+          }
+        },
+        "type": "object",
+        "required": [
+          "name",
+          "id"
+        ],
+        "title": "GroupOut",
+        "description": "Schema for group output"
+      },
+      "GroupUpdate": {
+        "properties": {
+          "name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Name"
+          },
+          "description": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Description"
+          },
+          "is_system_group": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Is System Group"
+          }
+        },
+        "type": "object",
+        "title": "GroupUpdate",
+        "description": "Schema for updating a group"
+      },
+      "GroupsOut": {
+        "properties": {
+          "data": {
+            "items": {
+              "$ref": "#/components/schemas/GroupOut"
+            },
+            "type": "array",
+            "title": "Data"
+          },
+          "count": {
+            "type": "integer",
+            "title": "Count"
+          }
+        },
+        "type": "object",
+        "required": [
+          "data",
+          "count"
+        ],
+        "title": "GroupsOut",
+        "description": "Schema for groups output"
       },
       "HTTPValidationError": {
         "properties": {
@@ -4547,6 +5763,162 @@
           "context_input"
         ],
         "title": "InterruptType"
+      },
+      "MCPServerMetadataRequest": {
+        "properties": {
+          "transport": {
+            "type": "string",
+            "title": "Transport",
+            "description": "The type of MCP server connection (stdio or sse)"
+          },
+          "command": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Command",
+            "description": "The command to execute (for stdio type)"
+          },
+          "args": {
+            "anyOf": [
+              {
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Args",
+            "description": "Command arguments (for stdio type)"
+          },
+          "url": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Url",
+            "description": "The URL of the SSE server (for sse type)"
+          },
+          "env": {
+            "anyOf": [
+              {
+                "additionalProperties": {
+                  "type": "string"
+                },
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Env",
+            "description": "Environment variables"
+          },
+          "timeout_seconds": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Timeout Seconds",
+            "description": "Optional custom timeout in seconds for the operation"
+          }
+        },
+        "type": "object",
+        "required": [
+          "transport"
+        ],
+        "title": "MCPServerMetadataRequest",
+        "description": "Request model for MCP server metadata."
+      },
+      "MCPServerMetadataResponse": {
+        "properties": {
+          "transport": {
+            "type": "string",
+            "title": "Transport",
+            "description": "The type of MCP server connection (stdio or sse)"
+          },
+          "command": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Command",
+            "description": "The command to execute (for stdio type)"
+          },
+          "args": {
+            "anyOf": [
+              {
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Args",
+            "description": "Command arguments (for stdio type)"
+          },
+          "url": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Url",
+            "description": "The URL of the SSE server (for sse type)"
+          },
+          "env": {
+            "anyOf": [
+              {
+                "additionalProperties": {
+                  "type": "string"
+                },
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Env",
+            "description": "Environment variables"
+          },
+          "tools": {
+            "items": {},
+            "type": "array",
+            "title": "Tools",
+            "description": "Available tools from the MCP server"
+          }
+        },
+        "type": "object",
+        "required": [
+          "transport"
+        ],
+        "title": "MCPServerMetadataResponse",
+        "description": "Response model for MCP server metadata."
       },
       "MemberCreate": {
         "properties": {
@@ -5010,6 +6382,7 @@
           "meta_": {
             "anyOf": [
               {
+                "additionalProperties": true,
                 "type": "object"
               },
               {
@@ -5476,6 +6849,7 @@
           "meta_": {
             "anyOf": [
               {
+                "additionalProperties": true,
                 "type": "object"
               },
               {
@@ -5526,6 +6900,7 @@
             "title": "Id"
           },
           "meta_": {
+            "additionalProperties": true,
             "type": "object",
             "title": "Meta"
           }
@@ -5593,6 +6968,237 @@
         ],
         "title": "ProvidersListWithModelsOut"
       },
+      "QuestionRequest": {
+        "properties": {
+          "question": {
+            "type": "string",
+            "title": "Question"
+          },
+          "debug": {
+            "type": "boolean",
+            "title": "Debug",
+            "default": false
+          },
+          "max_plan_iterations": {
+            "type": "integer",
+            "title": "Max Plan Iterations",
+            "default": 1
+          },
+          "max_step_num": {
+            "type": "integer",
+            "title": "Max Step Num",
+            "default": 3
+          },
+          "enable_background_investigation": {
+            "type": "boolean",
+            "title": "Enable Background Investigation",
+            "default": true
+          }
+        },
+        "type": "object",
+        "required": [
+          "question"
+        ],
+        "title": "QuestionRequest"
+      },
+      "RAGConfigResponse": {
+        "properties": {
+          "provider": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Provider",
+            "description": "The provider of the RAG, default is ragflow"
+          }
+        },
+        "type": "object",
+        "title": "RAGConfigResponse",
+        "description": "Response model for RAG config."
+      },
+      "RAGResourcesResponse": {
+        "properties": {
+          "resources": {
+            "items": {
+              "$ref": "#/components/schemas/Resource"
+            },
+            "type": "array",
+            "title": "Resources",
+            "description": "The resources of the RAG"
+          }
+        },
+        "type": "object",
+        "required": [
+          "resources"
+        ],
+        "title": "RAGResourcesResponse",
+        "description": "Response model for RAG resources."
+      },
+      "Resource": {
+        "properties": {
+          "uri": {
+            "type": "string",
+            "title": "Uri",
+            "description": "The URI of the resource"
+          },
+          "title": {
+            "type": "string",
+            "title": "Title",
+            "description": "The title of the resource"
+          },
+          "description": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Description",
+            "description": "The description of the resource",
+            "default": ""
+          }
+        },
+        "type": "object",
+        "required": [
+          "uri",
+          "title"
+        ],
+        "title": "Resource",
+        "description": "Resource is a class that represents a resource."
+      },
+      "RoleCreate": {
+        "properties": {
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "description": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Description"
+          },
+          "is_system_role": {
+            "type": "boolean",
+            "title": "Is System Role",
+            "default": false
+          }
+        },
+        "type": "object",
+        "required": [
+          "name"
+        ],
+        "title": "RoleCreate",
+        "description": "Schema for creating a role"
+      },
+      "RoleOut": {
+        "properties": {
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "description": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Description"
+          },
+          "is_system_role": {
+            "type": "boolean",
+            "title": "Is System Role",
+            "default": false
+          },
+          "id": {
+            "type": "integer",
+            "title": "Id"
+          }
+        },
+        "type": "object",
+        "required": [
+          "name",
+          "id"
+        ],
+        "title": "RoleOut",
+        "description": "Schema for role output"
+      },
+      "RoleUpdate": {
+        "properties": {
+          "name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Name"
+          },
+          "description": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Description"
+          },
+          "is_system_role": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Is System Role"
+          }
+        },
+        "type": "object",
+        "title": "RoleUpdate",
+        "description": "Schema for updating a role"
+      },
+      "RolesOut": {
+        "properties": {
+          "data": {
+            "items": {
+              "$ref": "#/components/schemas/RoleOut"
+            },
+            "type": "array",
+            "title": "Data"
+          },
+          "count": {
+            "type": "integer",
+            "title": "Count"
+          }
+        },
+        "type": "object",
+        "required": [
+          "data",
+          "count"
+        ],
+        "title": "RolesOut",
+        "description": "Schema for roles output"
+      },
       "Skill": {
         "properties": {
           "name": {
@@ -5622,6 +7228,7 @@
           "tool_definition": {
             "anyOf": [
               {
+                "additionalProperties": true,
                 "type": "object"
               },
               {
@@ -5633,6 +7240,7 @@
           "input_parameters": {
             "anyOf": [
               {
+                "additionalProperties": true,
                 "type": "object"
               },
               {
@@ -5644,6 +7252,7 @@
           "credentials": {
             "anyOf": [
               {
+                "additionalProperties": true,
                 "type": "object"
               },
               {
@@ -5663,6 +7272,10 @@
             ],
             "title": "Id"
           },
+          "resource_id": {
+            "type": "integer",
+            "title": "Resource Id"
+          },
           "owner_id": {
             "anyOf": [
               {
@@ -5678,7 +7291,8 @@
         "type": "object",
         "required": [
           "name",
-          "description"
+          "description",
+          "resource_id"
         ],
         "title": "Skill"
       },
@@ -5709,12 +7323,14 @@
             "default": false
           },
           "tool_definition": {
+            "additionalProperties": true,
             "type": "object",
             "title": "Tool Definition"
           },
           "input_parameters": {
             "anyOf": [
               {
+                "additionalProperties": true,
                 "type": "object"
               },
               {
@@ -5726,6 +7342,7 @@
           "credentials": {
             "anyOf": [
               {
+                "additionalProperties": true,
                 "type": "object"
               },
               {
@@ -5772,6 +7389,7 @@
           "tool_definition": {
             "anyOf": [
               {
+                "additionalProperties": true,
                 "type": "object"
               },
               {
@@ -5783,6 +7401,7 @@
           "input_parameters": {
             "anyOf": [
               {
+                "additionalProperties": true,
                 "type": "object"
               },
               {
@@ -5794,6 +7413,7 @@
           "credentials": {
             "anyOf": [
               {
+                "additionalProperties": true,
                 "type": "object"
               },
               {
@@ -5864,6 +7484,7 @@
           "tool_definition": {
             "anyOf": [
               {
+                "additionalProperties": true,
                 "type": "object"
               },
               {
@@ -5875,6 +7496,7 @@
           "input_parameters": {
             "anyOf": [
               {
+                "additionalProperties": true,
                 "type": "object"
               },
               {
@@ -5886,6 +7508,7 @@
           "credentials": {
             "anyOf": [
               {
+                "additionalProperties": true,
                 "type": "object"
               },
               {
@@ -5938,10 +7561,12 @@
             "title": "Description"
           },
           "config": {
+            "additionalProperties": true,
             "type": "object",
             "title": "Config"
           },
           "metadata_": {
+            "additionalProperties": true,
             "type": "object",
             "title": "Metadata"
           },
@@ -5993,10 +7618,12 @@
             "title": "Description"
           },
           "config": {
+            "additionalProperties": true,
             "type": "object",
             "title": "Config"
           },
           "metadata_": {
+            "additionalProperties": true,
             "type": "object",
             "title": "Metadata"
           },
@@ -6064,10 +7691,12 @@
             "title": "Description"
           },
           "config": {
+            "additionalProperties": true,
             "type": "object",
             "title": "Config"
           },
           "metadata_": {
+            "additionalProperties": true,
             "type": "object",
             "title": "Metadata"
           },
@@ -6131,11 +7760,129 @@
         ],
         "title": "SubgraphsOut"
       },
+      "TTSRequest": {
+        "properties": {
+          "text": {
+            "type": "string",
+            "title": "Text",
+            "description": "The text to convert to speech"
+          },
+          "voice_type": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Voice Type",
+            "description": "The voice type to use",
+            "default": "BV700_V2_streaming"
+          },
+          "encoding": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Encoding",
+            "description": "The audio encoding format",
+            "default": "mp3"
+          },
+          "speed_ratio": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Speed Ratio",
+            "description": "Speech speed ratio",
+            "default": 1
+          },
+          "volume_ratio": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Volume Ratio",
+            "description": "Speech volume ratio",
+            "default": 1
+          },
+          "pitch_ratio": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Pitch Ratio",
+            "description": "Speech pitch ratio",
+            "default": 1
+          },
+          "text_type": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Text Type",
+            "description": "Text type (plain or ssml)",
+            "default": "plain"
+          },
+          "with_frontend": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "With Frontend",
+            "description": "Whether to use frontend processing",
+            "default": 1
+          },
+          "frontend_type": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Frontend Type",
+            "description": "Frontend type",
+            "default": "unitTson"
+          }
+        },
+        "type": "object",
+        "required": [
+          "text"
+        ],
+        "title": "TTSRequest"
+      },
       "TeamChat": {
         "properties": {
           "messages": {
             "items": {
-              "$ref": "#/components/schemas/ChatMessage"
+              "$ref": "#/components/schemas/app__models__ChatMessage"
             },
             "type": "array",
             "title": "Messages"
@@ -6162,7 +7909,7 @@
           "message": {
             "anyOf": [
               {
-                "$ref": "#/components/schemas/ChatMessage"
+                "$ref": "#/components/schemas/app__models__ChatMessage"
               },
               {
                 "type": "null"
@@ -6482,6 +8229,7 @@
             "title": "Name"
           },
           "args": {
+            "additionalProperties": true,
             "type": "object",
             "title": "Args"
           },
@@ -6514,6 +8262,7 @@
       "ToolDefinitionValidate": {
         "properties": {
           "tool_definition": {
+            "additionalProperties": true,
             "type": "object",
             "title": "Tool Definition"
           }
@@ -6639,6 +8388,10 @@
             ],
             "title": "Id"
           },
+          "resource_id": {
+            "type": "integer",
+            "title": "Resource Id"
+          },
           "owner_id": {
             "anyOf": [
               {
@@ -6672,6 +8425,7 @@
           "name",
           "description",
           "file_type",
+          "resource_id",
           "status",
           "chunk_size",
           "chunk_overlap"
@@ -7031,6 +8785,64 @@
           "type"
         ],
         "title": "ValidationError"
+      },
+      "app__core__langmanus__server__chat_request__ChatMessage": {
+        "properties": {
+          "role": {
+            "type": "string",
+            "title": "Role",
+            "description": "The role of the message sender (user or assistant)"
+          },
+          "content": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "items": {
+                  "$ref": "#/components/schemas/ContentItem"
+                },
+                "type": "array"
+              }
+            ],
+            "title": "Content",
+            "description": "The content of the message, either a string or a list of content items"
+          }
+        },
+        "type": "object",
+        "required": [
+          "role",
+          "content"
+        ],
+        "title": "ChatMessage"
+      },
+      "app__models__ChatMessage": {
+        "properties": {
+          "type": {
+            "$ref": "#/components/schemas/ChatMessageType"
+          },
+          "content": {
+            "type": "string",
+            "title": "Content"
+          },
+          "imgdata": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Imgdata"
+          }
+        },
+        "type": "object",
+        "required": [
+          "type",
+          "content"
+        ],
+        "title": "ChatMessage"
       }
     },
     "securitySchemes": {

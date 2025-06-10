@@ -5,12 +5,12 @@
 export const $ToolDefinitionValidate = {
     properties: {
         tool_definition: {
-            type: 'dictionary',
-            contains: {
-                properties: {
-                },
-            },
-            isRequired: true,
-        },
+    type: 'dictionary',
+    contains: {
+    properties: {
+    },
+},
+    isRequired: true,
+},
     },
 } as const;

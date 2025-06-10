@@ -5,12 +5,12 @@
 export const $UpdatePassword = {
     properties: {
         current_password: {
-            type: 'string',
-            isRequired: true,
-        },
+    type: 'string',
+    isRequired: true,
+},
         new_password: {
-            type: 'string',
-            isRequired: true,
-        },
+    type: 'string',
+    isRequired: true,
+},
     },
 } as const;

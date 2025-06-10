@@ -15,17 +15,27 @@ import Delete from "@/components/Common/DeleteAlert";
 import EditTeam from "@/components/Teams/EditTeam";
 import EditSkill from "@/components/Tools/EditSkill";
 import EditUpload from "@/components/Uploads/EditUpload";
-import type { SkillOut, TeamOut, UploadOut, UserOut } from "../../client";
+import type { SkillOut, TeamOut, UploadOut, UserOut, GroupOut, RoleOut } from "../../client";
 
 interface ActionsMenuProps {
   type: string;
-  value: UserOut | TeamOut | SkillOut | UploadOut;
+  value: UserOut | TeamOut | SkillOut | UploadOut | GroupOut | RoleOut;
   disabled?: boolean;
+  onEdit?: () => void;
 }
 
-const ActionsMenu = ({ type, value, disabled }: ActionsMenuProps) => {
+const ActionsMenu = ({ type, value, disabled, onEdit }: ActionsMenuProps) => {
   const editUserModal = useDisclosure();
   const deleteModal = useDisclosure();
+
+  const handleEdit = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (onEdit) {
+      onEdit();
+    } else {
+      editUserModal.onOpen();
+    }
+  };
 
   return (
     <>
@@ -58,10 +68,7 @@ const ActionsMenu = ({ type, value, disabled }: ActionsMenuProps) => {
           backdropFilter="blur(8px)"
         >
           <MenuItem
-            onClick={(e) => {
-              e.stopPropagation();
-              editUserModal.onOpen();
-            }}
+            onClick={handleEdit}
             icon={<Icon as={FiEdit} color="gray.600" />}
             py={2}
             px={4}
@@ -91,30 +98,32 @@ const ActionsMenu = ({ type, value, disabled }: ActionsMenuProps) => {
         </MenuList>
 
         {/* Modals */}
-        {type === "User" ? (
-          <EditUser
-            user={value as UserOut}
-            isOpen={editUserModal.isOpen}
-            onClose={editUserModal.onClose}
-          />
-        ) : type === "Team" ? (
-          <EditTeam
-            team={value as TeamOut}
-            isOpen={editUserModal.isOpen}
-            onClose={editUserModal.onClose}
-          />
-        ) : type === "Skill" ? (
-          <EditSkill
-            skill={value as SkillOut}
-            isOpen={editUserModal.isOpen}
-            onClose={editUserModal.onClose}
-          />
-        ) : (
-          <EditUpload
-            upload={value as UploadOut}
-            isOpen={editUserModal.isOpen}
-            onClose={editUserModal.onClose}
-          />
+        {!onEdit && (
+          type === "User" ? (
+            <EditUser
+              user={value as UserOut}
+              isOpen={editUserModal.isOpen}
+              onClose={editUserModal.onClose}
+            />
+          ) : type === "Team" ? (
+            <EditTeam
+              team={value as TeamOut}
+              isOpen={editUserModal.isOpen}
+              onClose={editUserModal.onClose}
+            />
+          ) : type === "Skill" ? (
+            <EditSkill
+              skill={value as SkillOut}
+              isOpen={editUserModal.isOpen}
+              onClose={editUserModal.onClose}
+            />
+          ) : type === "Upload" && (
+            <EditUpload
+              upload={value as UploadOut}
+              isOpen={editUserModal.isOpen}
+              onClose={editUserModal.onClose}
+            />
+          )
         )}
         <Delete
           type={type}

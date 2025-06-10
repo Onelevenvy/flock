@@ -23,4 +23,3 @@ export type MemberUpdate = {
     skills?: (Array<Skill> | null);
     uploads?: (Array<Upload> | null);
 };
-

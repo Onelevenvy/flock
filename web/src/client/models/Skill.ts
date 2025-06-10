@@ -12,6 +12,6 @@ export type Skill = {
     input_parameters?: (Record<string, any> | null);
     credentials?: (Record<string, any> | null);
     id?: (number | null);
+    resource_id: number;
     owner_id?: (number | null);
 };
-

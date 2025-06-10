@@ -9,4 +9,3 @@ export type ModelsOut = {
     data: Array<ModelOut>;
     count: number;
 };
-

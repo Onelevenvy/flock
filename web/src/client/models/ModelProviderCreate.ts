@@ -10,4 +10,3 @@ export type ModelProviderCreate = {
     icon?: (string | null);
     description: string;
 };
-

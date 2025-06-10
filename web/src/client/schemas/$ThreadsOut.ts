@@ -5,15 +5,15 @@
 export const $ThreadsOut = {
     properties: {
         data: {
-            type: 'array',
-            contains: {
-                type: 'ThreadOut',
-            },
-            isRequired: true,
-        },
+    type: 'array',
+    contains: {
+        type: 'ThreadOut',
+    },
+    isRequired: true,
+},
         count: {
-            type: 'number',
-            isRequired: true,
-        },
+    type: 'number',
+    isRequired: true,
+},
     },
 } as const;

@@ -3,11 +3,9 @@
 /* tslint:disable */
 /* eslint-disable */
 
-import type { ChatMessageType } from './ChatMessageType';
-
-export type ChatMessage = {
-    type: ChatMessageType;
+export type GeneratePodcastRequest = {
+    /**
+     * The content of the podcast
+     */
     content: string;
-    imgdata?: (string | null);
 };
-

@@ -21,14 +21,14 @@ export class MembersService {
      * @throws ApiError
      */
     public static readMembers({
-        teamId,
-        skip,
-        limit = 100,
-    }: {
-        teamId: number,
-        skip?: number,
-        limit?: number,
-    }): CancelablePromise<MembersOut> {
+teamId,
+skip,
+limit = 100,
+}: {
+teamId: number,
+skip?: number,
+limit?: number,
+}): CancelablePromise<MembersOut> {
         return __request(OpenAPI, {
             method: 'GET',
             url: '/api/v1/teams/{team_id}/members/',
@@ -52,12 +52,12 @@ export class MembersService {
      * @throws ApiError
      */
     public static createMember({
-        teamId,
-        requestBody,
-    }: {
-        teamId: number,
-        requestBody: MemberCreate,
-    }): CancelablePromise<MemberOut> {
+teamId,
+requestBody,
+}: {
+teamId: number,
+requestBody: MemberCreate,
+}): CancelablePromise<MemberOut> {
         return __request(OpenAPI, {
             method: 'POST',
             url: '/api/v1/teams/{team_id}/members/',
@@ -79,12 +79,12 @@ export class MembersService {
      * @throws ApiError
      */
     public static readMember({
-        teamId,
-        id,
-    }: {
-        teamId: number,
-        id: number,
-    }): CancelablePromise<MemberOut> {
+teamId,
+id,
+}: {
+teamId: number,
+id: number,
+}): CancelablePromise<MemberOut> {
         return __request(OpenAPI, {
             method: 'GET',
             url: '/api/v1/teams/{team_id}/members/{id}',
@@ -105,14 +105,14 @@ export class MembersService {
      * @throws ApiError
      */
     public static updateMember({
-        teamId,
-        id,
-        requestBody,
-    }: {
-        teamId: number,
-        id: number,
-        requestBody: MemberUpdate,
-    }): CancelablePromise<MemberOut> {
+teamId,
+id,
+requestBody,
+}: {
+teamId: number,
+id: number,
+requestBody: MemberUpdate,
+}): CancelablePromise<MemberOut> {
         return __request(OpenAPI, {
             method: 'PUT',
             url: '/api/v1/teams/{team_id}/members/{id}',
@@ -135,12 +135,12 @@ export class MembersService {
      * @throws ApiError
      */
     public static deleteMember({
-        teamId,
-        id,
-    }: {
-        teamId: number,
-        id: number,
-    }): CancelablePromise<Message> {
+teamId,
+id,
+}: {
+teamId: number,
+id: number,
+}): CancelablePromise<Message> {
         return __request(OpenAPI, {
             method: 'DELETE',
             url: '/api/v1/teams/{team_id}/members/{id}',

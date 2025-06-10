@@ -21,14 +21,14 @@ export class SubgraphsService {
      * @throws ApiError
      */
     public static readSubgraphs({
-        teamId,
-        skip,
-        limit = 100,
-    }: {
-        teamId: (number | null),
-        skip?: number,
-        limit?: number,
-    }): CancelablePromise<SubgraphsOut> {
+teamId,
+skip,
+limit = 100,
+}: {
+teamId: (number | null),
+skip?: number,
+limit?: number,
+}): CancelablePromise<SubgraphsOut> {
         return __request(OpenAPI, {
             method: 'GET',
             url: '/api/v1/teams/{team_id}/subgraphs/',
@@ -52,10 +52,10 @@ export class SubgraphsService {
      * @throws ApiError
      */
     public static createSubgraph({
-        requestBody,
-    }: {
-        requestBody: SubgraphCreate,
-    }): CancelablePromise<SubgraphOut> {
+requestBody,
+}: {
+requestBody: SubgraphCreate,
+}): CancelablePromise<SubgraphOut> {
         return __request(OpenAPI, {
             method: 'POST',
             url: '/api/v1/teams/{team_id}/subgraphs/',
@@ -74,10 +74,10 @@ export class SubgraphsService {
      * @throws ApiError
      */
     public static readSubgraph({
-        id,
-    }: {
-        id: number,
-    }): CancelablePromise<SubgraphOut> {
+id,
+}: {
+id: number,
+}): CancelablePromise<SubgraphOut> {
         return __request(OpenAPI, {
             method: 'GET',
             url: '/api/v1/teams/{team_id}/subgraphs/{id}',
@@ -97,12 +97,12 @@ export class SubgraphsService {
      * @throws ApiError
      */
     public static updateSubgraph({
-        id,
-        requestBody,
-    }: {
-        id: number,
-        requestBody: SubgraphUpdate,
-    }): CancelablePromise<SubgraphOut> {
+id,
+requestBody,
+}: {
+id: number,
+requestBody: SubgraphUpdate,
+}): CancelablePromise<SubgraphOut> {
         return __request(OpenAPI, {
             method: 'PUT',
             url: '/api/v1/teams/{team_id}/subgraphs/{id}',
@@ -124,10 +124,10 @@ export class SubgraphsService {
      * @throws ApiError
      */
     public static deleteSubgraph({
-        id,
-    }: {
-        id: number,
-    }): CancelablePromise<Message> {
+id,
+}: {
+id: number,
+}): CancelablePromise<Message> {
         return __request(OpenAPI, {
             method: 'DELETE',
             url: '/api/v1/teams/{team_id}/subgraphs/{id}',
@@ -147,12 +147,12 @@ export class SubgraphsService {
      * @throws ApiError
      */
     public static readAllPublicSubgraphs({
-        skip,
-        limit = 100,
-    }: {
-        skip?: number,
-        limit?: number,
-    }): CancelablePromise<SubgraphsOut> {
+skip,
+limit = 100,
+}: {
+skip?: number,
+limit?: number,
+}): CancelablePromise<SubgraphsOut> {
         return __request(OpenAPI, {
             method: 'GET',
             url: '/api/v1/subgraphs/all',

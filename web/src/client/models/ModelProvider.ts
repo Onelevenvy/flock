@@ -11,4 +11,3 @@ export type ModelProvider = {
     description?: (string | null);
     id?: (number | null);
 };
-

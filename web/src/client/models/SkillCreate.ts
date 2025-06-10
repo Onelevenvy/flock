@@ -12,4 +12,3 @@ export type SkillCreate = {
     input_parameters?: (Record<string, any> | null);
     credentials?: (Record<string, any> | null);
 };
-

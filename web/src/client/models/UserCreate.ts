@@ -11,4 +11,3 @@ export type UserCreate = {
     language?: string;
     password: string;
 };
-

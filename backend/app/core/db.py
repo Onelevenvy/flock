@@ -155,16 +155,6 @@ def print_skills_info(session: Session) -> None:
         print(f"Skill: {skill.name} (ID: {skill.id})")
         print(f"  Display Name: {skill.display_name}")
         print(f"  Description: {skill.description}")
-        # print(f"  Managed: {'Yes' if skill.managed else 'No'}")
-        # print(f"  Owner ID: {skill.owner_id}")
-        # if skill.input_parameters:
-        #     print("  Input Parameters:")
-        #     for param, param_type in skill.input_parameters.items():
-        #         print(f"    - {param}: {param_type}")
-        # if skill.credentials:
-        #     print("  Credentials:")
-        #     for credential_name, credential_info in skill.credentials.items():
-        #         print(f"    - {credential_name}: {credential_info}")
         print()
 
 

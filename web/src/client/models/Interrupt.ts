@@ -11,4 +11,3 @@ export type Interrupt = {
     decision: InterruptDecision;
     tool_message?: (string | null);
 };
-

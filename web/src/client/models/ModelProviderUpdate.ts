@@ -10,4 +10,3 @@ export type ModelProviderUpdate = {
     icon?: (string | null);
     description?: (string | null);
 };
-

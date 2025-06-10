@@ -7,4 +7,3 @@ export type NewPassword = {
     token: string;
     new_password: string;
 };
-

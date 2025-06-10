@@ -9,4 +9,3 @@ export type SkillsOut = {
     data: Array<SkillOut>;
     count: number;
 };
-

@@ -31,10 +31,10 @@ export class ModelService {
      * @throws ApiError
      */
     public static createModels({
-        requestBody,
-    }: {
-        requestBody: ModelCreate,
-    }): CancelablePromise<Models> {
+requestBody,
+}: {
+requestBody: ModelCreate,
+}): CancelablePromise<Models> {
         return __request(OpenAPI, {
             method: 'POST',
             url: '/api/v1/model/',
@@ -52,10 +52,10 @@ export class ModelService {
      * @throws ApiError
      */
     public static readModel({
-        providerId,
-    }: {
-        providerId: number,
-    }): CancelablePromise<ModelsOut> {
+providerId,
+}: {
+providerId: number,
+}): CancelablePromise<ModelsOut> {
         return __request(OpenAPI, {
             method: 'GET',
             url: '/api/v1/model/{provider_id}',
@@ -74,10 +74,10 @@ export class ModelService {
      * @throws ApiError
      */
     public static deleteModel({
-        modelId,
-    }: {
-        modelId: number,
-    }): CancelablePromise<Models> {
+modelId,
+}: {
+modelId: number,
+}): CancelablePromise<Models> {
         return __request(OpenAPI, {
             method: 'DELETE',
             url: '/api/v1/model/{model_id}',
@@ -96,12 +96,12 @@ export class ModelService {
      * @throws ApiError
      */
     public static updateModel({
-        modelId,
-        requestBody,
-    }: {
-        modelId: number,
-        requestBody: ModelUpdate,
-    }): CancelablePromise<Models> {
+modelId,
+requestBody,
+}: {
+modelId: number,
+requestBody: ModelUpdate,
+}): CancelablePromise<Models> {
         return __request(OpenAPI, {
             method: 'PUT',
             url: '/api/v1/model/{model_id}',
@@ -122,12 +122,12 @@ export class ModelService {
      * @throws ApiError
      */
     public static updateModelMetadata({
-        modelId,
-        requestBody,
-    }: {
-        modelId: number,
-        requestBody: Record<string, any>,
-    }): CancelablePromise<Models> {
+modelId,
+requestBody,
+}: {
+modelId: number,
+requestBody: Record<string, any>,
+}): CancelablePromise<Models> {
         return __request(OpenAPI, {
             method: 'PATCH',
             url: '/api/v1/model/{model_id}/metadata',

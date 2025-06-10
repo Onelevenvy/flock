@@ -21,10 +21,10 @@ export class LoginService {
      * @throws ApiError
      */
     public static loginAccessToken({
-        formData,
-    }: {
-        formData: Body_login_login_access_token,
-    }): CancelablePromise<Token> {
+formData,
+}: {
+formData: Body_login_login_access_token,
+}): CancelablePromise<Token> {
         return __request(OpenAPI, {
             method: 'POST',
             url: '/api/v1/login/access-token',
@@ -56,10 +56,10 @@ export class LoginService {
      * @throws ApiError
      */
     public static recoverPassword({
-        email,
-    }: {
-        email: string,
-    }): CancelablePromise<Message> {
+email,
+}: {
+email: string,
+}): CancelablePromise<Message> {
         return __request(OpenAPI, {
             method: 'POST',
             url: '/api/v1/password-recovery/{email}',
@@ -79,10 +79,10 @@ export class LoginService {
      * @throws ApiError
      */
     public static resetPassword({
-        requestBody,
-    }: {
-        requestBody: NewPassword,
-    }): CancelablePromise<Message> {
+requestBody,
+}: {
+requestBody: NewPassword,
+}): CancelablePromise<Message> {
         return __request(OpenAPI, {
             method: 'POST',
             url: '/api/v1/reset-password/',
@@ -101,10 +101,10 @@ export class LoginService {
      * @throws ApiError
      */
     public static recoverPasswordHtmlContent({
-        email,
-    }: {
-        email: string,
-    }): CancelablePromise<string> {
+email,
+}: {
+email: string,
+}): CancelablePromise<string> {
         return __request(OpenAPI, {
             method: 'POST',
             url: '/api/v1/password-recovery-html-content/{email}',

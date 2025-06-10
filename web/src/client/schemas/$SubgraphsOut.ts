@@ -5,15 +5,15 @@
 export const $SubgraphsOut = {
     properties: {
         data: {
-            type: 'array',
-            contains: {
-                type: 'SubgraphOut',
-            },
-            isRequired: true,
-        },
+    type: 'array',
+    contains: {
+        type: 'SubgraphOut',
+    },
+    isRequired: true,
+},
         count: {
-            type: 'number',
-            isRequired: true,
-        },
+    type: 'number',
+    isRequired: true,
+},
     },
 } as const;

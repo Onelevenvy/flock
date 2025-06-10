@@ -5,15 +5,15 @@
 export const $TeamsOut = {
     properties: {
         data: {
-            type: 'array',
-            contains: {
-                type: 'TeamOut',
-            },
-            isRequired: true,
-        },
+    type: 'array',
+    contains: {
+        type: 'TeamOut',
+    },
+    isRequired: true,
+},
         count: {
-            type: 'number',
-            isRequired: true,
-        },
+    type: 'number',
+    isRequired: true,
+},
     },
 } as const;

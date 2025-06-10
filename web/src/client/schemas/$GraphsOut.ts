@@ -5,15 +5,15 @@
 export const $GraphsOut = {
     properties: {
         data: {
-            type: 'array',
-            contains: {
-                type: 'GraphOut',
-            },
-            isRequired: true,
-        },
+    type: 'array',
+    contains: {
+        type: 'GraphOut',
+    },
+    isRequired: true,
+},
         count: {
-            type: 'number',
-            isRequired: true,
-        },
+    type: 'number',
+    isRequired: true,
+},
     },
 } as const;

@@ -5,25 +5,25 @@
 export const $ThreadRead = {
     properties: {
         id: {
-            type: 'string',
-            isRequired: true,
-            format: 'uuid',
-        },
+    type: 'string',
+    isRequired: true,
+    format: 'uuid',
+},
         query: {
-            type: 'string',
-            isRequired: true,
-        },
+    type: 'string',
+    isRequired: true,
+},
         updated_at: {
-            type: 'string',
-            isRequired: true,
-            format: 'date-time',
-        },
+    type: 'string',
+    isRequired: true,
+    format: 'date-time',
+},
         messages: {
-            type: 'array',
-            contains: {
-                type: 'ChatResponse',
-            },
-            isRequired: true,
-        },
+    type: 'array',
+    contains: {
+        type: 'ChatResponse',
+    },
+    isRequired: true,
+},
     },
 } as const;
