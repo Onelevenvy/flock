@@ -10,5 +10,6 @@ export type GroupOut = {
     name: string;
     description?: (string | null);
     is_system_group?: boolean;
+    admin_id: (number | null);
     id: number;
 };

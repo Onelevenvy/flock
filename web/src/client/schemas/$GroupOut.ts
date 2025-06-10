@@ -20,6 +20,15 @@ export const $GroupOut = {
         is_system_group: {
     type: 'boolean',
 },
+        admin_id: {
+    type: 'any-of',
+    contains: [{
+    type: 'number',
+}, {
+    type: 'null',
+}],
+    isRequired: true,
+},
         id: {
     type: 'number',
     isRequired: true,

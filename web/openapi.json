@@ -5589,6 +5589,17 @@
             "type": "boolean",
             "title": "Is System Group",
             "default": false
+          },
+          "admin_id": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Admin Id"
           }
         },
         "type": "object",
@@ -5620,6 +5631,17 @@
             "title": "Is System Group",
             "default": false
           },
+          "admin_id": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Admin Id"
+          },
           "id": {
             "type": "integer",
             "title": "Id"
@@ -5628,6 +5650,7 @@
         "type": "object",
         "required": [
           "name",
+          "admin_id",
           "id"
         ],
         "title": "GroupOut",
@@ -5667,6 +5690,17 @@
               }
             ],
             "title": "Is System Group"
+          },
+          "admin_id": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Admin Id"
           }
         },
         "type": "object",
@@ -7093,6 +7127,17 @@
             "type": "boolean",
             "title": "Is System Role",
             "default": false
+          },
+          "group_id": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Group Id"
           }
         },
         "type": "object",
@@ -7124,6 +7169,10 @@
             "title": "Is System Role",
             "default": false
           },
+          "group_id": {
+            "type": "integer",
+            "title": "Group Id"
+          },
           "id": {
             "type": "integer",
             "title": "Id"
@@ -7132,6 +7181,7 @@
         "type": "object",
         "required": [
           "name",
+          "group_id",
           "id"
         ],
         "title": "RoleOut",
@@ -7171,6 +7221,17 @@
               }
             ],
             "title": "Is System Role"
+          },
+          "group_id": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Group Id"
           }
         },
         "type": "object",

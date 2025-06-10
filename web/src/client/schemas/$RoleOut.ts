@@ -20,6 +20,10 @@ export const $RoleOut = {
         is_system_role: {
     type: 'boolean',
 },
+        group_id: {
+    type: 'number',
+    isRequired: true,
+},
         id: {
     type: 'number',
     isRequired: true,

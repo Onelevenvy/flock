@@ -10,5 +10,6 @@ export type RoleOut = {
     name: string;
     description?: (string | null);
     is_system_role?: boolean;
+    group_id: number;
     id: number;
 };

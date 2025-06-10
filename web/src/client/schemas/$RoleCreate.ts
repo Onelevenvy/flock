@@ -20,5 +20,13 @@ export const $RoleCreate = {
         is_system_role: {
     type: 'boolean',
 },
+        group_id: {
+    type: 'any-of',
+    contains: [{
+    type: 'number',
+}, {
+    type: 'null',
+}],
+},
     },
 } as const;

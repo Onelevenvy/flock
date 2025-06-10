@@ -10,4 +10,5 @@ export type RoleCreate = {
     name: string;
     description?: (string | null);
     is_system_role?: boolean;
+    group_id?: (number | null);
 };

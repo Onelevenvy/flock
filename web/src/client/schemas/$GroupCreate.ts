@@ -20,5 +20,13 @@ export const $GroupCreate = {
         is_system_group: {
     type: 'boolean',
 },
+        admin_id: {
+    type: 'any-of',
+    contains: [{
+    type: 'number',
+}, {
+    type: 'null',
+}],
+},
     },
 } as const;

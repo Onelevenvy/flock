@@ -5,7 +5,7 @@ from sqlmodel import func, select
 
 from app.api.deps import CurrentUser, SessionDep, get_current_active_superuser
 from app.curd import roles
-from app.models import Role, RoleCreate, RoleOut, RolesOut, RoleUpdate, Message
+from app.models import Role, RoleCreate, RoleOut, RolesOut, RoleUpdate, Message, Group
 
 router = APIRouter()
 
@@ -18,8 +18,22 @@ def read_roles(session: SessionDep, skip: int = 0, limit: int = 100) -> Any:
     count_statement = select(func.count()).select_from(Role)
     count = session.exec(count_statement).one()
 
+    # 获取默认用户组
+    default_group = session.exec(
+        select(Group).where(Group.name == "默认用户组")
+    ).first()
+
+    # 获取所有角色
     statement = select(Role).offset(skip).limit(limit)
     roles_list = session.exec(statement).all()
+
+    # 如果角色没有关联用户组，关联到默认用户组
+    for role in roles_list:
+        if role.group_id is None and default_group:
+            role.group_id = default_group.id
+            session.add(role)
+    
+    session.commit()
 
     return RolesOut(data=roles_list, count=count)
 
@@ -35,6 +49,14 @@ def create_role(*, session: SessionDep, role_in: RoleCreate) -> Any:
             status_code=400,
             detail="The role with this name already exists in the system.",
         )
+
+    # 如果没有指定用户组，使用默认用户组
+    if not role_in.group_id:
+        default_group = session.exec(
+            select(Group).where(Group.name == "默认用户组")
+        ).first()
+        if default_group:
+            role_in.group_id = default_group.id
 
     role = roles.create_role(session=session, role_create=role_in)
     return role

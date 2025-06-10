@@ -10,4 +10,5 @@ export type RoleUpdate = {
     name?: (string | null);
     description?: (string | null);
     is_system_role?: (boolean | null);
+    group_id?: (number | null);
 };

@@ -219,29 +219,3 @@ export { ToolsService } from './services/ToolsService';
 export { UploadsService } from './services/UploadsService';
 export { UsersService } from './services/UsersService';
 export { UtilsService } from './services/UtilsService';
-
-export interface UserOut {
-    id: number;
-    email: string;
-    is_active: boolean;
-    is_superuser: boolean;
-    full_name: string | null;
-    groups: number[];  // 用户所属的组ID列表
-    roles: number[];   // 用户拥有的角色ID列表
-}
-
-export interface GroupOut {
-    id: number;
-    name: string;
-    description: string | null;
-    is_system_group: boolean;
-    admin_id: number | null;  // 组管理员ID
-}
-
-export interface RoleOut {
-    id: number;
-    name: string;
-    description: string | null;
-    is_system_role: boolean;
-    group_id: number;  // 角色所属的组ID
-}
