@@ -14,7 +14,6 @@ import { LuBookCopy } from "react-icons/lu";
 import { PiToolboxLight } from "react-icons/pi";
 import { RiRobot2Fill, RiRobot2Line } from "react-icons/ri";
 import { GiArchiveResearch } from "react-icons/gi";
-import useAuth from "../../../hooks/useAuth";
 import { TbDeviceImacSearch } from "react-icons/tb";
 interface SidebarItemsProps {
   onClose?: () => void;
@@ -24,10 +23,9 @@ const SidebarItems = ({ onClose }: SidebarItemsProps) => {
   const textColor = useColorModeValue("ui.main", "ui.white");
   const bgActive = useColorModeValue("white", "#4A5568");
   const currentPath = usePathname();
-  const { user: currentUser } = useAuth();
   const { t } = useTranslation();
 
-  const superuser_items = [
+  const items = [
     {
       activeIcon: FaHouseChimney,
       inactiveIcon: FiHome,
@@ -67,22 +65,9 @@ const SidebarItems = ({ onClose }: SidebarItemsProps) => {
     },
   ];
 
-  const nosuperuser_items = [
-    {
-      activeIcon: FiHome,
-      inactiveIcon: FiHome,
-      title: "主页",
-      path: "/dashboard",
-    },
-    {
-      activeIcon: BsRobot,
-      inactiveIcon: BsRobot,
-      title: "会话",
-      path: "/playground",
-    },
-  ];
 
-  const items = currentUser?.is_superuser ? superuser_items : nosuperuser_items;
+
+ 
 
   return (
     <Box display="flex" flexDirection="column">
