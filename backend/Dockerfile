@@ -68,7 +68,8 @@ RUN set -eux; \
     && mkdir -p /app/data/.local/share/app \
     && chown -R nobody:nogroup /app \
     && chmod -R u+rwX,go+rX,go-w /app \
-    && chmod 777 /app/data/.local/share/app
+    && chmod 777 /app/data/.local/share/app \
+    && curl -fsSL https://deno.land/install.sh | sh
 
 # 复制Python环境
 ENV VIRTUAL_ENV=/app/.venv
