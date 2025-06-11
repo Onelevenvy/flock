@@ -35,6 +35,8 @@ const Markdown = ({ content }: { content: any }) => {
   const borderColor = useColorModeValue("gray.200", "gray.600");
   const inlineCodeBg = useColorModeValue("gray.100", "gray.700");
 
+  const proseColor = useColorModeValue("zinc.800", "zinc.200");
+
   const latexContent = preprocessLaTeX(content);
 
   return (
@@ -44,7 +46,7 @@ const Markdown = ({ content }: { content: any }) => {
           sx={{
             maxWidth: "2xl",
             "& .prose": {
-              color: useColorModeValue("zinc.800", "zinc.200"),
+              color: proseColor,
             },
           }}
         >

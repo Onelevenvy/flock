@@ -8,7 +8,7 @@ import {
   Button,
   Text,
 } from "@chakra-ui/react";
-import React from "react";
+import { type MutableRefObject, useRef } from "react";
 import { useForm } from "react-hook-form";
 import { useMutation, useQueryClient } from "react-query";
 
@@ -30,7 +30,7 @@ interface DeleteProps {
 const Delete = ({ type, id, isOpen, onClose }: DeleteProps) => {
   const queryClient = useQueryClient();
   const showToast = useCustomToast();
-  const cancelRef = React.useRef<HTMLButtonElement | null>(null);
+  const cancelRef: MutableRefObject<any> = useRef(null);
   const {
     handleSubmit,
     formState: { isSubmitting },

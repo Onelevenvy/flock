@@ -429,7 +429,7 @@ export function EditFlowMember({
                       id="model"
                       name={name}
                       ref={ref}
-                      onChange={(newValue) => onChange(newValue?.value)}
+                      onChange={(newValue:any) => onChange(newValue?.value)}
                       onBlur={onBlur}
                       value={{ value: value, label: value }}
                       options={modelOptions}
