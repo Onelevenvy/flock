@@ -2,9 +2,14 @@
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
-export const $UserUpdate = {
+export const $Role = {
+    description: `Role model for database`,
     properties: {
-        email: {
+        name: {
+    type: 'string',
+    isRequired: true,
+},
+        description: {
     type: 'any-of',
     contains: [{
     type: 'string',
@@ -12,42 +17,32 @@ export const $UserUpdate = {
     type: 'null',
 }],
 },
-        is_active: {
+        is_system_role: {
     type: 'boolean',
 },
-        is_superuser: {
-    type: 'boolean',
-},
-        full_name: {
+        group_id: {
     type: 'any-of',
     contains: [{
-    type: 'string',
+    type: 'number',
 }, {
     type: 'null',
 }],
 },
-        language: {
-    type: 'string',
-},
-        password: {
+        id: {
     type: 'any-of',
     contains: [{
-    type: 'string',
+    type: 'number',
 }, {
     type: 'null',
 }],
 },
-        groups: {
-    type: 'array',
-    contains: {
+        parent_role_id: {
+    type: 'any-of',
+    contains: [{
     type: 'number',
-},
-},
-        roles: {
-    type: 'array',
-    contains: {
-    type: 'number',
-},
+}, {
+    type: 'null',
+}],
 },
     },
 } as const;

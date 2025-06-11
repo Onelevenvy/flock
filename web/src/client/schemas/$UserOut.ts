@@ -40,5 +40,16 @@ export const $UserOut = {
     type: 'null',
 }],
 },
+        roles: {
+    type: 'any-of',
+    contains: [{
+    type: 'array',
+    contains: {
+        type: 'Role',
+    },
+}, {
+    type: 'null',
+}],
+},
     },
 } as const;

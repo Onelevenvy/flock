@@ -251,6 +251,8 @@ class UserUpdate(UserBase):
     email: str | None = None  # type: ignore
     password: str | None = None
     full_name: str | None = None
+    groups: list[int] = []  # 用户组 ID 列表
+    roles: list[int] = []   # 角色 ID 列表
 
 class UserUpdateMe(SQLModel):
     full_name: str | None = None

@@ -29,5 +29,17 @@ export const $UserCreate = {
     type: 'string',
     isRequired: true,
 },
+        groups: {
+    type: 'array',
+    contains: {
+    type: 'number',
+},
+},
+        roles: {
+    type: 'array',
+    contains: {
+    type: 'number',
+},
+},
     },
 } as const;

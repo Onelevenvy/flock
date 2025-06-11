@@ -3,6 +3,9 @@
 /* tslint:disable */
 /* eslint-disable */
 
+import type { Group } from './Group';
+import type { Role } from './Role';
+
 export type UserOut = {
     email: string;
     is_active?: boolean;
@@ -10,5 +13,6 @@ export type UserOut = {
     full_name?: (string | null);
     language?: string;
     id: number;
-    groups?: { id: number }[];
+    groups?: (Array<Group> | null);
+    roles?: (Array<Role> | null);
 };

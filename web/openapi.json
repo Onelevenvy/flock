@@ -4526,22 +4526,6 @@
               "default": 100,
               "title": "Limit"
             }
-          },
-          {
-            "name": "group_id",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "anyOf": [
-                {
-                  "type": "integer"
-                },
-                {
-                  "type": "null"
-                }
-              ],
-              "title": "Group Id"
-            }
           }
         ],
         "responses": {
@@ -7185,6 +7169,69 @@
         "title": "Resource",
         "description": "Resource is a class that represents a resource."
       },
+      "Role": {
+        "properties": {
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "description": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Description"
+          },
+          "is_system_role": {
+            "type": "boolean",
+            "title": "Is System Role",
+            "default": false
+          },
+          "group_id": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Group Id"
+          },
+          "id": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Id"
+          },
+          "parent_role_id": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Parent Role Id"
+          }
+        },
+        "type": "object",
+        "required": [
+          "name"
+        ],
+        "title": "Role",
+        "description": "Role model for database"
+      },
       "RoleCreate": {
         "properties": {
           "name": {
@@ -8708,6 +8755,22 @@
           "password": {
             "type": "string",
             "title": "Password"
+          },
+          "groups": {
+            "items": {
+              "type": "integer"
+            },
+            "type": "array",
+            "title": "Groups",
+            "default": []
+          },
+          "roles": {
+            "items": {
+              "type": "integer"
+            },
+            "type": "array",
+            "title": "Roles",
+            "default": []
           }
         },
         "type": "object",
@@ -8795,6 +8858,20 @@
               }
             ],
             "title": "Groups"
+          },
+          "roles": {
+            "anyOf": [
+              {
+                "items": {
+                  "$ref": "#/components/schemas/Role"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Roles"
           }
         },
         "type": "object",
@@ -8853,6 +8930,22 @@
               }
             ],
             "title": "Password"
+          },
+          "groups": {
+            "items": {
+              "type": "integer"
+            },
+            "type": "array",
+            "title": "Groups",
+            "default": []
+          },
+          "roles": {
+            "items": {
+              "type": "integer"
+            },
+            "type": "array",
+            "title": "Roles",
+            "default": []
           }
         },
         "type": "object",

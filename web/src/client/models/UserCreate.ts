@@ -10,4 +10,6 @@ export type UserCreate = {
     full_name?: (string | null);
     language?: string;
     password: string;
+    groups?: Array<number>;
+    roles?: Array<number>;
 };

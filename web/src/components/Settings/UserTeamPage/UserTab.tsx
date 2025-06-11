@@ -22,13 +22,15 @@ import {
   useColorModeValue,
   useToast,
 } from "@chakra-ui/react";
-import { AddIcon, DeleteIcon, EditIcon } from "@chakra-ui/icons";
+import { AddIcon, DeleteIcon, EditIcon, RepeatIcon } from "@chakra-ui/icons";
 import { BsThreeDotsVertical } from "react-icons/bs";
 import { useState } from "react";
-import { useQueryClient } from "react-query";
+import { useQueryClient, useMutation } from "react-query";
 import { type ApiError, type UserOut, UsersService } from "@/client";
 import useCustomToast from "@/hooks/useCustomToast";
 import UserForm from "./UserForm";
+
+const DEFAULT_PASSWORD = "12345678";
 
 interface UserTabProps {
   users: UserOut[];
@@ -51,6 +53,46 @@ export default function UserTab({ users, currentUserId, totalCount, onPageChange
   const borderColor = useColorModeValue("gray.100", "gray.700");
   const tableHeaderBg = useColorModeValue("gray.50", "gray.700");
   const hoverBg = useColorModeValue("gray.50", "gray.700");
+
+  const resetPasswordMutation = useMutation(
+    (userId: number) =>
+      UsersService.updateUser({
+        userId,
+        requestBody: {
+          password: DEFAULT_PASSWORD,
+        },
+      }),
+    {
+      onSuccess: () => {
+        toast({
+          title: "Success",
+          description: "Password has been reset to default (12345678)",
+          status: "success",
+          duration: 3000,
+          isClosable: true,
+        });
+        queryClient.invalidateQueries("users");
+      },
+      onError: (err: ApiError) => {
+        const errDetail = err.body?.detail;
+        showToast("Something went wrong.", `${errDetail}`, "error");
+      },
+    }
+  );
+
+  const handleResetPassword = async (userId: number, isSuperUser: boolean) => {
+    if (isSuperUser) {
+      toast({
+        title: "Warning",
+        description: "Cannot reset superuser password",
+        status: "warning",
+        duration: 3000,
+        isClosable: true,
+      });
+      return;
+    }
+    resetPasswordMutation.mutate(userId);
+  };
 
   const handleDeleteUser = async (userId: number, isSuperUser: boolean) => {
     if (isSuperUser) {
@@ -224,6 +266,16 @@ export default function UserTab({ users, currentUserId, totalCount, onPageChange
                   </Td>
                   <Td py={4}>
                     <HStack spacing={2} justify="flex-end">
+                      <IconButton
+                        aria-label="Reset password"
+                        icon={<RepeatIcon />}
+                        size="sm"
+                        variant="ghost"
+                        colorScheme="orange"
+                        onClick={() => handleResetPassword(user.id, user.is_superuser || false)}
+                        isDisabled={user.is_superuser || false}
+                        title={user.is_superuser ? "Cannot reset superuser password" : "Reset password to default (12345678)"}
+                      />
                       <IconButton
                         aria-label="Edit user"
                         icon={<EditIcon />}

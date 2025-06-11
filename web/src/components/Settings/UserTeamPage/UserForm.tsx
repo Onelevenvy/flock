@@ -71,6 +71,8 @@ interface ExtendedUserOut extends UserOut {
   roles?: { id: number; name: string; group_id: number }[];
 }
 
+const DEFAULT_PASSWORD = "12345678";
+
 const UserForm = ({ user, isOpen, onClose }: UserFormProps) => {
   const isEditMode = !!user;
   const queryClient = useQueryClient();
@@ -110,8 +112,8 @@ const UserForm = ({ user, isOpen, onClose }: UserFormProps) => {
     : {
         email: "",
         full_name: "",
-        password: "",
-        confirm_password: "",
+        password: DEFAULT_PASSWORD,
+        confirm_password: DEFAULT_PASSWORD,
         is_superuser: false,
         is_active: true,
         groupRolePairs: [{ group: null, roles: [] }]
@@ -286,13 +288,14 @@ const UserForm = ({ user, isOpen, onClose }: UserFormProps) => {
                 fontSize="sm"
                 transition="all 0.2s"
                 _hover={{
-                  borderColor: "gray.300",
+                  borderColor: isEditMode ? borderColor : "gray.300",
                 }}
                 _focus={{
-                  borderColor: "ui.main",
-                  boxShadow: "0 0 0 1px var(--chakra-colors-ui-main)",
+                  borderColor: isEditMode ? borderColor : "ui.main",
+                  boxShadow: isEditMode ? "none" : "0 0 0 1px var(--chakra-colors-ui-main)",
                 }}
                 isReadOnly={isEditMode}
+                opacity={isEditMode ? 0.6 : 1}
                 _readOnly={{
                   bg: "gray.100",
                   cursor: "not-allowed",
@@ -331,81 +334,87 @@ const UserForm = ({ user, isOpen, onClose }: UserFormProps) => {
               />
             </FormControl>
 
-            <FormControl isRequired={!isEditMode} isInvalid={!!errors.password}>
-              <FormLabel
-                fontSize="sm"
-                fontWeight="500"
-                color="gray.700"
-              >
-                Password
-              </FormLabel>
-              <Input
-                {...register("password", {
-                  required: !isEditMode && "Password is required",
-                  minLength: {
-                    value: 8,
-                    message: "Password must be at least 8 characters",
-                  },
-                })}
-                placeholder="Password"
-                type="password"
-                bg={inputBgColor}
-                border="1px solid"
-                borderColor={borderColor}
-                borderRadius="lg"
-                fontSize="sm"
-                transition="all 0.2s"
-                _hover={{
-                  borderColor: "gray.300",
-                }}
-                _focus={{
-                  borderColor: "ui.main",
-                  boxShadow: "0 0 0 1px var(--chakra-colors-ui-main)",
-                }}
-              />
-              {errors.password && (
-                <FormErrorMessage>{errors.password.message}</FormErrorMessage>
-              )}
-            </FormControl>
+            {!isEditMode && (
+              <>
+                <FormControl isRequired={!isEditMode} isInvalid={!!errors.password}>
+                  <FormLabel
+                    fontSize="sm"
+                    fontWeight="500"
+                    color="gray.700"
+                  >
+                    Password
+                  </FormLabel>
+                  <Input
+                    {...register("password", {
+                      required: !isEditMode && "Password is required",
+                      minLength: {
+                        value: 8,
+                        message: "Password must be at least 8 characters",
+                      },
+                    })}
+                    placeholder="Password"
+                    type="password"
+                    defaultValue={DEFAULT_PASSWORD}
+                    bg={inputBgColor}
+                    border="1px solid"
+                    borderColor={borderColor}
+                    borderRadius="lg"
+                    fontSize="sm"
+                    transition="all 0.2s"
+                    _hover={{
+                      borderColor: "gray.300",
+                    }}
+                    _focus={{
+                      borderColor: "ui.main",
+                      boxShadow: "0 0 0 1px var(--chakra-colors-ui-main)",
+                    }}
+                  />
+                  {errors.password && (
+                    <FormErrorMessage>{errors.password.message}</FormErrorMessage>
+                  )}
+                </FormControl>
 
-            <FormControl isRequired={!isEditMode} isInvalid={!!errors.confirm_password}>
-              <FormLabel
-                fontSize="sm"
-                fontWeight="500"
-                color="gray.700"
-              >
-                Confirm Password
-              </FormLabel>
-              <Input
-                {...register("confirm_password", {
-                  required: !isEditMode && "Please confirm your password",
-                  validate: (value) =>
-                    !value ||
-                    value === getValues().password ||
-                    "The passwords do not match",
-                })}
-                placeholder="Confirm password"
-                type="password"
-                bg={inputBgColor}
-                border="1px solid"
-                borderColor={borderColor}
-                borderRadius="lg"
-                fontSize="sm"
-                transition="all 0.2s"
-                _hover={{
-                  borderColor: "gray.300",
-                }}
-                _focus={{
-                  borderColor: "ui.main",
-                  boxShadow: "0 0 0 1px var(--chakra-colors-ui-main)",
-                }}
-              />
-              {errors.confirm_password && (
-                <FormErrorMessage>
-                  {errors.confirm_password.message}
-                </FormErrorMessage>
-              )}
-            </FormControl>
+                <FormControl isRequired={!isEditMode} isInvalid={!!errors.confirm_password}>
+                  <FormLabel
+                    fontSize="sm"
+                    fontWeight="500"
+                    color="gray.700"
+                  >
+                    Confirm Password
+                  </FormLabel>
+                  <Input
+                    {...register("confirm_password", {
+                      required: !isEditMode && "Please confirm your password",
+                      validate: (value) =>
+                        !value ||
+                        value === getValues().password ||
+                        "The passwords do not match",
+                    })}
+                    placeholder="Confirm password"
+                    type="password"
+                    defaultValue={DEFAULT_PASSWORD}
+                    bg={inputBgColor}
+                    border="1px solid"
+                    borderColor={borderColor}
+                    borderRadius="lg"
+                    fontSize="sm"
+                    transition="all 0.2s"
+                    _hover={{
+                      borderColor: "gray.300",
+                    }}
+                    _focus={{
+                      borderColor: "ui.main",
+                      boxShadow: "0 0 0 1px var(--chakra-colors-ui-main)",
+                    }}
+                  />
+                  {errors.confirm_password && (
+                    <FormErrorMessage>
+                      {errors.confirm_password.message}
+                    </FormErrorMessage>
+                  )}
+                </FormControl>
+              </>
+            )}
 
             <Box w="full">
               <FormLabel
