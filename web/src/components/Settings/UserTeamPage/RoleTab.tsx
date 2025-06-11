@@ -20,10 +20,11 @@ import {
   useColorModeValue,
 } from "@chakra-ui/react";
 import { AddIcon, DeleteIcon, EditIcon } from "@chakra-ui/icons";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { type ApiError, type GroupOut, type RoleOut, type UserOut, RolesService } from "@/client";
 import useCustomToast from "@/hooks/useCustomToast";
 import RoleForm from "./RoleForm";
+import { useMutation, useQueryClient } from "react-query";
 
 interface RoleTabProps {
   roles: RoleOut[];
@@ -33,25 +34,39 @@ interface RoleTabProps {
 
 export default function RoleTab({ roles, groups, users }: RoleTabProps) {
   const showToast = useCustomToast();
+  const queryClient = useQueryClient();
   const [isAddRoleOpen, setIsAddRoleOpen] = useState(false);
   const [selectedRole, setSelectedRole] = useState<RoleOut | null>(null);
-  const [selectedGroupForRoles, setSelectedGroupForRoles] = useState<GroupOut | null>(
-    groups.length > 0 ? groups[0] : null
-  );
+  const [selectedGroupForRoles, setSelectedGroupForRoles] = useState<GroupOut | null>(null);
 
   const bgColor = useColorModeValue("white", "gray.800");
   const borderColor = useColorModeValue("gray.100", "gray.700");
   const tableHeaderBg = useColorModeValue("gray.50", "gray.700");
   const hoverBg = useColorModeValue("gray.50", "gray.700");
 
-  const handleDeleteRole = async (role: RoleOut) => {
-    try {
-      await RolesService.deleteRole({ roleId: role.id });
-      showToast("Success!", "Role deleted successfully.", "success");
-    } catch (err) {
-      const errDetail = (err as ApiError).body?.detail;
-      showToast("Something went wrong.", `${errDetail}`, "error");
+  // Set default group on component mount
+  useEffect(() => {
+    if (groups.length > 0 && !selectedGroupForRoles) {
+      setSelectedGroupForRoles(groups[0]);
     }
+  }, [groups]);
+
+  const deleteMutation = useMutation(
+    (roleId: number) => RolesService.deleteRole({ roleId }),
+    {
+      onSuccess: () => {
+        showToast("Success!", "Role deleted successfully.", "success");
+        queryClient.invalidateQueries("roles");
+      },
+      onError: (err: ApiError) => {
+        const errDetail = err.body?.detail;
+        showToast("Something went wrong.", `${errDetail}`, "error");
+      },
+    }
+  );
+
+  const handleDeleteRole = async (role: RoleOut) => {
+    deleteMutation.mutate(role.id);
   };
 
   return (

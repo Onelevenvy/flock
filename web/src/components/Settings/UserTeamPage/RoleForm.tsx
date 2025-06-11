@@ -16,6 +16,7 @@ import {
 } from "@chakra-ui/react";
 import { type SubmitHandler, useForm } from "react-hook-form";
 import { useMutation, useQueryClient } from "react-query";
+import { useEffect } from "react";
 
 import { type RoleCreate, type RoleOut, RolesService } from "@/client";
 import type { ApiError } from "@/client/core/ApiError";
@@ -33,6 +34,8 @@ const RoleForm = ({ role, groupId, isOpen, onClose }: RoleFormProps) => {
   const queryClient = useQueryClient();
   const showToast = useCustomToast();
 
+  console.log('RoleForm - Current groupId:', groupId);
+
   const bgColor = useColorModeValue("white", "gray.800");
   const borderColor = useColorModeValue("gray.100", "gray.700");
   const inputBgColor = useColorModeValue("ui.inputbgcolor", "gray.700");
@@ -41,6 +44,7 @@ const RoleForm = ({ role, groupId, isOpen, onClose }: RoleFormProps) => {
     register,
     handleSubmit,
     reset,
+    setValue,
     formState: { errors, isSubmitting, isDirty },
   } = useForm<RoleCreate>({
     mode: "onBlur",
@@ -59,8 +63,13 @@ const RoleForm = ({ role, groupId, isOpen, onClose }: RoleFormProps) => {
         },
   });
 
+  useEffect(() => {
+    setValue('group_id', groupId);
+  }, [groupId, setValue]);
+
   const createRole = async (data: RoleCreate) => {
-    await RolesService.createRole({ requestBody: data });
+    console.log('Creating role with data:', data);
+    await RolesService.createRole({ requestBody: { ...data, group_id: groupId } });
   };
 
   const updateRole = async (data: RoleCreate) => {
