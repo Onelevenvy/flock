@@ -3,7 +3,6 @@
 
 import {
   ArrowDownWideNarrow,
-  CheckCheck,
   RefreshCcwDot,
   StepForward,
   WrapText,

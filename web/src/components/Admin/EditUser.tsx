@@ -50,7 +50,16 @@ const EditUser = ({ user, isOpen, onClose }: EditUserProps) => {
   } = useForm<UserUpdateForm>({
     mode: "onBlur",
     criteriaMode: "all",
-    defaultValues: user,
+    defaultValues: {
+      email: user.email,
+      full_name: user.full_name,
+      is_active: user.is_active,
+      is_superuser: user.is_superuser,
+      language: user.language,
+      groups: user.groups?.map(g => g.id).filter((id): id is number => id !== null) || [],
+      roles: user.roles?.map(r => r.id).filter((id): id is number => id !== null) || [],
+      confirm_password: ""
+    },
   });
 
   const updateUser = async (data: UserUpdateForm) => {

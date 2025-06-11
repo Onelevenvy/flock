@@ -18,7 +18,6 @@ import {
   Box,
   Text,
   IconButton,
-  HStack,
   Table,
   Thead,
   Tbody,
@@ -26,7 +25,7 @@ import {
   Th,
   Td,
 } from "@chakra-ui/react";
-import { type SubmitHandler, useForm, Controller, useFieldArray } from "react-hook-form";
+import { useForm, Controller, useFieldArray } from "react-hook-form";
 import { useMutation, useQueryClient, useQuery } from "react-query";
 import { Select as MultiSelect } from "chakra-react-select";
 import { AddIcon, DeleteIcon } from "@chakra-ui/icons";
@@ -34,7 +33,6 @@ import {
   type ApiError,
   type UserOut,
   type UserUpdate,
-  type UserCreate,
   type GroupOut,
   type RoleOut,
   UsersService,
@@ -43,7 +41,7 @@ import {
 } from "@/client";
 import useCustomToast from "@/hooks/useCustomToast";
 import { emailPattern } from "@/utils";
-import { useEffect, useCallback } from "react";
+import { useEffect } from "react";
 
 interface UserFormProps {
   user?: UserOut;

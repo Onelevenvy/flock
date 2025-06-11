@@ -2,7 +2,6 @@ import { Box, Flex, Icon, Text, useColorModeValue } from "@chakra-ui/react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useTranslation } from "react-i18next";
-import { BsRobot } from "react-icons/bs";
 import { FaToolbox } from "react-icons/fa";
 import { FaBook, FaHouseChimney } from "react-icons/fa6";
 import { FiHome } from "react-icons/fi";

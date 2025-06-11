@@ -4,7 +4,7 @@
 "use client";
 
 import Mention from "@tiptap/extension-mention";
-import { Editor, Extension, type Content } from "@tiptap/react";
+import { Editor, Extension } from "@tiptap/react";
 import {
   EditorContent,
   type EditorInstance,

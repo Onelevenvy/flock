@@ -4,7 +4,7 @@
 "use client"
 
 import * as React from "react"
-import { Tabs as ChakraTabs, TabList as ChakraTabList, TabPanels as ChakraTabPanels, Tab as ChakraTab, TabPanel as ChakraTabPanel, TabsProps as ChakraTabsProps } from "@chakra-ui/react"
+import { Tabs as ChakraTabs, TabList as ChakraTabList, Tab as ChakraTab, TabPanel as ChakraTabPanel, TabsProps as ChakraTabsProps } from "@chakra-ui/react"
 
 export interface TabsProps extends ChakraTabsProps {
   value?: string | number

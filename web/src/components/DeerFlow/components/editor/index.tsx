@@ -18,7 +18,7 @@ import {
   handleImagePaste,
 } from "novel";
 import type { Content } from "@tiptap/react";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { useDebouncedCallback } from "use-debounce";
 import { defaultExtensions } from "./extensions";
 import { ColorSelector } from "./selectors/color-selector";
