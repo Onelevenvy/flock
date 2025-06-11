@@ -9,7 +9,8 @@ from pydantic import BaseModel
 from sqlmodel import select
 
 from app.core.config import settings
-from app.core.model_providers.model_provider_manager import model_provider_manager
+from app.core.model_providers.model_provider_manager import \
+    model_provider_manager
 from app.core.workflow.utils.db_utils import db_operation
 from app.models import ModelProvider, Models
 

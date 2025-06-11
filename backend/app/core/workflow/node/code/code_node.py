@@ -1,4 +1,3 @@
-import base64
 import json
 import logging
 import uuid
@@ -7,12 +6,8 @@ from textwrap import dedent
 from langchain_core.messages import ToolMessage
 from langchain_core.runnables import RunnableConfig
 
-from ....state import (
-    ReturnWorkflowTeamState,
-    WorkflowTeamState,
-    parse_variables,
-    update_node_outputs,
-)
+from ....state import (ReturnWorkflowTeamState, WorkflowTeamState,
+                       parse_variables, update_node_outputs)
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)

@@ -4,16 +4,13 @@ from crewai import Agent, Crew, Process, Task
 from langchain_core.messages import AIMessage
 from langchain_core.runnables import RunnableConfig
 
-from app.core.model_providers.model_provider_manager import model_provider_manager
+from app.core.model_providers.model_provider_manager import \
+    model_provider_manager
 from app.core.tools.tool_manager import managed_tools
 from app.core.workflow.utils.db_utils import get_model_info
 
-from ...state import (
-    ReturnWorkflowTeamState,
-    WorkflowTeamState,
-    parse_variables,
-    update_node_outputs,
-)
+from ...state import (ReturnWorkflowTeamState, WorkflowTeamState,
+                      parse_variables, update_node_outputs)
 
 
 class CrewAINode:

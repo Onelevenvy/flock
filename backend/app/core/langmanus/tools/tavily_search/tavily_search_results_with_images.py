@@ -1,16 +1,13 @@
 import json
 from typing import Dict, List, Optional, Tuple, Union
 
-from langchain.callbacks.manager import (
-    AsyncCallbackManagerForToolRun,
-    CallbackManagerForToolRun,
-)
+from langchain.callbacks.manager import (AsyncCallbackManagerForToolRun,
+                                         CallbackManagerForToolRun)
 from langchain_community.tools.tavily_search.tool import TavilySearchResults
 from pydantic import Field
 
-from app.core.langmanus.tools.tavily_search.tavily_search_api_wrapper import (
-    EnhancedTavilySearchAPIWrapper,
-)
+from app.core.langmanus.tools.tavily_search.tavily_search_api_wrapper import \
+    EnhancedTavilySearchAPIWrapper
 
 
 class TavilySearchResultsWithImages(TavilySearchResults):  # type: ignore[override, override]

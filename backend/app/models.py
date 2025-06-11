@@ -1,6 +1,6 @@
 from datetime import datetime
 from enum import Enum
-from typing import Any, List, Optional
+from typing import TYPE_CHECKING, Any, List, Optional
 from uuid import UUID, uuid4
 from zoneinfo import ZoneInfo
 
@@ -14,8 +14,6 @@ from sqlalchemy.dialects.postgresql import JSONB
 from sqlmodel import Field, Relationship, SQLModel
 
 from app.core.graph.messages import ChatResponse
-
-from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
     from app.core.security import security_manager
@@ -127,8 +125,6 @@ class Resource(ResourceBase, table=True):
 class ResourceCreate(ResourceBase):
     """Schema for creating a resource"""
 
-    pass
-
 
 class ResourceUpdate(ResourceBase):
     """Schema for updating a resource"""
@@ -208,8 +204,6 @@ class Group(GroupBase, table=True):
 class GroupCreate(GroupBase):
     """Schema for creating a group"""
 
-    pass
-
 
 class GroupUpdate(GroupBase):
     """Schema for updating a group"""
@@ -246,8 +240,6 @@ class Role(RoleBase, table=True):
 
 class RoleCreate(RoleBase):
     """Schema for creating a role"""
-
-    pass
 
 
 class RoleUpdate(RoleBase):

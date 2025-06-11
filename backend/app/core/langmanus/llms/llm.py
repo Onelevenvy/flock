@@ -1,9 +1,9 @@
 # Copyright (c) 2025 Bytedance Ltd. and/or its affiliates
 # SPDX-License-Identifier: MIT
 
+import os
 from pathlib import Path
 from typing import Any, Dict
-import os
 
 from langchain_openai import ChatOpenAI
 

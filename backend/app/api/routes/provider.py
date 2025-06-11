@@ -4,24 +4,17 @@ from fastapi import APIRouter, HTTPException
 from sqlmodel import select
 
 from app.api.deps import SessionDep
-from app.core.model_providers.model_provider_manager import model_provider_manager
-from app.curd.modelprovider import (
-    create_model_provider,
-    delete_model_provider,
-    get_model_provider,
-    get_model_provider_list_with_models,
-    get_model_provider_with_models,
-    sync_provider_models,
-    update_model_provider,
-)
-from app.models import (
-    ModelProvider,
-    ModelProviderCreate,
-    ModelProviderOut,
-    ModelProviderUpdate,
-    ModelProviderWithModelsListOut,
-    ProvidersListWithModelsOut,
-)
+from app.core.model_providers.model_provider_manager import \
+    model_provider_manager
+from app.curd.modelprovider import (create_model_provider,
+                                    delete_model_provider, get_model_provider,
+                                    get_model_provider_list_with_models,
+                                    get_model_provider_with_models,
+                                    sync_provider_models,
+                                    update_model_provider)
+from app.models import (ModelProvider, ModelProviderCreate, ModelProviderOut,
+                        ModelProviderUpdate, ModelProviderWithModelsListOut,
+                        ProvidersListWithModelsOut)
 
 router = APIRouter()
 

@@ -4,23 +4,13 @@ import os
 from sqlmodel import Session, create_engine, select
 
 from app.core.config import settings
-from app.core.model_providers.model_provider_manager import model_provider_manager
+from app.core.model_providers.model_provider_manager import \
+    model_provider_manager
 from app.core.tools import managed_tools
 from app.curd import users
-from app.models import (
-    ModelProvider,
-    Models,
-    Skill,
-    User,
-    UserCreate,
-    Role,
-    Group,
-    Resource,
-    RoleAccess,
-    ActionType,
-    ResourceType,
-    AccessScope,
-)
+from app.models import (AccessScope, ActionType, Group, ModelProvider, Models,
+                        Resource, ResourceType, Role, RoleAccess, Skill, User,
+                        UserCreate)
 
 logger = logging.getLogger(__name__)
 

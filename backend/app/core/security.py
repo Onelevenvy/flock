@@ -1,16 +1,15 @@
 import secrets
 from datetime import datetime, timedelta
-from functools import wraps
-from typing import Any, Callable, Union
+from typing import Any
 
 import jwt
 from cryptography.fernet import Fernet
-from passlib.context import CryptContext
-from sqlmodel import Session, select
-
 from fastapi import HTTPException
+from passlib.context import CryptContext
+from sqlmodel import Session
+
 from app.core.config import settings
-from app.models import Resource, ResourceType, User, ActionType
+from app.models import ActionType, Resource, ResourceType, User
 
 
 class SecurityManager:

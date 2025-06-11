@@ -8,7 +8,8 @@ from typing import IO, Annotated, Any
 
 import aiofiles
 from celery.result import AsyncResult
-from fastapi import APIRouter, Depends, File, Form, Header, HTTPException, UploadFile
+from fastapi import (APIRouter, Depends, File, Form, Header, HTTPException,
+                     UploadFile)
 from sqlalchemy import ColumnElement
 from sqlmodel import and_, func, select
 from starlette import status
@@ -16,18 +17,11 @@ from starlette import status
 from app.api.deps import CurrentUser, SessionDep, check_team_permission
 from app.core.config import settings
 from app.core.security import resource_manager
-from app.models import (
-    Message,
-    Upload,
-    UploadCreate,
-    UploadOut,
-    UploadsOut,
-    UploadStatus,
-    UploadUpdate,
-    ResourceType,
-    ActionType,
-)
-from app.tasks.tasks import add_upload, edit_upload, perform_search, remove_upload
+from app.models import (ActionType, Message, ResourceType, Upload,
+                        UploadCreate, UploadOut, UploadsOut, UploadStatus,
+                        UploadUpdate)
+from app.tasks.tasks import (add_upload, edit_upload, perform_search,
+                             remove_upload)
 
 router = APIRouter()
 

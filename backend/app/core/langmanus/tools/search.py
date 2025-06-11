@@ -1,7 +1,6 @@
 # Copyright (c) 2025 Bytedance Ltd. and/or its affiliates
 # SPDX-License-Identifier: MIT
 
-import json
 import logging
 import os
 
@@ -9,12 +8,10 @@ from langchain_community.tools import BraveSearch, DuckDuckGoSearchResults
 from langchain_community.tools.arxiv import ArxivQueryRun
 from langchain_community.utilities import ArxivAPIWrapper, BraveSearchWrapper
 
-from app.core.langmanus.config import SearchEngine, SELECTED_SEARCH_ENGINE
-from app.core.langmanus.tools.tavily_search.tavily_search_results_with_images import (
-    TavilySearchResultsWithImages,
-)
-
+from app.core.langmanus.config import SELECTED_SEARCH_ENGINE, SearchEngine
 from app.core.langmanus.tools.decorators import create_logged_tool
+from app.core.langmanus.tools.tavily_search.tavily_search_results_with_images import \
+    TavilySearchResultsWithImages
 
 logger = logging.getLogger(__name__)
 

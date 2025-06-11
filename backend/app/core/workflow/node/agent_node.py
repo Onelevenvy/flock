@@ -1,23 +1,16 @@
 from typing import Any, Dict, List
 
+from langchain_core.prompts import ChatPromptTemplate, MessagesPlaceholder
 from langchain_core.runnables import RunnableConfig
 from langgraph.prebuilt import create_react_agent
 
-from app.core.model_providers.model_provider_manager import model_provider_manager
-from app.core.state import (
-    ReturnWorkflowTeamState,
-    WorkflowTeamState,
-    format_messages,
-    parse_variables,
-    update_node_outputs,
-)
+from app.core.model_providers.model_provider_manager import \
+    model_provider_manager
+from app.core.state import (ReturnWorkflowTeamState, WorkflowTeamState,
+                            format_messages, parse_variables,
+                            update_node_outputs)
 from app.core.workflow.utils.db_utils import get_model_info
 from app.core.workflow.utils.tools_utils import get_retrieval_tool, get_tool
-
-from typing import Any
-
-
-from langchain_core.prompts import ChatPromptTemplate, MessagesPlaceholder
 
 
 class AgentNode:

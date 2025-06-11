@@ -3,7 +3,8 @@ from typing import Any
 from uuid import uuid4
 
 from langchain_core.documents import Document
-from langchain_core.messages import AIMessage, AnyMessage, HumanMessage, ToolMessage
+from langchain_core.messages import (AIMessage, AnyMessage, HumanMessage,
+                                     ToolMessage)
 from langgraph.checkpoint.base import CheckpointTuple
 from langgraph.checkpoint.postgres.aio import AsyncPostgresSaver
 from psycopg import AsyncConnection

@@ -1,41 +1,37 @@
-from fastapi import APIRouter, HTTPException, Query
-from fastapi.responses import Response, StreamingResponse
-from typing import Annotated, List, cast
-from pydantic import BaseModel
-import asyncio
 import base64
 import json
 import os
+from typing import Annotated, List, cast
 from uuid import uuid4
+
+from fastapi import APIRouter, HTTPException, Query
+from fastapi.responses import Response, StreamingResponse
+from langchain_core.messages import AIMessageChunk, BaseMessage, ToolMessage
 from langgraph.types import Command
-from app.core.langmanus.workflow import run_agent_workflow_async
-from app.core.langmanus.graph.builder import build_graph_with_memory
-from app.core.langmanus.podcast.graph.builder import build_graph as build_podcast_graph
-from app.core.langmanus.ppt.graph.builder import build_graph as build_ppt_graph
-from app.core.langmanus.prose.graph.builder import build_graph as build_prose_graph
-from app.core.langmanus.rag.builder import build_retriever
+from pydantic import BaseModel
+
 from app.core.langmanus.config.tools import SELECTED_RAG_PROVIDER
-from app.core.langmanus.tools import VolcengineTTS
-from app.core.langmanus.server.chat_request import (
-    ChatMessage,
-    ChatRequest,
-    GeneratePodcastRequest,
-    GeneratePPTRequest,
-    GenerateProseRequest,
-    TTSRequest,
-)
-from langchain_core.messages import AIMessageChunk, ToolMessage, BaseMessage
-from app.core.langmanus.server.mcp_request import (
-    MCPServerMetadataRequest,
-    MCPServerMetadataResponse,
-)
-from app.core.langmanus.server.mcp_utils import load_mcp_tools
-from app.core.langmanus.server.rag_request import (
-    RAGConfigResponse,
-    RAGResourceRequest,
-    RAGResourcesResponse,
-)
+from app.core.langmanus.graph.builder import build_graph_with_memory
+from app.core.langmanus.podcast.graph.builder import \
+    build_graph as build_podcast_graph
+from app.core.langmanus.ppt.graph.builder import build_graph as build_ppt_graph
+from app.core.langmanus.prose.graph.builder import \
+    build_graph as build_prose_graph
+from app.core.langmanus.rag.builder import build_retriever
 from app.core.langmanus.rag.retriever import Resource
+from app.core.langmanus.server.chat_request import (ChatMessage, ChatRequest,
+                                                    GeneratePodcastRequest,
+                                                    GeneratePPTRequest,
+                                                    GenerateProseRequest,
+                                                    TTSRequest)
+from app.core.langmanus.server.mcp_request import (MCPServerMetadataRequest,
+                                                   MCPServerMetadataResponse)
+from app.core.langmanus.server.mcp_utils import load_mcp_tools
+from app.core.langmanus.server.rag_request import (RAGConfigResponse,
+                                                   RAGResourceRequest,
+                                                   RAGResourcesResponse)
+from app.core.langmanus.tools import VolcengineTTS
+from app.core.langmanus.workflow import run_agent_workflow_async
 
 router = APIRouter()
 graph = build_graph_with_memory()
@@ -230,7 +226,7 @@ async def text_to_speech(request: TTSRequest):
                 )
             },
         )
-    except Exception as e:
+    except Exception:
         raise HTTPException(status_code=500, detail=INTERNAL_SERVER_ERROR_DETAIL)
 
 
@@ -242,7 +238,7 @@ async def generate_podcast(request: GeneratePodcastRequest):
         final_state = workflow.invoke({"input": report_content})
         audio_bytes = final_state["output"]
         return Response(content=audio_bytes, media_type="audio/mp3")
-    except Exception as e:
+    except Exception:
         raise HTTPException(status_code=500, detail=INTERNAL_SERVER_ERROR_DETAIL)
 
 
@@ -259,7 +255,7 @@ async def generate_ppt(request: GeneratePPTRequest):
             content=ppt_bytes,
             media_type="application/vnd.openxmlformats-officedocument.presentationml.presentation",
         )
-    except Exception as e:
+    except Exception:
         raise HTTPException(status_code=500, detail=INTERNAL_SERVER_ERROR_DETAIL)
 
 
@@ -281,7 +277,7 @@ async def generate_prose(request: GenerateProseRequest):
             (f"data: {event[0].content}\n\n" async for _, event in events),
             media_type="text/event-stream",
         )
-    except Exception as e:
+    except Exception:
         raise HTTPException(status_code=500, detail=INTERNAL_SERVER_ERROR_DETAIL)
 
 

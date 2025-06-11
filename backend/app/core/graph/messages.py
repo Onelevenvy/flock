@@ -2,15 +2,9 @@ import json
 from typing import Any, Dict
 
 from langchain_core.documents import Document
-from langchain_core.messages import (
-    AIMessage,
-    AIMessageChunk,
-    HumanMessage,
-    HumanMessageChunk,
-    ToolCall,
-    ToolMessage,
-    ToolMessageChunk,
-)
+from langchain_core.messages import (AIMessage, AIMessageChunk, HumanMessage,
+                                     HumanMessageChunk, ToolCall, ToolMessage,
+                                     ToolMessageChunk)
 from langchain_core.runnables.schema import StreamEvent
 from pydantic import BaseModel
 

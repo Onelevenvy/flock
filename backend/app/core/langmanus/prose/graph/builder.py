@@ -3,13 +3,17 @@
 
 import asyncio
 import logging
+
 from langgraph.graph import END, START, StateGraph
 
-from app.core.langmanus.prose.graph.prose_continue_node import prose_continue_node
+from app.core.langmanus.prose.graph.prose_continue_node import \
+    prose_continue_node
 from app.core.langmanus.prose.graph.prose_fix_node import prose_fix_node
-from app.core.langmanus.prose.graph.prose_improve_node import prose_improve_node
+from app.core.langmanus.prose.graph.prose_improve_node import \
+    prose_improve_node
 from app.core.langmanus.prose.graph.prose_longer_node import prose_longer_node
-from app.core.langmanus.prose.graph.prose_shorter_node import prose_shorter_node
+from app.core.langmanus.prose.graph.prose_shorter_node import \
+    prose_shorter_node
 from app.core.langmanus.prose.graph.prose_zap_node import prose_zap_node
 from app.core.langmanus.prose.graph.state import ProseState
 

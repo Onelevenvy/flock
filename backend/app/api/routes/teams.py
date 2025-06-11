@@ -4,25 +4,15 @@ from typing import Any
 from fastapi import APIRouter, Depends, HTTPException
 from fastapi.responses import StreamingResponse
 from fastapi.security import APIKeyHeader
-from sqlmodel import col, func, select
+from sqlmodel import func, select
 
-from app.api.deps import CurrentTeam, CurrentUser, SessionDep, check_team_permission
+from app.api.deps import (CurrentTeam, CurrentUser, SessionDep,
+                          check_team_permission)
 from app.core.graph.build import generator
 from app.core.security import resource_manager
-from app.models import (
-    Member,
-    Message,
-    Team,
-    TeamChat,
-    TeamChatPublic,
-    TeamCreate,
-    TeamOut,
-    TeamsOut,
-    TeamUpdate,
-    Thread,
-    ResourceType,
-    ActionType,
-)
+from app.models import (ActionType, Member, ResourceType, Team, TeamChat,
+                        TeamChatPublic, TeamCreate, TeamOut, TeamsOut,
+                        TeamUpdate, Thread)
 
 router = APIRouter()
 

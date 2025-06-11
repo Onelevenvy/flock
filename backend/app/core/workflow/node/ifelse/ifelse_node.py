@@ -2,12 +2,8 @@ from typing import Any
 
 from langchain_core.runnables import RunnableConfig
 
-from ....state import (
-    ReturnWorkflowTeamState,
-    WorkflowTeamState,
-    parse_variables,
-    update_node_outputs,
-)
+from ....state import (ReturnWorkflowTeamState, WorkflowTeamState,
+                       parse_variables, update_node_outputs)
 
 
 class IfElseNode:

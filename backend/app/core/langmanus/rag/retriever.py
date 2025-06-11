@@ -2,6 +2,7 @@
 # SPDX-License-Identifier: MIT
 
 import abc
+
 from pydantic import BaseModel, Field
 
 
@@ -68,7 +69,6 @@ class Retriever(abc.ABC):
         """
         List resources from the rag provider.
         """
-        pass
 
     @abc.abstractmethod
     def query_relevant_documents(
@@ -77,4 +77,3 @@ class Retriever(abc.ABC):
         """
         Query relevant documents from the resources.
         """
-        pass

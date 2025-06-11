@@ -4,7 +4,8 @@
 from langgraph.graph import END, START, StateGraph
 
 from app.core.langmanus.podcast.graph.audio_mixer_node import audio_mixer_node
-from app.core.langmanus.podcast.graph.script_writer_node import script_writer_node
+from app.core.langmanus.podcast.graph.script_writer_node import \
+    script_writer_node
 from app.core.langmanus.podcast.graph.state import PodcastState
 from app.core.langmanus.podcast.graph.tts_node import tts_node
 

@@ -3,9 +3,10 @@ from typing import Any
 from fastapi import APIRouter, Depends, HTTPException
 from sqlmodel import func, select
 
-from app.api.deps import CurrentUser, SessionDep, get_current_active_superuser
+from app.api.deps import SessionDep, get_current_active_superuser
 from app.curd import roles
-from app.models import Role, RoleCreate, RoleOut, RolesOut, RoleUpdate, Message, Group
+from app.models import (Group, Message, Role, RoleCreate, RoleOut, RolesOut,
+                        RoleUpdate)
 
 router = APIRouter()
 

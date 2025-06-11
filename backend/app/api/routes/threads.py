@@ -7,19 +7,9 @@ from sqlmodel import col, func, select
 
 from app.api.deps import CurrentTeam, CurrentUser, SessionDep
 from app.core.graph.checkpoint.utils import (
-    convert_checkpoint_tuple_to_messages,
-    get_checkpoint_tuples,
-)
-from app.models import (
-    Message,
-    Team,
-    Thread,
-    ThreadCreate,
-    ThreadOut,
-    ThreadRead,
-    ThreadsOut,
-    ThreadUpdate,
-)
+    convert_checkpoint_tuple_to_messages, get_checkpoint_tuples)
+from app.models import (Message, Team, Thread, ThreadCreate, ThreadOut,
+                        ThreadRead, ThreadsOut, ThreadUpdate)
 
 router = APIRouter()
 
