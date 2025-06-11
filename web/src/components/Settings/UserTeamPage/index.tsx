@@ -247,23 +247,61 @@ function MembersPage() {
                             <Text color="gray.600">{user.email}</Text>
                           </Td>
                           <Td py={4}>
-                            <Text color="gray.600">
-                              {groups?.data.find(g => 
-                                Array.isArray(user.groups) && user.groups.some(ug => ug.id === g.id)
-                              )?.name || "默认用户组"}
-                            </Text>
+                            <VStack align="start" spacing={1}>
+                              {user.groups?.map((group: any) => (
+                                <Badge
+                                  key={group.id}
+                                  colorScheme="blue"
+                                  variant="subtle"
+                                  fontSize="xs"
+                                  borderRadius="full"
+                                  px={2}
+                                  py={0.5}
+                                >
+                                  {group.name}
+                                </Badge>
+                              )) || (
+                                <Badge
+                                  colorScheme="gray"
+                                  variant="subtle"
+                                  fontSize="xs"
+                                  borderRadius="full"
+                                  px={2}
+                                  py={0.5}
+                                >
+                                  默认用户组
+                                </Badge>
+                              )}
+                            </VStack>
                           </Td>
                           <Td py={4}>
-                            <Badge
-                              colorScheme={user.is_superuser ? "purple" : "gray"}
-                              variant="subtle"
-                              fontSize="xs"
-                              borderRadius="full"
-                              px={2}
-                              py={0.5}
-                            >
-                              {user.is_superuser ? "管理员" : "普通用户"}
-                            </Badge>
+                            <VStack align="start" spacing={1}>
+                              {(user as any).roles?.map((role: any) => (
+                                <Badge
+                                  key={role.id}
+                                  colorScheme="purple"
+                                  variant="subtle"
+                                  fontSize="xs"
+                                  borderRadius="full"
+                                  px={2}
+                                  py={0.5}
+                                >
+                                  {role.name}
+                                </Badge>
+                              ))}
+                              {user.is_superuser && (
+                                <Badge
+                                  colorScheme="red"
+                                  variant="subtle"
+                                  fontSize="xs"
+                                  borderRadius="full"
+                                  px={2}
+                                  py={0.5}
+                                >
+                                  管理员
+                                </Badge>
+                              )}
+                            </VStack>
                           </Td>
                           <Td py={4}>
                             <HStack spacing={2}>
