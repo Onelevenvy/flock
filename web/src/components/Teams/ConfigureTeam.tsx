@@ -12,8 +12,8 @@ const ConfigureTeam: React.FC<ConfigureTeamProps> = ({ teamId }) => {
   const { isOpen, onOpen, onClose } = useDisclosure();
 
   return (
-    <VStack 
-      spacing={4} 
+    <VStack
+      spacing={4}
       align="stretch"
       p={6}
       bg="white"
@@ -27,14 +27,10 @@ const ConfigureTeam: React.FC<ConfigureTeamProps> = ({ teamId }) => {
         borderColor: "gray.200",
       }}
     >
-      <Heading 
-        size="md" 
-        color="gray.800"
-        fontWeight="600"
-      >
+      <Heading size="md" color="gray.800" fontWeight="600">
         Team Configuration
       </Heading>
-      
+
       <CustomButton
         text="Manage API Keys"
         variant="white"
@@ -49,12 +45,8 @@ const ConfigureTeam: React.FC<ConfigureTeamProps> = ({ teamId }) => {
           transform: "translateY(0)",
         }}
       />
-      
-      <ApiKeyManager 
-        teamId={teamId} 
-        isOpen={isOpen} 
-        onClose={onClose} 
-      />
+
+      <ApiKeyManager teamId={teamId} isOpen={isOpen} onClose={onClose} />
     </VStack>
   );
 };

@@ -31,7 +31,7 @@ const ClassifierNode: React.FC<NodeProps<ClassifierNodeData>> = (props) => {
     () => (
       <ModelProviderIcon modelprovider_name={providerName} key={providerName} />
     ),
-    [providerName]
+    [providerName],
   );
 
   return (
@@ -80,7 +80,7 @@ const ClassifierNode: React.FC<NodeProps<ClassifierNodeData>> = (props) => {
             <Text fontSize="xs" fontWeight="500">
               {category.category_id === "others_category"
                 ? `${t("workflow.nodes.classifier.category")} ${index + 1}: ${t(
-                    "workflow.nodes.classifier.othersCategory"
+                    "workflow.nodes.classifier.othersCategory",
                   )}`
                 : `${t("workflow.nodes.classifier.category")} ${index + 1}: ${
                     category.category_name ||

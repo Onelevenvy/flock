@@ -89,8 +89,8 @@ const ChangePasswordPage = () => {
 
           <FormControl isRequired isInvalid={!!errors.current_password}>
             <Flex align="center" gap={4}>
-              <Text 
-                w="140px" 
+              <Text
+                w="140px"
                 fontSize="sm"
                 fontWeight="500"
                 color="gray.700"
@@ -118,14 +118,16 @@ const ChangePasswordPage = () => {
               />
             </Flex>
             {errors.current_password && (
-              <FormErrorMessage>{errors.current_password.message}</FormErrorMessage>
+              <FormErrorMessage>
+                {errors.current_password.message}
+              </FormErrorMessage>
             )}
           </FormControl>
 
           <FormControl isRequired isInvalid={!!errors.new_password}>
             <Flex align="center" gap={4}>
-              <Text 
-                w="140px" 
+              <Text
+                w="140px"
                 fontSize="sm"
                 fontWeight="500"
                 color="gray.700"
@@ -165,8 +167,8 @@ const ChangePasswordPage = () => {
 
           <FormControl isRequired isInvalid={!!errors.confirm_password}>
             <Flex align="center" gap={4}>
-              <Text 
-                w="140px" 
+              <Text
+                w="140px"
                 fontSize="sm"
                 fontWeight="500"
                 color="gray.700"
@@ -199,7 +201,9 @@ const ChangePasswordPage = () => {
               />
             </Flex>
             {errors.confirm_password && (
-              <FormErrorMessage>{errors.confirm_password.message}</FormErrorMessage>
+              <FormErrorMessage>
+                {errors.confirm_password.message}
+              </FormErrorMessage>
             )}
           </FormControl>
 

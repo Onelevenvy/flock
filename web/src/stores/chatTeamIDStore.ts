@@ -1,6 +1,6 @@
 // store.ts
 import { create } from "zustand";
-import { persist } from 'zustand/middleware';
+import { persist } from "zustand/middleware";
 
 interface ChatTeamIdStore {
   teamId: number;
@@ -14,9 +14,9 @@ const useChatTeamIdStore = create<ChatTeamIdStore>()(
       setTeamId: (teamId) => set(() => ({ teamId })),
     }),
     {
-      name: 'chat-team-id',
-    }
-  )
+      name: "chat-team-id",
+    },
+  ),
 );
 
 export default useChatTeamIdStore;

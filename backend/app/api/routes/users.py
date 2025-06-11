@@ -209,24 +209,24 @@ def update_user(
 
     # Update user data
     user_data = user_in.model_dump(exclude_unset=True)
-    
+
     # Update password if provided
     if "password" in user_data and user_data["password"]:
         user_data["hashed_password"] = get_password_hash(user_data.pop("password"))
-    
+
     # Update user fields
     db_user.sqlmodel_update(user_data)
-    
+
     # Update relationships if provided
     if hasattr(user_in, "groups"):
         db_user.groups = [session.get(Group, group_id) for group_id in user_in.groups]
     if hasattr(user_in, "roles"):
         db_user.roles = [session.get(Role, role_id) for role_id in user_in.roles]
-    
+
     session.add(db_user)
     session.commit()
     session.refresh(db_user)
-    
+
     return db_user
 
 

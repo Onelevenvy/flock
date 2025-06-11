@@ -1,6 +1,6 @@
 "use client";
 import { Box, Center, Flex, IconButton, useDisclosure } from "@chakra-ui/react";
-import { useSearchParams,useRouter } from "next/navigation";
+import { useSearchParams, useRouter } from "next/navigation";
 import { useEffect } from "react";
 import { LuChevronLeft, LuChevronRight } from "react-icons/lu";
 

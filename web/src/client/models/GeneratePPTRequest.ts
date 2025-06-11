@@ -4,8 +4,8 @@
 /* eslint-disable */
 
 export type GeneratePPTRequest = {
-    /**
-     * The content of the ppt
-     */
-    content: string;
+  /**
+   * The content of the ppt
+   */
+  content: string;
 };

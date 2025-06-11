@@ -29,9 +29,13 @@ const geist = Geist({
 const LocaleLayout = ({ children }: { children: React.ReactNode }) => {
   // Get API URL from environment variable at server time
   const apiBaseUrl = process.env.NEXT_PUBLIC_API_URL || "http://127.0.0.1:8000";
-  
+
   return (
-    <html lang="en" className={`h-full ${geist.variable}`} suppressHydrationWarning>
+    <html
+      lang="en"
+      className={`h-full ${geist.variable}`}
+      suppressHydrationWarning
+    >
       <head>
         <meta name="theme-color" content="#FFFFFF" />
         <link href="/favicon.ico" rel="icon" type="image/x-icon" />
@@ -58,14 +62,14 @@ const LocaleLayout = ({ children }: { children: React.ReactNode }) => {
           </ChakraUIProviders>
         </StrictMode>
         <Toaster />
-        
+
         {/* Load runtime config script using Next.js Script component */}
-        <Script 
-          src="/runtime-config.js" 
-          strategy="beforeInteractive" 
+        <Script
+          src="/runtime-config.js"
+          strategy="beforeInteractive"
           id="runtime-config"
         />
-        
+
         {/* Inject API URL into window object with fallback */}
         <Script
           id="api-fallback"
@@ -76,10 +80,10 @@ const LocaleLayout = ({ children }: { children: React.ReactNode }) => {
                 window.__RUNTIME_CONFIG__ = { API_URL: "${apiBaseUrl}" };
               }
               window.__API_BASE_URL__ = window.__RUNTIME_CONFIG__.API_URL;
-            `
+            `,
           }}
         />
-        
+
         {env.NEXT_PUBLIC_STATIC_WEBSITE_ONLY && env.AMPLITUDE_API_KEY && (
           <>
             <Script src="https://cdn.amplitude.com/script/d2197dd1df3f2959f26295bb0e7e849f.js"></Script>
@@ -93,4 +97,4 @@ const LocaleLayout = ({ children }: { children: React.ReactNode }) => {
   );
 };
 
-export default LocaleLayout; 
+export default LocaleLayout;

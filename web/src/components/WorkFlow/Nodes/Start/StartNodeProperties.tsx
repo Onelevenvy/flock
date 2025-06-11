@@ -16,29 +16,26 @@ const StartNodeProperties: React.FC<StartNodePropertiesProps> = ({
   return (
     <VStack align="stretch" spacing={4}>
       <Box>
-        <Text 
-          fontWeight="500" 
-          fontSize="sm" 
-          color="gray.700"
-          mb={2}
-        >
+        <Text fontWeight="500" fontSize="sm" color="gray.700" mb={2}>
           {t("workflow.nodes.start.initialInput")}:
         </Text>
         <Input
-          value={node.data.initialInput || ''}
+          value={node.data.initialInput || ""}
           onChange={(e) =>
             onNodeDataChange(node.id, "initialInput", e.target.value)
           }
-          placeholder={t("workflow.nodes.start.placeholder") || "Enter initial input"}
+          placeholder={
+            t("workflow.nodes.start.placeholder") || "Enter initial input"
+          }
           size="sm"
           borderRadius="lg"
           borderColor="gray.200"
           _hover={{
-            borderColor: "green.200"
+            borderColor: "green.200",
           }}
           _focus={{
             borderColor: "green.500",
-            boxShadow: "0 0 0 1px var(--chakra-colors-green-500)"
+            boxShadow: "0 0 0 1px var(--chakra-colors-green-500)",
           }}
           transition="all 0.2s"
         />

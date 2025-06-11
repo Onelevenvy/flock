@@ -48,7 +48,7 @@ const getSimplifiedCode = (code: string, currentArgs: ArgVariable[]) => {
     (match: string, start: string, end: string) => {
       const params = currentArgs.map((arg) => `${arg.name}: str`).join(", ");
       return `${start}${params}${end}`;
-    }
+    },
   );
   return [simplifiedFuncDef, ...restCode].join("\n");
 };
@@ -61,11 +61,11 @@ const getFullCode = (code: string, currentArgs: ArgVariable[]) => {
     (match: string, start: string, end: string) => {
       const params = currentArgs
         .map((arg) =>
-          arg.value ? `${arg.name}: str = {${arg.value}}` : `${arg.name}: str`
+          arg.value ? `${arg.name}: str = {${arg.value}}` : `${arg.name}: str`,
         )
         .join(", ");
       return `${start}${params}${end}`;
-    }
+    },
   );
   return [fullFuncDef, ...restCode].join("\n");
 };
@@ -95,7 +95,7 @@ const CodeNodeProperties: React.FC<CodeNodePropertiesProps> = ({
         onNodeDataChange(node.id, "code", codeToSave);
       }
     },
-    [editorInstance, node.id, onNodeDataChange]
+    [editorInstance, node.id, onNodeDataChange],
   );
 
   // 初始化代码模板和参数
@@ -182,7 +182,7 @@ const CodeNodeProperties: React.FC<CodeNodePropertiesProps> = ({
       onNodeDataChange(node.id, "args", newArgs);
       updateCodeWithNewArgs(newArgs);
     },
-    [args, updateCodeWithNewArgs, onNodeDataChange, node.id]
+    [args, updateCodeWithNewArgs, onNodeDataChange, node.id],
   );
 
   const handleArgNameChange = useCallback(
@@ -193,7 +193,7 @@ const CodeNodeProperties: React.FC<CodeNodePropertiesProps> = ({
       onNodeDataChange(node.id, "args", newArgs);
       updateCodeWithNewArgs(newArgs);
     },
-    [args, updateCodeWithNewArgs, onNodeDataChange, node.id]
+    [args, updateCodeWithNewArgs, onNodeDataChange, node.id],
   );
 
   const handleRemoveArg = useCallback(
@@ -203,7 +203,7 @@ const CodeNodeProperties: React.FC<CodeNodePropertiesProps> = ({
       onNodeDataChange(node.id, "args", newArgs);
       updateCodeWithNewArgs(newArgs);
     },
-    [args, updateCodeWithNewArgs, onNodeDataChange, node.id]
+    [args, updateCodeWithNewArgs, onNodeDataChange, node.id],
   );
 
   const handleAddArg = useCallback(() => {
@@ -261,9 +261,11 @@ const CodeNodeProperties: React.FC<CodeNodePropertiesProps> = ({
           {args.map((arg, index) => (
             <HStack key={index} width="100%">
               <Input
-                placeholder={t(
-                  "team.workflow.nodes.code.placeholder.variableName"
-                ) as string}
+                placeholder={
+                  t(
+                    "team.workflow.nodes.code.placeholder.variableName",
+                  ) as string
+                }
                 value={arg.name}
                 onChange={(e) => handleArgNameChange(index, e.target.value)}
                 size="sm"
@@ -275,9 +277,11 @@ const CodeNodeProperties: React.FC<CodeNodePropertiesProps> = ({
                 onChange={(e) => handleArgValueChange(index, e.target.value)}
                 size="sm"
                 flex={1}
-                placeholder={t(
-                  "team.workflow.nodes.code.placeholder.selectVariable"
-                ) as string}
+                placeholder={
+                  t(
+                    "team.workflow.nodes.code.placeholder.selectVariable",
+                  ) as string
+                }
               >
                 {availableVariables.map((v) => (
                   <option

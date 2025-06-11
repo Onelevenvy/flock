@@ -23,21 +23,21 @@ export default [
         ecmaVersion: "latest",
         sourceType: "module",
         ecmaFeatures: {
-          jsx: true
-        }
-      }
+          jsx: true,
+        },
+      },
     },
     plugins: {
       "@typescript-eslint": tsPlugin,
       "unused-imports": unusedImports,
-      "react": reactPlugin,
+      react: reactPlugin,
       "react-hooks": reactHooksPlugin,
-      "import": importPlugin
+      import: importPlugin,
     },
     settings: {
       react: {
-        version: "detect"
-      }
+        version: "detect",
+      },
     },
     rules: {
       // 基本规则
@@ -50,7 +50,7 @@ export default [
       // React 相关规则
       "react/prop-types": "off",
       "react/react-in-jsx-scope": "off",
-      "react/jsx-filename-extension": ["warn", { "extensions": [".tsx"] }],
+      "react/jsx-filename-extension": ["warn", { extensions: [".tsx"] }],
       "react-hooks/rules-of-hooks": "error",
       "react-hooks/exhaustive-deps": "warn",
 
@@ -75,10 +75,10 @@ export default [
       "no-prototype-builtins": "off",
       "padding-line-between-statements": "off",
       "import/default": "off",
-      "import/no-named-as-default": "off"
-    }
+      "import/no-named-as-default": "off",
+    },
   },
   ...compat.config({
-    extends: ["plugin:react-hooks/recommended"]
-  })
-]; 
+    extends: ["plugin:react-hooks/recommended"],
+  }),
+];

@@ -310,11 +310,15 @@ class LeaderNode(BaseNode):
                     "properties": {
                         "task": {
                             "title": "task",
-                            "description": "Provide the next task only if answer is still incomplete. Else say no further task.",
+                            "description": (
+                                "Provide the next task only if answer is still incomplete. Else say no further task."
+                            ),
                         },
                         "next": {
                             "title": "next",
-                            "description": "Choose the next most appropriate team member if answer is still incomplete. Else choose FINISH.",
+                            "description": (
+                                "Choose the next most appropriate team member if answer is still incomplete. Else choose FINISH."
+                            ),
                             "anyOf": [
                                 {"enum": options},
                             ],

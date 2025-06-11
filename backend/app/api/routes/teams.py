@@ -130,12 +130,15 @@ def create_team(
         description=team_in.description or f"Team resource for {team_in.name}",
         resource_type=ResourceType.TEAM,
     )
-    
+
     # 创建team
-    team = Team.model_validate(team_in, update={
-        "owner_id": current_user.id,
-        "resource_id": resource.id  # 设置resource_id
-    })
+    team = Team.model_validate(
+        team_in,
+        update={
+            "owner_id": current_user.id,
+            "resource_id": resource.id,  # 设置resource_id
+        },
+    )
     session.add(team)
     session.commit()
     session.refresh(team)
@@ -194,10 +197,10 @@ def create_team(
         )
     else:
         raise ValueError("Unsupported graph type")
-        
+
     session.add(member)
     session.commit()
-    
+
     return team
 
 
@@ -224,11 +227,11 @@ def update_team(
     team = session.get(Team, id)
     if not team:
         raise HTTPException(status_code=404, detail="Team not found")
-    
+
     team_data = team_in.model_dump(exclude_unset=True)
     for field in team_data:
         setattr(team, field, team_data[field])
-    
+
     session.add(team)
     session.commit()
     session.refresh(team)
@@ -255,7 +258,7 @@ def delete_team(
     team = session.get(Team, id)
     if not team:
         raise HTTPException(status_code=404, detail="Team not found")
-    
+
     session.delete(team)
     session.commit()
     return {"ok": True}

@@ -3,17 +3,17 @@
 /* tslint:disable */
 /* eslint-disable */
 export const $GraphsOut = {
-    properties: {
-        data: {
-    type: 'array',
-    contains: {
-        type: 'GraphOut',
+  properties: {
+    data: {
+      type: "array",
+      contains: {
+        type: "GraphOut",
+      },
+      isRequired: true,
     },
-    isRequired: true,
-},
-        count: {
-    type: 'number',
-    isRequired: true,
-},
+    count: {
+      type: "number",
+      isRequired: true,
     },
+  },
 } as const;

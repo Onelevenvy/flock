@@ -42,7 +42,7 @@ const Toast = ({
         type === "success" ? "bg-green-50" : "",
         type === "error" ? "bg-red-50" : "",
         type === "warning" ? "bg-yellow-50" : "",
-        type === "info" ? "bg-blue-50" : ""
+        type === "info" ? "bg-blue-50" : "",
       )}
     >
       <div className="flex">
@@ -76,7 +76,7 @@ const Toast = ({
               type === "success" ? "text-green-800" : "",
               type === "error" ? "text-red-800" : "",
               type === "warning" ? "text-yellow-800" : "",
-              type === "info" ? "text-blue-800" : ""
+              type === "info" ? "text-blue-800" : "",
             )}
           >
             {message}
@@ -88,7 +88,7 @@ const Toast = ({
                 type === "success" ? "text-green-700" : "",
                 type === "error" ? "text-red-700" : "",
                 type === "warning" ? "text-yellow-700" : "",
-                type === "info" ? "text-blue-700" : ""
+                type === "info" ? "text-blue-700" : "",
               )}
             >
               {children}
@@ -152,7 +152,7 @@ Toast.notify = ({
         message={message}
         duration={duration}
         className={className}
-      />
+      />,
     );
     document.body.appendChild(holder);
     setTimeout(() => {

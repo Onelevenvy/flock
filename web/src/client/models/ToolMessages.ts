@@ -4,7 +4,7 @@
 /* eslint-disable */
 
 export type ToolMessages = {
-    content: string;
-    name: string;
-    tool_call_id: string;
+  content: string;
+  name: string;
+  tool_call_id: string;
 };

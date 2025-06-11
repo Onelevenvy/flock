@@ -67,7 +67,7 @@ const CrewAINodeProperties: React.FC<CrewAINodePropertiesProps> = ({
   const [editingAgent, setEditingAgent] = useState<AgentConfig | undefined>();
   const [editingTask, setEditingTask] = useState<TaskConfig | undefined>();
   const [useCustomManager, setUseCustomManager] = useState(
-    !!data.manager_config?.agent
+    !!data.manager_config?.agent,
   );
 
   // 检查是否已经存在Manager Agent
@@ -145,7 +145,7 @@ const CrewAINodeProperties: React.FC<CrewAINodePropertiesProps> = ({
   const handleAddTask = (task: TaskConfig) => {
     const updatedTasks = [...(data.tasks || [])];
     const existingIndex = updatedTasks.findIndex(
-      (t) => t.description === task.description && t.agent_id === task.agent_id
+      (t) => t.description === task.description && t.agent_id === task.agent_id,
     );
 
     if (existingIndex >= 0) {

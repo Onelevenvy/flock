@@ -34,8 +34,8 @@ import { LogicalOperator } from "../types";
 import HumanNodeProperties from "./Human/HumanNodeProperties";
 import SubgraphNodeProperties from "./Subgraph/SubgraphNodeProperties";
 import ParameterExtractorNodeProperties from "./ParameterExtractor/ParameterExtractorNodeProperties";
-import MCPNodeProperties from './MCPTool/MCPNodeProperties';
-import AgentNodeProperties from './Agent/AgentNodeProperties';
+import MCPNodeProperties from "./MCPTool/MCPNodeProperties";
+import AgentNodeProperties from "./Agent/AgentNodeProperties";
 
 interface NodeConfigItem {
   display: string;
@@ -111,7 +111,7 @@ export const nodeConfig: Record<string, NodeConfigItem> = {
       userMessage: "",
       tools: [],
       retrievalTools: [],
-    }
+    },
   },
   tool: {
     display: "Tools",
@@ -325,7 +325,7 @@ export const nodeConfig: Record<string, NodeConfigItem> = {
     initialData: {
       model: "glm-4-flash",
       parameters: [],
-      toolImport: null
+      toolImport: null,
     },
     inputVariables: ["Input"],
     outputVariables: ["parameters"],
@@ -345,9 +345,8 @@ export const nodeConfig: Record<string, NodeConfigItem> = {
       model: "",
       input: "",
       mcp_config: {},
-    }
+    },
   },
-  
 };
 
 export type NodeType = keyof typeof nodeConfig;

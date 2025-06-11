@@ -4,7 +4,7 @@
 /* eslint-disable */
 
 export type UserCreateOpen = {
-    email: string;
-    password: string;
-    full_name?: (string | null);
+  email: string;
+  password: string;
+  full_name?: string | null;
 };

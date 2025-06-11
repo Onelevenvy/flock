@@ -15,7 +15,14 @@ import Delete from "@/components/Common/DeleteAlert";
 import EditTeam from "@/components/Teams/EditTeam";
 import EditSkill from "@/components/Tools/EditSkill";
 import EditUpload from "@/components/Uploads/EditUpload";
-import type { SkillOut, TeamOut, UploadOut, UserOut, GroupOut, RoleOut } from "../../client";
+import type {
+  SkillOut,
+  TeamOut,
+  UploadOut,
+  UserOut,
+  GroupOut,
+  RoleOut,
+} from "../../client";
 
 interface ActionsMenuProps {
   type: string;
@@ -98,8 +105,8 @@ const ActionsMenu = ({ type, value, disabled, onEdit }: ActionsMenuProps) => {
         </MenuList>
 
         {/* Modals */}
-        {!onEdit && (
-          type === "User" ? (
+        {!onEdit &&
+          (type === "User" ? (
             <EditUser
               user={value as UserOut}
               isOpen={editUserModal.isOpen}
@@ -117,14 +124,15 @@ const ActionsMenu = ({ type, value, disabled, onEdit }: ActionsMenuProps) => {
               isOpen={editUserModal.isOpen}
               onClose={editUserModal.onClose}
             />
-          ) : type === "Upload" && (
-            <EditUpload
-              upload={value as UploadOut}
-              isOpen={editUserModal.isOpen}
-              onClose={editUserModal.onClose}
-            />
-          )
-        )}
+          ) : (
+            type === "Upload" && (
+              <EditUpload
+                upload={value as UploadOut}
+                isOpen={editUserModal.isOpen}
+                onClose={editUserModal.onClose}
+              />
+            )
+          ))}
         <Delete
           type={type}
           id={value.id}

@@ -7,8 +7,8 @@
  * Response model for RAG config.
  */
 export type RAGConfigResponse = {
-    /**
-     * The provider of the RAG, default is ragflow
-     */
-    provider?: (string | null);
+  /**
+   * The provider of the RAG, default is ragflow
+   */
+  provider?: string | null;
 };

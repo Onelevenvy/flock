@@ -35,7 +35,7 @@ export default function NormalTeamSettings({
     isError,
     error,
   } = useQuery(`teams/${teamId}/members`, () =>
-    MembersService.readMembers({ teamId: Number.parseInt(teamId) })
+    MembersService.readMembers({ teamId: Number.parseInt(teamId) }),
   );
 
   if (isError) {

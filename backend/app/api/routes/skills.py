@@ -217,6 +217,7 @@ def update_skill_credentials(
 
     return skill
 
+
 @router.post("/mcp/tools")
 async def get_mcp_tools(mcp_config: dict[str, Any]) -> Any:
     """
@@ -225,15 +226,18 @@ async def get_mcp_tools(mcp_config: dict[str, Any]) -> Any:
     try:
         # 添加日志打印
         logger.info(f"Received mcp_config: {mcp_config}")
-        
+
         async with MultiServerMCPClient(mcp_config) as client:
             tools = client.get_tools()
             # 只返回工具的基本信息
-            tools_info = [{
-                "name": tool.name,
-                "description": tool.description,
-                "parameters": tool.args
-            } for tool in tools]
+            tools_info = [
+                {
+                    "name": tool.name,
+                    "description": tool.description,
+                    "parameters": tool.args,
+                }
+                for tool in tools
+            ]
             return {"tools": tools_info}
     except Exception as e:
         # 添加错误日志

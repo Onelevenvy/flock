@@ -1,7 +1,15 @@
 // Copyright (c) 2025 Bytedance Ltd. and/or its affiliates
 // SPDX-License-Identifier: MIT
 
-import { Box, Flex, TabList, TabPanels, TabPanel, Tab, Tabs } from "@chakra-ui/react";
+import {
+  Box,
+  Flex,
+  TabList,
+  TabPanels,
+  TabPanel,
+  Tab,
+  Tabs,
+} from "@chakra-ui/react";
 import { Check, Copy, Headphones, Pencil, Undo2, X } from "lucide-react";
 import { useCallback, useEffect, useState } from "react";
 
@@ -10,7 +18,11 @@ import { Tooltip } from "@/components/DeerFlow/components/deer-flow/tooltip";
 import { Button } from "@/components/DeerFlow/components/ui/button";
 import { Card } from "@/components/DeerFlow/components/ui/card";
 import { useReplay } from "@/components/DeerFlow/core/replay";
-import { closeResearch, listenToPodcast, useStore } from "@/components/DeerFlow/core/store";
+import {
+  closeResearch,
+  listenToPodcast,
+  useStore,
+} from "@/components/DeerFlow/core/store";
 import { cn } from "@/components/DeerFlow/lib/utils";
 
 import { ResearchActivitiesBlock } from "./research-activities-block";
@@ -78,7 +90,14 @@ export function ResearchBlock({
   return (
     <Box h="full" w="full" className={className}>
       <Card className={cn("relative h-full w-full pt-4", className)}>
-        <Box position="absolute" right={4} display="flex" h={9} alignItems="center" justifyContent="center">
+        <Box
+          position="absolute"
+          right={4}
+          display="flex"
+          h={9}
+          alignItems="center"
+          justifyContent="center"
+        >
           {hasReport && !reportStreaming && (
             <>
               <Tooltip title="Generate podcast">
@@ -134,7 +153,9 @@ export function ResearchBlock({
           h="full"
           w="full"
           defaultIndex={activeTab === "report" ? 0 : 1}
-          onChange={(index) => setActiveTab(index === 0 ? "report" : "activities")}
+          onChange={(index) =>
+            setActiveTab(index === 0 ? "report" : "activities")
+          }
           variant="enclosed"
         >
           <Flex w="full" justifyContent="center">
@@ -144,11 +165,7 @@ export function ResearchBlock({
             </TabList>
           </Flex>
           <TabPanels flex="1" minH="0" overflow="auto">
-            <TabPanel
-              h="full"
-              px={8}
-              hidden={activeTab !== "report"}
-            >
+            <TabPanel h="full" px={8} hidden={activeTab !== "report"}>
               <ScrollContainer
                 className="h-full"
                 scrollShadowColor="var(--chakra-colors-white)"
@@ -164,11 +181,7 @@ export function ResearchBlock({
                 )}
               </ScrollContainer>
             </TabPanel>
-            <TabPanel
-              h="full"
-              px={8}
-              hidden={activeTab !== "activities"}
-            >
+            <TabPanel h="full" px={8} hidden={activeTab !== "activities"}>
               <ScrollContainer
                 className="h-full"
                 scrollShadowColor="var(--chakra-colors-white)"

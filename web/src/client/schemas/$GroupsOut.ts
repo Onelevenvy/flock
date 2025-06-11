@@ -3,18 +3,18 @@
 /* tslint:disable */
 /* eslint-disable */
 export const $GroupsOut = {
-    description: `Schema for groups output`,
-    properties: {
-        data: {
-    type: 'array',
-    contains: {
-        type: 'GroupOut',
+  description: `Schema for groups output`,
+  properties: {
+    data: {
+      type: "array",
+      contains: {
+        type: "GroupOut",
+      },
+      isRequired: true,
     },
-    isRequired: true,
-},
-        count: {
-    type: 'number',
-    isRequired: true,
-},
+    count: {
+      type: "number",
+      isRequired: true,
     },
+  },
 } as const;

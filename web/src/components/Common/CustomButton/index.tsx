@@ -24,7 +24,7 @@ const CustomButton = React.forwardRef<HTMLButtonElement, CustomButtonProps>(
       size = "md",
       ...rest
     },
-    ref
+    ref,
   ) => {
     const getButtonStyles = () => {
       const baseStyles = {
@@ -127,7 +127,7 @@ const CustomButton = React.forwardRef<HTMLButtonElement, CustomButtonProps>(
         {text}
       </Button>
     );
-  }
+  },
 );
 
 CustomButton.displayName = "CustomButton";

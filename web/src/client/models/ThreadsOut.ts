@@ -3,9 +3,9 @@
 /* tslint:disable */
 /* eslint-disable */
 
-import type { ThreadOut } from './ThreadOut';
+import type { ThreadOut } from "./ThreadOut";
 
 export type ThreadsOut = {
-    data: Array<ThreadOut>;
-    count: number;
+  data: Array<ThreadOut>;
+  count: number;
 };

@@ -3,65 +3,74 @@
 /* tslint:disable */
 /* eslint-disable */
 export const $SkillOut = {
-    properties: {
-        name: {
-    type: 'string',
-    isRequired: true,
-},
-        description: {
-    type: 'string',
-    isRequired: true,
-},
-        display_name: {
-    type: 'any-of',
-    contains: [{
-    type: 'string',
-}, {
-    type: 'null',
-}],
-},
-        managed: {
-    type: 'boolean',
-},
-        tool_definition: {
-    type: 'any-of',
-    contains: [{
-    type: 'dictionary',
-    contains: {
-    properties: {
+  properties: {
+    name: {
+      type: "string",
+      isRequired: true,
     },
-},
-}, {
-    type: 'null',
-}],
-},
-        input_parameters: {
-    type: 'any-of',
-    contains: [{
-    type: 'dictionary',
-    contains: {
-    properties: {
+    description: {
+      type: "string",
+      isRequired: true,
     },
-},
-}, {
-    type: 'null',
-}],
-},
-        credentials: {
-    type: 'any-of',
-    contains: [{
-    type: 'dictionary',
-    contains: {
-    properties: {
+    display_name: {
+      type: "any-of",
+      contains: [
+        {
+          type: "string",
+        },
+        {
+          type: "null",
+        },
+      ],
     },
-},
-}, {
-    type: 'null',
-}],
-},
-        id: {
-    type: 'number',
-    isRequired: true,
-},
+    managed: {
+      type: "boolean",
     },
+    tool_definition: {
+      type: "any-of",
+      contains: [
+        {
+          type: "dictionary",
+          contains: {
+            properties: {},
+          },
+        },
+        {
+          type: "null",
+        },
+      ],
+    },
+    input_parameters: {
+      type: "any-of",
+      contains: [
+        {
+          type: "dictionary",
+          contains: {
+            properties: {},
+          },
+        },
+        {
+          type: "null",
+        },
+      ],
+    },
+    credentials: {
+      type: "any-of",
+      contains: [
+        {
+          type: "dictionary",
+          contains: {
+            properties: {},
+          },
+        },
+        {
+          type: "null",
+        },
+      ],
+    },
+    id: {
+      type: "number",
+      isRequired: true,
+    },
+  },
 } as const;

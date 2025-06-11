@@ -3,9 +3,9 @@
 /* tslint:disable */
 /* eslint-disable */
 
-import type { GraphOut } from './GraphOut';
+import type { GraphOut } from "./GraphOut";
 
 export type GraphsOut = {
-    data: Array<GraphOut>;
-    count: number;
+  data: Array<GraphOut>;
+  count: number;
 };

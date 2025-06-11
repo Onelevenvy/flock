@@ -3,4 +3,10 @@
 /* tslint:disable */
 /* eslint-disable */
 
-export type ModelCategory = 'llm' | 'chat' | 'text-embedding' | 'rerank' | 'speech-to-text' | 'text-to-speech';
+export type ModelCategory =
+  | "llm"
+  | "chat"
+  | "text-embedding"
+  | "rerank"
+  | "speech-to-text"
+  | "text-to-speech";

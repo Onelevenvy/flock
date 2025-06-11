@@ -30,7 +30,7 @@ const AnswerProperties: React.FC<AnswerPropertiesProps> = ({
       setAnswerInput(value);
       onNodeDataChange(node.id, "answer", value);
     },
-    [node.id, onNodeDataChange]
+    [node.id, onNodeDataChange],
   );
 
   const {

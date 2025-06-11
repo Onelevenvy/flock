@@ -3,8 +3,8 @@
 /* tslint:disable */
 /* eslint-disable */
 
-import type { ModelProviderWithModelsListOut } from './ModelProviderWithModelsListOut';
+import type { ModelProviderWithModelsListOut } from "./ModelProviderWithModelsListOut";
 
 export type ProvidersListWithModelsOut = {
-    providers: Array<ModelProviderWithModelsListOut>;
+  providers: Array<ModelProviderWithModelsListOut>;
 };

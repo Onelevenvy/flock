@@ -257,7 +257,7 @@ const MCPNodeProperties: React.FC<MCPNodePropertiesProps> = ({
   >();
   const cancelRef = useRef<HTMLButtonElement>(null);
   const [isLoadingTools, setIsLoadingTools] = useState<Record<string, boolean>>(
-    {}
+    {},
   );
 
   const { control, setValue } = useForm<FormValues>({
@@ -291,12 +291,12 @@ const MCPNodeProperties: React.FC<MCPNodePropertiesProps> = ({
           }
           return acc;
         },
-        {} as Record<string, any>
+        {} as Record<string, any>,
       );
 
       onNodeDataChange(node.id, "mcp_config", mcp_config);
     },
-    [node.id, onNodeDataChange]
+    [node.id, onNodeDataChange],
   );
 
   const fetchTools = useCallback(
@@ -324,7 +324,7 @@ const MCPNodeProperties: React.FC<MCPNodePropertiesProps> = ({
         if (data && data.tools) {
           setServers((currentServers) => {
             const updatedServers = currentServers.map((s) =>
-              s.name === serverConfig.name ? { ...s, tools: data.tools } : s
+              s.name === serverConfig.name ? { ...s, tools: data.tools } : s,
             );
             // 更新 server_tools
             const serverTools = updatedServers.reduce(
@@ -334,7 +334,7 @@ const MCPNodeProperties: React.FC<MCPNodePropertiesProps> = ({
                 }
                 return acc;
               },
-              {} as Record<string, any>
+              {} as Record<string, any>,
             );
             onNodeDataChange(node.id, "server_tools", serverTools);
             updateMCPConfig(updatedServers);
@@ -353,7 +353,7 @@ const MCPNodeProperties: React.FC<MCPNodePropertiesProps> = ({
         setIsLoadingTools((prev) => ({ ...prev, [serverConfig.name]: false }));
       }
     },
-    [node.id, onNodeDataChange, t, toast, updateMCPConfig]
+    [node.id, onNodeDataChange, t, toast, updateMCPConfig],
   );
 
   useEffect(() => {
@@ -365,7 +365,7 @@ const MCPNodeProperties: React.FC<MCPNodePropertiesProps> = ({
     }
     if (node && node.data.mcp_config) {
       const serverConfigs: ServerConfig[] = Object.entries(
-        node.data.mcp_config
+        node.data.mcp_config,
       ).map(([name, config]: [string, any]) => ({
         name,
         transport: config.transport,
@@ -386,7 +386,7 @@ const MCPNodeProperties: React.FC<MCPNodePropertiesProps> = ({
   const onModelSelect = useCallback(
     (modelName: string) => {
       const selectedModel = models?.data.find(
-        (model) => model.ai_model_name === modelName
+        (model) => model.ai_model_name === modelName,
       );
 
       if (selectedModel) {
@@ -394,7 +394,7 @@ const MCPNodeProperties: React.FC<MCPNodePropertiesProps> = ({
         setValue("model", modelName);
       }
     },
-    [node.id, models, onNodeDataChange, setValue]
+    [node.id, models, onNodeDataChange, setValue],
   );
 
   const handleInputChange = useCallback(
@@ -402,7 +402,7 @@ const MCPNodeProperties: React.FC<MCPNodePropertiesProps> = ({
       setInputText(value);
       onNodeDataChange(node.id, "input", value);
     },
-    [node.id, onNodeDataChange]
+    [node.id, onNodeDataChange],
   );
 
   const {

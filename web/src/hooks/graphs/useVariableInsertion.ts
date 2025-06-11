@@ -42,11 +42,11 @@ export const useVariableInsertion = <
         input.focus();
         input.setSelectionRange(
           start + variable.length + 2,
-          start + variable.length + 2
+          start + variable.length + 2,
         );
       }
     },
-    [onValueChange]
+    [onValueChange],
   );
 
   return {

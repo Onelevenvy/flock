@@ -23,9 +23,9 @@ const translation = {
     hidemodel: "Hide Model",
     themedark: "Dark Mode",
     themelight: "Light Mode",
-    usermanagement:"User Management",
-    groupmanagement:"UserGroup Management",
-    rolemanagement:"Role Management"
+    usermanagement: "User Management",
+    groupmanagement: "UserGroup Management",
+    rolemanagement: "Role Management",
   },
 };
 

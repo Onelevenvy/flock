@@ -48,7 +48,7 @@ const ImageUploadModal = ({ onImageSelect }: ImageUploadModalProps) => {
   const validateAndLoadUrl = async () => {
     if (!imageUrl) {
       setUrlError(
-        t("components.imageUpload.imageUrl.error.required") as string
+        t("components.imageUpload.imageUrl.error.required") as string,
       );
       return;
     }
@@ -62,13 +62,13 @@ const ImageUploadModal = ({ onImageSelect }: ImageUploadModalProps) => {
       const response = await fetch(imageUrl);
       if (!response.ok)
         throw new Error(
-          t("components.imageUpload.imageUrl.error.loading") as string
+          t("components.imageUpload.imageUrl.error.loading") as string,
         );
 
       const blob = await response.blob();
       if (!blob.type.startsWith("image/")) {
         throw new Error(
-          t("components.imageUpload.imageUrl.error.notImage") as string
+          t("components.imageUpload.imageUrl.error.notImage") as string,
         );
       }
 

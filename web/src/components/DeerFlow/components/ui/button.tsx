@@ -1,9 +1,18 @@
 import * as React from "react";
-import { Button as ChakraButton, ButtonProps as ChakraButtonProps } from "@chakra-ui/react";
+import {
+  Button as ChakraButton,
+  ButtonProps as ChakraButtonProps,
+} from "@chakra-ui/react";
 
 export interface ButtonProps extends ChakraButtonProps {
-  variant?: 'default' | 'destructive' | 'outline' | 'secondary' | 'ghost' | 'link';
-  size?: 'default' | 'sm' | 'lg' | 'icon';
+  variant?:
+    | "default"
+    | "destructive"
+    | "outline"
+    | "secondary"
+    | "ghost"
+    | "link";
+  size?: "default" | "sm" | "lg" | "icon";
   asChild?: boolean;
 }
 
@@ -24,7 +33,16 @@ const sizeMapping = {
 };
 
 const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
-  ({ className, variant = "default", size = "default", asChild = false, ...props }, ref) => {
+  (
+    {
+      className,
+      variant = "default",
+      size = "default",
+      asChild = false,
+      ...props
+    },
+    ref,
+  ) => {
     const chakraVariant = variantMapping[variant];
     const chakraSize = sizeMapping[size];
 
@@ -37,7 +55,7 @@ const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
         {...props}
       />
     );
-  }
+  },
 );
 
 Button.displayName = "Button";

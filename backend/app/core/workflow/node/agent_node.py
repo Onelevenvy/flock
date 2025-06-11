@@ -20,7 +20,6 @@ from typing import Any
 from langchain_core.prompts import ChatPromptTemplate, MessagesPlaceholder
 
 
-
 class AgentNode:
     """Agent Node that combines LLM with tools and knowledge bases"""
 
@@ -36,7 +35,7 @@ class AgentNode:
         agent_name: str = None,
     ):
         self.node_id = node_id
-        self.system_message = system_message 
+        self.system_message = system_message
         self.user_message = user_message
         self.agent_name = agent_name or node_id
         self.model_info = get_model_info(model_name)
@@ -44,14 +43,14 @@ class AgentNode:
         self.user_prompt = user_message
         # 准备工具列表
         self.tools_list = []
-        
+
         # 添加常规工具
         if tools:
             for tool_name in tools:
                 tool = get_tool(tool_name)
                 if tool:
                     self.tools_list.append(tool)
-        
+
         # 添加知识库工具
         if retrieval_tools:
             for kb_tool in retrieval_tools:
@@ -73,7 +72,7 @@ class AgentNode:
                     )
                     if retrieval_tool:
                         self.tools_list.append(retrieval_tool)
-        
+
         # 初始化模型
         try:
             # 创建模型配置
@@ -84,13 +83,9 @@ class AgentNode:
                 "api_key": self.model_info["api_key"],
                 "base_url": self.model_info["base_url"],
             }
-            
+
             # 初始化模型
             self.llm = model_provider_manager.init_model(**self.model_config)
-            
-           
-            
-            
 
         except ValueError:
             raise ValueError(f"Model {model_name} is not supported as a chat model.")
@@ -102,11 +97,11 @@ class AgentNode:
 
         if "node_outputs" not in state:
             state["node_outputs"] = {}
-        
+
         history = state.get("history", [])
         messages = state.get("messages", [])
         all_messages = state.get("all_messages", [])
-        
+
         if self.system_prompt:
             # First parse variables, then escape any remaining curly braces
             parsed_system_prompt = (
@@ -161,8 +156,7 @@ class AgentNode:
         messages = state.get("messages", [])
         all_messages = state.get("all_messages", [])
         prompt = llm_node_prompts.partial(history_string=format_messages(history))
-       
-        
+
         # 准备Agent的输入状态
         if self.user_prompt:
             parsed_user_prompt = (
@@ -171,20 +165,22 @@ class AgentNode:
                 .replace("}", "}}")
             )
             agent_input = {
-                "messages": [{"role": "user", "content": parsed_user_prompt}]}
+                "messages": [{"role": "user", "content": parsed_user_prompt}]
+            }
         else:
             agent_input = {
-                "messages": [{"role": "user", "content": all_messages[-1].content}]}  # 最后一条用户类型的消息
-            
+                "messages": [{"role": "user", "content": all_messages[-1].content}]
+            }  # 最后一条用户类型的消息
+
         # 创建React Agent
         self.agent = create_react_agent(
-                model=self.llm,
-                tools=self.tools_list,
-                messages_modifier=prompt,
-            )
+            model=self.llm,
+            tools=self.tools_list,
+            messages_modifier=prompt,
+        )
         # 调用Agent
         agent_result = await self.agent.ainvoke(agent_input)
-        
+
         # 获取最终回复
         messages = agent_result["messages"]
         # 从后往前找第一个不带工具调用的AI消息
@@ -195,16 +191,18 @@ class AgentNode:
         else:
             # 如果没有找到合适的AIMessage，使用最后一个消息
             result = messages[-1]
-        
+
         # 更新 node_outputs
         new_output = {self.node_id: {"response": result.content}}
         state["node_outputs"] = update_node_outputs(state["node_outputs"], new_output)
-        
+
         return_state: ReturnWorkflowTeamState = {
             "history": history + [result],
-            "messages": [result] if hasattr(result, "tool_calls") and result.tool_calls else [],
+            "messages": (
+                [result] if hasattr(result, "tool_calls") and result.tool_calls else []
+            ),
             "all_messages": messages + [result],
             "node_outputs": state["node_outputs"],
         }
-        
-        return return_state 
+
+        return return_state

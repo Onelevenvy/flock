@@ -8,7 +8,9 @@ import { nodeConfig } from "../nodeConfig";
 import { ParameterExtractorNodeData, ParameterSchema } from "../../types";
 import ModelProviderIcon from "@/components/Icons/models";
 
-const ParameterExtractorNode: React.FC<NodeProps<ParameterExtractorNodeData>> = (props) => {
+const ParameterExtractorNode: React.FC<
+  NodeProps<ParameterExtractorNodeData>
+> = (props) => {
   const { t } = useTranslation();
   const { icon: Icon, colorScheme } = nodeConfig.parameterExtractor;
   const { parameters } = props.data;
@@ -31,7 +33,7 @@ const ParameterExtractorNode: React.FC<NodeProps<ParameterExtractorNodeData>> = 
     () => (
       <ModelProviderIcon modelprovider_name={providerName} key={providerName} />
     ),
-    [providerName]
+    [providerName],
   );
 
   return (
@@ -100,7 +102,11 @@ const ParameterExtractorNode: React.FC<NodeProps<ParameterExtractorNodeData>> = 
             >
               <Text fontSize="xs" fontWeight="500">
                 {paramName} ({paramData.type})
-                {paramData.required && <Text as="span" color="red.500">*</Text>}
+                {paramData.required && (
+                  <Text as="span" color="red.500">
+                    *
+                  </Text>
+                )}
               </Text>
             </Box>
           );
@@ -110,4 +116,4 @@ const ParameterExtractorNode: React.FC<NodeProps<ParameterExtractorNodeData>> = 
   );
 };
 
-export default React.memo(ParameterExtractorNode); 
+export default React.memo(ParameterExtractorNode);

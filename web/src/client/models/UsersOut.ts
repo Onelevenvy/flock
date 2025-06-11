@@ -3,9 +3,9 @@
 /* tslint:disable */
 /* eslint-disable */
 
-import type { UserOut } from './UserOut';
+import type { UserOut } from "./UserOut";
 
 export type UsersOut = {
-    data: Array<UserOut>;
-    count: number;
+  data: Array<UserOut>;
+  count: number;
 };

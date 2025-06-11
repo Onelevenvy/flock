@@ -3,14 +3,14 @@
 /* tslint:disable */
 /* eslint-disable */
 
-import type { Resource } from './Resource';
+import type { Resource } from "./Resource";
 
 /**
  * Response model for RAG resources.
  */
 export type RAGResourcesResponse = {
-    /**
-     * The resources of the RAG
-     */
-    resources: Array<Resource>;
+  /**
+   * The resources of the RAG
+   */
+  resources: Array<Resource>;
 };

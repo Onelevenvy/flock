@@ -64,12 +64,14 @@ const RoleForm = ({ role, groupId, isOpen, onClose }: RoleFormProps) => {
   });
 
   useEffect(() => {
-    setValue('group_id', groupId);
+    setValue("group_id", groupId);
   }, [groupId, setValue]);
 
   const createRole = async (data: RoleCreate) => {
     // console.log('Creating role with data:', data);
-    await RolesService.createRole({ requestBody: { ...data, group_id: groupId } });
+    await RolesService.createRole({
+      requestBody: { ...data, group_id: groupId },
+    });
   };
 
   const updateRole = async (data: RoleCreate) => {
@@ -82,7 +84,7 @@ const RoleForm = ({ role, groupId, isOpen, onClose }: RoleFormProps) => {
       showToast(
         "Success!",
         `Role ${isEditMode ? "updated" : "created"} successfully.`,
-        "success"
+        "success",
       );
       reset();
       onClose();
@@ -106,9 +108,9 @@ const RoleForm = ({ role, groupId, isOpen, onClose }: RoleFormProps) => {
   };
 
   return (
-    <Modal 
-      isOpen={isOpen} 
-      onClose={onClose} 
+    <Modal
+      isOpen={isOpen}
+      onClose={onClose}
       size={{ base: "sm", md: "md" }}
       isCentered
       motionPreset="slideInBottom"
@@ -123,7 +125,7 @@ const RoleForm = ({ role, groupId, isOpen, onClose }: RoleFormProps) => {
         as="form"
         onSubmit={handleSubmit(onSubmit)}
       >
-        <ModalHeader 
+        <ModalHeader
           borderBottom="1px solid"
           borderColor={borderColor}
           py={4}
@@ -132,7 +134,7 @@ const RoleForm = ({ role, groupId, isOpen, onClose }: RoleFormProps) => {
         >
           {isEditMode ? "Edit Role" : "Add Role"}
         </ModalHeader>
-        
+
         <ModalCloseButton
           position="absolute"
           right={4}
@@ -148,11 +150,7 @@ const RoleForm = ({ role, groupId, isOpen, onClose }: RoleFormProps) => {
         <ModalBody py={6}>
           <VStack spacing={6}>
             <FormControl isRequired isInvalid={!!errors.name}>
-              <FormLabel
-                fontSize="sm"
-                fontWeight="500"
-                color="gray.700"
-              >
+              <FormLabel fontSize="sm" fontWeight="500" color="gray.700">
                 Role Name
               </FormLabel>
               <Input
@@ -180,11 +178,7 @@ const RoleForm = ({ role, groupId, isOpen, onClose }: RoleFormProps) => {
             </FormControl>
 
             <FormControl>
-              <FormLabel
-                fontSize="sm"
-                fontWeight="500"
-                color="gray.700"
-              >
+              <FormLabel fontSize="sm" fontWeight="500" color="gray.700">
                 Description
               </FormLabel>
               <Input
@@ -208,11 +202,7 @@ const RoleForm = ({ role, groupId, isOpen, onClose }: RoleFormProps) => {
           </VStack>
         </ModalBody>
 
-        <ModalFooter 
-          borderTop="1px solid"
-          borderColor={borderColor}
-          gap={3}
-        >
+        <ModalFooter borderTop="1px solid" borderColor={borderColor} gap={3}>
           <Button
             variant="primary"
             type="submit"
@@ -245,4 +235,4 @@ const RoleForm = ({ role, groupId, isOpen, onClose }: RoleFormProps) => {
   );
 };
 
-export default RoleForm; 
+export default RoleForm;

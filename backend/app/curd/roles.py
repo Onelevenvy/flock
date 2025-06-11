@@ -25,4 +25,4 @@ def update_role(*, session: Session, db_role: Role, role_in: RoleUpdate) -> Any:
 def get_role_by_name(*, session: Session, name: str) -> Role | None:
     statement = select(Role).where(Role.name == name)
     session_role = session.exec(statement).first()
-    return session_role 
+    return session_role

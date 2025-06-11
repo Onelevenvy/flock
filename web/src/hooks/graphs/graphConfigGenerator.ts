@@ -21,11 +21,11 @@ export interface GraphConfig {
 export function generateGraphConfig(
   nodes: CustomNode[],
   edges: Edge[],
-  configName: string = "Flow Visualization"
+  configName: string = "Flow Visualization",
 ): GraphConfig {
   const startEdge = edges.find((edge) => {
     const sourceNode = nodes.find(
-      (node) => node.id === edge.source && node.type === "start"
+      (node) => node.id === edge.source && node.type === "start",
     );
     return sourceNode !== undefined;
   });
@@ -68,7 +68,9 @@ export function generateGraphConfig(
       entry_point: entryPointId,
       start_connections: edges
         .filter((edge) =>
-          nodes.find((node) => node.id === edge.source && node.type === "start")
+          nodes.find(
+            (node) => node.id === edge.source && node.type === "start",
+          ),
         )
         .map((edge) => ({
           target: edge.target,
@@ -76,7 +78,7 @@ export function generateGraphConfig(
         })),
       end_connections: edges
         .filter((edge) =>
-          nodes.find((node) => node.id === edge.target && node.type === "end")
+          nodes.find((node) => node.id === edge.target && node.type === "end"),
         )
         .map((edge) => ({
           source: edge.source,

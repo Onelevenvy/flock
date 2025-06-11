@@ -1,4 +1,11 @@
-import { Box, Tag, TagLabel, Text, VStack, useColorModeValue } from "@chakra-ui/react";
+import {
+  Box,
+  Tag,
+  TagLabel,
+  Text,
+  VStack,
+  useColorModeValue,
+} from "@chakra-ui/react";
 import { useTranslation } from "react-i18next";
 
 import type { TeamOut } from "@/client";
@@ -28,43 +35,26 @@ function TeamInforCard({ teamData }: { teamData: TeamOut }) {
     >
       <VStack spacing={4} align="stretch">
         <Box>
-          <Text 
-            color={labelColor} 
-            fontSize="sm" 
-            fontWeight="500"
-            mb={2}
-          >
+          <Text color={labelColor} fontSize="sm" fontWeight="500" mb={2}>
             {t("team.teamsetting.type")}
           </Text>
-          <Tag 
-            variant="subtle" 
-            colorScheme="blue" 
+          <Tag
+            variant="subtle"
+            colorScheme="blue"
             size="md"
             borderRadius="full"
             px={3}
             py={1}
           >
-            <TagLabel fontWeight="500">
-              {teamData.workflow || "N/A"}
-            </TagLabel>
+            <TagLabel fontWeight="500">{teamData.workflow || "N/A"}</TagLabel>
           </Tag>
         </Box>
 
         <Box>
-          <Text 
-            color={labelColor}
-            fontSize="sm"
-            fontWeight="500"
-            mb={2}
-          >
+          <Text color={labelColor} fontSize="sm" fontWeight="500" mb={2}>
             {t("team.teamsetting.description")}
           </Text>
-          <Text
-            color={textColor}
-            fontSize="sm"
-            noOfLines={3}
-            lineHeight="tall"
-          >
+          <Text color={textColor} fontSize="sm" noOfLines={3} lineHeight="tall">
             {teamData.description || "N/A"}
           </Text>
         </Box>

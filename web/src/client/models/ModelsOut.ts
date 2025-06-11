@@ -3,9 +3,9 @@
 /* tslint:disable */
 /* eslint-disable */
 
-import type { ModelOut } from './ModelOut';
+import type { ModelOut } from "./ModelOut";
 
 export type ModelsOut = {
-    data: Array<ModelOut>;
-    count: number;
+  data: Array<ModelOut>;
+  count: number;
 };

@@ -3,17 +3,17 @@
 /* tslint:disable */
 /* eslint-disable */
 export const $ApiKeysOutPublic = {
-    properties: {
-        data: {
-    type: 'array',
-    contains: {
-        type: 'ApiKeyOutPublic',
+  properties: {
+    data: {
+      type: "array",
+      contains: {
+        type: "ApiKeyOutPublic",
+      },
+      isRequired: true,
     },
-    isRequired: true,
-},
-        count: {
-    type: 'number',
-    isRequired: true,
-},
+    count: {
+      type: "number",
+      isRequired: true,
     },
+  },
 } as const;

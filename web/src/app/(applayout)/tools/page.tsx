@@ -45,7 +45,7 @@ function Skills() {
     refetch,
   } = useSkillsQuery();
   const [skills, setSkills] = useState<SkillOut[] | undefined>(
-    initialSkills?.data
+    initialSkills?.data,
   );
 
   useEffect(() => {
@@ -82,19 +82,26 @@ function Skills() {
     defaultTab: "all",
   });
 
-  const filteredSkills = skills?.filter((skill) => skill.name !== "ask-human" && (activeTab=='all' || activeTab=='managed' && skill.managed || activeTab=='def' && !skill.managed));
+  const filteredSkills = skills?.filter(
+    (skill) =>
+      skill.name !== "ask-human" &&
+      (activeTab == "all" ||
+        (activeTab == "managed" && skill.managed) ||
+        (activeTab == "def" && !skill.managed)),
+  );
   const [selectedSkill, setSelectedSkill] = useState<SkillOut | null>(null);
 
   return (
     <Flex h="full">
-      <Box flex="1" bg="ui.bgMain" display="flex" flexDirection="column" h="full">
+      <Box
+        flex="1"
+        bg="ui.bgMain"
+        display="flex"
+        flexDirection="column"
+        h="full"
+      >
         <Box px={6} py={4}>
-          <Flex
-            direction="row"
-            justify="space-between"
-            align="center"
-            mb={2}
-          >
+          <Flex direction="row" justify="space-between" align="center" mb={2}>
             <Box>
               <TabSlider
                 value={activeTab}
@@ -108,12 +115,7 @@ function Skills() {
           </Flex>
         </Box>
 
-        <Box 
-          flex="1" 
-          overflowY="auto"
-          px={6}
-          pb={4}
-        >
+        <Box flex="1" overflowY="auto" px={6} pb={4}>
           {isLoading ? (
             <Flex justify="center" align="center" height="full" width="full">
               <Spinner size="xl" color="ui.main" thickness="3px" />
@@ -222,14 +224,14 @@ function Skills() {
               showToast(
                 "Success",
                 "Credentials updated successfully",
-                "success"
+                "success",
               );
               setSkills((prevSkills) =>
                 prevSkills?.map((skill) =>
                   skill.id === selectedSkill.id
                     ? { ...skill, credentials: updatedCredentials }
-                    : skill
-                )
+                    : skill,
+                ),
               );
               refetch();
             } catch (error) {

@@ -1,11 +1,25 @@
-import { Modal, ModalOverlay, ModalContent, ModalHeader, ModalFooter, ModalBody, ModalCloseButton, VStack, Input, Select, Button, FormControl, FormLabel } from "@chakra-ui/react";
+import {
+  Modal,
+  ModalOverlay,
+  ModalContent,
+  ModalHeader,
+  ModalFooter,
+  ModalBody,
+  ModalCloseButton,
+  VStack,
+  Input,
+  Select,
+  Button,
+  FormControl,
+  FormLabel,
+} from "@chakra-ui/react";
 import React, { useState, useEffect } from "react";
 import { useTranslation } from "react-i18next";
 
 interface ServerConfig {
   name: string;
-  transport: 'stdio' | 'sse';
-  command?: 'python' | 'node';
+  transport: "stdio" | "sse";
+  command?: "python" | "node";
   args?: string[];
   url?: string;
 }
@@ -84,8 +98,12 @@ const ServerModal: React.FC<ServerModalProps> = ({
                   })
                 }
               >
-                <option value="stdio">{t("workflow.nodes.mcp.serverType.stdio")}</option>
-                <option value="sse">{t("workflow.nodes.mcp.serverType.sse")}</option>
+                <option value="stdio">
+                  {t("workflow.nodes.mcp.serverType.stdio")}
+                </option>
+                <option value="sse">
+                  {t("workflow.nodes.mcp.serverType.sse")}
+                </option>
               </Select>
             </FormControl>
 
@@ -158,4 +176,4 @@ const ServerModal: React.FC<ServerModalProps> = ({
   );
 };
 
-export default ServerModal; 
+export default ServerModal;

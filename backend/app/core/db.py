@@ -7,9 +7,20 @@ from app.core.config import settings
 from app.core.model_providers.model_provider_manager import model_provider_manager
 from app.core.tools import managed_tools
 from app.curd import users
-from app.models import (ModelProvider, Models, Skill, User, UserCreate, 
-                       Role, Group, Resource, RoleAccess, ActionType, 
-                       ResourceType, AccessScope)
+from app.models import (
+    ModelProvider,
+    Models,
+    Skill,
+    User,
+    UserCreate,
+    Role,
+    Group,
+    Resource,
+    RoleAccess,
+    ActionType,
+    ResourceType,
+    AccessScope,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -29,22 +40,20 @@ def init_default_roles_and_groups(session: Session, superuser: User) -> None:
     admin_role = session.exec(select(Role).where(Role.name == "admin")).first()
     if not admin_role:
         admin_role = Role(
-            name="admin",
-            description="管理员角色，拥有所有权限",
-            is_system_role=True
+            name="admin", description="管理员角色，拥有所有权限", is_system_role=True
         )
         session.add(admin_role)
-        
+
     normal_role = session.exec(select(Role).where(Role.name == "普通用户")).first()
     if not normal_role:
         normal_role = Role(
             name="普通用户",
             description="普通用户角色，具有基本访问权限",
             is_system_role=True,
-            parent_role_id=None
+            parent_role_id=None,
         )
         session.add(normal_role)
-    
+
     # 创建默认用户组
     admin_group = session.exec(select(Group).where(Group.name == "管理员组")).first()
     if not admin_group:
@@ -52,20 +61,22 @@ def init_default_roles_and_groups(session: Session, superuser: User) -> None:
             name="管理员组",
             description="管理员用户组，拥有所有权限",
             is_system_group=True,
-            admin_id=superuser.id  # 设置超级用户为管理员组的管理员
+            admin_id=superuser.id,  # 设置超级用户为管理员组的管理员
         )
         session.add(admin_group)
-        
-    default_group = session.exec(select(Group).where(Group.name == "默认用户组")).first()
+
+    default_group = session.exec(
+        select(Group).where(Group.name == "默认用户组")
+    ).first()
     if not default_group:
         default_group = Group(
             name="默认用户组",
             description="默认用户组，所有新用户默认加入此组",
             is_system_group=True,
-            admin_id=superuser.id  # 设置超级用户为默认组的管理员
+            admin_id=superuser.id,  # 设置超级用户为默认组的管理员
         )
         session.add(default_group)
-    
+
     session.flush()  # 确保所有对象都有ID
 
     # 将普通用户角色关联到默认用户组
@@ -83,21 +94,21 @@ def init_default_roles_and_groups(session: Session, superuser: User) -> None:
         resource = session.exec(
             select(Resource).where(
                 Resource.name == f"{resource_type.value}_resource",
-                Resource.resource_id == None
+                Resource.resource_id == None,
             )
         ).first()
-        
+
         if not resource:
             resource = Resource(
                 name=f"{resource_type.value}_resource",
                 description=f"Default resource for {resource_type.value}",
                 type=resource_type,
-                resource_id=None  # 这是资源类型级别的权限
+                resource_id=None,  # 这是资源类型级别的权限
             )
             session.add(resource)
-    
+
     session.flush()
-    
+
     # 设置默认权限
     # 管理员角色获得所有资源的所有权限
     for resource in session.exec(select(Resource)).all():
@@ -106,19 +117,19 @@ def init_default_roles_and_groups(session: Session, superuser: User) -> None:
                 select(RoleAccess).where(
                     RoleAccess.role_id == admin_role.id,
                     RoleAccess.resource_id == resource.id,
-                    RoleAccess.action == action
+                    RoleAccess.action == action,
                 )
             ).first()
-            
+
             if not role_access:
                 role_access = RoleAccess(
                     role_id=admin_role.id,
                     resource_id=resource.id,
                     action=action,
-                    scope=AccessScope.GLOBAL
+                    scope=AccessScope.GLOBAL,
                 )
                 session.add(role_access)
-    
+
     # 普通用户角色获得基本权限
     for resource in session.exec(select(Resource)).all():
         # 普通用户只能读取和执行
@@ -127,29 +138,29 @@ def init_default_roles_and_groups(session: Session, superuser: User) -> None:
                 select(RoleAccess).where(
                     RoleAccess.role_id == normal_role.id,
                     RoleAccess.resource_id == resource.id,
-                    RoleAccess.action == action
+                    RoleAccess.action == action,
                 )
             ).first()
-            
+
             if not role_access:
                 role_access = RoleAccess(
                     role_id=normal_role.id,
                     resource_id=resource.id,
                     action=action,
-                    scope=AccessScope.PERSONAL  # 普通用户只能访问自己的资源
+                    scope=AccessScope.PERSONAL,  # 普通用户只能访问自己的资源
                 )
                 session.add(role_access)
-    
+
     # 将超级用户添加到管理员组和角色
     if superuser:
         # 添加到管理员角色
         if admin_role not in superuser.roles:
             superuser.roles.append(admin_role)
-        
+
         # 添加到管理员组
         if admin_group not in superuser.groups:
             superuser.groups.append(admin_group)
-    
+
     session.commit()
 
 
@@ -183,7 +194,7 @@ def init_db(session: Session) -> None:
             is_superuser=True,
         )
         user = users.create_user(session=session, user_create=user_in)
-    
+
     # 初始化默认角色和用户组
     init_default_roles_and_groups(session, user)
 
@@ -191,16 +202,16 @@ def init_db(session: Session) -> None:
     skill_resource = session.exec(
         select(Resource).where(
             Resource.name == f"{ResourceType.SKILL.value}_resource",
-            Resource.resource_id == None
+            Resource.resource_id == None,
         )
     ).first()
-    
+
     if not skill_resource:
         skill_resource = Resource(
             name=f"{ResourceType.SKILL.value}_resource",
             description=f"Default resource for {ResourceType.SKILL.value}",
             type=ResourceType.SKILL,
-            resource_id=None
+            resource_id=None,
         )
         session.add(skill_resource)
         session.flush()

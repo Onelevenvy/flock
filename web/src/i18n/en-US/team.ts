@@ -111,7 +111,8 @@ const translation = {
         required: "Required",
         untitled: "Untitled",
         extractionInstruction: "Extraction Instruction",
-        instructionPlaceholder: "Enter additional instructions to help the parameter extractor understand how to extract parameters (optional)",
+        instructionPlaceholder:
+          "Enter additional instructions to help the parameter extractor understand how to extract parameters (optional)",
         importFromTool: "Import from Tool",
         modal: {
           title: "Parameter Configuration",
@@ -127,7 +128,7 @@ const translation = {
           importButton: "Import Parameters",
           importSuccess: "Successfully imported parameters",
           importError: "Failed to import parameters",
-        }
+        },
       },
       crewai: {
         model: "Model",
@@ -243,7 +244,7 @@ const translation = {
         deleteServer: "Delete Server",
         serverType: {
           stdio: "STDIO",
-          sse: "SSE"
+          sse: "SSE",
         },
         toolsList: "Available Tools",
         loadingTools: "Loading tools...",
@@ -255,10 +256,11 @@ const translation = {
           editTitle: "Edit Server",
           save: "Save",
           deleteConfirm: "Confirm Delete",
-          deleteMessage: "Are you sure you want to delete this server configuration?",
+          deleteMessage:
+            "Are you sure you want to delete this server configuration?",
           confirm: "Confirm",
-          cancel: "Cancel"
-        }
+          cancel: "Cancel",
+        },
       },
     },
     common: {

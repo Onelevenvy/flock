@@ -213,7 +213,7 @@ async def create_upload(
             update={
                 "owner_id": current_user.id,
                 "status": UploadStatus.IN_PROGRESS,
-                "resource_id": resource.id  # 设置resource_id
+                "resource_id": resource.id,  # 设置resource_id
             },
         )
         session.add(upload)

@@ -4,8 +4,8 @@
 /* eslint-disable */
 
 export type ApiKeyOut = {
-    description?: (string | null);
-    id?: (number | null);
-    key: string;
-    created_at: string;
+  description?: string | null;
+  id?: number | null;
+  key: string;
+  created_at: string;
 };

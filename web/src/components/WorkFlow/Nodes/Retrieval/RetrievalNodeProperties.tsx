@@ -37,7 +37,7 @@ const RetrievalProperties: React.FC<RetrievalPropertiesProps> = ({
       setQueryInput(value);
       onNodeDataChange(node.id, "query", value);
     },
-    [node.id, onNodeDataChange]
+    [node.id, onNodeDataChange],
   );
 
   const handleRagMethodChange = useCallback(
@@ -46,7 +46,7 @@ const RetrievalProperties: React.FC<RetrievalPropertiesProps> = ({
       setRagMethod(value);
       onNodeDataChange(node.id, "rag_method", value);
     },
-    [node.id, onNodeDataChange]
+    [node.id, onNodeDataChange],
   );
 
   const handleDatabaseChange = useCallback(
@@ -55,7 +55,7 @@ const RetrievalProperties: React.FC<RetrievalPropertiesProps> = ({
       setSelectedDatabase(value);
 
       const selectedUpload = uploads?.data.find(
-        (upload) => upload.name === value
+        (upload) => upload.name === value,
       );
 
       if (selectedUpload) {
@@ -64,7 +64,7 @@ const RetrievalProperties: React.FC<RetrievalPropertiesProps> = ({
         onNodeDataChange(node.id, "kb_id", selectedUpload.id);
       }
     },
-    [node.id, onNodeDataChange, uploads]
+    [node.id, onNodeDataChange, uploads],
   );
 
   const {
@@ -87,7 +87,7 @@ const RetrievalProperties: React.FC<RetrievalPropertiesProps> = ({
         placeholder="Enter query. Use '/' to insert variables."
         showVariables={showVariables}
         setShowVariables={setShowVariables}
-        inputRef={inputRef}
+        inputRef={inputRef as React.RefObject<HTMLTextAreaElement>}
         handleKeyDown={handleKeyDown}
         insertVariable={insertVariable}
         availableVariables={availableVariables}

@@ -64,10 +64,6 @@ const SidebarItems = ({ onClose }: SidebarItemsProps) => {
     },
   ];
 
-
-
- 
-
   return (
     <Box display="flex" flexDirection="column">
       {items.map((item) => {
@@ -104,8 +100,8 @@ const SidebarItems = ({ onClose }: SidebarItemsProps) => {
               color={isActive ? textColor : "gray.500"}
               transition="all 0.2s"
             />
-            <Text 
-              fontSize="xs" 
+            <Text
+              fontSize="xs"
               color={isActive ? textColor : "gray.500"}
               fontWeight={isActive ? "600" : "500"}
               transition="all 0.2s"

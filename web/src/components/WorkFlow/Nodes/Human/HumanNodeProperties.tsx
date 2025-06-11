@@ -44,14 +44,14 @@ const HumanNodeProperties: React.FC<HumanNodePropertiesProps> = ({
       };
       onNodeDataChange(node.id, "routes", newRoutes);
     },
-    [node.id, data.routes, onNodeDataChange]
+    [node.id, data.routes, onNodeDataChange],
   );
 
   const handleTitleChange = useCallback(
     (value: string) => {
       onNodeDataChange(node.id, "title", value);
     },
-    [node.id, onNodeDataChange]
+    [node.id, onNodeDataChange],
   );
 
   const getDefaultTitle = useCallback(
@@ -67,7 +67,7 @@ const HumanNodeProperties: React.FC<HumanNodePropertiesProps> = ({
           return "";
       }
     },
-    [t]
+    [t],
   );
 
   const handleInteractionTypeChange = useCallback(
@@ -98,7 +98,7 @@ const HumanNodeProperties: React.FC<HumanNodePropertiesProps> = ({
       onNodeDataChange(node.id, "routes", initialRoutes);
       onNodeDataChange(node.id, "title", getDefaultTitle(value));
     },
-    [node.id, onNodeDataChange, getDefaultTitle]
+    [node.id, onNodeDataChange, getDefaultTitle],
   );
 
   const renderRoutesByType = () => {
@@ -250,7 +250,7 @@ const HumanNodeProperties: React.FC<HumanNodePropertiesProps> = ({
       onNodeDataChange(
         node.id,
         "title",
-        getDefaultTitle(data.interaction_type)
+        getDefaultTitle(data.interaction_type),
       );
     }
   }, [

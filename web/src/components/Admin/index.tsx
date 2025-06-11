@@ -83,7 +83,9 @@ function Admin() {
                       >
                         <Td py={4}>
                           <Flex align="center" gap={2}>
-                            <Text color={!user.full_name ? "gray.400" : "gray.700"}>
+                            <Text
+                              color={!user.full_name ? "gray.400" : "gray.700"}
+                            >
                               {user.full_name || "N/A"}
                             </Text>
                             {currentUser?.id === user.id && (
@@ -98,7 +100,9 @@ function Admin() {
                             )}
                           </Flex>
                         </Td>
-                        <Td py={4} color="gray.600">{user.email}</Td>
+                        <Td py={4} color="gray.600">
+                          {user.email}
+                        </Td>
                         <Td py={4}>
                           <Badge
                             colorScheme={user.is_superuser ? "purple" : "gray"}

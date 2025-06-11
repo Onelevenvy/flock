@@ -98,7 +98,7 @@ const IfElseNodeProperties: React.FC<IfElseNodePropertiesProps> = ({
       });
       onNodeDataChange(node.id, "cases", newCases);
     },
-    [node.id, node.data.cases, onNodeDataChange]
+    [node.id, node.data.cases, onNodeDataChange],
   );
 
   const handleVariableSelect = useCallback(
@@ -113,7 +113,7 @@ const IfElseNodeProperties: React.FC<IfElseNodePropertiesProps> = ({
                     ...condition,
                     field: value,
                   }
-                : condition
+                : condition,
             ),
           };
         }
@@ -121,7 +121,7 @@ const IfElseNodeProperties: React.FC<IfElseNodePropertiesProps> = ({
       });
       onNodeDataChange(node.id, "cases", newCases);
     },
-    [node.id, node.data.cases, onNodeDataChange]
+    [node.id, node.data.cases, onNodeDataChange],
   );
 
   const handleOperatorChange = useCallback(
@@ -133,7 +133,7 @@ const IfElseNodeProperties: React.FC<IfElseNodePropertiesProps> = ({
             conditions: (caseItem.conditions || []).map((condition) =>
               condition.id === conditionId
                 ? { ...condition, comparison_operator: operator }
-                : condition
+                : condition,
             ),
           };
         }
@@ -141,7 +141,7 @@ const IfElseNodeProperties: React.FC<IfElseNodePropertiesProps> = ({
       });
       onNodeDataChange(node.id, "cases", newCases);
     },
-    [node.id, node.data.cases, onNodeDataChange]
+    [node.id, node.data.cases, onNodeDataChange],
   );
 
   const handleValueSelect = useCallback(
@@ -151,10 +151,15 @@ const IfElseNodeProperties: React.FC<IfElseNodePropertiesProps> = ({
           return {
             ...caseItem,
             conditions: (caseItem.conditions || []).map((condition) =>
-              condition.id === conditionId ? { 
-                ...condition, 
-                value: condition.compareType === 'variable' ? `{${value}}` : value 
-              } : condition
+              condition.id === conditionId
+                ? {
+                    ...condition,
+                    value:
+                      condition.compareType === "variable"
+                        ? `{${value}}`
+                        : value,
+                  }
+                : condition,
             ),
           };
         }
@@ -162,7 +167,7 @@ const IfElseNodeProperties: React.FC<IfElseNodePropertiesProps> = ({
       });
       onNodeDataChange(node.id, "cases", newCases);
     },
-    [node.id, node.data.cases, onNodeDataChange]
+    [node.id, node.data.cases, onNodeDataChange],
   );
 
   // Toggle AND/OR operator
@@ -182,7 +187,7 @@ const IfElseNodeProperties: React.FC<IfElseNodePropertiesProps> = ({
       });
       onNodeDataChange(node.id, "cases", newCases);
     },
-    [node.id, node.data.cases, onNodeDataChange]
+    [node.id, node.data.cases, onNodeDataChange],
   );
 
   // 添加删除条件的处理函数
@@ -199,7 +204,7 @@ const IfElseNodeProperties: React.FC<IfElseNodePropertiesProps> = ({
       });
       onNodeDataChange(node.id, "cases", newCases);
     },
-    [node.id, node.data.cases, onNodeDataChange]
+    [node.id, node.data.cases, onNodeDataChange],
   );
 
   // 删除 case
@@ -213,7 +218,7 @@ const IfElseNodeProperties: React.FC<IfElseNodePropertiesProps> = ({
       });
       onNodeDataChange(node.id, "cases", newCases);
     },
-    [node.id, node.data.cases, onNodeDataChange]
+    [node.id, node.data.cases, onNodeDataChange],
   );
 
   return (
@@ -264,22 +269,22 @@ const IfElseNodeProperties: React.FC<IfElseNodePropertiesProps> = ({
               >
                 {index === 0 ? "IF" : "ELIF"}
               </Box>
-              
+
               <HStack spacing={2}>
                 {caseItem.conditions.length > 1 && (
                   <Button
                     size="sm"
                     variant="outline"
                     rightIcon={<RiLoopLeftLine />}
-                    onClick={() => handleToggleLogicalOperator(caseItem.case_id)}
+                    onClick={() =>
+                      handleToggleLogicalOperator(caseItem.case_id)
+                    }
                     colorScheme="blue"
                   >
                     {caseItem.logical_operator.toUpperCase()}
                   </Button>
                 )}
-                {index === 0 && (
-                  <Box w="32px" />
-                )}
+                {index === 0 && <Box w="32px" />}
                 {index > 0 && (
                   <IconButton
                     aria-label="Remove case"
@@ -315,7 +320,7 @@ const IfElseNodeProperties: React.FC<IfElseNodePropertiesProps> = ({
                       handleVariableSelect(
                         caseItem.case_id,
                         condition.id,
-                        e.target.value
+                        e.target.value,
                       )
                     }
                     bg="white"
@@ -342,7 +347,7 @@ const IfElseNodeProperties: React.FC<IfElseNodePropertiesProps> = ({
                       handleOperatorChange(
                         caseItem.case_id,
                         condition.id,
-                        value
+                        value,
                       )
                     }
                     width="40%"
@@ -384,7 +389,7 @@ const IfElseNodeProperties: React.FC<IfElseNodePropertiesProps> = ({
                                         compareType: e.target.value,
                                         value: "",
                                       }
-                                    : cond
+                                    : cond,
                                 ),
                               };
                             }
@@ -404,12 +409,12 @@ const IfElseNodeProperties: React.FC<IfElseNodePropertiesProps> = ({
                         <Select
                           size="sm"
                           placeholder="Select variable"
-                          value={condition.value?.replace(/[{}]/g, '') || ''}
+                          value={condition.value?.replace(/[{}]/g, "") || ""}
                           onChange={(e) =>
                             handleValueSelect(
                               caseItem.case_id,
                               condition.id,
-                              e.target.value
+                              e.target.value,
                             )
                           }
                           width="49%"
@@ -435,7 +440,7 @@ const IfElseNodeProperties: React.FC<IfElseNodePropertiesProps> = ({
                             handleValueSelect(
                               caseItem.case_id,
                               condition.id,
-                              e.target.value
+                              e.target.value,
                             )
                           }
                           width="49%"
@@ -455,7 +460,6 @@ const IfElseNodeProperties: React.FC<IfElseNodePropertiesProps> = ({
               onClick={() => handleAddCondition(caseItem.case_id)}
               variant="outline"
               colorScheme="gray"
-          
             >
               Add Condition
             </Button>

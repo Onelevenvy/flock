@@ -3,9 +3,9 @@
 /* tslint:disable */
 /* eslint-disable */
 export const $UpdateLanguageMe = {
-    properties: {
-        language: {
-    type: 'string',
-},
+  properties: {
+    language: {
+      type: "string",
     },
+  },
 } as const;

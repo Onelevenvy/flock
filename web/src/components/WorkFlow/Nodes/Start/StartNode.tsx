@@ -9,16 +9,16 @@ const StartNode: React.FC<NodeProps> = (props) => {
 
   return (
     <BaseNode {...props} icon={<Icon />} colorScheme={colorScheme}>
-      <Handle 
-        type="source" 
-        position={Position.Right} 
+      <Handle
+        type="source"
+        position={Position.Right}
         id="right"
         style={{
-          background: 'var(--chakra-colors-ui-wfhandlecolor)',
+          background: "var(--chakra-colors-ui-wfhandlecolor)",
           width: 8,
           height: 8,
-          border: '2px solid white',
-          transition: 'all 0.2s',
+          border: "2px solid white",
+          transition: "all 0.2s",
         }}
         className="custom-handle"
       />

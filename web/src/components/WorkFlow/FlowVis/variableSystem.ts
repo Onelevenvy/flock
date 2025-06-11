@@ -20,7 +20,7 @@ export function parseVariableReference(ref: string): VariableReference | null {
 function getUpstreamNodes(
   nodeId: string,
   nodes: Node[],
-  edges: Edge[]
+  edges: Edge[],
 ): Node[] {
   const upstreamNodeIds = new Set<string>();
   const queue = [nodeId];
@@ -42,7 +42,7 @@ function getUpstreamNodes(
 export function getAvailableVariables(
   currentNodeId: string,
   nodes: Node[],
-  edges: Edge[]
+  edges: Edge[],
 ): VariableReference[] {
   const upstreamNodes = getUpstreamNodes(currentNodeId, nodes, edges);
 
@@ -60,7 +60,7 @@ export function validateVariableReferences(
   nodeId: string,
   data: any,
   nodes: Node[],
-  edges: Edge[]
+  edges: Edge[],
 ): string[] {
   const availableVariables = getAvailableVariables(nodeId, nodes, edges);
   const errors: string[] = [];
@@ -72,7 +72,7 @@ export function validateVariableReferences(
       if (
         ref &&
         !availableVariables.some(
-          (v) => v.nodeId === ref.nodeId && v.variableName === ref.variableName
+          (v) => v.nodeId === ref.nodeId && v.variableName === ref.variableName,
         )
       ) {
         errors.push(`Invalid variable reference: ${value} in field ${key}`);

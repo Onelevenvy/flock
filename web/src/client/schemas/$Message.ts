@@ -3,10 +3,10 @@
 /* tslint:disable */
 /* eslint-disable */
 export const $Message = {
-    properties: {
-        message: {
-    type: 'string',
-    isRequired: true,
-},
+  properties: {
+    message: {
+      type: "string",
+      isRequired: true,
     },
+  },
 } as const;

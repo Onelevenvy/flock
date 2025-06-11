@@ -12,7 +12,7 @@ import { nodeConfig } from "../nodeConfig";
 const AgentNode: React.FC<NodeProps> = (props) => {
   const { icon: Icon, colorScheme } = nodeConfig.agent;
   const [providerName, setProviderName] = useState<string>(props.data.model!);
-  
+
   useEffect(() => {
     setProviderName(props.data.model!);
   }, [props.data]);
@@ -21,11 +21,13 @@ const AgentNode: React.FC<NodeProps> = (props) => {
     () => (
       <ModelProviderIcon modelprovider_name={providerName} key={providerName} />
     ),
-    [providerName]
+    [providerName],
   );
 
   const tools = Array.isArray(props.data.tools) ? props.data.tools : [];
-  const retrievalTools = Array.isArray(props.data.retrievalTools) ? props.data.retrievalTools : [];
+  const retrievalTools = Array.isArray(props.data.retrievalTools)
+    ? props.data.retrievalTools
+    : [];
 
   const handleStyle = {
     background: "var(--chakra-colors-ui-wfhandlecolor)",
@@ -122,7 +124,7 @@ const AgentNode: React.FC<NodeProps> = (props) => {
             </Text>
             {retrievalTools.map((kb: any, index: number) => {
               const kbName = typeof kb === "string" ? kb : kb.name;
-              
+
               return (
                 <Box
                   key={`kb-${index}`}
@@ -156,7 +158,9 @@ export default React.memo(AgentNode, (prevProps, nextProps) => {
   return (
     prevProps.data.model === nextProps.data.model &&
     prevProps.data.label === nextProps.data.label &&
-    JSON.stringify(prevProps.data.tools) === JSON.stringify(nextProps.data.tools) &&
-    JSON.stringify(prevProps.data.retrievalTools) === JSON.stringify(nextProps.data.retrievalTools)
+    JSON.stringify(prevProps.data.tools) ===
+      JSON.stringify(nextProps.data.tools) &&
+    JSON.stringify(prevProps.data.retrievalTools) ===
+      JSON.stringify(nextProps.data.retrievalTools)
   );
-}); 
+});

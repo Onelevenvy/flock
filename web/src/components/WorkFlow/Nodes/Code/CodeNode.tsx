@@ -61,4 +61,4 @@ const CodeNode: React.FC<NodeProps> = (props) => {
   );
 };
 
-export default React.memo(CodeNode); 
+export default React.memo(CodeNode);

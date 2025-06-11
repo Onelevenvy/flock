@@ -1,7 +1,10 @@
-"use client"
+"use client";
 
-import * as React from "react"
-import { Switch as ChakraSwitch, SwitchProps as ChakraSwitchProps } from "@chakra-ui/react"
+import * as React from "react";
+import {
+  Switch as ChakraSwitch,
+  SwitchProps as ChakraSwitchProps,
+} from "@chakra-ui/react";
 
 export interface SwitchProps extends Omit<ChakraSwitchProps, "onChange"> {
   onCheckedChange?: (checked: boolean) => void;
@@ -16,13 +19,15 @@ const Switch = React.forwardRef<HTMLInputElement, SwitchProps>(
         size="md"
         colorScheme="blue"
         isChecked={checked}
-        onChange={onCheckedChange ? (e) => onCheckedChange(e.target.checked) : undefined}
+        onChange={
+          onCheckedChange ? (e) => onCheckedChange(e.target.checked) : undefined
+        }
         {...props}
       />
-    )
-  }
-)
+    );
+  },
+);
 
-Switch.displayName = "Switch"
+Switch.displayName = "Switch";
 
-export { Switch }
+export { Switch };

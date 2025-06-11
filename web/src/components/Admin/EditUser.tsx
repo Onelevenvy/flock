@@ -56,9 +56,15 @@ const EditUser = ({ user, isOpen, onClose }: EditUserProps) => {
       is_active: user.is_active,
       is_superuser: user.is_superuser,
       language: user.language,
-      groups: user.groups?.map(g => g.id).filter((id): id is number => id !== null) || [],
-      roles: user.roles?.map(r => r.id).filter((id): id is number => id !== null) || [],
-      confirm_password: ""
+      groups:
+        user.groups
+          ?.map((g) => g.id)
+          .filter((id): id is number => id !== null) || [],
+      roles:
+        user.roles
+          ?.map((r) => r.id)
+          .filter((id): id is number => id !== null) || [],
+      confirm_password: "",
     },
   });
 
@@ -106,14 +112,10 @@ const EditUser = ({ user, isOpen, onClose }: EditUserProps) => {
         borderRadius="xl"
         boxShadow="xl"
       >
-        <ModalHeader 
-          borderBottom="1px solid" 
-          borderColor="gray.100"
-          py={4}
-        >
+        <ModalHeader borderBottom="1px solid" borderColor="gray.100" py={4}>
           Edit User
         </ModalHeader>
-        <ModalCloseButton 
+        <ModalCloseButton
           top={4}
           transition="all 0.2s"
           _hover={{
@@ -232,19 +234,15 @@ const EditUser = ({ user, isOpen, onClose }: EditUserProps) => {
               >
                 Is superuser
               </Checkbox>
-              <Checkbox
-                {...register("is_active")}
-                colorScheme="blue"
-                size="lg"
-              >
+              <Checkbox {...register("is_active")} colorScheme="blue" size="lg">
                 Is active
               </Checkbox>
             </Flex>
           </VStack>
         </ModalBody>
 
-        <ModalFooter 
-          borderTop="1px solid" 
+        <ModalFooter
+          borderTop="1px solid"
           borderColor="gray.100"
           gap={3}
           py={4}

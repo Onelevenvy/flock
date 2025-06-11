@@ -53,9 +53,7 @@ api_router.include_router(
 )
 
 # 添加langmanus路由
-api_router.include_router(
-    langmanus.router, prefix="/langmanus", tags=["langmanus"]
-)
+api_router.include_router(langmanus.router, prefix="/langmanus", tags=["langmanus"])
 
 # RBAC相关路由
 api_router.include_router(groups.router, prefix="/groups", tags=["groups"])

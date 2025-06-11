@@ -18,7 +18,11 @@ import { fastForwardReplay } from "@/components/DeerFlow/core/api";
 import { useReplayMetadata } from "@/components/DeerFlow/core/api/hooks";
 import type { Option, Resource } from "@/components/DeerFlow/core/messages";
 import { useReplay } from "@/components/DeerFlow/core/replay";
-import { sendMessage, useMessageIds, useStore } from "@/components/DeerFlow/core/store";
+import {
+  sendMessage,
+  useMessageIds,
+  useStore,
+} from "@/components/DeerFlow/core/store";
 import { env } from "@/components/DeerFlow/env";
 import { cn } from "@/components/DeerFlow/lib/utils";
 
@@ -94,9 +98,9 @@ export function MessagesBlock({ className }: { className?: string }) {
         />
       </Box>
       {!isReplay ? (
-        <Box 
-          position="relative" 
-          h="168px" 
+        <Box
+          position="relative"
+          h="168px"
           flexShrink={0}
           bg="white"
           borderWidth="1px"

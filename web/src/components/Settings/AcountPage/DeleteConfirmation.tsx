@@ -45,7 +45,7 @@ const DeleteConfirmation = ({ isOpen, onClose }: DeleteProps) => {
       showToast(
         "Success",
         "Your account has been successfully deleted.",
-        "success"
+        "success",
       );
       logout();
       onClose();
@@ -94,13 +94,17 @@ const DeleteConfirmation = ({ isOpen, onClose }: DeleteProps) => {
 
           <AlertDialogBody py={6}>
             <Text color="gray.700" fontSize="sm" lineHeight="tall">
-              All your account data will be <strong>permanently deleted</strong>. 
-              If you are sure, please click <strong>Confirm</strong> to proceed. 
-              This action cannot be undone.
+              All your account data will be <strong>permanently deleted</strong>
+              . If you are sure, please click <strong>Confirm</strong> to
+              proceed. This action cannot be undone.
             </Text>
           </AlertDialogBody>
 
-          <AlertDialogFooter gap={3} borderTop="1px solid" borderColor={borderColor}>
+          <AlertDialogFooter
+            gap={3}
+            borderTop="1px solid"
+            borderColor={borderColor}
+          >
             <Button
               variant="danger"
               type="submit"

@@ -16,7 +16,7 @@ export default function TqxWorkflow({
   teamId: number;
 }) {
   return (
-    <Box h="full" w="full" >
+    <Box h="full" w="full">
       <ReactFlowProvider>
         <FlowVisualizer
           teamId={teamId}

@@ -7,16 +7,16 @@
  * Resource is a class that represents a resource.
  */
 export type Resource = {
-    /**
-     * The URI of the resource
-     */
-    uri: string;
-    /**
-     * The title of the resource
-     */
-    title: string;
-    /**
-     * The description of the resource
-     */
-    description?: (string | null);
+  /**
+   * The URI of the resource
+   */
+  uri: string;
+  /**
+   * The title of the resource
+   */
+  title: string;
+  /**
+   * The description of the resource
+   */
+  description?: string | null;
 };

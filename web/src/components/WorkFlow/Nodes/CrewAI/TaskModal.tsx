@@ -46,10 +46,10 @@ const TaskModal: React.FC<TaskModalProps> = ({
   availableVariables,
 }) => {
   const { t } = useTranslation();
-  const { 
-    register, 
-    handleSubmit, 
-    formState: { errors }, 
+  const {
+    register,
+    handleSubmit,
+    formState: { errors },
     watch,
     setValue,
   } = useForm<TaskConfig>({
@@ -66,7 +66,12 @@ const TaskModal: React.FC<TaskModalProps> = ({
     if (!initialData && existingTaskNames.includes(value)) {
       return String(t("workflow.nodes.crewai.taskModal.uniqueNameError"));
     }
-    if (initialData && existingTaskNames.filter(name => name !== initialData.name).includes(value)) {
+    if (
+      initialData &&
+      existingTaskNames
+        .filter((name) => name !== initialData.name)
+        .includes(value)
+    ) {
       return String(t("workflow.nodes.crewai.taskModal.uniqueNameError"));
     }
     return true;
@@ -106,10 +111,9 @@ const TaskModal: React.FC<TaskModalProps> = ({
               <FaListAlt size="20px" />
             </Box>
             <Text fontSize="lg" fontWeight="600" color="gray.800">
-              {initialData 
+              {initialData
                 ? t("workflow.nodes.crewai.taskModal.editTitle")
-                : t("workflow.nodes.crewai.taskModal.addTitle")
-              }
+                : t("workflow.nodes.crewai.taskModal.addTitle")}
             </Text>
           </HStack>
         </ModalHeader>
@@ -134,15 +138,17 @@ const TaskModal: React.FC<TaskModalProps> = ({
                 <Input
                   {...register("name", {
                     required: String(t("knowledge.upload.error.required")),
-                    validate: validateUniqueName
+                    validate: validateUniqueName,
                   })}
-                  placeholder={String(t("workflow.nodes.crewai.taskModal.namePlaceholder"))}
+                  placeholder={String(
+                    t("workflow.nodes.crewai.taskModal.namePlaceholder"),
+                  )}
                   borderRadius="lg"
                   borderColor="gray.200"
                   _hover={{ borderColor: "green.200" }}
                   _focus={{
                     borderColor: "green.500",
-                    boxShadow: "0 0 0 1px var(--chakra-colors-green-500)"
+                    boxShadow: "0 0 0 1px var(--chakra-colors-green-500)",
                   }}
                   transition="all 0.2s"
                 />
@@ -155,7 +161,9 @@ const TaskModal: React.FC<TaskModalProps> = ({
                 label={t("workflow.nodes.crewai.taskModal.description")}
                 value={watch("description") || ""}
                 onChange={(value) => setValue("description", value)}
-                placeholder={String(t("workflow.nodes.crewai.taskModal.descriptionPlaceholder"))}
+                placeholder={String(
+                  t("workflow.nodes.crewai.taskModal.descriptionPlaceholder"),
+                )}
                 showVariables={descriptionVariableHook.showVariables}
                 setShowVariables={descriptionVariableHook.setShowVariables}
                 inputRef={descriptionVariableHook.inputRef}
@@ -169,15 +177,17 @@ const TaskModal: React.FC<TaskModalProps> = ({
                 <FormLabel fontWeight="500" color="gray.700">
                   {t("workflow.nodes.crewai.taskModal.assignAgent")}
                 </FormLabel>
-                <Select 
-                  {...register("agent_id")} 
-                  placeholder={String(t("workflow.nodes.crewai.taskModal.selectAgent"))}
+                <Select
+                  {...register("agent_id")}
+                  placeholder={String(
+                    t("workflow.nodes.crewai.taskModal.selectAgent"),
+                  )}
                   borderRadius="lg"
                   borderColor="gray.200"
                   _hover={{ borderColor: "green.200" }}
                   _focus={{
                     borderColor: "green.500",
-                    boxShadow: "0 0 0 1px var(--chakra-colors-green-500)"
+                    boxShadow: "0 0 0 1px var(--chakra-colors-green-500)",
                   }}
                   transition="all 0.2s"
                 >
@@ -193,7 +203,11 @@ const TaskModal: React.FC<TaskModalProps> = ({
                 label={t("workflow.nodes.crewai.taskModal.expectedOutput")}
                 value={watch("expected_output") || ""}
                 onChange={(value) => setValue("expected_output", value)}
-                placeholder={String(t("workflow.nodes.crewai.taskModal.expectedOutputPlaceholder"))}
+                placeholder={String(
+                  t(
+                    "workflow.nodes.crewai.taskModal.expectedOutputPlaceholder",
+                  ),
+                )}
                 showVariables={expectedOutputVariableHook.showVariables}
                 setShowVariables={expectedOutputVariableHook.setShowVariables}
                 inputRef={expectedOutputVariableHook.inputRef}
@@ -203,8 +217,8 @@ const TaskModal: React.FC<TaskModalProps> = ({
                 minHeight="100px"
               />
 
-              <Button 
-                type="submit" 
+              <Button
+                type="submit"
                 colorScheme="green"
                 size="md"
                 w="100%"
@@ -223,7 +237,9 @@ const TaskModal: React.FC<TaskModalProps> = ({
                   transform: "translateY(0)",
                 }}
               >
-                {initialData ? t("workflow.common.edit") : t("workflow.common.add")}
+                {initialData
+                  ? t("workflow.common.edit")
+                  : t("workflow.common.add")}
               </Button>
             </VStack>
           </form>

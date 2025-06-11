@@ -62,7 +62,11 @@ def get_llm_by_type(
     conf = load_yaml_config(
         os.getenv(
             "FLOCK_CONFIG_PATH",
-            str((Path(__file__).parent.parent.parent.parent.parent / "conf.yaml").resolve())
+            str(
+                (
+                    Path(__file__).parent.parent.parent.parent.parent / "conf.yaml"
+                ).resolve()
+            ),
         )
     )
 

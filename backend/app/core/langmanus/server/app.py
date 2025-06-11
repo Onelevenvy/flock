@@ -29,7 +29,10 @@ from app.core.langmanus.server.chat_request import (
     GenerateProseRequest,
     TTSRequest,
 )
-from app.core.langmanus.server.mcp_request import MCPServerMetadataRequest, MCPServerMetadataResponse
+from app.core.langmanus.server.mcp_request import (
+    MCPServerMetadataRequest,
+    MCPServerMetadataResponse,
+)
 from app.core.langmanus.server.mcp_utils import load_mcp_tools
 from app.core.langmanus.server.rag_request import (
     RAGConfigResponse,

@@ -24,7 +24,7 @@ const preprocessLaTeX = (content: string) => {
     .replace(/\\\((.*?)\\\)/g, (_, equation) => `$$${equation}$$`)
     .replace(
       /(^|[^\\])\$(.+?)\$/g,
-      (_, prefix, equation) => `${prefix}$${equation}$`
+      (_, prefix, equation) => `${prefix}$${equation}$`,
     );
 };
 

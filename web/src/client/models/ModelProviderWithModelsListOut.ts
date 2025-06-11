@@ -3,14 +3,14 @@
 /* tslint:disable */
 /* eslint-disable */
 
-import type { ModelOutIdWithAndName } from './ModelOutIdWithAndName';
+import type { ModelOutIdWithAndName } from "./ModelOutIdWithAndName";
 
 export type ModelProviderWithModelsListOut = {
-    id: number;
-    provider_name: string;
-    base_url: (string | null);
-    api_key: (string | null);
-    icon: (string | null);
-    description: (string | null);
-    models: Array<ModelOutIdWithAndName>;
+  id: number;
+  provider_name: string;
+  base_url: string | null;
+  api_key: string | null;
+  icon: string | null;
+  description: string | null;
+  models: Array<ModelOutIdWithAndName>;
 };

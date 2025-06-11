@@ -4,8 +4,8 @@
 /* eslint-disable */
 
 export type GeneratePodcastRequest = {
-    /**
-     * The content of the podcast
-     */
-    content: string;
+  /**
+   * The content of the podcast
+   */
+  content: string;
 };

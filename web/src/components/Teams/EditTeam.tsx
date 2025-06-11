@@ -86,9 +86,9 @@ const EditTeam = ({ team, isOpen, onClose }: EditTeamProps) => {
   };
 
   return (
-    <Modal 
-      isOpen={isOpen} 
-      onClose={onClose} 
+    <Modal
+      isOpen={isOpen}
+      onClose={onClose}
       size={{ base: "sm", md: "md" }}
       isCentered
       motionPreset="slideInBottom"
@@ -103,7 +103,7 @@ const EditTeam = ({ team, isOpen, onClose }: EditTeamProps) => {
         as="form"
         onSubmit={handleSubmit(onSubmit)}
       >
-        <ModalHeader 
+        <ModalHeader
           borderBottom="1px solid"
           borderColor={borderColor}
           py={4}
@@ -112,7 +112,7 @@ const EditTeam = ({ team, isOpen, onClose }: EditTeamProps) => {
         >
           {t("team.addteam.editteam")}
         </ModalHeader>
-        
+
         <ModalCloseButton
           position="absolute"
           right={4}
@@ -128,15 +128,10 @@ const EditTeam = ({ team, isOpen, onClose }: EditTeamProps) => {
         <ModalBody py={6}>
           <VStack spacing={6} align="stretch">
             <Box>
-              <Text 
-                fontSize="sm"
-                fontWeight="600"
-                color="gray.700"
-                mb={3}
-              >
+              <Text fontSize="sm" fontWeight="600" color="gray.700" mb={3}>
                 {t("team.addteam.nameandicon")}
               </Text>
-              
+
               <Box display="flex" alignItems="center" gap={4}>
                 <FormControl w="auto">
                   <Controller
@@ -144,10 +139,7 @@ const EditTeam = ({ team, isOpen, onClose }: EditTeamProps) => {
                     control={control}
                     defaultValue="0"
                     render={({ field: { onChange, value } }) => (
-                      <IconPicker
-                        onSelect={onChange}
-                        selectedIcon={value!}
-                      />
+                      <IconPicker onSelect={onChange} selectedIcon={value!} />
                     )}
                   />
                 </FormControl>
@@ -158,7 +150,8 @@ const EditTeam = ({ team, isOpen, onClose }: EditTeamProps) => {
                       required: "Title is required.",
                       pattern: {
                         value: /^[a-zA-Z0-9_-]{1,64}$/,
-                        message: "Name must follow pattern: ^[a-zA-Z0-9_-]{1,64}$",
+                        message:
+                          "Name must follow pattern: ^[a-zA-Z0-9_-]{1,64}$",
                       },
                     })}
                     placeholder={t("team.addteam.placeholderapp") as string}
@@ -186,7 +179,7 @@ const EditTeam = ({ team, isOpen, onClose }: EditTeamProps) => {
             </Box>
 
             <FormControl>
-              <FormLabel 
+              <FormLabel
                 htmlFor="description"
                 fontSize="sm"
                 fontWeight="600"
@@ -217,11 +210,7 @@ const EditTeam = ({ team, isOpen, onClose }: EditTeamProps) => {
           </VStack>
         </ModalBody>
 
-        <ModalFooter 
-          borderTop="1px solid"
-          borderColor={borderColor}
-          gap={3}
-        >
+        <ModalFooter borderTop="1px solid" borderColor={borderColor} gap={3}>
           <Button
             variant="primary"
             type="submit"

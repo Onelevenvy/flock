@@ -76,7 +76,7 @@ const ChatMain = ({ isPlayground }: { isPlayground?: boolean }) => {
   // 从 graphData 中获取初始节点和边
   const { data: graphData, isLoading: isGraphLoading } = useQuery(
     ["graph", teamId],
-    () => GraphsService.readGraphs({ teamId })
+    () => GraphsService.readGraphs({ teamId }),
   );
 
   const initialNodes = graphData?.data[0]?.config?.nodes || [];
@@ -86,7 +86,7 @@ const ChatMain = ({ isPlayground }: { isPlayground?: boolean }) => {
 
   const [imageData, setImageData] = useState<string | null>(null);
   const [currentThreadId, setCurrentThreadId] = useState<string | null>(
-    searchParams.get("threadId") || null
+    searchParams.get("threadId") || null,
   );
   const showToast = useCustomToast();
   const [input, setInput] = useState("");
@@ -130,7 +130,7 @@ const ChatMain = ({ isPlayground }: { isPlayground?: boolean }) => {
           processMessage(message);
         }
       },
-    }
+    },
   );
 
   const createThread = async (data: ThreadCreate) => {
@@ -195,7 +195,7 @@ const ChatMain = ({ isPlayground }: { isPlayground?: boolean }) => {
   const processMessage = (response: ChatResponse) => {
     setMessages((prevMessages: ChatResponse[]) => {
       const messageIndex = prevMessages.findIndex(
-        (msg) => msg.id === response.id
+        (msg) => msg.id === response.id,
       );
 
       if (messageIndex !== -1) {
@@ -206,7 +206,7 @@ const ChatMain = ({ isPlayground }: { isPlayground?: boolean }) => {
                 content: (msg.content ?? "") + (response.content ?? ""),
                 tool_output: response.tool_output,
               }
-            : msg
+            : msg,
         );
       }
 
@@ -221,7 +221,7 @@ const ChatMain = ({ isPlayground }: { isPlayground?: boolean }) => {
           node.type === "tool" &&
           node.data.tools &&
           Array.isArray(node.data.tools) &&
-          node.data.tools.includes(response.name)
+          node.data.tools.includes(response.name),
       );
     }
 
@@ -383,7 +383,7 @@ const ChatMain = ({ isPlayground }: { isPlayground?: boolean }) => {
       setInput("");
       setImageData(null);
     },
-    [input, imageData, mutation]
+    [input, imageData, mutation],
   );
 
   const newChatHandler = useCallback(() => {
@@ -402,7 +402,7 @@ const ChatMain = ({ isPlayground }: { isPlayground?: boolean }) => {
     (
       decision: InterruptDecision,
       tool_message?: string | null,
-      interaction_type?: InterruptType | null
+      interaction_type?: InterruptType | null,
     ) => {
       mutation.mutate({
         messages: [
@@ -418,7 +418,7 @@ const ChatMain = ({ isPlayground }: { isPlayground?: boolean }) => {
         },
       });
     },
-    [mutation]
+    [mutation],
   );
 
   return (

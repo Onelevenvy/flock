@@ -6,7 +6,15 @@ from sqlalchemy.orm import selectinload
 
 from app.api.deps import CurrentUser, SessionDep, get_current_active_superuser
 from app.curd import groups
-from app.models import Group, GroupCreate, GroupOut, GroupsOut, GroupUpdate, Message, User
+from app.models import (
+    Group,
+    GroupCreate,
+    GroupOut,
+    GroupsOut,
+    GroupUpdate,
+    Message,
+    User,
+)
 
 router = APIRouter()
 
@@ -19,13 +27,17 @@ def read_groups(session: SessionDep, skip: int = 0, limit: int = 100) -> Any:
     count_statement = select(func.count()).select_from(Group)
     count = session.exec(count_statement).one()
 
-    statement = select(Group).options(selectinload(Group.admin)).offset(skip).limit(limit)
+    statement = (
+        select(Group).options(selectinload(Group.admin)).offset(skip).limit(limit)
+    )
     groups_list = session.exec(statement).all()
 
     return GroupsOut(data=groups_list, count=count)
 
 
-@router.post("/", dependencies=[Depends(get_current_active_superuser)], response_model=GroupOut)
+@router.post(
+    "/", dependencies=[Depends(get_current_active_superuser)], response_model=GroupOut
+)
 def create_group(*, session: SessionDep, group_in: GroupCreate) -> Any:
     """
     Create new group.
@@ -46,7 +58,9 @@ def read_group_by_id(group_id: int, session: SessionDep) -> Any:
     """
     Get a specific group by id.
     """
-    statement = select(Group).options(selectinload(Group.admin)).where(Group.id == group_id)
+    statement = (
+        select(Group).options(selectinload(Group.admin)).where(Group.id == group_id)
+    )
     group = session.exec(statement).first()
     if not group:
         raise HTTPException(
@@ -83,7 +97,9 @@ def update_group(
                 status_code=409, detail="Group with this name already exists"
             )
 
-    db_group = groups.update_group(session=session, db_group=db_group, group_in=group_in)
+    db_group = groups.update_group(
+        session=session, db_group=db_group, group_in=group_in
+    )
     return db_group
 
 
@@ -103,4 +119,4 @@ def delete_group(session: SessionDep, group_id: int) -> Message:
 
     session.delete(group)
     session.commit()
-    return Message(message="Group deleted successfully") 
+    return Message(message="Group deleted successfully")

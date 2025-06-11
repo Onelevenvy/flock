@@ -59,8 +59,8 @@ function DebugPreview({
           }}
         />
       )}
-      
-      <Box 
+
+      <Box
         py={5}
         px={4}
         position="absolute"
@@ -92,7 +92,6 @@ function DebugPreview({
         overflowY="hidden"
         display="flex"
         p={4}
-       
         sx={{
           "&::-webkit-scrollbar": {
             width: "4px",

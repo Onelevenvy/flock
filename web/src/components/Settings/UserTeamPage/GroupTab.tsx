@@ -18,7 +18,12 @@ import {
 } from "@chakra-ui/react";
 import { AddIcon, DeleteIcon, EditIcon } from "@chakra-ui/icons";
 import { useState } from "react";
-import { type ApiError, type GroupOut, type UserOut, GroupsService } from "@/client";
+import {
+  type ApiError,
+  type GroupOut,
+  type UserOut,
+  GroupsService,
+} from "@/client";
 import useCustomToast from "@/hooks/useCustomToast";
 import GroupForm from "./GroupForm";
 
@@ -86,7 +91,7 @@ export default function GroupTab({ groups, users }: GroupTabProps) {
             </Thead>
             <Tbody>
               {groups.map((group) => (
-                <Tr 
+                <Tr
                   key={group.id}
                   transition="all 0.2s"
                   _hover={{ bg: hoverBg }}
@@ -103,7 +108,8 @@ export default function GroupTab({ groups, users }: GroupTabProps) {
                   </Td>
                   <Td py={4}>
                     <Text color="gray.600">
-                      {users.find(u => u.id === group.admin_id)?.full_name || "未设置"}
+                      {users.find((u) => u.id === group.admin_id)?.full_name ||
+                        "未设置"}
                     </Text>
                   </Td>
                   <Td py={4}>
@@ -146,9 +152,9 @@ export default function GroupTab({ groups, users }: GroupTabProps) {
         </TableContainer>
       </Box>
 
-      <GroupForm 
-        isOpen={isAddGroupOpen} 
-        onClose={() => setIsAddGroupOpen(false)} 
+      <GroupForm
+        isOpen={isAddGroupOpen}
+        onClose={() => setIsAddGroupOpen(false)}
       />
       {selectedGroup && (
         <GroupForm
@@ -159,4 +165,4 @@ export default function GroupTab({ groups, users }: GroupTabProps) {
       )}
     </>
   );
-} 
+}

@@ -55,12 +55,12 @@ export default function UserTab({
   const queryClient = useQueryClient();
   const [isAddUserOpen, setIsAddUserOpen] = useState(false);
   const [selectedUser, setSelectedUser] = useState<UserOut | undefined>(
-    undefined
+    undefined,
   );
   const [currentPage, setCurrentPage] = useState(1);
   const { isOpen, onOpen, onClose } = useDisclosure();
   const [resetPasswordUserId, setResetPasswordUserId] = useState<number | null>(
-    null
+    null,
   );
   const cancelRef = React.useRef<any>(null);
 
@@ -80,7 +80,7 @@ export default function UserTab({
             [],
           roles:
             (users.find((u) => u.id === userId) as any)?.roles?.map(
-              (r: any) => r.id
+              (r: any) => r.id,
             ) || [],
         },
       }),
@@ -99,7 +99,7 @@ export default function UserTab({
         const errDetail = err.body?.detail;
         showToast("Something went wrong.", `${errDetail}`, "error");
       },
-    }
+    },
   );
 
   const handleResetPassword = async (userId: number, isSuperUser: boolean) => {
@@ -292,7 +292,7 @@ export default function UserTab({
                         onClick={() =>
                           handleResetPassword(
                             user.id,
-                            user.is_superuser || false
+                            user.is_superuser || false,
                           )
                         }
                         isDisabled={user.is_superuser || false}

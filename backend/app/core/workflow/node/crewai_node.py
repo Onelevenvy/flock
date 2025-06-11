@@ -53,7 +53,9 @@ Even though you don't perform tasks by yourself, you have a lot of experience in
                 "agent",
                 {
                     "role": "Crew Manager",
-                    "goal": "Manage the team to complete the task in the best way possible.",
+                    "goal": (
+                        "Manage the team to complete the task in the best way possible."
+                    ),
                     "backstory": self.DEFAULT_MANAGER_BACKSTORY,
                     "allow_delegation": True,
                 },

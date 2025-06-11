@@ -13,11 +13,7 @@ import { useMutation, useQueryClient } from "react-query";
 import { useTranslation } from "react-i18next";
 
 import UploadForm, { UploadFormData } from "./UploadForm";
-import {
-  type ApiError,
-  type UploadOut,
-  UploadsService,
-} from "../../client";
+import { type ApiError, type UploadOut, UploadsService } from "../../client";
 import useCustomToast from "../../hooks/useCustomToast";
 
 interface EditUploadProps {
@@ -31,7 +27,7 @@ const EditUpload = ({ upload, isOpen, onClose }: EditUploadProps) => {
   const queryClient = useQueryClient();
   const showToast = useCustomToast();
   const [fileType, setFileType] = useState<"file" | "web">(
-    upload.file_type === "web" ? "web" : "file"
+    upload.file_type === "web" ? "web" : "file",
   );
 
   const bgColor = useColorModeValue("white", "gray.800");
@@ -74,7 +70,7 @@ const EditUpload = ({ upload, isOpen, onClose }: EditUploadProps) => {
         const errDetail = err.body?.detail;
         showToast(t("knowledge.upload.error.generic"), `${errDetail}`, "error");
       },
-    }
+    },
   );
 
   const onSubmit: SubmitHandler<UploadFormData> = (data) => {
@@ -97,7 +93,7 @@ const EditUpload = ({ upload, isOpen, onClose }: EditUploadProps) => {
         border="1px solid"
         borderColor={borderColor}
       >
-        <ModalHeader 
+        <ModalHeader
           borderBottom="1px solid"
           borderColor={borderColor}
           py={4}
@@ -106,7 +102,7 @@ const EditUpload = ({ upload, isOpen, onClose }: EditUploadProps) => {
         >
           {t("knowledge.upload.edit.title")}
         </ModalHeader>
-        
+
         <ModalCloseButton
           position="absolute"
           right={4}

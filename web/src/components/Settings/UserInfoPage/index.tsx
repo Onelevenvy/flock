@@ -103,12 +103,7 @@ const UserInfoPage = () => {
       >
         <VStack spacing={6} align="stretch">
           <FormControl>
-            <FormLabel 
-              color={labelColor}
-              fontSize="sm"
-              fontWeight="600"
-              mb={3}
-            >
+            <FormLabel color={labelColor} fontSize="sm" fontWeight="600" mb={3}>
               Avatar
             </FormLabel>
             <Avatar
@@ -125,12 +120,7 @@ const UserInfoPage = () => {
           </FormControl>
 
           <FormControl>
-            <FormLabel 
-              color={labelColor}
-              fontSize="sm"
-              fontWeight="600"
-              mb={3}
-            >
+            <FormLabel color={labelColor} fontSize="sm" fontWeight="600" mb={3}>
               Name
             </FormLabel>
             {editMode ? (
@@ -170,12 +160,7 @@ const UserInfoPage = () => {
           </FormControl>
 
           <FormControl isInvalid={!!errors.email}>
-            <FormLabel 
-              color={labelColor}
-              fontSize="sm"
-              fontWeight="600"
-              mb={3}
-            >
+            <FormLabel color={labelColor} fontSize="sm" fontWeight="600" mb={3}>
               Email
             </FormLabel>
             {editMode ? (

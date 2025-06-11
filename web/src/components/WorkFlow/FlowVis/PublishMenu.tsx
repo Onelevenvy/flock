@@ -62,7 +62,7 @@ const PublishMenu: React.FC<PublishMenuProps> = ({
     return generateGraphConfig(
       workflowConfig.nodes,
       workflowConfig.edges,
-      "Subgraph"
+      "Subgraph",
     );
   };
 
@@ -87,10 +87,10 @@ const PublishMenu: React.FC<PublishMenuProps> = ({
         showToast(
           "Error",
           error.message || "Failed to fetch subgraph data",
-          "error"
+          "error",
         );
       },
-    }
+    },
   );
 
   const existingSubgraph = subgraphsData?.data?.[0];
@@ -128,7 +128,7 @@ const PublishMenu: React.FC<PublishMenuProps> = ({
           existingSubgraph
             ? "Workflow updated successfully"
             : "Workflow published successfully",
-          "success"
+          "success",
         );
         onPublishClose();
       },
@@ -137,7 +137,7 @@ const PublishMenu: React.FC<PublishMenuProps> = ({
           error?.body?.detail || error?.message || "Failed to publish workflow";
         showToast("Error", errorMessage, "error");
       },
-    }
+    },
   );
 
   const handlePublish = () => {

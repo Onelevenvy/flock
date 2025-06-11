@@ -48,7 +48,7 @@ export default function LanguagePage() {
         queryClient.invalidateQueries("users");
         queryClient.invalidateQueries("currentUser");
       },
-    }
+    },
   );
 
   const onChangeLanguage = (event: ChangeEvent<HTMLSelectElement>) => {
@@ -106,7 +106,8 @@ export default function LanguagePage() {
 
           <Box>
             <Text fontSize="sm" color="gray.500" lineHeight="tall">
-              Choose your preferred language for the interface. This setting will be saved and applied across all your sessions.
+              Choose your preferred language for the interface. This setting
+              will be saved and applied across all your sessions.
             </Text>
           </Box>
         </VStack>

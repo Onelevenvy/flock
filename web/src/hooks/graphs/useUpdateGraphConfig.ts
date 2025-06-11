@@ -12,7 +12,7 @@ export function useGraphConfig(
   graphName: string | undefined,
   graphDescription: string | undefined | null,
   nodes: CustomNode[],
-  edges: Edge[]
+  edges: Edge[],
 ) {
   const showToast = useCustomToast();
   const mutation = useGraphMutation(teamId, graphId);
@@ -26,7 +26,7 @@ export function useGraphConfig(
       showToast(
         "Something went wrong.",
         "No graph found for this team",
-        "error"
+        "error",
       );
 
       return;

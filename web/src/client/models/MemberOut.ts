@@ -3,24 +3,24 @@
 /* tslint:disable */
 /* eslint-disable */
 
-import type { Skill } from './Skill';
-import type { Upload } from './Upload';
+import type { Skill } from "./Skill";
+import type { Upload } from "./Upload";
 
 export type MemberOut = {
-    name: string;
-    backstory?: (string | null);
-    role: string;
-    type: string;
-    owner_of: (number | null);
-    position_x: number;
-    position_y: number;
-    source?: (number | null);
-    provider?: string;
-    model?: string;
-    temperature?: number;
-    interrupt?: boolean;
-    id: number;
-    belongs_to: number;
-    skills: Array<Skill>;
-    uploads: Array<Upload>;
+  name: string;
+  backstory?: string | null;
+  role: string;
+  type: string;
+  owner_of: number | null;
+  position_x: number;
+  position_y: number;
+  source?: number | null;
+  provider?: string;
+  model?: string;
+  temperature?: number;
+  interrupt?: boolean;
+  id: number;
+  belongs_to: number;
+  skills: Array<Skill>;
+  uploads: Array<Upload>;
 };

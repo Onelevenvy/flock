@@ -3,14 +3,14 @@
 /* tslint:disable */
 /* eslint-disable */
 export const $RAGResourcesResponse = {
-    description: `Response model for RAG resources.`,
-    properties: {
-        resources: {
-    type: 'array',
-    contains: {
-        type: 'Resource',
+  description: `Response model for RAG resources.`,
+  properties: {
+    resources: {
+      type: "array",
+      contains: {
+        type: "Resource",
+      },
+      isRequired: true,
     },
-    isRequired: true,
-},
-    },
+  },
 } as const;

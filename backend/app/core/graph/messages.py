@@ -95,7 +95,7 @@ def event_to_response(
         tool_name = event["name"]
         # If tool is KnowledgeBase then serialise the documents in artifact
         documents: list[dict[str, Any]] = []
-        if tool_name!= 'python_code_sandbox':
+        if tool_name != "python_code_sandbox":
             if tool_output and tool_output.name == "KnowledgeBase":
                 docs: list[Document] = tool_output.artifact
                 for doc in docs:

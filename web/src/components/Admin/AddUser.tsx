@@ -93,14 +93,10 @@ const AddUser = ({ isOpen, onClose }: AddUserProps) => {
         borderRadius="xl"
         boxShadow="xl"
       >
-        <ModalHeader 
-          borderBottom="1px solid" 
-          borderColor="gray.100"
-          py={4}
-        >
+        <ModalHeader borderBottom="1px solid" borderColor="gray.100" py={4}>
           Add User
         </ModalHeader>
-        <ModalCloseButton 
+        <ModalCloseButton
           top={4}
           transition="all 0.2s"
           _hover={{
@@ -220,19 +216,15 @@ const AddUser = ({ isOpen, onClose }: AddUserProps) => {
               >
                 Is superuser
               </Checkbox>
-              <Checkbox
-                {...register("is_active")}
-                colorScheme="blue"
-                size="lg"
-              >
+              <Checkbox {...register("is_active")} colorScheme="blue" size="lg">
                 Is active
               </Checkbox>
             </Flex>
           </VStack>
         </ModalBody>
 
-        <ModalFooter 
-          borderTop="1px solid" 
+        <ModalFooter
+          borderTop="1px solid"
           borderColor="gray.100"
           gap={3}
           py={4}

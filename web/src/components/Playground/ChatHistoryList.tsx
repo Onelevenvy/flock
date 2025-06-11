@@ -31,7 +31,7 @@ const ChatHistoryList = ({ teamId, isPlayground }: ChatHistoryProps) => {
   const rowTint = useColorModeValue("blackAlpha.50", "whiteAlpha.50");
   const selctedColor = useColorModeValue(
     "ui.selctedColor",
-    "ui.selctedColorDark"
+    "ui.selctedColorDark",
   );
   const [localTeamId, setLocalTeamId] = useState(teamId);
   const { t } = useTranslation();
@@ -50,7 +50,7 @@ const ChatHistoryList = ({ teamId, isPlayground }: ChatHistoryProps) => {
     () => MembersService.readMembers({ teamId: localTeamId }),
     {
       enabled: !!localTeamId,
-    }
+    },
   );
 
   const {
@@ -59,7 +59,7 @@ const ChatHistoryList = ({ teamId, isPlayground }: ChatHistoryProps) => {
     isError,
     error,
   } = useQuery(["threads", teamId], () =>
-    ThreadsService.readThreads({ teamId: teamId })
+    ThreadsService.readThreads({ teamId: teamId }),
   );
 
   const deleteThread = async (threadId: string) => {

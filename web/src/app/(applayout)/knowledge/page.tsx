@@ -163,7 +163,13 @@ function Uploads() {
 
   return (
     <Flex h="full">
-      <Box flex="1" bg="ui.bgMain" display="flex" flexDirection="column" h="full">
+      <Box
+        flex="1"
+        bg="ui.bgMain"
+        display="flex"
+        flexDirection="column"
+        h="full"
+      >
         <Box px={6} py={4}>
           <Flex direction="row" justify="space-between" align="center" mb={2}>
             <Box>
@@ -186,7 +192,10 @@ function Uploads() {
             </Flex>
           ) : (
             uploads && (
-              <SimpleGrid columns={{ base: 1, md: 2, lg: 3, xl: 4 }} spacing={6}>
+              <SimpleGrid
+                columns={{ base: 1, md: 2, lg: 3, xl: 4 }}
+                spacing={6}
+              >
                 {uploads.data.map((upload) => (
                   <Box
                     key={upload.id}
