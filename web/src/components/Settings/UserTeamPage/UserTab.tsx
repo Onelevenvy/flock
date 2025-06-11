@@ -6,10 +6,6 @@ import {
   Flex,
   HStack,
   IconButton,
-  Menu,
-  MenuButton,
-  MenuItem,
-  MenuList,
   Table,
   TableContainer,
   Tbody,
@@ -30,7 +26,6 @@ import {
   useDisclosure,
 } from "@chakra-ui/react";
 import { AddIcon, DeleteIcon, EditIcon, LockIcon } from "@chakra-ui/icons";
-import { BsThreeDotsVertical } from "react-icons/bs";
 import { useState } from "react";
 import { useQueryClient, useMutation } from "react-query";
 import { type ApiError, type UserOut, UsersService } from "@/client";
@@ -353,7 +348,7 @@ export default function UserTab({ users, currentUserId, totalCount, onPageChange
       <UserForm
         isOpen={isAddUserOpen || !!selectedUser}
         onClose={() => {
-          console.log('UserForm closing');
+    
           setIsAddUserOpen(false);
           setSelectedUser(undefined);
           // Force refetch users after form closes

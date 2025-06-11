@@ -180,7 +180,7 @@ const UserForm = ({ user, isOpen, onClose }: UserFormProps) => {
         is_active: isEditMode ? !!user.is_active : true,
         groupRolePairs: getInitialGroupRolePairs()
       };
-      console.log('Resetting form with values:', formValues);
+
       reset(formValues as UserFormData);
     }
   }, [isOpen, user, reset, isEditMode]);
@@ -193,7 +193,7 @@ const UserForm = ({ user, isOpen, onClose }: UserFormProps) => {
   const groupRolePairs = watch("groupRolePairs");
 
   const createUser = async (formData: UserFormData): Promise<UserOut> => {
-    console.log('Creating user with data:', formData);
+
     const groups: number[] = [];
     const roles: number[] = [];
     formData.groupRolePairs.forEach(pair => {
@@ -218,8 +218,7 @@ const UserForm = ({ user, isOpen, onClose }: UserFormProps) => {
 
   const updateUser = async (formData: UserFormData): Promise<UserOut> => {
     if (!user) throw new Error('No user data available for update');
-    console.log('Updating user:', user.id);
-    console.log('Form data:', formData);
+
     
     const groups: number[] = [];
     const roles: number[] = [];
@@ -236,7 +235,7 @@ const UserForm = ({ user, isOpen, onClose }: UserFormProps) => {
       });
     }
 
-    console.log('Updating with groups:', groups, 'roles:', roles);
+   
 
     const updateData: UserUpdate = {
       full_name: formData.full_name,
@@ -244,17 +243,17 @@ const UserForm = ({ user, isOpen, onClose }: UserFormProps) => {
       roles
     };
 
-    console.log('Sending update request with data:', updateData);
+   
 
     try {
       const response = await UsersService.updateUser({ 
         userId: user.id, 
         requestBody: updateData
       });
-      console.log('Update response:', response);
+    
       return response;
     } catch (error) {
-      console.error('Update error:', error);
+
       throw error;
     }
   };
@@ -280,18 +279,17 @@ const UserForm = ({ user, isOpen, onClose }: UserFormProps) => {
   );
 
   const handleFormSubmit = async (data: UserFormData) => {
-    console.log('Form submit handler called with data:', data);
+
     try {
       if (isEditMode) {
-        console.log('Editing user with ID:', user?.id);
-        console.log('Current groups and roles:', data.groupRolePairs);
+       
         // 编辑模式下，不发送密码字段
         const { password, confirm_password, ...updateData } = data;
         await mutation.mutateAsync(updateData as UserFormData);
       } else {
         await mutation.mutateAsync(data);
       }
-      console.log('Mutation completed successfully');
+    
     } catch (error) {
       console.error('Error submitting form:', error);
     }
@@ -626,11 +624,7 @@ const UserForm = ({ user, isOpen, onClose }: UserFormProps) => {
             isLoading={isSubmitting || mutation.isLoading}
             loadingText={isEditMode ? "Saving..." : "Creating..."}
             isDisabled={isEditMode && !isDirty}
-            onClick={(e) => {
-              console.log('Submit button clicked');
-              console.log('Form state:', { isDirty, isSubmitting, errors });
-              console.log('Current form values:', getValues());
-            }}
+         
             transition="all 0.2s"
             _hover={{
               transform: "translateY(-1px)",
@@ -644,7 +638,7 @@ const UserForm = ({ user, isOpen, onClose }: UserFormProps) => {
           </Button>
           <Button
             onClick={() => {
-              console.log('Form cancelled');
+         
               reset();
               onClose();
             }}
