@@ -21,14 +21,22 @@ import {
   VStack,
   useColorModeValue,
   useToast,
+  AlertDialog,
+  AlertDialogBody,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogContent,
+  AlertDialogOverlay,
+  useDisclosure,
 } from "@chakra-ui/react";
-import { AddIcon, DeleteIcon, EditIcon, RepeatIcon } from "@chakra-ui/icons";
+import { AddIcon, DeleteIcon, EditIcon, LockIcon } from "@chakra-ui/icons";
 import { BsThreeDotsVertical } from "react-icons/bs";
 import { useState } from "react";
 import { useQueryClient, useMutation } from "react-query";
 import { type ApiError, type UserOut, UsersService } from "@/client";
 import useCustomToast from "@/hooks/useCustomToast";
 import UserForm from "./UserForm";
+import React from "react";
 
 const DEFAULT_PASSWORD = "12345678";
 
@@ -48,6 +56,9 @@ export default function UserTab({ users, currentUserId, totalCount, onPageChange
   const [isAddUserOpen, setIsAddUserOpen] = useState(false);
   const [selectedUser, setSelectedUser] = useState<UserOut | undefined>(undefined);
   const [currentPage, setCurrentPage] = useState(1);
+  const { isOpen, onOpen, onClose } = useDisclosure();
+  const [resetPasswordUserId, setResetPasswordUserId] = useState<number | null>(null);
+  const cancelRef = React.useRef<any>(null);
 
   const bgColor = useColorModeValue("white", "gray.800");
   const borderColor = useColorModeValue("gray.100", "gray.700");
@@ -60,6 +71,8 @@ export default function UserTab({ users, currentUserId, totalCount, onPageChange
         userId,
         requestBody: {
           password: DEFAULT_PASSWORD,
+          groups: users.find(u => u.id === userId)?.groups?.map((g: any) => g.id) || [],
+          roles: (users.find(u => u.id === userId) as any)?.roles?.map((r: any) => r.id) || [],
         },
       }),
     {
@@ -91,7 +104,15 @@ export default function UserTab({ users, currentUserId, totalCount, onPageChange
       });
       return;
     }
-    resetPasswordMutation.mutate(userId);
+    setResetPasswordUserId(userId);
+    onOpen();
+  };
+
+  const confirmResetPassword = async () => {
+    if (resetPasswordUserId) {
+      resetPasswordMutation.mutate(resetPasswordUserId);
+      onClose();
+    }
   };
 
   const handleDeleteUser = async (userId: number, isSuperUser: boolean) => {
@@ -268,7 +289,7 @@ export default function UserTab({ users, currentUserId, totalCount, onPageChange
                     <HStack spacing={2} justify="flex-end">
                       <IconButton
                         aria-label="Reset password"
-                        icon={<RepeatIcon />}
+                        icon={<LockIcon />}
                         size="sm"
                         variant="ghost"
                         colorScheme="orange"
@@ -332,11 +353,41 @@ export default function UserTab({ users, currentUserId, totalCount, onPageChange
       <UserForm
         isOpen={isAddUserOpen || !!selectedUser}
         onClose={() => {
+          console.log('UserForm closing');
           setIsAddUserOpen(false);
           setSelectedUser(undefined);
+          // Force refetch users after form closes
+          queryClient.invalidateQueries("users");
         }}
         user={selectedUser}
       />
+
+      <AlertDialog
+        isOpen={isOpen}
+        leastDestructiveRef={cancelRef}
+        onClose={onClose}
+      >
+        <AlertDialogOverlay>
+          <AlertDialogContent>
+            <AlertDialogHeader fontSize="lg" fontWeight="bold">
+              重置密码
+            </AlertDialogHeader>
+
+            <AlertDialogBody>
+              确定要将密码重置为默认密码（12345678）吗？
+            </AlertDialogBody>
+
+            <AlertDialogFooter>
+              <Button ref={cancelRef} onClick={onClose}>
+                取消
+              </Button>
+              <Button colorScheme="blue" onClick={confirmResetPassword} ml={3}>
+                确认重置
+              </Button>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialogOverlay>
+      </AlertDialog>
     </>
   );
 } 

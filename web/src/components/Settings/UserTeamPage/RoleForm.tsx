@@ -34,7 +34,7 @@ const RoleForm = ({ role, groupId, isOpen, onClose }: RoleFormProps) => {
   const queryClient = useQueryClient();
   const showToast = useCustomToast();
 
-  console.log('RoleForm - Current groupId:', groupId);
+  // console.log('RoleForm - Current groupId:', groupId);
 
   const bgColor = useColorModeValue("white", "gray.800");
   const borderColor = useColorModeValue("gray.100", "gray.700");
@@ -68,7 +68,7 @@ const RoleForm = ({ role, groupId, isOpen, onClose }: RoleFormProps) => {
   }, [groupId, setValue]);
 
   const createRole = async (data: RoleCreate) => {
-    console.log('Creating role with data:', data);
+    // console.log('Creating role with data:', data);
     await RolesService.createRole({ requestBody: { ...data, group_id: groupId } });
   };
 

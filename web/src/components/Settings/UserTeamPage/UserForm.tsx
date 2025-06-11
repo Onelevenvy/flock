@@ -43,7 +43,7 @@ import {
 } from "@/client";
 import useCustomToast from "@/hooks/useCustomToast";
 import { emailPattern } from "@/utils";
-import { useEffect } from "react";
+import { useEffect, useCallback } from "react";
 
 interface UserFormProps {
   user?: UserOut;
@@ -61,14 +61,28 @@ interface GroupRolePair {
   roles: SelectOption[];
 }
 
-interface UserFormData extends Omit<UserCreate, "password"> {
-  password?: string;
-  confirm_password: string;
+interface BaseUserFormData {
+  email: string;
+  full_name: string;
+  is_superuser: boolean;
+  is_active: boolean;
   groupRolePairs: GroupRolePair[];
 }
 
+interface CreateUserFormData extends BaseUserFormData {
+  password: string;
+  confirm_password: string;
+}
+
+interface UpdateUserFormData extends BaseUserFormData {
+  password?: string;
+  confirm_password?: string;
+}
+
+type UserFormData = CreateUserFormData | UpdateUserFormData;
+
 interface ExtendedUserOut extends UserOut {
-  roles?: { id: number; name: string; group_id: number }[];
+  roles: { id: number; name: string; group_id: number }[];
 }
 
 const DEFAULT_PASSWORD = "12345678";
@@ -91,33 +105,26 @@ const UserForm = ({ user, isOpen, onClose }: UserFormProps) => {
     RolesService.readRoles({ skip: 0, limit: 100 })
   );
 
-  // Reset form when user changes or modal opens/closes
-  const defaultValues = isEditMode
-    ? {
-        email: user.email,
-        full_name: user.full_name || "",
-        password: "",
-        confirm_password: "",
-        is_superuser: user.is_superuser,
-        is_active: user.is_active,
-        groupRolePairs: user.groups ? 
-          (user.groups as unknown as Array<{ id: number; name: string }>).map(g => ({
-            group: { value: g.id, label: g.name },
-            roles: (user as ExtendedUserOut).roles
-              ?.filter(r => r.group_id === g.id)
-              .map(r => ({ value: r.id, label: r.name })) || []
-          })) : 
-          [{ group: null, roles: [] }]
-      }
-    : {
-        email: "",
-        full_name: "",
-        password: DEFAULT_PASSWORD,
-        confirm_password: DEFAULT_PASSWORD,
-        is_superuser: false,
-        is_active: true,
-        groupRolePairs: [{ group: null, roles: [] }]
-      };
+  const getInitialGroupRolePairs = (): GroupRolePair[] => {
+    if (!isEditMode || !user.groups) return [{ group: null, roles: [] }];
+    
+    return user.groups.map(g => ({
+      group: g.id ? { value: g.id, label: g.name } : null,
+      roles: (user as ExtendedUserOut).roles
+        .filter(r => r.group_id === g.id)
+        .map(r => ({ value: r.id, label: r.name }))
+    }));
+  };
+
+  const defaultValues = {
+    email: isEditMode ? user.email : "",
+    full_name: isEditMode ? user.full_name || "" : "",
+    password: isEditMode ? undefined : DEFAULT_PASSWORD,
+    confirm_password: isEditMode ? undefined : DEFAULT_PASSWORD,
+    is_superuser: isEditMode ? !!user.is_superuser : false,
+    is_active: isEditMode ? !!user.is_active : true,
+    groupRolePairs: getInitialGroupRolePairs()
+  };
 
   const {
     register,
@@ -130,15 +137,53 @@ const UserForm = ({ user, isOpen, onClose }: UserFormProps) => {
   } = useForm<UserFormData>({
     mode: "onBlur",
     criteriaMode: "all",
-    defaultValues,
+    defaultValues: defaultValues as UserFormData,
+    resolver: async (data) => {
+      const errors: Record<string, any> = {};
+      
+      // Only validate email in create mode
+      if (!isEditMode) {
+        if (!data.email) {
+          errors.email = { message: "Email is required" };
+        } else if (!data.email.match(emailPattern.value)) {
+          errors.email = { message: "Invalid email format" };
+        }
+        
+        // Only validate password in create mode
+        if (!data.password) {
+          errors.password = { message: "Password is required" };
+        } else if (data.password.length < 8) {
+          errors.password = { message: "Password must be at least 8 characters" };
+        }
+        
+        if (data.password !== data.confirm_password) {
+          errors.confirm_password = { message: "The passwords do not match" };
+        }
+      }
+      
+      return {
+        values: data,
+        errors,
+      };
+    },
   });
 
   // Reset form when user changes or modal opens/closes
   useEffect(() => {
     if (isOpen) {
-      reset(defaultValues);
+      const formValues = {
+        email: isEditMode ? user.email : "",
+        full_name: isEditMode ? user.full_name || "" : "",
+        password: isEditMode ? undefined : DEFAULT_PASSWORD,
+        confirm_password: isEditMode ? undefined : DEFAULT_PASSWORD,
+        is_superuser: isEditMode ? !!user.is_superuser : false,
+        is_active: isEditMode ? !!user.is_active : true,
+        groupRolePairs: getInitialGroupRolePairs()
+      };
+      console.log('Resetting form with values:', formValues);
+      reset(formValues as UserFormData);
     }
-  }, [isOpen, user, reset]);
+  }, [isOpen, user, reset, isEditMode]);
 
   const { fields, append, remove } = useFieldArray({
     control,
@@ -147,7 +192,8 @@ const UserForm = ({ user, isOpen, onClose }: UserFormProps) => {
 
   const groupRolePairs = watch("groupRolePairs");
 
-  const createUser = async (formData: UserFormData) => {
+  const createUser = async (formData: UserFormData): Promise<UserOut> => {
+    console.log('Creating user with data:', formData);
     const groups: number[] = [];
     const roles: number[] = [];
     formData.groupRolePairs.forEach(pair => {
@@ -157,71 +203,98 @@ const UserForm = ({ user, isOpen, onClose }: UserFormProps) => {
       }
     });
 
-    const data = {
-      ...formData,
-      groups,
-      roles,
-      password: formData.password || "",
-    } as UserCreate;
-    await UsersService.createUser({ requestBody: data });
+    return await UsersService.createUser({ 
+      requestBody: {
+        email: formData.email,
+        full_name: formData.full_name,
+        password: formData.password || DEFAULT_PASSWORD,
+        groups,
+        roles,
+        is_superuser: formData.is_superuser,
+        is_active: formData.is_active
+      }
+    });
   };
 
-  const updateUser = async (formData: UserFormData) => {
-    if (!user) return;
-    const groups: number[] = [];
-    const roles: number[] = [];
-    formData.groupRolePairs.forEach(pair => {
-      if (pair.group) {
-        groups.push(pair.group.value);
-        roles.push(...pair.roles.map(r => r.value));
-      }
-    });
-
-    const data = {
-      full_name: formData.full_name,
-      is_active: formData.is_active,
-      is_superuser: formData.is_superuser,
-      groups,
-      roles,
-    } as UserUpdate;
+  const updateUser = async (formData: UserFormData): Promise<UserOut> => {
+    if (!user) throw new Error('No user data available for update');
+    console.log('Updating user:', user.id);
+    console.log('Form data:', formData);
     
-    if (formData.password) {
-      data.password = formData.password;
+    const groups: number[] = [];
+    const roles: number[] = [];
+    
+    // 确保 groupRolePairs 存在且不为空
+    if (formData.groupRolePairs && formData.groupRolePairs.length > 0) {
+      formData.groupRolePairs.forEach(pair => {
+        if (pair.group) {
+          groups.push(pair.group.value);
+          if (pair.roles && pair.roles.length > 0) {
+            roles.push(...pair.roles.map(r => r.value));
+          }
+        }
+      });
     }
 
-    await UsersService.updateUser({ userId: user.id, requestBody: data });
-  };
+    console.log('Updating with groups:', groups, 'roles:', roles);
 
-  const mutation = useMutation(isEditMode ? updateUser : createUser, {
-    onSuccess: () => {
-      showToast(
-        "Success!",
-        `User ${isEditMode ? "updated" : "created"} successfully.`,
-        "success"
-      );
-      reset();
-      onClose();
-    },
-    onError: (err: ApiError) => {
-      const errDetail = err.body?.detail;
-      showToast("Something went wrong.", `${errDetail}`, "error");
-    },
-    onSettled: () => {
-      queryClient.invalidateQueries("users");
-    },
-  });
+    const updateData: UserUpdate = {
+      full_name: formData.full_name,
+      groups,
+      roles
+    };
 
-  const onSubmit: SubmitHandler<UserFormData> = async (data) => {
-    const submitData = { ...data };
-    if (isEditMode && submitData.password === "") {
-      submitData.password = undefined;
+    console.log('Sending update request with data:', updateData);
+
+    try {
+      const response = await UsersService.updateUser({ 
+        userId: user.id, 
+        requestBody: updateData
+      });
+      console.log('Update response:', response);
+      return response;
+    } catch (error) {
+      console.error('Update error:', error);
+      throw error;
     }
-    mutation.mutate(submitData);
   };
 
-  const onCancel = () => {
-    reset();
-    onClose();
+  const mutation = useMutation<UserOut, ApiError, UserFormData>(
+    isEditMode ? updateUser : createUser,
+    {
+      onSuccess: () => {
+        showToast(
+          "Success!",
+          `User ${isEditMode ? "updated" : "created"} successfully.`,
+          "success"
+        );
+        queryClient.invalidateQueries("users");
+        onClose();
+      },
+      onError: (err: ApiError) => {
+        console.error('Mutation error:', err);
+        const errDetail = err.body?.detail;
+        showToast("Something went wrong.", `${errDetail}`, "error");
+      }
+    }
+  );
+
+  const handleFormSubmit = async (data: UserFormData) => {
+    console.log('Form submit handler called with data:', data);
+    try {
+      if (isEditMode) {
+        console.log('Editing user with ID:', user?.id);
+        console.log('Current groups and roles:', data.groupRolePairs);
+        // 编辑模式下，不发送密码字段
+        const { password, confirm_password, ...updateData } = data;
+        await mutation.mutateAsync(updateData as UserFormData);
+      } else {
+        await mutation.mutateAsync(data);
+      }
+      console.log('Mutation completed successfully');
+    } catch (error) {
+      console.error('Error submitting form:', error);
+    }
   };
 
   return (
@@ -240,7 +313,8 @@ const UserForm = ({ user, isOpen, onClose }: UserFormProps) => {
         border="1px solid"
         borderColor={borderColor}
         as="form"
-        onSubmit={handleSubmit(onSubmit)}
+        noValidate
+        onSubmit={handleSubmit(handleFormSubmit)}
       >
         <ModalHeader 
           borderBottom="1px solid"
@@ -336,7 +410,7 @@ const UserForm = ({ user, isOpen, onClose }: UserFormProps) => {
 
             {!isEditMode && (
               <>
-                <FormControl isRequired={!isEditMode} isInvalid={!!errors.password}>
+                <FormControl isRequired isInvalid={!!errors.password}>
                   <FormLabel
                     fontSize="sm"
                     fontWeight="500"
@@ -346,7 +420,7 @@ const UserForm = ({ user, isOpen, onClose }: UserFormProps) => {
                   </FormLabel>
                   <Input
                     {...register("password", {
-                      required: !isEditMode && "Password is required",
+                      required: "Password is required",
                       minLength: {
                         value: 8,
                         message: "Password must be at least 8 characters",
@@ -372,9 +446,14 @@ const UserForm = ({ user, isOpen, onClose }: UserFormProps) => {
                   {errors.password && (
                     <FormErrorMessage>{errors.password.message}</FormErrorMessage>
                   )}
+                  {!errors.password && (
+                    <Text fontSize="xs" color="gray.500" mt={1}>
+                      默认密码为：12345678
+                    </Text>
+                  )}
                 </FormControl>
 
-                <FormControl isRequired={!isEditMode} isInvalid={!!errors.confirm_password}>
+                <FormControl isRequired isInvalid={!!errors.confirm_password}>
                   <FormLabel
                     fontSize="sm"
                     fontWeight="500"
@@ -384,9 +463,8 @@ const UserForm = ({ user, isOpen, onClose }: UserFormProps) => {
                   </FormLabel>
                   <Input
                     {...register("confirm_password", {
-                      required: !isEditMode && "Please confirm your password",
+                      required: "Please confirm your password",
                       validate: (value) =>
-                        !value ||
                         value === getValues().password ||
                         "The passwords do not match",
                     })}
@@ -512,26 +590,28 @@ const UserForm = ({ user, isOpen, onClose }: UserFormProps) => {
               </Button>
             </Box>
 
-            <Flex w="full" gap={8}>
-              <FormControl>
-                <Checkbox 
-                  {...register("is_superuser")} 
-                  colorScheme="blue"
-                  size="lg"
-                >
-                  Is superuser?
-                </Checkbox>
-              </FormControl>
-              <FormControl>
-                <Checkbox 
-                  {...register("is_active")} 
-                  colorScheme="blue"
-                  size="lg"
-                >
-                  Is active?
-                </Checkbox>
-              </FormControl>
-            </Flex>
+            {!isEditMode && (
+              <Flex w="full" gap={8}>
+                <FormControl>
+                  <Checkbox 
+                    {...register("is_superuser")} 
+                    colorScheme="blue"
+                    size="lg"
+                  >
+                    Is superuser?
+                  </Checkbox>
+                </FormControl>
+                <FormControl>
+                  <Checkbox 
+                    {...register("is_active")} 
+                    colorScheme="blue"
+                    size="lg"
+                  >
+                    Is active?
+                  </Checkbox>
+                </FormControl>
+              </Flex>
+            )}
           </VStack>
         </ModalBody>
 
@@ -543,8 +623,14 @@ const UserForm = ({ user, isOpen, onClose }: UserFormProps) => {
           <Button
             variant="primary"
             type="submit"
-            isLoading={isSubmitting}
+            isLoading={isSubmitting || mutation.isLoading}
+            loadingText={isEditMode ? "Saving..." : "Creating..."}
             isDisabled={isEditMode && !isDirty}
+            onClick={(e) => {
+              console.log('Submit button clicked');
+              console.log('Form state:', { isDirty, isSubmitting, errors });
+              console.log('Current form values:', getValues());
+            }}
             transition="all 0.2s"
             _hover={{
               transform: "translateY(-1px)",
@@ -557,7 +643,11 @@ const UserForm = ({ user, isOpen, onClose }: UserFormProps) => {
             {isEditMode ? "Save Changes" : "Create"}
           </Button>
           <Button
-            onClick={onCancel}
+            onClick={() => {
+              console.log('Form cancelled');
+              reset();
+              onClose();
+            }}
             variant="ghost"
             transition="all 0.2s"
             _hover={{
