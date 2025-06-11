@@ -44,15 +44,24 @@ interface UserTabProps {
 
 const PAGE_SIZE = 10;
 
-export default function UserTab({ users, currentUserId, totalCount, onPageChange }: UserTabProps) {
+export default function UserTab({
+  users,
+  currentUserId,
+  totalCount,
+  onPageChange,
+}: UserTabProps) {
   const toast = useToast();
   const showToast = useCustomToast();
   const queryClient = useQueryClient();
   const [isAddUserOpen, setIsAddUserOpen] = useState(false);
-  const [selectedUser, setSelectedUser] = useState<UserOut | undefined>(undefined);
+  const [selectedUser, setSelectedUser] = useState<UserOut | undefined>(
+    undefined
+  );
   const [currentPage, setCurrentPage] = useState(1);
   const { isOpen, onOpen, onClose } = useDisclosure();
-  const [resetPasswordUserId, setResetPasswordUserId] = useState<number | null>(null);
+  const [resetPasswordUserId, setResetPasswordUserId] = useState<number | null>(
+    null
+  );
   const cancelRef = React.useRef<any>(null);
 
   const bgColor = useColorModeValue("white", "gray.800");
@@ -66,8 +75,13 @@ export default function UserTab({ users, currentUserId, totalCount, onPageChange
         userId,
         requestBody: {
           password: DEFAULT_PASSWORD,
-          groups: users.find(u => u.id === userId)?.groups?.map((g: any) => g.id) || [],
-          roles: (users.find(u => u.id === userId) as any)?.roles?.map((r: any) => r.id) || [],
+          groups:
+            users.find((u) => u.id === userId)?.groups?.map((g: any) => g.id) ||
+            [],
+          roles:
+            (users.find((u) => u.id === userId) as any)?.roles?.map(
+              (r: any) => r.id
+            ) || [],
         },
       }),
     {
@@ -174,20 +188,19 @@ export default function UserTab({ users, currentUserId, totalCount, onPageChange
                 <Th>Email</Th>
                 <Th>Group</Th>
                 <Th>Role</Th>
-                <Th>Status</Th>
                 <Th>Actions</Th>
               </Tr>
             </Thead>
             <Tbody>
               {users?.map((user) => (
-                <Tr 
+                <Tr
                   key={user.id}
                   transition="all 0.2s"
                   _hover={{ bg: hoverBg }}
                 >
                   <Td py={4}>
                     <HStack spacing={2}>
-                      <Text 
+                      <Text
                         color={!user.full_name ? "gray.400" : "gray.700"}
                         fontWeight="500"
                       >
@@ -267,19 +280,7 @@ export default function UserTab({ users, currentUserId, totalCount, onPageChange
                       )}
                     </VStack>
                   </Td>
-                  <Td py={4}>
-                    <HStack spacing={2}>
-                      <Box
-                        w="2"
-                        h="2"
-                        borderRadius="full"
-                        bg={user.is_active ? "green.400" : "red.400"}
-                      />
-                      <Text color="gray.600">
-                        {user.is_active ? "Active" : "Inactive"}
-                      </Text>
-                    </HStack>
-                  </Td>
+
                   <Td py={4}>
                     <HStack spacing={2} justify="flex-end">
                       <IconButton
@@ -288,9 +289,18 @@ export default function UserTab({ users, currentUserId, totalCount, onPageChange
                         size="sm"
                         variant="ghost"
                         colorScheme="orange"
-                        onClick={() => handleResetPassword(user.id, user.is_superuser || false)}
+                        onClick={() =>
+                          handleResetPassword(
+                            user.id,
+                            user.is_superuser || false
+                          )
+                        }
                         isDisabled={user.is_superuser || false}
-                        title={user.is_superuser ? "Cannot reset superuser password" : "Reset password to default (12345678)"}
+                        title={
+                          user.is_superuser
+                            ? "Cannot reset superuser password"
+                            : "Reset password to default (12345678)"
+                        }
                       />
                       <IconButton
                         aria-label="Edit user"
@@ -299,7 +309,11 @@ export default function UserTab({ users, currentUserId, totalCount, onPageChange
                         variant="ghost"
                         onClick={() => setSelectedUser(user)}
                         isDisabled={user.is_superuser || false}
-                        title={user.is_superuser ? "Cannot edit superuser accounts" : "Edit user"}
+                        title={
+                          user.is_superuser
+                            ? "Cannot edit superuser accounts"
+                            : "Edit user"
+                        }
                       />
                       <IconButton
                         aria-label="Delete user"
@@ -307,9 +321,15 @@ export default function UserTab({ users, currentUserId, totalCount, onPageChange
                         size="sm"
                         variant="ghost"
                         colorScheme="red"
-                        onClick={() => handleDeleteUser(user.id, user.is_superuser || false)}
+                        onClick={() =>
+                          handleDeleteUser(user.id, user.is_superuser || false)
+                        }
                         isDisabled={user.is_superuser || false}
-                        title={user.is_superuser ? "Cannot delete superuser accounts" : "Delete user"}
+                        title={
+                          user.is_superuser
+                            ? "Cannot delete superuser accounts"
+                            : "Delete user"
+                        }
                       />
                     </HStack>
                   </Td>
@@ -319,7 +339,12 @@ export default function UserTab({ users, currentUserId, totalCount, onPageChange
           </Table>
         </TableContainer>
         {totalPages > 1 && (
-          <Flex justify="center" p={4} borderTop="1px solid" borderColor={borderColor}>
+          <Flex
+            justify="center"
+            p={4}
+            borderTop="1px solid"
+            borderColor={borderColor}
+          >
             <HStack spacing={2}>
               <Button
                 size="sm"
@@ -348,7 +373,6 @@ export default function UserTab({ users, currentUserId, totalCount, onPageChange
       <UserForm
         isOpen={isAddUserOpen || !!selectedUser}
         onClose={() => {
-    
           setIsAddUserOpen(false);
           setSelectedUser(undefined);
           // Force refetch users after form closes
@@ -385,4 +409,4 @@ export default function UserTab({ users, currentUserId, totalCount, onPageChange
       </AlertDialog>
     </>
   );
-} 
+}
