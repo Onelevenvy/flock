@@ -120,6 +120,7 @@ function KnowledgeTest() {
     () =>
       UploadsService.getSearchResults({
         taskId: searchTaskId as string,
+        uploadId: Number(uploadId),
       }),
     {
       enabled: !!searchTaskId,

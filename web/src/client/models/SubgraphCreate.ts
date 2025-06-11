@@ -13,4 +13,3 @@ export type SubgraphCreate = {
     updated_at: string;
     team_id: number;
 };
-

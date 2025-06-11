@@ -5,12 +5,12 @@
 export const $ApiKeyCreate = {
     properties: {
         description: {
-            type: 'any-of',
-            contains: [{
-                type: 'string',
-            }, {
-                type: 'null',
-            }],
-        },
+    type: 'any-of',
+    contains: [{
+    type: 'string',
+}, {
+    type: 'null',
+}],
+},
     },
 } as const;

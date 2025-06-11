@@ -17,10 +17,10 @@ export class UtilsService {
      * @throws ApiError
      */
     public static testEmail({
-        emailTo,
-    }: {
-        emailTo: string,
-    }): CancelablePromise<Message> {
+emailTo,
+}: {
+emailTo: string,
+}): CancelablePromise<Message> {
         return __request(OpenAPI, {
             method: 'POST',
             url: '/api/v1/utils/test-email/',

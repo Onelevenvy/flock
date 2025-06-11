@@ -12,4 +12,3 @@ export type Body_uploads_create_upload = {
     web_url?: (string | null);
     file?: (Blob | null);
 };
-

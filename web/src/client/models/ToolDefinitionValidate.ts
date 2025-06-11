@@ -6,4 +6,3 @@
 export type ToolDefinitionValidate = {
     tool_definition: Record<string, any>;
 };
-

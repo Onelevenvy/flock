@@ -1,6 +1,6 @@
 from datetime import datetime
 from enum import Enum
-from typing import Any
+from typing import Any, List, Optional
 from uuid import UUID, uuid4
 from zoneinfo import ZoneInfo
 
@@ -14,7 +14,10 @@ from sqlalchemy.dialects.postgresql import JSONB
 from sqlmodel import Field, Relationship, SQLModel
 
 from app.core.graph.messages import ChatResponse
-from app.core.security import security_manager
+
+from typing import TYPE_CHECKING
+if TYPE_CHECKING:
+    from app.core.security import security_manager
 
 
 class Message(SQLModel):
@@ -36,10 +39,194 @@ class NewPassword(SQLModel):
     token: str
     new_password: str
 
+class GroupResource(SQLModel, table=True):
+    """Group-Resource association table"""
+    group_id: int | None = Field(default=None, foreign_key="group.id", primary_key=True)
+    resource_id: int | None = Field(default=None, foreign_key="resource.id", primary_key=True)
 
-# ===============USER========================
+# =============RESOURCE=========================
+class ResourceType(str, Enum):
+    """Resource type enumeration"""
+    TEAM = "team"
+    MEMBER = "member"
+    SKILL = "skill"
+    UPLOAD = "upload"
+    GRAPH = "graph"
+    SUBGRAPH = "subgraph"
+    API_KEY = "api_key"
+    MODEL = "model"
+    SYSTEM = "system"
+
+class ActionType(str, Enum):
+    """Action type enumeration"""
+    CREATE = "create"
+    READ = "read"
+    UPDATE = "update"
+    DELETE = "delete"
+    EXECUTE = "execute"
+    MANAGE = "manage"
+
+class AccessScope(str, Enum):
+    """Access scope enumeration"""
+    GLOBAL = "global"
+    TEAM = "team"
+    PERSONAL = "personal"
+
+class RBACAuditLog(SQLModel, table=True):
+    """Audit log for RBAC-related actions"""
+    id: int | None = Field(default=None, primary_key=True)
+    timestamp: datetime = Field(
+        sa_column=Column(
+            DateTime(timezone=True),
+            nullable=False,
+            default=func.now(),
+            server_default=func.now(),
+        )
+    )
+    actor_id: int = Field(foreign_key="user.id")
+    action: str  # e.g. "grant_role", "revoke_permission"
+    target_type: str  # e.g. "role", "permission"
+    target_id: int
+    details: dict[str, Any] = Field(default_factory=dict, sa_column=Column(JSONB))
+
+class ResourceBase(SQLModel):
+    """Base Resource model"""
+    name: str = Field(unique=True, index=True)
+    description: str | None = None
+    type: ResourceType = Field(sa_column=Column(String, nullable=False))
+    resource_id: str | None = None  # 具体资源ID，可以为空表示资源类型级别的权限
+
+class Resource(ResourceBase, table=True):
+    """Resource model for database"""
+    id: int | None = Field(default=None, primary_key=True)
+    
+    # Relationships
+    groups: List["Group"] = Relationship(back_populates="resources", link_model=GroupResource)
+    role_accesses: List["RoleAccess"] = Relationship(back_populates="resource")
+
+class ResourceCreate(ResourceBase):
+    """Schema for creating a resource"""
+    pass
+
+class ResourceUpdate(ResourceBase):
+    """Schema for updating a resource"""
+    name: Optional[str] = None
+    description: Optional[str] = None
+    type: Optional[ResourceType] = None
+    resource_id: Optional[str] = None
+
+class ResourceOut(ResourceBase):
+    """Schema for resource output"""
+    id: int 
+# =============ASSOCIATION=========================
+class UserRole(SQLModel, table=True):
+    """User-Role association table"""
+    user_id: int | None = Field(default=None, foreign_key="user.id", primary_key=True)
+    role_id: int | None = Field(default=None, foreign_key="role.id", primary_key=True)
+
+class UserGroup(SQLModel, table=True):
+    """User-Group association table"""
+    user_id: int | None = Field(default=None, foreign_key="user.id", primary_key=True)
+    group_id: int | None = Field(default=None, foreign_key="group.id", primary_key=True)
 
 
+
+class RoleAccess(SQLModel, table=True):
+    """Role-Resource access control table"""
+    id: int | None = Field(default=None, primary_key=True)
+    role_id: int = Field(foreign_key="role.id")
+    resource_id: int = Field(foreign_key="resource.id")
+    action: ActionType
+    scope: AccessScope = Field(default=AccessScope.GLOBAL)
+    
+    # Relationships
+    role: "Role" = Relationship(back_populates="accesses")
+    resource: "Resource" = Relationship(back_populates="role_accesses")
+
+
+# =============GROUP=========================
+
+class GroupBase(SQLModel):
+    """Base Group model"""
+    name: str = Field(unique=True, index=True)
+    description: str | None = None
+    is_system_group: bool = False
+    admin_id: int | None = Field(default=None, foreign_key="user.id")
+
+class Group(GroupBase, table=True):
+    """Group model for database"""
+    id: int | None = Field(default=None, primary_key=True)
+    
+    # Relationships
+    users: List["User"] = Relationship(back_populates="groups", link_model=UserGroup)
+    resources: List["Resource"] = Relationship(back_populates="groups", link_model=GroupResource)
+    roles: List["Role"] = Relationship(back_populates="group")
+    admin: Optional["User"] = Relationship(
+        sa_relationship_kwargs={
+            "primaryjoin": "Group.admin_id==User.id",
+            "lazy": "joined"
+        }
+    )
+
+class GroupCreate(GroupBase):
+    """Schema for creating a group"""
+    pass
+
+class GroupUpdate(GroupBase):
+    """Schema for updating a group"""
+    name: Optional[str] = None
+    description: Optional[str] = None
+    is_system_group: Optional[bool] = None
+
+
+
+
+
+# =============ROLE=========================
+class RoleBase(SQLModel):
+    """Base Role model"""
+    name: str = Field(unique=True, index=True)
+    description: str | None = None
+    is_system_role: bool = False
+    group_id: int | None = Field(default=None, foreign_key="group.id")
+
+class Role(RoleBase, table=True):
+    """Role model for database"""
+    id: int | None = Field(default=None, primary_key=True)
+    parent_role_id: int | None = Field(default=None, foreign_key="role.id")
+    
+    # Relationships
+    users: List["User"] = Relationship(back_populates="roles", link_model=UserRole)
+    accesses: List["RoleAccess"] = Relationship(back_populates="role")
+    parent_role: Optional["Role"] = Relationship(
+        sa_relationship_kwargs={
+            "remote_side": "Role.id",
+            "backref": "child_roles"
+        }
+    )
+    group: "Group" = Relationship(back_populates="roles")
+
+class RoleCreate(RoleBase):
+    """Schema for creating a role"""
+    pass
+
+class RoleUpdate(RoleBase):
+    """Schema for updating a role"""
+    name: Optional[str] = None
+    description: Optional[str] = None
+    is_system_role: Optional[bool] = None
+
+class RoleOut(RoleBase):
+    """Schema for role output"""
+    id: int
+    group_id: int
+
+class RolesOut(SQLModel):
+    """Schema for roles output"""
+    data: list[RoleOut]
+    count: int 
+
+# ==============USER=========================
 class UserBase(SQLModel):
     email: str = Field(unique=True, index=True)
     is_active: bool = True
@@ -47,11 +234,11 @@ class UserBase(SQLModel):
     full_name: str | None = None
     language: str = Field(default="en-US")
 
-
 # Properties to receive via API on creation
 class UserCreate(UserBase):
     password: str
-
+    groups: list[int] = []  # 用户组 ID 列表
+    roles: list[int] = []   # 角色 ID 列表
 
 # TODO replace email str with EmailStr when sqlmodel supports it
 class UserCreateOpen(SQLModel):
@@ -59,51 +246,62 @@ class UserCreateOpen(SQLModel):
     password: str
     full_name: str | None = None
 
-
 # Properties to receive via API on update, all are optional
-# TODO replace email str with EmailStr when sqlmodel supports it
 class UserUpdate(UserBase):
     email: str | None = None  # type: ignore
     password: str | None = None
+    full_name: str | None = None
+    groups: list[int] = []  # 用户组 ID 列表
+    roles: list[int] = []   # 角色 ID 列表
 
-
-# TODO replace email str with EmailStr when sqlmodel supports it
 class UserUpdateMe(SQLModel):
     full_name: str | None = None
     email: str | None = None
-
 
 class UpdatePassword(SQLModel):
     current_password: str
     new_password: str
 
-
 class UpdateLanguageMe(SQLModel):
     language: str = Field(default="en-US")
 
-
-# Database model, database table inferred from class name
+# Database model
 class User(UserBase, table=True):
     id: int | None = Field(default=None, primary_key=True)
     hashed_password: str
-    teams: list["Team"] = Relationship(back_populates="owner")
-    skills: list["Skill"] = Relationship(back_populates="owner")
-    uploads: list["Upload"] = Relationship(back_populates="owner")
-    graphs: list["Graph"] = Relationship(back_populates="owner")
-    subgraphs: list["Subgraph"] = Relationship(back_populates="owner")
+    
+    # RBAC relationships
+    roles: List["Role"] = Relationship(back_populates="users", link_model=UserRole)
+    groups: List["Group"] = Relationship(back_populates="users", link_model=UserGroup)
+    
+    # Original relationships
+    teams: List["Team"] = Relationship(back_populates="owner")
+    skills: List["Skill"] = Relationship(back_populates="owner")
+    uploads: List["Upload"] = Relationship(back_populates="owner")
+    graphs: List["Graph"] = Relationship(back_populates="owner")
+    subgraphs: List["Subgraph"] = Relationship(back_populates="owner")
     language: str = Field(default="en-US")
 
-
-# Properties to return via API, id is always required
+# Properties to return via API
 class UserOut(UserBase):
     id: int
-
+    groups: list["Group"] | None = None
+    roles: list["Role"] | None = None
 
 class UsersOut(SQLModel):
     data: list[UserOut]
-    count: int
+    count: int 
 
+class GroupOut(GroupBase):
+    """Schema for group output"""
+    id: int
+    admin_id: int | None
+    admin: Optional[UserOut]
 
+class GroupsOut(SQLModel):
+    """Schema for groups output"""
+    data: list[GroupOut]
+    count: int 
 # ==============TEAM=========================
 
 
@@ -176,6 +374,7 @@ class TeamChatPublic(BaseModel):
 class Team(TeamBase, table=True):
     id: int | None = Field(default=None, primary_key=True)
     name: str = Field(regex=r"^[a-zA-Z0-9_-]{1,64}$", unique=True)
+    resource_id: int = Field(foreign_key="resource.id", nullable=False)
     owner_id: int | None = Field(default=None, foreign_key="user.id", nullable=False)
     owner: User | None = Relationship(back_populates="teams")
     members: list["Member"] = Relationship(
@@ -390,6 +589,7 @@ class SkillUpdate(SkillBase):
 
 class Skill(SkillBase, table=True):
     id: int | None = Field(default=None, primary_key=True)
+    resource_id: int = Field(foreign_key="resource.id", nullable=False)
     members: list["Member"] = Relationship(
         back_populates="skills",
         link_model=MemberSkillsLink,
@@ -524,6 +724,7 @@ class UploadStatus(str, Enum):
 
 class Upload(UploadBase, table=True):
     id: int | None = Field(default=None, primary_key=True)
+    resource_id: int = Field(foreign_key="resource.id", nullable=False)
     owner_id: int | None = Field(default=None, foreign_key="user.id", nullable=False)
     owner: User | None = Relationship(back_populates="uploads")
     members: list["Member"] = Relationship(
@@ -720,6 +921,7 @@ class GraphUpdate(GraphBase):
 
 class Graph(GraphBase, table=True):
     id: int | None = Field(default=None, primary_key=True)
+    resource_id: int = Field(foreign_key="resource.id", nullable=False)
     owner_id: int | None = Field(default=None, foreign_key="user.id", nullable=False)
     owner: User | None = Relationship(back_populates="graphs")
     team_id: int = Field(foreign_key="team.id", nullable=False)
@@ -818,6 +1020,7 @@ class SubgraphUpdate(SubgraphBase):
 
 class Subgraph(SubgraphBase, table=True):
     id: int | None = Field(default=None, primary_key=True)
+    resource_id: int = Field(foreign_key="resource.id", nullable=False)
     owner_id: int | None = Field(default=None, foreign_key="user.id", nullable=False)
     owner: User | None = Relationship(back_populates="subgraphs")
     team_id: int = Field(foreign_key="team.id", nullable=False)

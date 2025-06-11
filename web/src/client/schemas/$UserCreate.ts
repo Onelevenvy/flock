@@ -5,29 +5,41 @@
 export const $UserCreate = {
     properties: {
         email: {
-            type: 'string',
-            isRequired: true,
-        },
+    type: 'string',
+    isRequired: true,
+},
         is_active: {
-            type: 'boolean',
-        },
+    type: 'boolean',
+},
         is_superuser: {
-            type: 'boolean',
-        },
+    type: 'boolean',
+},
         full_name: {
-            type: 'any-of',
-            contains: [{
-                type: 'string',
-            }, {
-                type: 'null',
-            }],
-        },
+    type: 'any-of',
+    contains: [{
+    type: 'string',
+}, {
+    type: 'null',
+}],
+},
         language: {
-            type: 'string',
-        },
+    type: 'string',
+},
         password: {
-            type: 'string',
-            isRequired: true,
-        },
+    type: 'string',
+    isRequired: true,
+},
+        groups: {
+    type: 'array',
+    contains: {
+    type: 'number',
+},
+},
+        roles: {
+    type: 'array',
+    contains: {
+    type: 'number',
+},
+},
     },
 } as const;

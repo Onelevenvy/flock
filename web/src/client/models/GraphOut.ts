@@ -10,4 +10,3 @@ export type GraphOut = {
     metadata_?: Record<string, any>;
     id: number;
 };
-

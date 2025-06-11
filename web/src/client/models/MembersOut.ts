@@ -9,4 +9,3 @@ export type MembersOut = {
     data: Array<MemberOut>;
     count: number;
 };
-

@@ -4,7 +4,6 @@
 import {
   useEffect,
   useImperativeHandle,
-  useLayoutEffect,
   useRef,
   type ReactNode,
   type RefObject,

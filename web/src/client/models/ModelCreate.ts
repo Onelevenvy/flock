@@ -13,4 +13,3 @@ export type ModelCreate = {
     capabilities?: Array<ModelCapability>;
     meta_?: (Record<string, any> | null);
 };
-

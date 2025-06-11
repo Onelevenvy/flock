@@ -10,4 +10,3 @@ export type GraphUpdate = {
     metadata_?: Record<string, any>;
     updated_at: string;
 };
-

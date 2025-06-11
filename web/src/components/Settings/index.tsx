@@ -21,7 +21,7 @@ import useAuth from "@/hooks/useAuth";
 import AppearancePage from "./AcountPage/Appearance";
 import ChangePasswordPage from "./AcountPage/ChangePassword";
 import LanguagePage from "./LanguagePage";
-import MembersPage from "./MembersPage";
+import MembersPage from "./UserTeamPage";
 import ModelProviderPage from "./ModelProviderPage";
 import UserInfoPage from "./UserInfoPage";
 

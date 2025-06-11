@@ -6,8 +6,9 @@ from fastapi.responses import StreamingResponse
 from fastapi.security import APIKeyHeader
 from sqlmodel import col, func, select
 
-from app.api.deps import CurrentTeam, CurrentUser, SessionDep
+from app.api.deps import CurrentTeam, CurrentUser, SessionDep, check_team_permission
 from app.core.graph.build import generator
+from app.core.security import resource_manager
 from app.models import (
     Member,
     Message,
@@ -19,6 +20,8 @@ from app.models import (
     TeamsOut,
     TeamUpdate,
     Thread,
+    ResourceType,
+    ActionType,
 )
 
 router = APIRouter()
@@ -38,53 +41,56 @@ async def validate_name_on_update(
     session: SessionDep, team_in: TeamUpdate, id: int
 ) -> None:
     """Validate that team name is unique"""
-    statement = select(Team).where(Team.name == team_in.name, Team.id != id)
-    team = session.exec(statement).first()
-    if team:
-        raise HTTPException(status_code=400, detail="Team name already exists")
+    if team_in.name:
+        statement = select(Team).where(Team.name == team_in.name, Team.id != id)
+        team = session.exec(statement).first()
+        if team:
+            raise HTTPException(status_code=400, detail="Team name already exists")
 
 
 @router.get("/", response_model=TeamsOut)
 def read_teams(
-    session: SessionDep, current_user: CurrentUser, skip: int = 0, limit: int = 100
+    session: SessionDep,
+    current_user: CurrentUser,
+    skip: int = 0,
+    limit: int = 100,
 ) -> Any:
     """
-    Retrieve teams
+    Retrieve teams.
     """
+    # 检查权限
+    check_team_permission(
+        session=session,
+        current_user=current_user,
+        resource_type=ResourceType.TEAM,
+        action_type=ActionType.READ,
+    )
 
-    if current_user.is_superuser:
-        count_statement = select(func.count()).select_from(Team)
-        count = session.exec(count_statement).one()
-        statement = select(Team).offset(skip).limit(limit).order_by(col(Team.id).desc())
-        teams = session.exec(statement).all()
-    else:
-        count_statement = (
-            select(func.count())
-            .select_from(Team)
-            .where(Team.owner_id == current_user.id)
-        )
-        count = session.exec(count_statement).one()
-        statement = (
-            select(Team)
-            .where(Team.owner_id == current_user.id)
-            .offset(skip)
-            .limit(limit)
-            .order_by(col(Team.id).desc())
-        )
-        teams = session.exec(statement).all()
-    return TeamsOut(data=teams, count=count)
+    total = session.exec(select(func.count(Team.id))).first()
+    teams = session.exec(select(Team).offset(skip).limit(limit)).all()
+    return TeamsOut(data=teams, count=total)
 
 
 @router.get("/{id}", response_model=TeamOut)
-def read_team(session: SessionDep, current_user: CurrentUser, id: int) -> Any:
+def read_team(
+    session: SessionDep,
+    current_user: CurrentUser,
+    id: int,
+) -> Any:
     """
     Get team by ID.
     """
+    # 检查权限
+    check_team_permission(
+        session=session,
+        current_user=current_user,
+        resource_type=ResourceType.TEAM,
+        action_type=ActionType.READ,
+    )
+
     team = session.get(Team, id)
     if not team:
         raise HTTPException(status_code=404, detail="Team not found")
-    if not current_user.is_superuser and (team.owner_id != current_user.id):
-        raise HTTPException(status_code=400, detail="Not enough permissions")
     return team
 
 
@@ -99,8 +105,16 @@ def create_team(
     """
     Create new team and it's team leader
     """
-    team = Team.model_validate(team_in, update={"owner_id": current_user.id})
-    if team.workflow not in [
+    # 检查权限
+    check_team_permission(
+        session=session,
+        current_user=current_user,
+        resource_type=ResourceType.TEAM,
+        action_type=ActionType.CREATE,
+    )
+
+    # 验证workflow类型
+    if team_in.workflow not in [
         "hierarchical",
         "sequential",
         "chatbot",
@@ -108,13 +122,28 @@ def create_team(
         "workflow",
     ]:
         raise HTTPException(status_code=400, detail="Invalid workflow")
+
+    # 创建team对应的resource
+    resource = resource_manager.create_resource(
+        session=session,
+        name=f"team_{team_in.name}",  # 使用team名称作为resource名称
+        description=team_in.description or f"Team resource for {team_in.name}",
+        resource_type=ResourceType.TEAM,
+    )
+    
+    # 创建team
+    team = Team.model_validate(team_in, update={
+        "owner_id": current_user.id,
+        "resource_id": resource.id  # 设置resource_id
+    })
     session.add(team)
     session.commit()
+    session.refresh(team)
 
+    # 根据workflow类型创建对应的member
     if team.workflow == "hierarchical":
         # Create team leader
         member = Member(
-            # The leader name will be used as the team's name in the graph, so it has to be specific
             name=f"{team.name}Leader",
             type="root",
             role="Gather inputs from your team and answer the question.",
@@ -124,7 +153,6 @@ def create_team(
             belongs_to=team.id,
         )
     elif team.workflow == "sequential":
-        # Create a freelancer head
         member = Member(
             name="Worker0",
             type="freelancer_root",
@@ -135,7 +163,6 @@ def create_team(
             belongs_to=team.id,
         )
     elif team.workflow == "chatbot":
-        # Create a freelancer head
         member = Member(
             name="ChatBot",
             type="chatbot",
@@ -146,7 +173,6 @@ def create_team(
             belongs_to=team.id,
         )
     elif team.workflow == "ragbot":
-        # Create a freelancer head
         member = Member(
             name="RagBot",
             type="ragbot",
@@ -157,7 +183,6 @@ def create_team(
             belongs_to=team.id,
         )
     elif team.workflow == "workflow":
-        # Create a freelancer head
         member = Member(
             name="Workflow",
             type="workflow",
@@ -169,9 +194,10 @@ def create_team(
         )
     else:
         raise ValueError("Unsupported graph type")
+        
     session.add(member)
     session.commit()
-
+    
     return team
 
 
@@ -187,13 +213,22 @@ def update_team(
     """
     Update a team.
     """
+    # 检查权限
+    check_team_permission(
+        session=session,
+        current_user=current_user,
+        resource_type=ResourceType.TEAM,
+        action_type=ActionType.UPDATE,
+    )
+
     team = session.get(Team, id)
     if not team:
         raise HTTPException(status_code=404, detail="Team not found")
-    if not current_user.is_superuser and (team.owner_id != current_user.id):
-        raise HTTPException(status_code=400, detail="Not enough permissions")
-    update_dict = team_in.model_dump(exclude_unset=True)
-    team.sqlmodel_update(update_dict)
+    
+    team_data = team_in.model_dump(exclude_unset=True)
+    for field in team_data:
+        setattr(team, field, team_data[field])
+    
     session.add(team)
     session.commit()
     session.refresh(team)
@@ -201,18 +236,29 @@ def update_team(
 
 
 @router.delete("/{id}")
-def delete_team(session: SessionDep, current_user: CurrentUser, id: int) -> Any:
+def delete_team(
+    session: SessionDep,
+    current_user: CurrentUser,
+    id: int,
+) -> Any:
     """
     Delete a team.
     """
+    # 检查权限
+    check_team_permission(
+        session=session,
+        current_user=current_user,
+        resource_type=ResourceType.TEAM,
+        action_type=ActionType.DELETE,
+    )
+
     team = session.get(Team, id)
     if not team:
         raise HTTPException(status_code=404, detail="Team not found")
-    if not current_user.is_superuser and (team.owner_id != current_user.id):
-        raise HTTPException(status_code=400, detail="Not enough permissions")
+    
     session.delete(team)
     session.commit()
-    return Message(message="Team deleted successfully")
+    return {"ok": True}
 
 
 @router.post("/{id}/stream/{thread_id}")

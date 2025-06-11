@@ -22,12 +22,12 @@ export class ToolsService {
      * @throws ApiError
      */
     public static readSkills({
-        skip,
-        limit = 100,
-    }: {
-        skip?: number,
-        limit?: number,
-    }): CancelablePromise<SkillsOut> {
+skip,
+limit = 100,
+}: {
+skip?: number,
+limit?: number,
+}): CancelablePromise<SkillsOut> {
         return __request(OpenAPI, {
             method: 'GET',
             url: '/api/v1/tools/',
@@ -48,10 +48,10 @@ export class ToolsService {
      * @throws ApiError
      */
     public static createSkill({
-        requestBody,
-    }: {
-        requestBody: SkillCreate,
-    }): CancelablePromise<SkillOut> {
+requestBody,
+}: {
+requestBody: SkillCreate,
+}): CancelablePromise<SkillOut> {
         return __request(OpenAPI, {
             method: 'POST',
             url: '/api/v1/tools/',
@@ -70,10 +70,10 @@ export class ToolsService {
      * @throws ApiError
      */
     public static readSkill({
-        id,
-    }: {
-        id: number,
-    }): CancelablePromise<SkillOut> {
+id,
+}: {
+id: number,
+}): CancelablePromise<SkillOut> {
         return __request(OpenAPI, {
             method: 'GET',
             url: '/api/v1/tools/{id}',
@@ -93,12 +93,12 @@ export class ToolsService {
      * @throws ApiError
      */
     public static updateSkill({
-        id,
-        requestBody,
-    }: {
-        id: number,
-        requestBody: SkillUpdate,
-    }): CancelablePromise<SkillOut> {
+id,
+requestBody,
+}: {
+id: number,
+requestBody: SkillUpdate,
+}): CancelablePromise<SkillOut> {
         return __request(OpenAPI, {
             method: 'PUT',
             url: '/api/v1/tools/{id}',
@@ -120,10 +120,10 @@ export class ToolsService {
      * @throws ApiError
      */
     public static deleteSkill({
-        id,
-    }: {
-        id: number,
-    }): CancelablePromise<any> {
+id,
+}: {
+id: number,
+}): CancelablePromise<any> {
         return __request(OpenAPI, {
             method: 'DELETE',
             url: '/api/v1/tools/{id}',
@@ -143,10 +143,10 @@ export class ToolsService {
      * @throws ApiError
      */
     public static validateSkill({
-        requestBody,
-    }: {
-        requestBody: ToolDefinitionValidate,
-    }): CancelablePromise<any> {
+requestBody,
+}: {
+requestBody: ToolDefinitionValidate,
+}): CancelablePromise<any> {
         return __request(OpenAPI, {
             method: 'POST',
             url: '/api/v1/tools/validate',
@@ -165,12 +165,12 @@ export class ToolsService {
      * @throws ApiError
      */
     public static invokeTools({
-        toolName,
-        requestBody,
-    }: {
-        toolName: string,
-        requestBody: Record<string, any>,
-    }): CancelablePromise<ToolInvokeResponse> {
+toolName,
+requestBody,
+}: {
+toolName: string,
+requestBody: Record<string, any>,
+}): CancelablePromise<ToolInvokeResponse> {
         return __request(OpenAPI, {
             method: 'POST',
             url: '/api/v1/tools/invoke-tool',
@@ -192,12 +192,12 @@ export class ToolsService {
      * @throws ApiError
      */
     public static updateSkillCredentials({
-        id,
-        requestBody,
-    }: {
-        id: number,
-        requestBody: Record<string, Record<string, any>>,
-    }): CancelablePromise<SkillOut> {
+id,
+requestBody,
+}: {
+id: number,
+requestBody: Record<string, Record<string, any>>,
+}): CancelablePromise<SkillOut> {
         return __request(OpenAPI, {
             method: 'POST',
             url: '/api/v1/tools/update-credentials/{id}',
@@ -219,10 +219,10 @@ export class ToolsService {
      * @throws ApiError
      */
     public static getMcpTools({
-        requestBody,
-    }: {
-        requestBody: Record<string, any>,
-    }): CancelablePromise<any> {
+requestBody,
+}: {
+requestBody: Record<string, any>,
+}): CancelablePromise<any> {
         return __request(OpenAPI, {
             method: 'POST',
             url: '/api/v1/tools/mcp/tools',

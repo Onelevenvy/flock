@@ -5,15 +5,15 @@
 export const $ApiKeysOutPublic = {
     properties: {
         data: {
-            type: 'array',
-            contains: {
-                type: 'ApiKeyOutPublic',
-            },
-            isRequired: true,
-        },
+    type: 'array',
+    contains: {
+        type: 'ApiKeyOutPublic',
+    },
+    isRequired: true,
+},
         count: {
-            type: 'number',
-            isRequired: true,
-        },
+    type: 'number',
+    isRequired: true,
+},
     },
 } as const;

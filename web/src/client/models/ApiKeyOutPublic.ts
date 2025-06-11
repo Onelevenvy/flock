@@ -9,4 +9,3 @@ export type ApiKeyOutPublic = {
     short_key: string;
     created_at: string;
 };
-

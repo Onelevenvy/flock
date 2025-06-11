@@ -21,14 +21,14 @@ export class ThreadsService {
      * @throws ApiError
      */
     public static readThreads({
-        teamId,
-        skip,
-        limit = 100,
-    }: {
-        teamId: number,
-        skip?: number,
-        limit?: number,
-    }): CancelablePromise<ThreadsOut> {
+teamId,
+skip,
+limit = 100,
+}: {
+teamId: number,
+skip?: number,
+limit?: number,
+}): CancelablePromise<ThreadsOut> {
         return __request(OpenAPI, {
             method: 'GET',
             url: '/api/v1/teams/{team_id}/threads/',
@@ -52,12 +52,12 @@ export class ThreadsService {
      * @throws ApiError
      */
     public static createThread({
-        teamId,
-        requestBody,
-    }: {
-        teamId: number,
-        requestBody: ThreadCreate,
-    }): CancelablePromise<ThreadOut> {
+teamId,
+requestBody,
+}: {
+teamId: number,
+requestBody: ThreadCreate,
+}): CancelablePromise<ThreadOut> {
         return __request(OpenAPI, {
             method: 'POST',
             url: '/api/v1/teams/{team_id}/threads/',
@@ -79,12 +79,12 @@ export class ThreadsService {
      * @throws ApiError
      */
     public static readThread({
-        teamId,
-        id,
-    }: {
-        teamId: number,
-        id: string,
-    }): CancelablePromise<ThreadRead> {
+teamId,
+id,
+}: {
+teamId: number,
+id: string,
+}): CancelablePromise<ThreadRead> {
         return __request(OpenAPI, {
             method: 'GET',
             url: '/api/v1/teams/{team_id}/threads/{id}',
@@ -105,14 +105,14 @@ export class ThreadsService {
      * @throws ApiError
      */
     public static updateThread({
-        teamId,
-        id,
-        requestBody,
-    }: {
-        teamId: number,
-        id: string,
-        requestBody: ThreadUpdate,
-    }): CancelablePromise<ThreadOut> {
+teamId,
+id,
+requestBody,
+}: {
+teamId: number,
+id: string,
+requestBody: ThreadUpdate,
+}): CancelablePromise<ThreadOut> {
         return __request(OpenAPI, {
             method: 'PUT',
             url: '/api/v1/teams/{team_id}/threads/{id}',
@@ -135,12 +135,12 @@ export class ThreadsService {
      * @throws ApiError
      */
     public static deleteThread({
-        teamId,
-        id,
-    }: {
-        teamId: number,
-        id: string,
-    }): CancelablePromise<any> {
+teamId,
+id,
+}: {
+teamId: number,
+id: string,
+}): CancelablePromise<any> {
         return __request(OpenAPI, {
             method: 'DELETE',
             url: '/api/v1/teams/{team_id}/threads/{id}',
@@ -161,12 +161,12 @@ export class ThreadsService {
      * @throws ApiError
      */
     public static readThreadPublic({
-        threadId,
-        teamId,
-    }: {
-        threadId: string,
-        teamId: number,
-    }): CancelablePromise<ThreadRead> {
+threadId,
+teamId,
+}: {
+threadId: string,
+teamId: number,
+}): CancelablePromise<ThreadRead> {
         return __request(OpenAPI, {
             method: 'GET',
             url: '/api/v1/teams/{team_id}/threads/public/{thread_id}',

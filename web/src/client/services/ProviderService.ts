@@ -33,10 +33,10 @@ export class ProviderService {
      * @throws ApiError
      */
     public static createProvider({
-        requestBody,
-    }: {
-        requestBody: ModelProviderCreate,
-    }): CancelablePromise<ModelProvider> {
+requestBody,
+}: {
+requestBody: ModelProviderCreate,
+}): CancelablePromise<ModelProvider> {
         return __request(OpenAPI, {
             method: 'POST',
             url: '/api/v1/provider/',
@@ -55,10 +55,10 @@ export class ProviderService {
      * @throws ApiError
      */
     public static readProvider({
-        modelProviderId,
-    }: {
-        modelProviderId: number,
-    }): CancelablePromise<ModelProviderOut> {
+modelProviderId,
+}: {
+modelProviderId: number,
+}): CancelablePromise<ModelProviderOut> {
         return __request(OpenAPI, {
             method: 'GET',
             url: '/api/v1/provider/{model_provider_id}',
@@ -78,12 +78,12 @@ export class ProviderService {
      * @throws ApiError
      */
     public static updateProvider({
-        modelProviderId,
-        requestBody,
-    }: {
-        modelProviderId: number,
-        requestBody: ModelProviderUpdate,
-    }): CancelablePromise<ModelProviderOut> {
+modelProviderId,
+requestBody,
+}: {
+modelProviderId: number,
+requestBody: ModelProviderUpdate,
+}): CancelablePromise<ModelProviderOut> {
         return __request(OpenAPI, {
             method: 'PUT',
             url: '/api/v1/provider/{model_provider_id}',
@@ -104,10 +104,10 @@ export class ProviderService {
      * @throws ApiError
      */
     public static deleteProvider({
-        modelProviderId,
-    }: {
-        modelProviderId: number,
-    }): CancelablePromise<ModelProvider> {
+modelProviderId,
+}: {
+modelProviderId: number,
+}): CancelablePromise<ModelProvider> {
         return __request(OpenAPI, {
             method: 'DELETE',
             url: '/api/v1/provider/{model_provider_id}',
@@ -126,10 +126,10 @@ export class ProviderService {
      * @throws ApiError
      */
     public static readProviderWithModels({
-        modelProviderId,
-    }: {
-        modelProviderId: number,
-    }): CancelablePromise<ModelProviderWithModelsListOut> {
+modelProviderId,
+}: {
+modelProviderId: number,
+}): CancelablePromise<ModelProviderWithModelsListOut> {
         return __request(OpenAPI, {
             method: 'GET',
             url: '/api/v1/provider/withmodels/{model_provider_id}',
@@ -145,15 +145,15 @@ export class ProviderService {
     /**
      * Sync Provider
      * 从配置文件同步提供者的模型到数据库
-     * 返回同步的模型名称列表
+ * 返回同步的模型名称列表
      * @returns string Successful Response
      * @throws ApiError
      */
     public static syncProvider({
-        providerName,
-    }: {
-        providerName: string,
-    }): CancelablePromise<Array<string>> {
+providerName,
+}: {
+providerName: string,
+}): CancelablePromise<Array<string>> {
         return __request(OpenAPI, {
             method: 'POST',
             url: '/api/v1/provider/{provider_name}/sync',

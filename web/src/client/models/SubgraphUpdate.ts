@@ -13,4 +13,3 @@ export type SubgraphUpdate = {
     id?: (number | null);
     team_id?: (number | null);
 };
-

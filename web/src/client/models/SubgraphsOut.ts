@@ -9,4 +9,3 @@ export type SubgraphsOut = {
     data: Array<SubgraphOut>;
     count: number;
 };
-

@@ -6,4 +6,3 @@
 export type ThreadCreate = {
     query: string;
 };
-

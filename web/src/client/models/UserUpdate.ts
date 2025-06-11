@@ -10,5 +10,6 @@ export type UserUpdate = {
     full_name?: (string | null);
     language?: string;
     password?: (string | null);
+    groups?: Array<number>;
+    roles?: Array<number>;
 };
-

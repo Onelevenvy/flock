@@ -6,4 +6,3 @@
 export type ApiKeyCreate = {
     description?: (string | null);
 };
-

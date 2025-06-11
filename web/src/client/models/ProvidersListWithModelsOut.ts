@@ -8,4 +8,3 @@ import type { ModelProviderWithModelsListOut } from './ModelProviderWithModelsLi
 export type ProvidersListWithModelsOut = {
     providers: Array<ModelProviderWithModelsListOut>;
 };
-

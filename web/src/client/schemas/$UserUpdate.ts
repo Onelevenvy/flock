@@ -5,37 +5,49 @@
 export const $UserUpdate = {
     properties: {
         email: {
-            type: 'any-of',
-            contains: [{
-                type: 'string',
-            }, {
-                type: 'null',
-            }],
-        },
+    type: 'any-of',
+    contains: [{
+    type: 'string',
+}, {
+    type: 'null',
+}],
+},
         is_active: {
-            type: 'boolean',
-        },
+    type: 'boolean',
+},
         is_superuser: {
-            type: 'boolean',
-        },
+    type: 'boolean',
+},
         full_name: {
-            type: 'any-of',
-            contains: [{
-                type: 'string',
-            }, {
-                type: 'null',
-            }],
-        },
+    type: 'any-of',
+    contains: [{
+    type: 'string',
+}, {
+    type: 'null',
+}],
+},
         language: {
-            type: 'string',
-        },
+    type: 'string',
+},
         password: {
-            type: 'any-of',
-            contains: [{
-                type: 'string',
-            }, {
-                type: 'null',
-            }],
-        },
+    type: 'any-of',
+    contains: [{
+    type: 'string',
+}, {
+    type: 'null',
+}],
+},
+        groups: {
+    type: 'array',
+    contains: {
+    type: 'number',
+},
+},
+        roles: {
+    type: 'array',
+    contains: {
+    type: 'number',
+},
+},
     },
 } as const;

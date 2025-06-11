@@ -9,4 +9,3 @@ export type TeamCreate = {
     icon?: (string | null);
     workflow: string;
 };
-

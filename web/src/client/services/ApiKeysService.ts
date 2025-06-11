@@ -19,14 +19,14 @@ export class ApiKeysService {
      * @throws ApiError
      */
     public static readApiKeys({
-        teamId,
-        skip,
-        limit = 100,
-    }: {
-        teamId: number,
-        skip?: number,
-        limit?: number,
-    }): CancelablePromise<ApiKeysOutPublic> {
+teamId,
+skip,
+limit = 100,
+}: {
+teamId: number,
+skip?: number,
+limit?: number,
+}): CancelablePromise<ApiKeysOutPublic> {
         return __request(OpenAPI, {
             method: 'GET',
             url: '/api/v1/teams/{team_id}/api-keys/',
@@ -50,12 +50,12 @@ export class ApiKeysService {
      * @throws ApiError
      */
     public static createApiKey({
-        teamId,
-        requestBody,
-    }: {
-        teamId: number,
-        requestBody: ApiKeyCreate,
-    }): CancelablePromise<ApiKeyOut> {
+teamId,
+requestBody,
+}: {
+teamId: number,
+requestBody: ApiKeyCreate,
+}): CancelablePromise<ApiKeyOut> {
         return __request(OpenAPI, {
             method: 'POST',
             url: '/api/v1/teams/{team_id}/api-keys/',
@@ -77,12 +77,12 @@ export class ApiKeysService {
      * @throws ApiError
      */
     public static deleteApiKey({
-        teamId,
-        id,
-    }: {
-        teamId: number,
-        id: number,
-    }): CancelablePromise<any> {
+teamId,
+id,
+}: {
+teamId: number,
+id: number,
+}): CancelablePromise<any> {
         return __request(OpenAPI, {
             method: 'DELETE',
             url: '/api/v1/teams/{team_id}/api-keys/{id}',

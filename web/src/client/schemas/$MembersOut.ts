@@ -5,15 +5,15 @@
 export const $MembersOut = {
     properties: {
         data: {
-            type: 'array',
-            contains: {
-                type: 'MemberOut',
-            },
-            isRequired: true,
-        },
+    type: 'array',
+    contains: {
+        type: 'MemberOut',
+    },
+    isRequired: true,
+},
         count: {
-            type: 'number',
-            isRequired: true,
-        },
+    type: 'number',
+    isRequired: true,
+},
     },
 } as const;

@@ -5,15 +5,15 @@
 export const $ModelsOut = {
     properties: {
         data: {
-            type: 'array',
-            contains: {
-                type: 'ModelOut',
-            },
-            isRequired: true,
-        },
+    type: 'array',
+    contains: {
+        type: 'ModelOut',
+    },
+    isRequired: true,
+},
         count: {
-            type: 'number',
-            isRequired: true,
-        },
+    type: 'number',
+    isRequired: true,
+},
     },
 } as const;

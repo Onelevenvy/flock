@@ -5,48 +5,48 @@
 export const $SubgraphCreate = {
     properties: {
         name: {
-            type: 'string',
-            isRequired: true,
-            pattern: '^[a-zA-Z0-9_-]{1,64}$',
-        },
+    type: 'string',
+    isRequired: true,
+    pattern: '^[a-zA-Z0-9_-]{1,64}$',
+},
         description: {
-            type: 'any-of',
-            contains: [{
-                type: 'string',
-            }, {
-                type: 'null',
-            }],
-        },
+    type: 'any-of',
+    contains: [{
+    type: 'string',
+}, {
+    type: 'null',
+}],
+},
         config: {
-            type: 'dictionary',
-            contains: {
-                properties: {
-                },
-            },
-        },
+    type: 'dictionary',
+    contains: {
+    properties: {
+    },
+},
+},
         metadata_: {
-            type: 'dictionary',
-            contains: {
-                properties: {
-                },
-            },
-        },
+    type: 'dictionary',
+    contains: {
+    properties: {
+    },
+},
+},
         is_public: {
-            type: 'boolean',
-        },
+    type: 'boolean',
+},
         created_at: {
-            type: 'string',
-            isRequired: true,
-            format: 'date-time',
-        },
+    type: 'string',
+    isRequired: true,
+    format: 'date-time',
+},
         updated_at: {
-            type: 'string',
-            isRequired: true,
-            format: 'date-time',
-        },
+    type: 'string',
+    isRequired: true,
+    format: 'date-time',
+},
         team_id: {
-            type: 'number',
-            isRequired: true,
-        },
+    type: 'number',
+    isRequired: true,
+},
     },
 } as const;

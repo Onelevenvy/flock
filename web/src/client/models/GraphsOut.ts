@@ -9,4 +9,3 @@ export type GraphsOut = {
     data: Array<GraphOut>;
     count: number;
 };
-

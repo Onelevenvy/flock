@@ -16,4 +16,3 @@ export type ChatResponse = {
     documents?: (string | null);
     next?: (string | null);
 };
-

@@ -9,4 +9,3 @@ export type UploadsOut = {
     data: Array<UploadOut>;
     count: number;
 };
-

@@ -11,4 +11,3 @@ export type TeamOut = {
     owner_id: number;
     workflow: string;
 };
-

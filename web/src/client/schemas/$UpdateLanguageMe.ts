@@ -5,7 +5,7 @@
 export const $UpdateLanguageMe = {
     properties: {
         language: {
-            type: 'string',
-        },
+    type: 'string',
+},
     },
 } as const;

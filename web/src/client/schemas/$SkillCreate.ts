@@ -5,55 +5,55 @@
 export const $SkillCreate = {
     properties: {
         name: {
-            type: 'string',
-            isRequired: true,
-        },
+    type: 'string',
+    isRequired: true,
+},
         description: {
-            type: 'string',
-            isRequired: true,
-        },
+    type: 'string',
+    isRequired: true,
+},
         display_name: {
-            type: 'any-of',
-            contains: [{
-                type: 'string',
-            }, {
-                type: 'null',
-            }],
-        },
+    type: 'any-of',
+    contains: [{
+    type: 'string',
+}, {
+    type: 'null',
+}],
+},
         managed: {
-            type: 'boolean',
-        },
+    type: 'boolean',
+},
         tool_definition: {
-            type: 'dictionary',
-            contains: {
-                properties: {
-                },
-            },
-            isRequired: true,
-        },
+    type: 'dictionary',
+    contains: {
+    properties: {
+    },
+},
+    isRequired: true,
+},
         input_parameters: {
-            type: 'any-of',
-            contains: [{
-                type: 'dictionary',
-                contains: {
-                    properties: {
-                    },
-                },
-            }, {
-                type: 'null',
-            }],
-        },
+    type: 'any-of',
+    contains: [{
+    type: 'dictionary',
+    contains: {
+    properties: {
+    },
+},
+}, {
+    type: 'null',
+}],
+},
         credentials: {
-            type: 'any-of',
-            contains: [{
-                type: 'dictionary',
-                contains: {
-                    properties: {
-                    },
-                },
-            }, {
-                type: 'null',
-            }],
-        },
+    type: 'any-of',
+    contains: [{
+    type: 'dictionary',
+    contains: {
+    properties: {
+    },
+},
+}, {
+    type: 'null',
+}],
+},
     },
 } as const;

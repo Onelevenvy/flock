@@ -24,4 +24,3 @@ export type MemberOut = {
     skills: Array<Skill>;
     uploads: Array<Upload>;
 };
-

@@ -15,6 +15,8 @@ from app.api.routes import (
     users,
     utils,
     langmanus,
+    groups,
+    roles,
 )
 
 api_router = APIRouter()
@@ -54,3 +56,7 @@ api_router.include_router(
 api_router.include_router(
     langmanus.router, prefix="/langmanus", tags=["langmanus"]
 )
+
+# RBAC相关路由
+api_router.include_router(groups.router, prefix="/groups", tags=["groups"])
+api_router.include_router(roles.router, prefix="/roles", tags=["roles"])

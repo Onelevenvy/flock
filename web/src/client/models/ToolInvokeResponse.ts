@@ -9,4 +9,3 @@ export type ToolInvokeResponse = {
     messages: Array<ToolMessages>;
     error?: (string | null);
 };
-

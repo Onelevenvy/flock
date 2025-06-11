@@ -17,4 +17,3 @@ export type MemberCreate = {
     temperature?: number;
     interrupt?: boolean;
 };
-

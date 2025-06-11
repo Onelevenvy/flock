@@ -7,4 +7,3 @@ export type ThreadUpdate = {
     query?: (string | null);
     updated_at?: (string | null);
 };
-

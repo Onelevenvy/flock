@@ -14,4 +14,3 @@ export type Models = {
     id?: (number | null);
     meta_?: Record<string, any>;
 };
-

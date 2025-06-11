@@ -9,4 +9,3 @@ export type ApiKeyOut = {
     key: string;
     created_at: string;
 };
-

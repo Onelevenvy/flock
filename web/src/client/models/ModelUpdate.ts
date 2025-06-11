@@ -10,4 +10,3 @@ export type ModelUpdate = {
     capabilities?: null;
     meta_?: (Record<string, any> | null);
 };
-

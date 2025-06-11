@@ -1,6 +1,16 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-
+  output: 'standalone',
+  
+  typescript: {
+    // 如果设置了SKIP_TYPE_CHECK环境变量，则跳过类型检查
+    ignoreBuildErrors: process.env.SKIP_TYPE_CHECK === 'true',
+  },
+  
+  eslint: {
+    // 如果设置了SKIP_TYPE_CHECK环境变量，则跳过ESLint检查
+    ignoreDuringBuilds: process.env.SKIP_TYPE_CHECK === 'true',
+  },
 
   turbopack: {
     rules: {
@@ -19,9 +29,6 @@ const nextConfig = {
     });
     return config;
   },
+}
 
-  // ... rest of the configuration.
-  output: "standalone",
-};
-
-export default nextConfig;
+export default nextConfig

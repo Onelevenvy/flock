@@ -12,4 +12,3 @@ export type ModelOutIdWithAndName = {
     categories: Array<ModelCategory>;
     capabilities: Array<ModelCapability>;
 };
-
