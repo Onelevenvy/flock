@@ -108,7 +108,7 @@ const UserForm = ({ user, isOpen, onClose }: UserFormProps) => {
         password: "",
         confirm_password: "",
         is_superuser: false,
-        is_active: false,
+        is_active: true,
         groupRolePairs: [{ group: null, roles: [] }]
       };
 
@@ -398,9 +398,9 @@ const UserForm = ({ user, isOpen, onClose }: UserFormProps) => {
               <Table variant="simple" size="sm" mb={4}>
                 <Thead>
                   <Tr>
-                    <Th>Group</Th>
-                    <Th>Roles</Th>
-                    <Th width="80px">Action</Th>
+                    <Th width="40%">Group</Th>
+                    <Th width="50%">Roles</Th>
+                    <Th width="10%">Action</Th>
                   </Tr>
                 </Thead>
                 <Tbody>

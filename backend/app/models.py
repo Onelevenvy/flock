@@ -237,6 +237,8 @@ class UserBase(SQLModel):
 # Properties to receive via API on creation
 class UserCreate(UserBase):
     password: str
+    groups: list[int] = []  # 用户组 ID 列表
+    roles: list[int] = []   # 角色 ID 列表
 
 # TODO replace email str with EmailStr when sqlmodel supports it
 class UserCreateOpen(SQLModel):
@@ -282,6 +284,7 @@ class User(UserBase, table=True):
 class UserOut(UserBase):
     id: int
     groups: list["Group"] | None = None
+    roles: list["Role"] | None = None
 
 class UsersOut(SQLModel):
     data: list[UserOut]

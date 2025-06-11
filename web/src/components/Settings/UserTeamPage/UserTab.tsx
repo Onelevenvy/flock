@@ -198,26 +198,23 @@ export default function UserTab({ users, currentUserId }: UserTabProps) {
                     </HStack>
                   </Td>
                   <Td py={4}>
-                    <Menu>
-                      <MenuButton
-                        as={IconButton}
-                        icon={<BsThreeDotsVertical />}
-                        variant="ghost"
+                    <HStack spacing={2} justify="flex-end">
+                      <IconButton
+                        aria-label="Edit user"
+                        icon={<EditIcon />}
                         size="sm"
+                        variant="ghost"
+                        onClick={() => setSelectedUser(user)}
                       />
-                      <MenuList>
-                        <MenuItem icon={<EditIcon />} onClick={() => setSelectedUser(user)}>
-                          Edit
-                        </MenuItem>
-                        <MenuItem
-                          icon={<DeleteIcon />}
-                          color="red.500"
-                          onClick={() => handleDeleteUser(user.id)}
-                        >
-                          Delete
-                        </MenuItem>
-                      </MenuList>
-                    </Menu>
+                      <IconButton
+                        aria-label="Delete user"
+                        icon={<DeleteIcon />}
+                        size="sm"
+                        variant="ghost"
+                        colorScheme="red"
+                        onClick={() => handleDeleteUser(user.id)}
+                      />
+                    </HStack>
                   </Td>
                 </Tr>
               ))}
