@@ -3,9 +3,10 @@ from typing import Any
 from fastapi import APIRouter, Depends, HTTPException
 from sqlmodel import func, select
 
-from app.api.deps import CurrentUser, SessionDep, get_current_active_superuser
+from app.api.deps import SessionDep, get_current_active_superuser
 from app.curd import roles
-from app.models import Role, RoleCreate, RoleOut, RolesOut, RoleUpdate, Message, Group
+from app.models import (Group, Message, Role, RoleCreate, RoleOut, RolesOut,
+                        RoleUpdate)
 
 router = APIRouter()
 
@@ -32,13 +33,15 @@ def read_roles(session: SessionDep, skip: int = 0, limit: int = 100) -> Any:
         if role.group_id is None and default_group:
             role.group_id = default_group.id
             session.add(role)
-    
+
     session.commit()
 
     return RolesOut(data=roles_list, count=count)
 
 
-@router.post("/", dependencies=[Depends(get_current_active_superuser)], response_model=RoleOut)
+@router.post(
+    "/", dependencies=[Depends(get_current_active_superuser)], response_model=RoleOut
+)
 def create_role(*, session: SessionDep, role_in: RoleCreate) -> Any:
     """
     Create new role.
@@ -123,4 +126,4 @@ def delete_role(session: SessionDep, role_id: int) -> Message:
 
     session.delete(role)
     session.commit()
-    return Message(message="Role deleted successfully") 
+    return Message(message="Role deleted successfully")

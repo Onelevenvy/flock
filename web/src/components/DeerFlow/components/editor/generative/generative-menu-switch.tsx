@@ -7,7 +7,10 @@ import { Button } from "../../ui/button";
 import Magic from "../../ui/icons/magic";
 import { AISelector } from "./ai-selector";
 import { useReplay } from "@/components/DeerFlow/core/replay";
-import { TooltipContent, TooltipTrigger } from "@/components/DeerFlow/components/ui/tooltip";
+import {
+  TooltipContent,
+  TooltipTrigger,
+} from "@/components/DeerFlow/components/ui/tooltip";
 import { Tooltip } from "@/components/DeerFlow/components/ui/tooltip";
 
 interface GenerativeMenuSwitchProps {

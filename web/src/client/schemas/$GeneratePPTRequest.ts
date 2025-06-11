@@ -3,11 +3,11 @@
 /* tslint:disable */
 /* eslint-disable */
 export const $GeneratePPTRequest = {
-    properties: {
-        content: {
-    type: 'string',
-    description: `The content of the ppt`,
-    isRequired: true,
-},
+  properties: {
+    content: {
+      type: "string",
+      description: `The content of the ppt`,
+      isRequired: true,
     },
+  },
 } as const;

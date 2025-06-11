@@ -4,8 +4,10 @@ from fastapi import APIRouter, HTTPException
 from sqlmodel import func, select
 
 from app.api.deps import CurrentUser, SessionDep
-from app.core.security import generate_apikey, generate_short_apikey, get_password_hash
-from app.models import ApiKey, ApiKeyCreate, ApiKeyOut, ApiKeysOutPublic, Message, Team
+from app.core.security import (generate_apikey, generate_short_apikey,
+                               get_password_hash)
+from app.models import (ApiKey, ApiKeyCreate, ApiKeyOut, ApiKeysOutPublic,
+                        Message, Team)
 
 router = APIRouter()
 

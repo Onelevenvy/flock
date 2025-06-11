@@ -4,7 +4,7 @@
 /* eslint-disable */
 
 export type TeamUpdate = {
-    name?: (string | null);
-    description?: (string | null);
-    icon?: (string | null);
+  name?: string | null;
+  description?: string | null;
+  icon?: string | null;
 };

@@ -19,7 +19,7 @@ export const CopyInput = ({ value }: CopyInputProps) => {
   const onClickHandler = () => {
     navigator.clipboard.writeText(value);
     setCopied(true);
-    
+
     toast({
       title: "Copied to clipboard",
       status: "success",

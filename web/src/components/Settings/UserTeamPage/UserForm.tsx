@@ -95,22 +95,24 @@ const UserForm = ({ user, isOpen, onClose }: UserFormProps) => {
   const inputBgColor = useColorModeValue("ui.inputbgcolor", "gray.700");
 
   // Fetch groups and roles
-  const { data: groups } = useQuery<{ data: GroupOut[]; count: number }>("groups", () =>
-    GroupsService.readGroups({ skip: 0, limit: 100 })
+  const { data: groups } = useQuery<{ data: GroupOut[]; count: number }>(
+    "groups",
+    () => GroupsService.readGroups({ skip: 0, limit: 100 }),
   );
 
-  const { data: roles } = useQuery<{ data: RoleOut[]; count: number }>("roles", () =>
-    RolesService.readRoles({ skip: 0, limit: 100 })
+  const { data: roles } = useQuery<{ data: RoleOut[]; count: number }>(
+    "roles",
+    () => RolesService.readRoles({ skip: 0, limit: 100 }),
   );
 
   const getInitialGroupRolePairs = (): GroupRolePair[] => {
     if (!isEditMode || !user.groups) return [{ group: null, roles: [] }];
-    
-    return user.groups.map(g => ({
+
+    return user.groups.map((g) => ({
       group: g.id ? { value: g.id, label: g.name } : null,
       roles: (user as ExtendedUserOut).roles
-        .filter(r => r.group_id === g.id)
-        .map(r => ({ value: r.id, label: r.name }))
+        .filter((r) => r.group_id === g.id)
+        .map((r) => ({ value: r.id, label: r.name })),
     }));
   };
 
@@ -121,7 +123,7 @@ const UserForm = ({ user, isOpen, onClose }: UserFormProps) => {
     confirm_password: isEditMode ? undefined : DEFAULT_PASSWORD,
     is_superuser: isEditMode ? !!user.is_superuser : false,
     is_active: isEditMode ? !!user.is_active : true,
-    groupRolePairs: getInitialGroupRolePairs()
+    groupRolePairs: getInitialGroupRolePairs(),
   };
 
   const {
@@ -138,7 +140,7 @@ const UserForm = ({ user, isOpen, onClose }: UserFormProps) => {
     defaultValues: defaultValues as UserFormData,
     resolver: async (data) => {
       const errors: Record<string, any> = {};
-      
+
       // Only validate email in create mode
       if (!isEditMode) {
         if (!data.email) {
@@ -146,19 +148,21 @@ const UserForm = ({ user, isOpen, onClose }: UserFormProps) => {
         } else if (!data.email.match(emailPattern.value)) {
           errors.email = { message: "Invalid email format" };
         }
-        
+
         // Only validate password in create mode
         if (!data.password) {
           errors.password = { message: "Password is required" };
         } else if (data.password.length < 8) {
-          errors.password = { message: "Password must be at least 8 characters" };
+          errors.password = {
+            message: "Password must be at least 8 characters",
+          };
         }
-        
+
         if (data.password !== data.confirm_password) {
           errors.confirm_password = { message: "The passwords do not match" };
         }
       }
-      
+
       return {
         values: data,
         errors,
@@ -176,7 +180,7 @@ const UserForm = ({ user, isOpen, onClose }: UserFormProps) => {
         confirm_password: isEditMode ? undefined : DEFAULT_PASSWORD,
         is_superuser: isEditMode ? !!user.is_superuser : false,
         is_active: isEditMode ? !!user.is_active : true,
-        groupRolePairs: getInitialGroupRolePairs()
+        groupRolePairs: getInitialGroupRolePairs(),
       };
 
       reset(formValues as UserFormData);
@@ -185,23 +189,22 @@ const UserForm = ({ user, isOpen, onClose }: UserFormProps) => {
 
   const { fields, append, remove } = useFieldArray({
     control,
-    name: "groupRolePairs"
+    name: "groupRolePairs",
   });
 
   const groupRolePairs = watch("groupRolePairs");
 
   const createUser = async (formData: UserFormData): Promise<UserOut> => {
-
     const groups: number[] = [];
     const roles: number[] = [];
-    formData.groupRolePairs.forEach(pair => {
+    formData.groupRolePairs.forEach((pair) => {
       if (pair.group) {
         groups.push(pair.group.value);
-        roles.push(...pair.roles.map(r => r.value));
+        roles.push(...pair.roles.map((r) => r.value));
       }
     });
 
-    return await UsersService.createUser({ 
+    return await UsersService.createUser({
       requestBody: {
         email: formData.email,
         full_name: formData.full_name,
@@ -209,49 +212,43 @@ const UserForm = ({ user, isOpen, onClose }: UserFormProps) => {
         groups,
         roles,
         is_superuser: formData.is_superuser,
-        is_active: formData.is_active
-      }
+        is_active: formData.is_active,
+      },
     });
   };
 
   const updateUser = async (formData: UserFormData): Promise<UserOut> => {
-    if (!user) throw new Error('No user data available for update');
+    if (!user) throw new Error("No user data available for update");
 
-    
     const groups: number[] = [];
     const roles: number[] = [];
-    
+
     // 确保 groupRolePairs 存在且不为空
     if (formData.groupRolePairs && formData.groupRolePairs.length > 0) {
-      formData.groupRolePairs.forEach(pair => {
+      formData.groupRolePairs.forEach((pair) => {
         if (pair.group) {
           groups.push(pair.group.value);
           if (pair.roles && pair.roles.length > 0) {
-            roles.push(...pair.roles.map(r => r.value));
+            roles.push(...pair.roles.map((r) => r.value));
           }
         }
       });
     }
 
-   
-
     const updateData: UserUpdate = {
       full_name: formData.full_name,
       groups,
-      roles
+      roles,
     };
 
-   
-
     try {
-      const response = await UsersService.updateUser({ 
-        userId: user.id, 
-        requestBody: updateData
+      const response = await UsersService.updateUser({
+        userId: user.id,
+        requestBody: updateData,
       });
-    
+
       return response;
     } catch (error) {
-
       throw error;
     }
   };
@@ -263,40 +260,37 @@ const UserForm = ({ user, isOpen, onClose }: UserFormProps) => {
         showToast(
           "Success!",
           `User ${isEditMode ? "updated" : "created"} successfully.`,
-          "success"
+          "success",
         );
         queryClient.invalidateQueries("users");
         onClose();
       },
       onError: (err: ApiError) => {
-        console.error('Mutation error:', err);
+        console.error("Mutation error:", err);
         const errDetail = err.body?.detail;
         showToast("Something went wrong.", `${errDetail}`, "error");
-      }
-    }
+      },
+    },
   );
 
   const handleFormSubmit = async (data: UserFormData) => {
-
     try {
       if (isEditMode) {
-       
         // 编辑模式下，不发送密码字段
         const { password, confirm_password, ...updateData } = data;
         await mutation.mutateAsync(updateData as UserFormData);
       } else {
         await mutation.mutateAsync(data);
       }
-    
     } catch (error) {
-      console.error('Error submitting form:', error);
+      console.error("Error submitting form:", error);
     }
   };
 
   return (
-    <Modal 
-      isOpen={isOpen} 
-      onClose={onClose} 
+    <Modal
+      isOpen={isOpen}
+      onClose={onClose}
       size={{ base: "sm", md: "xl" }}
       isCentered
       motionPreset="slideInBottom"
@@ -312,7 +306,7 @@ const UserForm = ({ user, isOpen, onClose }: UserFormProps) => {
         noValidate
         onSubmit={handleSubmit(handleFormSubmit)}
       >
-        <ModalHeader 
+        <ModalHeader
           borderBottom="1px solid"
           borderColor={borderColor}
           py={4}
@@ -321,7 +315,7 @@ const UserForm = ({ user, isOpen, onClose }: UserFormProps) => {
         >
           {isEditMode ? "Edit User" : "Add User"}
         </ModalHeader>
-        
+
         <ModalCloseButton
           position="absolute"
           right={4}
@@ -337,11 +331,7 @@ const UserForm = ({ user, isOpen, onClose }: UserFormProps) => {
         <ModalBody py={6}>
           <VStack spacing={6}>
             <FormControl isRequired={!isEditMode} isInvalid={!!errors.email}>
-              <FormLabel
-                fontSize="sm"
-                fontWeight="500"
-                color="gray.700"
-              >
+              <FormLabel fontSize="sm" fontWeight="500" color="gray.700">
                 Email
               </FormLabel>
               <Input
@@ -362,7 +352,9 @@ const UserForm = ({ user, isOpen, onClose }: UserFormProps) => {
                 }}
                 _focus={{
                   borderColor: isEditMode ? borderColor : "ui.main",
-                  boxShadow: isEditMode ? "none" : "0 0 0 1px var(--chakra-colors-ui-main)",
+                  boxShadow: isEditMode
+                    ? "none"
+                    : "0 0 0 1px var(--chakra-colors-ui-main)",
                 }}
                 isReadOnly={isEditMode}
                 opacity={isEditMode ? 0.6 : 1}
@@ -377,11 +369,7 @@ const UserForm = ({ user, isOpen, onClose }: UserFormProps) => {
             </FormControl>
 
             <FormControl>
-              <FormLabel
-                fontSize="sm"
-                fontWeight="500"
-                color="gray.700"
-              >
+              <FormLabel fontSize="sm" fontWeight="500" color="gray.700">
                 Full name
               </FormLabel>
               <Input
@@ -407,11 +395,7 @@ const UserForm = ({ user, isOpen, onClose }: UserFormProps) => {
             {!isEditMode && (
               <>
                 <FormControl isRequired isInvalid={!!errors.password}>
-                  <FormLabel
-                    fontSize="sm"
-                    fontWeight="500"
-                    color="gray.700"
-                  >
+                  <FormLabel fontSize="sm" fontWeight="500" color="gray.700">
                     Password
                   </FormLabel>
                   <Input
@@ -440,7 +424,9 @@ const UserForm = ({ user, isOpen, onClose }: UserFormProps) => {
                     }}
                   />
                   {errors.password && (
-                    <FormErrorMessage>{errors.password.message}</FormErrorMessage>
+                    <FormErrorMessage>
+                      {errors.password.message}
+                    </FormErrorMessage>
                   )}
                   {!errors.password && (
                     <Text fontSize="xs" color="gray.500" mt={1}>
@@ -450,11 +436,7 @@ const UserForm = ({ user, isOpen, onClose }: UserFormProps) => {
                 </FormControl>
 
                 <FormControl isRequired isInvalid={!!errors.confirm_password}>
-                  <FormLabel
-                    fontSize="sm"
-                    fontWeight="500"
-                    color="gray.700"
-                  >
+                  <FormLabel fontSize="sm" fontWeight="500" color="gray.700">
                     Confirm Password
                   </FormLabel>
                   <Input
@@ -491,12 +473,7 @@ const UserForm = ({ user, isOpen, onClose }: UserFormProps) => {
             )}
 
             <Box w="full">
-              <FormLabel
-                fontSize="sm"
-                fontWeight="500"
-                color="gray.700"
-                mb={4}
-              >
+              <FormLabel fontSize="sm" fontWeight="500" color="gray.700" mb={4}>
                 Groups and Roles
               </FormLabel>
               <Table variant="simple" size="sm" mb={4}>
@@ -520,18 +497,27 @@ const UserForm = ({ user, isOpen, onClose }: UserFormProps) => {
                               onChange={(newValue: SelectOption | null) => {
                                 onChange(newValue);
                                 // Reset roles when group changes
-                                const currentPairs = getValues("groupRolePairs");
+                                const currentPairs =
+                                  getValues("groupRolePairs");
                                 currentPairs[index].roles = [];
                                 // Update the form
-                                reset({ ...getValues(), groupRolePairs: currentPairs });
+                                reset({
+                                  ...getValues(),
+                                  groupRolePairs: currentPairs,
+                                });
                               }}
                               options={groups?.data
-                                .filter(g => !groupRolePairs.some((pair, i) => 
-                                  i !== index && pair.group?.value === g.id
-                                ))
-                                .map(group => ({
+                                .filter(
+                                  (g) =>
+                                    !groupRolePairs.some(
+                                      (pair, i) =>
+                                        i !== index &&
+                                        pair.group?.value === g.id,
+                                    ),
+                                )
+                                .map((group) => ({
                                   value: group.id,
-                                  label: group.name
+                                  label: group.name,
                                 }))}
                               placeholder="Select group"
                               isClearable={false}
@@ -549,10 +535,14 @@ const UserForm = ({ user, isOpen, onClose }: UserFormProps) => {
                               onChange={onChange}
                               isMulti
                               options={roles?.data
-                                .filter(role => field.group && role.group_id === field.group.value)
-                                .map(role => ({
+                                .filter(
+                                  (role) =>
+                                    field.group &&
+                                    role.group_id === field.group.value,
+                                )
+                                .map((role) => ({
                                   value: role.id,
-                                  label: role.name
+                                  label: role.name,
                                 }))}
                               placeholder="Select roles"
                               isDisabled={!field.group}
@@ -580,7 +570,7 @@ const UserForm = ({ user, isOpen, onClose }: UserFormProps) => {
                 variant="ghost"
                 size="sm"
                 onClick={() => append({ group: null, roles: [] })}
-                isDisabled={groupRolePairs.some(pair => !pair.group)}
+                isDisabled={groupRolePairs.some((pair) => !pair.group)}
               >
                 Add Group
               </Button>
@@ -589,8 +579,8 @@ const UserForm = ({ user, isOpen, onClose }: UserFormProps) => {
             {!isEditMode && (
               <Flex w="full" gap={8}>
                 <FormControl>
-                  <Checkbox 
-                    {...register("is_superuser")} 
+                  <Checkbox
+                    {...register("is_superuser")}
                     colorScheme="blue"
                     size="lg"
                   >
@@ -598,8 +588,8 @@ const UserForm = ({ user, isOpen, onClose }: UserFormProps) => {
                   </Checkbox>
                 </FormControl>
                 <FormControl>
-                  <Checkbox 
-                    {...register("is_active")} 
+                  <Checkbox
+                    {...register("is_active")}
                     colorScheme="blue"
                     size="lg"
                   >
@@ -611,18 +601,13 @@ const UserForm = ({ user, isOpen, onClose }: UserFormProps) => {
           </VStack>
         </ModalBody>
 
-        <ModalFooter 
-          borderTop="1px solid"
-          borderColor={borderColor}
-          gap={3}
-        >
+        <ModalFooter borderTop="1px solid" borderColor={borderColor} gap={3}>
           <Button
             variant="primary"
             type="submit"
             isLoading={isSubmitting || mutation.isLoading}
             loadingText={isEditMode ? "Saving..." : "Creating..."}
             isDisabled={isEditMode && !isDirty}
-         
             transition="all 0.2s"
             _hover={{
               transform: "translateY(-1px)",
@@ -636,7 +621,6 @@ const UserForm = ({ user, isOpen, onClose }: UserFormProps) => {
           </Button>
           <Button
             onClick={() => {
-         
               reset();
               onClose();
             }}
@@ -654,4 +638,4 @@ const UserForm = ({ user, isOpen, onClose }: UserFormProps) => {
   );
 };
 
-export default UserForm; 
+export default UserForm;

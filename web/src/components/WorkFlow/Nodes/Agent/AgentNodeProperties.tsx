@@ -51,14 +51,14 @@ const AgentNodeProperties: React.FC<AgentNodePropertiesProps> = ({
   availableVariables,
 }) => {
   const { t } = useTranslation();
-  
+
   // 状态
   const [isToolsListOpen, setIsToolsListOpen] = useState(false);
   const [isKBListOpen, setIsKBListOpen] = useState(false);
   const [temperatureInput, setTemperatureInput] = useState("");
   const [systemPromptInput, setSystemPromptInput] = useState("");
   const [userPromptInput, setUserPromptInput] = useState("");
-  
+
   // 表单管理
   const { control, setValue } = useForm<FormValues>({
     mode: "onBlur",
@@ -97,7 +97,7 @@ const AgentNodeProperties: React.FC<AgentNodePropertiesProps> = ({
   const onModelSelect = useCallback(
     (modelName: string) => {
       const selectedModel = models?.data.find(
-        (model) => model.ai_model_name === modelName
+        (model) => model.ai_model_name === modelName,
       );
 
       if (selectedModel) {
@@ -110,7 +110,7 @@ const AgentNodeProperties: React.FC<AgentNodePropertiesProps> = ({
         setValue("provider", providerName);
       }
     },
-    [node.id, models, onNodeDataChange, setValue]
+    [node.id, models, onNodeDataChange, setValue],
   );
 
   // 系统提示词变更
@@ -119,7 +119,7 @@ const AgentNodeProperties: React.FC<AgentNodePropertiesProps> = ({
       setSystemPromptInput(value);
       onNodeDataChange(node.id, "systemMessage", value);
     },
-    [node.id, onNodeDataChange]
+    [node.id, onNodeDataChange],
   );
 
   // 用户提示词变更
@@ -128,7 +128,7 @@ const AgentNodeProperties: React.FC<AgentNodePropertiesProps> = ({
       setUserPromptInput(value);
       onNodeDataChange(node.id, "userMessage", value);
     },
-    [node.id, onNodeDataChange]
+    [node.id, onNodeDataChange],
   );
 
   // 变量选择器 - 系统提示词
@@ -168,7 +168,7 @@ const AgentNodeProperties: React.FC<AgentNodePropertiesProps> = ({
     onNodeDataChange(
       node.id,
       "tools",
-      currentTools.filter((t: string) => t !== tool)
+      currentTools.filter((t: string) => t !== tool),
     );
   };
 
@@ -178,7 +178,8 @@ const AgentNodeProperties: React.FC<AgentNodePropertiesProps> = ({
 
     if (
       !currentKBs.some(
-        (k: string | KBInfo) => (typeof k === "string" ? k : k.name) === kb.name
+        (k: string | KBInfo) =>
+          (typeof k === "string" ? k : k.name) === kb.name,
       )
     ) {
       onNodeDataChange(node.id, "retrievalTools", [...currentKBs, kb]);
@@ -192,8 +193,8 @@ const AgentNodeProperties: React.FC<AgentNodePropertiesProps> = ({
       node.id,
       "retrievalTools",
       currentKBs.filter(
-        (k: string | KBInfo) => (typeof k === "string" ? k : k.name) !== kbName
-      )
+        (k: string | KBInfo) => (typeof k === "string" ? k : k.name) !== kbName,
+      ),
     );
   };
 
@@ -448,7 +449,7 @@ const AgentNodeProperties: React.FC<AgentNodePropertiesProps> = ({
           onAddKB={addKB}
           selectedKBs={
             node.data.retrievalTools?.map((kb: string | KBInfo) =>
-              typeof kb === "string" ? kb : kb.name
+              typeof kb === "string" ? kb : kb.name,
             ) || []
           }
         />
@@ -457,4 +458,4 @@ const AgentNodeProperties: React.FC<AgentNodePropertiesProps> = ({
   );
 };
 
-export default AgentNodeProperties; 
+export default AgentNodeProperties;

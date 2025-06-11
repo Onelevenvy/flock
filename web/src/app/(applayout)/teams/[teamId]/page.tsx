@@ -46,7 +46,7 @@ function Team() {
     isError,
     error,
   } = useQuery(`team/${teamId}`, () =>
-    TeamsService.readTeam({ id: Number.parseInt(teamId) })
+    TeamsService.readTeam({ id: Number.parseInt(teamId) }),
   );
 
   if (isError) {
@@ -62,19 +62,14 @@ function Team() {
 
   if (isLoading) {
     return (
-      <Flex 
-        justify="center" 
-        align="center" 
-        height="100vh" 
+      <Flex
+        justify="center"
+        align="center"
+        height="100vh"
         width="full"
         bg="ui.bgMain"
       >
-        <Spinner 
-          size="xl" 
-          color="ui.main" 
-          thickness="3px"
-          speed="0.8s"
-        />
+        <Spinner size="xl" color="ui.main" thickness="3px" speed="0.8s" />
       </Flex>
     );
   }
@@ -89,8 +84,8 @@ function Team() {
         overflow="hidden"
         bg="ui.bgMain"
       >
-        <Box 
-          py={4} 
+        <Box
+          py={4}
           px={6}
           bg={breadcrumbBg}
           borderBottom="1px solid"
@@ -113,8 +108,8 @@ function Team() {
           <Breadcrumb
             spacing="8px"
             separator={
-              <ChevronRightIcon 
-                color="gray.400" 
+              <ChevronRightIcon
+                color="gray.400"
                 fontSize="sm"
                 transition="all 0.2s"
               />
@@ -122,11 +117,11 @@ function Team() {
           >
             <BreadcrumbItem>
               <BreadcrumbLink as={Link} href="/teams">
-                <Box 
-                  display="flex" 
-                  alignItems="center" 
-                  color="gray.600" 
-                  fontSize="sm" 
+                <Box
+                  display="flex"
+                  alignItems="center"
+                  color="gray.600"
+                  fontSize="sm"
                   fontWeight="500"
                 >
                   <FiUsers style={{ marginRight: "6px" }} />
@@ -134,7 +129,7 @@ function Team() {
                 </Box>
               </BreadcrumbLink>
             </BreadcrumbItem>
-            
+
             <BreadcrumbItem isCurrentPage>
               <BreadcrumbLink
                 fontSize="sm"
@@ -162,9 +157,10 @@ function Team() {
           overflow="hidden"
           p={2}
         >
-          {team.workflow === "sequential" || team.workflow === "hierarchical" ? (
+          {team.workflow === "sequential" ||
+          team.workflow === "hierarchical" ? (
             <Flex h="full" gap={4}>
-              <Box 
+              <Box
                 flex={3}
                 bg={flowBg}
                 borderRadius="xl"
@@ -178,7 +174,7 @@ function Team() {
               >
                 <Flow />
               </Box>
-              <Box 
+              <Box
                 flex={1}
                 borderRadius="xl"
                 bg="white"
@@ -215,7 +211,7 @@ function Team() {
             <Box
               h="full"
               borderRadius="xl"
-              bg="white" 
+              bg="white"
               border="1px solid"
               borderColor="gray.100"
               transition="all 0.2s"

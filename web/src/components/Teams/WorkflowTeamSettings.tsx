@@ -29,7 +29,7 @@ function WorkflowTeamSettings({ teamId }: WorkflowSettingProps) {
     () => GraphsService.readGraphs({ teamId: currentTeamId }),
     {
       keepPreviousData: true,
-    }
+    },
   );
 
   const createDefaultGraph = async (teamId: number) => {
@@ -126,42 +126,23 @@ function WorkflowTeamSettings({ teamId }: WorkflowSettingProps) {
   }
 
   return (
-    <Flex 
-      width="full" 
-      height="full" 
+    <Flex
+      width="full"
+      height="full"
       flexDirection="column"
       bg={bgColor}
       borderRadius="xl"
       overflow="hidden"
       transition="all 0.2s"
     >
-      <Box 
-        width="100%" 
-        transition="width 0.3s" 
-        flex={1}
-        position="relative"
-      >
+      <Box width="100%" transition="width 0.3s" flex={1} position="relative">
         {isLoading ? (
-          <Flex 
-            justify="center" 
-            align="center" 
-            height="100%" 
-            width="100%"
-          >
-            <Spinner 
-              size="xl" 
-              color="ui.main" 
-              thickness="3px"
-              speed="0.8s"
-            />
+          <Flex justify="center" align="center" height="100%" width="100%">
+            <Spinner size="xl" color="ui.main" thickness="3px" speed="0.8s" />
           </Flex>
         ) : (
           graphs && (
-            <Box 
-              height="100%" 
-              bg={bgColor}
-              position="relative"
-            >
+            <Box height="100%" bg={bgColor} position="relative">
               <TqxWorkflow teamId={currentTeamId} graphData={graphs} />
             </Box>
           )

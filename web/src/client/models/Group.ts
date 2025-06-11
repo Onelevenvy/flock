@@ -7,9 +7,9 @@
  * Group model for database
  */
 export type Group = {
-    name: string;
-    description?: (string | null);
-    is_system_group?: boolean;
-    admin_id?: (number | null);
-    id?: (number | null);
+  name: string;
+  description?: string | null;
+  is_system_group?: boolean;
+  admin_id?: number | null;
+  id?: number | null;
 };

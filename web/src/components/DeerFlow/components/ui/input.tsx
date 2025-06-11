@@ -1,5 +1,8 @@
-import * as React from "react"
-import { Input as ChakraInput, InputProps as ChakraInputProps } from "@chakra-ui/react"
+import * as React from "react";
+import {
+  Input as ChakraInput,
+  InputProps as ChakraInputProps,
+} from "@chakra-ui/react";
 
 export interface InputProps extends ChakraInputProps {}
 
@@ -11,19 +14,19 @@ const Input = React.forwardRef<HTMLInputElement, InputProps>(
         variant="filled"
         bg="gray.50"
         _hover={{ bg: "gray.100" }}
-        _focus={{ 
+        _focus={{
           bg: "gray.100",
           borderColor: "ui.main",
-          borderWidth: "2px"
+          borderWidth: "2px",
         }}
         size="md"
         className={className}
         {...props}
       />
-    )
-  }
-)
+    );
+  },
+);
 
-Input.displayName = "Input"
+Input.displayName = "Input";
 
-export { Input }
+export { Input };

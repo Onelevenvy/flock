@@ -3,50 +3,51 @@
 /* tslint:disable */
 /* eslint-disable */
 export const $SubgraphCreate = {
-    properties: {
-        name: {
-    type: 'string',
-    isRequired: true,
-    pattern: '^[a-zA-Z0-9_-]{1,64}$',
-},
-        description: {
-    type: 'any-of',
-    contains: [{
-    type: 'string',
-}, {
-    type: 'null',
-}],
-},
-        config: {
-    type: 'dictionary',
-    contains: {
-    properties: {
+  properties: {
+    name: {
+      type: "string",
+      isRequired: true,
+      pattern: "^[a-zA-Z0-9_-]{1,64}$",
     },
-},
-},
-        metadata_: {
-    type: 'dictionary',
-    contains: {
-    properties: {
+    description: {
+      type: "any-of",
+      contains: [
+        {
+          type: "string",
+        },
+        {
+          type: "null",
+        },
+      ],
     },
-},
-},
-        is_public: {
-    type: 'boolean',
-},
-        created_at: {
-    type: 'string',
-    isRequired: true,
-    format: 'date-time',
-},
-        updated_at: {
-    type: 'string',
-    isRequired: true,
-    format: 'date-time',
-},
-        team_id: {
-    type: 'number',
-    isRequired: true,
-},
+    config: {
+      type: "dictionary",
+      contains: {
+        properties: {},
+      },
     },
+    metadata_: {
+      type: "dictionary",
+      contains: {
+        properties: {},
+      },
+    },
+    is_public: {
+      type: "boolean",
+    },
+    created_at: {
+      type: "string",
+      isRequired: true,
+      format: "date-time",
+    },
+    updated_at: {
+      type: "string",
+      isRequired: true,
+      format: "date-time",
+    },
+    team_id: {
+      type: "number",
+      isRequired: true,
+    },
+  },
 } as const;

@@ -4,9 +4,9 @@
 /* eslint-disable */
 
 export type QuestionRequest = {
-    question: string;
-    debug?: boolean;
-    max_plan_iterations?: number;
-    max_step_num?: number;
-    enable_background_investigation?: boolean;
+  question: string;
+  debug?: boolean;
+  max_plan_iterations?: number;
+  max_step_num?: number;
+  enable_background_investigation?: boolean;
 };

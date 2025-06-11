@@ -3,13 +3,10 @@ import json
 
 from langchain_core.runnables import RunnableConfig
 
-from app.core.state import (
-    ReturnWorkflowTeamState,
-    WorkflowTeamState,
-    parse_variables,
-    update_node_outputs,
-)
-from app.core.tools.tool_invoker import ToolInvokeResponse, ToolMessages, invoke_tool
+from app.core.state import (ReturnWorkflowTeamState, WorkflowTeamState,
+                            parse_variables, update_node_outputs)
+from app.core.tools.tool_invoker import (ToolInvokeResponse, ToolMessages,
+                                         invoke_tool)
 
 
 def convert_str_to_dict(s: str) -> dict:

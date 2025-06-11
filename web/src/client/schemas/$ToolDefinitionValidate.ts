@@ -3,14 +3,13 @@
 /* tslint:disable */
 /* eslint-disable */
 export const $ToolDefinitionValidate = {
-    properties: {
-        tool_definition: {
-    type: 'dictionary',
-    contains: {
-    properties: {
+  properties: {
+    tool_definition: {
+      type: "dictionary",
+      contains: {
+        properties: {},
+      },
+      isRequired: true,
     },
-},
-    isRequired: true,
-},
-    },
+  },
 } as const;

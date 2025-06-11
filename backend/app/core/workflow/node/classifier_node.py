@@ -4,15 +4,12 @@ from langchain_core.output_parsers import JsonOutputParser
 from langchain_core.prompts import ChatPromptTemplate
 from langchain_core.runnables import RunnableConfig
 
-from app.core.model_providers.model_provider_manager import model_provider_manager
+from app.core.model_providers.model_provider_manager import \
+    model_provider_manager
 from app.core.workflow.utils.db_utils import get_model_info
 
-from ...state import (
-    ReturnWorkflowTeamState,
-    WorkflowTeamState,
-    parse_variables,
-    update_node_outputs,
-)
+from ...state import (ReturnWorkflowTeamState, WorkflowTeamState,
+                      parse_variables, update_node_outputs)
 
 CLASSIFIER_SYSTEM_PROMPT = """
 ### Job Description

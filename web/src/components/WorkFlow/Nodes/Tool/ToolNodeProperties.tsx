@@ -42,7 +42,7 @@ const ToolNodeProperties: React.FC<ToolNodePropertiesProps> = ({
     onNodeDataChange(
       node.id,
       "tools",
-      currentTools.filter((t: string) => t !== tool)
+      currentTools.filter((t: string) => t !== tool),
     );
   };
 

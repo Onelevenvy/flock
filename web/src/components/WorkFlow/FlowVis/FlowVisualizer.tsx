@@ -81,7 +81,7 @@ const FlowVisualizer: React.FC<FlowVisualizerProps> = ({
     nameError,
   } = useFlowState(
     graphData?.data[0]?.config?.nodes,
-    graphData?.data[0]?.config?.edges
+    graphData?.data[0]?.config?.edges,
   );
 
   const { contextMenu, onNodeContextMenu, closeContextMenu } = useContextMenu();
@@ -94,14 +94,14 @@ const FlowVisualizer: React.FC<FlowVisualizerProps> = ({
       setSelectedNodeId(node.id);
       setSelectedEdge(null); // 取消选中的边
     },
-    [setSelectedNodeId]
+    [setSelectedNodeId],
   );
 
   const { activeNodeName } = useWorkflowStore();
 
   const selectedNode = useMemo(
     () => nodes?.find((n) => n.id === selectedNodeId) || null,
-    [nodes, selectedNodeId]
+    [nodes, selectedNodeId],
   );
 
   const nodesWithSelection = useMemo(() => {
@@ -187,7 +187,7 @@ const FlowVisualizer: React.FC<FlowVisualizerProps> = ({
         (edge) =>
           edge.source === connection.source &&
           edge.target === connection.target &&
-          edge.sourceHandle === connection.sourceHandle
+          edge.sourceHandle === connection.sourceHandle,
       );
       if (existingEdge) return false;
 
@@ -205,7 +205,7 @@ const FlowVisualizer: React.FC<FlowVisualizerProps> = ({
         if (
           connection.targetHandle &&
           !nodeConfig[targetType].allowedConnections.targets.includes(
-            connection.targetHandle
+            connection.targetHandle,
           )
         ) {
           return false;
@@ -217,7 +217,7 @@ const FlowVisualizer: React.FC<FlowVisualizerProps> = ({
       if (sourceType === "ifelse") {
         // 验证源连接点是否是有效的 case_id
         const sourceCase = (sourceNode.data as IfElseNodeData).cases.find(
-          (c: { case_id: string }) => c.case_id === connection.sourceHandle
+          (c: { case_id: string }) => c.case_id === connection.sourceHandle,
         );
         if (!sourceCase) return false;
 
@@ -225,7 +225,7 @@ const FlowVisualizer: React.FC<FlowVisualizerProps> = ({
         if (
           connection.targetHandle &&
           !nodeConfig[targetType].allowedConnections.targets.includes(
-            connection.targetHandle
+            connection.targetHandle,
           )
         ) {
           return false;
@@ -242,7 +242,7 @@ const FlowVisualizer: React.FC<FlowVisualizerProps> = ({
         if (
           connection.sourceHandle &&
           !nodeConfig[sourceType].allowedConnections.sources.includes(
-            connection.sourceHandle
+            connection.sourceHandle,
           )
         ) {
           return false;
@@ -259,7 +259,7 @@ const FlowVisualizer: React.FC<FlowVisualizerProps> = ({
         if (
           connection.sourceHandle &&
           !nodeConfig[sourceType].allowedConnections.sources.includes(
-            connection.sourceHandle
+            connection.sourceHandle,
           )
         ) {
           return false;
@@ -291,7 +291,7 @@ const FlowVisualizer: React.FC<FlowVisualizerProps> = ({
 
       return true;
     },
-    [nodes, edges]
+    [nodes, edges],
   );
 
   const toggleEdgeType = useCallback(
@@ -306,10 +306,10 @@ const FlowVisualizer: React.FC<FlowVisualizerProps> = ({
             };
           }
           return e;
-        })
+        }),
       );
     },
-    [setEdges]
+    [setEdges],
   );
 
   const onEdgeContextMenu = useCallback(
@@ -317,7 +317,7 @@ const FlowVisualizer: React.FC<FlowVisualizerProps> = ({
       event.preventDefault();
       toggleEdgeType(edge);
     },
-    [toggleEdgeType]
+    [toggleEdgeType],
   );
 
   const onKeyDown = useCallback(
@@ -327,7 +327,7 @@ const FlowVisualizer: React.FC<FlowVisualizerProps> = ({
         selectedEdges.forEach(toggleEdgeType);
       }
     },
-    [edges, toggleEdgeType]
+    [edges, toggleEdgeType],
   );
 
   const onDragOver = useCallback((event: React.DragEvent) => {
@@ -348,7 +348,7 @@ const FlowVisualizer: React.FC<FlowVisualizerProps> = ({
 
       return newName;
     },
-    [nodes]
+    [nodes],
   );
 
   const onDrop = useCallback(
@@ -410,7 +410,7 @@ const FlowVisualizer: React.FC<FlowVisualizerProps> = ({
 
       setNodes((nds) => nds.concat(newNode));
     },
-    [nodes, reactFlowInstance, setNodes, generateUniqueName, onNodeDataChange]
+    [nodes, reactFlowInstance, setNodes, generateUniqueName, onNodeDataChange],
   );
   const closePropertiesPanel = useCallback(() => {
     setSelectedNodeId(null);
@@ -432,7 +432,7 @@ const FlowVisualizer: React.FC<FlowVisualizerProps> = ({
               type:
                 nodeToDelete.type.charAt(0).toUpperCase() +
                 nodeToDelete.type.slice(1),
-            }
+            },
           ),
           status: "warning",
           duration: 3000,
@@ -446,8 +446,8 @@ const FlowVisualizer: React.FC<FlowVisualizerProps> = ({
         eds.filter(
           (edge) =>
             edge.source !== contextMenu.nodeId &&
-            edge.target !== contextMenu.nodeId
-        )
+            edge.target !== contextMenu.nodeId,
+        ),
       );
     }
     closeContextMenu();
@@ -475,18 +475,18 @@ const FlowVisualizer: React.FC<FlowVisualizerProps> = ({
     graphName,
     graphDescription,
     nodes,
-    edges
+    edges,
   );
 
   const memoizedNodeTypes = useMemo(
     () => ({
       ...nodeTypes,
     }),
-    [nodeTypes]
+    [nodeTypes],
   );
   const memoizedDefaultEdgeOptions = useMemo(
     () => defaultEdgeOptions,
-    [defaultEdgeOptions]
+    [defaultEdgeOptions],
   );
   const { zoom } = useViewport();
 
@@ -521,13 +521,13 @@ const FlowVisualizer: React.FC<FlowVisualizerProps> = ({
         const menuHeight = 400; // SharedNodeMenu 的最大高度
         const yPosition = Math.min(
           centerPoint.y,
-          viewportHeight - menuHeight - 20
+          viewportHeight - menuHeight - 20,
         ); // 20px 作为底部边距
 
         setMenuPosition({ x: centerPoint.x, y: yPosition });
       }
     },
-    [nodes]
+    [nodes],
   );
 
   const handleAddNodeClick = useCallback((event: React.MouseEvent) => {
@@ -584,12 +584,12 @@ const FlowVisualizer: React.FC<FlowVisualizerProps> = ({
       setNodes((nds) => {
         // 对节点按 x 坐标排序
         const sortedNodes = [...nds].sort(
-          (a, b) => a.position.x - b.position.x
+          (a, b) => a.position.x - b.position.x,
         );
 
         // 找到节点应该插入的位置
         const insertIndex = sortedNodes.findIndex(
-          (node) => node.position.x > newNodeX
+          (node) => node.position.x > newNodeX,
         );
 
         // 插入新节点
@@ -625,7 +625,7 @@ const FlowVisualizer: React.FC<FlowVisualizerProps> = ({
       };
 
       setEdges((eds) =>
-        eds.filter((e) => e.id !== selectedEdge.id).concat(newEdge1, newEdge2)
+        eds.filter((e) => e.id !== selectedEdge.id).concat(newEdge1, newEdge2),
       );
       setSelectedEdge(null);
       setShowNodeMenu(false);
@@ -637,7 +637,7 @@ const FlowVisualizer: React.FC<FlowVisualizerProps> = ({
       setEdges,
       onNodeDataChange,
       generateUniqueName,
-    ]
+    ],
   );
 
   const onPaneClick = useCallback(() => {
@@ -704,7 +704,7 @@ const FlowVisualizer: React.FC<FlowVisualizerProps> = ({
         nodes.map((node) => ({
           ...node,
           className: node.className?.replace("react-flow__node-animated", ""),
-        }))
+        })),
       );
     }, 500);
   }, [nodes, edges, reactFlowInstance, setNodes]);
@@ -1087,7 +1087,7 @@ const FlowVisualizer: React.FC<FlowVisualizerProps> = ({
             }}
           />
           {getNodePropertiesComponent(
-            nodes.find((n) => n.id === selectedNodeId) || null
+            nodes.find((n) => n.id === selectedNodeId) || null,
           )}
         </Box>
       )}

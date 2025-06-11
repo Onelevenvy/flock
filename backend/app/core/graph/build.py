@@ -5,7 +5,8 @@ from functools import partial
 from typing import Any, cast
 from uuid import uuid4
 
-from langchain_core.messages import AIMessage, AnyMessage, HumanMessage, ToolMessage
+from langchain_core.messages import (AIMessage, AnyMessage, HumanMessage,
+                                     ToolMessage)
 from langchain_core.runnables import RunnableLambda
 from langchain_core.runnables.config import RunnableConfig
 from langchain_core.tools import BaseTool
@@ -18,16 +19,10 @@ from langgraph.types import Command
 from psycopg import AsyncConnection
 
 from app.core.config import settings
-from app.core.graph.members import (
-    GraphLeader,
-    GraphMember,
-    GraphTeam,
-    GraphTeamState,
-    LeaderNode,
-    SequentialWorkerNode,
-    SummariserNode,
-    WorkerNode,
-)
+from app.core.graph.members import (GraphLeader, GraphMember, GraphTeam,
+                                    GraphTeamState, LeaderNode,
+                                    SequentialWorkerNode, SummariserNode,
+                                    WorkerNode)
 from app.core.graph.messages import ChatResponse, event_to_response
 from app.core.state import GraphSkill, GraphUpload
 from app.core.workflow.build_workflow import initialize_graph

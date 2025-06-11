@@ -35,11 +35,12 @@ const DeleteAccount = () => {
           <Heading size="md" color="gray.800" fontWeight="600">
             Delete Account
           </Heading>
-          
+
           <Text color="gray.600" fontSize="sm" lineHeight="tall">
-            Permanently delete your data and everything associated with your account.
+            Permanently delete your data and everything associated with your
+            account.
           </Text>
-          
+
           <Button
             variant="danger"
             onClick={confirmationModal.onOpen}

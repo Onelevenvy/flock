@@ -3,17 +3,17 @@
 /* tslint:disable */
 /* eslint-disable */
 export const $SkillsOut = {
-    properties: {
-        data: {
-    type: 'array',
-    contains: {
-        type: 'SkillOut',
+  properties: {
+    data: {
+      type: "array",
+      contains: {
+        type: "SkillOut",
+      },
+      isRequired: true,
     },
-    isRequired: true,
-},
-        count: {
-    type: 'number',
-    isRequired: true,
-},
+    count: {
+      type: "number",
+      isRequired: true,
     },
+  },
 } as const;

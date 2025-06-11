@@ -40,7 +40,8 @@ const RetrievalToolNodeProperties: React.FC<
 
     if (
       !currentKBs.some(
-        (k: string | KBInfo) => (typeof k === "string" ? k : k.name) === kb.name
+        (k: string | KBInfo) =>
+          (typeof k === "string" ? k : k.name) === kb.name,
       )
     ) {
       onNodeDataChange(node.id, "tools", [...currentKBs, kb]);
@@ -54,8 +55,8 @@ const RetrievalToolNodeProperties: React.FC<
       node.id,
       "tools",
       currentKBs.filter(
-        (k: string | KBInfo) => (typeof k === "string" ? k : k.name) !== kbName
-      )
+        (k: string | KBInfo) => (typeof k === "string" ? k : k.name) !== kbName,
+      ),
     );
   };
 
@@ -155,7 +156,7 @@ const RetrievalToolNodeProperties: React.FC<
           onAddKB={addKB}
           selectedKBs={
             node.data.tools?.map((kb: string | KBInfo) =>
-              typeof kb === "string" ? kb : kb.name
+              typeof kb === "string" ? kb : kb.name,
             ) || []
           }
         />

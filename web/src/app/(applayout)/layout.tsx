@@ -14,7 +14,9 @@ function Layout({ children }: { children: React.ReactNode }) {
   const router = useRouter();
   const currentPath = usePathname();
 
-  const shouldRenderTopBar = !/(\/teams\/\d+|\/knowledge\/\d+)/.test(currentPath);
+  const shouldRenderTopBar = !/(\/teams\/\d+|\/knowledge\/\d+)/.test(
+    currentPath,
+  );
 
   useEffect(() => {
     if (!isLoggedIn()) {
@@ -52,11 +54,7 @@ function Layout({ children }: { children: React.ReactNode }) {
           )}
 
           {/* Content Area */}
-          <Box
-            flex={1}
-            overflow="hidden"
-            bg="ui.bgMain"
-          >
+          <Box flex={1} overflow="hidden" bg="ui.bgMain">
             {children}
           </Box>
         </Box>

@@ -3,10 +3,10 @@
 /* tslint:disable */
 /* eslint-disable */
 
-import type { ChatMessageType } from './ChatMessageType';
+import type { ChatMessageType } from "./ChatMessageType";
 
 export type app__models__ChatMessage = {
-    type: ChatMessageType;
-    content: string;
-    imgdata?: (string | null);
+  type: ChatMessageType;
+  content: string;
+  imgdata?: string | null;
 };

@@ -109,7 +109,7 @@ function QuickAccessItem({
 }: QuickAccessItemProps) {
   return (
     <ListItem>
-      <NextLink href={href} style={{ textDecoration: 'none' }}>
+      <NextLink href={href} style={{ textDecoration: "none" }}>
         <Box
           display="flex"
           alignItems="center"
@@ -137,12 +137,18 @@ function Dashboard() {
   const { data: skillsData } = useSkillsQuery();
   const { data: uploadsData } = useUploadsQuery();
   const { data: teamsData } = useQuery("teams", () =>
-    TeamsService.readTeams({})
+    TeamsService.readTeams({}),
   );
 
   return (
     <Flex h="full">
-      <Box flex="1" bg="ui.bgMain" display="flex" flexDirection="column" h="full">
+      <Box
+        flex="1"
+        bg="ui.bgMain"
+        display="flex"
+        flexDirection="column"
+        h="full"
+      >
         <Box px={6} py={4}>
           <Flex
             justifyContent="space-between"

@@ -31,7 +31,7 @@ const UserMenu = () => {
   };
 
   const getUserName = () => {
-    return currentUser?.full_name || currentUser?.email || 'User';
+    return currentUser?.full_name || currentUser?.email || "User";
   };
 
   return (
@@ -61,10 +61,10 @@ const UserMenu = () => {
                 color="gray.700"
                 lineHeight="short"
               >
-                {currentUser?.full_name || 'User'}
+                {currentUser?.full_name || "User"}
               </Text>
               <Text fontSize="xs" color="gray.500">
-                {currentUser?.email || 'No email'}
+                {currentUser?.email || "No email"}
               </Text>
             </Box>
             <ChevronDownIcon color="gray.500" />

@@ -235,7 +235,7 @@ const EditTeamMember = forwardRef<HTMLFormElement, EditTeamMemberProps>(
           // Remove 'ask-human' tool if 'enableHumanTool' is false
           .filter(
             (skill) =>
-              skill.name !== "ask-human" || memberConfig.enableHumanTool
+              skill.name !== "ask-human" || memberConfig.enableHumanTool,
           )
           .map((skill) => ({
             ...skill,
@@ -254,7 +254,7 @@ const EditTeamMember = forwardRef<HTMLFormElement, EditTeamMemberProps>(
 
     const onModelSelect = (modelName: string) => {
       const selectedModel = models?.data.find(
-        (model) => model.ai_model_name === modelName
+        (model) => model.ai_model_name === modelName,
       );
 
       if (selectedModel) {
@@ -269,7 +269,7 @@ const EditTeamMember = forwardRef<HTMLFormElement, EditTeamMemberProps>(
     useEffect(() => {
       if (member.model) {
         const selectedModelData = models?.data.find(
-          (model) => model.ai_model_name === member.model
+          (model) => model.ai_model_name === member.model,
         );
         if (selectedModelData) {
           setSelectedModelProvider(selectedModelData.provider.provider_name);
@@ -667,7 +667,7 @@ const EditTeamMember = forwardRef<HTMLFormElement, EditTeamMemberProps>(
         </ModalOverlay>
       </Modal>
     );
-  }
+  },
 );
 
 EditTeamMember.displayName = "EditTeamMember";

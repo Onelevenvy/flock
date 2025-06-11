@@ -4,5 +4,5 @@
 /* eslint-disable */
 
 export type ThreadCreate = {
-    query: string;
+  query: string;
 };

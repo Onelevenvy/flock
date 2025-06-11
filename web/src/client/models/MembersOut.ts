@@ -3,9 +3,9 @@
 /* tslint:disable */
 /* eslint-disable */
 
-import type { MemberOut } from './MemberOut';
+import type { MemberOut } from "./MemberOut";
 
 export type MembersOut = {
-    data: Array<MemberOut>;
-    count: number;
+  data: Array<MemberOut>;
+  count: number;
 };

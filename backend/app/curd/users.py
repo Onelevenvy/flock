@@ -3,7 +3,7 @@ from typing import Any
 from sqlmodel import Session, select
 
 from app.core.security import get_password_hash, verify_password
-from app.models import User, UserCreate, UserUpdate, Group, Role, UserGroup, UserRole
+from app.models import User, UserCreate, UserGroup, UserRole, UserUpdate
 
 
 def create_user(*, session: Session, user_create: UserCreate) -> User:
@@ -22,13 +22,13 @@ def create_user(*, session: Session, user_create: UserCreate) -> User:
     session.refresh(db_obj)
 
     # 添加用户组关联
-    if hasattr(user_create, 'groups'):
+    if hasattr(user_create, "groups"):
         for group_id in user_create.groups:
             user_group = UserGroup(user_id=db_obj.id, group_id=group_id)
             session.add(user_group)
 
     # 添加角色关联
-    if hasattr(user_create, 'roles'):
+    if hasattr(user_create, "roles"):
         for role_id in user_create.roles:
             user_role = UserRole(user_id=db_obj.id, role_id=role_id)
             session.add(user_role)
@@ -43,7 +43,7 @@ def update_user(*, session: Session, db_user: User, user_in: UserUpdate) -> Any:
     Update user.
     """
     user_data = user_in.model_dump(exclude_unset=True)
-    
+
     # 处理密码
     if "password" in user_data:
         password = user_data.pop("password")

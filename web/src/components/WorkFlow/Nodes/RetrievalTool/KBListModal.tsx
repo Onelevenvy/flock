@@ -46,7 +46,7 @@ const KBListModal: React.FC<KBListProps> = ({
 
   const filteredUploads = useMemo(() => {
     return uploads.filter((upload) =>
-      upload.name.toLowerCase().includes(searchQuery.toLowerCase())
+      upload.name.toLowerCase().includes(searchQuery.toLowerCase()),
     );
   }, [uploads, searchQuery]);
 

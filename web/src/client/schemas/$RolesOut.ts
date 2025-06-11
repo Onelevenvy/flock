@@ -3,18 +3,18 @@
 /* tslint:disable */
 /* eslint-disable */
 export const $RolesOut = {
-    description: `Schema for roles output`,
-    properties: {
-        data: {
-    type: 'array',
-    contains: {
-        type: 'RoleOut',
+  description: `Schema for roles output`,
+  properties: {
+    data: {
+      type: "array",
+      contains: {
+        type: "RoleOut",
+      },
+      isRequired: true,
     },
-    isRequired: true,
-},
-        count: {
-    type: 'number',
-    isRequired: true,
-},
+    count: {
+      type: "number",
+      isRequired: true,
     },
+  },
 } as const;

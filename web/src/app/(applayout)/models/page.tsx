@@ -9,12 +9,10 @@ import {
   Spinner,
   Tag,
   TagLabel,
-
 } from "@chakra-ui/react";
 import React, { useState, useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import { RiApps2Fill } from "react-icons/ri";
-
 
 import {
   type ApiError,
@@ -42,7 +40,7 @@ function ModelPage() {
           provider.models.map((model) => ({
             ...model,
             provider: provider as ModelProviderOut,
-          }))
+          })),
         );
 
         setModels(allModels);
@@ -73,7 +71,13 @@ function ModelPage() {
 
   return (
     <Flex h="full">
-      <Box flex="1" bg="ui.bgMain" display="flex" flexDirection="column" h="full">
+      <Box
+        flex="1"
+        bg="ui.bgMain"
+        display="flex"
+        flexDirection="column"
+        h="full"
+      >
         <Box px={6} py={4}>
           <Flex direction="row" justify="space-between" align="center" mb={2}>
             <Box>
@@ -93,7 +97,10 @@ function ModelPage() {
             </Flex>
           ) : (
             models && (
-              <SimpleGrid columns={{ base: 1, md: 2, lg: 3, xl: 4 }} spacing={6}>
+              <SimpleGrid
+                columns={{ base: 1, md: 2, lg: 3, xl: 4 }}
+                spacing={6}
+              >
                 {models.map((model) => (
                   <Box
                     key={model.id}

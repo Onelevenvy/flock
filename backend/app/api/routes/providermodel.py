@@ -3,13 +3,8 @@ from typing import Any
 from fastapi import APIRouter, HTTPException
 
 from app.api.deps import SessionDep
-from app.curd.models import (
-    _create_model,
-    _delete_model,
-    _update_model,
-    get_all_models,
-    get_models_by_provider,
-)
+from app.curd.models import (_create_model, _delete_model, _update_model,
+                             get_all_models, get_models_by_provider)
 from app.models import Models, ModelsBase, ModelsOut
 
 router = APIRouter()

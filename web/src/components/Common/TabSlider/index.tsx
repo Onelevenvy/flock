@@ -21,11 +21,11 @@ const TabSlider: FC<TabSliderProps> = ({
   options,
 }) => {
   return (
-    <Flex 
-      className={className} 
-      position="relative" 
-      bg="gray.50" 
-      p={1} 
+    <Flex
+      className={className}
+      position="relative"
+      bg="gray.50"
+      p={1}
       borderRadius="xl"
     >
       {options.map((option, index) => (

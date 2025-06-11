@@ -19,7 +19,7 @@ const MCPNode: React.FC<NodeProps> = (props) => {
     () => (
       <ModelProviderIcon modelprovider_name={providerName} key={providerName} />
     ),
-    [providerName]
+    [providerName],
   );
 
   const handleStyle = {
@@ -76,22 +76,23 @@ const MCPNode: React.FC<NodeProps> = (props) => {
             {props.data.model || "No model selected"}
           </Text>
         </Box>
-        {props.data.mcp_config && Object.keys(props.data.mcp_config).length > 0 && (
-          <Box
-            bg="ui.inputbgcolor"
-            borderRadius="md"
-            w="full"
-            p="2"
-            display="flex"
-            flexDirection="row"
-            justifyContent="center"
-            alignItems="center"
-          >
-            <Text fontSize="xs" color="gray.600">
-              {Object.keys(props.data.mcp_config).length} Server(s) Configured
-            </Text>
-          </Box>
-        )}
+        {props.data.mcp_config &&
+          Object.keys(props.data.mcp_config).length > 0 && (
+            <Box
+              bg="ui.inputbgcolor"
+              borderRadius="md"
+              w="full"
+              p="2"
+              display="flex"
+              flexDirection="row"
+              justifyContent="center"
+              alignItems="center"
+            >
+              <Text fontSize="xs" color="gray.600">
+                {Object.keys(props.data.mcp_config).length} Server(s) Configured
+              </Text>
+            </Box>
+          )}
       </VStack>
     </BaseNode>
   );
@@ -101,6 +102,7 @@ export default React.memo(MCPNode, (prevProps, nextProps) => {
   return (
     prevProps.data.model === nextProps.data.model &&
     prevProps.data.label === nextProps.data.label &&
-    JSON.stringify(prevProps.data.mcp_config) === JSON.stringify(nextProps.data.mcp_config)
+    JSON.stringify(prevProps.data.mcp_config) ===
+      JSON.stringify(nextProps.data.mcp_config)
   );
-}); 
+});

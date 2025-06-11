@@ -1,9 +1,9 @@
 # Copyright (c) 2025 Bytedance Ltd. and/or its affiliates
 # SPDX-License-Identifier: MIT
 
+import os
 from pathlib import Path
 from typing import Any, Dict
-import os
 
 from langchain_openai import ChatOpenAI
 
@@ -62,7 +62,11 @@ def get_llm_by_type(
     conf = load_yaml_config(
         os.getenv(
             "FLOCK_CONFIG_PATH",
-            str((Path(__file__).parent.parent.parent.parent.parent / "conf.yaml").resolve())
+            str(
+                (
+                    Path(__file__).parent.parent.parent.parent.parent / "conf.yaml"
+                ).resolve()
+            ),
         )
     )
 

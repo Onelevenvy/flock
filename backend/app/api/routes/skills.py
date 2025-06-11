@@ -1,23 +1,16 @@
 from typing import Any
 
 from fastapi import APIRouter, HTTPException
+from langchain_mcp_adapters.client import MultiServerMCPClient
+from loguru import logger
 from pydantic import ValidationError
 from sqlmodel import col, func, or_, select
-from loguru import logger
 
 from app.api.deps import CurrentUser, SessionDep
 from app.core.tools.api_tool import ToolDefinition
 from app.core.tools.tool_invoker import ToolInvokeResponse, invoke_tool
-from app.models import (
-    Message,
-    Skill,
-    SkillCreate,
-    SkillOut,
-    SkillsOut,
-    SkillUpdate,
-    ToolDefinitionValidate,
-)
-from langchain_mcp_adapters.client import MultiServerMCPClient
+from app.models import (Message, Skill, SkillCreate, SkillOut, SkillsOut,
+                        SkillUpdate, ToolDefinitionValidate)
 
 router = APIRouter()
 
@@ -217,6 +210,7 @@ def update_skill_credentials(
 
     return skill
 
+
 @router.post("/mcp/tools")
 async def get_mcp_tools(mcp_config: dict[str, Any]) -> Any:
     """
@@ -225,15 +219,18 @@ async def get_mcp_tools(mcp_config: dict[str, Any]) -> Any:
     try:
         # 添加日志打印
         logger.info(f"Received mcp_config: {mcp_config}")
-        
+
         async with MultiServerMCPClient(mcp_config) as client:
             tools = client.get_tools()
             # 只返回工具的基本信息
-            tools_info = [{
-                "name": tool.name,
-                "description": tool.description,
-                "parameters": tool.args
-            } for tool in tools]
+            tools_info = [
+                {
+                    "name": tool.name,
+                    "description": tool.description,
+                    "parameters": tool.args,
+                }
+                for tool in tools
+            ]
             return {"tools": tools_info}
     except Exception as e:
         # 添加错误日志

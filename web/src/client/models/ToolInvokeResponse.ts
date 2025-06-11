@@ -3,9 +3,9 @@
 /* tslint:disable */
 /* eslint-disable */
 
-import type { ToolMessages } from './ToolMessages';
+import type { ToolMessages } from "./ToolMessages";
 
 export type ToolInvokeResponse = {
-    messages: Array<ToolMessages>;
-    error?: (string | null);
+  messages: Array<ToolMessages>;
+  error?: string | null;
 };

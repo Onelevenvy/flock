@@ -1,43 +1,43 @@
-from fastapi import APIRouter, HTTPException, Query
-from fastapi.responses import Response, StreamingResponse
-from typing import Annotated, List, cast
-from pydantic import BaseModel
-import asyncio
 import base64
 import json
 import os
+from typing import Annotated, List, cast
 from uuid import uuid4
+
+from fastapi import APIRouter, HTTPException, Query
+from fastapi.responses import Response, StreamingResponse
+from langchain_core.messages import AIMessageChunk, BaseMessage, ToolMessage
 from langgraph.types import Command
-from app.core.langmanus.workflow import run_agent_workflow_async
-from app.core.langmanus.graph.builder import build_graph_with_memory
-from app.core.langmanus.podcast.graph.builder import build_graph as build_podcast_graph
-from app.core.langmanus.ppt.graph.builder import build_graph as build_ppt_graph
-from app.core.langmanus.prose.graph.builder import build_graph as build_prose_graph
-from app.core.langmanus.rag.builder import build_retriever
+from pydantic import BaseModel
+
 from app.core.langmanus.config.tools import SELECTED_RAG_PROVIDER
-from app.core.langmanus.tools import VolcengineTTS
-from app.core.langmanus.server.chat_request import (
-    ChatMessage,
-    ChatRequest,
-    GeneratePodcastRequest,
-    GeneratePPTRequest,
-    GenerateProseRequest,
-    TTSRequest,
-)
-from langchain_core.messages import AIMessageChunk, ToolMessage, BaseMessage
-from app.core.langmanus.server.mcp_request import MCPServerMetadataRequest, MCPServerMetadataResponse
-from app.core.langmanus.server.mcp_utils import load_mcp_tools
-from app.core.langmanus.server.rag_request import (
-    RAGConfigResponse,
-    RAGResourceRequest,
-    RAGResourcesResponse,
-)
+from app.core.langmanus.graph.builder import build_graph_with_memory
+from app.core.langmanus.podcast.graph.builder import \
+    build_graph as build_podcast_graph
+from app.core.langmanus.ppt.graph.builder import build_graph as build_ppt_graph
+from app.core.langmanus.prose.graph.builder import \
+    build_graph as build_prose_graph
+from app.core.langmanus.rag.builder import build_retriever
 from app.core.langmanus.rag.retriever import Resource
+from app.core.langmanus.server.chat_request import (ChatMessage, ChatRequest,
+                                                    GeneratePodcastRequest,
+                                                    GeneratePPTRequest,
+                                                    GenerateProseRequest,
+                                                    TTSRequest)
+from app.core.langmanus.server.mcp_request import (MCPServerMetadataRequest,
+                                                   MCPServerMetadataResponse)
+from app.core.langmanus.server.mcp_utils import load_mcp_tools
+from app.core.langmanus.server.rag_request import (RAGConfigResponse,
+                                                   RAGResourceRequest,
+                                                   RAGResourcesResponse)
+from app.core.langmanus.tools import VolcengineTTS
+from app.core.langmanus.workflow import run_agent_workflow_async
 
 router = APIRouter()
 graph = build_graph_with_memory()
 
 INTERNAL_SERVER_ERROR_DETAIL = "Internal Server Error"
+
 
 class QuestionRequest(BaseModel):
     question: str
@@ -45,6 +45,7 @@ class QuestionRequest(BaseModel):
     max_plan_iterations: int = 1
     max_step_num: int = 3
     enable_background_investigation: bool = True
+
 
 @router.post("/ask")
 async def ask_question(request: QuestionRequest):
@@ -54,11 +55,12 @@ async def ask_question(request: QuestionRequest):
             debug=request.debug,
             max_plan_iterations=request.max_plan_iterations,
             max_step_num=request.max_step_num,
-            enable_background_investigation=request.enable_background_investigation
+            enable_background_investigation=request.enable_background_investigation,
         )
         return {"status": "success", "response": response}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+
 
 @router.post("/chat/stream")
 async def chat_stream(request: ChatRequest):
@@ -80,6 +82,7 @@ async def chat_stream(request: ChatRequest):
         ),
         media_type="text/event-stream",
     )
+
 
 async def _astream_workflow_generator(
     messages: List[ChatMessage],
@@ -157,18 +160,24 @@ async def _astream_workflow_generator(
         elif isinstance(message_chunk, AIMessageChunk):
             if message_chunk.tool_calls:
                 event_stream_message["tool_calls"] = message_chunk.tool_calls
-                event_stream_message["tool_call_chunks"] = message_chunk.tool_call_chunks
+                event_stream_message["tool_call_chunks"] = (
+                    message_chunk.tool_call_chunks
+                )
                 yield _make_event("tool_calls", event_stream_message)
             elif message_chunk.tool_call_chunks:
-                event_stream_message["tool_call_chunks"] = message_chunk.tool_call_chunks
+                event_stream_message["tool_call_chunks"] = (
+                    message_chunk.tool_call_chunks
+                )
                 yield _make_event("tool_call_chunks", event_stream_message)
             else:
                 yield _make_event("message_chunk", event_stream_message)
+
 
 def _make_event(event_type: str, data: dict[str, any]):
     if data.get("content") == "":
         data.pop("content")
     return f"event: {event_type}\ndata: {json.dumps(data, ensure_ascii=False)}\n\n"
+
 
 @router.post("/tts")
 async def text_to_speech(request: TTSRequest):
@@ -176,10 +185,14 @@ async def text_to_speech(request: TTSRequest):
     try:
         app_id = os.getenv("VOLCENGINE_TTS_APPID", "")
         if not app_id:
-            raise HTTPException(status_code=400, detail="VOLCENGINE_TTS_APPID is not set")
+            raise HTTPException(
+                status_code=400, detail="VOLCENGINE_TTS_APPID is not set"
+            )
         access_token = os.getenv("VOLCENGINE_TTS_ACCESS_TOKEN", "")
         if not access_token:
-            raise HTTPException(status_code=400, detail="VOLCENGINE_TTS_ACCESS_TOKEN is not set")
+            raise HTTPException(
+                status_code=400, detail="VOLCENGINE_TTS_ACCESS_TOKEN is not set"
+            )
         cluster = os.getenv("VOLCENGINE_TTS_CLUSTER", "volcano_tts")
         voice_type = os.getenv("VOLCENGINE_TTS_VOICE_TYPE", "BV700_V2_streaming")
 
@@ -208,11 +221,14 @@ async def text_to_speech(request: TTSRequest):
             content=audio_data,
             media_type=f"audio/{request.encoding}",
             headers={
-                "Content-Disposition": f"attachment; filename=tts_output.{request.encoding}"
+                "Content-Disposition": (
+                    f"attachment; filename=tts_output.{request.encoding}"
+                )
             },
         )
-    except Exception as e:
+    except Exception:
         raise HTTPException(status_code=500, detail=INTERNAL_SERVER_ERROR_DETAIL)
+
 
 @router.post("/podcast/generate")
 async def generate_podcast(request: GeneratePodcastRequest):
@@ -222,8 +238,9 @@ async def generate_podcast(request: GeneratePodcastRequest):
         final_state = workflow.invoke({"input": report_content})
         audio_bytes = final_state["output"]
         return Response(content=audio_bytes, media_type="audio/mp3")
-    except Exception as e:
+    except Exception:
         raise HTTPException(status_code=500, detail=INTERNAL_SERVER_ERROR_DETAIL)
+
 
 @router.post("/ppt/generate")
 async def generate_ppt(request: GeneratePPTRequest):
@@ -238,8 +255,9 @@ async def generate_ppt(request: GeneratePPTRequest):
             content=ppt_bytes,
             media_type="application/vnd.openxmlformats-officedocument.presentationml.presentation",
         )
-    except Exception as e:
+    except Exception:
         raise HTTPException(status_code=500, detail=INTERNAL_SERVER_ERROR_DETAIL)
+
 
 @router.post("/prose/generate")
 async def generate_prose(request: GenerateProseRequest):
@@ -259,8 +277,9 @@ async def generate_prose(request: GenerateProseRequest):
             (f"data: {event[0].content}\n\n" async for _, event in events),
             media_type="text/event-stream",
         )
-    except Exception as e:
+    except Exception:
         raise HTTPException(status_code=500, detail=INTERNAL_SERVER_ERROR_DETAIL)
+
 
 @router.post("/mcp/server/metadata", response_model=MCPServerMetadataResponse)
 async def mcp_server_metadata(request: MCPServerMetadataRequest):
@@ -290,9 +309,11 @@ async def mcp_server_metadata(request: MCPServerMetadataRequest):
             raise HTTPException(status_code=500, detail=INTERNAL_SERVER_ERROR_DETAIL)
         raise
 
+
 @router.get("/rag/config", response_model=RAGConfigResponse)
 async def rag_config():
     return RAGConfigResponse(provider=SELECTED_RAG_PROVIDER)
+
 
 @router.get("/rag/resources", response_model=RAGResourcesResponse)
 async def rag_resources(request: Annotated[RAGResourceRequest, Query()]):

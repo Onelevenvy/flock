@@ -3,11 +3,11 @@
 /* tslint:disable */
 /* eslint-disable */
 export const $GeneratePodcastRequest = {
-    properties: {
-        content: {
-    type: 'string',
-    description: `The content of the podcast`,
-    isRequired: true,
-},
+  properties: {
+    content: {
+      type: "string",
+      description: `The content of the podcast`,
+      isRequired: true,
     },
+  },
 } as const;

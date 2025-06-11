@@ -109,7 +109,8 @@ const translation = {
         required: "必填",
         untitled: "未命名",
         extractionInstruction: "提取指令",
-        instructionPlaceholder: "输入额外的指令来帮助参数提取器理解如何提取参数（可选）",
+        instructionPlaceholder:
+          "输入额外的指令来帮助参数提取器理解如何提取参数（可选）",
         importFromTool: "从工具导入",
         modal: {
           title: "参数配置",
@@ -125,7 +126,7 @@ const translation = {
           importButton: "导入参数",
           importSuccess: "参数导入成功",
           importError: "参数导入失败",
-        }
+        },
       },
       crewai: {
         model: "模型",
@@ -238,7 +239,7 @@ const translation = {
         deleteServer: "删除服务器",
         serverType: {
           stdio: "STDIO",
-          sse: "SSE"
+          sse: "SSE",
         },
         toolsList: "可用工具",
         loadingTools: "加载工具中...",
@@ -253,7 +254,7 @@ const translation = {
           deleteConfirm: "确认删除",
           deleteMessage: "确定要删除此服务器配置吗？",
           confirm: "确认",
-        }
+        },
       },
     },
     common: {

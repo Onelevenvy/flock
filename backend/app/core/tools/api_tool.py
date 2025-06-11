@@ -6,7 +6,8 @@ from typing import Any
 import requests
 from langchain.tools import StructuredTool
 from langchain_core.tools import ToolException
-from pydantic import BaseModel, Field, ValidationError, create_model, field_validator
+from pydantic import (BaseModel, Field, ValidationError, create_model,
+                      field_validator)
 
 
 class ParameterProperties(BaseModel):

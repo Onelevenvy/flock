@@ -5,16 +5,8 @@ from sqlmodel import func, select
 
 from app.api.deps import CurrentUser, SessionDep, check_team_permission
 from app.core.security import resource_manager
-from app.models import (
-    Graph,
-    GraphCreate,
-    GraphOut,
-    GraphsOut,
-    GraphUpdate,
-    Team,
-    ResourceType,
-    ActionType,
-)
+from app.models import (ActionType, Graph, GraphCreate, GraphOut, GraphsOut,
+                        GraphUpdate, ResourceType, Team)
 
 router = APIRouter()
 
@@ -58,7 +50,9 @@ def read_graphs(
     )
 
     # 获取所有图表
-    count_statement = select(func.count()).select_from(Graph).where(Graph.team_id == team_id)
+    count_statement = (
+        select(func.count()).select_from(Graph).where(Graph.team_id == team_id)
+    )
     count = session.exec(count_statement).one()
     statement = select(Graph).where(Graph.team_id == team_id).offset(skip).limit(limit)
     graphs = session.exec(statement).all()
@@ -124,15 +118,15 @@ def create_graph(
         description=graph_in.description or f"Graph resource for {graph_in.name}",
         resource_type=ResourceType.GRAPH,
     )
-    
+
     # 创建graph
     graph = Graph.model_validate(
         graph_in,
         update={
             "team_id": team_id,
             "owner_id": current_user.id,
-            "resource_id": resource.id  # 设置resource_id
-        }
+            "resource_id": resource.id,  # 设置resource_id
+        },
     )
     session.add(graph)
     session.commit()
@@ -163,11 +157,11 @@ def update_graph(
     graph = session.get(Graph, id)
     if not graph:
         raise HTTPException(status_code=404, detail="Graph not found")
-    
+
     graph_data = graph_in.model_dump(exclude_unset=True)
     for field in graph_data:
         setattr(graph, field, graph_data[field])
-    
+
     session.add(graph)
     session.commit()
     session.refresh(graph)
@@ -195,7 +189,7 @@ def delete_graph(
     graph = session.get(Graph, id)
     if not graph:
         raise HTTPException(status_code=404, detail="Graph not found")
-    
+
     session.delete(graph)
     session.commit()
     return {"ok": True}

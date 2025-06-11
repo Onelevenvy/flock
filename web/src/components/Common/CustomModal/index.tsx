@@ -39,10 +39,7 @@ const CustomModalWrapper = ({
       closeOnOverlayClick={false}
       motionPreset="slideInBottom"
     >
-      <ModalOverlay 
-        bg="blackAlpha.300" 
-        backdropFilter="blur(10px)"
-      />
+      <ModalOverlay bg="blackAlpha.300" backdropFilter="blur(10px)" />
       <ModalContent
         borderRadius="xl"
         boxShadow="xl"
@@ -63,9 +60,7 @@ const CustomModalWrapper = ({
             transform: "rotate(90deg)",
           }}
         />
-        <ModalBody p={6}>
-          {component}
-        </ModalBody>
+        <ModalBody p={6}>{component}</ModalBody>
       </ModalContent>
     </Modal>
   );

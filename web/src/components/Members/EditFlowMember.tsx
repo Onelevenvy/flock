@@ -242,7 +242,7 @@ export function EditFlowMember({
     ? skills.data
         // Remove 'ask-human' tool if 'enableHumanTool' is false
         .filter(
-          (skill) => skill.name !== "ask-human" || memberConfig.enableHumanTool
+          (skill) => skill.name !== "ask-human" || memberConfig.enableHumanTool,
         )
         .map((skill) => ({
           ...skill,
@@ -264,7 +264,7 @@ export function EditFlowMember({
     (model) => ({
       label: model,
       value: model,
-    })
+    }),
   );
 
   return (
@@ -403,7 +403,7 @@ export function EditFlowMember({
                   onChange: (event) =>
                     setValue(
                       "model",
-                      AVAILABLE_MODELS[event.target.value as ModelProvider][0]
+                      AVAILABLE_MODELS[event.target.value as ModelProvider][0],
                     ),
                 })}
               >
@@ -429,7 +429,7 @@ export function EditFlowMember({
                       id="model"
                       name={name}
                       ref={ref}
-                      onChange={(newValue:any) => onChange(newValue?.value)}
+                      onChange={(newValue: any) => onChange(newValue?.value)}
                       onBlur={onBlur}
                       value={{ value: value, label: value }}
                       options={modelOptions}

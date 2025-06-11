@@ -3,5 +3,5 @@
 /* tslint:disable */
 /* eslint-disable */
 export const $InterruptType = {
-    type: 'Enum',
+  type: "Enum",
 } as const;

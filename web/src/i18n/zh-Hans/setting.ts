@@ -23,12 +23,10 @@ const translation = {
     hidemodel: "隐藏模型",
     themedark: "深色",
     themelight: "浅色",
-    usermanagement:"用户管理",
-    groupmanagement:"用户组管理",
-    rolemanagement:"角色管理"
+    usermanagement: "用户管理",
+    groupmanagement: "用户组管理",
+    rolemanagement: "角色管理",
   },
-
-
 };
 
 export default translation;

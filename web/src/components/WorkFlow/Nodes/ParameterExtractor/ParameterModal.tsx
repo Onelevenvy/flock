@@ -33,13 +33,13 @@ const PARAMETER_TYPES = [
   {
     type: "str",
     label: "String",
-    description: "A text value"
+    description: "A text value",
   },
   {
     type: "number",
     label: "Number",
-    description: "A numeric value"
-  }
+    description: "A numeric value",
+  },
 ];
 
 const ParameterModal: React.FC<ParameterModalProps> = ({
@@ -51,7 +51,7 @@ const ParameterModal: React.FC<ParameterModalProps> = ({
   existingParameters = [],
 }) => {
   const { t } = useTranslation();
-  
+
   const [parameterName, setParameterName] = useState("");
   const [formData, setFormData] = useState({
     type: "str",
@@ -65,10 +65,13 @@ const ParameterModal: React.FC<ParameterModalProps> = ({
       setNameError("Parameter name is required");
       return;
     }
-    
-    const exists = existingParameters.some(p => {
+
+    const exists = existingParameters.some((p) => {
       const existingName = Object.keys(p)[0];
-      return existingName === name && (!isEdit || existingName !== Object.keys(parameter || {})[0]);
+      return (
+        existingName === name &&
+        (!isEdit || existingName !== Object.keys(parameter || {})[0])
+      );
     });
 
     if (exists) {
@@ -111,8 +114,8 @@ const ParameterModal: React.FC<ParameterModalProps> = ({
       [parameterName]: {
         type: formData.type,
         required: formData.required,
-        description: formData.description
-      }
+        description: formData.description,
+      },
     };
     onSave(parameter);
     onClose();
@@ -148,7 +151,9 @@ const ParameterModal: React.FC<ParameterModalProps> = ({
               <FormLabel>Type</FormLabel>
               <Select
                 value={formData.type}
-                onChange={(e) => setFormData(prev => ({...prev, type: e.target.value}))}
+                onChange={(e) =>
+                  setFormData((prev) => ({ ...prev, type: e.target.value }))
+                }
               >
                 {PARAMETER_TYPES.map((type) => (
                   <option key={type.type} value={type.type}>
@@ -162,7 +167,12 @@ const ParameterModal: React.FC<ParameterModalProps> = ({
               <FormLabel>Description</FormLabel>
               <Textarea
                 value={formData.description}
-                onChange={(e) => setFormData(prev => ({...prev, description: e.target.value}))}
+                onChange={(e) =>
+                  setFormData((prev) => ({
+                    ...prev,
+                    description: e.target.value,
+                  }))
+                }
                 placeholder="Enter parameter description"
               />
             </FormControl>
@@ -170,7 +180,12 @@ const ParameterModal: React.FC<ParameterModalProps> = ({
             <FormControl>
               <Checkbox
                 isChecked={formData.required}
-                onChange={(e) => setFormData(prev => ({...prev, required: e.target.checked}))}
+                onChange={(e) =>
+                  setFormData((prev) => ({
+                    ...prev,
+                    required: e.target.checked,
+                  }))
+                }
               >
                 Required
               </Checkbox>
@@ -182,8 +197,8 @@ const ParameterModal: React.FC<ParameterModalProps> = ({
           <Button variant="ghost" mr={3} onClick={onClose}>
             {t("workflow.nodes.parameterExtractor.modal.cancel")}
           </Button>
-          <Button 
-            colorScheme="blue" 
+          <Button
+            colorScheme="blue"
             onClick={handleSave}
             isDisabled={!parameterName || !!nameError}
           >
@@ -195,4 +210,4 @@ const ParameterModal: React.FC<ParameterModalProps> = ({
   );
 };
 
-export default ParameterModal; 
+export default ParameterModal;

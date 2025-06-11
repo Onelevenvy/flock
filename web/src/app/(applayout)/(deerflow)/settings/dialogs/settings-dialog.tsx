@@ -147,7 +147,7 @@ export function SettingsDialog() {
                   key={tab.id}
                   className={cn(
                     "h-full w-full",
-                    activeTabId !== tab.id && "hidden"
+                    activeTabId !== tab.id && "hidden",
                   )}
                 >
                   <tab.component

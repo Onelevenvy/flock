@@ -123,7 +123,7 @@ export default function AccountSetting({
   }, []);
 
   const activeItem = [...menuItems[0].items, ...menuItems[1].items].find(
-    (item) => item.key === activeMenu
+    (item) => item.key === activeMenu,
   );
 
   return (
@@ -179,7 +179,9 @@ export default function AccountSetting({
                     cursor="pointer"
                     rounded="lg"
                     bg={activeMenu === item.key ? menuBgColor : "transparent"}
-                    color={activeMenu === item.key ? menuActiveColor : "gray.600"}
+                    color={
+                      activeMenu === item.key ? menuActiveColor : "gray.600"
+                    }
                     fontWeight={activeMenu === item.key ? "600" : "500"}
                     transition="all 0.2s"
                     _hover={{

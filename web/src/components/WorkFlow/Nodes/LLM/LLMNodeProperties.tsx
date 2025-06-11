@@ -59,7 +59,7 @@ const LLMNodeProperties: React.FC<LLMNodePropertiesProps> = ({
   const onModelSelect = useCallback(
     (modelName: string) => {
       const selectedModel = models?.data.find(
-        (model) => model.ai_model_name === modelName
+        (model) => model.ai_model_name === modelName,
       );
 
       if (selectedModel) {
@@ -74,7 +74,7 @@ const LLMNodeProperties: React.FC<LLMNodePropertiesProps> = ({
         setValue("provider", providerName);
       }
     },
-    [node.id, models, onNodeDataChange, setValue]
+    [node.id, models, onNodeDataChange, setValue],
   );
 
   const handleSystemPromptChange = useCallback(
@@ -82,7 +82,7 @@ const LLMNodeProperties: React.FC<LLMNodePropertiesProps> = ({
       setSystemPromptInput(value);
       onNodeDataChange(node.id, "systemMessage", value);
     },
-    [node.id, onNodeDataChange]
+    [node.id, onNodeDataChange],
   );
 
   const {

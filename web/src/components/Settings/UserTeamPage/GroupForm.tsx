@@ -18,7 +18,12 @@ import {
 import { type SubmitHandler, useForm } from "react-hook-form";
 import { useMutation, useQueryClient, useQuery } from "react-query";
 
-import { type GroupCreate, type GroupOut, GroupsService, UsersService } from "@/client";
+import {
+  type GroupCreate,
+  type GroupOut,
+  GroupsService,
+  UsersService,
+} from "@/client";
 import type { ApiError } from "@/client/core/ApiError";
 import useCustomToast from "@/hooks/useCustomToast";
 
@@ -38,13 +43,9 @@ const GroupForm = ({ group, isOpen, onClose }: GroupFormProps) => {
   const inputBgColor = useColorModeValue("ui.inputbgcolor", "gray.700");
 
   // Fetch users for admin selection
-  const { data: users } = useQuery(
-    "users",
-    () => UsersService.readUsers({}),
-    {
-      enabled: isOpen,
-    }
-  );
+  const { data: users } = useQuery("users", () => UsersService.readUsers({}), {
+    enabled: isOpen,
+  });
 
   const {
     register,
@@ -82,7 +83,7 @@ const GroupForm = ({ group, isOpen, onClose }: GroupFormProps) => {
       showToast(
         "Success!",
         `Group ${isEditMode ? "updated" : "created"} successfully.`,
-        "success"
+        "success",
       );
       reset();
       onClose();
@@ -106,9 +107,9 @@ const GroupForm = ({ group, isOpen, onClose }: GroupFormProps) => {
   };
 
   return (
-    <Modal 
-      isOpen={isOpen} 
-      onClose={onClose} 
+    <Modal
+      isOpen={isOpen}
+      onClose={onClose}
       size={{ base: "sm", md: "md" }}
       isCentered
       motionPreset="slideInBottom"
@@ -123,7 +124,7 @@ const GroupForm = ({ group, isOpen, onClose }: GroupFormProps) => {
         as="form"
         onSubmit={handleSubmit(onSubmit)}
       >
-        <ModalHeader 
+        <ModalHeader
           borderBottom="1px solid"
           borderColor={borderColor}
           py={4}
@@ -132,7 +133,7 @@ const GroupForm = ({ group, isOpen, onClose }: GroupFormProps) => {
         >
           {isEditMode ? "Edit Group" : "Add Group"}
         </ModalHeader>
-        
+
         <ModalCloseButton
           position="absolute"
           right={4}
@@ -148,11 +149,7 @@ const GroupForm = ({ group, isOpen, onClose }: GroupFormProps) => {
         <ModalBody py={6}>
           <VStack spacing={6}>
             <FormControl isRequired isInvalid={!!errors.name}>
-              <FormLabel
-                fontSize="sm"
-                fontWeight="500"
-                color="gray.700"
-              >
+              <FormLabel fontSize="sm" fontWeight="500" color="gray.700">
                 Group Name
               </FormLabel>
               <Input
@@ -180,11 +177,7 @@ const GroupForm = ({ group, isOpen, onClose }: GroupFormProps) => {
             </FormControl>
 
             <FormControl>
-              <FormLabel
-                fontSize="sm"
-                fontWeight="500"
-                color="gray.700"
-              >
+              <FormLabel fontSize="sm" fontWeight="500" color="gray.700">
                 Description
               </FormLabel>
               <Input
@@ -207,17 +200,13 @@ const GroupForm = ({ group, isOpen, onClose }: GroupFormProps) => {
             </FormControl>
 
             <FormControl isRequired>
-              <FormLabel
-                fontSize="sm"
-                fontWeight="500"
-                color="gray.700"
-              >
+              <FormLabel fontSize="sm" fontWeight="500" color="gray.700">
                 Group Admin
               </FormLabel>
               <Select
                 {...register("admin_id", {
                   required: "Group admin is required",
-                  valueAsNumber: true
+                  valueAsNumber: true,
                 })}
                 placeholder="Select group admin"
                 bg={inputBgColor}
@@ -236,11 +225,7 @@ const GroupForm = ({ group, isOpen, onClose }: GroupFormProps) => {
           </VStack>
         </ModalBody>
 
-        <ModalFooter 
-          borderTop="1px solid"
-          borderColor={borderColor}
-          gap={3}
-        >
+        <ModalFooter borderTop="1px solid" borderColor={borderColor} gap={3}>
           <Button
             variant="primary"
             type="submit"
@@ -273,4 +258,4 @@ const GroupForm = ({ group, isOpen, onClose }: GroupFormProps) => {
   );
 };
 
-export default GroupForm; 
+export default GroupForm;

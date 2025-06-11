@@ -82,7 +82,7 @@ function KnowledgeTest() {
 
         showToast("Error fetching upload", `${errDetail}`, "error");
       },
-    }
+    },
   );
 
   const searchMutation = useMutation(
@@ -109,10 +109,10 @@ function KnowledgeTest() {
         showToast(
           "Search Error",
           error.body?.detail || "An error occurred",
-          "error"
+          "error",
         );
       },
-    }
+    },
   );
 
   const { data: searchResults, refetch: refetchSearchResults } = useQuery(
@@ -125,7 +125,7 @@ function KnowledgeTest() {
     {
       enabled: !!searchTaskId,
       refetchInterval: (data) => (data?.status === "completed" ? false : 1000),
-    }
+    },
   );
 
   useEffect(() => {
@@ -483,12 +483,12 @@ function KnowledgeTest() {
                               <VStack align="start" spacing={1}>
                                 <Text fontWeight="500" color="gray.700">
                                   {t(
-                                    `knowledge.test.searchType.${info.type}.name`
+                                    `knowledge.test.searchType.${info.type}.name`,
                                   )}
                                 </Text>
                                 <Text fontSize="sm" color="gray.500">
                                   {t(
-                                    `knowledge.test.searchType.${info.type}.description`
+                                    `knowledge.test.searchType.${info.type}.description`,
                                   )}
                                 </Text>
                               </VStack>

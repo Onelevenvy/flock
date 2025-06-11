@@ -25,4 +25,4 @@ def update_group(*, session: Session, db_group: Group, group_in: GroupUpdate) ->
 def get_group_by_name(*, session: Session, name: str) -> Group | None:
     statement = select(Group).where(Group.name == name)
     session_group = session.exec(statement).first()
-    return session_group 
+    return session_group

@@ -5,17 +5,8 @@ from sqlmodel import col, func, select
 
 from app.api.deps import CurrentUser, SessionDep
 from app.core.config import settings
-from app.models import (
-    Member,
-    MemberCreate,
-    MemberOut,
-    MembersOut,
-    MemberUpdate,
-    Message,
-    Skill,
-    Team,
-    Upload,
-)
+from app.models import (Member, MemberCreate, MemberOut, MembersOut,
+                        MemberUpdate, Message, Skill, Team, Upload)
 
 router = APIRouter()
 

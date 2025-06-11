@@ -3,21 +3,24 @@
 /* tslint:disable */
 /* eslint-disable */
 export const $TeamChat = {
-    properties: {
-        messages: {
-    type: 'array',
-    contains: {
-        type: 'app__models__ChatMessage',
+  properties: {
+    messages: {
+      type: "array",
+      contains: {
+        type: "app__models__ChatMessage",
+      },
+      isRequired: true,
     },
-    isRequired: true,
-},
-        interrupt: {
-    type: 'any-of',
-    contains: [{
-    type: 'Interrupt',
-}, {
-    type: 'null',
-}],
-},
+    interrupt: {
+      type: "any-of",
+      contains: [
+        {
+          type: "Interrupt",
+        },
+        {
+          type: "null",
+        },
+      ],
     },
+  },
 } as const;

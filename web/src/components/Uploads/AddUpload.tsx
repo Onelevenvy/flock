@@ -60,7 +60,7 @@ const AddUpload = ({ isOpen, onClose }: AddUploadProps) => {
         const errDetail = err.body?.detail;
         showToast(t("knowledge.upload.error.generic"), `${errDetail}`, "error");
       },
-    }
+    },
   );
 
   const onSubmit: SubmitHandler<Body_uploads_create_upload> = (data) => {
@@ -71,9 +71,9 @@ const AddUpload = ({ isOpen, onClose }: AddUploadProps) => {
   };
 
   return (
-    <Modal 
-      isOpen={isOpen} 
-      onClose={onClose} 
+    <Modal
+      isOpen={isOpen}
+      onClose={onClose}
       size={{ base: "sm", md: "md" }}
       isCentered
       motionPreset="slideInBottom"
@@ -86,7 +86,7 @@ const AddUpload = ({ isOpen, onClose }: AddUploadProps) => {
         border="1px solid"
         borderColor={borderColor}
       >
-        <ModalHeader 
+        <ModalHeader
           borderBottom="1px solid"
           borderColor={borderColor}
           py={4}
@@ -95,7 +95,7 @@ const AddUpload = ({ isOpen, onClose }: AddUploadProps) => {
         >
           {t("knowledge.upload.add.title")}
         </ModalHeader>
-        
+
         <ModalCloseButton
           position="absolute"
           right={4}

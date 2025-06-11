@@ -8,12 +8,14 @@ from langgraph.graph import END, START, StateGraph
 from langgraph.graph.graph import CompiledGraph
 from langgraph.prebuilt import ToolNode
 
-from app.core.workflow.node.parameter_extractor_node import ParameterExtractorNode
+from app.core.workflow.node.parameter_extractor_node import \
+    ParameterExtractorNode
 from app.core.workflow.node.plugin_node import PluginNode
 from app.core.workflow.utils.tools_utils import get_retrieval_tool, get_tool
 from app.models import InterruptType
 
 from ..state import WorkflowTeamState
+from .node.agent_node import AgentNode
 from .node.answer_node import AnswerNode
 from .node.classifier_node import ClassifierNode
 from .node.code.code_node import CodeNode
@@ -25,7 +27,7 @@ from .node.llm_node import LLMNode
 from .node.mcp.mcp_node import MCPNode
 from .node.retrieval_node import RetrievalNode
 from .node.subgraph_node import SubgraphNode
-from .node.agent_node import AgentNode
+
 
 def validate_config(config: dict[str, Any]) -> bool:
     required_keys = ["id", "name", "nodes", "edges", "metadata"]
@@ -501,7 +503,7 @@ def _add_edge(graph_builder, edge, nodes, conditional_edges):
                 )
     elif source_node["type"].startswith("tool") and target_node["type"] == "llm":
         graph_builder.add_edge(edge["source"], edge["target"])
-    
+
     elif source_node["type"].startswith("tool") and target_node["type"] == "human":
         graph_builder.add_edge(edge["source"], edge["target"])
     elif source_node["type"] == "retrieval":
@@ -695,6 +697,7 @@ def _add_mcp_node(graph_builder, node_id, node_data):
         ).work,
     )
 
+
 def _add_agent_node(graph_builder, node_id, node_data):
     """Add agent node to graph"""
     graph_builder.add_node(
@@ -710,4 +713,3 @@ def _add_agent_node(graph_builder, node_id, node_data):
             agent_name=node_data["label"],
         ).work,
     )
-

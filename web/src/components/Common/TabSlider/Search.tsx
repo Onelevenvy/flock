@@ -4,17 +4,13 @@ import { FaSearch } from "react-icons/fa";
 
 const Search = () => {
   return (
-    <InputGroup 
+    <InputGroup
       w={{ base: "100%", md: "auto" }}
       transition="all 0.2s"
       _hover={{ transform: "translateY(-1px)" }}
     >
       <InputLeftElement pointerEvents="none">
-        <Icon 
-          as={FaSearch} 
-          color="gray.400"
-          transition="all 0.2s"
-        />
+        <Icon as={FaSearch} color="gray.400" transition="all 0.2s" />
       </InputLeftElement>
       <Input
         type="text"

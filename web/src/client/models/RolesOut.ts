@@ -3,12 +3,12 @@
 /* tslint:disable */
 /* eslint-disable */
 
-import type { RoleOut } from './RoleOut';
+import type { RoleOut } from "./RoleOut";
 
 /**
  * Schema for roles output
  */
 export type RolesOut = {
-    data: Array<RoleOut>;
-    count: number;
+  data: Array<RoleOut>;
+  count: number;
 };

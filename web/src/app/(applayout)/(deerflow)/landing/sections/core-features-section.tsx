@@ -3,7 +3,10 @@
 
 import { Bird, Microscope, Podcast, Usb, User } from "lucide-react";
 
-import { BentoCard, BentoGrid } from "@/components/DeerFlow/components/magicui/bento-grid";
+import {
+  BentoCard,
+  BentoGrid,
+} from "@/components/DeerFlow/components/magicui/bento-grid";
 
 import { SectionHeader } from "../components/section-header";
 

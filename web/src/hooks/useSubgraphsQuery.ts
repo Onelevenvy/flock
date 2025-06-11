@@ -8,6 +8,6 @@ export function useSubgraphsQuery() {
     {
       staleTime: 1 * 60 * 1000, // 1 minute
       cacheTime: 10 * 60 * 1000, // 10 minutes
-    }
+    },
   );
 }

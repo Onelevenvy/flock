@@ -32,7 +32,9 @@ const CredentialsPanel: React.FC<CredentialsPanelProps> = ({
   onSave,
 }) => {
   const [credentials, setCredentials] = useState<Record<string, any>>({});
-  const [showPasswords, setShowPasswords] = useState<Record<string, boolean>>({});
+  const [showPasswords, setShowPasswords] = useState<Record<string, boolean>>(
+    {},
+  );
 
   const bgColor = useColorModeValue("white", "gray.800");
   const borderColor = useColorModeValue("gray.100", "gray.700");
@@ -112,7 +114,7 @@ const CredentialsPanel: React.FC<CredentialsPanelProps> = ({
             {Object.entries(credentials).map(([key, credInfo]) => (
               <FormControl key={key}>
                 <HStack spacing={2} mb={2}>
-                  <FormLabel 
+                  <FormLabel
                     mb={0}
                     fontSize="sm"
                     fontWeight="500"
@@ -120,8 +122,8 @@ const CredentialsPanel: React.FC<CredentialsPanelProps> = ({
                   >
                     {formatLabel(key)}
                   </FormLabel>
-                  <Tooltip 
-                    label={credInfo.description} 
+                  <Tooltip
+                    label={credInfo.description}
                     placement="top"
                     hasArrow
                     bg="gray.700"
@@ -155,7 +157,9 @@ const CredentialsPanel: React.FC<CredentialsPanelProps> = ({
                   />
                   <InputRightElement>
                     <IconButton
-                      aria-label={showPasswords[key] ? "Hide password" : "Show password"}
+                      aria-label={
+                        showPasswords[key] ? "Hide password" : "Show password"
+                      }
                       icon={showPasswords[key] ? <ViewOffIcon /> : <ViewIcon />}
                       size="sm"
                       variant="ghost"

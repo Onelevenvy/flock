@@ -47,10 +47,10 @@ const ClassifierNodeProperties: React.FC<ClassifierNodePropertiesProps> = ({
 
     const currentCategories = node.data.categories || [];
     const othersCategory = currentCategories.find(
-      (c: ClassifierCategory) => c.category_id === "others_category"
+      (c: ClassifierCategory) => c.category_id === "others_category",
     );
     const regularCategories = currentCategories.filter(
-      (c: ClassifierCategory) => c.category_id !== "others_category"
+      (c: ClassifierCategory) => c.category_id !== "others_category",
     );
 
     onNodeDataChange(node.id, "categories", [
@@ -75,11 +75,11 @@ const ClassifierNodeProperties: React.FC<ClassifierNodePropertiesProps> = ({
         node.id,
         "categories",
         currentCategories.filter(
-          (c: ClassifierCategory) => c.category_id !== categoryId
-        )
+          (c: ClassifierCategory) => c.category_id !== categoryId,
+        ),
       );
     },
-    [node.id, node.data.categories, onNodeDataChange]
+    [node.id, node.data.categories, onNodeDataChange],
   );
 
   const handleCategoryNameChange = useCallback(
@@ -91,11 +91,11 @@ const ClassifierNodeProperties: React.FC<ClassifierNodePropertiesProps> = ({
         (category: ClassifierCategory) =>
           category.category_id === categoryId
             ? { ...category, category_name: newName }
-            : category
+            : category,
       );
       onNodeDataChange(node.id, "categories", updatedCategories);
     },
-    [node.id, node.data.categories, onNodeDataChange]
+    [node.id, node.data.categories, onNodeDataChange],
   );
 
   return (
@@ -169,11 +169,11 @@ const ClassifierNodeProperties: React.FC<ClassifierNodePropertiesProps> = ({
                     onChange={(e) =>
                       handleCategoryNameChange(
                         category.category_id,
-                        e.target.value
+                        e.target.value,
                       )
                     }
                     placeholder={String(
-                      t("workflow.nodes.classifier.placeholder")
+                      t("workflow.nodes.classifier.placeholder"),
                     )}
                     size="sm"
                     bg="ui.inputbgcolor"
@@ -186,7 +186,7 @@ const ClassifierNodeProperties: React.FC<ClassifierNodePropertiesProps> = ({
                   />
                 )}
               </Box>
-            )
+            ),
           )}
 
           <Button

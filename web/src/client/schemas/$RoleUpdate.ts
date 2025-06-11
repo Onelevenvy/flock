@@ -3,39 +3,51 @@
 /* tslint:disable */
 /* eslint-disable */
 export const $RoleUpdate = {
-    description: `Schema for updating a role`,
-    properties: {
-        name: {
-    type: 'any-of',
-    contains: [{
-    type: 'string',
-}, {
-    type: 'null',
-}],
-},
-        description: {
-    type: 'any-of',
-    contains: [{
-    type: 'string',
-}, {
-    type: 'null',
-}],
-},
-        is_system_role: {
-    type: 'any-of',
-    contains: [{
-    type: 'boolean',
-}, {
-    type: 'null',
-}],
-},
-        group_id: {
-    type: 'any-of',
-    contains: [{
-    type: 'number',
-}, {
-    type: 'null',
-}],
-},
+  description: `Schema for updating a role`,
+  properties: {
+    name: {
+      type: "any-of",
+      contains: [
+        {
+          type: "string",
+        },
+        {
+          type: "null",
+        },
+      ],
     },
+    description: {
+      type: "any-of",
+      contains: [
+        {
+          type: "string",
+        },
+        {
+          type: "null",
+        },
+      ],
+    },
+    is_system_role: {
+      type: "any-of",
+      contains: [
+        {
+          type: "boolean",
+        },
+        {
+          type: "null",
+        },
+      ],
+    },
+    group_id: {
+      type: "any-of",
+      contains: [
+        {
+          type: "number",
+        },
+        {
+          type: "null",
+        },
+      ],
+    },
+  },
 } as const;

@@ -11,7 +11,12 @@ import {
   TabPanel,
 } from "@chakra-ui/react";
 import { useQuery } from "react-query";
-import { type ApiError, UsersService, GroupsService, RolesService } from "@/client";
+import {
+  type ApiError,
+  UsersService,
+  GroupsService,
+  RolesService,
+} from "@/client";
 import useAuth from "@/hooks/useAuth";
 import useCustomToast from "@/hooks/useCustomToast";
 import { useTranslation } from "react-i18next";
@@ -34,8 +39,11 @@ function MembersPage() {
     isLoading: isLoadingUsers,
     isError: isErrorUsers,
     error: errorUsers,
-  } = useQuery(["users", currentPage], () => 
-    UsersService.readUsers({ skip: (currentPage - 1) * PAGE_SIZE, limit: PAGE_SIZE })
+  } = useQuery(["users", currentPage], () =>
+    UsersService.readUsers({
+      skip: (currentPage - 1) * PAGE_SIZE,
+      limit: PAGE_SIZE,
+    }),
   );
 
   const {
@@ -53,7 +61,7 @@ function MembersPage() {
   } = useQuery("roles", () => RolesService.readRoles({}));
 
   if (isErrorUsers || isErrorGroups || isErrorRoles) {
-    const errDetail = 
+    const errDetail =
       (isErrorUsers && (errorUsers as ApiError).body?.detail) ||
       (isErrorGroups && (errorGroups as ApiError).body?.detail) ||
       (isErrorRoles && (errorRoles as ApiError).body?.detail);
@@ -64,19 +72,14 @@ function MembersPage() {
 
   if (isLoading) {
     return (
-      <Flex 
-        justify="center" 
-        align="center" 
-        height="100vh" 
+      <Flex
+        justify="center"
+        align="center"
+        height="100vh"
         width="full"
         bg="ui.bgMain"
       >
-        <Spinner 
-          size="xl" 
-          color="ui.main" 
-          thickness="3px"
-          speed="0.8s"
-        />
+        <Spinner size="xl" color="ui.main" thickness="3px" speed="0.8s" />
       </Flex>
     );
   }
@@ -88,7 +91,9 @@ function MembersPage() {
   return (
     <Container maxW="full">
       <Flex justifyContent="space-between" mb={6}>
-        <Text fontSize="2xl" fontWeight="bold">Settings</Text>
+        <Text fontSize="2xl" fontWeight="bold">
+          Settings
+        </Text>
       </Flex>
 
       <Tabs>
@@ -100,9 +105,9 @@ function MembersPage() {
 
         <TabPanels>
           <TabPanel p={0}>
-            <UserTab 
-              users={users?.data || []} 
-              currentUserId={currentUser?.id} 
+            <UserTab
+              users={users?.data || []}
+              currentUserId={currentUser?.id}
               totalCount={users?.count || 0}
               onPageChange={handlePageChange}
             />
@@ -111,10 +116,10 @@ function MembersPage() {
             <GroupTab groups={groups?.data || []} users={users?.data || []} />
           </TabPanel>
           <TabPanel p={0}>
-            <RoleTab 
-              roles={roles?.data || []} 
-              groups={groups?.data || []} 
-              users={users?.data || []} 
+            <RoleTab
+              roles={roles?.data || []}
+              groups={groups?.data || []}
+              users={users?.data || []}
             />
           </TabPanel>
         </TabPanels>

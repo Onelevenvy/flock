@@ -12,11 +12,11 @@ import { SettingsDialog } from "../settings/dialogs/settings-dialog";
 const Main = dynamic(() => import("./main"), {
   ssr: false,
   loading: () => (
-    <Box 
-      display="flex" 
-      h="full" 
-      w="full" 
-      alignItems="center" 
+    <Box
+      display="flex"
+      h="full"
+      w="full"
+      alignItems="center"
       justifyContent="center"
       bg="ui.bgMain"
     >
@@ -27,20 +27,20 @@ const Main = dynamic(() => import("./main"), {
 
 export default function ChatPage() {
   return (
-    <Box 
-      h="full" 
-      w="full" 
-      bg="ui.bgMain" 
+    <Box
+      h="full"
+      w="full"
+      bg="ui.bgMain"
       display="flex"
       flexDirection="column"
       overflow="hidden"
     >
-      <Flex 
-        h="12" 
-        px="4" 
-        alignItems="center" 
-        justifyContent="flex-end" 
-        borderBottom="1px" 
+      <Flex
+        h="12"
+        px="4"
+        alignItems="center"
+        justifyContent="flex-end"
+        borderBottom="1px"
         borderColor="gray.100"
         bg="white"
         flexShrink={0}
@@ -52,7 +52,7 @@ export default function ChatPage() {
           </Suspense>
         </Flex>
       </Flex>
-      <Box flex="1" p="4" overflow="hidden" >
+      <Box flex="1" p="4" overflow="hidden">
         <Main />
       </Box>
     </Box>

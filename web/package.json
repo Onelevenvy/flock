@@ -10,7 +10,10 @@
     "start": "next start",
     "generate-client": "openapi --input ./openapi.json --useOptions --useUnionTypes --output ./src/client --client axios --exportSchemas true",
     "lint": "tsc --noEmit && eslint .",
-    "lint:fix": "eslint . --fix"
+    "lint:fix": "eslint . --fix",
+    "format:check": "prettier --check \"**/*.{ts,tsx,js,jsx,mdx}\" --cache",
+    "format:write": "prettier --write \"**/*.{ts,tsx,js,jsx,mdx}\" --cache"
+
   },
   "dependencies": {
     "@ant-design/icons": "^6.0.0",

@@ -21,7 +21,13 @@ import {
 } from "@chakra-ui/react";
 import { AddIcon, DeleteIcon, EditIcon } from "@chakra-ui/icons";
 import { useState, useEffect } from "react";
-import { type ApiError, type GroupOut, type RoleOut, type UserOut, RolesService } from "@/client";
+import {
+  type ApiError,
+  type GroupOut,
+  type RoleOut,
+  type UserOut,
+  RolesService,
+} from "@/client";
 import useCustomToast from "@/hooks/useCustomToast";
 import RoleForm from "./RoleForm";
 import { useMutation, useQueryClient } from "react-query";
@@ -37,7 +43,8 @@ export default function RoleTab({ roles, groups, users }: RoleTabProps) {
   const queryClient = useQueryClient();
   const [isAddRoleOpen, setIsAddRoleOpen] = useState(false);
   const [selectedRole, setSelectedRole] = useState<RoleOut | null>(null);
-  const [selectedGroupForRoles, setSelectedGroupForRoles] = useState<GroupOut | null>(null);
+  const [selectedGroupForRoles, setSelectedGroupForRoles] =
+    useState<GroupOut | null>(null);
 
   const bgColor = useColorModeValue("white", "gray.800");
   const borderColor = useColorModeValue("gray.100", "gray.700");
@@ -62,7 +69,7 @@ export default function RoleTab({ roles, groups, users }: RoleTabProps) {
         const errDetail = err.body?.detail;
         showToast("Something went wrong.", `${errDetail}`, "error");
       },
-    }
+    },
   );
 
   const handleDeleteRole = async (role: RoleOut) => {
@@ -73,12 +80,12 @@ export default function RoleTab({ roles, groups, users }: RoleTabProps) {
     <VStack spacing={4} align="stretch">
       <FormControl>
         <FormLabel>选择用户组</FormLabel>
-        <Select 
+        <Select
           placeholder="选择要管理角色的用户组"
           value={selectedGroupForRoles?.id || ""}
           onChange={(e) => {
             const groupId = parseInt(e.target.value);
-            const group = groups.find(g => g.id === groupId) || null;
+            const group = groups.find((g) => g.id === groupId) || null;
             setSelectedGroupForRoles(group);
           }}
         >
@@ -94,7 +101,9 @@ export default function RoleTab({ roles, groups, users }: RoleTabProps) {
         <>
           <HStack justify="space-between" align="center" mb={4}>
             <Text fontSize="sm" color="gray.600">
-              管理员: {users.find(u => u.id === selectedGroupForRoles.admin_id)?.full_name || "未设置"}
+              管理员:{" "}
+              {users.find((u) => u.id === selectedGroupForRoles.admin_id)
+                ?.full_name || "未设置"}
             </Text>
             <Button
               leftIcon={<AddIcon />}
@@ -131,9 +140,11 @@ export default function RoleTab({ roles, groups, users }: RoleTabProps) {
                 </Thead>
                 <Tbody>
                   {roles
-                    .filter(role => role.group_id === selectedGroupForRoles.id)
+                    .filter(
+                      (role) => role.group_id === selectedGroupForRoles.id,
+                    )
                     .map((role) => (
-                      <Tr 
+                      <Tr
                         key={role.id}
                         transition="all 0.2s"
                         _hover={{ bg: hoverBg }}
@@ -150,7 +161,9 @@ export default function RoleTab({ roles, groups, users }: RoleTabProps) {
                         </Td>
                         <Td py={4}>
                           <Badge
-                            colorScheme={role.is_system_role ? "purple" : "blue"}
+                            colorScheme={
+                              role.is_system_role ? "purple" : "blue"
+                            }
                             variant="subtle"
                             fontSize="xs"
                             borderRadius="full"
@@ -182,7 +195,7 @@ export default function RoleTab({ roles, groups, users }: RoleTabProps) {
                           </HStack>
                         </Td>
                       </Tr>
-                  ))}
+                    ))}
                 </Tbody>
               </Table>
             </TableContainer>
@@ -207,4 +220,4 @@ export default function RoleTab({ roles, groups, users }: RoleTabProps) {
       )}
     </VStack>
   );
-} 
+}

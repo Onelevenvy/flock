@@ -65,11 +65,16 @@ const UploadForm: React.FC<UploadFormProps> = ({
   const inputBgColor = useColorModeValue("ui.inputbgcolor", "gray.700");
 
   const watchFile = useWatch({ control, name: "file" }) as File[] | undefined;
-  const watchWebUrl = useWatch({ control, name: "web_url" }) as string | undefined;
+  const watchWebUrl = useWatch({ control, name: "web_url" }) as
+    | string
+    | undefined;
 
-  const generateDefaultDescription = useCallback((name: string) => {
-    return t("knowledge.upload.form.description.default", { name });
-  }, [t]);
+  const generateDefaultDescription = useCallback(
+    (name: string) => {
+      return t("knowledge.upload.form.description.default", { name });
+    },
+    [t],
+  );
 
   useEffect(() => {
     let fileName = "";
@@ -84,16 +89,19 @@ const UploadForm: React.FC<UploadFormProps> = ({
         shouldDirty: true,
       });
     }
-  }, [watchFile, watchWebUrl, fileType, setValue, isUpdating, generateDefaultDescription]);
+  }, [
+    watchFile,
+    watchWebUrl,
+    fileType,
+    setValue,
+    isUpdating,
+    generateDefaultDescription,
+  ]);
 
   return (
     <VStack spacing={6} align="stretch">
       <FormControl isInvalid={!!errors.name}>
-        <FormLabel 
-          fontSize="sm"
-          fontWeight="500"
-          color="gray.700"
-        >
+        <FormLabel fontSize="sm" fontWeight="500" color="gray.700">
           {t("knowledge.upload.form.name.label")}
         </FormLabel>
         <Input
@@ -124,16 +132,15 @@ const UploadForm: React.FC<UploadFormProps> = ({
       </FormControl>
 
       <FormControl isInvalid={!!errors.description}>
-        <FormLabel 
-          fontSize="sm"
-          fontWeight="500"
-          color="gray.700"
-        >
+        <FormLabel fontSize="sm" fontWeight="500" color="gray.700">
           {t("knowledge.upload.form.description.label")}
         </FormLabel>
         <Input
           {...register("description")}
-          placeholder={t("knowledge.upload.form.description.placeholder") || "Enter initial input"}
+          placeholder={
+            t("knowledge.upload.form.description.placeholder") ||
+            "Enter initial input"
+          }
           bg={inputBgColor}
           border="1px solid"
           borderColor={borderColor}
@@ -151,30 +158,18 @@ const UploadForm: React.FC<UploadFormProps> = ({
       </FormControl>
 
       <FormControl isRequired>
-        <FormLabel 
-          fontSize="sm"
-          fontWeight="500"
-          color="gray.700"
-        >
+        <FormLabel fontSize="sm" fontWeight="500" color="gray.700">
           {t("knowledge.upload.form.type.label")}
         </FormLabel>
         <RadioGroup value={fileType} onChange={setFileType}>
           <Stack direction="row" spacing={6}>
-            <Radio 
-              value="file" 
-              colorScheme="blue"
-              size="lg"
-            >
+            <Radio value="file" colorScheme="blue" size="lg">
               <HStack spacing={2}>
                 <FiUpload />
                 <Text>{t("knowledge.upload.form.type.file")}</Text>
               </HStack>
             </Radio>
-            <Radio 
-              value="web" 
-              colorScheme="blue"
-              size="lg"
-            >
+            <Radio value="web" colorScheme="blue" size="lg">
               <HStack spacing={2}>
                 <FiGlobe />
                 <Text>{t("knowledge.upload.form.type.web")}</Text>
@@ -201,7 +196,9 @@ const UploadForm: React.FC<UploadFormProps> = ({
             name="file"
             acceptedFileTypes=".pdf,.docx,.pptx,.xlsx,.txt,.html,.md"
             isRequired={!isUpdating}
-            placeholder={t("knowledge.upload.form.file.label") || "Enter initial input"}
+            placeholder={
+              t("knowledge.upload.form.file.label") || "Enter initial input"
+            }
             control={control}
           >
             {t("knowledge.upload.form.file.button")}
@@ -209,11 +206,7 @@ const UploadForm: React.FC<UploadFormProps> = ({
         </Box>
       ) : (
         <FormControl isRequired>
-          <FormLabel 
-            fontSize="sm"
-            fontWeight="500"
-            color="gray.700"
-          >
+          <FormLabel fontSize="sm" fontWeight="500" color="gray.700">
             {t("knowledge.upload.form.webUrl.label")}
           </FormLabel>
           <Input
@@ -254,11 +247,7 @@ const UploadForm: React.FC<UploadFormProps> = ({
           fieldState: { error },
         }) => (
           <FormControl isRequired isInvalid={!!error}>
-            <FormLabel 
-              fontSize="sm"
-              fontWeight="500"
-              color="gray.700"
-            >
+            <FormLabel fontSize="sm" fontWeight="500" color="gray.700">
               {t("knowledge.upload.form.chunkSize.label")}
             </FormLabel>
             <NumberInput
@@ -271,7 +260,7 @@ const UploadForm: React.FC<UploadFormProps> = ({
               bg={inputBgColor}
               borderRadius="lg"
             >
-              <NumberInputField 
+              <NumberInputField
                 ref={ref}
                 border="1px solid"
                 borderColor={borderColor}
@@ -302,11 +291,7 @@ const UploadForm: React.FC<UploadFormProps> = ({
           fieldState: { error },
         }) => (
           <FormControl isRequired isInvalid={!!error}>
-            <FormLabel 
-              fontSize="sm"
-              fontWeight="500"
-              color="gray.700"
-            >
+            <FormLabel fontSize="sm" fontWeight="500" color="gray.700">
               {t("knowledge.upload.form.chunkOverlap.label")}
             </FormLabel>
             <NumberInput
@@ -319,7 +304,7 @@ const UploadForm: React.FC<UploadFormProps> = ({
               bg={inputBgColor}
               borderRadius="lg"
             >
-              <NumberInputField 
+              <NumberInputField
                 ref={ref}
                 border="1px solid"
                 borderColor={borderColor}

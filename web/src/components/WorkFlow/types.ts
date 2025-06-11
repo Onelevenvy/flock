@@ -18,7 +18,10 @@ export interface AgentNodeData extends NodeData {
   systemMessage?: string;
   userMessage?: string;
   tools: string[];
-  retrievalTools: (string | { name: string; description: string; usr_id: number; kb_id: number; })[];
+  retrievalTools: (
+    | string
+    | { name: string; description: string; usr_id: number; kb_id: number }
+  )[];
 }
 
 export interface AgentConfig {
@@ -117,10 +120,10 @@ export interface HumanNodeData extends NodeData {
 
 export interface ParameterSchema {
   [key: string]: {
-    type: string;  // "str" | "number"
+    type: string; // "str" | "number"
     required: boolean;
     description: string;
-  }
+  };
 }
 
 export interface ParameterExtractorNodeData {
@@ -131,7 +134,7 @@ export interface ParameterExtractorNodeData {
 }
 
 export interface MCPToolConfig {
-  command: "python" | "node";  // node暂不支持
+  command: "python" | "node"; // node暂不支持
   args: string[];
   transport: "stdio";
 }

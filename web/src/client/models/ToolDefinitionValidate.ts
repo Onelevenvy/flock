@@ -4,5 +4,5 @@
 /* eslint-disable */
 
 export type ToolDefinitionValidate = {
-    tool_definition: Record<string, any>;
+  tool_definition: Record<string, any>;
 };

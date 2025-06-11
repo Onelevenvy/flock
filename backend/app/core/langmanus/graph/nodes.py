@@ -9,27 +9,22 @@ from typing import Annotated, Literal
 from langchain_core.messages import AIMessage, HumanMessage
 from langchain_core.runnables import RunnableConfig
 from langchain_core.tools import tool
-from langgraph.types import Command, interrupt
 from langchain_mcp_adapters.client import MultiServerMCPClient
+from langgraph.types import Command, interrupt
 
 from app.core.langmanus.agents import create_agent
-from app.core.langmanus.tools.search import LoggedTavilySearch
-from app.core.langmanus.tools import (
-    crawl_tool,
-    get_web_search_tool,
-    get_retriever_tool,
-    python_repl_tool,
-)
-
 from app.core.langmanus.config.agents import AGENT_LLM_MAP
 from app.core.langmanus.config.configuration import Configuration
 from app.core.langmanus.llms.llm import get_llm_by_type
 from app.core.langmanus.prompts.planner_model import Plan
 from app.core.langmanus.prompts.template import apply_prompt_template
+from app.core.langmanus.tools import (crawl_tool, get_retriever_tool,
+                                      get_web_search_tool, python_repl_tool)
+from app.core.langmanus.tools.search import LoggedTavilySearch
 from app.core.langmanus.utils.json_utils import repair_json_output
 
-from .types import State
 from ..config import SELECTED_SEARCH_ENGINE, SearchEngine
+from .types import State
 
 logger = logging.getLogger(__name__)
 
@@ -289,7 +284,6 @@ def reporter_node(state: State):
 def research_team_node(state: State):
     """Research team node that collaborates on tasks."""
     logger.info("Research team is collaborating on tasks.")
-    pass
 
 
 async def _execute_agent_step(

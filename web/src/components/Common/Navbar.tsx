@@ -57,7 +57,10 @@ const Navbar = ({ type }: NavbarProps) => {
         {/* Modals */}
         <AddUser isOpen={addUserModal.isOpen} onClose={addUserModal.onClose} />
         <AddTeam isOpen={addTeamModal.isOpen} onClose={addTeamModal.onClose} />
-        <AddSkill isOpen={addSkillModal.isOpen} onClose={addSkillModal.onClose} />
+        <AddSkill
+          isOpen={addSkillModal.isOpen}
+          onClose={addSkillModal.onClose}
+        />
         <AddUpload
           isOpen={addUploadModal.isOpen}
           onClose={addUploadModal.onClose}

@@ -20,7 +20,7 @@ const LLMNode: React.FC<NodeProps> = (props) => {
     () => (
       <ModelProviderIcon modelprovider_name={providerName} key={providerName} />
     ),
-    [providerName]
+    [providerName],
   );
   const handleStyle = {
     background: "var(--chakra-colors-ui-wfhandlecolor)",

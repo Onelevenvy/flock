@@ -73,7 +73,7 @@ const AgentModal: React.FC<AgentModalProps> = ({
   const [isToolsListOpen, setIsToolsListOpen] = useState(false);
   const { data: skills, isLoading, isError } = useSkillsQuery();
   const [selectedTools, setSelectedTools] = useState<string[]>(
-    initialData?.tools || []
+    initialData?.tools || [],
   );
 
   const validateUniqueName = (value: string) => {

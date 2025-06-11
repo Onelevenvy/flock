@@ -20,7 +20,7 @@ const PluginNodeProperties: React.FC<PluginNodePropertiesProps> = ({
 }) => {
   const { data: skills } = useSkillsQuery();
   const tool = skills?.data.find(
-    (skill) => skill.display_name === node.data.toolName
+    (skill) => skill.display_name === node.data.toolName,
   );
   const [loading, setLoading] = useState(false);
 
@@ -28,7 +28,7 @@ const PluginNodeProperties: React.FC<PluginNodePropertiesProps> = ({
     (value: string) => {
       onNodeDataChange(node.id, "args", value);
     },
-    [node.id, onNodeDataChange]
+    [node.id, onNodeDataChange],
   );
 
   const variableInsertionHook = useVariableInsertion<HTMLTextAreaElement>({
@@ -60,7 +60,7 @@ const PluginNodeProperties: React.FC<PluginNodePropertiesProps> = ({
         onChange={handleInputChange}
         showVariables={variableInsertionHook.showVariables}
         setShowVariables={variableInsertionHook.setShowVariables}
-        inputRef={variableInsertionHook.inputRef}
+        inputRef={variableInsertionHook.inputRef as React.RefObject<HTMLTextAreaElement>}
         handleKeyDown={variableInsertionHook.handleKeyDown}
         insertVariable={variableInsertionHook.insertVariable}
         availableVariables={availableVariables}

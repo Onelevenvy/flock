@@ -45,7 +45,7 @@ function ModelSelect<T extends FieldValues>({
 
   const filteredModels = models?.data.filter(
     (model) =>
-      model.categories.includes("llm") || model.categories.includes("chat")
+      model.categories.includes("llm") || model.categories.includes("chat"),
   );
 
   const groupedModels = filteredModels?.reduce(
@@ -57,13 +57,13 @@ function ModelSelect<T extends FieldValues>({
       acc[providerName].push(model);
       return acc;
     },
-    {} as Record<string, typeof filteredModels>
+    {} as Record<string, typeof filteredModels>,
   );
 
   useEffect(() => {
     if (!selectedProvider && value) {
       const selectedModelData = models?.data.find(
-        (model) => model.ai_model_name === value
+        (model) => model.ai_model_name === value,
       );
       if (selectedModelData) {
         setInternalProvider(selectedModelData.provider.provider_name);

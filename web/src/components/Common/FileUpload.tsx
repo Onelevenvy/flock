@@ -53,11 +53,7 @@ export const FileUpload = ({
 
   return (
     <FormControl isInvalid={invalid} isRequired={isRequired}>
-      <FormLabel 
-        htmlFor="writeUpFile"
-        color="gray.700"
-        fontWeight="500"
-      >
+      <FormLabel htmlFor="writeUpFile" color="gray.700" fontWeight="500">
         {children}
       </FormLabel>
       <Box
@@ -69,8 +65,8 @@ export const FileUpload = ({
       >
         <InputGroup>
           <InputLeftElement pointerEvents="none">
-            <Icon 
-              as={value ? FiFile : FiUploadCloud} 
+            <Icon
+              as={value ? FiFile : FiUploadCloud}
               color={value ? "blue.500" : "gray.400"}
               transition="all 0.2s"
             />
@@ -101,9 +97,7 @@ export const FileUpload = ({
           />
         </InputGroup>
       </Box>
-      <FormErrorMessage>
-        {invalid && "Please select a file"}
-      </FormErrorMessage>
+      <FormErrorMessage>{invalid && "Please select a file"}</FormErrorMessage>
     </FormControl>
   );
 };

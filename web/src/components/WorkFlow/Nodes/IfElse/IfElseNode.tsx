@@ -1,5 +1,10 @@
 import React, { useEffect } from "react";
-import { Handle, Position, type NodeProps, useUpdateNodeInternals } from "reactflow";
+import {
+  Handle,
+  Position,
+  type NodeProps,
+  useUpdateNodeInternals,
+} from "reactflow";
 import { Box, Text, VStack } from "@chakra-ui/react";
 import { useTranslation } from "react-i18next";
 
@@ -49,10 +54,10 @@ const IfElseNode: React.FC<NodeProps<IfElseNodeData>> = (props) => {
             }}
           >
             <Text fontSize="xs" fontWeight="500">
-              {caseItem.case_id === cases[cases.length - 1].case_id 
-                ? "ELSE" 
-                : caseItem.case_id === cases[0].case_id 
-                  ? "IF" 
+              {caseItem.case_id === cases[cases.length - 1].case_id
+                ? "ELSE"
+                : caseItem.case_id === cases[0].case_id
+                  ? "IF"
                   : "ELIF"}
             </Text>
             <Handle
@@ -68,4 +73,4 @@ const IfElseNode: React.FC<NodeProps<IfElseNodeData>> = (props) => {
   );
 };
 
-export default React.memo(IfElseNode); 
+export default React.memo(IfElseNode);

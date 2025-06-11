@@ -29,11 +29,7 @@ interface AddApiKeyProps {
   onClose: () => void;
 }
 
-const AddApiKey = ({
-  teamId,
-  isOpen,
-  onClose,
-}: AddApiKeyProps) => {
+const AddApiKey = ({ teamId, isOpen, onClose }: AddApiKeyProps) => {
   const queryClient = useQueryClient();
   const showToast = useCustomToast();
   const [apiKey, setApiKey] = useState<string | null>(null);
@@ -58,11 +54,7 @@ const AddApiKey = ({
 
   const mutation = useMutation(addApiKey, {
     onSuccess: (data) => {
-      showToast(
-        "Success!",
-        "API key created successfully.",
-        "success"
-      );
+      showToast("Success!", "API key created successfully.", "success");
       setApiKey(data.key);
       reset();
     },
@@ -95,9 +87,7 @@ const AddApiKey = ({
       <ModalOverlay />
       {!apiKey ? (
         <ModalContent as="form" onSubmit={handleSubmit(onSubmit)}>
-          <ModalHeader>
-            Create an API key
-          </ModalHeader>
+          <ModalHeader>Create an API key</ModalHeader>
           <ModalCloseButton />
           <ModalBody pb={6}>
             <FormControl isInvalid={!!errors.description}>

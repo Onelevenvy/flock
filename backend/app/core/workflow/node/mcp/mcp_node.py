@@ -5,13 +5,10 @@ from langchain_core.runnables import RunnableConfig
 from langchain_mcp_adapters.client import MultiServerMCPClient
 from langgraph.prebuilt import create_react_agent
 
-from app.core.model_providers.model_provider_manager import model_provider_manager
-from app.core.state import (
-    ReturnWorkflowTeamState,
-    WorkflowTeamState,
-    parse_variables,
-    update_node_outputs,
-)
+from app.core.model_providers.model_provider_manager import \
+    model_provider_manager
+from app.core.state import (ReturnWorkflowTeamState, WorkflowTeamState,
+                            parse_variables, update_node_outputs)
 from app.core.workflow.utils.db_utils import get_model_info
 
 

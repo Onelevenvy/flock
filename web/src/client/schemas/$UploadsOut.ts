@@ -3,17 +3,17 @@
 /* tslint:disable */
 /* eslint-disable */
 export const $UploadsOut = {
-    properties: {
-        data: {
-    type: 'array',
-    contains: {
-        type: 'UploadOut',
+  properties: {
+    data: {
+      type: "array",
+      contains: {
+        type: "UploadOut",
+      },
+      isRequired: true,
     },
-    isRequired: true,
-},
-        count: {
-    type: 'number',
-    isRequired: true,
-},
+    count: {
+      type: "number",
+      isRequired: true,
     },
+  },
 } as const;

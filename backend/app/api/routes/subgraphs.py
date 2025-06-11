@@ -4,14 +4,8 @@ from fastapi import APIRouter, Depends, HTTPException
 from sqlmodel import func, select
 
 from app.api.deps import CurrentUser, SessionDep
-from app.models import (
-    Message,
-    Subgraph,
-    SubgraphCreate,
-    SubgraphOut,
-    SubgraphsOut,
-    SubgraphUpdate,
-)
+from app.models import (Message, Subgraph, SubgraphCreate, SubgraphOut,
+                        SubgraphsOut, SubgraphUpdate)
 
 # 创建一个新的路由组，专门用于不需要team_id的操作
 public_router = APIRouter()

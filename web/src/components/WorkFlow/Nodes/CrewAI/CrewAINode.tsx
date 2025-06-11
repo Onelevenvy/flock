@@ -11,19 +11,39 @@ const CrewAINode: React.FC<NodeProps> = (props) => {
   const data = props.data as CrewAINodeData;
 
   const handleStyle = {
-    background: 'var(--chakra-colors-ui-wfhandlecolor)',
+    background: "var(--chakra-colors-ui-wfhandlecolor)",
     width: 8,
     height: 8,
-    border: '2px solid white',
-    transition: 'all 0.2s',
+    border: "2px solid white",
+    transition: "all 0.2s",
   };
 
   return (
     <BaseNode {...props} icon={<Icon />} colorScheme={colorScheme}>
-      <Handle type="target" position={Position.Left} id="left" style={handleStyle} />
-      <Handle type="target" position={Position.Right} id="right" style={handleStyle} />
-      <Handle type="source" position={Position.Left} id="left" style={handleStyle} />
-      <Handle type="source" position={Position.Right} id="right" style={handleStyle} />
+      <Handle
+        type="target"
+        position={Position.Left}
+        id="left"
+        style={handleStyle}
+      />
+      <Handle
+        type="target"
+        position={Position.Right}
+        id="right"
+        style={handleStyle}
+      />
+      <Handle
+        type="source"
+        position={Position.Left}
+        id="left"
+        style={handleStyle}
+      />
+      <Handle
+        type="source"
+        position={Position.Right}
+        id="right"
+        style={handleStyle}
+      />
 
       <Tag
         size="sm"

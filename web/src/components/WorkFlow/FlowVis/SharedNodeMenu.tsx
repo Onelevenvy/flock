@@ -54,7 +54,7 @@ const SharedNodeMenu: React.FC<SharedNodeMenuProps> = ({
                   ? tool
                   : nodeType,
             type: nodeType,
-          })
+          }),
         );
         dragEvent.dataTransfer.effectAllowed = "move";
       } else if (!isDraggable) {
@@ -169,7 +169,7 @@ const SharedNodeMenu: React.FC<SharedNodeMenuProps> = ({
                         </Text>
                       </HStack>
                     </Box>
-                  )
+                  ),
               )}
             </VStack>
           </TabPanel>

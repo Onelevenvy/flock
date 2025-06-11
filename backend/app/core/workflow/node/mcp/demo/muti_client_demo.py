@@ -23,7 +23,7 @@ async def main():
                 ],
                 "transport": "stdio",
             },
-             "Hacker-News": {
+            "Hacker-News": {
                 "command": "node",
                 # Make sure to update to the full absolute path to your math_server.py file
                 "args": [

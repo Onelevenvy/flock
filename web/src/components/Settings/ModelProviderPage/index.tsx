@@ -1,4 +1,10 @@
-import { Box, Flex, SimpleGrid, Spinner, useColorModeValue } from "@chakra-ui/react";
+import {
+  Box,
+  Flex,
+  SimpleGrid,
+  Spinner,
+  useColorModeValue,
+} from "@chakra-ui/react";
 import { useQuery } from "react-query";
 
 import type { ApiError } from "@/client/core/ApiError";
@@ -28,24 +34,19 @@ export default function ModelProviderPage() {
   return (
     <>
       {isLoading ? (
-        <Flex 
-          justify="center" 
-          align="center" 
-          height="100vh" 
+        <Flex
+          justify="center"
+          align="center"
+          height="100vh"
           width="full"
           bg="ui.bgMain"
         >
-          <Spinner 
-            size="xl" 
-            color="ui.main" 
-            thickness="3px"
-            speed="0.8s"
-          />
+          <Spinner size="xl" color="ui.main" thickness="3px" speed="0.8s" />
         </Flex>
       ) : (
-        <Box 
-          maxW="full" 
-          w="full" 
+        <Box
+          maxW="full"
+          w="full"
           overflow="hidden"
           bg={bgColor}
           borderRadius="xl"
@@ -59,10 +60,7 @@ export default function ModelProviderPage() {
             borderColor: "gray.200",
           }}
         >
-          <SimpleGrid 
-            columns={{ base: 1, md: 1 }} 
-            spacing={6}
-          >
+          <SimpleGrid columns={{ base: 1, md: 1 }} spacing={6}>
             {providers?.providers.map((provider) => (
               <ModelProvider key={provider.id} value={provider}>
                 <ModelProviderCard providerName={provider.provider_name} />

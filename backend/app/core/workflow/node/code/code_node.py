@@ -1,4 +1,3 @@
-import base64
 import json
 import logging
 import uuid
@@ -7,12 +6,8 @@ from textwrap import dedent
 from langchain_core.messages import ToolMessage
 from langchain_core.runnables import RunnableConfig
 
-from ....state import (
-    ReturnWorkflowTeamState,
-    WorkflowTeamState,
-    parse_variables,
-    update_node_outputs,
-)
+from ....state import (ReturnWorkflowTeamState, WorkflowTeamState,
+                       parse_variables, update_node_outputs)
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -89,6 +84,7 @@ class CodeExecutor:
             self.timeout = timeout
             try:
                 from langchain_sandbox import PyodideSandboxTool
+
                 self._sandbox = PyodideSandboxTool(
                     stateful=False,  # 不需要状态持久化
                     allow_net=True,  # 允许网络访问以安装依赖
@@ -109,12 +105,13 @@ class CodeExecutor:
 
             # 使用模板创建执行脚本
             runner_script = CodeTemplate.create_execution_script(code)
-            
+
             # 执行代码
             result = await self._sandbox.ainvoke(runner_script)
 
             # 解析输出中的结果
             import re
+
             result_match = re.search(r"<<RESULT>>(.+?)<<RESULT>>", result, re.DOTALL)
             if result_match:
                 result_json = result_match.group(1)
@@ -163,7 +160,9 @@ class CodeNode:
             )
 
             # Execute code
-            code_execution_result = await self.executor.execute(parsed_code, self.libraries)
+            code_execution_result = await self.executor.execute(
+                parsed_code, self.libraries
+            )
 
             if isinstance(code_execution_result, str):
                 # If code_result is a string, return it as it is

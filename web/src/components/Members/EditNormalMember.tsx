@@ -151,13 +151,12 @@ const EditNormalMember = forwardRef<HTMLFormElement, EditAgentProps>(
 
     const onModelSelect = (modelName: string) => {
       const selectedModel = models?.data.find(
-        (model) => model.ai_model_name === modelName
+        (model) => model.ai_model_name === modelName,
       );
 
       setValue("model", modelName);
 
       setValue("provider", selectedModel?.provider.provider_name);
- 
     };
 
     return (
@@ -331,7 +330,7 @@ const EditNormalMember = forwardRef<HTMLFormElement, EditAgentProps>(
         </Box>
       </Box>
     );
-  }
+  },
 );
 
 EditNormalMember.displayName = "EditAgent";

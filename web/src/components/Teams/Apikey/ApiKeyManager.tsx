@@ -44,7 +44,7 @@ const ApiKeyManager: React.FC<ApiKeyManagerProps> = ({
   } = useDisclosure();
 
   const { data: apiKeys, isLoading } = useQuery(["apiKeys", teamId], () =>
-    ApiKeysService.readApiKeys({ teamId: parseInt(teamId) })
+    ApiKeysService.readApiKeys({ teamId: parseInt(teamId) }),
   );
 
   const deleteApiKeyMutation = useMutation(
@@ -59,10 +59,10 @@ const ApiKeyManager: React.FC<ApiKeyManagerProps> = ({
         showToast(
           "Error",
           error.body?.detail || "Failed to delete API key",
-          "error"
+          "error",
         );
       },
-    }
+    },
   );
 
   const handleDelete = (apiKeyId: number) => {
@@ -105,7 +105,9 @@ const ApiKeyManager: React.FC<ApiKeyManagerProps> = ({
                   apiKeys?.data.map((apiKey) => (
                     <Tr key={apiKey.id}>
                       <Td>{apiKey.description}</Td>
-                      <Td><code>{apiKey.short_key}</code></Td>
+                      <Td>
+                        <code>{apiKey.short_key}</code>
+                      </Td>
                       <Td>{new Date(apiKey.created_at).toLocaleString()}</Td>
                       <Td>
                         <IconButton

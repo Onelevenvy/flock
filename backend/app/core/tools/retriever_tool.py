@@ -2,7 +2,8 @@ import logging
 from typing import Annotated, Literal
 
 from langchain_core.documents import Document
-from langchain_core.prompts import BasePromptTemplate, PromptTemplate, format_document
+from langchain_core.prompts import (BasePromptTemplate, PromptTemplate,
+                                    format_document)
 from langchain_core.retrievers import BaseRetriever
 from langchain_core.tools import BaseTool
 

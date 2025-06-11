@@ -4,24 +4,17 @@ from typing import Annotated, Any
 from langchain_core.messages import AIMessage, AnyMessage
 from langchain_core.output_parsers.openai_tools import JsonOutputKeyToolsParser
 from langchain_core.prompts import ChatPromptTemplate, MessagesPlaceholder
-from langchain_core.runnables import (
-    RunnableConfig,
-    RunnableLambda,
-    RunnableSerializable,
-)
+from langchain_core.runnables import (RunnableConfig, RunnableLambda,
+                                      RunnableSerializable)
 from langchain_core.tools import BaseTool
 from langchain_openai import ChatOpenAI
 from langgraph.graph import add_messages
 from typing_extensions import NotRequired, TypedDict
 
-from app.core.model_providers.model_provider_manager import model_provider_manager
-from app.core.state import (
-    GraphLeader,
-    GraphMember,
-    GraphTeam,
-    add_or_replace_messages,
-    format_messages,
-)
+from app.core.model_providers.model_provider_manager import \
+    model_provider_manager
+from app.core.state import (GraphLeader, GraphMember, GraphTeam,
+                            add_or_replace_messages, format_messages)
 from app.core.workflow.utils.db_utils import get_model_info
 
 
@@ -310,11 +303,15 @@ class LeaderNode(BaseNode):
                     "properties": {
                         "task": {
                             "title": "task",
-                            "description": "Provide the next task only if answer is still incomplete. Else say no further task.",
+                            "description": (
+                                "Provide the next task only if answer is still incomplete. Else say no further task."
+                            ),
                         },
                         "next": {
                             "title": "next",
-                            "description": "Choose the next most appropriate team member if answer is still incomplete. Else choose FINISH.",
+                            "description": (
+                                "Choose the next most appropriate team member if answer is still incomplete. Else choose FINISH."
+                            ),
                             "anyOf": [
                                 {"enum": options},
                             ],

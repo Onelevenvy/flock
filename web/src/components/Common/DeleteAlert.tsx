@@ -56,7 +56,7 @@ const Delete = ({ type, id, isOpen, onClose }: DeleteProps) => {
         showToast(
           "Success",
           `The ${type.toLowerCase()} was deleted successfully.`,
-          "success"
+          "success",
         );
       }
       onClose();
@@ -65,7 +65,7 @@ const Delete = ({ type, id, isOpen, onClose }: DeleteProps) => {
       showToast(
         "An error occurred.",
         `An error occurred while deleting the ${type.toLowerCase()}.`,
-        "error"
+        "error",
       );
     },
     onSettled: () => {
@@ -76,7 +76,7 @@ const Delete = ({ type, id, isOpen, onClose }: DeleteProps) => {
             ? "teams"
             : type === "Skill"
               ? "skills"
-              : "uploads"
+              : "uploads",
       );
     },
   });

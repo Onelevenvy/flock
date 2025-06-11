@@ -1,15 +1,9 @@
 import logging
 
 from langchain_community.document_loaders import (
-    PyMuPDFLoader,
-    TextLoader,
-    UnstructuredExcelLoader,
-    UnstructuredHTMLLoader,
-    UnstructuredMarkdownLoader,
-    UnstructuredPowerPointLoader,
-    UnstructuredWordDocumentLoader,
-    WebBaseLoader,
-)
+    PyMuPDFLoader, TextLoader, UnstructuredExcelLoader, UnstructuredHTMLLoader,
+    UnstructuredMarkdownLoader, UnstructuredPowerPointLoader,
+    UnstructuredWordDocumentLoader, WebBaseLoader)
 from langchain_core.documents import Document
 from langchain_text_splitters import RecursiveCharacterTextSplitter
 

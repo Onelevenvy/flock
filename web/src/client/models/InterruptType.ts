@@ -3,4 +3,4 @@
 /* tslint:disable */
 /* eslint-disable */
 
-export type InterruptType = 'tool_review' | 'output_review' | 'context_input';
+export type InterruptType = "tool_review" | "output_review" | "context_input";

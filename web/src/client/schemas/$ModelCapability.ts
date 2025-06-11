@@ -3,5 +3,5 @@
 /* tslint:disable */
 /* eslint-disable */
 export const $ModelCapability = {
-    type: 'Enum',
+  type: "Enum",
 } as const;

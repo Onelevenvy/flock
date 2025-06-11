@@ -4,5 +4,5 @@
 /* eslint-disable */
 
 export type UpdateLanguageMe = {
-    language?: string;
+  language?: string;
 };

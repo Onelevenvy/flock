@@ -56,7 +56,7 @@ interface MessageBoxProps {
   onResume: (
     decision: InterruptDecision,
     message?: string | null,
-    interaction_type?: InterruptType | null
+    interaction_type?: InterruptType | null,
   ) => void;
   isPlayground?: boolean;
 }
@@ -113,7 +113,7 @@ const MessageBox: React.FC<MessageBoxProps> = ({
 
       onResume(decision, message, interruptType);
     },
-    [onResume, toolMessage, name]
+    [onResume, toolMessage, name],
   );
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -634,7 +634,7 @@ const MessageBox: React.FC<MessageBoxProps> = ({
                                 />
                               </InputGroup>
                             </FormControl>
-                          )
+                          ),
                         )}
                         <Button
                           size="sm"

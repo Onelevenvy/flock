@@ -42,7 +42,7 @@ const ToolsList: React.FC<ToolsListProps> = ({
 
   const filteredSkills = useMemo(() => {
     return skills.filter((skill) =>
-      skill.name.toLowerCase().includes(searchQuery.toLowerCase())
+      skill.name.toLowerCase().includes(searchQuery.toLowerCase()),
     );
   }, [skills, searchQuery]);
 

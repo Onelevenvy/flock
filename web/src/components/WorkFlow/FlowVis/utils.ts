@@ -4,7 +4,7 @@ import { Node, Edge } from "reactflow";
 // 计算边的中心点
 export const calculateEdgeCenter = (
   sourceNode: Node,
-  targetNode: Node
+  targetNode: Node,
 ): { x: number; y: number } => {
   const sourceX = sourceNode.position.x + (sourceNode.width ?? 0) / 2;
   const sourceY = sourceNode.position.y + (sourceNode.height ?? 0) / 2;
@@ -34,7 +34,7 @@ interface DagreNodeConfig {
 export const getLayoutedElements = (
   nodes: Node[],
   edges: Edge[],
-  options: LayoutOptions = {}
+  options: LayoutOptions = {},
 ) => {
   const {
     nodeWidth = 200,

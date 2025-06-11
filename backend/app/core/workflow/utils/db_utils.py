@@ -59,7 +59,9 @@ def get_model_info(model_name: str) -> dict[str, str]:
             "ai_model_name": model.ai_model_name,
             "provider_name": model.provider.provider_name,
             "base_url": model.provider.base_url,
-            "api_key": model.provider.decrypted_api_key,  # 现在可以使用decrypted_api_key
+            "api_key": (
+                model.provider.decrypted_api_key
+            ),  # 现在可以使用decrypted_api_key
         }
 
 
