@@ -191,21 +191,40 @@ def update_user(
     """
     Update a user.
     """
-
     db_user = session.get(User, user_id)
     if not db_user:
         raise HTTPException(
             status_code=404,
             detail="The user with this id does not exist in the system",
         )
-    if user_in.email:
-        existing_user = users.get_user_by_email(session=session, email=user_in.email)
-        if existing_user and existing_user.id != user_id:
-            raise HTTPException(
-                status_code=409, detail="User with this email already exists"
-            )
 
-    db_user = users.update_user(session=session, db_user=db_user, user_in=user_in)
+    # Prevent updating superuser status
+    if db_user.is_superuser:
+        raise HTTPException(
+            status_code=403,
+            detail="Superuser accounts cannot be modified",
+        )
+
+    # Update user data
+    user_data = user_in.model_dump(exclude_unset=True)
+    
+    # Update password if provided
+    if "password" in user_data and user_data["password"]:
+        user_data["hashed_password"] = get_password_hash(user_data.pop("password"))
+    
+    # Update user fields
+    db_user.sqlmodel_update(user_data)
+    
+    # Update relationships if provided
+    if hasattr(user_in, "groups"):
+        db_user.groups = [session.get(Group, group_id) for group_id in user_in.groups]
+    if hasattr(user_in, "roles"):
+        db_user.roles = [session.get(Role, role_id) for role_id in user_in.roles]
+    
+    session.add(db_user)
+    session.commit()
+    session.refresh(db_user)
+    
     return db_user
 
 

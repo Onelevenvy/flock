@@ -20,6 +20,7 @@ import {
   Tr,
   VStack,
   useColorModeValue,
+  useToast,
 } from "@chakra-ui/react";
 import { AddIcon, DeleteIcon, EditIcon } from "@chakra-ui/icons";
 import { BsThreeDotsVertical } from "react-icons/bs";
@@ -32,20 +33,37 @@ import UserForm from "./UserForm";
 interface UserTabProps {
   users: UserOut[];
   currentUserId?: number;
+  totalCount: number;
+  onPageChange?: (page: number) => void;
 }
 
-export default function UserTab({ users, currentUserId }: UserTabProps) {
+const PAGE_SIZE = 10;
+
+export default function UserTab({ users, currentUserId, totalCount, onPageChange }: UserTabProps) {
+  const toast = useToast();
   const showToast = useCustomToast();
   const queryClient = useQueryClient();
   const [isAddUserOpen, setIsAddUserOpen] = useState(false);
   const [selectedUser, setSelectedUser] = useState<UserOut | undefined>(undefined);
+  const [currentPage, setCurrentPage] = useState(1);
 
   const bgColor = useColorModeValue("white", "gray.800");
   const borderColor = useColorModeValue("gray.100", "gray.700");
   const tableHeaderBg = useColorModeValue("gray.50", "gray.700");
   const hoverBg = useColorModeValue("gray.50", "gray.700");
 
-  const handleDeleteUser = async (userId: number) => {
+  const handleDeleteUser = async (userId: number, isSuperUser: boolean) => {
+    if (isSuperUser) {
+      toast({
+        title: "Warning",
+        description: "Cannot delete superuser accounts.",
+        status: "warning",
+        duration: 3000,
+        isClosable: true,
+      });
+      return;
+    }
+
     try {
       await UsersService.deleteUser({ userId });
       showToast("Success!", "User deleted successfully.", "success");
@@ -55,6 +73,13 @@ export default function UserTab({ users, currentUserId }: UserTabProps) {
       const errDetail = error.body?.detail;
       showToast("Something went wrong.", `${errDetail}`, "error");
     }
+  };
+
+  const totalPages = Math.ceil(totalCount / PAGE_SIZE);
+
+  const handlePageChange = (newPage: number) => {
+    setCurrentPage(newPage);
+    onPageChange?.(newPage);
   };
 
   return (
@@ -83,9 +108,9 @@ export default function UserTab({ users, currentUserId }: UserTabProps) {
           borderColor: "gray.200",
         }}
       >
-        <TableContainer>
+        <TableContainer maxH="600px" overflowY="auto">
           <Table fontSize="sm">
-            <Thead bg={tableHeaderBg}>
+            <Thead position="sticky" top={0} bg={tableHeaderBg} zIndex={1}>
               <Tr>
                 <Th>Full name</Th>
                 <Th>Email</Th>
@@ -205,6 +230,8 @@ export default function UserTab({ users, currentUserId }: UserTabProps) {
                         size="sm"
                         variant="ghost"
                         onClick={() => setSelectedUser(user)}
+                        isDisabled={user.is_superuser || false}
+                        title={user.is_superuser ? "Cannot edit superuser accounts" : "Edit user"}
                       />
                       <IconButton
                         aria-label="Delete user"
@@ -212,7 +239,9 @@ export default function UserTab({ users, currentUserId }: UserTabProps) {
                         size="sm"
                         variant="ghost"
                         colorScheme="red"
-                        onClick={() => handleDeleteUser(user.id)}
+                        onClick={() => handleDeleteUser(user.id, user.is_superuser || false)}
+                        isDisabled={user.is_superuser || false}
+                        title={user.is_superuser ? "Cannot delete superuser accounts" : "Delete user"}
                       />
                     </HStack>
                   </Td>
@@ -221,6 +250,31 @@ export default function UserTab({ users, currentUserId }: UserTabProps) {
             </Tbody>
           </Table>
         </TableContainer>
+        {totalPages > 1 && (
+          <Flex justify="center" p={4} borderTop="1px solid" borderColor={borderColor}>
+            <HStack spacing={2}>
+              <Button
+                size="sm"
+                variant="outline"
+                isDisabled={currentPage === 1}
+                onClick={() => handlePageChange(currentPage - 1)}
+              >
+                Previous
+              </Button>
+              <Text fontSize="sm">
+                Page {currentPage} of {totalPages}
+              </Text>
+              <Button
+                size="sm"
+                variant="outline"
+                isDisabled={currentPage === totalPages}
+                onClick={() => handlePageChange(currentPage + 1)}
+              >
+                Next
+              </Button>
+            </HStack>
+          </Flex>
+        )}
       </Box>
 
       <UserForm

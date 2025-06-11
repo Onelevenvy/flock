@@ -43,6 +43,7 @@ import {
 } from "@/client";
 import useCustomToast from "@/hooks/useCustomToast";
 import { emailPattern } from "@/utils";
+import { useEffect } from "react";
 
 interface UserFormProps {
   user?: UserOut;
@@ -88,11 +89,15 @@ const UserForm = ({ user, isOpen, onClose }: UserFormProps) => {
     RolesService.readRoles({ skip: 0, limit: 100 })
   );
 
+  // Reset form when user changes or modal opens/closes
   const defaultValues = isEditMode
     ? {
-        ...user,
+        email: user.email,
+        full_name: user.full_name || "",
         password: "",
         confirm_password: "",
+        is_superuser: user.is_superuser,
+        is_active: user.is_active,
         groupRolePairs: user.groups ? 
           (user.groups as unknown as Array<{ id: number; name: string }>).map(g => ({
             group: { value: g.id, label: g.name },
@@ -125,6 +130,13 @@ const UserForm = ({ user, isOpen, onClose }: UserFormProps) => {
     criteriaMode: "all",
     defaultValues,
   });
+
+  // Reset form when user changes or modal opens/closes
+  useEffect(() => {
+    if (isOpen) {
+      reset(defaultValues);
+    }
+  }, [isOpen, user, reset]);
 
   const { fields, append, remove } = useFieldArray({
     control,
@@ -164,13 +176,17 @@ const UserForm = ({ user, isOpen, onClose }: UserFormProps) => {
     });
 
     const data = {
-      ...formData,
+      full_name: formData.full_name,
+      is_active: formData.is_active,
+      is_superuser: formData.is_superuser,
       groups,
       roles,
     } as UserUpdate;
-    if (data.password === "") {
-      delete (data as any).password;
+    
+    if (formData.password) {
+      data.password = formData.password;
     }
+
     await UsersService.updateUser({ userId: user.id, requestBody: data });
   };
 
@@ -275,6 +291,11 @@ const UserForm = ({ user, isOpen, onClose }: UserFormProps) => {
                 _focus={{
                   borderColor: "ui.main",
                   boxShadow: "0 0 0 1px var(--chakra-colors-ui-main)",
+                }}
+                isReadOnly={isEditMode}
+                _readOnly={{
+                  bg: "gray.100",
+                  cursor: "not-allowed",
                 }}
               />
               {errors.email && (

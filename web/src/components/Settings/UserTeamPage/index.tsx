@@ -18,11 +18,15 @@ import { useTranslation } from "react-i18next";
 import UserTab from "./UserTab";
 import GroupTab from "./GroupTab";
 import RoleTab from "./RoleTab";
+import { useState } from "react";
+
+const PAGE_SIZE = 10;
 
 function MembersPage() {
   const showToast = useCustomToast();
   const { currentUser } = useAuth();
   const { t } = useTranslation();
+  const [currentPage, setCurrentPage] = useState(1);
 
   // Fetch data for all tabs
   const {
@@ -30,7 +34,9 @@ function MembersPage() {
     isLoading: isLoadingUsers,
     isError: isErrorUsers,
     error: errorUsers,
-  } = useQuery("users", () => UsersService.readUsers({}));
+  } = useQuery(["users", currentPage], () => 
+    UsersService.readUsers({ skip: (currentPage - 1) * PAGE_SIZE, limit: PAGE_SIZE })
+  );
 
   const {
     data: groups,
@@ -75,6 +81,10 @@ function MembersPage() {
     );
   }
 
+  const handlePageChange = (page: number) => {
+    setCurrentPage(page);
+  };
+
   return (
     <Container maxW="full">
       <Flex justifyContent="space-between" mb={6}>
@@ -90,7 +100,12 @@ function MembersPage() {
 
         <TabPanels>
           <TabPanel p={0}>
-            <UserTab users={users?.data || []} currentUserId={currentUser?.id} />
+            <UserTab 
+              users={users?.data || []} 
+              currentUserId={currentUser?.id} 
+              totalCount={users?.count || 0}
+              onPageChange={handlePageChange}
+            />
           </TabPanel>
           <TabPanel p={0}>
             <GroupTab groups={groups?.data || []} users={users?.data || []} />
