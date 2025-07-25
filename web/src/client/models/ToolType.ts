@@ -3,9 +3,4 @@
 /* tslint:disable */
 /* eslint-disable */
 
-export type GeneratePodcastRequest = {
-  /**
-   * The content of the podcast
-   */
-  content: string;
-};
+export type ToolType = 'builtin' | 'api' | 'mcp';

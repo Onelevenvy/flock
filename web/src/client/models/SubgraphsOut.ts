@@ -3,9 +3,10 @@
 /* tslint:disable */
 /* eslint-disable */
 
-import type { SubgraphOut } from "./SubgraphOut";
+import type { SubgraphOut } from './SubgraphOut';
 
 export type SubgraphsOut = {
-  data: Array<SubgraphOut>;
-  count: number;
+    data: Array<SubgraphOut>;
+    count: number;
 };
+

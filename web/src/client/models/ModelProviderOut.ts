@@ -4,10 +4,12 @@
 /* eslint-disable */
 
 export type ModelProviderOut = {
-  id: number;
-  provider_name: string;
-  base_url: string | null;
-  api_key: string | null;
-  icon: string | null;
-  description: string | null;
+    id: number;
+    provider_name: string;
+    base_url: (string | null);
+    api_key: (string | null);
+    icon: (string | null);
+    description: (string | null);
+    is_available: boolean;
 };
+

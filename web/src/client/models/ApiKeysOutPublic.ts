@@ -3,9 +3,10 @@
 /* tslint:disable */
 /* eslint-disable */
 
-import type { ApiKeyOutPublic } from "./ApiKeyOutPublic";
+import type { ApiKeyOutPublic } from './ApiKeyOutPublic';
 
 export type ApiKeysOutPublic = {
-  data: Array<ApiKeyOutPublic>;
-  count: number;
+    data: Array<ApiKeyOutPublic>;
+    count: number;
 };
+

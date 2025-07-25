@@ -3,12 +3,13 @@
 /* tslint:disable */
 /* eslint-disable */
 
-import type { GroupOut } from "./GroupOut";
+import type { GroupOut } from './GroupOut';
 
 /**
  * Schema for groups output
  */
 export type GroupsOut = {
-  data: Array<GroupOut>;
-  count: number;
+    data: Array<GroupOut>;
+    count: number;
 };
+

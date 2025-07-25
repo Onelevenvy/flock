@@ -3,11 +3,12 @@
 /* tslint:disable */
 /* eslint-disable */
 
-import type { ChatResponse } from "./ChatResponse";
+import type { ChatResponse } from './ChatResponse';
 
 export type ThreadRead = {
-  id: string;
-  query: string;
-  updated_at: string;
-  messages: Array<ChatResponse>;
+    id: string;
+    query: string;
+    updated_at: string;
+    messages: Array<ChatResponse>;
 };
+

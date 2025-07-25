@@ -3,71 +3,62 @@
 /* tslint:disable */
 /* eslint-disable */
 export const $Upload = {
-  properties: {
-    name: {
-      type: "string",
-      isRequired: true,
-    },
-    description: {
-      type: "string",
-      isRequired: true,
-    },
-    file_type: {
-      type: "string",
-      isRequired: true,
-    },
-    web_url: {
-      type: "any-of",
-      contains: [
-        {
-          type: "string",
+    properties: {
+        name: {
+            type: 'string',
+            isRequired: true,
         },
-        {
-          type: "null",
+        description: {
+            type: 'string',
+            isRequired: true,
         },
-      ],
-    },
-    id: {
-      type: "any-of",
-      contains: [
-        {
-          type: "number",
+        file_type: {
+            type: 'string',
+            isRequired: true,
         },
-        {
-          type: "null",
+        web_url: {
+            type: 'any-of',
+            contains: [{
+                type: 'string',
+            }, {
+                type: 'null',
+            }],
         },
-      ],
-    },
-    resource_id: {
-      type: "number",
-      isRequired: true,
-    },
-    owner_id: {
-      type: "any-of",
-      contains: [
-        {
-          type: "number",
+        id: {
+            type: 'any-of',
+            contains: [{
+                type: 'number',
+            }, {
+                type: 'null',
+            }],
         },
-        {
-          type: "null",
+        resource_id: {
+            type: 'number',
+            isRequired: true,
         },
-      ],
+        owner_id: {
+            type: 'any-of',
+            contains: [{
+                type: 'number',
+            }, {
+                type: 'null',
+            }],
+        },
+        last_modified: {
+            type: 'string',
+            format: 'date-time',
+        },
+        status: {
+            type: 'UploadStatus',
+            isRequired: true,
+        },
+        chunk_size: {
+            type: 'number',
+            isRequired: true,
+        },
+        chunk_overlap: {
+            type: 'number',
+            isRequired: true,
+        },
     },
-    last_modified: {
-      type: "string",
-      format: "date-time",
-    },
-    status: {
-      type: "UploadStatus",
-      isRequired: true,
-    },
-    chunk_size: {
-      type: "number",
-      isRequired: true,
-    },
-    chunk_overlap: {
-      type: "number",
-      isRequired: true,
-    },
-  },
 } as const;

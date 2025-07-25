@@ -7,8 +7,9 @@
  * Schema for creating a role
  */
 export type RoleCreate = {
-  name: string;
-  description?: string | null;
-  is_system_role?: boolean;
-  group_id?: number | null;
+    name: string;
+    description?: (string | null);
+    is_system_role?: boolean;
+    group_id?: (number | null);
 };
+

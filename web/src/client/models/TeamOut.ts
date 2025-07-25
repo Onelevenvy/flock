@@ -4,10 +4,11 @@
 /* eslint-disable */
 
 export type TeamOut = {
-  name: string;
-  description?: string | null;
-  icon?: string | null;
-  id: number;
-  owner_id: number;
-  workflow: string;
+    name: string;
+    description?: (string | null);
+    icon?: (string | null);
+    id: number;
+    owner_id: number;
+    workflow: string;
 };
+

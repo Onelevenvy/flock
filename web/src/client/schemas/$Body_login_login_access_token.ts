@@ -3,51 +3,42 @@
 /* tslint:disable */
 /* eslint-disable */
 export const $Body_login_login_access_token = {
-  properties: {
-    grant_type: {
-      type: "any-of",
-      contains: [
-        {
-          type: "string",
-          pattern: "^password$",
+    properties: {
+        grant_type: {
+            type: 'any-of',
+            contains: [{
+                type: 'string',
+                pattern: '^password$',
+            }, {
+                type: 'null',
+            }],
         },
-        {
-          type: "null",
+        username: {
+            type: 'string',
+            isRequired: true,
         },
-      ],
-    },
-    username: {
-      type: "string",
-      isRequired: true,
-    },
-    password: {
-      type: "string",
-      isRequired: true,
-    },
-    scope: {
-      type: "string",
-    },
-    client_id: {
-      type: "any-of",
-      contains: [
-        {
-          type: "string",
+        password: {
+            type: 'string',
+            isRequired: true,
         },
-        {
-          type: "null",
+        scope: {
+            type: 'string',
         },
-      ],
+        client_id: {
+            type: 'any-of',
+            contains: [{
+                type: 'string',
+            }, {
+                type: 'null',
+            }],
+        },
+        client_secret: {
+            type: 'any-of',
+            contains: [{
+                type: 'string',
+            }, {
+                type: 'null',
+            }],
+        },
     },
-    client_secret: {
-      type: "any-of",
-      contains: [
-        {
-          type: "string",
-        },
-        {
-          type: "null",
-        },
-      ],
-    },
-  },
 } as const;

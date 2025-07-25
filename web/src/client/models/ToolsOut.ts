@@ -3,9 +3,10 @@
 /* tslint:disable */
 /* eslint-disable */
 
-export type GeneratePPTRequest = {
-  /**
-   * The content of the ppt
-   */
-  content: string;
+import type { ToolOut } from './ToolOut';
+
+export type ToolsOut = {
+    data: Array<ToolOut>;
+    count: number;
 };
+

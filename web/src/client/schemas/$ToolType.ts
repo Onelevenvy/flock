@@ -2,7 +2,6 @@
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
-
-export type ToolDefinitionValidate = {
-  tool_definition: Record<string, any>;
-};
+export const $ToolType = {
+    type: 'Enum',
+} as const;

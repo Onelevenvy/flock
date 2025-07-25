@@ -3,46 +3,43 @@
 /* tslint:disable */
 /* eslint-disable */
 export const $UserCreate = {
-  properties: {
-    email: {
-      type: "string",
-      isRequired: true,
-    },
-    is_active: {
-      type: "boolean",
-    },
-    is_superuser: {
-      type: "boolean",
-    },
-    full_name: {
-      type: "any-of",
-      contains: [
-        {
-          type: "string",
+    properties: {
+        email: {
+            type: 'string',
+            isRequired: true,
         },
-        {
-          type: "null",
+        is_active: {
+            type: 'boolean',
         },
-      ],
+        is_superuser: {
+            type: 'boolean',
+        },
+        full_name: {
+            type: 'any-of',
+            contains: [{
+                type: 'string',
+            }, {
+                type: 'null',
+            }],
+        },
+        language: {
+            type: 'string',
+        },
+        password: {
+            type: 'string',
+            isRequired: true,
+        },
+        groups: {
+            type: 'array',
+            contains: {
+                type: 'number',
+            },
+        },
+        roles: {
+            type: 'array',
+            contains: {
+                type: 'number',
+            },
+        },
     },
-    language: {
-      type: "string",
-    },
-    password: {
-      type: "string",
-      isRequired: true,
-    },
-    groups: {
-      type: "array",
-      contains: {
-        type: "number",
-      },
-    },
-    roles: {
-      type: "array",
-      contains: {
-        type: "number",
-      },
-    },
-  },
 } as const;

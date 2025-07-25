@@ -3,4 +3,4 @@
 /* tslint:disable */
 /* eslint-disable */
 
-export type UploadStatus = "In Progress" | "Completed" | "Failed";
+export type UploadStatus = 'In Progress' | 'Completed' | 'Failed';

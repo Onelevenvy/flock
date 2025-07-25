@@ -3,4 +3,4 @@
 /* tslint:disable */
 /* eslint-disable */
 
-export type ChatMessageType = "human" | "ai";
+export type ChatMessageType = 'human' | 'ai';

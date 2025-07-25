@@ -399,17 +399,17 @@ def init_modelprovider_model_db(session: Session) -> None:
 
 
     # 打印当前数据库状态
-    providers = session.exec(select(ModelProvider).order_by(ModelProvider.id)).all()
-    for provider in providers:
-        print(f"\nProvider: {provider.provider_name} (ID: {provider.id})")
-        # print(f"  Base URL: {provider.base_url}")
-        # print(f"  API Key: {'***************'  if provider.api_key else 'None'}")
-        # print(f"  Description: {provider.description}")
-        models = session.exec(
-            select(Models).where(Models.provider_id == provider.id).order_by(Models.id)
-        ).all()
-        for model in models:
-            print(f"\n  - Model: {model.ai_model_name} (ID: {model.id})")
-            print(f"    Categories: {', '.join(model.categories)}")
-            print(f"    Capabilities: {', '.join(model.capabilities)}")
-            print(f"    Metadata: {model.meta_}")
+    # providers = session.exec(select(ModelProvider).order_by(ModelProvider.id)).all()
+    # for provider in providers:
+    #     print(f"\nProvider: {provider.provider_name} (ID: {provider.id})")
+    #     # print(f"  Base URL: {provider.base_url}")
+    #     # print(f"  API Key: {'***************'  if provider.api_key else 'None'}")
+    #     # print(f"  Description: {provider.description}")
+    #     models = session.exec(
+    #         select(Models).where(Models.provider_id == provider.id).order_by(Models.id)
+    #     ).all()
+    #     for model in models:
+    #         print(f"\n  - Model: {model.ai_model_name} (ID: {model.id})")
+    #         print(f"    Categories: {', '.join(model.categories)}")
+    #         print(f"    Capabilities: {', '.join(model.capabilities)}")
+    #         print(f"    Metadata: {model.meta_}")

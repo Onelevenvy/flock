@@ -3,11 +3,12 @@
 /* tslint:disable */
 /* eslint-disable */
 
-import type { InterruptDecision } from "./InterruptDecision";
-import type { InterruptType } from "./InterruptType";
+import type { InterruptDecision } from './InterruptDecision';
+import type { InterruptType } from './InterruptType';
 
 export type Interrupt = {
-  interaction_type?: InterruptType | null;
-  decision: InterruptDecision;
-  tool_message?: string | null;
+    interaction_type?: (InterruptType | null);
+    decision: InterruptDecision;
+    tool_message?: (string | null);
 };
+

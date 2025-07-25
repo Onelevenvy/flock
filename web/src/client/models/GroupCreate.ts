@@ -7,8 +7,9 @@
  * Schema for creating a group
  */
 export type GroupCreate = {
-  name: string;
-  description?: string | null;
-  is_system_group?: boolean;
-  admin_id?: number | null;
+    name: string;
+    description?: (string | null);
+    is_system_group?: boolean;
+    admin_id?: (number | null);
 };
+

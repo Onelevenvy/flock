@@ -3,17 +3,14 @@
 /* tslint:disable */
 /* eslint-disable */
 export const $ApiKeyCreate = {
-  properties: {
-    description: {
-      type: "any-of",
-      contains: [
-        {
-          type: "string",
+    properties: {
+        description: {
+            type: 'any-of',
+            contains: [{
+                type: 'string',
+            }, {
+                type: 'null',
+            }],
         },
-        {
-          type: "null",
-        },
-      ],
     },
-  },
 } as const;

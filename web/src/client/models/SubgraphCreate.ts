@@ -4,12 +4,13 @@
 /* eslint-disable */
 
 export type SubgraphCreate = {
-  name: string;
-  description?: string | null;
-  config?: Record<string, any>;
-  metadata_?: Record<string, any>;
-  is_public?: boolean;
-  created_at: string;
-  updated_at: string;
-  team_id: number;
+    name: string;
+    description?: (string | null);
+    config?: Record<string, any>;
+    metadata_?: Record<string, any>;
+    is_public?: boolean;
+    created_at: string;
+    updated_at: string;
+    team_id: number;
 };
+

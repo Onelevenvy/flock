@@ -3,14 +3,14 @@
 /* tslint:disable */
 /* eslint-disable */
 export const $NewPassword = {
-  properties: {
-    token: {
-      type: "string",
-      isRequired: true,
+    properties: {
+        token: {
+            type: 'string',
+            isRequired: true,
+        },
+        new_password: {
+            type: 'string',
+            isRequired: true,
+        },
     },
-    new_password: {
-      type: "string",
-      isRequired: true,
-    },
-  },
 } as const;
