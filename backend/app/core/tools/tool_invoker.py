@@ -1,15 +1,14 @@
 # 导入自定义响应模型
-import uuid
 import json
-from typing import Any, Dict, Union, Optional
+import uuid
 
+from langchain.tools import BaseTool
 from langchain_core.messages import AIMessage
 from langgraph.prebuilt import ToolNode
 from pydantic import BaseModel
-from langchain.tools import BaseTool
 
-from app.core.tools.tool_manager import get_tool_by_name
 from app.core.tools.response_formatter import format_tool_response
+from app.core.tools.tool_manager import get_tool_by_name
 
 
 class ToolMessages(BaseModel):
@@ -56,23 +55,23 @@ def format_and_invoke_tool(tool: BaseTool, **kwargs) -> str:
 def invoke_tool(tool_name: str, args: dict) -> ToolInvokeResponse:
     """
     Invoke a tool by name with the provided arguments.
-    
+
     Args:
         tool_name: 工具名称，必须是provider_name:tool_name格式
         args: 工具调用参数
-        
+
     Returns:
         ToolInvokeResponse: 工具调用响应
     """
     # 确保工具名称是provider_name:tool_name格式
     if ":" not in tool_name:
         return ToolInvokeResponse(
-            messages=[], 
-            error=f"Invalid tool name format: {tool_name}. Must be in 'provider_name:tool_name' format"
+            messages=[],
+            error=f"Invalid tool name format: {tool_name}. Must be in 'provider_name:tool_name' format",
         )
-    
+
     tool_call_id = str(uuid.uuid4())
-    
+
     # 从完整名称中提取简单工具名称用于显示
     _, simple_tool_name = tool_name.split(":", 1)
 
@@ -91,9 +90,7 @@ def invoke_tool(tool_name: str, args: dict) -> ToolInvokeResponse:
 
     try:
         # 使用完整的provider_name:tool_name格式获取工具
-        tool_node = ToolNode(
-            tools=[get_tool_by_name(tool_name)]
-        )
+        tool_node = ToolNode(tools=[get_tool_by_name(tool_name)])
         result = tool_node.invoke({"messages": [message_with_tool_call]})
 
         messages = [

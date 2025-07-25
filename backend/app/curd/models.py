@@ -1,8 +1,7 @@
 from sqlmodel import Session, func, select
 
-from app.models import (ModelOut, ModelProviderOut,
-                                                  Models, ModelsBase,
-                                                  ModelsOut)
+from app.models import (ModelOut, ModelProviderOut, Models, ModelsBase,
+                        ModelsOut)
 
 
 def _create_model(session: Session, model: ModelsBase) -> Models:

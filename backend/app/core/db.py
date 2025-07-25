@@ -163,7 +163,9 @@ engine = create_engine(str(settings.SQLALCHEMY_DATABASE_URI))
 
 
 from app.core.tools.tool_manager import get_all_tool_providers
-from app.models import ToolProvider, Tool, ToolType
+from app.models import Tool, ToolProvider, ToolType
+
+
 def init_db(session: Session) -> None:
     # 创建超级用户
     user = session.exec(
@@ -205,13 +207,13 @@ def init_db(session: Session) -> None:
         db_provider = session.exec(
             select(ToolProvider).where(ToolProvider.provider_name == provider_name)
         ).first()
-        
+
         # 根据credentials判断是否需要鉴权
         needs_auth = provider_info.credentials and provider_info.credentials != {}
-        
+
         # 不需要鉴权的provider默认可用，需要鉴权的默认不可用
         is_available = not needs_auth
-        
+
         if db_provider:
             db_provider.icon = provider_info.icon
             db_provider.description = provider_info.description
@@ -228,11 +230,11 @@ def init_db(session: Session) -> None:
             else:
                 # 默认设置为内置工具
                 db_provider.tool_type = ToolType.BUILTIN
-                
+
             # 如果数据库中没有凭据，则使用配置中的凭据
             if not db_provider.credentials:
                 db_provider.credentials = provider_info.credentials
-                
+
             # 只有在数据库中没有设置is_available时才设置默认值
             # 这样可以保留已经鉴权过的状态
             if db_provider.is_available is None:
@@ -248,7 +250,7 @@ def init_db(session: Session) -> None:
                 "is_available": is_available,
                 "tool_type": getattr(provider_info, "tool_type", ToolType.BUILTIN),
             }
-            
+
             # 添加可选字段
             if hasattr(provider_info, "mcp_endpoint_url"):
                 provider_args["mcp_endpoint_url"] = provider_info.mcp_endpoint_url
@@ -256,37 +258,37 @@ def init_db(session: Session) -> None:
                 provider_args["mcp_server_id"] = provider_info.mcp_server_id
             if hasattr(provider_info, "mcp_connection_type"):
                 provider_args["mcp_connection_type"] = provider_info.mcp_connection_type
-                
+
             db_provider = ToolProvider(**provider_args)
             session.add(db_provider)
         session.flush()
-        
+
         # 处理Tool
         existing_tools = session.exec(
             select(Tool).where(Tool.provider_id == db_provider.id)
         ).all()
         existing_tools_dict = {tool.name: tool for tool in existing_tools}
-        
+
         for tool_info in provider_info.tools:
             tool_name = tool_info.name
-            
+
             # 根据provider是否可用决定tool的在线状态
             # 不需要鉴权的provider下的tool默认在线
             # 需要鉴权的provider下的tool默认离线
             is_online = db_provider.is_available
-            
+
             if tool_name in existing_tools_dict:
                 existing_tool = existing_tools_dict[tool_name]
                 existing_tool.description = tool_info.description
                 existing_tool.display_name = tool_info.display_name
                 existing_tool.input_parameters = tool_info.input_parameters
                 existing_tool.tool_definition = tool_info.tool_definition or {}
-                
+
                 # 只有在数据库中没有设置is_online时才设置默认值
                 # 这样可以保留已经鉴权过的状态
                 if existing_tool.is_online is None:
                     existing_tool.is_online = is_online
-                    
+
                 session.add(existing_tool)
             else:
                 # 创建新工具时，设置默认值
@@ -302,7 +304,7 @@ def init_db(session: Session) -> None:
                 }
                 new_tool = Tool(**tool_args)
                 session.add(new_tool)
-                
+
         # 删除不再存在的tool
         for tool_name in list(existing_tools_dict.keys()):
             if tool_name not in [t.name for t in provider_info.tools]:
@@ -396,7 +398,6 @@ def init_modelprovider_model_db(session: Session) -> None:
             logger.info(f"Removed provider {provider_name} and its associated models")
 
     session.commit()
-
 
     # 打印当前数据库状态
     # providers = session.exec(select(ModelProvider).order_by(ModelProvider.id)).all()

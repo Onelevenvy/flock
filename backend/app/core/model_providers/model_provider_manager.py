@@ -26,7 +26,9 @@ class ModelProviderManager:
                     provider_config = getattr(module, "PROVIDER_CONFIG", None)
                     supported_models = getattr(module, "SUPPORTED_MODELS", [])
                     init_function = getattr(module, "init_model", None)
-                    credentials_model_name = getattr(module, "CREDENTIALS_MODEL_NAME", None)
+                    credentials_model_name = getattr(
+                        module, "CREDENTIALS_MODEL_NAME", None
+                    )
 
                     if provider_config and init_function:
                         self.providers[item] = provider_config
@@ -49,8 +51,7 @@ class ModelProviderManager:
 
     def get_all_models(self) -> dict[str, list[str]]:
         return self.models
-    
-   
+
     def get_credentials_model_name(self, provider_name: str) -> str | None:
         """
         获取指定提供商的鉴权模型名

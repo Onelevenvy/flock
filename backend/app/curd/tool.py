@@ -1,9 +1,6 @@
-from typing import Any
-
 from sqlmodel import Session, select
 
-from app.models import (Tool, ToolCreate, ToolsOut,
-                                                 ToolUpdate)
+from app.models import Tool, ToolCreate, ToolsOut, ToolUpdate
 
 
 def _create_tool(session: Session, tool: ToolCreate) -> Tool:
@@ -64,7 +61,7 @@ def update_tool_online_status(
     db_tool = session.get(Tool, tool_id)
     if not db_tool:
         return None
-    
+
     db_tool.is_online = is_online
     session.add(db_tool)
     session.commit()

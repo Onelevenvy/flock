@@ -2,20 +2,12 @@ from typing import Any, Sequence
 
 from sqlmodel import Session, select
 
-from app.models import (
-    ProvidersListWithToolsOut,
-    Tool,
-    ToolOutIdWithAndName,
-    ToolProvider,
-    ToolProviderCreate,
-    ToolProviderUpdate,
-    ToolProviderWithToolsListOut,
-)
+from app.models import (ProvidersListWithToolsOut, Tool, ToolOutIdWithAndName,
+                        ToolProvider, ToolProviderUpdate,
+                        ToolProviderWithToolsListOut)
 
 
-def create_tool_provider(
-    session: Session, tool_provider: ToolProvider
-) -> ToolProvider:
+def create_tool_provider(session: Session, tool_provider: ToolProvider) -> ToolProvider:
     """创建工具提供者"""
     db_provider = ToolProvider.model_validate(tool_provider)
     # 移除 api_key 相关操作

@@ -4,11 +4,9 @@ from typing import Tuple
 
 from sqlmodel import Session, select
 
-from app.models import ToolProvider, Tool
-from app.core.tools.tool_manager import (
-    get_tool_by_name,
-    get_tool_credentials_function,
-)
+from app.core.tools.tool_manager import (get_tool_by_name,
+                                         get_tool_credentials_function)
+from app.models import Tool, ToolProvider
 
 logger = logging.getLogger(__name__)
 

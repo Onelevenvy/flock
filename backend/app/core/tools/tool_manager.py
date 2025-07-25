@@ -5,14 +5,14 @@ from functools import cache
 from typing import Any
 
 from langchain.tools import BaseTool
+from langchain_mcp_adapters.client import MultiServerMCPClient
 from pydantic import BaseModel
 from sqlmodel import select
 
 from app.core.database import get_session
-from app.models import Tool, ToolProvider, ToolType
-from app.core.security import encrypt_token,decrypt_token
 from app.core.mcp.mcp_manage import MCPManager
-from langchain_mcp_adapters.client import MultiServerMCPClient
+from app.core.security import decrypt_token
+from app.models import Tool, ToolProvider, ToolType
 
 logger = logging.getLogger(__name__)
 
@@ -275,13 +275,13 @@ class ToolManager:
             dict[str, ToolInfo]: 包含所有工具的字典，键为"provider_name:tool_name"格式
         """
         all_tools = {}
-        
+
         for provider_name, provider in self.providers.items():
             for tool in provider.tools:
                 # 使用provider_name:tool_name作为键
                 combined_key = f"{provider_name}:{tool.name}"
                 all_tools[combined_key] = tool
-            
+
         return all_tools
 
     def get_tool_credentials_function(self, provider_name: str) -> dict[str, Any]:
@@ -329,21 +329,23 @@ class ToolManager:
         """
         # 获取所有工具
         all_tools = self.get_all_tools()
-        
+
         # 直接查找组合键
         if tool_name in all_tools:
             tool = all_tools[tool_name].tool
             if tool is None:
                 raise ValueError(f"Tool instance is None for tool: {tool_name}")
             return tool
-            
+
         # 如果不是组合键格式，尝试解析
         if ":" not in tool_name:
-            raise ValueError(f"Invalid tool name format: {tool_name}. Must be in 'provider_name:tool_name' format")
-            
+            raise ValueError(
+                f"Invalid tool name format: {tool_name}. Must be in 'provider_name:tool_name' format"
+            )
+
         # 解析provider_name:tool_name格式
         provider_name, simple_tool_name = tool_name.split(":", 1)
-        
+
         # 检查提供商是否存在
         if provider_name in self.providers:
             provider_info = self.providers[provider_name]
@@ -351,18 +353,19 @@ class ToolManager:
             for tool_info in provider_info.tools:
                 if tool_info.name == simple_tool_name:
                     if tool_info.tool is None:
-                        raise ValueError(f"Tool instance is None for tool: {simple_tool_name} in provider: {provider_name}")
+                        raise ValueError(
+                            f"Tool instance is None for tool: {simple_tool_name} in provider: {provider_name}"
+                        )
                     return tool_info.tool
 
         raise ValueError(f"Unknown tool: {tool_name}")
 
-  
     async def get_tool_by_tool_id(self, tool_id: int) -> BaseTool:
         """根据工具ID获取工具实例。
 
         Args:
             tool_id: 工具ID
-           
+
 
         Returns:
             BaseTool: 工具实例
@@ -370,33 +373,35 @@ class ToolManager:
         Raises:
             ValueError: 如果找不到指定的工具
         """
-       
+
         session = next(get_session())
-        
+
         try:
             # 获取工具及其提供商信息
             tool = session.exec(select(Tool).where(Tool.id == tool_id)).first()
             if not tool:
                 raise ValueError(f"Tool not found with id: {tool_id}")
-            
+
             # 获取提供商信息
-            provider = session.exec(select(ToolProvider).where(ToolProvider.id == tool.provider_id)).first()
+            provider = session.exec(
+                select(ToolProvider).where(ToolProvider.id == tool.provider_id)
+            ).first()
             if not provider:
                 raise ValueError(f"Tool provider not found for tool id: {tool_id}")
-            
+
             # 根据提供商类型处理不同的工具获取方式
             if provider.tool_type == ToolType.MCP:
-                
-                
+
                 # 使用MCP工具缓存获取工具
                 if not provider.mcp_server_id:
-                    raise ValueError(f"MCP server ID not found for provider: {provider.provider_name}")
-                
+                    raise ValueError(
+                        f"MCP server ID not found for provider: {provider.provider_name}"
+                    )
+
                 # 获取MCP工具列表
                 try:
                     client = MultiServerMCPClient(
                         {
-                           
                             provider.mcp_server_id: {
                                 # Make sure you start your weather server on port 8000
                                 "url": provider.mcp_endpoint_url,
@@ -407,24 +412,26 @@ class ToolManager:
                     mcp_tools = await client.get_tools()
                 except Exception as e:
                     raise ValueError(f"Failed to get MCP tools: {str(e)}")
-                
+
                 # 在MCP工具列表中查找指定名称的工具
                 for mcp_tool in mcp_tools:
                     if mcp_tool.name == tool.name:
                         return mcp_tool
-                
-                raise ValueError(f"Tool '{tool.name}' not found in MCP provider: {provider.mcp_server_id}")
+
+                raise ValueError(
+                    f"Tool '{tool.name}' not found in MCP provider: {provider.mcp_server_id}"
+                )
             else:
                 # 处理内置工具和API工具
                 # 构造组合键格式
                 combined_key = f"{provider.provider_name}:{tool.name}"
-                
+
                 # 使用组合键调用get_builtin_tool_by_name
                 try:
                     return self.get_builtin_tool_by_name(combined_key)
                 except ValueError as e:
                     raise ValueError(f"Failed to get tool with id {tool_id}: {str(e)}")
-                
+
         finally:
             session.close()
 
@@ -434,79 +441,86 @@ class ToolManager:
 
         Args:
             tool_ids: 工具ID列表
-            
+
         Returns:
             list[BaseTool]: 工具实例列表，按输入的tool_ids顺序返回
 
         Raises:
             ValueError: 如果找不到指定的工具
         """
-        
+
         if not tool_ids:
             return []
-            
+
         session = next(get_session())
         tools_result = [None] * len(tool_ids)  # 预分配结果列表，保持原始顺序
-        
+
         try:
             # 步骤 1: 批量获取数据库信息
             tools = session.exec(select(Tool).where(Tool.id.in_(tool_ids))).all()
             tool_map = {tool.id: tool for tool in tools}
-            
+
             provider_ids = list(set(tool.provider_id for tool in tools))
-            providers = session.exec(select(ToolProvider).where(ToolProvider.id.in_(provider_ids))).all()
+            providers = session.exec(
+                select(ToolProvider).where(ToolProvider.id.in_(provider_ids))
+            ).all()
             provider_map = {provider.id: provider for provider in providers}
-            
+
             # 步骤 2: 按类型分组工具请求
             mcp_tools_by_provider = {}  # provider_id -> [(index, tool_id, tool)]
             builtin_tools = []  # [(index, tool_id, provider_name, tool_name)]
-            mcp_provider_ids_to_query = [] # 将要查询的MCP提供商ID列表
-            
+            mcp_provider_ids_to_query = []  # 将要查询的MCP提供商ID列表
+
             for index, tool_id in enumerate(tool_ids):
                 if tool_id not in tool_map:
                     raise ValueError(f"Tool not found with id: {tool_id}")
-                
+
                 tool = tool_map[tool_id]
                 provider = provider_map.get(tool.provider_id)
-                
+
                 if not provider:
                     raise ValueError(f"Tool provider not found for tool id: {tool_id}")
-                
+
                 if provider.tool_type == ToolType.MCP:
                     if provider.id not in mcp_tools_by_provider:
                         mcp_tools_by_provider[provider.id] = []
-                        mcp_provider_ids_to_query.append(provider.id) # 在这里填充列表
+                        mcp_provider_ids_to_query.append(provider.id)  # 在这里填充列表
                     mcp_tools_by_provider[provider.id].append((index, tool_id, tool))
                 else:
-                    builtin_tools.append((index, tool_id, provider.provider_name, tool.name))
+                    builtin_tools.append(
+                        (index, tool_id, provider.provider_name, tool.name)
+                    )
 
             # 步骤 3: 处理MCP工具 (这就是您关心的 if 块)
             if mcp_provider_ids_to_query:
                 # a. 对 MCPManager 进行一次清晰的调用，并行获取所有工具
                 tools_by_server_dict = await MCPManager.get_all_mcp_tools_by_server(
-                    provider_map, 
-                    mcp_provider_ids_to_query
+                    provider_map, mcp_provider_ids_to_query
                 )
 
                 # b. 用返回的字典构建精确的查找表 {server_id: {tool_name: tool_instance}}
                 mcp_tool_lookup = {}
                 for server_id, tool_list in tools_by_server_dict.items():
                     mcp_tool_lookup[server_id] = {tool.name: tool for tool in tool_list}
-                
+
                 # c. 精确地分发结果到 tools_result 列表的正确位置
                 for provider_id, tool_items in mcp_tools_by_provider.items():
                     provider = provider_map[provider_id]
                     provider_server_id = provider.mcp_server_id
-                    
+
                     for index, tool_id, requested_tool in tool_items:
                         requested_tool_name = requested_tool.name
-                        found_tool = mcp_tool_lookup.get(provider_server_id, {}).get(requested_tool_name)
-                        
+                        found_tool = mcp_tool_lookup.get(provider_server_id, {}).get(
+                            requested_tool_name
+                        )
+
                         if found_tool:
                             tools_result[index] = found_tool
                         else:
-                            raise ValueError(f"Tool '{requested_tool_name}' not found in provider '{provider.provider_name}'")
-            
+                            raise ValueError(
+                                f"Tool '{requested_tool_name}' not found in provider '{provider.provider_name}'"
+                            )
+
             # 步骤 4: 处理内置工具
             for index, tool_id, provider_name, tool_name in builtin_tools:
                 combined_key = f"{provider_name}:{tool_name}"
@@ -514,15 +528,19 @@ class ToolManager:
                     tools_result[index] = self.get_builtin_tool_by_name(combined_key)
                 except ValueError as e:
                     raise ValueError(f"Failed to get tool with id {tool_id}: {str(e)}")
-            
+
             # 步骤 5: 最终检查并返回结果
             if None in tools_result:
-                missing_indices = [i for i, tool in enumerate(tools_result) if tool is None]
+                missing_indices = [
+                    i for i, tool in enumerate(tools_result) if tool is None
+                ]
                 missing_ids = [tool_ids[i] for i in missing_indices]
-                raise ValueError(f"Failed to find all requested tools. Missing IDs: {missing_ids}")
-                
+                raise ValueError(
+                    f"Failed to find all requested tools. Missing IDs: {missing_ids}"
+                )
+
             return tools_result
-                
+
         finally:
             session.close()
 

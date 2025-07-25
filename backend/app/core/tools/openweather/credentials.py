@@ -21,10 +21,11 @@ def get_provider_info() -> dict[str, str]:
 def get_credentials() -> dict[str, Any]:
     return OPENWEATHER_CREDENTIALS
 
+
 def credentials_function() -> dict[str, Any]:
     return {
         "tool_name": "openweather",
         "input_parameters": {
             "city": "Beijing",
-        }
+        },
     }

@@ -2,22 +2,20 @@ from typing import Any, Dict
 
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
-from app.models import ToolProvider,ToolProviderCreate,ToolProviderOut,ToolProviderUpdate,ToolProviderWithToolsListOut,ProvidersListWithToolsOut,ToolType,MCPProviderOut
-from app.curd.toolprovider import (
-    create_tool_provider,
-    get_tool_provider,
-    get_tool_provider_list_with_tools,
-    get_tool_provider_with_tools,
-    update_tool_provider,
-)
+
+from app.core.auth.tool_provider_auth import authenticate_tool_provider
+from app.core.mcp.mcp_manage import MCPManager
+from app.core.workflow.utils.db_utils import get_db_session as session_getter
+from app.curd.toolprovider import (create_tool_provider, get_tool_provider,
+                                   get_tool_provider_list_with_tools,
+                                   get_tool_provider_with_tools,
+                                   update_tool_provider)
+from app.models import (MCPProviderOut, ProvidersListWithToolsOut,
+                        ToolProvider, ToolProviderCreate, ToolProviderOut,
+                        ToolProviderUpdate, ToolProviderWithToolsListOut,
+                        ToolType)
 
 router = APIRouter()
-from contextlib import contextmanager
-
-from sqlmodel import Session
-from app.core.auth.tool_provider_auth import authenticate_tool_provider
-from app.core.workflow.utils.db_utils import get_db_session as session_getter
-
 
 
 class MCPProviderCreate(BaseModel):
@@ -135,7 +133,7 @@ def update_provider(tool_provider_id: int, provider_update: ToolProviderUpdate) 
                 status_code=404,
                 detail="The provider with this ID does not exist in the system",
             )
-        
+
         if provider.credentials:
             provider.encrypt_credentials()
             session.add(provider)
@@ -143,7 +141,7 @@ def update_provider(tool_provider_id: int, provider_update: ToolProviderUpdate) 
 
         if provider.credentials:
             provider.decrypt_credentials()
-        
+
         return ToolProviderOut(
             id=provider.id,
             display_name=provider.display_name,
@@ -169,15 +167,15 @@ async def delete_provider(tool_provider_id: int):
         provider = session.get(ToolProvider, tool_provider_id)
         if provider is None:
             raise HTTPException(status_code=404, detail="Tool provider not found")
-        
+
         # 删除提供者的所有工具
         for tool in provider.tools:
             session.delete(tool)
-        
+
         # 删除提供者
         session.delete(provider)
         session.commit()
-        
+
         return ToolProviderOut(
             id=provider.id,
             provider_name=provider.provider_name,
@@ -189,7 +187,7 @@ async def delete_provider(tool_provider_id: int):
             icon=provider.icon,
             mcp_endpoint_url=provider.mcp_endpoint_url,
             mcp_server_id=provider.mcp_server_id,
-            mcp_connection_type=provider.mcp_connection_type
+            mcp_connection_type=provider.mcp_connection_type,
         )
 
 
@@ -206,28 +204,31 @@ async def authenticate_provider(tool_provider_id: int):
                 status_code=404,
                 detail="The provider with this ID does not exist in the system",
             )
-            
+
         # 根据工具提供者类型选择不同的处理方式
         if provider.tool_type == ToolType.MCP:
             # MCP类型直接刷新工具列表，不需要鉴权
             if not provider.mcp_server_id:
                 return {"success": False, "message": "MCP服务器ID未配置"}
-                
+
             try:
-                
-                from mozix.core.mcp.mcp_manage import MCPManager
-                client = await MCPManager.initialize_mcp_client({provider.mcp_server_id: {
-                    "url": provider.mcp_endpoint_url,
-                    "transport": provider.mcp_connection_type
-                }})
+
+                client = await MCPManager.initialize_mcp_client(
+                    {
+                        provider.mcp_server_id: {
+                            "url": provider.mcp_endpoint_url,
+                            "transport": provider.mcp_connection_type,
+                        }
+                    }
+                )
                 tools_list = await client.get_tools()
                 # 更新提供者状态为可用
                 provider.is_available = True
                 session.add(provider)
-                
+
                 # 使用MCPManager中的sync_provider_tools同步工具到数据库
-                from mozix.core.curd.toolprovider import sync_provider_tools
-                
+                from app.curd.toolprovider import sync_provider_tools
+
                 # 准备工具配置
                 tools_config = []
                 for tool in tools_list:
@@ -235,12 +236,12 @@ async def authenticate_provider(tool_provider_id: int):
                     args_schema = tool.args_schema
                     if hasattr(args_schema, "model_dump"):
                         args_schema = args_schema.model_dump()
-                    
+
                     # 处理 args 属性
                     input_params = getattr(tool, "args", {})
                     if hasattr(input_params, "model_dump"):
                         input_params = input_params.model_dump()
-                        
+
                     tool_config = {
                         "name": tool.name,
                         "description": tool.description,
@@ -251,32 +252,35 @@ async def authenticate_provider(tool_provider_id: int):
                         "is_online": True,
                     }
                     tools_config.append(tool_config)
-                
+
                 # 同步工具配置到数据库
                 sync_provider_tools(session, provider.id, tools_config)
-                
+
                 session.commit()
-                
+
                 return {"success": True, "message": "工具列表刷新成功"}
             except Exception as e:
                 import logging
+
                 logging.error(f"刷新工具列表失败: {str(e)}")
-                
+
                 # 刷新失败，将提供商标记为不可用
                 provider.is_available = False
                 session.add(provider)
-                
+
                 # 将所有工具设置为离线
                 for tool in provider.tools:
                     tool.is_online = False
                     session.add(tool)
-                
+
                 session.commit()
-                
+
                 return {"success": False, "message": f"刷新工具列表失败: {str(e)}"}
         elif provider.tool_type == ToolType.BUILTIN:
             # BUILTIN类型需要进行鉴权
-            success, message = await authenticate_tool_provider(session, tool_provider_id)
+            success, message = await authenticate_tool_provider(
+                session, tool_provider_id
+            )
             if success:
                 return {"success": True, "message": message}
             else:
@@ -297,9 +301,13 @@ async def create_mcp_provider(mcp_provider: MCPProviderCreate):
     with session_getter() as session:
         try:
             # 使用默认值补充其他字段
-            display_name = mcp_provider.provider_name  # 使用 provider_name 作为默认的 display_name
-            description = f"MCP 工具提供者: {mcp_provider.provider_name}"  # 生成默认描述
-            
+            display_name = (
+                mcp_provider.provider_name
+            )  # 使用 provider_name 作为默认的 display_name
+            description = (
+                f"MCP 工具提供者: {mcp_provider.provider_name}"  # 生成默认描述
+            )
+
             provider, _ = await MCPManager.create_mcp_provider(
                 session=session,
                 provider_name=mcp_provider.provider_name,
@@ -310,7 +318,7 @@ async def create_mcp_provider(mcp_provider: MCPProviderCreate):
                 display_name=display_name,
                 description=description,
             )
-            
+
             return MCPProviderOut(
                 id=provider.id,
                 provider_name=provider.provider_name,
@@ -321,6 +329,7 @@ async def create_mcp_provider(mcp_provider: MCPProviderCreate):
             )
         except Exception as e:
             import logging
+
             logging.error(f"创建 MCP 工具提供者失败: {str(e)}")
             raise HTTPException(
                 status_code=400,
@@ -342,17 +351,19 @@ async def update_mcp_provider(tool_provider_id: int, mcp_provider: MCPProviderUp
                     status_code=404,
                     detail="The provider with this ID does not exist in the system",
                 )
-                
+
             # 确保是 MCP 类型的提供者
             if current_provider.tool_type != ToolType.MCP:
                 raise HTTPException(
                     status_code=400,
                     detail="只能更新 MCP 类型的工具提供者",
                 )
-            
+
             # 使用默认值补充其他字段
-            display_name = mcp_provider.provider_name if mcp_provider.provider_name else None
-            
+            display_name = (
+                mcp_provider.provider_name if mcp_provider.provider_name else None
+            )
+
             provider, _ = await MCPManager.update_mcp_provider(
                 session=session,
                 provider_id=tool_provider_id,
@@ -362,7 +373,7 @@ async def update_mcp_provider(tool_provider_id: int, mcp_provider: MCPProviderUp
                 icon=mcp_provider.icon,
                 display_name=display_name,
             )
-                
+
             return MCPProviderOut(
                 id=provider.id,
                 provider_name=provider.provider_name,
@@ -375,6 +386,7 @@ async def update_mcp_provider(tool_provider_id: int, mcp_provider: MCPProviderUp
             raise e
         except Exception as e:
             import logging
+
             logging.error(f"更新 MCP 工具提供者失败: {str(e)}")
             raise HTTPException(
                 status_code=400,
@@ -393,7 +405,7 @@ async def test_mcp_connection(connection_test: MCPConnectionTest):
             mcp_server_id=connection_test.mcp_server_id,
             mcp_connection_type=connection_test.mcp_connection_type,
         )
-        
+
         return {
             "success": success,
             "message": message,
@@ -401,6 +413,7 @@ async def test_mcp_connection(connection_test: MCPConnectionTest):
         }
     except Exception as e:
         import logging
+
         logging.error(f"MCP 连接测试失败: {str(e)}")
         raise HTTPException(
             status_code=400,
@@ -421,26 +434,32 @@ async def sync_mcp_tools(tool_provider_id: int):
                     status_code=404,
                     detail="The provider with this ID does not exist in the system",
                 )
-            
+
             # 确保是 MCP 类型的提供者
             if provider.tool_type != ToolType.MCP:
                 raise HTTPException(
                     status_code=400,
                     detail="只能同步 MCP 类型的工具提供者",
                 )
-            
-            if not all([provider.mcp_endpoint_url, provider.mcp_server_id, provider.mcp_connection_type]):
+
+            if not all(
+                [
+                    provider.mcp_endpoint_url,
+                    provider.mcp_server_id,
+                    provider.mcp_connection_type,
+                ]
+            ):
                 raise HTTPException(
                     status_code=400,
                     detail="MCP 配置信息不完整",
                 )
-            
+
             # 更新 MCP 工具
             _, synced_tools = await MCPManager.update_mcp_provider(
                 session=session,
                 provider_id=tool_provider_id,
             )
-            
+
             return {
                 "success": True,
                 "message": f"成功同步 {len(synced_tools)} 个 MCP 工具",
@@ -458,6 +477,7 @@ async def sync_mcp_tools(tool_provider_id: int):
             raise e
         except Exception as e:
             import logging
+
             logging.error(f"同步 MCP 工具失败: {str(e)}")
             raise HTTPException(
                 status_code=400,

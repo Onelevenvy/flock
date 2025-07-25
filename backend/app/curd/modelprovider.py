@@ -2,10 +2,10 @@ from typing import Any
 
 from sqlmodel import Session, select
 
-from app.models import (
-    ModelOutIdWithAndName, ModelProvider, ModelProviderCreate,
-    ModelProviderUpdate, ModelProviderWithModelsListOut, Models,
-    ProvidersListWithModelsOut)
+from app.models import (ModelOutIdWithAndName, ModelProvider,
+                        ModelProviderCreate, ModelProviderUpdate,
+                        ModelProviderWithModelsListOut, Models,
+                        ProvidersListWithModelsOut)
 
 
 def create_model_provider(

@@ -1,22 +1,20 @@
+import re
 from datetime import datetime
 from enum import Enum
-from typing import TYPE_CHECKING, Any, List, Optional
+from typing import Any, List, Optional
 from uuid import UUID, uuid4
 from zoneinfo import ZoneInfo
-from pydantic import Field as PydanticField, field_validator
+
 from pydantic import BaseModel
 from pydantic import Field as PydanticField
-from pydantic import model_validator
-from sqlalchemy import ARRAY, JSON, Column, DateTime
+from pydantic import field_validator, model_validator
+from sqlalchemy import ARRAY, Column, DateTime
 from sqlalchemy import Enum as SQLEnum
 from sqlalchemy import PrimaryKeyConstraint, String, UniqueConstraint, func
 from sqlalchemy.dialects.postgresql import JSONB
 from sqlmodel import Field, Relationship, SQLModel
 
-
 from app.core.graph.messages import ChatResponse
-
-
 
 
 class Message(SQLModel):
@@ -606,7 +604,8 @@ class MembersOut(SQLModel):
     data: list[MemberOut]
     count: int
 
-#=====================TOOLS===========
+
+# =====================TOOLS===========
 class ToolType(str, Enum):
     BUILTIN = "builtin"
     API = "api"
@@ -614,7 +613,9 @@ class ToolType(str, Enum):
 
 
 class ToolProviderBase(SQLModel):
-    provider_name: str = PydanticField(pattern=r"^[\w\u4e00-\u9fa5_-]{1,64}$", unique=True)
+    provider_name: str = PydanticField(
+        pattern=r"^[\w\u4e00-\u9fa5_-]{1,64}$", unique=True
+    )
     mcp_endpoint_url: str | None = None
     mcp_server_id: str | None = None
     mcp_connection_type: str | None = None
@@ -626,7 +627,7 @@ class ToolProviderBase(SQLModel):
     is_available: bool | None = None
     tool_type: ToolType = Field(default=ToolType.BUILTIN)
 
-    @field_validator('mcp_server_id')
+    @field_validator("mcp_server_id")
     def validate_mcp_server_id(cls, v):
         """验证 mcp_server_id 字段，确保非空值符合正则表达式模式"""
         if v is not None and not re.match(r"^[a-zA-Z0-9_-]{1,24}$", v):
@@ -649,8 +650,8 @@ class ToolProvider(ToolProviderBase, table=True):
     id: int | None = Field(default=None, primary_key=True)
     provider_name: str = Field(max_length=64)
     display_name: str | None = Field(default=None, max_length=128)
-    mcp_endpoint_url: str | None = Field(default=None,unique=True)
-    mcp_server_id: str | None = Field(default=None,unique=True)
+    mcp_endpoint_url: str | None = Field(default=None, unique=True)
+    mcp_server_id: str | None = Field(default=None, unique=True)
     mcp_connection_type: str | None = Field(default=None)
     icon: str | None = Field(default=None)
     description: str | None = Field(default=None, max_length=256)
@@ -658,7 +659,7 @@ class ToolProvider(ToolProviderBase, table=True):
         default_factory=dict, sa_column=Column(JSONB)
     )
     is_available: bool = Field(default=False, nullable=True)
-    
+
     def encrypt_credentials(self) -> None:
         """Encrypt sensitive values in credentials"""
         if not self.credentials:
@@ -666,7 +667,7 @@ class ToolProvider(ToolProviderBase, table=True):
 
         # 在方法内部导入security_manager
         from app.core.security import security_manager
-        
+
         encrypted_credentials = {}
         for key, cred_info in self.credentials.items():
             if isinstance(cred_info, dict) and "value" in cred_info:
@@ -691,7 +692,7 @@ class ToolProvider(ToolProviderBase, table=True):
 
         # 在方法内部导入security_manager
         from app.core.security import security_manager
-        
+
         decrypted_credentials = {}
         for key, cred_info in self.credentials.items():
             if isinstance(cred_info, dict) and "value" in cred_info:
@@ -794,7 +795,7 @@ class MCPProviderOut(SQLModel):
     mcp_server_id: str
     mcp_connection_type: str
     icon: str | None = None
-    
+
     class Config:
         from_attributes = True
 
@@ -842,6 +843,7 @@ class ToolProviderWithToolsListOut(SQLModel):
 
 class ProvidersListWithToolsOut(SQLModel):
     providers: list[ToolProviderWithToolsListOut]
+
 
 # ===============SKILL========================
 
@@ -1089,6 +1091,7 @@ class ModelProvider(ModelProviderBase, table=True):
         if self.api_key:
             # 在方法内部导入security_manager
             from app.core.security import security_manager
+
             return security_manager.decrypt_api_key(self.api_key)
         return None
 
@@ -1097,6 +1100,7 @@ class ModelProvider(ModelProviderBase, table=True):
         if value:
             # 在方法内部导入security_manager
             from app.core.security import security_manager
+
             self.api_key = security_manager.encrypt_api_key(value)
         else:
             self.api_key = None
