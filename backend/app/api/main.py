@@ -1,7 +1,7 @@
 from fastapi import APIRouter
 
 from app.api.routes import (apikeys, graphs, groups, login, members,
-                            provider, providermodel, roles, skills, subgraphs,
+                            provider, providermodel, roles, tools, subgraphs,
                             teams, threads, uploads, users, utils)
 
 api_router = APIRouter()
@@ -12,7 +12,7 @@ api_router.include_router(teams.router, prefix="/teams", tags=["teams"])
 api_router.include_router(
     members.router, prefix="/teams/{team_id}/members", tags=["members"]
 )
-api_router.include_router(skills.router, prefix="/tools", tags=["tools"])
+api_router.include_router(tools.router, prefix="/tools", tags=["tools"])
 api_router.include_router(
     threads.router, prefix="/teams/{team_id}/threads", tags=["threads"]
 )

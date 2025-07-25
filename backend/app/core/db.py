@@ -263,6 +263,11 @@ def init_db(session: Session) -> None:
 def init_modelprovider_model_db(session: Session) -> None:
     providers = model_provider_manager.get_all_providers()
 
+    # 获取数据库中所有现有的providers
+    existing_providers = session.exec(select(ModelProvider)).all()
+    existing_provider_names = {p.provider_name for p in existing_providers}
+
+    # 处理现有的和新的providers
     for provider_name in sorted(providers.keys()):
         provider_data = providers[provider_name]
 
@@ -277,12 +282,15 @@ def init_modelprovider_model_db(session: Session) -> None:
             db_provider.description = provider_data["description"]
             if not db_provider.api_key:
                 db_provider.set_api_key(provider_data["api_key"])
+                # 如果设置了新的API密钥，默认设置为未鉴权（不可用）
+                db_provider.is_available = False
         else:
             db_provider = ModelProvider(
                 provider_name=provider_data["provider_name"],
                 base_url=provider_data["base_url"],
                 icon=provider_data["icon"],
                 description=provider_data["description"],
+                is_available=False,  # 新创建的提供商默认设置为不可用，需要鉴权
             )
             db_provider.set_api_key(provider_data["api_key"])
             session.add(db_provider)
@@ -309,12 +317,14 @@ def init_modelprovider_model_db(session: Session) -> None:
                 model.capabilities = model_info["capabilities"]
                 # 更新元数据
                 model.meta_ = meta_
+                # 不修改现有模型的is_online状态，保持原状态
             else:
                 new_model = Models(
                     ai_model_name=model_info["name"],
                     provider_id=db_provider.id,
                     categories=model_info["categories"],
                     capabilities=model_info["capabilities"],
+                    is_online=False,  # 新模型默认为离线，直到提供商鉴权通过
                     meta_=meta_,  # 添加元数据
                 )
                 session.add(new_model)
@@ -324,7 +334,19 @@ def init_modelprovider_model_db(session: Session) -> None:
         ):
             session.delete(existing_models[model_name])
 
+    # 删除不再存在的providers
+    providers_to_remove = existing_provider_names - set(providers.keys())
+    for provider_name in providers_to_remove:
+        provider_to_delete = session.exec(
+            select(ModelProvider).where(ModelProvider.provider_name == provider_name)
+        ).first()
+        if provider_to_delete:
+            # 由于设置了cascade="all, delete-orphan"，删除provider时会自动删除关联的models
+            session.delete(provider_to_delete)
+            logger.info(f"Removed provider {provider_name} and its associated models")
+
     session.commit()
+
 
     # 打印当前数据库状态
     providers = session.exec(select(ModelProvider).order_by(ModelProvider.id)).all()
