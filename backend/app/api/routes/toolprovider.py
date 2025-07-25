@@ -139,8 +139,8 @@ def update_provider(tool_provider_id: int, provider_update: ToolProviderUpdate) 
             session.add(provider)
             session.commit()
 
-        if provider.credentials:
-            provider.decrypt_credentials()
+        # if provider.credentials:
+        #     provider.decrypt_credentials()
 
         return ToolProviderOut(
             id=provider.id,

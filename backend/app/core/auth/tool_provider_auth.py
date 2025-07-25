@@ -77,7 +77,9 @@ async def authenticate_tool_provider(
                 )
                 # 使用provider_name:tool_name格式
                 tool_full_name = f"{provider.provider_name}:{test_tool_name}"
-                result = get_tool_by_name(tool_full_name).invoke(test_params)
+                tool = get_tool_by_name(tool_full_name)
+                # result = get_tool_by_name(tool_full_name).invoke(test_params)
+                result = tool.invoke(test_params)
 
                 # 检查结果是否为JSON格式，并包含success字段
                 try:

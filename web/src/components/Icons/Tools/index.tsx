@@ -397,12 +397,12 @@ const spark = createIcon({
 });
 
 const iconMap: { [key: string]: React.FC } = {
-  open_weather: OpenWeather,
-  google_translate: GoogleTranslate,
+  openweather: OpenWeather,
+  google: GoogleTranslate,
   duckduckgo: DuckduckgoSearch,
   Wikipedia: Wikipedia,
   tavily_search: tavilysearch,
-  math_calculator: calculator,
+  math: calculator,
   image_generation: SiliconFlowIcon,
   spark_image_generation: spark,
   image_understanding: ZhipuAIIcon,

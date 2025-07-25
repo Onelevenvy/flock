@@ -323,9 +323,8 @@ export default function Tools() {
                       <ToolsIcon
                         h="6"
                         w="6"
-                        tools_name={(provider.display_name || provider.provider_name)
-                          .toLowerCase()
-                          .replace(/ /g, "_")}
+                        tools_name={(provider.provider_name!)
+                        }
                         color={`${provider.tool_type === 'builtin' ? "blue" : "purple"}.500`}
                       />
                     </Box>
