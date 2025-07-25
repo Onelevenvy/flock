@@ -1,3 +1,4 @@
+from tomllib import TOMLDecodeError
 from typing import Any
 
 from fastapi import APIRouter, Depends, HTTPException
@@ -6,7 +7,7 @@ from sqlmodel import col, func, select
 from app.api.deps import CurrentUser, SessionDep
 from app.core.config import settings
 from app.models import (Member, MemberCreate, MemberOut, MembersOut,
-                        MemberUpdate, Message, Skill, Team, Upload)
+                        MemberUpdate, Message, Tool, Team, Upload)
 
 router = APIRouter()
 
@@ -183,7 +184,7 @@ def update_member(
     # update member's skills if required
     if member_in.skills is not None:
         skill_ids = [skill.id for skill in member_in.skills]
-        skills = session.exec(select(Skill).where(col(Skill.id).in_(skill_ids))).all()
+        skills = session.exec(select(Tool).where(col(Tool.id).in_(tool_ids))).all()
         member.skills = list(skills)
 
     # update member's accessible uploads if required

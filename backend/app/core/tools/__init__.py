@@ -1,3 +1,4 @@
-from .tool_manager import ToolInfo, managed_tools
+from .tool_manager import (get_all_tool_providers,
+                                           get_all_tools, get_tool_by_name)
 
-__all__ = ["managed_tools", "ToolInfo"]
+__all__ = ["get_all_tool_providers", "get_all_tools", "get_tool_by_name"]

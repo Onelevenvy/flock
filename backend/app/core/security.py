@@ -171,3 +171,5 @@ verify_password = security_manager.verify_password
 get_password_hash = security_manager.get_password_hash
 generate_apikey = security_manager.generate_apikey
 generate_short_apikey = security_manager.generate_short_apikey
+encrypt_token = security_manager.encrypt_api_key
+decrypt_token = security_manager.decrypt_api_key

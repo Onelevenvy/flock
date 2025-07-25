@@ -4,7 +4,8 @@ import requests
 from langchain.tools import StructuredTool
 from pydantic import BaseModel, Field
 
-from app.core.tools.utils import get_credential_value
+from app.core.tools.tool_manager import get_tool_provider_credential_value
+from app.core.tools.response_formatter import format_tool_response
 
 
 class WeatherSearchInput(BaseModel):
@@ -19,10 +20,10 @@ def open_weather_qry(city: str) -> str:
     """
     invoke tools
     """
-    appid = get_credential_value("Open Weather", "OPEN_WEATHER_API_KEY")
+    appid = get_tool_provider_credential_value("openweather", "OPEN_WEATHER_API_KEY")
 
     if not appid:
-        return "Error: OpenWeather API Key is not set."
+        return format_tool_response(False, error="OpenWeather API Key is not set.")
 
     try:
         url = "https://api.openweathermap.org/data/2.5/weather"
@@ -36,16 +37,17 @@ def open_weather_qry(city: str) -> str:
 
         if response.status_code == 200:
             data = response.json()
-            return data
+            return format_tool_response(True, data)
         else:
-            error_message = {
-                "error": f"failed:{response.status_code}",
-                "data": response.text,
-            }
-            return json.dumps(error_message)
+            error_message = (
+                f"Failed with status code {response.status_code}: {response.text}"
+            )
+            return format_tool_response(False, error=error_message)
 
     except Exception as e:
-        return json.dumps(f"OpenWeather API request failed. {e}")
+        return format_tool_response(
+            False, error=f"OpenWeather API request failed: {str(e)}"
+        )
 
 
 openweather = StructuredTool.from_function(

@@ -11,7 +11,8 @@ from langgraph.prebuilt import ToolNode
 from app.core.workflow.node.parameter_extractor_node import \
     ParameterExtractorNode
 from app.core.workflow.node.plugin_node import PluginNode
-from app.core.workflow.utils.tools_utils import get_retrieval_tool, get_tool
+from app.core.workflow.utils.tools_utils import get_retrieval_tool
+from app.core.tools.tool_manager import get_tool_by_name
 from app.models import InterruptType
 
 from ..state import WorkflowTeamState
@@ -423,7 +424,7 @@ def _get_tools_to_bind(node_id, edges, nodes):
                     if target_node["type"] == "tool":
                         tools_to_bind.extend(
                             [
-                                get_tool(tool_name)
+                                get_tool_by_name(tool_name)
                                 for tool_name in target_node["data"]["tools"]
                             ]
                         )

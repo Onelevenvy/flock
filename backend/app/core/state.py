@@ -8,7 +8,7 @@ from pydantic import BaseModel, Field
 from typing_extensions import NotRequired, TypedDict
 
 from app.core.rag.qdrant import QdrantStore
-from app.core.tools import managed_tools
+from app.core.tools import get_tool_by_name
 from app.core.tools.api_tool import dynamic_api_tool
 from app.core.tools.retriever_tool import create_retriever_tool_custom_modified
 
@@ -23,7 +23,7 @@ class GraphSkill(BaseModel):
     @property
     def tool(self) -> BaseTool:
         if self.managed:
-            return managed_tools[self.name].tool
+            return get_tool_by_name[self.name].tool
         elif self.definition:
             return dynamic_api_tool(self.definition)
         else:

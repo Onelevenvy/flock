@@ -10,7 +10,8 @@ from app.core.state import (ReturnWorkflowTeamState, WorkflowTeamState,
                             format_messages, parse_variables,
                             update_node_outputs)
 from app.core.workflow.utils.db_utils import get_model_info
-from app.core.workflow.utils.tools_utils import get_retrieval_tool, get_tool
+from app.core.workflow.utils.tools_utils import get_retrieval_tool
+from app.core.tools.tool_manager import get_tool_by_name
 
 
 class AgentNode:
@@ -40,7 +41,7 @@ class AgentNode:
         # 添加常规工具
         if tools:
             for tool_name in tools:
-                tool = get_tool(tool_name)
+                tool = get_tool_by_name(tool_name)
                 if tool:
                     self.tools_list.append(tool)
 

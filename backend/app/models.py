@@ -584,7 +584,7 @@ class Member(MemberBase, table=True):
     id: int | None = Field(default=None, primary_key=True)
     belongs_to: int | None = Field(default=None, foreign_key="team.id", nullable=False)
     belongs: Team | None = Relationship(back_populates="members")
-    skills: list["Tool"] = Relationship(
+    tools: list["Tool"] = Relationship(
         back_populates="members",
         link_model=MemberSkillsLink,
     )
@@ -658,7 +658,7 @@ class ToolProvider(ToolProviderBase, table=True):
         default_factory=dict, sa_column=Column(JSONB)
     )
     is_available: bool = Field(default=False, nullable=True)
-
+    
    
 
     def encrypt_credentials(self) -> None:
@@ -742,6 +742,7 @@ class ToolUpdate(ToolBase):
 
 class Tool(ToolBase, table=True):
     id: int | None = Field(default=None, primary_key=True)
+    owner_id: int | None = Field(default=None, foreign_key="user.id")
     provider_id: int = Field(foreign_key="toolprovider.id")
     name: str = Field(max_length=64)
     description: str | None = Field(default=None, max_length=256)
@@ -754,8 +755,14 @@ class Tool(ToolBase, table=True):
         default_factory=dict, sa_column=Column(JSONB)
     )
     is_online: bool = Field(default=True, nullable=True)
+
+    members: list["Member"] = Relationship(
+        back_populates="tools",
+        link_model=MemberSkillsLink,
+    )
     # Relationship with ToolProvider
     provider: ToolProvider = Relationship(back_populates="tools")
+    owner: User | None = Relationship(back_populates="tools")
 
 
 # Properties to return via API
@@ -835,54 +842,54 @@ class ProvidersListWithToolsOut(SQLModel):
 # ===============SKILL========================
 
 
-class SkillBase(SQLModel):
-    name: str
-    description: str
-    display_name: str | None = None
-    managed: bool = False
-    tool_definition: dict[str, Any] | None = Field(
-        default_factory=dict, sa_column=Column(JSON)
-    )
-    input_parameters: dict[str, Any] | None = Field(
-        default_factory=dict, sa_column=Column(JSON)  # 用于存储输入参数
-    )
-    credentials: dict[str, Any] | None = Field(
-        default_factory=dict, sa_column=Column(JSON)  # 新增字段,用于存储凭证信息
-    )
+# class SkillBase(SQLModel):
+#     name: str
+#     description: str
+#     display_name: str | None = None
+#     managed: bool = False
+#     tool_definition: dict[str, Any] | None = Field(
+#         default_factory=dict, sa_column=Column(JSON)
+#     )
+#     input_parameters: dict[str, Any] | None = Field(
+#         default_factory=dict, sa_column=Column(JSON)  # 用于存储输入参数
+#     )
+#     credentials: dict[str, Any] | None = Field(
+#         default_factory=dict, sa_column=Column(JSON)  # 新增字段,用于存储凭证信息
+#     )
 
 
-class SkillCreate(SkillBase):
-    tool_definition: dict[str, Any]  # Tool definition is required if not managed
-    managed: bool = Field(default=False, const=False)  # Managed must be False
-    credentials: dict[str, Any] | None = None  # 新增字段
+# class SkillCreate(SkillBase):
+#     tool_definition: dict[str, Any]  # Tool definition is required if not managed
+#     managed: bool = Field(default=False, const=False)  # Managed must be False
+#     credentials: dict[str, Any] | None = None  # 新增字段
 
 
-class SkillUpdate(SkillBase):
-    name: str | None = None  # type: ignore[assignment]
-    description: str | None = None  # type: ignore[assignment]
-    managed: bool | None = None  # type: ignore[assignment]
-    tool_definition: dict[str, Any] | None = None
-    credentials: dict[str, Any] | None = None  # 新增字段
+# class SkillUpdate(SkillBase):
+#     name: str | None = None  # type: ignore[assignment]
+#     description: str | None = None  # type: ignore[assignment]
+#     managed: bool | None = None  # type: ignore[assignment]
+#     tool_definition: dict[str, Any] | None = None
+#     credentials: dict[str, Any] | None = None  # 新增字段
 
 
-class Skill(SkillBase, table=True):
-    id: int | None = Field(default=None, primary_key=True)
-    resource_id: int = Field(foreign_key="resource.id", nullable=False)
-    members: list["Member"] = Relationship(
-        back_populates="skills",
-        link_model=MemberSkillsLink,
-    )
-    owner_id: int | None = Field(default=None, foreign_key="user.id", nullable=False)
-    owner: User | None = Relationship(back_populates="skills")
+# class Skill(SkillBase, table=True):
+#     id: int | None = Field(default=None, primary_key=True)
+#     resource_id: int = Field(foreign_key="resource.id", nullable=False)
+#     members: list["Member"] = Relationship(
+#         back_populates="skills",
+#         link_model=MemberSkillsLink,
+#     )
+#     owner_id: int | None = Field(default=None, foreign_key="user.id", nullable=False)
+#     owner: User | None = Relationship(back_populates="skills")
 
 
-class SkillsOut(SQLModel):
-    data: list["SkillOut"]
-    count: int
+# class SkillsOut(SQLModel):
+#     data: list["SkillOut"]
+#     count: int
 
 
-class SkillOut(SkillBase):
-    id: int
+# class SkillOut(SkillBase):
+#     id: int
 
 
 class ToolDefinitionValidate(SQLModel):

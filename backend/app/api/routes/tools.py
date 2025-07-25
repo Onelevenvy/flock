@@ -9,8 +9,7 @@ from sqlmodel import col, func, or_, select
 from app.api.deps import CurrentUser, SessionDep
 from app.core.tools.api_tool import ToolDefinition
 from app.core.tools.tool_invoker import ToolInvokeResponse, invoke_tool
-from app.models import (Message, Skill, SkillCreate, SkillOut, SkillsOut,
-                        SkillUpdate, ToolBase,ToolCreate,ToolsOut,Tool, ToolUpdate,ToolDefinitionValidate)
+from app.models import (Message, Tool, ToolBase,ToolCreate,ToolsOut,Tool, ToolUpdate,ToolDefinitionValidate)
 
 router = APIRouter()
 

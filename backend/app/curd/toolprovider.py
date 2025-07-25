@@ -2,7 +2,7 @@ from typing import Any, Sequence
 
 from sqlmodel import Session, select
 
-from mozix.database.models.tool_provider import (
+from app.models import (
     ProvidersListWithToolsOut,
     Tool,
     ToolOutIdWithAndName,
