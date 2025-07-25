@@ -1879,6 +1879,468 @@
         }
       }
     },
+    "/api/v1/toolprovider/": {
+      "get": {
+        "tags": [
+          "toolprovider"
+        ],
+        "summary": "Read Provider List With Tools",
+        "operationId": "read_provider_list_with_tools",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProvidersListWithToolsOut"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "toolprovider"
+        ],
+        "summary": "Create Provider",
+        "operationId": "create_provider",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ToolProviderCreate"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ToolProvider"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/toolprovider/{tool_provider_id}": {
+      "get": {
+        "tags": [
+          "toolprovider"
+        ],
+        "summary": "Read Provider",
+        "description": "Get provider by ID.",
+        "operationId": "read_provider",
+        "parameters": [
+          {
+            "name": "tool_provider_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Tool Provider Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ToolProviderOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "toolprovider"
+        ],
+        "summary": "Update Provider",
+        "description": "Update a provider.",
+        "operationId": "update_provider",
+        "parameters": [
+          {
+            "name": "tool_provider_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Tool Provider Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ToolProviderUpdate"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ToolProviderOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "toolprovider"
+        ],
+        "summary": "Delete Provider",
+        "description": "删除工具提供者",
+        "operationId": "delete_provider",
+        "parameters": [
+          {
+            "name": "tool_provider_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Tool Provider Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ToolProviderOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/toolprovider/withtools/{tool_provider_id}": {
+      "get": {
+        "tags": [
+          "toolprovider"
+        ],
+        "summary": "Read Provider With Tools",
+        "operationId": "read_provider_with_tools",
+        "parameters": [
+          {
+            "name": "tool_provider_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Tool Provider Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ToolProviderWithToolsListOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/toolprovider/{tool_provider_id}/authenticate": {
+      "post": {
+        "tags": [
+          "toolprovider"
+        ],
+        "summary": "Authenticate Provider",
+        "description": "对工具提供商进行鉴权或刷新工具列表",
+        "operationId": "authenticate_provider",
+        "parameters": [
+          {
+            "name": "tool_provider_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Tool Provider Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/toolprovider/mcp": {
+      "post": {
+        "tags": [
+          "toolprovider"
+        ],
+        "summary": "Create Mcp Provider",
+        "description": "创建 MCP 工具提供者并同步工具",
+        "operationId": "create_mcp_provider",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/MCPProviderCreate"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MCPProviderOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/toolprovider/mcp/{tool_provider_id}": {
+      "put": {
+        "tags": [
+          "toolprovider"
+        ],
+        "summary": "Update Mcp Provider",
+        "description": "更新 MCP 工具提供者并同步工具",
+        "operationId": "update_mcp_provider",
+        "parameters": [
+          {
+            "name": "tool_provider_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Tool Provider Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/MCPProviderUpdate"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MCPProviderOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/toolprovider/mcp/test-connection": {
+      "post": {
+        "tags": [
+          "toolprovider"
+        ],
+        "summary": "Test Mcp Connection",
+        "description": "测试 MCP 连接",
+        "operationId": "test_mcp_connection",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/MCPConnectionTest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "type": "object",
+                  "title": "Response Toolprovider-Test Mcp Connection"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/toolprovider/mcp/{tool_provider_id}/sync": {
+      "post": {
+        "tags": [
+          "toolprovider"
+        ],
+        "summary": "Sync Mcp Tools",
+        "description": "同步 MCP 工具",
+        "operationId": "sync_mcp_tools",
+        "parameters": [
+          {
+            "name": "tool_provider_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Tool Provider Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": true,
+                  "title": "Response Toolprovider-Sync Mcp Tools"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/v1/teams/{team_id}/threads/": {
       "get": {
         "tags": [
@@ -5306,6 +5768,127 @@
         ],
         "title": "InterruptType"
       },
+      "MCPConnectionTest": {
+        "properties": {
+          "mcp_endpoint_url": {
+            "type": "string",
+            "title": "Mcp Endpoint Url"
+          },
+          "mcp_server_id": {
+            "type": "string",
+            "title": "Mcp Server Id"
+          },
+          "mcp_connection_type": {
+            "type": "string",
+            "title": "Mcp Connection Type"
+          }
+        },
+        "type": "object",
+        "required": [
+          "mcp_endpoint_url",
+          "mcp_server_id",
+          "mcp_connection_type"
+        ],
+        "title": "MCPConnectionTest"
+      },
+      "MCPProviderCreate": {
+        "properties": {
+          "provider_name": {
+            "type": "string",
+            "title": "Provider Name"
+          },
+          "mcp_endpoint_url": {
+            "type": "string",
+            "title": "Mcp Endpoint Url"
+          },
+          "mcp_server_id": {
+            "type": "string",
+            "title": "Mcp Server Id"
+          },
+          "mcp_connection_type": {
+            "type": "string",
+            "title": "Mcp Connection Type"
+          },
+          "icon": {
+            "type": "string",
+            "title": "Icon"
+          }
+        },
+        "type": "object",
+        "required": [
+          "provider_name",
+          "mcp_endpoint_url",
+          "mcp_server_id",
+          "mcp_connection_type"
+        ],
+        "title": "MCPProviderCreate"
+      },
+      "MCPProviderOut": {
+        "properties": {
+          "id": {
+            "type": "integer",
+            "title": "Id"
+          },
+          "provider_name": {
+            "type": "string",
+            "title": "Provider Name"
+          },
+          "mcp_endpoint_url": {
+            "type": "string",
+            "title": "Mcp Endpoint Url"
+          },
+          "mcp_server_id": {
+            "type": "string",
+            "title": "Mcp Server Id"
+          },
+          "mcp_connection_type": {
+            "type": "string",
+            "title": "Mcp Connection Type"
+          },
+          "icon": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Icon"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "provider_name",
+          "mcp_endpoint_url",
+          "mcp_server_id",
+          "mcp_connection_type"
+        ],
+        "title": "MCPProviderOut"
+      },
+      "MCPProviderUpdate": {
+        "properties": {
+          "provider_name": {
+            "type": "string",
+            "title": "Provider Name"
+          },
+          "mcp_endpoint_url": {
+            "type": "string",
+            "title": "Mcp Endpoint Url"
+          },
+          "mcp_connection_type": {
+            "type": "string",
+            "title": "Mcp Connection Type"
+          },
+          "icon": {
+            "type": "string",
+            "title": "Icon"
+          }
+        },
+        "type": "object",
+        "title": "MCPProviderUpdate"
+      },
       "MemberCreate": {
         "properties": {
           "name": {
@@ -6409,6 +6992,22 @@
           "providers"
         ],
         "title": "ProvidersListWithModelsOut"
+      },
+      "ProvidersListWithToolsOut": {
+        "properties": {
+          "providers": {
+            "items": {
+              "$ref": "#/components/schemas/ToolProviderWithToolsListOut"
+            },
+            "type": "array",
+            "title": "Providers"
+          }
+        },
+        "type": "object",
+        "required": [
+          "providers"
+        ],
+        "title": "ProvidersListWithToolsOut"
       },
       "Role": {
         "properties": {
@@ -7590,6 +8189,287 @@
         ],
         "title": "ToolOut"
       },
+      "ToolOutIdWithAndName": {
+        "properties": {
+          "id": {
+            "type": "integer",
+            "title": "Id"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "description": {
+            "type": "string",
+            "title": "Description"
+          },
+          "display_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Display Name"
+          },
+          "input_parameters": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Input Parameters"
+          },
+          "is_online": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Is Online"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "name",
+          "description",
+          "display_name",
+          "input_parameters"
+        ],
+        "title": "ToolOutIdWithAndName"
+      },
+      "ToolProvider": {
+        "properties": {
+          "provider_name": {
+            "type": "string",
+            "maxLength": 64,
+            "title": "Provider Name"
+          },
+          "mcp_endpoint_url": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Mcp Endpoint Url"
+          },
+          "mcp_server_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Mcp Server Id"
+          },
+          "mcp_connection_type": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Mcp Connection Type"
+          },
+          "icon": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Icon"
+          },
+          "description": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 256
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Description"
+          },
+          "credentials": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Credentials"
+          },
+          "is_available": {
+            "type": "boolean",
+            "title": "Is Available",
+            "default": false
+          },
+          "tool_type": {
+            "$ref": "#/components/schemas/ToolType",
+            "default": "builtin"
+          },
+          "id": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Id"
+          },
+          "display_name": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 128
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Display Name"
+          }
+        },
+        "type": "object",
+        "required": [
+          "provider_name"
+        ],
+        "title": "ToolProvider"
+      },
+      "ToolProviderCreate": {
+        "properties": {
+          "provider_name": {
+            "type": "string",
+            "pattern": "^[\\w\\u4e00-\\u9fa5_-]{1,64}$",
+            "title": "Provider Name",
+            "unique": true
+          },
+          "mcp_endpoint_url": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Mcp Endpoint Url"
+          },
+          "mcp_server_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Mcp Server Id"
+          },
+          "mcp_connection_type": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Mcp Connection Type"
+          },
+          "icon": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Icon"
+          },
+          "description": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Description"
+          },
+          "credentials": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Credentials"
+          },
+          "is_available": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Is Available"
+          },
+          "tool_type": {
+            "$ref": "#/components/schemas/ToolType",
+            "default": "builtin"
+          },
+          "display_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Display Name"
+          }
+        },
+        "type": "object",
+        "required": [
+          "provider_name"
+        ],
+        "title": "ToolProviderCreate"
+      },
       "ToolProviderOut": {
         "properties": {
           "id": {
@@ -7707,6 +8587,244 @@
           "credentials"
         ],
         "title": "ToolProviderOut"
+      },
+      "ToolProviderUpdate": {
+        "properties": {
+          "provider_name": {
+            "anyOf": [
+              {
+                "type": "string",
+                "pattern": "^[\\w\\u4e00-\\u9fa5_-]{1,64}$"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Provider Name",
+            "unique": true
+          },
+          "mcp_endpoint_url": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Mcp Endpoint Url"
+          },
+          "mcp_server_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Mcp Server Id"
+          },
+          "mcp_connection_type": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Mcp Connection Type"
+          },
+          "icon": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Icon"
+          },
+          "description": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Description"
+          },
+          "credentials": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Credentials"
+          },
+          "is_available": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Is Available"
+          },
+          "tool_type": {
+            "$ref": "#/components/schemas/ToolType",
+            "default": "builtin"
+          },
+          "display_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Display Name"
+          }
+        },
+        "type": "object",
+        "title": "ToolProviderUpdate"
+      },
+      "ToolProviderWithToolsListOut": {
+        "properties": {
+          "id": {
+            "type": "integer",
+            "title": "Id"
+          },
+          "provider_name": {
+            "type": "string",
+            "title": "Provider Name"
+          },
+          "display_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Display Name"
+          },
+          "mcp_endpoint_url": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Mcp Endpoint Url"
+          },
+          "mcp_server_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Mcp Server Id"
+          },
+          "mcp_connection_type": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Mcp Connection Type"
+          },
+          "icon": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Icon"
+          },
+          "tool_type": {
+            "$ref": "#/components/schemas/ToolType"
+          },
+          "description": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Description"
+          },
+          "credentials": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Credentials"
+          },
+          "is_available": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Is Available"
+          },
+          "tools": {
+            "items": {
+              "$ref": "#/components/schemas/ToolOutIdWithAndName"
+            },
+            "type": "array",
+            "title": "Tools"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "provider_name",
+          "display_name",
+          "mcp_endpoint_url",
+          "mcp_server_id",
+          "mcp_connection_type",
+          "icon",
+          "tool_type",
+          "description",
+          "credentials",
+          "tools"
+        ],
+        "title": "ToolProviderWithToolsListOut"
       },
       "ToolType": {
         "type": "string",

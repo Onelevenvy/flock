@@ -13,10 +13,10 @@ from sqlalchemy import PrimaryKeyConstraint, String, UniqueConstraint, func
 from sqlalchemy.dialects.postgresql import JSONB
 from sqlmodel import Field, Relationship, SQLModel
 
+
 from app.core.graph.messages import ChatResponse
 
-if TYPE_CHECKING:
-    from app.core.security import security_manager
+
 
 
 class Message(SQLModel):
@@ -659,13 +659,14 @@ class ToolProvider(ToolProviderBase, table=True):
     )
     is_available: bool = Field(default=False, nullable=True)
     
-   
-
     def encrypt_credentials(self) -> None:
         """Encrypt sensitive values in credentials"""
         if not self.credentials:
             return
 
+        # 在方法内部导入security_manager
+        from app.core.security import security_manager
+        
         encrypted_credentials = {}
         for key, cred_info in self.credentials.items():
             if isinstance(cred_info, dict) and "value" in cred_info:
@@ -688,6 +689,9 @@ class ToolProvider(ToolProviderBase, table=True):
         if not self.credentials:
             return
 
+        # 在方法内部导入security_manager
+        from app.core.security import security_manager
+        
         decrypted_credentials = {}
         for key, cred_info in self.credentials.items():
             if isinstance(cred_info, dict) and "value" in cred_info:
@@ -1083,12 +1087,16 @@ class ModelProvider(ModelProviderBase, table=True):
     def decrypted_api_key(self) -> str | None:
         """获取解密后的API密钥，用于内部业务逻辑"""
         if self.api_key:
+            # 在方法内部导入security_manager
+            from app.core.security import security_manager
             return security_manager.decrypt_api_key(self.api_key)
         return None
 
     def set_api_key(self, value: str | None) -> None:
         """设置并加密API密钥"""
         if value:
+            # 在方法内部导入security_manager
+            from app.core.security import security_manager
             self.api_key = security_manager.encrypt_api_key(value)
         else:
             self.api_key = None

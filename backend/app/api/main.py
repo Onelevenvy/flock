@@ -2,7 +2,7 @@ from fastapi import APIRouter
 
 from app.api.routes import (apikeys, graphs, groups, login, members,
                             provider, providermodel, roles, tools, subgraphs,
-                            teams, threads, uploads, users, utils)
+                            teams, threads, uploads, users, utils,toolprovider)
 
 api_router = APIRouter()
 api_router.include_router(login.router, tags=["login"])
@@ -13,6 +13,7 @@ api_router.include_router(
     members.router, prefix="/teams/{team_id}/members", tags=["members"]
 )
 api_router.include_router(tools.router, prefix="/tools", tags=["tools"])
+api_router.include_router(toolprovider.router, prefix="/toolprovider", tags=["toolprovider"])
 api_router.include_router(
     threads.router, prefix="/teams/{team_id}/threads", tags=["threads"]
 )

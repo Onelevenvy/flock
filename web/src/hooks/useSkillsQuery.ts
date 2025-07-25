@@ -1,10 +1,10 @@
 import { useQuery } from "react-query";
 
-import { ToolsService } from "@/client/services/ToolsService";
+import { ToolproviderService } from "@/client/services/ToolproviderService";
 
-export function useSkillsQuery() {
-  return useQuery("skills", () => ToolsService.readSkills({}), {
-    staleTime: 1 * 60 * 1000, // 5 minutes
+export function useToolProvidersQuery() {
+  return useQuery("toolproviders", () => ToolproviderService.readProviderListWithTools(), {
+    staleTime: 1 * 60 * 1000, // 1 minute
     cacheTime: 10 * 60 * 1000, // 10 minutes
   });
-}
+} 
