@@ -56,12 +56,12 @@ const SidebarItems = ({ onClose }: SidebarItemsProps) => {
       path: "/knowledge",
     },
 
-    {
-      activeIcon: GiArchiveResearch,
-      inactiveIcon: TbDeviceImacSearch,
-      title: t("sidebar.research"),
-      path: "/research",
-    },
+    // {
+    //   activeIcon: GiArchiveResearch,
+    //   inactiveIcon: TbDeviceImacSearch,
+    //   title: t("sidebar.research"),
+    //   path: "/research",
+    // },
   ];
 
   return (

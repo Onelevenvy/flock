@@ -7,8 +7,6 @@ services:
           memory: 1G
         reservations:
           memory: 256M
-    networks:
-      - docker_default
     ports:
       - 3000:3000
     environment:
@@ -16,18 +14,6 @@ services:
       - TZ=UTC
     env_file:
       - .env
-    labels:
-      - traefik.enable=true
-      - traefik.docker.network=docker_default
-      - traefik.constraint-label=docker_default
-      - traefik.http.routers.${STACK_NAME}-frontend-http.rule=Host(`${DOMAIN}`)
-      - traefik.http.routers.${STACK_NAME}-frontend-http.entrypoints=http
-      - traefik.http.routers.${STACK_NAME}-frontend-http.middlewares=https-redirect
-      - traefik.http.routers.${STACK_NAME}-frontend-https.rule=Host(`${DOMAIN}`)
-      - traefik.http.routers.${STACK_NAME}-frontend-https.entrypoints=https
-      - traefik.http.routers.${STACK_NAME}-frontend-https.tls=true
-      - traefik.http.routers.${STACK_NAME}-frontend-https.tls.certresolver=le
-      - traefik.http.services.${STACK_NAME}-frontend.loadbalancer.server.port=3000
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:3000"]
       interval: 180s
@@ -45,8 +31,6 @@ services:
           memory: 2G
         reservations:
           memory: 512M
-    networks:
-      - docker_default
     ports:
       - 8000:8000
     environment:
@@ -82,8 +66,6 @@ services:
           memory: 2G
         reservations:
           memory: 512M
-    networks:
-      - docker_default
     environment:
       - MODE=worker
       - MIGRATION_ENABLED=true
@@ -111,8 +93,7 @@ services:
   db:
     image: postgres:12
     restart: always
-    networks:
-      - docker_default
+
     volumes:
       - app-db-data:/var/lib/postgresql/data/pgdata
     env_file:
@@ -134,8 +115,7 @@ services:
   qdrant:
     image: qdrant/qdrant
     restart: always
-    networks:
-      - docker_default
+
     volumes:
       - app-qdrant-data:/qdrant/storage
     environment:
@@ -147,8 +127,7 @@ services:
   redis:
     image: redis:alpine
     restart: always
-    networks:
-      - docker_default
+
     ports:
       - 6379:6379
     volumes:
@@ -161,9 +140,7 @@ services:
       start_period: 30s
 
 
-networks:
-  docker_default:
-    external: true
+
 
 volumes:
   app-db-data:

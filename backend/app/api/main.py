@@ -1,6 +1,6 @@
 from fastapi import APIRouter
 
-from app.api.routes import (apikeys, graphs, groups, langmanus, login, members,
+from app.api.routes import (apikeys, graphs, groups, login, members,
                             provider, providermodel, roles, skills, subgraphs,
                             teams, threads, uploads, users, utils)
 
@@ -38,7 +38,7 @@ api_router.include_router(
 )
 
 # 添加langmanus路由
-api_router.include_router(langmanus.router, prefix="/langmanus", tags=["langmanus"])
+# api_router.include_router(langmanus.router, prefix="/langmanus", tags=["langmanus"])
 
 # RBAC相关路由
 api_router.include_router(groups.router, prefix="/groups", tags=["groups"])
