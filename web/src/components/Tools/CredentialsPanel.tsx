@@ -3,7 +3,6 @@ import {
   Box,
   VStack,
   Heading,
-  FormControl,
   FormLabel,
   Input,
   InputGroup,
@@ -80,8 +79,6 @@ const CredentialsPanel: React.FC<CredentialsPanelProps> = ({
   const labelColor = useColorModeValue("gray.700", "gray.300");
   const accordionBg = useColorModeValue("gray.50", "gray.700");
   const accordionHoverBg = useColorModeValue("gray.100", "gray.600");
-  const badgeOnlineColor = useColorModeValue("green.500", "green.300");
-  const badgeOfflineColor = useColorModeValue("red.500", "red.300");
 
   // 只有MCP类型的工具提供者才显示三点菜单
   const isMcpProvider = providerState.tool_type === 'mcp';
@@ -141,8 +138,6 @@ const CredentialsPanel: React.FC<CredentialsPanelProps> = ({
           response.message || "Authentication successful",
           "success"
         );
-
-        // 刷新工具提供者列表数据
         await queryClient.invalidateQueries("toolproviders");
       } else {
         showToast(
@@ -203,13 +198,18 @@ const CredentialsPanel: React.FC<CredentialsPanelProps> = ({
       borderLeft="1px solid"
       borderColor={borderColor}
       bg={bgColor}
-      position="relative"
       height="calc(100vh - 78px)"
       borderRadius="lg"
-      transition="all 0.2s"
       boxShadow="xl"
       p={6}
+      // ** MODIFICATION START **
+      // 1. 将根 Box 变成一个垂直的 Flex 容器
+      display="flex"
+      flexDirection="column"
+      gap={4} // 在 Flex 项目之间添加间隙
+      // ** MODIFICATION END **
     >
+      {/* Item 1: Top controls (Close and Options) */}
       <Flex justifyContent="space-between" alignItems="center">
         <IconButton
           aria-label="Close"
@@ -250,241 +250,244 @@ const CredentialsPanel: React.FC<CredentialsPanelProps> = ({
         )}
       </Flex>
 
-      <VStack spacing={6} align="stretch" h="full" mt={4}>
-        <Box borderBottom="1px solid" borderColor={borderColor} pb={4}>
-          <Flex alignItems="center" justifyContent="space-between" mb={2}>
-            <HStack>
-              <Box
-                width="40px"
-                height="40px"
-                borderRadius="lg"
-                bg={`${providerState.tool_type === 'builtin' ? "blue" : "purple"}.50`}
-                display="flex"
-                alignItems="center"
-                justifyContent="center"
-              >
-                <ToolsIcon
-                  h="6"
-                  w="6"
-                  tools_name={(providerState.display_name || providerState.provider_name)
-                    .toLowerCase()
-                    .replace(/ /g, "_")}
-                  color={`${providerState.tool_type === 'builtin' ? "blue" : "purple"}.500`}
-                />
-              </Box>
-              <Heading size="md" fontWeight="600">
-                {providerState.display_name || providerState.provider_name}
-              </Heading>
-            </HStack>
-            {providerState.is_available ? (
-              <TbPointFilled color="green" size={20} />
-            ) : (
-              <Badge colorScheme="orange" variant="outline" display="flex" alignItems="center" gap={1}>
-                Unavailable
-                <TbPointFilled color="orange" size={20} />
-              </Badge>
-            )}
-          </Flex>
-          <Text fontSize="sm" color="gray.600">
-            {providerState.description || "No description available"}
-          </Text>
-        </Box>
+      {/* Item 2: Provider Header */}
+      <Box borderBottom="1px solid" borderColor={borderColor} pb={4}>
+        <Flex alignItems="center" justifyContent="space-between" mb={2}>
+          <HStack>
+            <Box
+              width="40px"
+              height="40px"
+              borderRadius="lg"
+              bg={`${providerState.tool_type === 'builtin' ? "blue" : "purple"}.50`}
+              display="flex"
+              alignItems="center"
+              justifyContent="center"
+            >
+              <ToolsIcon
+                h="6"
+                w="6"
+                tools_name={(providerState.display_name || providerState.provider_name)
+                  .toLowerCase()
+                  .replace(/ /g, "_")}
+                color={`${providerState.tool_type === 'builtin' ? "blue" : "purple"}.500`}
+              />
+            </Box>
+            <Heading size="md" fontWeight="600">
+              {providerState.display_name || providerState.provider_name}
+            </Heading>
+          </HStack>
+          {providerState.is_available ? (
+            <TbPointFilled color="green" size={20} />
+          ) : (
+            <Badge colorScheme="orange" variant="outline" display="flex" alignItems="center" gap={1}>
+              Unavailable
+              <TbPointFilled color="orange" size={20} />
+            </Badge>
+          )}
+        </Flex>
+        <Text fontSize="sm" color="gray.600">
+          {providerState.description || "No description available"}
+        </Text>
+      </Box>
 
-        <Box flex="1" overflowY="auto">
-          <VStack spacing={8} align="stretch">
-            {credentials && Object.keys(credentials).length > 0 && (
-              <Box>
-                <HStack spacing={2} mb={4}>
-                  <ChevronRightIcon />
-                  <Text fontSize="sm" fontWeight="semibold">
-                    Provider Credentials
-                  </Text>
-                </HStack>
-                <VStack spacing={4} align="stretch">
-                  {Object.entries(credentials).map(([key, credInfo]) => (
-                    <Box key={key} bg="gray.50" p={4} borderRadius="lg">
-                      <HStack spacing={2} mb={2}>
-                        <FormLabel
-                          mb={0}
-                          fontSize="sm"
-                          fontWeight="500"
-                          color={labelColor}
-                        >
-                          {formatLabel(key)}
-                        </FormLabel>
-                        <Tooltip
-                          label={credInfo.description}
-                          placement="top"
-                          hasArrow
-                          bg="gray.700"
-                          color="white"
-                        >
-                          <QuestionIcon boxSize={3} color="gray.400" />
-                        </Tooltip>
-                      </HStack>
-                      <InputGroup size="md">
-                        <Input
-                          type={showPasswords[key] ? "text" : "password"}
-                          value={credInfo.value || ""}
-                          onChange={(e) => handleInputChange(key, e.target.value)}
-                          placeholder={formatLabel(key)}
-                          bg={inputBgColor}
-                          border="1px solid"
-                          borderColor={borderColor}
-                          borderRadius="lg"
-                          fontSize="sm"
-                          pr="4.5rem"
+      {/* ** MODIFICATION START ** */}
+      {/* Item 3: Scrollable Content Area */}
+      {/* 2. 这个 Box 将占据所有剩余空间并提供滚动 */}
+      <Box flex="1" overflowY="auto" pr={2}> 
+      {/* ** MODIFICATION END ** */}
+        <VStack spacing={8} align="stretch">
+          {credentials && Object.keys(credentials).length > 0 && (
+            <Box>
+              <HStack spacing={2} mb={4}>
+                <ChevronRightIcon />
+                <Text fontSize="sm" fontWeight="semibold">
+                  Provider Credentials
+                </Text>
+              </HStack>
+              <VStack spacing={4} align="stretch">
+                {Object.entries(credentials).map(([key, credInfo]) => (
+                  <Box key={key} bg="gray.50" p={4} borderRadius="lg">
+                    <HStack spacing={2} mb={2}>
+                      <FormLabel
+                        mb={0}
+                        fontSize="sm"
+                        fontWeight="500"
+                        color={labelColor}
+                      >
+                        {formatLabel(key)}
+                      </FormLabel>
+                      <Tooltip
+                        label={credInfo.description}
+                        placement="top"
+                        hasArrow
+                        bg="gray.700"
+                        color="white"
+                      >
+                        <QuestionIcon boxSize={3} color="gray.400" />
+                      </Tooltip>
+                    </HStack>
+                    <InputGroup size="md">
+                      <Input
+                        type={showPasswords[key] ? "text" : "password"}
+                        value={credInfo.value || ""}
+                        onChange={(e) => handleInputChange(key, e.target.value)}
+                        placeholder={formatLabel(key)}
+                        bg={inputBgColor}
+                        border="1px solid"
+                        borderColor={borderColor}
+                        borderRadius="lg"
+                        fontSize="sm"
+                        pr="4.5rem"
+                        transition="all 0.2s"
+                        _hover={{
+                          borderColor: "gray.300",
+                        }}
+                        _focus={{
+                          borderColor: "blue.500",
+                          boxShadow: "0 0 0 1px var(--chakra-colors-blue-500)",
+                        }}
+                      />
+                      <InputRightElement width="4.5rem">
+                        <IconButton
+                          aria-label={showPasswords[key] ? "Hide password" : "Show password"}
+                          icon={showPasswords[key] ? <ViewOffIcon /> : <ViewIcon />}
+                          size="sm"
+                          variant="ghost"
+                          onClick={() => togglePasswordVisibility(key)}
                           transition="all 0.2s"
+                          borderRadius="lg"
                           _hover={{
-                            borderColor: "gray.300",
-                          }}
-                          _focus={{
-                            borderColor: "blue.500",
-                            boxShadow: "0 0 0 1px var(--chakra-colors-blue-500)",
+                            bg: "gray.100",
                           }}
                         />
-                        <InputRightElement width="4.5rem">
-                          <IconButton
-                            aria-label={showPasswords[key] ? "Hide password" : "Show password"}
-                            icon={showPasswords[key] ? <ViewOffIcon /> : <ViewIcon />}
-                            size="sm"
-                            variant="ghost"
-                            onClick={() => togglePasswordVisibility(key)}
-                            transition="all 0.2s"
-                            borderRadius="lg"
-                            _hover={{
-                              bg: "gray.100",
-                            }}
-                          />
-                        </InputRightElement>
-                      </InputGroup>
-                    </Box>
-                  ))}
-                </VStack>
-                <Button
-                  mt={4}
-                  colorScheme="blue"
-                  onClick={handleSave}
-                  width="full"
-                  isLoading={isAuthenticating}
-                  loadingText="Authorizing"
-                >
-                  Authorize
-                </Button>
-              </Box>
-            )}
-
-            {/* Tools List */}
-            <Box>
-              <Flex alignItems="center" justifyContent="space-between" mb={4}>
-                <HStack spacing={2}>
-                  <ChevronRightIcon />
-                  <Text fontSize="sm" fontWeight="semibold">
-                    Available Tools
-                  </Text>
-                </HStack>
-                {isMcpProvider && (
-                  <Button
-                    size="sm"
-                    leftIcon={<FiRefreshCw />}
-                    onClick={handleAuthenticate}
-                    isLoading={isAuthenticating}
-                    loadingText="Refreshing"
-                    variant="outline"
-                  >
-                    Refresh Tools
-                  </Button>
-                )}
-              </Flex>
-              {providerState.tools.length > 0 ? (
-                <Accordion allowToggle>
-                  {providerState.tools.map((tool) => (
-                    <AccordionItem
-                      key={tool.id}
-                      border="1px solid"
-                      borderColor={borderColor}
-                      borderRadius="lg"
-                      mb={2}
-                      overflow="hidden"
-                    >
-                      <AccordionButton
-                        bg={accordionBg}
-                        _hover={{ bg: accordionHoverBg }}
-                        px={4}
-                        py={3}
-                        onClick={() => handleToolClick(tool.id)}
-                      >
-                        <Flex flex="1" textAlign="left" justifyContent="space-between" alignItems="center">
-                          <Text fontSize="sm" fontWeight="medium">
-                            {tool.display_name || tool.name}
-                          </Text>
-                          <Badge
-                            colorScheme={tool.is_online ? "green" : "red"}
-                            variant="subtle"
-                          >
-                            {tool.is_online ? "Online" : "Offline"}
-                          </Badge>
-                        </Flex>
-                        <AccordionIcon />
-                      </AccordionButton>
-                      <AccordionPanel pb={4} bg={bgColor}>
-                        <VStack spacing={4} align="stretch">
-                          <Text fontSize="sm" color="gray.600">
-                            {tool.description}
-                          </Text>
-                          {loadingTools[tool.id] ? (
-                            <Flex justify="center" py={4}>
-                              <Spinner size="md" color="blue.500" />
-                            </Flex>
-                          ) : toolDetails[tool.id]?.input_parameters ? (
-                            <Box>
-                              <Text fontSize="sm" fontWeight="medium" mb={3}>
-                                Description
-                              </Text>
-                              <VStack spacing={3} align="stretch">
-                                {Object.entries(toolDetails[tool.id].input_parameters).map(
-                                  ([key, param]) => (
-                                    <Box
-                                      key={key}
-                                      bg={accordionBg}
-                                      p={3}
-                                      borderRadius="md"
-                                    >
-                                      <Flex alignItems="center" justifyContent="space-between" mb={1}>
-                                        <Text fontWeight="medium" fontSize="sm">
-                                          {formatLabel(key)}
-                                        </Text>
-                                        <Badge variant="solid" colorScheme="blue" fontSize="xs">
-                                          {getParameterType(param)}
-                                        </Badge>
-                                      </Flex>
-                                      <Text fontSize="sm" color="gray.600">
-                                        {param.description}
-                                      </Text>
-                                    </Box>
-                                  ),
-                                )}
-                              </VStack>
-                            </Box>
-                          ) : null}
-                        </VStack>
-                      </AccordionPanel>
-                    </AccordionItem>
-                  ))}
-                </Accordion>
-              ) : (
-                <Text fontSize="sm" color="gray.500" fontStyle="italic">
-                  No tools available
-                </Text>
-              )}
+                      </InputRightElement>
+                    </InputGroup>
+                  </Box>
+                ))}
+              </VStack>
+              <Button
+                mt={4}
+                colorScheme="blue"
+                onClick={handleSave}
+                width="full"
+                isLoading={isAuthenticating}
+                loadingText="Authorizing"
+              >
+                Authorize
+              </Button>
             </Box>
-          </VStack>
-        </Box>
-      </VStack>
+          )}
+
+          {/* Tools List */}
+          <Box>
+            <Flex alignItems="center" justifyContent="space-between" mb={4}>
+              <HStack spacing={2}>
+                <ChevronRightIcon />
+                <Text fontSize="sm" fontWeight="semibold">
+                  Available Tools
+                </Text>
+              </HStack>
+              {isMcpProvider && (
+                <Button
+                  size="sm"
+                  leftIcon={<FiRefreshCw />}
+                  onClick={handleAuthenticate}
+                  isLoading={isAuthenticating}
+                  loadingText="Refreshing"
+                  variant="outline"
+                >
+                  Refresh Tools
+                </Button>
+              )}
+            </Flex>
+            {providerState.tools.length > 0 ? (
+              <Accordion allowToggle>
+                {providerState.tools.map((tool) => (
+                  <AccordionItem
+                    key={tool.id}
+                    border="1px solid"
+                    borderColor={borderColor}
+                    borderRadius="lg"
+                    mb={2}
+                    overflow="hidden"
+                  >
+                    <AccordionButton
+                      bg={accordionBg}
+                      _hover={{ bg: accordionHoverBg }}
+                      px={4}
+                      py={3}
+                      onClick={() => handleToolClick(tool.id)}
+                    >
+                      <Flex flex="1" textAlign="left" justifyContent="space-between" alignItems="center">
+                        <Text fontSize="sm" fontWeight="medium">
+                          {tool.display_name || tool.name}
+                        </Text>
+                        <Badge
+                          colorScheme={tool.is_online ? "green" : "red"}
+                          variant="subtle"
+                        >
+                          {tool.is_online ? "Online" : "Offline"}
+                        </Badge>
+                      </Flex>
+                      <AccordionIcon />
+                    </AccordionButton>
+                    <AccordionPanel pb={4} bg={bgColor}>
+                      <VStack spacing={4} align="stretch">
+                        <Text fontSize="sm" color="gray.600">
+                          {tool.description}
+                        </Text>
+                        {loadingTools[tool.id] ? (
+                          <Flex justify="center" py={4}>
+                            <Spinner size="md" color="blue.500" />
+                          </Flex>
+                        ) : toolDetails[tool.id]?.input_parameters ? (
+                          <Box>
+                            <Text fontSize="sm" fontWeight="medium" mb={3}>
+                              Parameters
+                            </Text>
+                            <VStack spacing={3} align="stretch">
+                              {Object.entries(toolDetails[tool.id].input_parameters || {}).map(
+                                ([key, param]) => (
+                                  <Box
+                                    key={key}
+                                    bg={accordionBg}
+                                    p={3}
+                                    borderRadius="md"
+                                  >
+                                    <Flex alignItems="center" justifyContent="space-between" mb={1}>
+                                      <Text fontWeight="medium" fontSize="sm">
+                                        {formatLabel(key)}
+                                      </Text>
+                                      <Badge variant="solid" colorScheme="blue" fontSize="xs">
+                                        {getParameterType(param)}
+                                      </Badge>
+                                    </Flex>
+                                    <Text fontSize="sm" color="gray.600">
+                                      {param.description}
+                                    </Text>
+                                  </Box>
+                                ),
+                              )}
+                            </VStack>
+                          </Box>
+                        ) : null}
+                      </VStack>
+                    </AccordionPanel>
+                  </AccordionItem>
+                ))}
+              </Accordion>
+            ) : (
+              <Text fontSize="sm" color="gray.500" fontStyle="italic">
+                No tools available
+              </Text>
+            )}
+          </Box>
+        </VStack>
+      </Box>
 
       <AlertDialog
         isOpen={showDeleteDialog}
-        leastDestructiveRef={cancelRef}
+        leastDestructiveRef={cancelRef as any}
         onClose={closeDeleteDialog}
       >
         <AlertDialogOverlay>

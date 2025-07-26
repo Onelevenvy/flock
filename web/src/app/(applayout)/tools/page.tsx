@@ -238,7 +238,7 @@ export default function Tools() {
               />
             </Box>
             <Flex align="center" gap={4}>
-              <InputGroup size="md" width="150px">
+              <InputGroup size="md" width="150px" variant='outline'>
                 <InputLeftElement pointerEvents="none">
                   <MdSearch color="gray.300" />
                 </InputLeftElement>
