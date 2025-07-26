@@ -7,9 +7,6 @@ import {
   HStack,
   SimpleGrid,
   Spinner,
-  Tag,
-  TagLabel,
-  TagRightIcon,
   useColorModeValue,
   IconButton,
   Button,
@@ -24,10 +21,11 @@ import {
   Modal,
   ModalOverlay,
   ModalContent,
+  Badge,
 } from "@chakra-ui/react";
 import React, { useState, useCallback } from "react";
 import { useTranslation } from "react-i18next";
-import { MdSettings, MdSearch, MdAdd } from "react-icons/md";
+import {  MdSearch, MdAdd } from "react-icons/md";
 import { BsRobot } from "react-icons/bs";
 
 import { SiBuildkite } from "react-icons/si";
@@ -136,37 +134,6 @@ export default function Tools() {
     }
   }, [openMcpForm]);
 
-  const handleEditMcp = useCallback((provider: ToolProviderWithToolsListOut) => {
-    setEditMcpProvider(provider);
-    openMcpForm();
-    setSelectedProvider(null); // 关闭凭证面板
-  }, [openMcpForm]);
-
-  const handleDeleteProvider = useCallback(async (provider: ToolProviderWithToolsListOut) => {
-    try {
-      setIsDeleting(true);
-      await ToolproviderService.deleteProvider({
-        toolProviderId: provider.id
-      });
-      
-      showToast(
-        "Success",
-        `${provider.display_name || provider.provider_name} deleted successfully`,
-        "success"
-      );
-      
-      // 刷新数据
-      refetch();
-    } catch (error: any) {
-      showToast(
-        "Error",
-        error.message || "Failed to delete provider",
-        "error"
-      );
-    } finally {
-      setIsDeleting(false);
-    }
-  }, [refetch, showToast]);
 
   const handleFormSuccess = useCallback(() => {
     refetch();
@@ -357,17 +324,18 @@ export default function Tools() {
 
                   <Flex justifyContent="space-between" alignItems="center">
                     
-                      <Tag
-                        size="md"
+                      <Badge
+                        size="sm"
                         variant="subtle"
                         colorScheme="blue"
                         borderRadius="full"
                         px={3}
                         py={1}
                       >
-                        <TagLabel fontWeight="500">{provider.tool_type.toUpperCase()}</TagLabel>
-                      </Tag>
-                    <Box>{provider.tools.length} tools</Box>
+                  
+                           {provider.tool_type}
+                      </Badge>
+                    <Box  className="text-sm text-muted-foreground">{provider.tools.length} 个工具</Box>
                   </Flex>
                 </Box>
               ))}

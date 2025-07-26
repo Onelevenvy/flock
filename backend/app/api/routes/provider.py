@@ -92,6 +92,7 @@ def update_provider(
         api_key=provider.encrypted_api_key,  # 使用加密的api_key
         icon=provider.icon,
         description=provider.description,
+        is_available=provider.is_available,
     )
 
 

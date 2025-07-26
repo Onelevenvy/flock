@@ -73,3 +73,16 @@ async def update_model_metadata(
     session.commit()
     session.refresh(model)
     return model
+
+@router.patch("/{model_id}/online_status", response_model=Models)
+async def update_model_online_status(model_id: int, is_online: bool,session: SessionDep):
+    
+    model = session.get(Models, model_id)
+    if model is None:
+        raise HTTPException(status_code=404, detail="Model not found")
+
+    model.is_online = is_online
+    session.add(model)
+    session.commit()
+    session.refresh(model)
+    return model

@@ -142,4 +142,31 @@ export class ModelService {
         });
     }
 
+    /**
+     * Update Model Online Status
+     * @returns Models Successful Response
+     * @throws ApiError
+     */
+    public static updateModelOnlineStatus({
+        modelId,
+        isOnline,
+    }: {
+        modelId: number,
+        isOnline: boolean,
+    }): CancelablePromise<Models> {
+        return __request(OpenAPI, {
+            method: 'PATCH',
+            url: '/api/v1/model/{model_id}/online_status',
+            path: {
+                'model_id': modelId,
+            },
+            query: {
+                'is_online': isOnline,
+            },
+            errors: {
+                422: `Validation Error`,
+            },
+        });
+    }
+
 }

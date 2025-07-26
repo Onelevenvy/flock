@@ -13,7 +13,7 @@ from app.models import Tool, ToolBase, ToolCreate, ToolsOut, ToolUpdate
 router = APIRouter()
 
 
-from app.core.workflow.utils.db_utils import get_db_session as session_getter
+from app.api.deps import SessionDep
 
 
 def validate_tool_definition(tool_definition: dict[str, Any]) -> ToolDefinition | None:
@@ -33,56 +33,54 @@ def validate_tool_definition(tool_definition: dict[str, Any]) -> ToolDefinition 
 
 
 @router.post("/", response_model=ToolBase)
-def create_tool(tool: ToolCreate):
+def create_tool(tool: ToolCreate,session: SessionDep):
     """
     Create new tool.
     """
-    with session_getter() as session:
+    
         # 验证工具定义
-        if tool.tool_definition:
-            validate_tool_definition(tool.tool_definition)
-        return _create_tool(session, tool)
+    if tool.tool_definition:
+        validate_tool_definition(tool.tool_definition)
+    return _create_tool(session, tool)
 
 
 @router.get("/{provider_id}", response_model=ToolsOut)
-def read_tool(provider_id: int):
-    with session_getter() as session:
-        return get_tools_by_provider(session, provider_id)
+def read_tool(provider_id: int,session: SessionDep):
+    return get_tools_by_provider(session, provider_id)
 
 
 @router.get("/", response_model=ToolsOut)
-def read_tools(skip: int = 0, limit: int = 100):
-    with session_getter() as session:
-        return get_all_tools(session, skip=skip, limit=limit)
+def read_tools(session: SessionDep,skip: int = 0, limit: int = 100):
+    return get_all_tools(session, skip=skip, limit=limit)
 
 
 @router.put("/{tool_id}", response_model=Tool)
-def update_tool(tool_id: int, tool_update: ToolUpdate):
+def update_tool(tool_id: int, tool_update: ToolUpdate,session: SessionDep):
     """
     Update a tool.
     """
-    with session_getter() as session:
-        if tool_update.tool_definition:
-            validate_tool_definition(tool_update.tool_definition)
+   
+    if tool_update.tool_definition:
+        validate_tool_definition(tool_update.tool_definition)
 
-        tool = _update_tool(session, tool_id, tool_update)
-        if tool is None:
-            raise HTTPException(status_code=404, detail="Tool not found")
-        return tool
+    tool = _update_tool(session, tool_id, tool_update)
+    if tool is None:
+        raise HTTPException(status_code=404, detail="Tool not found")
+    return tool
 
 
 @router.delete("/{tool_id}", response_model=Tool)
-def delete_tool(tool_id: int):
+def delete_tool(tool_id: int,session: SessionDep):
     """
     Delete a tool.
     """
-    with session_getter() as session:
-        tool = _delete_tool(session, tool_id)
-        if tool is None:
-            raise HTTPException(status_code=404, detail="Tool not found")
-        if tool.managed:
-            raise HTTPException(status_code=400, detail="Cannot delete managed tools")
-        return tool
+    
+    tool = _delete_tool(session, tool_id)
+    if tool is None:
+        raise HTTPException(status_code=404, detail="Tool not found")
+    if tool.managed:
+        raise HTTPException(status_code=400, detail="Cannot delete managed tools")
+    return tool
 
 
 @router.post("/validate")
@@ -115,48 +113,50 @@ def invoke_tools(tool_name: str, args: dict) -> ToolInvokeResponse:
 def update_tool_input_parameters(
     tool_id: int,
     input_parameters: dict[str, Any],
+    session: SessionDep,
 ) -> Any:
     """
     Update a tool's input parameters.
     """
-    with session_getter() as session:
-        tool = session.get(Tool, tool_id)
-        if not tool:
-            raise HTTPException(status_code=404, detail="Tool not found")
+   
+    tool = session.get(Tool, tool_id)
+    if not tool:
+        raise HTTPException(status_code=404, detail="Tool not found")
 
-        if tool.input_parameters is None:
-            tool.input_parameters = {}
+    if tool.input_parameters is None:
+        tool.input_parameters = {}
 
-        tool.input_parameters.update(input_parameters)
-        session.add(tool)
-        session.commit()
-        session.refresh(tool)
-        return tool
+    tool.input_parameters.update(input_parameters)
+    session.add(tool)
+    session.commit()
+    session.refresh(tool)
+    return tool
 
 
 @router.patch("/{tool_id}/online-status")
 def update_tool_online_status_endpoint(
     tool_id: int,
     is_online: bool,
+    session: SessionDep,
 ) -> Any:
     """
     更新工具在线状态
     """
-    with session_getter() as session:
-        tool = update_tool_online_status(session, tool_id, is_online)
-        if not tool:
-            raise HTTPException(status_code=404, detail="Tool not found")
-        return tool
+   
+    tool = update_tool_online_status(session, tool_id, is_online)
+    if not tool:
+        raise HTTPException(status_code=404, detail="Tool not found")
+    return tool
 
 
 @router.post("/{tool_id}/test")
-async def test_tool(tool_id: int):
+async def test_tool(tool_id: int,session: SessionDep):
     """
     测试工具的可用性
     """
-    with session_getter() as session:
-        success, message = await test_tool_availability(session, tool_id)
-        if success:
-            return {"status": "success", "message": message}
-        else:
-            raise HTTPException(status_code=400, detail=message)
+  
+    success, message = await test_tool_availability(session, tool_id)
+    if success:
+        return {"status": "success", "message": message}
+    else:
+        raise HTTPException(status_code=400, detail=message)
