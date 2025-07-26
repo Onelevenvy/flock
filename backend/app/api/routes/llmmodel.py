@@ -5,7 +5,7 @@ from fastapi import APIRouter, HTTPException
 from app.api.deps import SessionDep
 from app.curd.models import (_create_model, _delete_model, _update_model,
                              get_all_models, get_models_by_provider)
-from app.models import Models, ModelsBase, ModelsOut
+from app.db.models import Models, ModelsBase, ModelsOut
 
 router = APIRouter()
 
@@ -74,9 +74,12 @@ async def update_model_metadata(
     session.refresh(model)
     return model
 
+
 @router.patch("/{model_id}/online_status", response_model=Models)
-async def update_model_online_status(model_id: int, is_online: bool,session: SessionDep):
-    
+async def update_model_online_status(
+    model_id: int, is_online: bool, session: SessionDep
+):
+
     model = session.get(Models, model_id)
     if model is None:
         raise HTTPException(status_code=404, detail="Model not found")

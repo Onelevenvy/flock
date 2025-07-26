@@ -8,7 +8,7 @@ from app.core.tools.tool_invoker import ToolInvokeResponse, invoke_tool
 from app.curd.tool import (_create_tool, _delete_tool, _update_tool,
                            get_all_tools, get_tools_by_provider,
                            update_tool_online_status)
-from app.models import Tool, ToolBase, ToolCreate, ToolsOut, ToolUpdate
+from app.db.models import Tool, ToolBase, ToolCreate, ToolsOut, ToolUpdate
 
 router = APIRouter()
 
@@ -33,33 +33,33 @@ def validate_tool_definition(tool_definition: dict[str, Any]) -> ToolDefinition 
 
 
 @router.post("/", response_model=ToolBase)
-def create_tool(tool: ToolCreate,session: SessionDep):
+def create_tool(tool: ToolCreate, session: SessionDep):
     """
     Create new tool.
     """
-    
-        # 验证工具定义
+
+    # 验证工具定义
     if tool.tool_definition:
         validate_tool_definition(tool.tool_definition)
     return _create_tool(session, tool)
 
 
 @router.get("/{provider_id}", response_model=ToolsOut)
-def read_tool(provider_id: int,session: SessionDep):
+def read_tool(provider_id: int, session: SessionDep):
     return get_tools_by_provider(session, provider_id)
 
 
 @router.get("/", response_model=ToolsOut)
-def read_tools(session: SessionDep,skip: int = 0, limit: int = 100):
+def read_tools(session: SessionDep, skip: int = 0, limit: int = 100):
     return get_all_tools(session, skip=skip, limit=limit)
 
 
 @router.put("/{tool_id}", response_model=Tool)
-def update_tool(tool_id: int, tool_update: ToolUpdate,session: SessionDep):
+def update_tool(tool_id: int, tool_update: ToolUpdate, session: SessionDep):
     """
     Update a tool.
     """
-   
+
     if tool_update.tool_definition:
         validate_tool_definition(tool_update.tool_definition)
 
@@ -70,11 +70,11 @@ def update_tool(tool_id: int, tool_update: ToolUpdate,session: SessionDep):
 
 
 @router.delete("/{tool_id}", response_model=Tool)
-def delete_tool(tool_id: int,session: SessionDep):
+def delete_tool(tool_id: int, session: SessionDep):
     """
     Delete a tool.
     """
-    
+
     tool = _delete_tool(session, tool_id)
     if tool is None:
         raise HTTPException(status_code=404, detail="Tool not found")
@@ -118,7 +118,7 @@ def update_tool_input_parameters(
     """
     Update a tool's input parameters.
     """
-   
+
     tool = session.get(Tool, tool_id)
     if not tool:
         raise HTTPException(status_code=404, detail="Tool not found")
@@ -142,7 +142,7 @@ def update_tool_online_status_endpoint(
     """
     更新工具在线状态
     """
-   
+
     tool = update_tool_online_status(session, tool_id, is_online)
     if not tool:
         raise HTTPException(status_code=404, detail="Tool not found")
@@ -150,11 +150,11 @@ def update_tool_online_status_endpoint(
 
 
 @router.post("/{tool_id}/test")
-async def test_tool(tool_id: int,session: SessionDep):
+async def test_tool(tool_id: int, session: SessionDep):
     """
     测试工具的可用性
     """
-  
+
     success, message = await test_tool_availability(session, tool_id)
     if success:
         return {"status": "success", "message": message}

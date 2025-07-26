@@ -3,18 +3,17 @@ from typing import Any, Dict
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
 
-from app.api.deps import  SessionDep
+from app.api.deps import SessionDep
 from app.core.auth.tool_provider_auth import authenticate_tool_provider
 from app.core.mcp.mcp_manage import MCPManager
-
 from app.curd.toolprovider import (create_tool_provider, get_tool_provider,
                                    get_tool_provider_list_with_tools,
                                    get_tool_provider_with_tools,
                                    update_tool_provider)
-from app.models import (MCPProviderOut, ProvidersListWithToolsOut,
-                        ToolProvider, ToolProviderCreate, ToolProviderOut,
-                        ToolProviderUpdate, ToolProviderWithToolsListOut,
-                        ToolType)
+from app.db.models import (MCPProviderOut, ProvidersListWithToolsOut,
+                           ToolProvider, ToolProviderCreate, ToolProviderOut,
+                           ToolProviderUpdate, ToolProviderWithToolsListOut,
+                           ToolType)
 
 router = APIRouter()
 
@@ -42,8 +41,8 @@ class MCPProviderUpdate(BaseModel):
 
 
 @router.post("/", response_model=ToolProvider)
-def create_provider(tool_provider: ToolProviderCreate,session: SessionDep):
-   
+def create_provider(tool_provider: ToolProviderCreate, session: SessionDep):
+
     provider = create_tool_provider(session, tool_provider)
     if provider.credentials:
         provider.encrypt_credentials()
@@ -53,11 +52,11 @@ def create_provider(tool_provider: ToolProviderCreate,session: SessionDep):
 
 
 @router.get("/{tool_provider_id}", response_model=ToolProviderOut)
-def read_provider(tool_provider_id: int,session: SessionDep) -> Any:
+def read_provider(tool_provider_id: int, session: SessionDep) -> Any:
     """
     Get provider by ID.
     """
-    
+
     provider = get_tool_provider(session, tool_provider_id)
     if not provider:
         raise HTTPException(
@@ -84,8 +83,8 @@ def read_provider(tool_provider_id: int,session: SessionDep) -> Any:
 @router.get(
     "/withtools/{tool_provider_id}", response_model=ToolProviderWithToolsListOut
 )
-def read_provider_with_tools(tool_provider_id: int,session: SessionDep):
-    
+def read_provider_with_tools(tool_provider_id: int, session: SessionDep):
+
     provider = get_tool_provider_with_tools(session, tool_provider_id)
     if provider is None:
         raise HTTPException(status_code=404, detail="ToolProvider not found")
@@ -110,7 +109,7 @@ def read_provider_with_tools(tool_provider_id: int,session: SessionDep):
 
 @router.get("/", response_model=ProvidersListWithToolsOut)
 def read_provider_list_with_tools(session: SessionDep):
-   
+
     providers = get_tool_provider_list_with_tools(session)
     if providers is None:
         raise HTTPException(status_code=404, detail="ToolProvider not found")
@@ -123,11 +122,13 @@ def read_provider_list_with_tools(session: SessionDep):
 
 
 @router.put("/{tool_provider_id}", response_model=ToolProviderOut)
-def update_provider(tool_provider_id: int, provider_update: ToolProviderUpdate,session: SessionDep) -> Any:
+def update_provider(
+    tool_provider_id: int, provider_update: ToolProviderUpdate, session: SessionDep
+) -> Any:
     """
     Update a provider.
     """
-   
+
     provider = update_tool_provider(session, tool_provider_id, provider_update)
     if not provider:
         raise HTTPException(
@@ -160,11 +161,11 @@ def update_provider(tool_provider_id: int, provider_update: ToolProviderUpdate,s
 
 # 添加删除工具提供者的端点
 @router.delete("/{tool_provider_id}", response_model=ToolProviderOut)
-async def delete_provider(tool_provider_id: int,session: SessionDep):
+async def delete_provider(tool_provider_id: int, session: SessionDep):
     """
     删除工具提供者
     """
-    
+
     provider = session.get(ToolProvider, tool_provider_id)
     if provider is None:
         raise HTTPException(status_code=404, detail="Tool provider not found")
@@ -193,12 +194,12 @@ async def delete_provider(tool_provider_id: int,session: SessionDep):
 
 
 @router.post("/{tool_provider_id}/authenticate")
-async def authenticate_provider(tool_provider_id: int,session: SessionDep):
+async def authenticate_provider(tool_provider_id: int, session: SessionDep):
     """
     对工具提供商进行鉴权或刷新工具列表
     """
-   
-        # 获取提供商信息
+
+    # 获取提供商信息
     provider = get_tool_provider(session, tool_provider_id)
     if not provider:
         raise HTTPException(
@@ -279,9 +280,7 @@ async def authenticate_provider(tool_provider_id: int,session: SessionDep):
             return {"success": False, "message": f"刷新工具列表失败: {str(e)}"}
     elif provider.tool_type == ToolType.BUILTIN:
         # BUILTIN类型需要进行鉴权
-        success, message = await authenticate_tool_provider(
-            session, tool_provider_id
-        )
+        success, message = await authenticate_tool_provider(session, tool_provider_id)
         if success:
             return {"success": True, "message": message}
         else:
@@ -295,19 +294,17 @@ async def authenticate_provider(tool_provider_id: int,session: SessionDep):
 
 # 新增 MCP 相关 API 路由
 @router.post("/mcp", response_model=MCPProviderOut)
-async def create_mcp_provider(mcp_provider: MCPProviderCreate,session: SessionDep):
+async def create_mcp_provider(mcp_provider: MCPProviderCreate, session: SessionDep):
     """
     创建 MCP 工具提供者并同步工具
     """
-   
+
     try:
         # 使用默认值补充其他字段
         display_name = (
             mcp_provider.provider_name
         )  # 使用 provider_name 作为默认的 display_name
-        description = (
-            f"MCP 工具提供者: {mcp_provider.provider_name}"  # 生成默认描述
-        )
+        description = f"MCP 工具提供者: {mcp_provider.provider_name}"  # 生成默认描述
 
         provider, _ = await MCPManager.create_mcp_provider(
             session=session,
@@ -339,11 +336,13 @@ async def create_mcp_provider(mcp_provider: MCPProviderCreate,session: SessionDe
 
 
 @router.put("/mcp/{tool_provider_id}", response_model=MCPProviderOut)
-async def update_mcp_provider(tool_provider_id: int, mcp_provider: MCPProviderUpdate,session: SessionDep):
+async def update_mcp_provider(
+    tool_provider_id: int, mcp_provider: MCPProviderUpdate, session: SessionDep
+):
     """
     更新 MCP 工具提供者并同步工具
     """
-  
+
     try:
         # 获取当前提供者
         current_provider = session.get(ToolProvider, tool_provider_id)
@@ -396,7 +395,7 @@ async def update_mcp_provider(tool_provider_id: int, mcp_provider: MCPProviderUp
 
 
 @router.post("/mcp/test-connection", response_model=Dict[str, Any])
-async def test_mcp_connection(connection_test: MCPConnectionTest,session: SessionDep):
+async def test_mcp_connection(connection_test: MCPConnectionTest, session: SessionDep):
     """
     测试 MCP 连接
     """
@@ -423,11 +422,11 @@ async def test_mcp_connection(connection_test: MCPConnectionTest,session: Sessio
 
 
 @router.post("/mcp/{tool_provider_id}/sync", response_model=Dict[str, Any])
-async def sync_mcp_tools(tool_provider_id: int,session: SessionDep):
+async def sync_mcp_tools(tool_provider_id: int, session: SessionDep):
     """
     同步 MCP 工具
     """
-    
+
     try:
         provider = get_tool_provider(session, tool_provider_id)
         if not provider:

@@ -5,7 +5,7 @@ from typing import Any, TypeVar
 from sqlmodel import Session, select
 
 from app.core.database import get_session
-from app.models import ModelProvider, Models, Subgraph
+from app.db.models import ModelProvider, Models, Subgraph
 
 T = TypeVar("T")
 

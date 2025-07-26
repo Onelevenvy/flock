@@ -1,6 +1,6 @@
 from sqlmodel import Session, select
 
-from app.models import Tool, ToolCreate, ToolsOut, ToolUpdate
+from app.db.models import Tool, ToolCreate, ToolsOut, ToolUpdate
 
 
 def _create_tool(session: Session, tool: ToolCreate) -> Tool:

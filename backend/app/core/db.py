@@ -7,9 +7,9 @@ from app.core.config import settings
 from app.core.model_providers.model_provider_manager import \
     model_provider_manager
 from app.curd import users
-from app.models import (AccessScope, ActionType, Group, ModelProvider, Models,
-                        Resource, ResourceType, Role, RoleAccess, User,
-                        UserCreate)
+from app.db.models import (AccessScope, ActionType, Group, ModelProvider,
+                           Models, Resource, ResourceType, Role, RoleAccess,
+                           User, UserCreate)
 
 logger = logging.getLogger(__name__)
 
@@ -163,7 +163,7 @@ engine = create_engine(str(settings.SQLALCHEMY_DATABASE_URI))
 
 
 from app.core.tools.tool_manager import get_all_tool_providers
-from app.models import Tool, ToolProvider, ToolType
+from app.db.models import Tool, ToolProvider, ToolType
 
 
 def init_db(session: Session) -> None:

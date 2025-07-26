@@ -13,7 +13,7 @@ from app.core.workflow.node.parameter_extractor_node import \
     ParameterExtractorNode
 from app.core.workflow.node.plugin_node import PluginNode
 from app.core.workflow.utils.tools_utils import get_retrieval_tool
-from app.models import InterruptType
+from app.db.models import InterruptType
 
 from ..state import WorkflowTeamState
 from .node.agent_node import AgentNode

@@ -7,7 +7,7 @@ from langchain_core.runnables import RunnableConfig
 from langgraph.types import Command, interrupt
 
 from app.core.state import ReturnWorkflowTeamState, WorkflowTeamState
-from app.models import InterruptDecision, InterruptType
+from app.db.models import InterruptDecision, InterruptType
 
 
 class HumanNode:

@@ -1,6 +1,6 @@
 from langchain_openai import ChatOpenAI
 
-from app.models import ModelCategory
+from app.db.models import ModelCategory
 
 PROVIDER_CONFIG = {
     "provider_name": "openai",

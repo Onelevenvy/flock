@@ -7,9 +7,9 @@ from app.api.deps import CurrentUser, SessionDep, get_current_active_superuser
 from app.core.config import settings
 from app.core.security import get_password_hash, verify_password
 from app.curd import users
-from app.models import (Group, Message, Role, UpdateLanguageMe, UpdatePassword,
-                        User, UserCreate, UserCreateOpen, UserOut, UsersOut,
-                        UserUpdate, UserUpdateMe)
+from app.db.models import (Group, Message, Role, UpdateLanguageMe,
+                           UpdatePassword, User, UserCreate, UserCreateOpen,
+                           UserOut, UsersOut, UserUpdate, UserUpdateMe)
 from app.utils import generate_new_account_email, send_email
 
 router = APIRouter()

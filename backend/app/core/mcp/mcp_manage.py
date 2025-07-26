@@ -11,8 +11,8 @@ from langchain_mcp_adapters.client import MultiServerMCPClient
 from app.core.mcp.aiclient_utils import CustomMultiServerMCPClient
 from app.curd.toolprovider import (create_tool_provider, sync_provider_tools,
                                    update_tool_provider)
-from app.models import (Tool, ToolProvider, ToolProviderCreate,
-                        ToolProviderUpdate, ToolType)
+from app.db.models import (Tool, ToolProvider, ToolProviderCreate,
+                           ToolProviderUpdate, ToolType)
 
 
 class MCPManager:

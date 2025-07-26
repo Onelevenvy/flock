@@ -26,7 +26,8 @@ from app.core.graph.members import (GraphLeader, GraphMember, GraphTeam,
 from app.core.graph.messages import ChatResponse, event_to_response
 from app.core.state import GraphSkill, GraphUpload
 from app.core.workflow.build_workflow import initialize_graph
-from app.models import ChatMessage, Interrupt, InterruptDecision, Member, Team
+from app.db.models import (ChatMessage, Interrupt, InterruptDecision, Member,
+                           Team)
 
 
 def convert_hierarchical_team_to_dict(

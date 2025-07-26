@@ -2,7 +2,7 @@ from typing import Any
 
 from sqlmodel import Session, select
 
-from app.models import Role, RoleCreate, RoleUpdate
+from app.db.models import Role, RoleCreate, RoleUpdate
 
 
 def create_role(*, session: Session, role_create: RoleCreate) -> Role:

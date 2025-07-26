@@ -13,9 +13,10 @@ from app.curd.modelprovider import (create_model_provider,
                                     get_model_provider_with_models,
                                     sync_provider_models,
                                     update_model_provider)
-from app.models import (ModelProvider, ModelProviderCreate, ModelProviderOut,
-                        ModelProviderUpdate, ModelProviderWithModelsListOut,
-                        ProvidersListWithModelsOut)
+from app.db.models import (ModelProvider, ModelProviderCreate,
+                           ModelProviderOut, ModelProviderUpdate,
+                           ModelProviderWithModelsListOut,
+                           ProvidersListWithModelsOut)
 
 router = APIRouter()
 
@@ -142,9 +143,5 @@ async def provider_authenticate(provider_id: int, session: SessionDep):
     如果鉴权成功，将提供商标记为可用，并将其所有模型设置为在线
     """
     success, message = await authenticate_provider(session, provider_id)
-        
-    return {
-        "success": success,
-        "message": message,
-        "provider_id": provider_id
-    }
+
+    return {"success": success, "message": message, "provider_id": provider_id}

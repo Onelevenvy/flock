@@ -5,8 +5,8 @@ import zhipuai
 from langchain.tools import StructuredTool
 from pydantic import BaseModel, Field
 
-from app.core.tools.tool_manager import get_tool_provider_credential_value
 from app.core.tools.response_formatter import format_tool_response
+from app.core.tools.tool_manager import get_tool_provider_credential_value
 
 ASSISTANT_IDS = {
     "data_analysis": "65a265419d72d299a9230616",

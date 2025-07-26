@@ -12,7 +12,7 @@ from sqlmodel import select
 from app.core.database import get_session
 from app.core.mcp.mcp_manage import MCPManager
 from app.core.security import decrypt_token
-from app.models import Tool, ToolProvider, ToolType
+from app.db.models import Tool, ToolProvider, ToolType
 
 logger = logging.getLogger(__name__)
 

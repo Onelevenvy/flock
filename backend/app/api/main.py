@@ -1,7 +1,7 @@
 from fastapi import APIRouter
 
-from app.api.routes import (apikeys, graphs, groups, login, members, provider,
-                            llmmodel, roles, subgraphs, teams, threads,
+from app.api.routes import (apikeys, graphs, groups, llmmodel, login, members,
+                            provider, roles, subgraphs, teams, threads,
                             toolprovider, tools, uploads, users, utils)
 
 api_router = APIRouter()

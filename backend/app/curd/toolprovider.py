@@ -2,9 +2,9 @@ from typing import Any, Sequence
 
 from sqlmodel import Session, select
 
-from app.models import (ProvidersListWithToolsOut, Tool, ToolOutIdWithAndName,
-                        ToolProvider, ToolProviderUpdate,
-                        ToolProviderWithToolsListOut)
+from app.db.models import (ProvidersListWithToolsOut, Tool,
+                           ToolOutIdWithAndName, ToolProvider,
+                           ToolProviderUpdate, ToolProviderWithToolsListOut)
 
 
 def create_tool_provider(session: Session, tool_provider: ToolProvider) -> ToolProvider:
