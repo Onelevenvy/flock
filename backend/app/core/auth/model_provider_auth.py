@@ -3,7 +3,7 @@ from typing import Tuple
 
 from sqlmodel import Session, select
 
-from app.core.model_providers.manager import model_provider_manager
+from app.core.model_providers.model_provider_manager import model_provider_manager
 from app.models import ModelProvider, Models
 
 logger = logging.getLogger(__name__)

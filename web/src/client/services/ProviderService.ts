@@ -166,4 +166,28 @@ export class ProviderService {
         });
     }
 
+    /**
+     * Provider Authenticate
+     * 对提供商进行鉴权，测试API密钥是否有效
+     * 如果鉴权成功，将提供商标记为可用，并将其所有模型设置为在线
+     * @returns any Successful Response
+     * @throws ApiError
+     */
+    public static providerAuthenticate({
+        providerId,
+    }: {
+        providerId: number,
+    }): CancelablePromise<Record<string, any>> {
+        return __request(OpenAPI, {
+            method: 'POST',
+            url: '/api/v1/provider/{provider_id}/authenticate',
+            path: {
+                'provider_id': providerId,
+            },
+            errors: {
+                422: `Validation Error`,
+            },
+        });
+    }
+
 }

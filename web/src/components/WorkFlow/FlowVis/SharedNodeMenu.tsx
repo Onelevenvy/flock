@@ -13,7 +13,7 @@ import {
 import React from "react";
 import { useTranslation } from "react-i18next";
 
-import { useSkillsQuery } from "@/hooks/useSkillsQuery";
+import { useToolProvidersQuery } from "@/hooks/useToolProvidersQuery";
 import { useSubgraphsQuery } from "@/hooks/useSubgraphsQuery";
 import ToolsIcon from "../../Icons/Tools";
 import { nodeConfig, type NodeType } from "../Nodes/nodeConfig";
@@ -28,7 +28,7 @@ const SharedNodeMenu: React.FC<SharedNodeMenuProps> = ({
   isDraggable = false,
 }) => {
   const { t } = useTranslation();
-  const { data: tools, isLoading, isError } = useSkillsQuery();
+  const { data: tools, isLoading, isError } = useToolProvidersQuery();
   const {
     data: subgraphs,
     isLoading: isSubgraphsLoading,

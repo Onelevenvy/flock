@@ -13,7 +13,7 @@ import { FaTools } from "react-icons/fa";
 import { useTranslation } from "react-i18next";
 
 import ToolsIcon from "@/components/Icons/Tools";
-import { useSkillsQuery } from "@/hooks/useSkillsQuery";
+import { useToolProvidersQuery } from "@/hooks/useToolProvidersQuery";
 
 import ToolsList from "./ToolsListModal";
 
@@ -28,7 +28,7 @@ const ToolNodeProperties: React.FC<ToolNodePropertiesProps> = ({
 }) => {
   const { t } = useTranslation();
   const [isToolsListOpen, setIsToolsListOpen] = useState(false);
-  const { data: skills, isLoading, isError } = useSkillsQuery();
+  const { data: skills, isLoading, isError } = useToolProvidersQuery();
 
   const addTool = (tool: string) => {
     const currentTools = node.data.tools || [];

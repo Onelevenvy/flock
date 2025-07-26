@@ -57,7 +57,7 @@ const NotFound = () => {
 
           <Button
             as={Link}
-            href="/dashboard"
+            href="/playground"
             leftIcon={<FiHome />}
             colorScheme="blue"
             size="lg"

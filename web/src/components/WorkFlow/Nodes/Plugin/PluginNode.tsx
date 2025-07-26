@@ -2,13 +2,13 @@ import React from "react";
 import { Handle, type NodeProps, Position } from "reactflow";
 
 import ToolsIcon from "@/components/Icons/Tools";
-import { useSkillsQuery } from "@/hooks/useSkillsQuery";
+import { useToolProvidersQuery } from "@/hooks/useToolProvidersQuery";
 
 import { BaseNode } from "../Base/BaseNode";
 import { nodeConfig } from "../nodeConfig";
 
 const PluginNode: React.FC<NodeProps> = (props) => {
-  const { data: skills } = useSkillsQuery();
+  const { data: skills } = useToolProvidersQuery();
   const toolName =
     skills?.data.find((skill) => skill.name === props.data.toolName)
       ?.display_name || props.data.toolName;

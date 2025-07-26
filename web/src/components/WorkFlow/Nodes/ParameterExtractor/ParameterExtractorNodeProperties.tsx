@@ -13,7 +13,7 @@ import { useTranslation } from "react-i18next";
 
 import ModelSelect from "@/components/Common/ModelProvider";
 import { useModelQuery } from "@/hooks/useModelQuery";
-import { useSkillsQuery } from "@/hooks/useSkillsQuery";
+import { useToolProvidersQuery } from "@/hooks/useToolProvidersQuery";
 import { ParameterSchema } from "../../types";
 import { useForm } from "react-hook-form";
 import ParameterModal from "./ParameterModal";
@@ -29,7 +29,7 @@ const ParameterExtractorNodeProperties: React.FC<
 > = ({ node, onNodeDataChange }) => {
   const { t } = useTranslation();
   const { data: models, isLoading: isLoadingModel } = useModelQuery();
-  const { data: skills } = useSkillsQuery();
+  const { data: skills } = useToolProvidersQuery();
   const { control } = useForm<{ model: string; provider: string }>({
     defaultValues: {
       model: node.data.model || "",

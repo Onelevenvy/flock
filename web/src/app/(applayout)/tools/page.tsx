@@ -39,7 +39,7 @@ import TabSlider from "@/components/Common/TabSlider";
 import ToolsIcon from "@/components/Icons/Tools/index";
 import CredentialsPanel from "@/components/Tools/CredentialsPanel";
 import useCustomToast from "@/hooks/useCustomToast";
-import { useToolProvidersQuery } from "@/hooks/useSkillsQuery";
+import { useToolProvidersQuery } from "@/hooks/useToolProvidersQuery";
 import type { ToolProviderWithToolsListOut } from "@/client/models/ToolProviderWithToolsListOut";
 import type { ToolProviderUpdate } from "@/client/models/ToolProviderUpdate";
 
@@ -356,18 +356,7 @@ export default function Tools() {
                   </Box>
 
                   <Flex justifyContent="space-between" alignItems="center">
-                    {provider.tool_type !== 'builtin' ? (
-                      <Tag
-                        size="md"
-                        variant="subtle"
-                        colorScheme="purple"
-                        borderRadius="full"
-                        px={3}
-                        py={1}
-                      >
-                        <TagLabel fontWeight="500">{provider.tool_type.toUpperCase()}</TagLabel>
-                      </Tag>
-                    ) : (
+                    
                       <Tag
                         size="md"
                         variant="subtle"
@@ -376,10 +365,9 @@ export default function Tools() {
                         px={3}
                         py={1}
                       >
-                        <TagLabel fontWeight="500">Built-in</TagLabel>
-                        <TagRightIcon as={MdSettings} />
+                        <TagLabel fontWeight="500">{provider.tool_type.toUpperCase()}</TagLabel>
                       </Tag>
-                    )}
+                    <Box>{provider.tools.length} tools</Box>
                   </Flex>
                 </Box>
               ))}

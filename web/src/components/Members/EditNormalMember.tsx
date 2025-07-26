@@ -18,7 +18,7 @@ import { Controller, type SubmitHandler, useForm } from "react-hook-form";
 import { useMutation, useQueryClient } from "react-query";
 
 import { useModelQuery } from "@/hooks/useModelQuery";
-import { useSkillsQuery } from "@/hooks/useSkillsQuery";
+import { useToolProvidersQuery } from "@/hooks/useToolProvidersQuery";
 import { useUploadsQuery } from "@/hooks/useUploadsQuery";
 
 import {
@@ -55,7 +55,7 @@ const EditNormalMember = forwardRef<HTMLFormElement, EditAgentProps>(
       isLoading: isLoadingSkills,
       isError: isErrorSkills,
       error: errorSkills,
-    } = useSkillsQuery();
+    } = useToolProvidersQuery();
     const {
       data: uploads,
       isLoading: isLoadingUploads,

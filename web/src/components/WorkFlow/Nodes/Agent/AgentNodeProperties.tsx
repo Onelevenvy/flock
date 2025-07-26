@@ -18,7 +18,7 @@ import ModelSelect from "@/components/Common/ModelProvider";
 import ToolsIcon from "@/components/Icons/Tools";
 import { useVariableInsertion } from "@/hooks/graphs/useVariableInsertion";
 import { useModelQuery } from "@/hooks/useModelQuery";
-import { useSkillsQuery } from "@/hooks/useSkillsQuery";
+import { useToolProvidersQuery } from "@/hooks/useToolProvidersQuery";
 import { useUploadsQuery } from "@/hooks/useUploadsQuery";
 import { VariableReference } from "../../FlowVis/variableSystem";
 import VariableSelector from "../../Common/VariableSelector";
@@ -71,7 +71,7 @@ const AgentNodeProperties: React.FC<AgentNodePropertiesProps> = ({
 
   // 数据查询
   const { data: models, isLoading: isLoadingModel } = useModelQuery();
-  const { data: skills, isLoading: isLoadingSkills } = useSkillsQuery();
+  const { data: skills, isLoading: isLoadingSkills } = useToolProvidersQuery();
   const { data: uploads, isLoading: isLoadingKB } = useUploadsQuery();
 
   // 初始化表单数据

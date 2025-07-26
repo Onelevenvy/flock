@@ -3332,6 +3332,51 @@
         }
       }
     },
+    "/api/v1/provider/{provider_id}/authenticate": {
+      "post": {
+        "tags": [
+          "provider"
+        ],
+        "summary": "Provider Authenticate",
+        "description": "对提供商进行鉴权，测试API密钥是否有效\n如果鉴权成功，将提供商标记为可用，并将其所有模型设置为在线",
+        "operationId": "provider_authenticate",
+        "parameters": [
+          {
+            "name": "provider_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Provider Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": true,
+                  "title": "Response Provider-Provider Authenticate"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/v1/model/": {
       "get": {
         "tags": [

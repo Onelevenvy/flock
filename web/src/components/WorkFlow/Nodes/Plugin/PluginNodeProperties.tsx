@@ -3,7 +3,7 @@ import type React from "react";
 import { useCallback, useState } from "react";
 
 import { useVariableInsertion } from "@/hooks/graphs/useVariableInsertion";
-import { useSkillsQuery } from "@/hooks/useSkillsQuery";
+import { useToolProvidersQuery } from "@/hooks/useToolProvidersQuery";
 import { VariableReference } from "../../FlowVis/variableSystem";
 import VariableSelector from "../../Common/VariableSelector";
 
@@ -18,7 +18,7 @@ const PluginNodeProperties: React.FC<PluginNodePropertiesProps> = ({
   onNodeDataChange,
   availableVariables,
 }) => {
-  const { data: skills } = useSkillsQuery();
+  const { data: skills } = useToolProvidersQuery();
   const tool = skills?.data.find(
     (skill) => skill.display_name === node.data.toolName,
   );

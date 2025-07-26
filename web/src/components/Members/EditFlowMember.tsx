@@ -31,7 +31,7 @@ import { useState } from "react";
 import { Controller, type SubmitHandler, useForm } from "react-hook-form";
 import { useMutation, useQueryClient } from "react-query";
 
-import { useSkillsQuery } from "@/hooks/useSkillsQuery";
+import { useToolProvidersQuery } from "@/hooks/useToolProvidersQuery";
 import { useUploadsQuery } from "@/hooks/useUploadsQuery";
 
 import {
@@ -162,7 +162,7 @@ export function EditFlowMember({
     isLoading: isLoadingSkills,
     isError: isErrorSkills,
     error: errorSkills,
-  } = useSkillsQuery();
+  } = useToolProvidersQuery();
   const {
     data: uploads,
     isLoading: isLoadingUploads,

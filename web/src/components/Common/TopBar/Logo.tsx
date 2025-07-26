@@ -3,7 +3,7 @@ import Link from "next/link";
 
 export function FlockLogo() {
   return (
-    <Link href="/dashboard">
+    <Link href="/playground">
       <Box
         display="flex"
         alignItems="center"

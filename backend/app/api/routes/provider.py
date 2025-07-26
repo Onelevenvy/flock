@@ -4,6 +4,7 @@ from fastapi import APIRouter, HTTPException
 from sqlmodel import select
 
 from app.api.deps import SessionDep
+from app.core.auth.model_provider_auth import authenticate_provider
 from app.core.model_providers.model_provider_manager import \
     model_provider_manager
 from app.curd.modelprovider import (create_model_provider,
@@ -131,3 +132,18 @@ async def sync_provider(
     synced_models = sync_provider_models(session, provider.id, config_models)
 
     return [model.ai_model_name for model in synced_models]
+
+
+@router.post("/{provider_id}/authenticate", response_model=dict)
+async def provider_authenticate(provider_id: int, session: SessionDep):
+    """
+    对提供商进行鉴权，测试API密钥是否有效
+    如果鉴权成功，将提供商标记为可用，并将其所有模型设置为在线
+    """
+    success, message = await authenticate_provider(session, provider_id)
+        
+    return {
+        "success": success,
+        "message": message,
+        "provider_id": provider_id
+    }

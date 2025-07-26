@@ -28,7 +28,7 @@ import { useTranslation } from "react-i18next";
 import { useMutation, useQueryClient } from "react-query";
 
 import { useModelQuery } from "@/hooks/useModelQuery";
-import { useSkillsQuery } from "@/hooks/useSkillsQuery";
+import { useToolProvidersQuery } from "@/hooks/useToolProvidersQuery";
 import { useUploadsQuery } from "@/hooks/useUploadsQuery";
 
 import {
@@ -147,7 +147,7 @@ const EditTeamMember = forwardRef<HTMLFormElement, EditTeamMemberProps>(
       isLoading: isLoadingSkills,
       isError: isErrorSkills,
       error: errorSkills,
-    } = useSkillsQuery();
+    } = useToolProvidersQuery();
     const {
       data: uploads,
       isLoading: isLoadingUploads,

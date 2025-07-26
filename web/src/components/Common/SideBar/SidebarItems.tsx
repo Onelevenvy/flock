@@ -25,12 +25,7 @@ const SidebarItems = ({ onClose }: SidebarItemsProps) => {
   const { t } = useTranslation();
 
   const items = [
-    {
-      activeIcon: FaHouseChimney,
-      inactiveIcon: FiHome,
-      title: t("sidebar.home"),
-      path: "/dashboard",
-    },
+  
     {
       activeIcon: IoChatbubbleEllipses,
       inactiveIcon: IoChatboxEllipsesOutline,

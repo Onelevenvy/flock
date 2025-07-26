@@ -33,7 +33,7 @@ function RecoverPassword() {
 
   useEffect(() => {
     if (isLoggedIn()) {
-      router.push("/dashboard");
+      router.push("/playground");
     }
   }, [router]);
 
