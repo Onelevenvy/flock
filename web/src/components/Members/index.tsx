@@ -18,8 +18,14 @@ import {
   SliderFilledTrack,
   SliderThumb,
   SliderTrack,
+  Tag,
+  TagLabel,
+  TagCloseButton,
+  Text,
   Textarea,
   Tooltip,
+  Wrap,
+  WrapItem,
 } from "@chakra-ui/react";
 import { Select as MultiSelect, chakraComponents } from "chakra-react-select";
 import { type Ref, forwardRef, useState, useEffect } from "react";
@@ -43,6 +49,7 @@ import {
 } from "../../client";
 import useCustomToast from "../../hooks/useCustomToast";
 import ModelSelect from "../Common/ModelProvider";
+import ToolSelector from "./ToolSelector";
 
 interface EditTeamMemberProps {
   member: MemberOut;
@@ -155,23 +162,7 @@ const EditTeamMember = forwardRef<HTMLFormElement, EditTeamMemberProps>(
       queryFn: () => ToolproviderService.readProviderListWithTools(),
     });
 
-    const [selectedToolProviderId, setSelectedToolProviderId] = useState<number | null>(null);
 
-    const {
-      data: toolsData,
-      isLoading: isLoadingTools,
-      isError: isErrorTools,
-      error: errorTools,
-    } = useQuery<ToolsOut | { data: [] }, Error>({
-      queryKey: ["tools", selectedToolProviderId],
-      queryFn: () =>
-        selectedToolProviderId
-          ? ToolsService.readTool({ providerId: selectedToolProviderId })
-          : Promise.resolve({ data: [] }),
-      enabled: !!selectedToolProviderId,
-    });
-
-    const tools = toolsData ? toolsData.data : [];
 
     const {
       data: uploads,
@@ -255,19 +246,7 @@ const EditTeamMember = forwardRef<HTMLFormElement, EditTeamMemberProps>(
 
     const memberConfig = ALLOWED_MEMBER_CONFIGS[watch("type") as MemberTypes];
 
-    const skillOptions = toolProviders
-      ? toolProviders.providers.flatMap(provider => provider.tools)
-          // Remove 'ask-human' tool if 'enableHumanTool' is false
-          .filter(
-            (tool: any) =>
-              tool.name !== "ask-human" || memberConfig.enableHumanTool,
-          )
-          .map((tool: any) => ({
-            ...tool,
-            label: tool.name,
-            value: tool.id,
-          }))
-      : [];
+
 
     const uploadOptions = uploads
       ? uploads.data.map((upload) => ({
@@ -389,19 +368,61 @@ const EditTeamMember = forwardRef<HTMLFormElement, EditTeamMemberProps>(
                   render={({ field, fieldState }) => (
                     <FormControl mt={4} px="6" isInvalid={!!fieldState.error} id="tools">
                       <FormLabel>{t("team.teamsetting.tools")}</FormLabel>
-                      <MultiSelect
-                        isLoading={isLoadingTools}
-                        isMulti
-                        name={field.name}
-                        ref={field.ref}
-                        onChange={field.onChange}
-                        onBlur={field.onBlur}
-                        value={field.value}
-                        options={skillOptions}
-                        placeholder="Select tools"
-                        closeMenuOnSelect={false}
-                        components={customSelectOption}
+                      <ToolSelector
+                        providers={toolProviders?.providers || []}
+                        selectedTools={(field.value || []).map(tool => ({
+                          id: tool.id || 0,
+                          name: tool.name,
+                          description: tool.description || '',
+                          display_name: tool.display_name || null,
+                          input_parameters: tool.input_parameters || null,
+                          is_online: tool.is_online || null,
+                        }))}
+                        onSelect={(tool) => {
+                          const currentTools = field.value || [];
+                          const newTools = [...currentTools, {
+                            name: tool.name,
+                            description: tool.description,
+                            display_name: tool.display_name || undefined,
+                            input_parameters: tool.input_parameters || undefined,
+                            is_online: tool.is_online || undefined,
+                            id: tool.id,
+                          }];
+                          field.onChange(newTools);
+                        }}
+                        onDeselect={(tool) => {
+                          const currentTools = field.value || [];
+                          const newTools = currentTools.filter(t => t.id !== tool.id);
+                          field.onChange(newTools);
+                        }}
                       />
+                      {field.value && field.value.length > 0 && (
+                        <Box mt={3}>
+                          <Text fontSize="sm" fontWeight="medium" mb={2}>
+                            Selected Tools:
+                          </Text>
+                          <Wrap>
+                            {field.value.map((tool) => (
+                              <WrapItem key={tool.id}>
+                                <Tag
+                                  size="md"
+                                  borderRadius="full"
+                                  variant="solid"
+                                  pr={2}
+                                >
+                                  <TagLabel>{tool.display_name || tool.name}</TagLabel>
+                                  <TagCloseButton
+                                    onClick={() => {
+                                      const newTools = field.value!.filter(t => t.id !== tool.id);
+                                      field.onChange(newTools);
+                                    }}
+                                  />
+                                </Tag>
+                              </WrapItem>
+                            ))}
+                          </Wrap>
+                        </Box>
+                      )}
                       <FormErrorMessage>{fieldState.error?.message}</FormErrorMessage>
                     </FormControl>
                   )}
@@ -576,19 +597,33 @@ const EditTeamMember = forwardRef<HTMLFormElement, EditTeamMemberProps>(
                   }) => (
                     <FormControl mt={4} isInvalid={!!error} id="skills">
                       <FormLabel>Skills</FormLabel>
-                      <MultiSelect
-                        isDisabled={!memberConfig.enableSkillTools}
-                        isLoading={isLoadingTools}
-                        isMulti
-                        name={name}
-                        ref={ref}
-                        onChange={onChange}
-                        onBlur={onBlur}
-                        value={value}
-                        options={skillOptions}
-                        placeholder="Select skills"
-                        closeMenuOnSelect={false}
-                        components={customSelectOption}
+                      <ToolSelector
+                        providers={toolProviders?.providers || []}
+                        selectedTools={(value || []).map(tool => ({
+                          id: tool.id || 0,
+                          name: tool.name,
+                          description: tool.description || '',
+                          display_name: tool.display_name || null,
+                          input_parameters: tool.input_parameters || null,
+                          is_online: tool.is_online || null,
+                        }))}
+                        onSelect={(tool) => {
+                          const currentTools = value || [];
+                          const newTools = [...currentTools, {
+                            name: tool.name,
+                            description: tool.description,
+                            display_name: tool.display_name || undefined,
+                            input_parameters: tool.input_parameters || undefined,
+                            is_online: tool.is_online || undefined,
+                            id: tool.id,
+                          }];
+                          onChange(newTools);
+                        }}
+                        onDeselect={(tool) => {
+                          const currentTools = value || [];
+                          const newTools = currentTools.filter(t => t.id !== tool.id);
+                          onChange(newTools);
+                        }}
                       />
                       <FormErrorMessage>{error?.message}</FormErrorMessage>
                     </FormControl>
