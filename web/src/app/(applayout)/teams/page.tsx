@@ -16,7 +16,7 @@ import { useMemo } from "react";
 import { useTranslation } from "react-i18next";
 import { GoGitMerge, GoGitPullRequestDraft, GoWorkflow } from "react-icons/go";
 import { PiChatCircleDots } from "react-icons/pi";
-import { RiApps2Line, RiBookLine } from "react-icons/ri";
+import { RiApps2Line } from "react-icons/ri";
 import { useQuery } from "react-query";
 
 import { type ApiError, TeamsService } from "@/client";

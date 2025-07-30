@@ -14,7 +14,6 @@ import {
   Select,
   VStack,
   Text,
-  useDisclosure,
 } from "@chakra-ui/react";
 import { ToolproviderService } from "@/client/services/ToolproviderService";
 import type { ToolProviderWithToolsListOut } from "@/client/models/ToolProviderWithToolsListOut";

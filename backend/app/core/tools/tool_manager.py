@@ -619,6 +619,7 @@ class ToolManager:
         finally:
             session.close()
 
+
 _tool_manager = ToolManager()
 get_all_tool_providers = _tool_manager.get_all_providers
 get_all_tools = _tool_manager.get_all_tools

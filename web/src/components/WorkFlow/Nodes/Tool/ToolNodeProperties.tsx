@@ -69,8 +69,9 @@ const ToolNodeProperties: React.FC<ToolNodePropertiesProps> = ({
     .map((t: any) => allTools.find((at) => at.id === t.id))
     .filter(Boolean) as ToolOutIdWithAndName[];
 
-  if (isLoading) return <Text>Loading tools...</Text>;
   const [isToolSelectorOpen, setIsToolSelectorOpen] = useState(false);
+
+  if (isLoading) return <Text>Loading tools...</Text>;
 
   if (isError) return <Text>Error loading tools</Text>;
 

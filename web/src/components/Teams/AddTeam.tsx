@@ -25,8 +25,7 @@ import { Controller, type SubmitHandler, useForm } from "react-hook-form";
 import { useTranslation } from "react-i18next";
 import { GiTeamIdea } from "react-icons/gi";
 import { RiChatVoiceLine, RiTeamFill } from "react-icons/ri";
-import { SiKashflow, SiVisualstudiocode } from "react-icons/si";
-import { TbDatabaseSearch } from "react-icons/tb";
+import { SiKashflow } from "react-icons/si";
 import { useMutation, useQueryClient } from "react-query";
 
 import IconPicker from "@/components/Icons/TqxIcon";

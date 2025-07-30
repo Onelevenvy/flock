@@ -36,7 +36,7 @@ class LLMBaseNode:
                 api_key=self.model_info["api_key"],
                 base_url=self.model_info["base_url"],
             )
-        
+
             if len(tools) >= 1 and hasattr(self.model, "bind_tools"):
                 try:
                     self.model = self.model.bind_tools(tools)

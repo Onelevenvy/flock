@@ -14,7 +14,6 @@ import useCustomToast from "@/hooks/useCustomToast";
 
 import EditTeamMember from "../Members";
 import DebugPreview from "./DebugPreview";
-import TeamInforCard from "./TeamInfo";
 
 export default function NormalTeamSettings({
   teamData,
