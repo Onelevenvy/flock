@@ -196,6 +196,26 @@ export default function Tools() {
     }
   };
 
+  const handleEditMcp = (provider: ToolProviderWithToolsListOut) => {
+    setEditMcpProvider(provider);
+    openMcpForm();
+    setSelectedProvider(null); // 关闭凭证面板
+  };
+
+  const handleDeleteMcp = async (provider: ToolProviderWithToolsListOut) => {
+    setIsDeleting(true);
+    try {
+      await ToolproviderService.deleteProvider({ toolProviderId: provider.id });
+      showToast("Success", "MCP provider deleted successfully", "success");
+      setSelectedProvider(null); // 关闭凭证面板
+      refetch(); // 刷新数据
+    } catch (error: any) {
+      showToast("Error", error.message || "Failed to delete MCP provider", "error");
+    } finally {
+      setIsDeleting(false);
+    }
+  };
+
   const typeOptions = [
     {
       value: "all",
@@ -374,6 +394,8 @@ export default function Tools() {
               skill={selectedProvider} 
               onClose={() => setSelectedProvider(null)} 
               onSave={handleSaveCredentials}
+              onEditMcp={handleEditMcp}
+              onDelete={handleDeleteMcp}
             />
           </Box>
         </Box>
