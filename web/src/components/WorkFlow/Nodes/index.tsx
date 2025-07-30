@@ -1,8 +1,8 @@
 import { NodeTypes } from "reactflow";
 
 import AnswerNode from "./Answer/AnswerNode";
-// import AgentNode from "./Agent/AgentNode";
-// import CrewAINode from "./CrewAI/CrewAINode";
+import AgentNode from "./Agent/AgentNode";
+import CrewAINode from "./CrewAI/CrewAINode";
 import EndNode from "./End/EndNode";
 import LLMNode from "./LLM/LLMNode";
 import PluginNode from "./Plugin/PluginNode";
@@ -15,7 +15,7 @@ import CodeNode from "./Code/CodeNode";
 import IfElseNode from "./IfElse/IfElseNode";
 import HumanNode from "./Human/HumanNode";
 import SubgraphNode from "./Subgraph/SubgraphNode";
-// import ParameterExtractorNode from "./ParameterExtractor/ParameterExtractorNode";
+import ParameterExtractorNode from "./ParameterExtractor/ParameterExtractorNode";
 import MCPNode from "./MCPTool/MCPNode";
 
 export const nodeTypes: NodeTypes = {
@@ -26,14 +26,14 @@ export const nodeTypes: NodeTypes = {
   retrieval: RetrievalNode,
   toolretrieval: RetrievalToolNode,
   plugin: PluginNode,
-  // crewai: CrewAINode,
+  crewai: CrewAINode,
   classifier: ClassifierNode,
   answer: AnswerNode,
   code: CodeNode,
   ifelse: IfElseNode,
   human: HumanNode,
   subgraph: SubgraphNode,
-  // parameterExtractor: ParameterExtractorNode,
+  parameterExtractor: ParameterExtractorNode,
   mcpTool: MCPNode,
-  // agent: AgentNode,
+  agent: AgentNode,
 };
