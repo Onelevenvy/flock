@@ -733,7 +733,7 @@ async def generator(
 
                 graph_config = team.graphs[0].config
 
-                root = initialize_graph(
+                root = await initialize_graph(
                     graph_config, checkpointer, save_graph_img=False
                 )
 

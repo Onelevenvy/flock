@@ -21,14 +21,20 @@ class SubgraphNode:
         self.input = input
         # 初始化时编译子图
         self.subgraph_config, self.subgraph_name = get_subgraph_by_id(subgraph_id)
-        self.subgraph = self._build_subgraph()
 
-    def _build_subgraph(self):
+    async def __aenter__(self):
+        self.subgraph = await self._build_subgraph()
+        return self
+
+    async def __aexit__(self, exc_type, exc_val, exc_tb):
+        pass
+
+    async def _build_subgraph(self):
         """Build and compile subgraph"""
         from app.core.workflow.build_workflow import initialize_graph
 
         # 使用主图的初始化函数来构建子图
-        return initialize_graph(
+        return await initialize_graph(
             self.subgraph_config,
             checkpointer=None,  # 子图不需要checkpointer
             save_graph_img=False,

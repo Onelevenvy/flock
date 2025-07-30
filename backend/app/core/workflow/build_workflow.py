@@ -8,9 +8,12 @@ from langgraph.graph import END, START, StateGraph
 from langgraph.graph.graph import CompiledGraph
 from langgraph.prebuilt import ToolNode
 
-from app.core.tools.tool_manager import get_tool_by_tool_id_list,get_tool_by_tool_id,get_tool_by_tool_id_sync,get_tool_by_tool_id_list_sync
-from app.core.workflow.node.parameter_extractor_node import \
-    ParameterExtractorNode
+from app.core.tools.tool_manager import (
+    get_tool_by_tool_id_list,
+    get_tool_by_tool_id,
+    get_tool_by_tool_id_sync,
+)
+from app.core.workflow.node.parameter_extractor_node import ParameterExtractorNode
 from app.core.workflow.node.plugin_node import PluginNode
 from app.core.workflow.utils.tools_utils import get_retrieval_tool
 from app.db.models import InterruptType
@@ -165,7 +168,7 @@ def _add_ifelse_conditional_edges(
         )
 
 
-def initialize_graph(
+async def initialize_graph(
     build_config: dict[str, Any],
     checkpointer: BaseCheckpointSaver,
     save_graph_img=False,
@@ -207,7 +210,8 @@ def initialize_graph(
             elif node_type == "retrieval":
                 _add_retrieval_node(graph_builder, node_id, node_data)
             elif node_type == "llm":
-                _add_llm_node(
+
+                await _add_llm_node(
                     graph_builder,
                     node_id,
                     node_data,
@@ -217,8 +221,9 @@ def initialize_graph(
                     is_hierarchical,
                     llm_children,
                 )
+
             elif node_type in ["tool", "toolretrieval"]:
-                _add_tool_node(graph_builder, node_id, node_type, node_data)
+                await _add_tool_node(graph_builder, node_id, node_type, node_data)
             elif node_type == "classifier":
                 _add_classifier_node(graph_builder, node_id, node_data)
             elif node_type == "code":
@@ -295,7 +300,7 @@ def _create_tool_name_mapping(nodes):
     for node in nodes:
         if node["type"] == "tool":
             tool_name_to_node_id[node["id"]] = [
-                tool['name'].lower() for tool in node["data"]["tools"]
+                tool["name"].lower() for tool in node["data"]["tools"]
             ]
         if node["type"] == "toolretrieval":
             tool_name_to_node_id[node["id"]] = [
@@ -362,7 +367,7 @@ def _add_retrieval_node(graph_builder, node_id, node_data):
     )
 
 
-def _add_llm_node(
+async def _add_llm_node(
     graph_builder,
     node_id,
     node_data,
@@ -384,7 +389,7 @@ def _add_llm_node(
     else:
         node_class = LLMNode
 
-    tools_to_bind = _get_tools_to_bind(node_id, edges, nodes)
+    tools_to_bind = await _get_tools_to_bind(node_id, edges, nodes)
 
     if node_data.get("type") == "subgraph":
         pass
@@ -404,12 +409,12 @@ def _add_llm_node(
         )
 
 
-def _get_tools_to_bind(node_id, edges, nodes):
+async def _get_tools_to_bind(node_id, edges, nodes):
     tools_to_bind = []
     # 存储已处理过的节点，避免循环
     processed_nodes = set()
 
-    def get_connected_tools(current_node_id, processed):
+    async def get_connected_tools(current_node_id, processed):
         if current_node_id in processed:
             return
         processed.add(current_node_id)
@@ -423,7 +428,7 @@ def _get_tools_to_bind(node_id, edges, nodes):
                     # 如果是工具节点，添加工具
                     if target_node["type"] == "tool":
                         tool_ids = [tool["id"] for tool in target_node["data"]["tools"]]
-                        tools = get_tool_by_tool_id_list_sync(tool_ids)
+                        tools = await get_tool_by_tool_id_list(tool_ids)
                         tools_to_bind.extend(tools)
                     elif target_node["type"] == "toolretrieval":
                         tools_to_bind.extend(
@@ -439,17 +444,17 @@ def _get_tools_to_bind(node_id, edges, nodes):
                         )
                     # 如果是human节点，继续遍历其后续节点
                     elif target_node["type"] == "human":
-                        get_connected_tools(target_node["id"], processed)
+                        await get_connected_tools(target_node["id"], processed)
 
     # 从起始节点开始遍历
-    get_connected_tools(node_id, processed_nodes)
+    await get_connected_tools(node_id, processed_nodes)
     return tools_to_bind
 
 
-def _add_tool_node(graph_builder, node_id, node_type, node_data):
+async def _add_tool_node(graph_builder, node_id, node_type, node_data):
     if node_type == "tool":
         tool_ids = [tool["id"] for tool in node_data["tools"]]
-        tools = get_tool_by_tool_id_list_sync(tool_ids)
+        tools = await get_tool_by_tool_id_list(tool_ids)
     else:  # toolretrieval
         tools = [
             get_retrieval_tool(
