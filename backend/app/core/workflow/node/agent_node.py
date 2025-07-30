@@ -172,7 +172,8 @@ class AgentNode:
             }  # 最后一条用户类型的消息
 
         # 创建React Agent
-        self.tools_list = await self.bind_tools()
+        if not self.tools_list:
+            await self.bind_tools()
         self.agent = create_react_agent(
             model=self.llm,
             tools=self.tools_list,

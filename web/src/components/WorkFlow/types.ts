@@ -24,13 +24,18 @@ export interface AgentNodeData extends NodeData {
   )[];
 }
 
+interface SavedTool {
+  id: number;
+  name: string;
+  provider: string;
+}
 export interface AgentConfig {
   id: string;
   name: string;
   role: string;
   goal: string;
   backstory: string;
-  tools: string[];
+  tools: SavedTool[];
   allow_delegation?: boolean;
 }
 

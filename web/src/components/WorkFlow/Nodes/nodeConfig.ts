@@ -109,7 +109,11 @@ export const nodeConfig: Record<string, NodeConfigItem> = {
       temperature: 0.1,
       systemMessage: "",
       userMessage: "",
-      tools: [],
+      tools: [{
+        id: 2,
+        name: "Math Calculator",
+        provider: "math",
+      }],
       retrievalTools: [],
     },
   },
