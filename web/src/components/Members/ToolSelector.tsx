@@ -111,8 +111,13 @@ export default function ToolSelector({
         // 阻止事件冒泡
         event.stopPropagation();
 
-        // 获取未选择的工具
-        const unselectedTools = providerTools.filter(
+        // 过滤出在线的工具
+        const onlineTools = providerTools.filter(
+            (tool) => tool.is_online === undefined || tool.is_online === null || tool.is_online === true
+        );
+
+        // 获取未选择的在线工具
+        const unselectedTools = onlineTools.filter(
             (tool) => !isToolSelected(tool.id),
         );
         const allSelected = unselectedTools.length === 0;
@@ -120,21 +125,21 @@ export default function ToolSelector({
         // 如果提供了批量处理函数，则使用它
         if (onBatchChange) {
             if (allSelected) {
-                // 如果所有工具都已选择，则取消选择所有工具
-                onBatchChange(providerTools, false);
+                // 如果所有在线工具都已选择，则取消选择所有在线工具
+                onBatchChange(onlineTools, false);
             } else {
-                // 否则选择所有未选择的工具
+                // 否则选择所有未选择的在线工具
                 onBatchChange(unselectedTools, true);
             }
         } else {
             // 如果没有提供批量处理函数，则逐个处理
             if (allSelected) {
-                // 如果所有工具都已选择，则取消选择所有工具
-                providerTools.forEach((tool) => {
+                // 如果所有在线工具都已选择，则取消选择所有在线工具
+                onlineTools.forEach((tool) => {
                     onDeselect(tool);
                 });
             } else {
-                // 否则选择所有未选择的工具
+                // 否则选择所有未选择的在线工具
                 unselectedTools.forEach((tool) => {
                     onSelect(tool);
                 });
