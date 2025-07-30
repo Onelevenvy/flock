@@ -123,7 +123,7 @@ export const nodeConfig: Record<string, NodeConfigItem> = {
       targets: ["left"],
     },
     initialData: {
-      tools: ["Open Weather"],
+      tools: [1],
     },
     inputVariables: [],
     outputVariables: ["response"],

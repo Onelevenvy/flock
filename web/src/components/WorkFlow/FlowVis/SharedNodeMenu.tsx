@@ -9,8 +9,14 @@ import {
   VStack,
   HStack,
   IconButton,
+  Accordion,
+  AccordionItem,
+  AccordionButton,
+  AccordionPanel,
+  AccordionIcon,
+  Tooltip,
 } from "@chakra-ui/react";
-import React from "react";
+import React, { useState } from "react";
 import { useTranslation } from "react-i18next";
 
 import { useToolProvidersQuery } from "@/hooks/useToolProvidersQuery";
@@ -34,6 +40,7 @@ const SharedNodeMenu: React.FC<SharedNodeMenuProps> = ({
     isLoading: isSubgraphsLoading,
     isError: isSubgraphsError,
   } = useSubgraphsQuery();
+  const [expandedProviders, setExpandedProviders] = useState<Record<number, boolean>>({});
 
   const handleNodeInteraction =
     (nodeType: NodeType | string, tool?: any) =>
@@ -144,7 +151,7 @@ const SharedNodeMenu: React.FC<SharedNodeMenuProps> = ({
                         transform: "translateY(0)",
                       }}
                     >
-                      <HStack spacing={3} overflow="hidden">
+                      <HStack spacing={5} overflow="hidden">
                         <IconButton
                           aria-label={display}
                           icon={<Icon />}
@@ -188,65 +195,116 @@ const SharedNodeMenu: React.FC<SharedNodeMenuProps> = ({
                   ) : isError ? (
                     <Text color="red.500">{t("workflow.nodeMenu.error")}</Text>
                   ) : (
-                    tools?.data.map((tool) => (
-                      <Box
-                        key={tool.display_name}
-                        border="1px solid"
-                        borderColor="gray.200"
-                        borderRadius="lg"
-                        p={3}
-                        cursor={isDraggable ? "move" : "pointer"}
-                        onClick={
-                          !isDraggable
-                            ? handleNodeInteraction("plugin", tool)
-                            : undefined
-                        }
-                        onDragStart={
-                          isDraggable
-                            ? handleNodeInteraction("plugin", tool)
-                            : undefined
-                        }
-                        draggable={isDraggable}
-                        transition="all 0.2s"
-                        _hover={{
-                          bg: "gray.50",
-                          transform: "translateY(-1px)",
-                          boxShadow: "sm",
-                          borderColor: "gray.300",
-                        }}
-                        _active={{
-                          transform: "translateY(0)",
-                        }}
-                      >
-                        <HStack spacing={3} overflow="hidden">
-                          <Box
-                            as={IconButton}
-                            borderRadius="lg"
-                            bg="blue.50"
-                            flexShrink={0}
-                            size={"sm"}
+                    <Accordion allowMultiple>
+                      {tools?.providers.map((provider) => (
+                        <AccordionItem key={provider.id} border="none">
+                          <AccordionButton
+                            py={2}
+                            _hover={{ bg: 'gray.50' }}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setExpandedProviders(prev => ({
+                                ...prev,
+                                [provider.id]: !prev[provider.id]
+                              }));
+                            }}
                           >
-                            <ToolsIcon
-                              tools_name={tool.display_name!.replace(/ /g, "_")}
-                              color="blue.500"
-                              boxSize={4}
-                            />
-                          </Box>
-                          <Text
-                            fontSize="xs"
-                            fontWeight="500"
-                            color="gray.700"
-                            noOfLines={1}
-                            overflow="hidden"
-                            textOverflow="ellipsis"
-                            whiteSpace="nowrap"
-                            title={tool.display_name!}
-                          >
-                            {tool.display_name}
-                          </Text>
-                        </HStack>
-                      </Box>
-                    ))
+                            <Box flex="1" textAlign="left">
+                              <HStack>
+                                {provider.icon && (
+                                  <Box w="5" h="5" borderRadius="md" bg="primary.100" display="flex" alignItems="center" justifyContent="center">
+                                    <ToolsIcon
+                                      h="6"
+                                      w="6"
+                                      tools_name={(provider.provider_name!)}
+                                      color={`${provider.tool_type === 'builtin' ? "blue" : "purple"}.500`}
+                                    />
+                                  </Box>
+                                )}
+                                <Text fontSize="xs" fontWeight="500" >
+                                  {provider.display_name || provider.provider_name}
+                                </Text>
+                              </HStack>
+                            </Box>
+                            <AccordionIcon />
+                          </AccordionButton>
+                          <AccordionPanel pb={2}>
+                            <VStack spacing={2} align="stretch">
+                              {provider.tools.map((tool) => {
+                                const isOnline = tool.is_online !== undefined && tool.is_online !== null ? tool.is_online : true;
+                                return (
+                                  <Tooltip
+                                    key={tool.id}
+                                    label={!isOnline ? "工具离线不可用" : tool.description}
+                                    placement="right"
+                                    isDisabled={!tool.description && isOnline}
+                                  >
+                                    <Box
+                                      p={2}
+                                      borderRadius="md"
+                                      cursor={isOnline && !isDraggable ? "pointer" : isDraggable ? "move" : "not-allowed"}
+                                      draggable={isDraggable && isOnline}
+                                      transition="all 0.2s"
+                                      onClick={(event) => {
+                                        if (isOnline && !isDraggable) {
+                                          event.stopPropagation();
+                                          handleNodeInteraction("plugin", tool)(event);
+                                        }
+                                      }}
+                                      onDragStart={
+                                        isDraggable && isOnline
+                                          ? (event) => {
+                                              event.stopPropagation();
+                                              handleNodeInteraction("plugin", tool)(event);
+                                            }
+                                          : undefined
+                                      }
+                                      _hover={isOnline ? {
+                                        bg: "gray.50",
+                                        transform: "translateY(-1px)",
+                                        boxShadow: "sm",
+                                        borderColor: "gray.300",
+                                      } : {}}
+                                      _active={{
+                                        transform: "translateY(0)",
+                                      }}
+                                    >
+                                      <HStack spacing={3} overflow="hidden">
+                                        <Box
+                                          as={IconButton}
+                                          borderRadius="lg"
+                                          bg="blue.50"
+                                          flexShrink={0}
+                                          size={"sm"}
+                                        >
+                                          <ToolsIcon
+                                            tools_name={(provider.display_name || provider.provider_name)!.replace(/ /g, "_")}
+                                            color="blue.500"
+                                            boxSize={4}
+                                          />
+                                        </Box>
+                                        <Text
+                                          fontSize="xs"
+                                          fontWeight="500"
+                                          color="gray.700"
+                                          noOfLines={1}
+                                          overflow="hidden"
+                                          textOverflow="ellipsis"
+                                          whiteSpace="nowrap"
+                                          title={tool.display_name || tool.name}
+                                        >
+                                          {tool.display_name || tool.name}
+                                        </Text>
+                                      </HStack>
+                                    </Box>
+                                  </Tooltip>
+                                );
+                              })}
+                            </VStack>
+                          </AccordionPanel>
+                        </AccordionItem>
+                      ))}
+                    </Accordion>
                   )}
                 </VStack>
               </Box>

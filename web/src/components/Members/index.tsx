@@ -668,7 +668,7 @@ const EditTeamMember = forwardRef<HTMLFormElement, EditTeamMemberProps>(
                   }) => (
                     <FormControl mt={4} isInvalid={!!error} id="skills">
                       <HStack justify="space-between" align="center" mb={2}>
-                        <FormLabel mb={0}>Skills</FormLabel>
+                        <FormLabel mb={0}>Tools</FormLabel>
                         <ToolSelector
                           providers={toolProviders?.providers || []}
                           selectedTools={(value || []).map(tool => ({
