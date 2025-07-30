@@ -21,9 +21,8 @@ import {
     Tooltip,
     Box,
     Text,
-    VStack,
     HStack,
-    Divider,
+    IconButton,
 } from "@chakra-ui/react";
 
 interface ToolSelectorProps {
@@ -150,11 +149,11 @@ export default function ToolSelector({
             {children}
         </Box>
     ) : (
-        <Button 
+        <IconButton 
             onClick={() => setOpen(true)}
-            leftIcon={<Plus size={16} />}
+            icon={<Plus size={16} />}
             size="sm"
-            variant="outline"
+            // variant="outline"
             aria-label="Add tools"
         />
     );
@@ -233,24 +232,30 @@ export default function ToolSelector({
                                             <AccordionPanel pb={2}>
                                                 {provider.tools.map((tool) => {
                                                     const selected = isToolSelected(tool.id);
+                                                    const isOnline = tool.is_online !== undefined && tool.is_online !== null ? tool.is_online : true; // 默认为 true
                                                     return (
                                                         <Tooltip
                                                             key={tool.id}
-                                                            label={tool.description}
+                                                            label={!isOnline ? "工具离线不可用" : tool.description}
                                                             placement="right"
-                                                            isDisabled={!tool.description}
+                                                            isDisabled={!tool.description && isOnline}
                                                         >
                                                             <Box
                                                                 p={2}
                                                                 borderRadius="md"
-                                                                cursor="pointer"
-                                                                _hover={{ bg: 'gray.50' }}
-                                                                onClick={(event) => handleToolToggle(tool, event as any)}
+                                                                cursor={isOnline ? "pointer" : "not-allowed"}
+                                                                opacity={isOnline ? 1 : 0.5}
+                                                                _hover={isOnline ? { bg: 'gray.50' } : {}}
+                                                                onClick={(event) => {
+                                                                    if (isOnline) {
+                                                                        handleToolToggle(tool, event as any);
+                                                                    }
+                                                                }}
                                                             >
                                                                 <HStack justify="space-between">
                                                                     <Text
                                                                         fontSize="sm"
-                                                                        color={selected ? 'gray.500' : 'inherit'}
+                                                                        color={selected ? 'gray.500' : isOnline ? 'inherit' : 'gray.500'}
                                                                     >
                                                                         {tool.display_name || tool.name}
                                                                     </Text>

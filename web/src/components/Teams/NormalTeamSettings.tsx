@@ -71,7 +71,7 @@ export default function NormalTeamSettings({
     >
       <Box w="30%" display="flex" flexDirection="column" gap={4}>
         <Box>
-          <TeamInforCard teamData={teamData} />
+          {/* <TeamInforCard teamData={teamData} /> */}
         </Box>
         <Box
           flex={1}
