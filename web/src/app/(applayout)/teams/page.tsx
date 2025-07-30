@@ -70,6 +70,11 @@ function Teams() {
       icon: <GoWorkflow className="w-[14px] h-[14px] mr-1" />,
     },
     {
+      value: "chatbot",
+      text: t("panestate.team.chatbot"),
+      icon: <PiChatCircleDots className="w-[14px] h-[14px] mr-1" />,
+    },
+    {
       value: "sequential",
       text: "S-Agent",
       icon: <GoGitPullRequestDraft className="w-[14px] h-[14px] mr-1" />,
@@ -78,16 +83,6 @@ function Teams() {
       value: "hierarchical",
       text: "H-Agent",
       icon: <GoGitMerge className="w-[14px] h-[14px] mr-1" />,
-    },
-    {
-      value: "chatbot",
-      text: t("panestate.team.chatbot"),
-      icon: <PiChatCircleDots className="w-[14px] h-[14px] mr-1" />,
-    },
-    {
-      value: "ragbot",
-      text: t("panestate.team.ragbot"),
-      icon: <RiBookLine className="w-[14px] h-[14px] mr-1" />,
     },
   ];
 

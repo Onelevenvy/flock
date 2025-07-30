@@ -20,7 +20,7 @@ import {
   VStack,
   useColorModeValue,
 } from "@chakra-ui/react";
-import { useState } from "react";
+import { JSX, useState } from "react";
 import { Controller, type SubmitHandler, useForm } from "react-hook-form";
 import { useTranslation } from "react-i18next";
 import { GiTeamIdea } from "react-icons/gi";
@@ -113,14 +113,7 @@ const AddTeam = ({ isOpen, onClose }: AddTeamProps) => {
   };
 
   // 任务类型列表
-  const taskTypes = [
-    "chatbot",
-    "ragbot",
-    "hierarchical",
-    "sequential",
-    "workflow",
-    "codeassistant",
-  ];
+  const taskTypes = ["workflow", "chatbot", "hierarchical", "sequential"];
 
   const cardIcons: CardIcons = {
     chatbot: {
@@ -129,13 +122,6 @@ const AddTeam = ({ isOpen, onClose }: AddTeamProps) => {
       icon: <RiTeamFill size="24" />,
       title: t("team.teamcard.chatbot.title"),
       descripthion: t("team.teamcard.chatbot.description"),
-    },
-    ragbot: {
-      colorScheme: "green",
-      backgroundColor: "#4caf50",
-      icon: <TbDatabaseSearch size="24" />,
-      title: t("team.teamcard.ragbot.title"),
-      descripthion: t("team.teamcard.ragbot.description"),
     },
     workflow: {
       colorScheme: "teal",
@@ -157,13 +143,6 @@ const AddTeam = ({ isOpen, onClose }: AddTeamProps) => {
       icon: <GiTeamIdea size="24" />,
       title: t("team.teamcard.sagent.title"),
       descripthion: t("team.teamcard.sagent.description"),
-    },
-    codeassistant: {
-      colorScheme: "yellow",
-      backgroundColor: "#ad7f9a",
-      icon: <SiVisualstudiocode size="24" />,
-      title: "Code assistant",
-      descripthion: "To be added",
     },
   };
 

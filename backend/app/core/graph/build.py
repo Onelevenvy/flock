@@ -24,7 +24,7 @@ from app.core.graph.members import (GraphLeader, GraphMember, GraphTeam,
                                     SequentialWorkerNode, SummariserNode,
                                     WorkerNode)
 from app.core.graph.messages import ChatResponse, event_to_response
-from app.core.state import GraphSkill, GraphUpload
+from app.core.state import GraphTool, GraphUpload
 from app.core.workflow.build_workflow import initialize_graph
 from app.db.models import (ChatMessage, Interrupt, InterruptDecision, Member,
                            Team)
@@ -91,9 +91,9 @@ def convert_hierarchical_team_to_dict(
             leader = members_lookup[member.source]
             leader_name = leader.name
             if member.type == "worker":
-                tools: list[GraphSkill | GraphUpload]
+                tools: list[GraphTool | GraphUpload]
                 tools = [
-                    GraphSkill(
+                    GraphTool(
                         id=skill.id,
                         name=skill.name,
                         managed=skill.managed,
@@ -162,15 +162,15 @@ def convert_sequential_team_to_dict(members: list[Member]) -> Mapping[str, Graph
     while queue:
         member_id = queue.popleft()
         memberModel = members_lookup[member_id]
-        tools: list[GraphSkill | GraphUpload]
+        tools: list[GraphTool | GraphUpload]
         tools = [
-            GraphSkill(
-                id=skill.id,
-                name=skill.name,
-                managed=skill.managed,
-                definition=skill.tool_definition,
+            GraphTool(
+                id=tool.id,
+                name=tool.name,
+                managed=tool.managed,
+                definition=tool.tool_definition,
             )
-            for skill in memberModel.skills
+            for tool in memberModel.tools
         ]
         tools += [
             GraphUpload(
@@ -210,7 +210,7 @@ def convert_chatbot_chatrag_team_to_dict(
 
     member = members[0]
     assert member.id is not None, "member.id is unexpectedly None"
-    tools: list[GraphSkill | GraphUpload]
+    tools: list[GraphTool | GraphUpload]
     if workflow_type == "ragbot":
         tools = [
             GraphUpload(
@@ -233,7 +233,7 @@ def convert_chatbot_chatrag_team_to_dict(
             for upload in member.uploads
             if upload.owner_id is not None
         ] + [
-            GraphSkill(
+            GraphTool(
                 id=tool.id,
                 name=tool.name,
                 managed=tool.managed,
@@ -302,7 +302,7 @@ def should_continue(state: GraphTeamState) -> str:
 def create_tools_condition(
     current_member_name: str,
     next_member_name: str,
-    tools: list[GraphSkill | GraphUpload],
+    tools: list[GraphTool | GraphUpload],
 ) -> dict[Hashable, str]:
     """Creates the mapping for conditional edges
     The tool node must be in format: '{current_member_name}_tools'
@@ -563,7 +563,7 @@ async def create_chatbot_ragbot_graph(
         normal_tools: list[BaseTool] = []
 
         graph_skills = [
-            GraphSkill(id=t.id, name=t.name, definition=t.definition, managed=t.managed)
+            GraphTool(id=t.id, name=t.name, definition=t.definition, managed=t.managed)
             for t in member.tools
         ]
 

@@ -11,7 +11,7 @@ const translation = {
   teamcard: {
     chatbot: {
       title: "Chatbot",
-      description: "Basic chatbot app, single agent, can use tools",
+      description: "Basic chatbot app, single react agent, can use tools",
     },
     ragbot: {
       title: "Knowledge Base Q&A",
