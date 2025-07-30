@@ -291,7 +291,7 @@ def should_continue(state: GraphTeamState) -> str:
     if messages and isinstance(messages[-1], AIMessage) and messages[-1].tool_calls:
         # TODO: what if multiple tool_calls?
         for tool_call in messages[-1].tool_calls:
-            if tool_call["name"] == "ask-human":
+            if tool_call["name"] == "ask_human":
                 return "call_human"
         else:
             return "call_tools"
@@ -318,7 +318,7 @@ def create_tools_condition(
     }
 
     for tool in tools:
-        if tool.name == "ask-human":
+        if tool.name == "ask_human":
             mapping["call_human"] = f"{current_member_name}_askHuman_tool"
         else:
             mapping["call_tools"] = f"{current_member_name}_tools"
@@ -391,8 +391,8 @@ async def create_hierarchical_graph(
                 normal_tools: list[BaseTool] = []
 
                 for tool in member.tools:
-                    if tool.name == "ask-human":
-                        # Handling Ask-Human tool
+                    if tool.name == "ask_human":
+                        # Handling ask_human tool
                         interrupt_member_names.append(f"{name}_askHuman_tool")
                         build.add_node(f"{name}_askHuman_tool", askhuman_node)
                         build.add_edge(f"{name}_askHuman_tool", name)
@@ -480,8 +480,8 @@ async def create_sequential_graph(
             normal_tools: list[BaseTool] = []
 
             for tool in member.tools:
-                if tool.name == "ask-human":
-                    # Handling Ask-Human tool
+                if tool.name == "ask_human":
+                    # Handling ask_human tool
                     interrupt_member_names.append(f"{member.name}_askHuman_tool")
                     graph.add_node(f"{member.name}_askHuman_tool", askhuman_node)
                     graph.add_edge(f"{member.name}_askHuman_tool", member.name)
@@ -568,8 +568,8 @@ async def create_chatbot_ragbot_graph(
         ]
 
         for skill in graph_skills:
-            if skill.name == "ask-human":
-                # Handling Ask-Human tool
+            if skill.name == "ask_human":
+                # Handling ask_human tool
                 interrupt_member_names.append(f"{member.name}_askHuman_tool")
                 graph.add_node(f"{member.name}_askHuman_tool", askhuman_node)
                 graph.add_edge(f"{member.name}_askHuman_tool", member.name)
@@ -790,10 +790,10 @@ async def generator(
                                 ToolMessage(
                                     tool_call_id=tool_call["id"],
                                     content=interrupt.tool_message,
-                                    name="ask-human",
+                                    name="ask_human",
                                 )
                                 for tool_call in tool_calls
-                                if tool_call["name"] == "ask-human"
+                                if tool_call["name"] == "ask_human"
                             ]
                         }
             elif interrupt and interrupt.interaction_type is not None:
@@ -884,7 +884,7 @@ async def generator(
                     if not isinstance(message, AIMessage):
                         return
                     for tool_call in message.tool_calls:
-                        if tool_call["name"] == "ask-human":
+                        if tool_call["name"] == "ask_human":
                             response = ChatResponse(
                                 type="interrupt",
                                 name="human",
