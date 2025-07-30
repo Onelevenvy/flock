@@ -49,9 +49,9 @@ const ToolNode: React.FC<NodeProps> = (props) => {
 
       <VStack align="stretch" spacing={1}>
         {tools.length > 0 ? (
-          tools.map((tool: string, index: number) => (
+          tools.map((tool: { id: number; name: string; provider: string }) => (
             <Box
-              key={index}
+              key={tool.id}
               bg="ui.inputbgcolor"
               borderRadius="md"
               p={1}
@@ -63,13 +63,14 @@ const ToolNode: React.FC<NodeProps> = (props) => {
               }}
             >
               <HStack spacing={2} px={2}>
-                {/* <ToolsIcon tools_name={tool.replace(/ /g, "_")} /> */}
+                 <ToolsIcon tools_name={tool.provider} />
                 <Text fontSize="xs" fontWeight="500" color="gray.700">
-                  {tool}
+                  {tool.name}
                 </Text>
               </HStack>
             </Box>
           ))
+
         ) : (
           <Text
             fontSize="xs"

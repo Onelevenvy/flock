@@ -9,7 +9,7 @@ import {
 } from "@chakra-ui/react";
 import type React from "react";
 import { useTranslation } from "react-i18next";
-import { FaPlus, FaTools } from "react-icons/fa";
+import { FaTools } from "react-icons/fa";
 
 import {
   ToolOutIdWithAndName,
@@ -34,18 +34,26 @@ const ToolNodeProperties: React.FC<ToolNodePropertiesProps> = ({
   const providers: ToolProviderWithToolsListOut[] = providersData?.providers || [];
 
   const addTool = (tool: ToolOutIdWithAndName) => {
-    const currentTools = node.data.tools || [];
-    if (!currentTools.includes(tool.id)) {
-      onNodeDataChange(node.id, "tools", [...currentTools, tool.id]);
+    const currentTools: any[] = node.data.tools || [];
+    if (!currentTools.some((t) => t.id === tool.id)) {
+      const provider = providers.find((p) =>
+        p.tools.some((t) => t.id === tool.id)
+      );
+      const newTool = {
+        id: tool.id,
+        name: tool.display_name || tool.name,
+        provider: provider?.provider_name || "Unknown",
+      };
+      onNodeDataChange(node.id, "tools", [...currentTools, newTool]);
     }
   };
 
   const removeTool = (toolId: number) => {
-    const currentTools = node.data.tools || [];
+    const currentTools: any[] = node.data.tools || [];
     onNodeDataChange(
       node.id,
       "tools",
-      currentTools.filter((id: number) => id !== toolId)
+      currentTools.filter((t) => t.id !== toolId)
     );
   };
 
@@ -56,7 +64,7 @@ const ToolNodeProperties: React.FC<ToolNodePropertiesProps> = ({
   const selectedToolsObjects: ToolOutIdWithAndName[] = (
     node.data.tools || []
   )
-    .map((toolId: number) => allTools.find((t) => t.id === toolId))
+    .map((t: any) => allTools.find((at) => at.id === t.id))
     .filter(Boolean) as ToolOutIdWithAndName[];
 
   if (isLoading) return <Text>Loading tools...</Text>;
@@ -90,7 +98,7 @@ const ToolNodeProperties: React.FC<ToolNodePropertiesProps> = ({
         </ToolSelector>
 
         <VStack spacing={2} align="stretch">
-          {selectedToolsObjects.map((tool: ToolOutIdWithAndName) => (
+          {(node.data.tools || []).map((tool: any) => (
             <Box
               key={tool.id}
               p={2}
@@ -101,8 +109,9 @@ const ToolNodeProperties: React.FC<ToolNodePropertiesProps> = ({
             >
               <HStack justify="space-between" align="center">
                 <HStack spacing={2}>
+                   <ToolsIcon tools_name={tool.provider} />
                   <Text fontSize="sm" fontWeight="500" color="gray.700">
-                    {tool.display_name || tool.name}
+                    {tool.name}
                   </Text>
                 </HStack>
                 <IconButton
