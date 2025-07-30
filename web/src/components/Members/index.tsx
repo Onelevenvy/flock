@@ -667,35 +667,98 @@ const EditTeamMember = forwardRef<HTMLFormElement, EditTeamMemberProps>(
                     fieldState: { error },
                   }) => (
                     <FormControl mt={4} isInvalid={!!error} id="skills">
-                      <FormLabel>Skills</FormLabel>
-                      <ToolSelector
-                        providers={toolProviders?.providers || []}
-                        selectedTools={(value || []).map(tool => ({
-                          id: tool.id || 0,
-                          name: tool.name,
-                          description: tool.description || '',
-                          display_name: tool.display_name || null,
-                          input_parameters: tool.input_parameters || null,
-                          is_online: tool.is_online || null,
-                        }))}
-                        onSelect={(tool) => {
-                          const currentTools = value || [];
-                          const newTools = [...currentTools, {
+                      <HStack justify="space-between" align="center" mb={2}>
+                        <FormLabel mb={0}>Skills</FormLabel>
+                        <ToolSelector
+                          providers={toolProviders?.providers || []}
+                          selectedTools={(value || []).map(tool => ({
+                            id: tool.id || 0,
                             name: tool.name,
-                            description: tool.description,
-                            display_name: tool.display_name || undefined,
-                            input_parameters: tool.input_parameters || undefined,
-                            is_online: tool.is_online || undefined,
-                            id: tool.id,
-                          }];
-                          onChange(newTools);
-                        }}
-                        onDeselect={(tool) => {
-                          const currentTools = value || [];
-                          const newTools = currentTools.filter(t => t.id !== tool.id);
-                          onChange(newTools);
-                        }}
-                      />
+                            description: tool.description || '',
+                            display_name: tool.display_name || null,
+                            input_parameters: tool.input_parameters || null,
+                            is_online: tool.is_online || null,
+                          }))}
+                          onSelect={(tool) => {
+                            const currentTools = value || [];
+                            const newTools = [...currentTools, {
+                              name: tool.name,
+                              description: tool.description,
+                              display_name: tool.display_name || undefined,
+                              input_parameters: tool.input_parameters || undefined,
+                              is_online: tool.is_online || undefined,
+                              id: tool.id,
+                            }];
+                            onChange(newTools);
+                          }}
+                          onDeselect={(tool) => {
+                            const currentTools = value || [];
+                            const newTools = currentTools.filter(t => t.id !== tool.id);
+                            onChange(newTools);
+                          }}
+                        />
+                      </HStack>
+                      {value && value.length > 0 && (
+                        <Box mt={3}>
+                          <SimpleGrid columns={2} spacing={3}>
+                            {value.map((tool) => {
+                              // 查找工具所属的提供商
+                              let provider = null;
+                              if (toolProviders?.providers) {
+                                for (const p of toolProviders.providers) {
+                                  if (p.tools.some(t => t.id === tool.id)) {
+                                    provider = p;
+                                    break;
+                                  }
+                                }
+                              }
+                              
+                              return (
+                                <HStack
+                                  key={tool.id}
+                                  role="group"
+                                  justify="space-between"
+                                  p={3}
+                                  boxShadow="sm"
+                                  borderWidth="1px"
+                                  borderColor="gray.200"
+                                  borderRadius="lg"
+                                  w="100%"
+                                >
+                                  <HStack flex="1" spacing={2} overflow="hidden">
+                                    <Box flexShrink={0} w={7} h={7} borderRadius="lg" bg="primary.50" display="flex" alignItems="center" justifyContent="center">
+                                      {provider && provider.icon && (
+                                        <ToolsIcon 
+                                          tools_name={provider.provider_name || ''} 
+                                          color={`${provider.tool_type === 'builtin' ? "blue" : "purple"}.500`} 
+                                        />
+                                      )}
+                                    </Box>
+                                    <Text fontSize="xs" fontWeight="medium" isTruncated>
+                                      {tool.display_name || tool.name}
+                                    </Text>
+                                  </HStack>
+                                  <IconButton
+                                    aria-label="Remove tool"
+                                    icon={<CircleMinus size={16} />}
+                                    variant="ghost"
+                                    size="sm"
+                                    isRound
+                                    opacity={0}
+                                    transition="opacity 0.2s"
+                                    _groupHover={{ opacity: 1 }}
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      const newTools = value.filter(t => t.id !== tool.id);
+                                      onChange(newTools);
+                                    }}
+                                  />
+                                </HStack>
+                              );
+                            })}
+                          </SimpleGrid>
+                        </Box>
+                      )}
                       <FormErrorMessage>{error?.message}</FormErrorMessage>
                     </FormControl>
                   )}

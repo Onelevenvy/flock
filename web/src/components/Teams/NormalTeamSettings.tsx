@@ -70,9 +70,6 @@ export default function NormalTeamSettings({
       gap={4}
     >
       <Box w="30%" display="flex" flexDirection="column" gap={4}>
-        <Box>
-          {/* <TeamInforCard teamData={teamData} /> */}
-        </Box>
         <Box
           flex={1}
           overflowY="auto"
