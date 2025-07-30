@@ -5,6 +5,7 @@ import {
   FormControl,
   FormErrorMessage,
   FormLabel,
+  HStack,
   Input,
   Modal,
   ModalBody,
@@ -14,19 +15,17 @@ import {
   ModalHeader,
   ModalOverlay,
   Select,
+  SimpleGrid,
   Slider,
   SliderFilledTrack,
   SliderThumb,
   SliderTrack,
-  Tag,
-  TagLabel,
-  TagCloseButton,
   Text,
   Textarea,
   Tooltip,
-  Wrap,
-  WrapItem,
+  IconButton,
 } from "@chakra-ui/react";
+import { CircleMinus } from 'lucide-react';
 import { Select as MultiSelect, chakraComponents } from "chakra-react-select";
 import { type Ref, forwardRef, useState, useEffect } from "react";
 import { Controller, type SubmitHandler, useForm } from "react-hook-form";
@@ -36,7 +35,6 @@ import { useMutation, useQueryClient } from "react-query";
 import { useModelQuery } from "@/hooks/useModelQuery";
 import { useQuery } from "react-query";
 import { ToolproviderService } from "@/client/services/ToolproviderService";
-import { ToolsService } from "@/client/services/ToolsService";
 import { useUploadsQuery } from "@/hooks/useUploadsQuery";
 
 import {
@@ -45,8 +43,8 @@ import {
   type MemberUpdate,
   MembersService,
   type TeamUpdate,
-  ToolsOut,
 } from "../../client";
+import ToolsIcon from "../Icons/Tools/index";
 import useCustomToast from "../../hooks/useCustomToast";
 import ModelSelect from "../Common/ModelProvider";
 import ToolSelector from "./ToolSelector";
@@ -367,97 +365,133 @@ const EditTeamMember = forwardRef<HTMLFormElement, EditTeamMemberProps>(
                   name="tools"
                   render={({ field, fieldState }) => (
                     <FormControl mt={4} px="6" isInvalid={!!fieldState.error} id="tools">
-                      <FormLabel>{t("team.teamsetting.tools")}</FormLabel>
-                      <ToolSelector
-                        providers={toolProviders?.providers || []}
-                        selectedTools={(field.value || []).map(tool => ({
-                          id: tool.id || 0,
-                          name: tool.name,
-                          description: tool.description || '',
-                          display_name: tool.display_name || null,
-                          input_parameters: tool.input_parameters || null,
-                          is_online: tool.is_online || null,
-                        }))}
-                        onSelect={(tool) => {
-                          const currentTools = field.value || [];
-                          const newTools = [...currentTools, {
+                      <HStack justify="space-between" align="center" mb={2}>
+                        <FormLabel mb={0}>{t("team.teamsetting.tools")}</FormLabel>
+                        <ToolSelector
+                          providers={toolProviders?.providers || []}
+                          selectedTools={(field.value || []).map(tool => ({
+                            id: tool.id || 0,
                             name: tool.name,
-                            description: tool.description,
-                            display_name: tool.display_name || undefined,
-                            input_parameters: tool.input_parameters || undefined,
-                            is_online: tool.is_online || undefined,
-                            id: tool.id,
-                          }];
-                          field.onChange(newTools);
-                        }}
-                        onDeselect={(tool) => {
-                          const currentTools = field.value || [];
-                          const newTools = currentTools.filter(t => t.id !== tool.id);
-                          field.onChange(newTools);
-                        }}
-                        onBatchChange={(tools, selected) => {
-                          const currentTools = field.value || [];
-                          if (selected) {
-                            // 添加工具
-                            const newTools = [...currentTools];
-                            tools.forEach(tool => {
-                              // 检查工具是否已存在
-                              if (!newTools.some(t => t.id === tool.id)) {
-                                // 查找工具所属的提供商ID
-                                let providerId = 0;
-                                if (toolProviders?.providers) {
-                                  for (const provider of toolProviders.providers) {
-                                    if (provider.tools.some(t => t.id === tool.id)) {
-                                      providerId = provider.id;
-                                      break;
+                            description: tool.description || '',
+                            display_name: tool.display_name || null,
+                            input_parameters: tool.input_parameters || null,
+                            is_online: tool.is_online || null,
+                          }))}
+                          onSelect={(tool) => {
+                            const currentTools = field.value || [];
+                            const newTools = [...currentTools, {
+                              name: tool.name,
+                              description: tool.description,
+                              display_name: tool.display_name || undefined,
+                              input_parameters: tool.input_parameters || undefined,
+                              is_online: tool.is_online || undefined,
+                              id: tool.id,
+                            }];
+                            field.onChange(newTools);
+                          }}
+                          onDeselect={(tool) => {
+                            const currentTools = field.value || [];
+                            const newTools = currentTools.filter(t => t.id !== tool.id);
+                            field.onChange(newTools);
+                          }}
+                          onBatchChange={(tools, selected) => {
+                            const currentTools = field.value || [];
+                            if (selected) {
+                              // 添加工具
+                              const newTools = [...currentTools];
+                              tools.forEach(tool => {
+                                // 检查工具是否已存在
+                                if (!newTools.some(t => t.id === tool.id)) {
+                                  // 查找工具所属的提供商ID
+                                  let providerId = 0;
+                                  if (toolProviders?.providers) {
+                                    for (const provider of toolProviders.providers) {
+                                      if (provider.tools.some(t => t.id === tool.id)) {
+                                        providerId = provider.id;
+                                        break;
+                                      }
                                     }
                                   }
+                                  newTools.push({
+                                    name: tool.name,
+                                    description: tool.description || '',
+                                    display_name: tool.display_name || undefined,
+                                    input_parameters: tool.input_parameters || undefined,
+                                    is_online: tool.is_online || undefined,
+                                    provider_id: providerId,
+                                    id: tool.id,
+                                  });
                                 }
-                                newTools.push({
-                                  name: tool.name,
-                                  description: tool.description || '',
-                                  display_name: tool.display_name || undefined,
-                                  input_parameters: tool.input_parameters || undefined,
-                                  is_online: tool.is_online || undefined,
-                                  provider_id: providerId,
-                                  id: tool.id,
-                                });
-                              }
-                            });
-                            field.onChange(newTools);
-                          } else {
-                            // 移除工具
-                            const toolIdsToRemove = new Set(tools.map(t => t.id));
-                            const newTools = currentTools.filter(t => !toolIdsToRemove.has(t.id!));
-                            field.onChange(newTools);
-                          }
-                        }}
-                      />
+                              });
+                              field.onChange(newTools);
+                            } else {
+                              // 移除工具
+                              const toolIdsToRemove = new Set(tools.map(t => t.id));
+                              const newTools = currentTools.filter(t => !toolIdsToRemove.has(t.id!));
+                              field.onChange(newTools);
+                            }
+                          }}
+                        />
+                      </HStack>
                       {field.value && field.value.length > 0 && (
                         <Box mt={3}>
-                          <Text fontSize="sm" fontWeight="medium" mb={2}>
-                            Selected Tools:
-                          </Text>
-                          <Wrap>
-                            {field.value.map((tool) => (
-                              <WrapItem key={tool.id}>
-                                <Tag
-                                  size="md"
-                                  borderRadius="full"
-                                  variant="solid"
-                                  pr={2}
+                          <SimpleGrid columns={2} spacing={3}>
+                            {field.value.map((tool) => {
+                              // 查找工具所属的提供商
+                              let provider = null;
+                              if (toolProviders?.providers) {
+                                for (const p of toolProviders.providers) {
+                                  if (p.tools.some(t => t.id === tool.id)) {
+                                    provider = p;
+                                    break;
+                                  }
+                                }
+                              }
+                              
+                              return (
+                                <HStack
+                                  key={tool.id}
+                                  role="group"
+                                  justify="space-between"
+                                  p={3}
+                                  boxShadow="sm"
+                                  borderWidth="1px"
+                                  borderColor="gray.200"
+                                  borderRadius="lg"
+                                  w="100%"
                                 >
-                                  <TagLabel>{tool.display_name || tool.name}</TagLabel>
-                                  <TagCloseButton
-                                    onClick={() => {
+                                  <HStack flex="1" spacing={2} overflow="hidden">
+                                    <Box flexShrink={0} w={7} h={7} borderRadius="lg" bg="primary.50" display="flex" alignItems="center" justifyContent="center">
+                                      {provider && provider.icon && (
+                                        <ToolsIcon 
+                                          tools_name={provider.provider_name || ''} 
+                                          color={`${provider.tool_type === 'builtin' ? "blue" : "purple"}.500`} 
+                                        />
+                                      )}
+                                    </Box>
+                                    <Text fontSize="sm" fontWeight="medium" isTruncated>
+                                      {tool.display_name || tool.name}
+                                    </Text>
+                                  </HStack>
+                                  <IconButton
+                                    aria-label="Remove tool"
+                                    icon={<CircleMinus size={16} />}
+                                    variant="ghost"
+                                    size="sm"
+                                    isRound
+                                    opacity={0}
+                                    transition="opacity 0.2s"
+                                    _groupHover={{ opacity: 1 }}
+                                    onClick={(e) => {
+                                      e.stopPropagation();
                                       const newTools = field.value!.filter(t => t.id !== tool.id);
                                       field.onChange(newTools);
                                     }}
                                   />
-                                </Tag>
-                              </WrapItem>
-                            ))}
-                          </Wrap>
+                                </HStack>
+                              );
+                            })}
+                          </SimpleGrid>
                         </Box>
                       )}
                       <FormErrorMessage>{fieldState.error?.message}</FormErrorMessage>
