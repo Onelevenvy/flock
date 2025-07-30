@@ -20,7 +20,7 @@ export type MemberUpdate = {
     temperature?: (number | null);
     interrupt?: (boolean | null);
     belongs_to?: (number | null);
-    skills?: (Array<Tool> | null);
+    tools?: (Array<Tool> | null);
     uploads?: (Array<Upload> | null);
 };
 

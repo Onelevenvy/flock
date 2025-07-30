@@ -232,11 +232,11 @@ def convert_chatbot_chatrag_team_to_dict(
             if upload.owner_id is not None
         ] + [
             GraphSkill(
-                name=skill.name,
-                managed=skill.managed,
-                definition=skill.tool_definition,
+                name=tool.name,
+                managed=tool.managed,
+                definition=tool.tool_definition,
             )
-            for skill in member.skills
+            for tool in member.tools
         ]
     else:
         raise ValueError("Invalid tasktype. Expected 'ragbot' or 'chatbot'.")

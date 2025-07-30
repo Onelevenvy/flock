@@ -21,7 +21,7 @@ export type MemberOut = {
     interrupt?: boolean;
     id: number;
     belongs_to: number;
-    skills: Array<Tool>;
+    tools: Array<Tool>;
     uploads: Array<Upload>;
 };
 

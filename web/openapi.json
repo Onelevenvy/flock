@@ -6156,12 +6156,12 @@
             "type": "integer",
             "title": "Belongs To"
           },
-          "skills": {
+          "tools": {
             "items": {
               "$ref": "#/components/schemas/Tool"
             },
             "type": "array",
-            "title": "Skills"
+            "title": "Tools"
           },
           "uploads": {
             "items": {
@@ -6181,7 +6181,7 @@
           "position_y",
           "id",
           "belongs_to",
-          "skills",
+          "tools",
           "uploads"
         ],
         "title": "MemberOut"
@@ -6332,7 +6332,7 @@
             ],
             "title": "Belongs To"
           },
-          "skills": {
+          "tools": {
             "anyOf": [
               {
                 "items": {
@@ -6344,7 +6344,7 @@
                 "type": "null"
               }
             ],
-            "title": "Skills"
+            "title": "Tools"
           },
           "uploads": {
             "anyOf": [

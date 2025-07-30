@@ -70,7 +70,7 @@ export const $MemberOut = {
             type: 'number',
             isRequired: true,
         },
-        skills: {
+        tools: {
             type: 'array',
             contains: {
                 type: 'Tool',

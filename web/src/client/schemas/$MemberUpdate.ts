@@ -109,7 +109,7 @@ export const $MemberUpdate = {
                 type: 'null',
             }],
         },
-        skills: {
+        tools: {
             type: 'any-of',
             contains: [{
                 type: 'array',

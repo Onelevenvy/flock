@@ -28,7 +28,9 @@ import { useTranslation } from "react-i18next";
 import { useMutation, useQueryClient } from "react-query";
 
 import { useModelQuery } from "@/hooks/useModelQuery";
-import { useToolProvidersQuery } from "@/hooks/useToolProvidersQuery";
+import { useQuery } from "react-query";
+import { ToolproviderService } from "@/client/services/ToolproviderService";
+import { ToolsService } from "@/client/services/ToolsService";
 import { useUploadsQuery } from "@/hooks/useUploadsQuery";
 
 import {
@@ -37,6 +39,7 @@ import {
   type MemberUpdate,
   MembersService,
   type TeamUpdate,
+  ToolsOut,
 } from "../../client";
 import useCustomToast from "../../hooks/useCustomToast";
 import ModelSelect from "../Common/ModelProvider";
@@ -143,11 +146,33 @@ const EditTeamMember = forwardRef<HTMLFormElement, EditTeamMemberProps>(
     const [selectedModelProvider, setSelectedModelProvider] =
       useState<string>("openai");
     const {
-      data: skills,
-      isLoading: isLoadingSkills,
-      isError: isErrorSkills,
-      error: errorSkills,
-    } = useToolProvidersQuery();
+      data: toolProviders,
+      isLoading: isLoadingToolProviders,
+      isError: isErrorToolProviders,
+      error: errorToolProviders,
+    } = useQuery({
+      queryKey: ["toolProviders"],
+      queryFn: () => ToolproviderService.readProviderListWithTools(),
+    });
+
+    const [selectedToolProviderId, setSelectedToolProviderId] = useState<number | null>(null);
+
+    const {
+      data: toolsData,
+      isLoading: isLoadingTools,
+      isError: isErrorTools,
+      error: errorTools,
+    } = useQuery<ToolsOut | { data: [] }, Error>({
+      queryKey: ["tools", selectedToolProviderId],
+      queryFn: () =>
+        selectedToolProviderId
+          ? ToolsService.readTool({ providerId: selectedToolProviderId })
+          : Promise.resolve({ data: [] }),
+      enabled: !!selectedToolProviderId,
+    });
+
+    const tools = toolsData ? toolsData.data : [];
+
     const {
       data: uploads,
       isLoading: isLoadingUploads,
@@ -162,8 +187,8 @@ const EditTeamMember = forwardRef<HTMLFormElement, EditTeamMemberProps>(
       error: errorModel,
     } = useModelQuery();
 
-    if (isErrorSkills || isErrorUploads || isErrorModel) {
-      const error = errorSkills || errorUploads || errorModel;
+    if (isErrorToolProviders || isErrorUploads || isErrorModel) {
+      const error = errorToolProviders || errorUploads || errorModel;
       const errDetail = (error as ApiError).body?.detail;
 
       showToast("Something went wrong.", `${errDetail}`, "error");
@@ -182,10 +207,10 @@ const EditTeamMember = forwardRef<HTMLFormElement, EditTeamMemberProps>(
       criteriaMode: "all",
       values: {
         ...member,
-        skills: member.skills.map((skill) => ({
-          ...skill,
-          label: skill.name,
-          value: skill.id,
+        tools: member.tools.map((tool) => ({
+          ...tool,
+          label: tool.name,
+          value: tool.id,
         })),
         uploads: member.uploads.map((upload) => ({
           ...upload,
@@ -230,17 +255,17 @@ const EditTeamMember = forwardRef<HTMLFormElement, EditTeamMemberProps>(
 
     const memberConfig = ALLOWED_MEMBER_CONFIGS[watch("type") as MemberTypes];
 
-    const skillOptions = skills
-      ? skills.data
+    const skillOptions = toolProviders
+      ? toolProviders.providers.flatMap(provider => provider.tools)
           // Remove 'ask-human' tool if 'enableHumanTool' is false
           .filter(
-            (skill) =>
-              skill.name !== "ask-human" || memberConfig.enableHumanTool,
+            (tool: any) =>
+              tool.name !== "ask-human" || memberConfig.enableHumanTool,
           )
-          .map((skill) => ({
-            ...skill,
-            label: skill.name,
-            value: skill.id,
+          .map((tool: any) => ({
+            ...tool,
+            label: tool.name,
+            value: tool.id,
           }))
       : [];
 
@@ -360,32 +385,28 @@ const EditTeamMember = forwardRef<HTMLFormElement, EditTeamMemberProps>(
               {memberConfig.enableSkillTools && (
                 <Controller
                   control={control}
-                  name="skills"
-                  render={({
-                    field: { onChange, onBlur, value, name, ref },
-                    fieldState: { error },
-                  }) => (
-                    <FormControl mt={4} px="6" isInvalid={!!error} id="skills">
+                  name="tools"
+                  render={({ field, fieldState }) => (
+                    <FormControl mt={4} px="6" isInvalid={!!fieldState.error} id="tools">
                       <FormLabel>{t("team.teamsetting.tools")}</FormLabel>
                       <MultiSelect
-                        isLoading={isLoadingSkills}
+                        isLoading={isLoadingTools}
                         isMulti
-                        name={name}
-                        ref={ref}
-                        onChange={onChange}
-                        onBlur={onBlur}
-                        value={value}
+                        name={field.name}
+                        ref={field.ref}
+                        onChange={field.onChange}
+                        onBlur={field.onBlur}
+                        value={field.value}
                         options={skillOptions}
-                        placeholder="Select skills"
+                        placeholder="Select tools"
                         closeMenuOnSelect={false}
                         components={customSelectOption}
                       />
-                      <FormErrorMessage>{error?.message}</FormErrorMessage>
+                      <FormErrorMessage>{fieldState.error?.message}</FormErrorMessage>
                     </FormControl>
                   )}
                 />
               )}
-
               {memberConfig.enableUploadTools && (
                 <Controller
                   control={control}
@@ -394,10 +415,10 @@ const EditTeamMember = forwardRef<HTMLFormElement, EditTeamMemberProps>(
                     field: { onChange, onBlur, value, name, ref },
                     fieldState: { error },
                   }) => (
-                    <FormControl mt={4} px="6" isInvalid={!!error} id="uploads">
-                      <FormLabel>{t("team.teamsetting.knowledge")}</FormLabel>
+                    <FormControl mt={4} isInvalid={!!error} id="uploads">
+                      <FormLabel>Knowledge Base</FormLabel>
                       <MultiSelect
-                        // isDisabled={}
+                        isDisabled={!memberConfig.enableUploadTools}
                         isLoading={isLoadingUploads}
                         isMulti
                         name={name}
@@ -416,7 +437,7 @@ const EditTeamMember = forwardRef<HTMLFormElement, EditTeamMemberProps>(
                 />
               )}
               {memberConfig.enableInterrupt && (
-                <FormControl mt={4} px="6">
+                <FormControl mt={4}>
                   <FormLabel htmlFor="interrupt">Human In The Loop</FormLabel>
                   <Checkbox {...register("interrupt")}>
                     Require approval before executing actions
@@ -548,7 +569,7 @@ const EditTeamMember = forwardRef<HTMLFormElement, EditTeamMemberProps>(
               {memberConfig.enableSkillTools && (
                 <Controller
                   control={control}
-                  name="skills"
+                  name="tools"
                   render={({
                     field: { onChange, onBlur, value, name, ref },
                     fieldState: { error },
@@ -557,7 +578,7 @@ const EditTeamMember = forwardRef<HTMLFormElement, EditTeamMemberProps>(
                       <FormLabel>Skills</FormLabel>
                       <MultiSelect
                         isDisabled={!memberConfig.enableSkillTools}
-                        isLoading={isLoadingSkills}
+                        isLoading={isLoadingTools}
                         isMulti
                         name={name}
                         ref={ref}

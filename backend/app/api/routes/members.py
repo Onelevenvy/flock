@@ -181,10 +181,10 @@ def update_member(
         raise HTTPException(status_code=404, detail="Member not found")
 
     # update member's skills if required
-    if member_in.skills is not None:
-        [skill.id for skill in member_in.skills]
-        skills = session.exec(select(Tool).where(col(Tool.id).in_(tool_ids))).all()
-        member.skills = list(skills)
+    if member_in.tools is not None:
+        tool_ids = [skill.id for skill in member_in.tools]
+        tools = session.exec(select(Tool).where(col(Tool.id).in_(tool_ids))).all()
+        member.tools = list(tools)
 
     # update member's accessible uploads if required
     if member_in.uploads is not None:

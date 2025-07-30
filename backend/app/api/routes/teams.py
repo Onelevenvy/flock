@@ -284,7 +284,7 @@ async def stream(
     # Populate the skills and accessible uploads for each member
     members = team.members
     for member in members:
-        member.skills = member.skills
+        member.tools = member.tools
         member.uploads = member.uploads
     graphs = team.graphs
     for graph in graphs:
@@ -344,7 +344,7 @@ async def public_stream(
     # Populate the skills and accessible uploads for each member
     members = team.members
     for member in members:
-        member.skills = member.skills
+        member.tools = member.tools
         member.uploads = member.uploads
     messages = [team_chat.message] if team_chat.message else []
     return StreamingResponse(

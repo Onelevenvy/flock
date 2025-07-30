@@ -566,7 +566,7 @@ class MemberUpdate(MemberBase):
     belongs_to: int | None = None
     position_x: float | None = None  # type: ignore[assignment]
     position_y: float | None = None  # type: ignore[assignment]
-    skills: list["Tool"] | None = None
+    tools: list["Tool"] | None = None
     uploads: list["Upload"] | None = None
     provider: str | None = None  # type: ignore[assignment]
     model: str | None = None  # type: ignore[assignment]
@@ -596,7 +596,7 @@ class MemberOut(MemberBase):
     id: int
     belongs_to: int
     owner_of: int | None
-    skills: list["Tool"]
+    tools: list["Tool"]
     uploads: list["Upload"]
 
 
