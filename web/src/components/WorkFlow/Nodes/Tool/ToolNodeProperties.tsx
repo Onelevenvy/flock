@@ -9,7 +9,7 @@ import {
 } from "@chakra-ui/react";
 import type React from "react";
 import { useTranslation } from "react-i18next";
-import { FaPlus } from "react-icons/fa";
+import { FaPlus, FaTools } from "react-icons/fa";
 
 import {
   ToolOutIdWithAndName,
@@ -34,19 +34,18 @@ const ToolNodeProperties: React.FC<ToolNodePropertiesProps> = ({
   const providers: ToolProviderWithToolsListOut[] = providersData?.providers || [];
 
   const addTool = (tool: ToolOutIdWithAndName) => {
-    const toolName = tool.display_name || tool.name;
     const currentTools = node.data.tools || [];
-    if (!currentTools.includes(toolName)) {
-      onNodeDataChange(node.id, "tools", [...currentTools, toolName]);
+    if (!currentTools.includes(tool.id)) {
+      onNodeDataChange(node.id, "tools", [...currentTools, tool.id]);
     }
   };
 
-  const removeTool = (toolName: string) => {
+  const removeTool = (toolId: number) => {
     const currentTools = node.data.tools || [];
     onNodeDataChange(
       node.id,
       "tools",
-      currentTools.filter((t: string) => t !== toolName)
+      currentTools.filter((id: number) => id !== toolId)
     );
   };
 
@@ -54,10 +53,10 @@ const ToolNodeProperties: React.FC<ToolNodePropertiesProps> = ({
     (p) => p.tools || []
   );
 
-  const selectedToolsObjects: ToolOutIdWithAndName[] = (node.data.tools || [])
-    .map((toolName: string) =>
-      allTools.find((t) => (t.display_name || t.name) === toolName)
-    )
+  const selectedToolsObjects: ToolOutIdWithAndName[] = (
+    node.data.tools || []
+  )
+    .map((toolId: number) => allTools.find((t) => t.id === toolId))
     .filter(Boolean) as ToolOutIdWithAndName[];
 
   if (isLoading) return <Text>Loading tools...</Text>;
@@ -74,17 +73,26 @@ const ToolNodeProperties: React.FC<ToolNodePropertiesProps> = ({
           providers={providers}
           selectedTools={selectedToolsObjects}
           onSelect={addTool}
-          onDeselect={(tool) => removeTool(tool.display_name || tool.name)}
+          onDeselect={(tool) => removeTool(tool.id)}
         >
-          <Button colorScheme="blue" size="sm" leftIcon={<FaPlus />}>
+          <Button
+            size="xs"
+            variant="ghost"
+            leftIcon={<FaTools size="12px" />}
+            colorScheme="blue"
+            transition="all 0.2s"
+            _hover={{
+              transform: "translateY(-1px)",
+            }}
+          >
             {t("workflow.nodes.tool.addTool")}
           </Button>
         </ToolSelector>
 
         <VStack spacing={2} align="stretch">
-          {node.data.tools?.map((tool: string) => (
+          {selectedToolsObjects.map((tool: ToolOutIdWithAndName) => (
             <Box
-              key={tool}
+              key={tool.id}
               p={2}
               borderWidth={1}
               borderRadius="md"
@@ -93,9 +101,8 @@ const ToolNodeProperties: React.FC<ToolNodePropertiesProps> = ({
             >
               <HStack justify="space-between" align="center">
                 <HStack spacing={2}>
-                  <ToolsIcon tools_name={tool.replace(/ /g, "_")} />
                   <Text fontSize="sm" fontWeight="500" color="gray.700">
-                    {tool}
+                    {tool.display_name || tool.name}
                   </Text>
                 </HStack>
                 <IconButton
@@ -104,7 +111,7 @@ const ToolNodeProperties: React.FC<ToolNodePropertiesProps> = ({
                   size="xs"
                   variant="ghost"
                   colorScheme="red"
-                  onClick={() => removeTool(tool)}
+                  onClick={() => removeTool(tool.id)}
                 />
               </HStack>
             </Box>

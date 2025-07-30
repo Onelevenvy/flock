@@ -63,7 +63,7 @@ const ToolNode: React.FC<NodeProps> = (props) => {
               }}
             >
               <HStack spacing={2} px={2}>
-                <ToolsIcon tools_name={tool.replace(/ /g, "_")} />
+                {/* <ToolsIcon tools_name={tool.replace(/ /g, "_")} /> */}
                 <Text fontSize="xs" fontWeight="500" color="gray.700">
                   {tool}
                 </Text>
