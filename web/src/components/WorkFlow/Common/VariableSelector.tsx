@@ -20,7 +20,7 @@ interface VariableSelectorProps {
   placeholder?: string;
   showVariables: boolean;
   setShowVariables: (show: boolean) => void;
-  inputRef: React.RefObject<HTMLTextAreaElement>;
+  inputRef: React.RefObject<HTMLTextAreaElement | null>;
   handleKeyDown: (e: React.KeyboardEvent) => void;
   insertVariable: (variable: string) => void;
   availableVariables: VariableReference[];

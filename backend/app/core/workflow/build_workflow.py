@@ -236,7 +236,7 @@ async def initialize_graph(
             elif node_type == "mcpTool":
                 _add_mcp_node(graph_builder, node_id, node_data)
             elif node_type == "agent":
-                _add_agent_node(graph_builder, node_id, node_data)
+                await _add_agent_node(graph_builder, node_id, node_data)
 
         # Add edges
         for edge in edges:
@@ -699,7 +699,7 @@ def _add_mcp_node(graph_builder, node_id, node_data):
     )
 
 
-def _add_agent_node(graph_builder, node_id, node_data):
+async def _add_agent_node(graph_builder, node_id, node_data):
     """Add agent node to graph"""
     graph_builder.add_node(
         node_id,
