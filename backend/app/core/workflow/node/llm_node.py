@@ -36,9 +36,12 @@ class LLMBaseNode:
                 api_key=self.model_info["api_key"],
                 base_url=self.model_info["base_url"],
             )
-
+        
             if len(tools) >= 1 and hasattr(self.model, "bind_tools"):
-                self.model = self.model.bind_tools(tools)
+                try:
+                    self.model = self.model.bind_tools(tools)
+                except ValueError:
+                    raise ValueError(f"Model {model_name} bind tools failed.")
 
         except ValueError:
             raise ValueError(f"Model {model_name} is not supported as a chat model.")

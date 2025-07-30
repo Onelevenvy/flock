@@ -8,7 +8,7 @@ from langgraph.graph import END, START, StateGraph
 from langgraph.graph.graph import CompiledGraph
 from langgraph.prebuilt import ToolNode
 
-from app.core.tools.tool_manager import get_tool_by_name
+from app.core.tools.tool_manager import get_tool_by_tool_id_list,get_tool_by_tool_id,get_tool_by_tool_id_sync
 from app.core.workflow.node.parameter_extractor_node import \
     ParameterExtractorNode
 from app.core.workflow.node.plugin_node import PluginNode
@@ -295,7 +295,7 @@ def _create_tool_name_mapping(nodes):
     for node in nodes:
         if node["type"] == "tool":
             tool_name_to_node_id[node["id"]] = [
-                tool.lower() for tool in node["data"]["tools"]
+                tool['name'].lower() for tool in node["data"]["tools"]
             ]
         if node["type"] == "toolretrieval":
             tool_name_to_node_id[node["id"]] = [
@@ -424,8 +424,8 @@ def _get_tools_to_bind(node_id, edges, nodes):
                     if target_node["type"] == "tool":
                         tools_to_bind.extend(
                             [
-                                get_tool_by_name(tool_name)
-                                for tool_name in target_node["data"]["tools"]
+                                get_tool_by_tool_id_sync(tool["id"])
+                                for tool in target_node["data"]["tools"]
                             ]
                         )
                     elif target_node["type"] == "toolretrieval":
@@ -451,7 +451,7 @@ def _get_tools_to_bind(node_id, edges, nodes):
 
 def _add_tool_node(graph_builder, node_id, node_type, node_data):
     if node_type == "tool":
-        tools = [get_tool(tool_name) for tool_name in node_data["tools"]]
+        tools = [get_tool_by_tool_id_sync(tool["id"]) for tool in node_data["tools"]]
     else:  # toolretrieval
         tools = [
             get_retrieval_tool(

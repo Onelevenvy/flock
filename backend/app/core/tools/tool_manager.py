@@ -544,6 +544,80 @@ class ToolManager:
         finally:
             session.close()
 
+    def get_tool_by_tool_id_sync(self, tool_id: int) -> BaseTool:
+        """根据工具ID获取工具实例。
+
+        Args:
+            tool_id: 工具ID
+
+
+        Returns:
+            BaseTool: 工具实例
+
+        Raises:
+            ValueError: 如果找不到指定的工具
+        """
+
+        session = next(get_session())
+
+        try:
+            # 获取工具及其提供商信息
+            tool = session.exec(select(Tool).where(Tool.id == tool_id)).first()
+            if not tool:
+                raise ValueError(f"Tool not found with id: {tool_id}")
+
+            # 获取提供商信息
+            provider = session.exec(
+                select(ToolProvider).where(ToolProvider.id == tool.provider_id)
+            ).first()
+            if not provider:
+                raise ValueError(f"Tool provider not found for tool id: {tool_id}")
+
+            # 根据提供商类型处理不同的工具获取方式
+            if provider.tool_type == ToolType.MCP:
+
+                # 使用MCP工具缓存获取工具
+                if not provider.mcp_server_id:
+                    raise ValueError(
+                        f"MCP server ID not found for provider: {provider.provider_name}"
+                    )
+
+                # 获取MCP工具列表
+                try:
+                    client = MultiServerMCPClient(
+                        {
+                            provider.mcp_server_id: {
+                                # Make sure you start your weather server on port 8000
+                                "url": provider.mcp_endpoint_url,
+                                "transport": provider.mcp_connection_type,
+                            }
+                        }
+                    )
+                    mcp_tools = client.get_tools()
+                except Exception as e:
+                    raise ValueError(f"Failed to get MCP tools: {str(e)}")
+
+                # 在MCP工具列表中查找指定名称的工具
+                for mcp_tool in mcp_tools:
+                    if mcp_tool.name == tool.name:
+                        return mcp_tool
+
+                raise ValueError(
+                    f"Tool '{tool.name}' not found in MCP provider: {provider.mcp_server_id}"
+                )
+            else:
+                # 处理内置工具和API工具
+                # 构造组合键格式
+                combined_key = f"{provider.provider_name}:{tool.name}"
+
+                # 使用组合键调用get_builtin_tool_by_name
+                try:
+                    return self.get_builtin_tool_by_name(combined_key)
+                except ValueError as e:
+                    raise ValueError(f"Failed to get tool with id {tool_id}: {str(e)}")
+
+        finally:
+            session.close()
 
 # 单例
 _tool_manager = ToolManager()
@@ -551,6 +625,7 @@ get_all_tool_providers = _tool_manager.get_all_providers
 get_all_tools = _tool_manager.get_all_tools
 get_tool_by_name = _tool_manager.get_builtin_tool_by_name
 get_tool_by_tool_id = _tool_manager.get_tool_by_tool_id
+get_tool_by_tool_id_sync = _tool_manager.get_tool_by_tool_id_sync
 get_tool_by_tool_id_list = _tool_manager.get_tool_by_tool_id_list
 # 导出工具凭据函数
 get_tool_credentials_function = _tool_manager.get_tool_credentials_function
