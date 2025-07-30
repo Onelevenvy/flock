@@ -395,6 +395,43 @@ const EditTeamMember = forwardRef<HTMLFormElement, EditTeamMemberProps>(
                           const newTools = currentTools.filter(t => t.id !== tool.id);
                           field.onChange(newTools);
                         }}
+                        onBatchChange={(tools, selected) => {
+                          const currentTools = field.value || [];
+                          if (selected) {
+                            // 添加工具
+                            const newTools = [...currentTools];
+                            tools.forEach(tool => {
+                              // 检查工具是否已存在
+                              if (!newTools.some(t => t.id === tool.id)) {
+                                // 查找工具所属的提供商ID
+                                let providerId = 0;
+                                if (toolProviders?.providers) {
+                                  for (const provider of toolProviders.providers) {
+                                    if (provider.tools.some(t => t.id === tool.id)) {
+                                      providerId = provider.id;
+                                      break;
+                                    }
+                                  }
+                                }
+                                newTools.push({
+                                  name: tool.name,
+                                  description: tool.description || '',
+                                  display_name: tool.display_name || undefined,
+                                  input_parameters: tool.input_parameters || undefined,
+                                  is_online: tool.is_online || undefined,
+                                  provider_id: providerId,
+                                  id: tool.id,
+                                });
+                              }
+                            });
+                            field.onChange(newTools);
+                          } else {
+                            // 移除工具
+                            const toolIdsToRemove = new Set(tools.map(t => t.id));
+                            const newTools = currentTools.filter(t => !toolIdsToRemove.has(t.id!));
+                            field.onChange(newTools);
+                          }
+                        }}
                       />
                       {field.value && field.value.length > 0 && (
                         <Box mt={3}>
