@@ -123,7 +123,13 @@ export const nodeConfig: Record<string, NodeConfigItem> = {
       targets: ["left"],
     },
     initialData: {
-      tools: [1],
+      tools: [
+        {
+          id: 2,
+          name: "Math Calculator",
+          provider: "math",
+        },
+      ],
     },
     inputVariables: [],
     outputVariables: ["response"],

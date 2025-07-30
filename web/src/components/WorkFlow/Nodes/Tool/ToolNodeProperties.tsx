@@ -2,6 +2,7 @@ import { DeleteIcon } from "@chakra-ui/icons";
 import {
   Box,
   Button,
+  Flex,
   HStack,
   IconButton,
   Text,
@@ -10,6 +11,7 @@ import {
 import type React from "react";
 import { useTranslation } from "react-i18next";
 import { FaTools } from "react-icons/fa";
+import { useState } from 'react';
 
 import {
   ToolOutIdWithAndName,
@@ -68,6 +70,8 @@ const ToolNodeProperties: React.FC<ToolNodePropertiesProps> = ({
     .filter(Boolean) as ToolOutIdWithAndName[];
 
   if (isLoading) return <Text>Loading tools...</Text>;
+  const [isToolSelectorOpen, setIsToolSelectorOpen] = useState(false);
+
   if (isError) return <Text>Error loading tools</Text>;
 
   if (!isLoading && providers.length === 0) {
@@ -77,25 +81,39 @@ const ToolNodeProperties: React.FC<ToolNodePropertiesProps> = ({
   return (
     <Box p={4}>
       <VStack spacing={4} align="stretch">
-        <ToolSelector
-          providers={providers}
-          selectedTools={selectedToolsObjects}
-          onSelect={addTool}
-          onDeselect={(tool) => removeTool(tool.id)}
-        >
-          <Button
-            size="xs"
-            variant="ghost"
-            leftIcon={<FaTools size="12px" />}
-            colorScheme="blue"
-            transition="all 0.2s"
-            _hover={{
-              transform: "translateY(-1px)",
-            }}
-          >
-            {t("workflow.nodes.tool.addTool")}
-          </Button>
-        </ToolSelector>
+        <>
+          <Flex justify="space-between" align="center" mb={2}>
+            <Button
+              size="xs"
+              variant="ghost"
+              leftIcon={<FaTools size="12px" />}
+              colorScheme="blue"
+              transition="all 0.2s"
+              _hover={{
+                transform: "translateY(-1px)",
+              }}
+              onClick={() => setIsToolSelectorOpen(true)}
+            >
+              {t("workflow.nodes.tool.addTool")}
+            </Button>
+            <HStack spacing={2}>
+              <Text fontSize="sm" fontWeight="500" color="gray.700">
+                {t("workflow.nodes.tool.title")}
+              </Text>
+              <Text fontSize="xs" color="gray.500">
+                ({node.data.tools?.length || 0})
+              </Text>
+            </HStack>
+          </Flex>
+          <ToolSelector
+            isOpen={isToolSelectorOpen}
+            onClose={() => setIsToolSelectorOpen(false)}
+            providers={providers}
+            selectedTools={selectedToolsObjects}
+            onSelect={addTool}
+            onDeselect={(tool) => removeTool(tool.id)}
+          />
+        </>
 
         <VStack spacing={2} align="stretch">
           {(node.data.tools || []).map((tool: any) => (
@@ -109,7 +127,7 @@ const ToolNodeProperties: React.FC<ToolNodePropertiesProps> = ({
             >
               <HStack justify="space-between" align="center">
                 <HStack spacing={2}>
-                   <ToolsIcon tools_name={tool.provider} />
+                  <ToolsIcon tools_name={tool.provider} />
                   <Text fontSize="sm" fontWeight="500" color="gray.700">
                     {tool.name}
                   </Text>

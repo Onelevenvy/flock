@@ -1,11 +1,10 @@
 import { ToolOutIdWithAndName } from '@/client/models/ToolOutIdWithAndName';
 import { ToolProviderWithToolsListOut } from '@/client/models/ToolProviderWithToolsListOut';
-import { Search, Plus } from 'lucide-react';
+import { Search } from 'lucide-react';
 import { useState } from 'react';
 import ToolsIcon from "@/components/Icons/Tools/index";
 import { useTranslation } from 'react-i18next';
 import {
-    Button,
     Modal,
     ModalOverlay,
     ModalContent,
@@ -22,29 +21,29 @@ import {
     Box,
     Text,
     HStack,
-    IconButton,
 } from "@chakra-ui/react";
 
 interface ToolSelectorProps {
+    isOpen: boolean;
+    onClose: () => void;
     providers: ToolProviderWithToolsListOut[];
     selectedTools: ToolOutIdWithAndName[];
     onSelect: (tool: ToolOutIdWithAndName) => void;
     onDeselect: (tool: ToolOutIdWithAndName) => void;
     onBatchChange?: (tools: ToolOutIdWithAndName[], selected: boolean) => void;
-    children?: React.ReactNode;
 }
 
 export default function ToolSelector({
+    isOpen,
+    onClose,
     providers,
     selectedTools,
     onSelect,
     onDeselect,
     onBatchChange,
-    children,
 }: ToolSelectorProps) {
     const { t } = useTranslation();
     const [searchText, setSearchText] = useState('');
-    const [open, setOpen] = useState(false);
     const [hoveredProviderId, setHoveredProviderId] = useState<string | null>(
         null,
     );
@@ -67,10 +66,7 @@ export default function ToolSelector({
         }))
         .filter((provider) => provider.tools.length > 0);
 
-    // 处理对话框的打开和关闭
-    const handleOpenChange = (newOpen: boolean) => {
-        setOpen(newOpen);
-    };
+
 
     // 处理工具选择
     const handleToolToggle = (
@@ -147,149 +143,138 @@ export default function ToolSelector({
         }
     };
 
-    // 如果提供了children，则使用children作为触发器
-    // 否则使用默认的按钮作为触发器
-    const trigger = children ? (
-        <Box onClick={() => setOpen(true)} style={{ display: 'inline-block' }}>
-            {children}
-        </Box>
-    ) : (
-        <IconButton 
-            onClick={() => setOpen(true)}
-            icon={<Plus size={16} />}
-            size="sm"
-            // variant="outline"
-            aria-label="Add tools"
-        />
-    );
-
     return (
-        <Box>
-            {trigger}
-            <Modal isOpen={open} onClose={() => setOpen(false)} size="xl">
-                <ModalOverlay />
-                <ModalContent>
-                    <ModalHeader>Add tools</ModalHeader>
-                    <ModalCloseButton />
-                    <ModalBody pb={6}>
-                        <Box position="relative" mb={4}>
-                            <Search style={{ position: 'absolute', left: '8px', top: '10px' }} size={16} />
-                            <Input
-                                placeholder="Search tools"
-                                pl="40px"
-                                value={searchText}
-                                onChange={(e) => setSearchText(e.target.value)}
-                            />
-                        </Box>
-                        <Box maxHeight="400px" overflowY="auto">
-                            <Accordion allowMultiple>
-                                {filteredProviders.map((provider, index) => {
-                                    const providerId = `${provider.id}-${index}`;
-                                    const selectedCount = getSelectedToolsCount(provider.tools);
-                                    const totalCount = provider.tools.length;
-                                    const allSelected = selectedCount === totalCount;
-                                    const isHovered = hoveredProviderId === providerId;
+        <Modal isOpen={isOpen} onClose={onClose} size="xl" isCentered>
+            <ModalOverlay />
+            <ModalContent>
+                <ModalHeader>Add tools</ModalHeader>
+                <ModalCloseButton />
+                <ModalBody pb={6}>
+                    <Box position="relative" mb={4}>
+                        <Search style={{ position: 'absolute', left: '8px', top: '10px' }} size={16} />
+                        <Input
+                            placeholder="Search tools"
+                            pl="40px"
+                            value={searchText}
+                            onChange={(e) => setSearchText(e.target.value)}
+                        />
+                    </Box>
+                    <Box maxHeight="400px" overflowY="auto">
+                        <Accordion allowMultiple>
+                            {filteredProviders.map((provider, index) => {
+                                const providerId = `${provider.id}-${index}`;
+                                const selectedCount = getSelectedToolsCount(provider.tools);
+                                const totalCount = provider.tools.length;
+                                const allSelected = selectedCount === totalCount;
+                                const isHovered = hoveredProviderId === providerId;
 
-                                    return (
-                                        <AccordionItem key={provider.id} border="none">
-                                            <AccordionButton
-                                                py={2}
-                                                _hover={{ bg: 'gray.50' }}
-                                                onMouseEnter={() => setHoveredProviderId(providerId)}
-                                                onMouseLeave={() => setHoveredProviderId(null)}
-                                            >
-                                                <Box flex="1" textAlign="left">
-                                                    <HStack>
-                                                        {provider.icon && (
-                                                            <Box w="5" h="5" borderRadius="md" bg="primary.100" display="flex" alignItems="center" justifyContent="center">
-                                                                <ToolsIcon
-                                                                    h="6"
-                                                                    w="6"
-                                                                    tools_name={(provider.provider_name!)
-                                                                    }
-                                                                    color={`${provider.tool_type === 'builtin' ? "blue" : "purple"}.500`}
-                                                                />
-                                                            </Box>
-                                                        )}
-                                                        <Text>
-                                                            {provider.display_name || provider.provider_name}
-                                                        </Text>
-                                                    </HStack>
-                                                </Box>
+                                return (
+                                    <AccordionItem key={provider.id} border="none">
+                                        <AccordionButton
+                                            py={2}
+                                            _hover={{ bg: 'gray.50' }}
+                                            onMouseEnter={() => setHoveredProviderId(providerId)}
+                                            onMouseLeave={() => setHoveredProviderId(null)}
+                                        >
+                                            <Box flex="1" textAlign="left">
+                                                <HStack>
+                                                    {provider.icon && (
+                                                        <Box w="5" h="5" borderRadius="md" bg="primary.100" display="flex" alignItems="center" justifyContent="center">
+                                                            <ToolsIcon
+                                                                h="6"
+                                                                w="6"
+                                                                tools_name={(provider.provider_name!)
+                                                                }
+                                                                color={`${provider.tool_type === 'builtin' ? "blue" : "purple"}.500`}
+                                                            />
+                                                        </Box>
+                                                    )}
+                                                    <Text>
+                                                        {provider.display_name || provider.provider_name}
+                                                    </Text>
+                                                </HStack>
+                                            </Box>
+                                            <HStack spacing={2}>
                                                 {(isHovered || selectedCount > 0) && (
-                                                    <Button
-                                                        size="xs"
-                                                        variant="ghost"
-                                                        onClick={(e) => {
+                                                    <Box
+                                                        as="span"
+                                                        px={2}
+                                                        py={1}
+                                                        fontSize="xs"
+                                                        fontWeight="medium"
+                                                        borderRadius="md"
+                                                        onClick={(e: React.MouseEvent) => {
                                                             e.stopPropagation();
-                                                            handleAddAllTools(provider.tools, e as any);
+                                                            handleAddAllTools(provider.tools, e);
                                                         }}
+                                                        _hover={{ bg: 'gray.200' }}
                                                     >
                                                         {allSelected && totalCount > 0
                                                             ? '已全部添加'
                                                             : selectedCount > 0
                                                                 ? `${selectedCount}/${totalCount}`
                                                                 : '添加全部'}
-                                                    </Button>
+                                                    </Box>
                                                 )}
                                                 <AccordionIcon />
-                                            </AccordionButton>
-                                            <AccordionPanel pb={2}>
-                                                {provider.tools.map((tool) => {
-                                                    const selected = isToolSelected(tool.id);
-                                                    const isOnline = tool.is_online !== undefined && tool.is_online !== null ? tool.is_online : true; // 默认为 true
-                                                    return (
-                                                        <Tooltip
-                                                            key={tool.id}
-                                                            label={!isOnline ? "工具离线不可用" : tool.description}
-                                                            placement="right"
-                                                            isDisabled={!tool.description && isOnline}
+                                            </HStack>
+                                        </AccordionButton>
+                                        <AccordionPanel pb={2}>
+                                            {provider.tools.map((tool) => {
+                                                const selected = isToolSelected(tool.id);
+                                                const isOnline = tool.is_online !== undefined && tool.is_online !== null ? tool.is_online : true; // 默认为 true
+                                                return (
+                                                    <Tooltip
+                                                        key={tool.id}
+                                                        label={!isOnline ? "工具离线不可用" : tool.description}
+                                                        placement="right"
+                                                        isDisabled={!tool.description && isOnline}
+                                                    >
+                                                        <Box
+                                                            p={2}
+                                                            borderRadius="md"
+                                                            cursor={isOnline ? "pointer" : "not-allowed"}
+                                                            opacity={isOnline ? 1 : 0.5}
+                                                            bg={selected ? 'blue.50' : 'transparent'}
+                                                            _hover={isOnline ? { bg: selected ? 'blue.100' : 'gray.50' } : {}}
+                                                            onClick={(event) => {
+                                                                if (isOnline) {
+                                                                    handleToolToggle(tool, event as any);
+                                                                }
+                                                            }}
                                                         >
-                                                            <Box
-                                                                p={2}
-                                                                borderRadius="md"
-                                                                cursor={isOnline ? "pointer" : "not-allowed"}
-                                                                opacity={isOnline ? 1 : 0.5}
-                                                                _hover={isOnline ? { bg: 'gray.50' } : {}}
-                                                                onClick={(event) => {
-                                                                    if (isOnline) {
-                                                                        handleToolToggle(tool, event as any);
-                                                                    }
-                                                                }}
-                                                            >
-                                                                <HStack justify="space-between">
-                                                                    <Text
-                                                                        fontSize="sm"
-                                                                        color={selected ? 'gray.500' : isOnline ? 'inherit' : 'gray.500'}
-                                                                    >
-                                                                        {tool.display_name || tool.name}
+                                                            <HStack justify="space-between">
+                                                                <Text
+                                                                    fontSize="sm"
+                                                                    color={selected ? 'gray.500' : isOnline ? 'inherit' : 'gray.500'}
+                                                                >
+                                                                    {tool.display_name || tool.name}
+                                                                </Text>
+                                                                {selected && (
+                                                                    <Text fontSize="xs" color="gray.500">
+                                                                        已添加
                                                                     </Text>
-                                                                    {selected && (
-                                                                        <Text fontSize="xs" color="gray.500">
-                                                                            已添加
-                                                                        </Text>
-                                                                    )}
-                                                                </HStack>
-                                                            </Box>
-                                                        </Tooltip>
-                                                    );
-                                                })}
-                                            </AccordionPanel>
-                                        </AccordionItem>
-                                    );
-                                })}
-                            </Accordion>
-                            {filteredProviders.length === 0 && (
-                                <Text textAlign="center" color="gray.500" py={4}>
-                                    {searchText
-                                        ? t('build.noMatchingTools') || 'No matching tools'
-                                        : t('build.noAvailableTools') || 'No available tools'}
-                                </Text>
-                            )}
-                        </Box>
-                    </ModalBody>
-                </ModalContent>
-            </Modal>
-        </Box>
+                                                                )}
+                                                            </HStack>
+                                                        </Box>
+                                                    </Tooltip>
+                                                );
+                                            })}
+                                        </AccordionPanel>
+                                    </AccordionItem>
+                                );
+                            })}
+                        </Accordion>
+                        {filteredProviders.length === 0 && (
+                            <Text textAlign="center" color="gray.500" py={4}>
+                                {searchText
+                                    ? t('build.noMatchingTools') || 'No matching tools'
+                                    : t('build.noAvailableTools') || 'No available tools'}
+                            </Text>
+                        )}
+                    </Box>
+                </ModalBody>
+            </ModalContent>
+        </Modal>
     );
 }

@@ -31,7 +31,7 @@ import { type Ref, forwardRef, useState, useEffect } from "react";
 import { Controller, type SubmitHandler, useForm } from "react-hook-form";
 import { useTranslation } from "react-i18next";
 import { useMutation, useQueryClient } from "react-query";
-
+import { FaTools } from "react-icons/fa";
 import { useModelQuery } from "@/hooks/useModelQuery";
 import { useQuery } from "react-query";
 import { ToolproviderService } from "@/client/services/ToolproviderService";
@@ -244,6 +244,10 @@ const EditTeamMember = forwardRef<HTMLFormElement, EditTeamMemberProps>(
 
     const memberConfig = ALLOWED_MEMBER_CONFIGS[watch("type") as MemberTypes];
 
+    // 工具选择器模态框状态
+    const [isToolSelectorOpen, setIsToolSelectorOpen] = useState(false);
+    const [isPageToolSelectorOpen, setIsPageToolSelectorOpen] = useState(false);
+
 
 
     const uploadOptions = uploads
@@ -367,7 +371,17 @@ const EditTeamMember = forwardRef<HTMLFormElement, EditTeamMemberProps>(
                     <FormControl mt={4} px="6" isInvalid={!!fieldState.error} id="tools">
                       <HStack justify="space-between" align="center" mb={2}>
                         <FormLabel mb={0}>{t("team.teamsetting.tools")}</FormLabel>
+                        <Button 
+                          leftIcon={<FaTools />}
+                          onClick={() => setIsPageToolSelectorOpen(true)}
+                          size="sm"
+                          variant="outline"
+                        >
+                          Add tools
+                        </Button>
                         <ToolSelector
+                          isOpen={isPageToolSelectorOpen}
+                          onClose={() => setIsPageToolSelectorOpen(false)}
                           providers={toolProviders?.providers || []}
                           selectedTools={(field.value || []).map(tool => ({
                             id: tool.id || 0,
@@ -379,12 +393,23 @@ const EditTeamMember = forwardRef<HTMLFormElement, EditTeamMemberProps>(
                           }))}
                           onSelect={(tool) => {
                             const currentTools = field.value || [];
+                            // 查找工具所属的提供商ID
+                            let providerId = 0;
+                            if (toolProviders?.providers) {
+                              for (const provider of toolProviders.providers) {
+                                if (provider.tools.some(t => t.id === tool.id)) {
+                                  providerId = provider.id;
+                                  break;
+                                }
+                              }
+                            }
                             const newTools = [...currentTools, {
                               name: tool.name,
-                              description: tool.description,
+                              description: tool.description || '',
                               display_name: tool.display_name || undefined,
                               input_parameters: tool.input_parameters || undefined,
                               is_online: tool.is_online || undefined,
+                              provider_id: providerId,
                               id: tool.id,
                             }];
                             field.onChange(newTools);
@@ -669,7 +694,17 @@ const EditTeamMember = forwardRef<HTMLFormElement, EditTeamMemberProps>(
                     <FormControl mt={4} isInvalid={!!error} id="skills">
                       <HStack justify="space-between" align="center" mb={2}>
                         <FormLabel mb={0}>Tools</FormLabel>
+                        <Button 
+                          leftIcon={<FaTools/>}
+                          onClick={() => setIsToolSelectorOpen(true)}
+                          size="sm"
+                          variant="outline"
+                        >
+                          Add tools
+                        </Button>
                         <ToolSelector
+                          isOpen={isToolSelectorOpen}
+                          onClose={() => setIsToolSelectorOpen(false)}
                           providers={toolProviders?.providers || []}
                           selectedTools={(value || []).map(tool => ({
                             id: tool.id || 0,
@@ -681,12 +716,23 @@ const EditTeamMember = forwardRef<HTMLFormElement, EditTeamMemberProps>(
                           }))}
                           onSelect={(tool) => {
                             const currentTools = value || [];
+                            // 查找工具所属的提供商ID
+                            let providerId = 0;
+                            if (toolProviders?.providers) {
+                              for (const provider of toolProviders.providers) {
+                                if (provider.tools.some(t => t.id === tool.id)) {
+                                  providerId = provider.id;
+                                  break;
+                                }
+                              }
+                            }
                             const newTools = [...currentTools, {
                               name: tool.name,
-                              description: tool.description,
+                              description: tool.description || '',
                               display_name: tool.display_name || undefined,
                               input_parameters: tool.input_parameters || undefined,
                               is_online: tool.is_online || undefined,
+                              provider_id: providerId,
                               id: tool.id,
                             }];
                             onChange(newTools);
@@ -695,6 +741,43 @@ const EditTeamMember = forwardRef<HTMLFormElement, EditTeamMemberProps>(
                             const currentTools = value || [];
                             const newTools = currentTools.filter(t => t.id !== tool.id);
                             onChange(newTools);
+                          }}
+                          onBatchChange={(tools, selected) => {
+                            const currentTools = value || [];
+                            if (selected) {
+                              // 添加工具
+                              const newTools = [...currentTools];
+                              tools.forEach(tool => {
+                                // 检查工具是否已存在
+                                if (!newTools.some(t => t.id === tool.id)) {
+                                  // 查找工具所属的提供商ID
+                                  let providerId = 0;
+                                  if (toolProviders?.providers) {
+                                    for (const provider of toolProviders.providers) {
+                                      if (provider.tools.some(t => t.id === tool.id)) {
+                                        providerId = provider.id;
+                                        break;
+                                      }
+                                    }
+                                  }
+                                  newTools.push({
+                                    name: tool.name,
+                                    description: tool.description || '',
+                                    display_name: tool.display_name || undefined,
+                                    input_parameters: tool.input_parameters || undefined,
+                                    is_online: tool.is_online || undefined,
+                                    provider_id: providerId,
+                                    id: tool.id,
+                                  });
+                                }
+                              });
+                              onChange(newTools);
+                            } else {
+                              // 移除工具
+                              const toolIdsToRemove = new Set(tools.map(t => t.id));
+                              const newTools = currentTools.filter(t => !toolIdsToRemove.has(t.id!));
+                              onChange(newTools);
+                            }
                           }}
                         />
                       </HStack>
