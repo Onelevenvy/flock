@@ -1,8 +1,8 @@
 from fastapi import APIRouter
 
-from app.api.routes import (apikeys, graphs, groups, langmanus, login, members,
-                            provider, providermodel, roles, skills, subgraphs,
-                            teams, threads, uploads, users, utils)
+from app.api.routes import (apikeys, graphs, groups, llmmodel, login, members,
+                            provider, roles, subgraphs, teams, threads,
+                            toolprovider, tools, uploads, users, utils)
 
 api_router = APIRouter()
 api_router.include_router(login.router, tags=["login"])
@@ -12,7 +12,10 @@ api_router.include_router(teams.router, prefix="/teams", tags=["teams"])
 api_router.include_router(
     members.router, prefix="/teams/{team_id}/members", tags=["members"]
 )
-api_router.include_router(skills.router, prefix="/tools", tags=["tools"])
+api_router.include_router(tools.router, prefix="/tools", tags=["tools"])
+api_router.include_router(
+    toolprovider.router, prefix="/toolprovider", tags=["toolprovider"]
+)
 api_router.include_router(
     threads.router, prefix="/teams/{team_id}/threads", tags=["threads"]
 )
@@ -21,7 +24,7 @@ api_router.include_router(uploads.router, prefix="/uploads", tags=["uploads"])
 
 api_router.include_router(provider.router, prefix="/provider", tags=["provider"])
 
-api_router.include_router(providermodel.router, prefix="/model", tags=["model"])
+api_router.include_router(llmmodel.router, prefix="/model", tags=["model"])
 api_router.include_router(
     graphs.router, prefix="/teams/{team_id}/graphs", tags=["graphs"]
 )
@@ -38,7 +41,7 @@ api_router.include_router(
 )
 
 # 添加langmanus路由
-api_router.include_router(langmanus.router, prefix="/langmanus", tags=["langmanus"])
+# api_router.include_router(langmanus.router, prefix="/langmanus", tags=["langmanus"])
 
 # RBAC相关路由
 api_router.include_router(groups.router, prefix="/groups", tags=["groups"])

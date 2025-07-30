@@ -10,9 +10,9 @@ from app.api.deps import (CurrentTeam, CurrentUser, SessionDep,
                           check_team_permission)
 from app.core.graph.build import generator
 from app.core.security import resource_manager
-from app.models import (ActionType, Member, ResourceType, Team, TeamChat,
-                        TeamChatPublic, TeamCreate, TeamOut, TeamsOut,
-                        TeamUpdate, Thread)
+from app.db.models import (ActionType, Member, ResourceType, Team, TeamChat,
+                           TeamChatPublic, TeamCreate, TeamOut, TeamsOut,
+                           TeamUpdate, Thread)
 
 router = APIRouter()
 
@@ -284,7 +284,7 @@ async def stream(
     # Populate the skills and accessible uploads for each member
     members = team.members
     for member in members:
-        member.skills = member.skills
+        member.tools = member.tools
         member.uploads = member.uploads
     graphs = team.graphs
     for graph in graphs:
@@ -344,7 +344,7 @@ async def public_stream(
     # Populate the skills and accessible uploads for each member
     members = team.members
     for member in members:
-        member.skills = member.skills
+        member.tools = member.tools
         member.uploads = member.uploads
     messages = [team_chat.message] if team_chat.message else []
     return StreamingResponse(

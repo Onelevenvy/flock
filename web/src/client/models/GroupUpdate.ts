@@ -7,8 +7,9 @@
  * Schema for updating a group
  */
 export type GroupUpdate = {
-  name?: string | null;
-  description?: string | null;
-  is_system_group?: boolean | null;
-  admin_id?: number | null;
+    name?: (string | null);
+    description?: (string | null);
+    is_system_group?: (boolean | null);
+    admin_id?: (number | null);
 };
+

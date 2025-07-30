@@ -3,45 +3,41 @@
 /* tslint:disable */
 /* eslint-disable */
 export const $GraphUpdate = {
-  properties: {
-    name: {
-      type: "any-of",
-      contains: [
-        {
-          type: "string",
+    properties: {
+        name: {
+            type: 'any-of',
+            contains: [{
+                type: 'string',
+            }, {
+                type: 'null',
+            }],
         },
-        {
-          type: "null",
+        description: {
+            type: 'any-of',
+            contains: [{
+                type: 'string',
+            }, {
+                type: 'null',
+            }],
         },
-      ],
-    },
-    description: {
-      type: "any-of",
-      contains: [
-        {
-          type: "string",
+        config: {
+            type: 'dictionary',
+            contains: {
+                properties: {
+                },
+            },
         },
-        {
-          type: "null",
+        metadata_: {
+            type: 'dictionary',
+            contains: {
+                properties: {
+                },
+            },
         },
-      ],
+        updated_at: {
+            type: 'string',
+            isRequired: true,
+            format: 'date-time',
+        },
     },
-    config: {
-      type: "dictionary",
-      contains: {
-        properties: {},
-      },
-    },
-    metadata_: {
-      type: "dictionary",
-      contains: {
-        properties: {},
-      },
-    },
-    updated_at: {
-      type: "string",
-      isRequired: true,
-      format: "date-time",
-    },
-  },
 } as const;

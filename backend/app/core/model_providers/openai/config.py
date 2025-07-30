@@ -1,7 +1,6 @@
-from crewai import LLM
 from langchain_openai import ChatOpenAI
 
-from app.models import ModelCategory
+from app.db.models import ModelCategory
 
 PROVIDER_CONFIG = {
     "provider_name": "openai",
@@ -64,14 +63,5 @@ def init_model(model: str, temperature: float, api_key: str, base_url: str, **kw
         raise ValueError(f"Model {model} is not supported as a chat model.")
 
 
-def init_crewai_model(model: str, api_key: str, base_url: str, **kwargs):
-    model_info = next((m for m in SUPPORTED_MODELS if m["name"] == model), None)
-    if model_info and ModelCategory.CHAT in model_info["categories"]:
-        return LLM(
-            model=f"openai/{model}",  # CrewAI 格式：provider/model
-            base_url=base_url,
-            api_key=api_key,
-            **kwargs,
-        )
-    else:
-        raise ValueError(f"Model {model} is not supported as a chat model.")
+# 指定用于鉴权的模型
+CREDENTIALS_MODEL_NAME = "gpt-3.5-turbo"

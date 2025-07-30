@@ -1,11 +1,11 @@
-import json
 import uuid
 
 import requests
 from langchain.tools import StructuredTool
 from pydantic import BaseModel, Field
 
-from app.core.tools.utils import get_credential_value
+from app.core.tools.response_formatter import format_tool_response
+from app.core.tools.tool_manager import get_tool_provider_credential_value
 
 
 class WebSearchInput(BaseModel):
@@ -18,10 +18,10 @@ def web_search_query(query: str) -> str:
     """
     Invoke Web Search API
     """
-    api_key = get_credential_value("Web Search Pro", "ZHIPUAI_API_KEY")
+    api_key = get_tool_provider_credential_value("zhipuai", "ZHIPUAI_API_KEY")
 
     if not api_key:
-        return "Error: Web Search API Key is not set."
+        return format_tool_response(False, error="Web Search API Key is not set.")
 
     try:
         url = "https://open.bigmodel.cn/api/paas/v4/tools"
@@ -57,18 +57,19 @@ def web_search_query(query: str) -> str:
                             "media": item.get("media", ""),
                         }
                     )
-                return json.dumps(formatted_results, ensure_ascii=False)
+                return format_tool_response(True, formatted_results)
             else:
-                return json.dumps({"error": "No search results found"})
+                return format_tool_response(False, error="No search results found")
         else:
-            error_message = {
-                "error": f"HTTP request failed: {response.status_code}",
-                "data": response.text,
-            }
-            return json.dumps(error_message)
+            error_message = (
+                f"HTTP request failed: {response.status_code}, {response.text}"
+            )
+            return format_tool_response(False, error=error_message)
 
     except Exception as e:
-        return json.dumps(f"Web Search API request failed. {e}")
+        return format_tool_response(
+            False, error=f"Web Search API request failed: {str(e)}"
+        )
 
 
 websearch = StructuredTool.from_function(

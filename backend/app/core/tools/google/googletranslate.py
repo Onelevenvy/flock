@@ -2,6 +2,8 @@ import requests
 from langchain.tools import StructuredTool
 from pydantic import BaseModel, Field
 
+from app.core.tools.response_formatter import format_tool_response
+
 
 class GoogleTranslateInput(BaseModel):
     """Input for the googleTranslate tool."""
@@ -25,10 +27,10 @@ def google_translate_invoke(content: str, dest: str) -> str:
         response_json = requests.get(url, params=params, headers=headers).json()
         result = response_json[0]
         translated_text = "".join([item[0] for item in result if item[0]])
-        return str(translated_text)
+        return format_tool_response(True, translated_text)
 
     except Exception as e:
-        return str(e)
+        return format_tool_response(False, error=str(e))
 
 
 googletranslate = StructuredTool.from_function(

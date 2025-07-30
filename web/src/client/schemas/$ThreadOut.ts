@@ -3,20 +3,20 @@
 /* tslint:disable */
 /* eslint-disable */
 export const $ThreadOut = {
-  properties: {
-    id: {
-      type: "string",
-      isRequired: true,
-      format: "uuid",
+    properties: {
+        id: {
+            type: 'string',
+            isRequired: true,
+            format: 'uuid',
+        },
+        query: {
+            type: 'string',
+            isRequired: true,
+        },
+        updated_at: {
+            type: 'string',
+            isRequired: true,
+            format: 'date-time',
+        },
     },
-    query: {
-      type: "string",
-      isRequired: true,
-    },
-    updated_at: {
-      type: "string",
-      isRequired: true,
-      format: "date-time",
-    },
-  },
 } as const;

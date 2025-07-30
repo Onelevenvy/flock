@@ -17,9 +17,9 @@ from starlette import status
 from app.api.deps import CurrentUser, SessionDep, check_team_permission
 from app.core.config import settings
 from app.core.security import resource_manager
-from app.models import (ActionType, Message, ResourceType, Upload,
-                        UploadCreate, UploadOut, UploadsOut, UploadStatus,
-                        UploadUpdate)
+from app.db.models import (ActionType, Message, ResourceType, Upload,
+                           UploadCreate, UploadOut, UploadsOut, UploadStatus,
+                           UploadUpdate)
 from app.tasks.tasks import (add_upload, edit_upload, perform_search,
                              remove_upload)
 

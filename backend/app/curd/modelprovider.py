@@ -2,10 +2,10 @@ from typing import Any
 
 from sqlmodel import Session, select
 
-from ..models import (ModelOutIdWithAndName, ModelProvider,
-                      ModelProviderCreate, ModelProviderUpdate,
-                      ModelProviderWithModelsListOut, Models,
-                      ProvidersListWithModelsOut)
+from app.db.models import (ModelOutIdWithAndName, ModelProvider,
+                           ModelProviderCreate, ModelProviderUpdate,
+                           ModelProviderWithModelsListOut, Models,
+                           ProvidersListWithModelsOut)
 
 
 def create_model_provider(
@@ -17,6 +17,7 @@ def create_model_provider(
         base_url=model_provider.base_url,
         icon=model_provider.icon,
         description=model_provider.description,
+        is_available=model_provider.is_available,
     )
 
     # 使用 set_api_key 方法设置并加密 api_key
@@ -102,6 +103,7 @@ def get_model_provider_with_models(
                 ai_model_name=model.ai_model_name,
                 categories=model.categories,
                 capabilities=model.capabilities,
+                is_online=model.is_online,
             )
             for model in result.models
         ]
@@ -113,6 +115,7 @@ def get_model_provider_with_models(
                 api_key=result.api_key,
                 icon=result.icon,
                 description=result.description,
+                is_available=result.is_available,
                 models=models_out,
             )
         else:
@@ -123,6 +126,7 @@ def get_model_provider_with_models(
                 api_key=result.api_key,
                 icon=result.icon,
                 description=result.description,
+                is_available=result.is_available,
                 models=[],
             )
     else:
@@ -143,6 +147,7 @@ def get_model_provider_list_with_models(
                 ai_model_name=model.ai_model_name,
                 categories=model.categories,
                 capabilities=model.capabilities,
+                is_online=model.is_online,
             )
             for model in result.models
         ]
@@ -154,6 +159,7 @@ def get_model_provider_list_with_models(
                 api_key=result.api_key,
                 icon=result.icon,
                 description=result.description,
+                is_available=result.is_available,
                 models=models_out,
             )
         )
@@ -189,6 +195,7 @@ def sync_provider_models(
             model.categories = config_model["categories"]
             model.capabilities = config_model.get("capabilities", [])
             model.meta_ = meta_
+            # 保留现有的is_online状态
         else:
             # 创建新模型
             model = Models(
@@ -196,6 +203,7 @@ def sync_provider_models(
                 provider_id=provider_id,
                 categories=config_model["categories"],
                 capabilities=config_model.get("capabilities", []),
+                is_online=True,  # 默认为在线
                 meta_=meta_,
             )
             session.add(model)

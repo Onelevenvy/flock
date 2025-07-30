@@ -26,7 +26,7 @@ import { FaTools, FaRobot, FaPlus } from "react-icons/fa";
 import { AgentConfig } from "../../types";
 import { DEFAULT_MANAGER } from "./constants";
 import { v4 } from "uuid";
-import { useSkillsQuery } from "@/hooks/useSkillsQuery";
+import { useToolProvidersQuery } from "@/hooks/useToolProvidersQuery";
 import ToolsIcon from "@/components/Icons/Tools";
 import ToolsList from "../Tool/ToolsListModal";
 import { useVariableInsertion } from "@/hooks/graphs/useVariableInsertion";
@@ -71,7 +71,7 @@ const AgentModal: React.FC<AgentModalProps> = ({
   });
 
   const [isToolsListOpen, setIsToolsListOpen] = useState(false);
-  const { data: skills, isLoading, isError } = useSkillsQuery();
+  const { data: skills, isLoading, isError } = useToolProvidersQuery();
   const [selectedTools, setSelectedTools] = useState<string[]>(
     initialData?.tools || [],
   );

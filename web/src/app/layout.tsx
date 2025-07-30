@@ -2,14 +2,12 @@ import type { Viewport } from "next";
 import { StrictMode } from "react";
 import Script from "next/script";
 import { Geist } from "next/font/google";
-import "@/components/DeerFlow/styles/globals.css";
+
 
 import I18nServer from "@/components/i18n/i18n-server";
 import { ChakraUIProviders } from "@/components/Provider/ChakraUIProvider";
 import QueryClientProviderWrapper from "@/components/Provider/QueryClientProvider";
-import { ThemeProviderWrapper } from "@/components/DeerFlow/components/deer-flow/theme-provider-wrapper";
-import { Toaster } from "@/components/DeerFlow/components/deer-flow/toaster";
-import { env } from "@/components/DeerFlow/env";
+
 
 import ClientProvider from "../components/Provider/ClientProviders";
 
@@ -54,14 +52,14 @@ const LocaleLayout = ({ children }: { children: React.ReactNode }) => {
           <ChakraUIProviders>
             <QueryClientProviderWrapper>
               <ClientProvider>
-                <ThemeProviderWrapper>
+               
                   <I18nServer>{children}</I18nServer>
-                </ThemeProviderWrapper>
+                
               </ClientProvider>
             </QueryClientProviderWrapper>
           </ChakraUIProviders>
         </StrictMode>
-        <Toaster />
+  
 
         {/* Load runtime config script using Next.js Script component */}
         <Script
@@ -84,14 +82,7 @@ const LocaleLayout = ({ children }: { children: React.ReactNode }) => {
           }}
         />
 
-        {env.NEXT_PUBLIC_STATIC_WEBSITE_ONLY && env.AMPLITUDE_API_KEY && (
-          <>
-            <Script src="https://cdn.amplitude.com/script/d2197dd1df3f2959f26295bb0e7e849f.js"></Script>
-            <Script id="amplitude-init" strategy="lazyOnload">
-              {`window.amplitude.init('${env.AMPLITUDE_API_KEY}', {"fetchRemoteConfig":true,"autocapture":true});`}
-            </Script>
-          </>
-        )}
+        
       </body>
     </html>
   );

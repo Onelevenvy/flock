@@ -47,7 +47,7 @@ function Login() {
   const onSubmit: SubmitHandler<AccessToken> = async (data) => {
     try {
       await login(data);
-      router.push("./dashboard");
+      router.push("./playground");
     } catch (err) {
       const errDetail = (err as ApiError).body.detail;
       setError(errDetail);

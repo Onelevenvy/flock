@@ -1,11 +1,12 @@
 import json
 from typing import Any, Literal
 
+import zhipuai
 from langchain.tools import StructuredTool
 from pydantic import BaseModel, Field
-from zhipuai import ZhipuAI
 
-from app.core.tools.utils import get_credential_value
+from app.core.tools.response_formatter import format_tool_response
+from app.core.tools.tool_manager import get_tool_provider_credential_value
 
 ASSISTANT_IDS = {
     "data_analysis": "65a265419d72d299a9230616",
@@ -103,14 +104,16 @@ def qingyan_assistant_query(query: str, assistant_type: str = "ai_search") -> st
     """
     Invoke Qingyan Assistant API
     """
-    api_key = get_credential_value("Qingyan Assistant", "ZHIPUAI_API_KEY")
+    api_key = get_tool_provider_credential_value("zhipuai", "ZHIPUAI_API_KEY")
 
     if not api_key:
-        return "Error: Qingyan Assistant API Key is not set."
+        return format_tool_response(
+            False, error="Qingyan Assistant API Key is not set."
+        )
 
     try:
         url = "https://open.bigmodel.cn/api/paas/v4"
-        client = ZhipuAI(api_key=api_key, base_url=url)
+        client = zhipuai(api_key=api_key, base_url=url)
 
         assistant_id = ASSISTANT_IDS.get(assistant_type, ASSISTANT_IDS["ai_search"])
 
@@ -144,11 +147,13 @@ def qingyan_assistant_query(query: str, assistant_type: str = "ai_search") -> st
                 combined_response["tool_calls"].extend(resp["tool_calls"])
 
         print("Final combined response:", combined_response)
-        return json.dumps(combined_response, ensure_ascii=False)
+        return format_tool_response(True, combined_response)
 
     except Exception as e:
         print(f"Exception occurred: {str(e)}")
-        return json.dumps({"error": f"Qingyan Assistant API request failed. {e}"})
+        return format_tool_response(
+            False, error=f"Qingyan Assistant API request failed: {str(e)}"
+        )
 
 
 qingyan_assistant = StructuredTool.from_function(

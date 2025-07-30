@@ -4,5 +4,6 @@
 /* eslint-disable */
 
 export type ApiKeyCreate = {
-  description?: string | null;
+    description?: (string | null);
 };
+

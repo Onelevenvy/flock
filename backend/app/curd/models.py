@@ -1,6 +1,7 @@
 from sqlmodel import Session, func, select
 
-from ..models import ModelOut, ModelProviderOut, Models, ModelsBase, ModelsOut
+from app.db.models import (ModelOut, ModelProviderOut, Models, ModelsBase,
+                           ModelsOut)
 
 
 def _create_model(session: Session, model: ModelsBase) -> Models:
@@ -40,6 +41,7 @@ def get_models_by_provider(session: Session, provider_id: int) -> ModelsOut:
             ai_model_name=model.ai_model_name,
             categories=model.categories,
             capabilities=model.capabilities,
+            is_online=model.is_online,
             provider=ModelProviderOut(
                 id=model.provider.id,
                 provider_name=model.provider.provider_name,
@@ -47,6 +49,7 @@ def get_models_by_provider(session: Session, provider_id: int) -> ModelsOut:
                 api_key=model.provider.encrypted_api_key,
                 icon=model.provider.icon,
                 description=model.provider.description,
+                is_available=model.provider.is_available,
             ),
         )
         for model in models
@@ -78,6 +81,7 @@ def get_all_models(session: Session) -> ModelsOut:
             ai_model_name=model.ai_model_name,
             categories=model.categories,
             capabilities=model.capabilities,
+            is_online=model.is_online,
             provider=ModelProviderOut(
                 id=model.provider.id,
                 provider_name=model.provider.provider_name,
@@ -85,6 +89,7 @@ def get_all_models(session: Session) -> ModelsOut:
                 api_key=model.provider.encrypted_api_key,
                 icon=model.provider.icon,
                 description=model.provider.description,
+                is_available=model.provider.is_available,
             ),
         )
         for model in models
@@ -114,3 +119,18 @@ def _update_model(
         session.commit()
         session.refresh(db_model)
     return db_model
+
+
+def get_model_info_by_id(session: Session, model_id: int) -> dict | None:
+    """
+    通过模型id返回模型和provider的详细信息。
+    """
+    model = session.exec(select(Models).where(Models.id == model_id)).first()
+    if not model or not model.provider:
+        return None
+    return {
+        "ai_model_name": model.ai_model_name,
+        "provider_name": model.provider.provider_name,
+        "base_url": model.provider.base_url,
+        "api_key": model.provider.decrypted_api_key,  # 现在可以使用decrypted_api_key
+    }

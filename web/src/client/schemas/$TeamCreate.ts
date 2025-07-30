@@ -3,37 +3,31 @@
 /* tslint:disable */
 /* eslint-disable */
 export const $TeamCreate = {
-  properties: {
-    name: {
-      type: "string",
-      isRequired: true,
-      pattern: "^[a-zA-Z0-9_-]{1,64}$",
-    },
-    description: {
-      type: "any-of",
-      contains: [
-        {
-          type: "string",
+    properties: {
+        name: {
+            type: 'string',
+            isRequired: true,
+            pattern: '^[a-zA-Z0-9_-]{1,64}$',
         },
-        {
-          type: "null",
+        description: {
+            type: 'any-of',
+            contains: [{
+                type: 'string',
+            }, {
+                type: 'null',
+            }],
         },
-      ],
-    },
-    icon: {
-      type: "any-of",
-      contains: [
-        {
-          type: "string",
+        icon: {
+            type: 'any-of',
+            contains: [{
+                type: 'string',
+            }, {
+                type: 'null',
+            }],
         },
-        {
-          type: "null",
+        workflow: {
+            type: 'string',
+            isRequired: true,
         },
-      ],
     },
-    workflow: {
-      type: "string",
-      isRequired: true,
-    },
-  },
 } as const;

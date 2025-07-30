@@ -3,13 +3,13 @@
 /* tslint:disable */
 /* eslint-disable */
 export const $ProvidersListWithModelsOut = {
-  properties: {
-    providers: {
-      type: "array",
-      contains: {
-        type: "ModelProviderWithModelsListOut",
-      },
-      isRequired: true,
+    properties: {
+        providers: {
+            type: 'array',
+            contains: {
+                type: 'ModelProviderWithModelsListOut',
+            },
+            isRequired: true,
+        },
     },
-  },
 } as const;

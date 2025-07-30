@@ -6,7 +6,7 @@ from sqlmodel import Session
 from app.core.celery_app import celery_app
 from app.core.db import engine
 from app.core.rag.qdrant import QdrantStore
-from app.models import Upload, UploadStatus
+from app.db.models import Upload, UploadStatus
 
 logger = logging.getLogger(__name__)
 

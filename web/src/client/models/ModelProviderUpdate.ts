@@ -4,9 +4,11 @@
 /* eslint-disable */
 
 export type ModelProviderUpdate = {
-  provider_name?: string | null;
-  base_url?: string | null;
-  api_key?: string | null;
-  icon?: string | null;
-  description?: string | null;
+    provider_name?: (string | null);
+    base_url?: (string | null);
+    api_key?: (string | null);
+    icon?: (string | null);
+    description?: (string | null);
+    is_available?: (boolean | null);
 };
+

@@ -3,13 +3,13 @@
 /* tslint:disable */
 /* eslint-disable */
 export const $Token = {
-  properties: {
-    access_token: {
-      type: "string",
-      isRequired: true,
+    properties: {
+        access_token: {
+            type: 'string',
+            isRequired: true,
+        },
+        token_type: {
+            type: 'string',
+        },
     },
-    token_type: {
-      type: "string",
-    },
-  },
 } as const;

@@ -22,10 +22,10 @@ import { useTranslation } from "react-i18next";
 import { FaTools } from "react-icons/fa";
 
 import ToolsIcon from "@/components/Icons/Tools";
-import type { SkillOut } from "@/client";
+import type { ToolOut } from "@/client";
 
 interface ToolsListProps {
-  skills: SkillOut[];
+  tools: ToolOut[];
   onClose: () => void;
   onAddTool: (tool: string) => void;
   selectedTools: string[];

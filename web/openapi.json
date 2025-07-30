@@ -1404,18 +1404,52 @@
       }
     },
     "/api/v1/tools/": {
+      "post": {
+        "tags": [
+          "tools"
+        ],
+        "summary": "Create Tool",
+        "description": "Create new tool.",
+        "operationId": "create_tool",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ToolCreate"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ToolBase"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
       "get": {
         "tags": [
           "tools"
         ],
-        "summary": "Read Skills",
-        "description": "Retrieve skills",
-        "operationId": "read_skills",
-        "security": [
-          {
-            "OAuth2PasswordBearer": []
-          }
-        ],
+        "summary": "Read Tools",
+        "operationId": "read_tools",
         "parameters": [
           {
             "name": "skip",
@@ -1444,52 +1478,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/SkillsOut"
-                }
-              }
-            }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            }
-          }
-        }
-      },
-      "post": {
-        "tags": [
-          "tools"
-        ],
-        "summary": "Create Skill",
-        "description": "Create new skill.",
-        "operationId": "create_skill",
-        "security": [
-          {
-            "OAuth2PasswordBearer": []
-          }
-        ],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/SkillCreate"
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/SkillOut"
+                  "$ref": "#/components/schemas/ToolsOut"
                 }
               }
             }
@@ -1507,27 +1496,21 @@
         }
       }
     },
-    "/api/v1/tools/{id}": {
+    "/api/v1/tools/{provider_id}": {
       "get": {
         "tags": [
           "tools"
         ],
-        "summary": "Read Skill",
-        "description": "Get skill by ID.",
-        "operationId": "read_skill",
-        "security": [
-          {
-            "OAuth2PasswordBearer": []
-          }
-        ],
+        "summary": "Read Tool",
+        "operationId": "read_tool",
         "parameters": [
           {
-            "name": "id",
+            "name": "provider_id",
             "in": "path",
             "required": true,
             "schema": {
               "type": "integer",
-              "title": "Id"
+              "title": "Provider Id"
             }
           }
         ],
@@ -1537,7 +1520,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/SkillOut"
+                  "$ref": "#/components/schemas/ToolsOut"
                 }
               }
             }
@@ -1553,27 +1536,24 @@
             }
           }
         }
-      },
+      }
+    },
+    "/api/v1/tools/{tool_id}": {
       "put": {
         "tags": [
           "tools"
         ],
-        "summary": "Update Skill",
-        "description": "Update a skill.",
-        "operationId": "update_skill",
-        "security": [
-          {
-            "OAuth2PasswordBearer": []
-          }
-        ],
+        "summary": "Update Tool",
+        "description": "Update a tool.",
+        "operationId": "update_tool",
         "parameters": [
           {
-            "name": "id",
+            "name": "tool_id",
             "in": "path",
             "required": true,
             "schema": {
               "type": "integer",
-              "title": "Id"
+              "title": "Tool Id"
             }
           }
         ],
@@ -1582,7 +1562,7 @@
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/SkillUpdate"
+                "$ref": "#/components/schemas/ToolUpdate"
               }
             }
           }
@@ -1593,7 +1573,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/SkillOut"
+                  "$ref": "#/components/schemas/Tool"
                 }
               }
             }
@@ -1614,22 +1594,17 @@
         "tags": [
           "tools"
         ],
-        "summary": "Delete Skill",
-        "description": "Delete a skill.",
-        "operationId": "delete_skill",
-        "security": [
-          {
-            "OAuth2PasswordBearer": []
-          }
-        ],
+        "summary": "Delete Tool",
+        "description": "Delete a tool.",
+        "operationId": "delete_tool",
         "parameters": [
           {
-            "name": "id",
+            "name": "tool_id",
             "in": "path",
             "required": true,
             "schema": {
               "type": "integer",
-              "title": "Id"
+              "title": "Tool Id"
             }
           }
         ],
@@ -1639,7 +1614,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "title": "Response Tools-Delete Skill"
+                  "$ref": "#/components/schemas/Tool"
                 }
               }
             }
@@ -1662,14 +1637,16 @@
         "tags": [
           "tools"
         ],
-        "summary": "Validate Skill",
-        "description": "Validate skill's tool definition.",
-        "operationId": "validate_skill",
+        "summary": "Validate Tool",
+        "description": "Validate tool's definition.",
+        "operationId": "validate_tool",
         "requestBody": {
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/ToolDefinitionValidate"
+                "additionalProperties": true,
+                "type": "object",
+                "title": "Tool Definition"
               }
             }
           },
@@ -1681,7 +1658,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "title": "Response Tools-Validate Skill"
+                  "title": "Response Tools-Validate Tool"
                 }
               }
             }
@@ -1699,7 +1676,7 @@
         }
       }
     },
-    "/api/v1/tools/invoke-tool": {
+    "/api/v1/tools/invoke": {
       "post": {
         "tags": [
           "tools"
@@ -1754,27 +1731,22 @@
         }
       }
     },
-    "/api/v1/tools/update-credentials/{id}": {
-      "post": {
+    "/api/v1/tools/{tool_id}/input-parameters": {
+      "patch": {
         "tags": [
           "tools"
         ],
-        "summary": "Update Skill Credentials",
-        "description": "Update a skill's credentials.",
-        "operationId": "update_skill_credentials",
-        "security": [
-          {
-            "OAuth2PasswordBearer": []
-          }
-        ],
+        "summary": "Update Tool Input Parameters",
+        "description": "Update a tool's input parameters.",
+        "operationId": "update_tool_input_parameters",
         "parameters": [
           {
-            "name": "id",
+            "name": "tool_id",
             "in": "path",
             "required": true,
             "schema": {
               "type": "integer",
-              "title": "Id"
+              "title": "Tool Id"
             }
           }
         ],
@@ -1784,11 +1756,8 @@
             "application/json": {
               "schema": {
                 "type": "object",
-                "additionalProperties": {
-                  "type": "object",
-                  "additionalProperties": true
-                },
-                "title": "Credentials"
+                "additionalProperties": true,
+                "title": "Input Parameters"
               }
             }
           }
@@ -1799,7 +1768,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/SkillOut"
+                  "title": "Response Tools-Update Tool Input Parameters"
                 }
               }
             }
@@ -1817,21 +1786,130 @@
         }
       }
     },
-    "/api/v1/tools/mcp/tools": {
+    "/api/v1/tools/{tool_id}/online-status": {
+      "patch": {
+        "tags": [
+          "tools"
+        ],
+        "summary": "Update Tool Online Status Endpoint",
+        "description": "更新工具在线状态",
+        "operationId": "update_tool_online_status_endpoint",
+        "parameters": [
+          {
+            "name": "tool_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Tool Id"
+            }
+          },
+          {
+            "name": "is_online",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "boolean",
+              "title": "Is Online"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "title": "Response Tools-Update Tool Online Status Endpoint"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/tools/{tool_id}/test": {
       "post": {
         "tags": [
           "tools"
         ],
-        "summary": "Get Mcp Tools",
-        "description": "获取MCP服务器的工具列表",
-        "operationId": "get_mcp_tools",
+        "summary": "Test Tool",
+        "description": "测试工具的可用性",
+        "operationId": "test_tool",
+        "parameters": [
+          {
+            "name": "tool_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Tool Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/toolprovider/": {
+      "get": {
+        "tags": [
+          "toolprovider"
+        ],
+        "summary": "Read Provider List With Tools",
+        "operationId": "read_provider_list_with_tools",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProvidersListWithToolsOut"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "toolprovider"
+        ],
+        "summary": "Create Provider",
+        "operationId": "create_provider",
         "requestBody": {
           "content": {
             "application/json": {
               "schema": {
-                "additionalProperties": true,
-                "type": "object",
-                "title": "Mcp Config"
+                "$ref": "#/components/schemas/ToolProviderCreate"
               }
             }
           },
@@ -1843,7 +1921,409 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "title": "Response Tools-Get Mcp Tools"
+                  "$ref": "#/components/schemas/ToolProvider"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/toolprovider/{tool_provider_id}": {
+      "get": {
+        "tags": [
+          "toolprovider"
+        ],
+        "summary": "Read Provider",
+        "description": "Get provider by ID.",
+        "operationId": "read_provider",
+        "parameters": [
+          {
+            "name": "tool_provider_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Tool Provider Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ToolProviderOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "toolprovider"
+        ],
+        "summary": "Update Provider",
+        "description": "Update a provider.",
+        "operationId": "update_provider",
+        "parameters": [
+          {
+            "name": "tool_provider_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Tool Provider Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ToolProviderUpdate"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ToolProviderOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "toolprovider"
+        ],
+        "summary": "Delete Provider",
+        "description": "删除工具提供者",
+        "operationId": "delete_provider",
+        "parameters": [
+          {
+            "name": "tool_provider_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Tool Provider Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ToolProviderOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/toolprovider/withtools/{tool_provider_id}": {
+      "get": {
+        "tags": [
+          "toolprovider"
+        ],
+        "summary": "Read Provider With Tools",
+        "operationId": "read_provider_with_tools",
+        "parameters": [
+          {
+            "name": "tool_provider_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Tool Provider Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ToolProviderWithToolsListOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/toolprovider/{tool_provider_id}/authenticate": {
+      "post": {
+        "tags": [
+          "toolprovider"
+        ],
+        "summary": "Authenticate Provider",
+        "description": "对工具提供商进行鉴权或刷新工具列表",
+        "operationId": "authenticate_provider",
+        "parameters": [
+          {
+            "name": "tool_provider_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Tool Provider Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/toolprovider/mcp": {
+      "post": {
+        "tags": [
+          "toolprovider"
+        ],
+        "summary": "Create Mcp Provider",
+        "description": "创建 MCP 工具提供者并同步工具",
+        "operationId": "create_mcp_provider",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/MCPProviderCreate"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MCPProviderOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/toolprovider/mcp/{tool_provider_id}": {
+      "put": {
+        "tags": [
+          "toolprovider"
+        ],
+        "summary": "Update Mcp Provider",
+        "description": "更新 MCP 工具提供者并同步工具",
+        "operationId": "update_mcp_provider",
+        "parameters": [
+          {
+            "name": "tool_provider_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Tool Provider Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/MCPProviderUpdate"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MCPProviderOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/toolprovider/mcp/test-connection": {
+      "post": {
+        "tags": [
+          "toolprovider"
+        ],
+        "summary": "Test Mcp Connection",
+        "description": "测试 MCP 连接",
+        "operationId": "test_mcp_connection",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/MCPConnectionTest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "type": "object",
+                  "title": "Response Toolprovider-Test Mcp Connection"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/toolprovider/mcp/{tool_provider_id}/sync": {
+      "post": {
+        "tags": [
+          "toolprovider"
+        ],
+        "summary": "Sync Mcp Tools",
+        "description": "同步 MCP 工具",
+        "operationId": "sync_mcp_tools",
+        "parameters": [
+          {
+            "name": "tool_provider_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Tool Provider Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": true,
+                  "title": "Response Toolprovider-Sync Mcp Tools"
                 }
               }
             }
@@ -2852,6 +3332,51 @@
         }
       }
     },
+    "/api/v1/provider/{provider_id}/authenticate": {
+      "post": {
+        "tags": [
+          "provider"
+        ],
+        "summary": "Provider Authenticate",
+        "description": "对提供商进行鉴权，测试API密钥是否有效\n如果鉴权成功，将提供商标记为可用，并将其所有模型设置为在线",
+        "operationId": "provider_authenticate",
+        "parameters": [
+          {
+            "name": "provider_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Provider Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": true,
+                  "title": "Response Provider-Provider Authenticate"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/v1/model/": {
       "get": {
         "tags": [
@@ -3076,6 +3601,57 @@
             }
           }
         },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Models"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/model/{model_id}/online_status": {
+      "patch": {
+        "tags": [
+          "model"
+        ],
+        "summary": "Update Model Online Status",
+        "operationId": "update_model_online_status",
+        "parameters": [
+          {
+            "name": "model_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Model Id"
+            }
+          },
+          {
+            "name": "is_online",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "boolean",
+              "title": "Is Online"
+            }
+          }
+        ],
         "responses": {
           "200": {
             "description": "Successful Response",
@@ -3906,354 +4482,6 @@
         }
       }
     },
-    "/api/v1/langmanus/ask": {
-      "post": {
-        "tags": [
-          "langmanus"
-        ],
-        "summary": "Ask Question",
-        "operationId": "ask_question",
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/QuestionRequest"
-              }
-            }
-          },
-          "required": true
-        },
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {}
-              }
-            }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/api/v1/langmanus/chat/stream": {
-      "post": {
-        "tags": [
-          "langmanus"
-        ],
-        "summary": "Chat Stream",
-        "operationId": "chat_stream",
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/ChatRequest"
-              }
-            }
-          },
-          "required": true
-        },
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {}
-              }
-            }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/api/v1/langmanus/tts": {
-      "post": {
-        "tags": [
-          "langmanus"
-        ],
-        "summary": "Text To Speech",
-        "description": "Convert text to speech using volcengine TTS API.",
-        "operationId": "text_to_speech",
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/TTSRequest"
-              }
-            }
-          },
-          "required": true
-        },
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {}
-              }
-            }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/api/v1/langmanus/podcast/generate": {
-      "post": {
-        "tags": [
-          "langmanus"
-        ],
-        "summary": "Generate Podcast",
-        "operationId": "generate_podcast",
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/GeneratePodcastRequest"
-              }
-            }
-          },
-          "required": true
-        },
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {}
-              }
-            }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/api/v1/langmanus/ppt/generate": {
-      "post": {
-        "tags": [
-          "langmanus"
-        ],
-        "summary": "Generate Ppt",
-        "operationId": "generate_ppt",
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/GeneratePPTRequest"
-              }
-            }
-          },
-          "required": true
-        },
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {}
-              }
-            }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/api/v1/langmanus/prose/generate": {
-      "post": {
-        "tags": [
-          "langmanus"
-        ],
-        "summary": "Generate Prose",
-        "operationId": "generate_prose",
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/GenerateProseRequest"
-              }
-            }
-          },
-          "required": true
-        },
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {}
-              }
-            }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/api/v1/langmanus/mcp/server/metadata": {
-      "post": {
-        "tags": [
-          "langmanus"
-        ],
-        "summary": "Mcp Server Metadata",
-        "operationId": "mcp_server_metadata",
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/MCPServerMetadataRequest"
-              }
-            }
-          },
-          "required": true
-        },
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/MCPServerMetadataResponse"
-                }
-              }
-            }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/api/v1/langmanus/rag/config": {
-      "get": {
-        "tags": [
-          "langmanus"
-        ],
-        "summary": "Rag Config",
-        "operationId": "rag_config",
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/RAGConfigResponse"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/api/v1/langmanus/rag/resources": {
-      "get": {
-        "tags": [
-          "langmanus"
-        ],
-        "summary": "Rag Resources",
-        "operationId": "rag_resources",
-        "parameters": [
-          {
-            "name": "query",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "anyOf": [
-                {
-                  "type": "string"
-                },
-                {
-                  "type": "null"
-                }
-              ],
-              "description": "The query of the resource need to be searched",
-              "title": "Query"
-            },
-            "description": "The query of the resource need to be searched"
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/RAGResourcesResponse"
-                }
-              }
-            }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
     "/api/v1/groups/": {
       "get": {
         "tags": [
@@ -5061,6 +5289,34 @@
         "type": "object",
         "title": "Body_uploads-update_upload"
       },
+      "ChatMessage": {
+        "properties": {
+          "type": {
+            "$ref": "#/components/schemas/ChatMessageType"
+          },
+          "content": {
+            "type": "string",
+            "title": "Content"
+          },
+          "imgdata": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Imgdata"
+          }
+        },
+        "type": "object",
+        "required": [
+          "type",
+          "content"
+        ],
+        "title": "ChatMessage"
+      },
       "ChatMessageType": {
         "type": "string",
         "enum": [
@@ -5068,160 +5324,6 @@
           "ai"
         ],
         "title": "ChatMessageType"
-      },
-      "ChatRequest": {
-        "properties": {
-          "messages": {
-            "anyOf": [
-              {
-                "items": {
-                  "$ref": "#/components/schemas/app__core__langmanus__server__chat_request__ChatMessage"
-                },
-                "type": "array"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Messages",
-            "description": "History of messages between the user and the assistant",
-            "default": []
-          },
-          "resources": {
-            "anyOf": [
-              {
-                "items": {
-                  "$ref": "#/components/schemas/Resource"
-                },
-                "type": "array"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Resources",
-            "description": "Resources to be used for the research",
-            "default": []
-          },
-          "debug": {
-            "anyOf": [
-              {
-                "type": "boolean"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Debug",
-            "description": "Whether to enable debug logging",
-            "default": false
-          },
-          "thread_id": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Thread Id",
-            "description": "A specific conversation identifier",
-            "default": "__default__"
-          },
-          "max_plan_iterations": {
-            "anyOf": [
-              {
-                "type": "integer"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Max Plan Iterations",
-            "description": "The maximum number of plan iterations",
-            "default": 1
-          },
-          "max_step_num": {
-            "anyOf": [
-              {
-                "type": "integer"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Max Step Num",
-            "description": "The maximum number of steps in a plan",
-            "default": 3
-          },
-          "max_search_results": {
-            "anyOf": [
-              {
-                "type": "integer"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Max Search Results",
-            "description": "The maximum number of search results",
-            "default": 3
-          },
-          "auto_accepted_plan": {
-            "anyOf": [
-              {
-                "type": "boolean"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Auto Accepted Plan",
-            "description": "Whether to automatically accept the plan",
-            "default": false
-          },
-          "interrupt_feedback": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Interrupt Feedback",
-            "description": "Interrupt feedback from the user on the plan"
-          },
-          "mcp_settings": {
-            "anyOf": [
-              {
-                "additionalProperties": true,
-                "type": "object"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Mcp Settings",
-            "description": "MCP settings for the chat request"
-          },
-          "enable_background_investigation": {
-            "anyOf": [
-              {
-                "type": "boolean"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Enable Background Investigation",
-            "description": "Whether to get background investigation before plan",
-            "default": true
-          }
-        },
-        "type": "object",
-        "title": "ChatRequest"
       },
       "ChatResponse": {
         "properties": {
@@ -5314,105 +5416,6 @@
           "name"
         ],
         "title": "ChatResponse"
-      },
-      "ContentItem": {
-        "properties": {
-          "type": {
-            "type": "string",
-            "title": "Type",
-            "description": "The type of content (text, image, etc.)"
-          },
-          "text": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Text",
-            "description": "The text content if type is 'text'"
-          },
-          "image_url": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Image Url",
-            "description": "The image URL if type is 'image'"
-          }
-        },
-        "type": "object",
-        "required": [
-          "type"
-        ],
-        "title": "ContentItem"
-      },
-      "GeneratePPTRequest": {
-        "properties": {
-          "content": {
-            "type": "string",
-            "title": "Content",
-            "description": "The content of the ppt"
-          }
-        },
-        "type": "object",
-        "required": [
-          "content"
-        ],
-        "title": "GeneratePPTRequest"
-      },
-      "GeneratePodcastRequest": {
-        "properties": {
-          "content": {
-            "type": "string",
-            "title": "Content",
-            "description": "The content of the podcast"
-          }
-        },
-        "type": "object",
-        "required": [
-          "content"
-        ],
-        "title": "GeneratePodcastRequest"
-      },
-      "GenerateProseRequest": {
-        "properties": {
-          "prompt": {
-            "type": "string",
-            "title": "Prompt",
-            "description": "The content of the prose"
-          },
-          "option": {
-            "type": "string",
-            "title": "Option",
-            "description": "The option of the prose writer"
-          },
-          "command": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Command",
-            "description": "The user custom command of the prose writer",
-            "default": ""
-          }
-        },
-        "type": "object",
-        "required": [
-          "prompt",
-          "option"
-        ],
-        "title": "GenerateProseRequest"
       },
       "GraphCreate": {
         "properties": {
@@ -5861,161 +5864,126 @@
         ],
         "title": "InterruptType"
       },
-      "MCPServerMetadataRequest": {
+      "MCPConnectionTest": {
         "properties": {
-          "transport": {
+          "mcp_endpoint_url": {
             "type": "string",
-            "title": "Transport",
-            "description": "The type of MCP server connection (stdio or sse)"
+            "title": "Mcp Endpoint Url"
           },
-          "command": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Command",
-            "description": "The command to execute (for stdio type)"
+          "mcp_server_id": {
+            "type": "string",
+            "title": "Mcp Server Id"
           },
-          "args": {
-            "anyOf": [
-              {
-                "items": {
-                  "type": "string"
-                },
-                "type": "array"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Args",
-            "description": "Command arguments (for stdio type)"
-          },
-          "url": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Url",
-            "description": "The URL of the SSE server (for sse type)"
-          },
-          "env": {
-            "anyOf": [
-              {
-                "additionalProperties": {
-                  "type": "string"
-                },
-                "type": "object"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Env",
-            "description": "Environment variables"
-          },
-          "timeout_seconds": {
-            "anyOf": [
-              {
-                "type": "integer"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Timeout Seconds",
-            "description": "Optional custom timeout in seconds for the operation"
+          "mcp_connection_type": {
+            "type": "string",
+            "title": "Mcp Connection Type"
           }
         },
         "type": "object",
         "required": [
-          "transport"
+          "mcp_endpoint_url",
+          "mcp_server_id",
+          "mcp_connection_type"
         ],
-        "title": "MCPServerMetadataRequest",
-        "description": "Request model for MCP server metadata."
+        "title": "MCPConnectionTest"
       },
-      "MCPServerMetadataResponse": {
+      "MCPProviderCreate": {
         "properties": {
-          "transport": {
+          "provider_name": {
             "type": "string",
-            "title": "Transport",
-            "description": "The type of MCP server connection (stdio or sse)"
+            "title": "Provider Name"
           },
-          "command": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Command",
-            "description": "The command to execute (for stdio type)"
+          "mcp_endpoint_url": {
+            "type": "string",
+            "title": "Mcp Endpoint Url"
           },
-          "args": {
-            "anyOf": [
-              {
-                "items": {
-                  "type": "string"
-                },
-                "type": "array"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Args",
-            "description": "Command arguments (for stdio type)"
+          "mcp_server_id": {
+            "type": "string",
+            "title": "Mcp Server Id"
           },
-          "url": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Url",
-            "description": "The URL of the SSE server (for sse type)"
+          "mcp_connection_type": {
+            "type": "string",
+            "title": "Mcp Connection Type"
           },
-          "env": {
-            "anyOf": [
-              {
-                "additionalProperties": {
-                  "type": "string"
-                },
-                "type": "object"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Env",
-            "description": "Environment variables"
-          },
-          "tools": {
-            "items": {},
-            "type": "array",
-            "title": "Tools",
-            "description": "Available tools from the MCP server"
+          "icon": {
+            "type": "string",
+            "title": "Icon"
           }
         },
         "type": "object",
         "required": [
-          "transport"
+          "provider_name",
+          "mcp_endpoint_url",
+          "mcp_server_id",
+          "mcp_connection_type"
         ],
-        "title": "MCPServerMetadataResponse",
-        "description": "Response model for MCP server metadata."
+        "title": "MCPProviderCreate"
+      },
+      "MCPProviderOut": {
+        "properties": {
+          "id": {
+            "type": "integer",
+            "title": "Id"
+          },
+          "provider_name": {
+            "type": "string",
+            "title": "Provider Name"
+          },
+          "mcp_endpoint_url": {
+            "type": "string",
+            "title": "Mcp Endpoint Url"
+          },
+          "mcp_server_id": {
+            "type": "string",
+            "title": "Mcp Server Id"
+          },
+          "mcp_connection_type": {
+            "type": "string",
+            "title": "Mcp Connection Type"
+          },
+          "icon": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Icon"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "provider_name",
+          "mcp_endpoint_url",
+          "mcp_server_id",
+          "mcp_connection_type"
+        ],
+        "title": "MCPProviderOut"
+      },
+      "MCPProviderUpdate": {
+        "properties": {
+          "provider_name": {
+            "type": "string",
+            "title": "Provider Name"
+          },
+          "mcp_endpoint_url": {
+            "type": "string",
+            "title": "Mcp Endpoint Url"
+          },
+          "mcp_connection_type": {
+            "type": "string",
+            "title": "Mcp Connection Type"
+          },
+          "icon": {
+            "type": "string",
+            "title": "Icon"
+          }
+        },
+        "type": "object",
+        "title": "MCPProviderUpdate"
       },
       "MemberCreate": {
         "properties": {
@@ -6188,12 +6156,12 @@
             "type": "integer",
             "title": "Belongs To"
           },
-          "skills": {
+          "tools": {
             "items": {
-              "$ref": "#/components/schemas/Skill"
+              "$ref": "#/components/schemas/Tool"
             },
             "type": "array",
-            "title": "Skills"
+            "title": "Tools"
           },
           "uploads": {
             "items": {
@@ -6213,7 +6181,7 @@
           "position_y",
           "id",
           "belongs_to",
-          "skills",
+          "tools",
           "uploads"
         ],
         "title": "MemberOut"
@@ -6364,11 +6332,11 @@
             ],
             "title": "Belongs To"
           },
-          "skills": {
+          "tools": {
             "anyOf": [
               {
                 "items": {
-                  "$ref": "#/components/schemas/Skill"
+                  "$ref": "#/components/schemas/Tool"
                 },
                 "type": "array"
               },
@@ -6376,7 +6344,7 @@
                 "type": "null"
               }
             ],
-            "title": "Skills"
+            "title": "Tools"
           },
           "uploads": {
             "anyOf": [
@@ -6476,6 +6444,11 @@
             "title": "Capabilities",
             "default": []
           },
+          "is_online": {
+            "type": "boolean",
+            "title": "Is Online",
+            "default": false
+          },
           "meta_": {
             "anyOf": [
               {
@@ -6521,6 +6494,10 @@
             "type": "array",
             "title": "Capabilities"
           },
+          "is_online": {
+            "type": "boolean",
+            "title": "Is Online"
+          },
           "provider": {
             "$ref": "#/components/schemas/ModelProviderOut"
           }
@@ -6531,6 +6508,7 @@
           "ai_model_name",
           "categories",
           "capabilities",
+          "is_online",
           "provider"
         ],
         "title": "ModelOut"
@@ -6558,6 +6536,10 @@
             },
             "type": "array",
             "title": "Capabilities"
+          },
+          "is_online": {
+            "type": "boolean",
+            "title": "Is Online"
           }
         },
         "type": "object",
@@ -6565,7 +6547,8 @@
           "id",
           "ai_model_name",
           "categories",
-          "capabilities"
+          "capabilities",
+          "is_online"
         ],
         "title": "ModelOutIdWithAndName"
       },
@@ -6620,6 +6603,11 @@
               }
             ],
             "title": "Description"
+          },
+          "is_available": {
+            "type": "boolean",
+            "title": "Is Available",
+            "default": false
           },
           "id": {
             "anyOf": [
@@ -6683,6 +6671,11 @@
           "description": {
             "type": "string",
             "title": "Description"
+          },
+          "is_available": {
+            "type": "boolean",
+            "title": "Is Available",
+            "default": false
           }
         },
         "type": "object",
@@ -6745,6 +6738,10 @@
               }
             ],
             "title": "Description"
+          },
+          "is_available": {
+            "type": "boolean",
+            "title": "Is Available"
           }
         },
         "type": "object",
@@ -6754,7 +6751,8 @@
           "base_url",
           "api_key",
           "icon",
-          "description"
+          "description",
+          "is_available"
         ],
         "title": "ModelProviderOut"
       },
@@ -6816,6 +6814,17 @@
               }
             ],
             "title": "Description"
+          },
+          "is_available": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Is Available"
           }
         },
         "type": "object",
@@ -6875,6 +6884,10 @@
             ],
             "title": "Description"
           },
+          "is_available": {
+            "type": "boolean",
+            "title": "Is Available"
+          },
           "models": {
             "items": {
               "$ref": "#/components/schemas/ModelOutIdWithAndName"
@@ -6891,6 +6904,7 @@
           "api_key",
           "icon",
           "description",
+          "is_available",
           "models"
         ],
         "title": "ModelProviderWithModelsListOut"
@@ -6943,6 +6957,11 @@
             ],
             "title": "Capabilities"
           },
+          "is_online": {
+            "type": "boolean",
+            "title": "Is Online",
+            "default": false
+          },
           "meta_": {
             "anyOf": [
               {
@@ -6984,6 +7003,11 @@
             "type": "array",
             "title": "Capabilities",
             "default": []
+          },
+          "is_online": {
+            "type": "boolean",
+            "title": "Is Online",
+            "default": true
           },
           "id": {
             "anyOf": [
@@ -7065,109 +7089,21 @@
         ],
         "title": "ProvidersListWithModelsOut"
       },
-      "QuestionRequest": {
+      "ProvidersListWithToolsOut": {
         "properties": {
-          "question": {
-            "type": "string",
-            "title": "Question"
-          },
-          "debug": {
-            "type": "boolean",
-            "title": "Debug",
-            "default": false
-          },
-          "max_plan_iterations": {
-            "type": "integer",
-            "title": "Max Plan Iterations",
-            "default": 1
-          },
-          "max_step_num": {
-            "type": "integer",
-            "title": "Max Step Num",
-            "default": 3
-          },
-          "enable_background_investigation": {
-            "type": "boolean",
-            "title": "Enable Background Investigation",
-            "default": true
-          }
-        },
-        "type": "object",
-        "required": [
-          "question"
-        ],
-        "title": "QuestionRequest"
-      },
-      "RAGConfigResponse": {
-        "properties": {
-          "provider": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Provider",
-            "description": "The provider of the RAG, default is ragflow"
-          }
-        },
-        "type": "object",
-        "title": "RAGConfigResponse",
-        "description": "Response model for RAG config."
-      },
-      "RAGResourcesResponse": {
-        "properties": {
-          "resources": {
+          "providers": {
             "items": {
-              "$ref": "#/components/schemas/Resource"
+              "$ref": "#/components/schemas/ToolProviderWithToolsListOut"
             },
             "type": "array",
-            "title": "Resources",
-            "description": "The resources of the RAG"
+            "title": "Providers"
           }
         },
         "type": "object",
         "required": [
-          "resources"
+          "providers"
         ],
-        "title": "RAGResourcesResponse",
-        "description": "Response model for RAG resources."
-      },
-      "Resource": {
-        "properties": {
-          "uri": {
-            "type": "string",
-            "title": "Uri",
-            "description": "The URI of the resource"
-          },
-          "title": {
-            "type": "string",
-            "title": "Title",
-            "description": "The title of the resource"
-          },
-          "description": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Description",
-            "description": "The description of the resource",
-            "default": ""
-          }
-        },
-        "type": "object",
-        "required": [
-          "uri",
-          "title"
-        ],
-        "title": "Resource",
-        "description": "Resource is a class that represents a resource."
+        "title": "ProvidersListWithToolsOut"
       },
       "Role": {
         "properties": {
@@ -7385,349 +7321,6 @@
         ],
         "title": "RolesOut",
         "description": "Schema for roles output"
-      },
-      "Skill": {
-        "properties": {
-          "name": {
-            "type": "string",
-            "title": "Name"
-          },
-          "description": {
-            "type": "string",
-            "title": "Description"
-          },
-          "display_name": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Display Name"
-          },
-          "managed": {
-            "type": "boolean",
-            "title": "Managed",
-            "default": false
-          },
-          "tool_definition": {
-            "anyOf": [
-              {
-                "additionalProperties": true,
-                "type": "object"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Tool Definition"
-          },
-          "input_parameters": {
-            "anyOf": [
-              {
-                "additionalProperties": true,
-                "type": "object"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Input Parameters"
-          },
-          "credentials": {
-            "anyOf": [
-              {
-                "additionalProperties": true,
-                "type": "object"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Credentials"
-          },
-          "id": {
-            "anyOf": [
-              {
-                "type": "integer"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Id"
-          },
-          "resource_id": {
-            "type": "integer",
-            "title": "Resource Id"
-          },
-          "owner_id": {
-            "anyOf": [
-              {
-                "type": "integer"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Owner Id"
-          }
-        },
-        "type": "object",
-        "required": [
-          "name",
-          "description",
-          "resource_id"
-        ],
-        "title": "Skill"
-      },
-      "SkillCreate": {
-        "properties": {
-          "name": {
-            "type": "string",
-            "title": "Name"
-          },
-          "description": {
-            "type": "string",
-            "title": "Description"
-          },
-          "display_name": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Display Name"
-          },
-          "managed": {
-            "type": "boolean",
-            "title": "Managed",
-            "default": false
-          },
-          "tool_definition": {
-            "additionalProperties": true,
-            "type": "object",
-            "title": "Tool Definition"
-          },
-          "input_parameters": {
-            "anyOf": [
-              {
-                "additionalProperties": true,
-                "type": "object"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Input Parameters"
-          },
-          "credentials": {
-            "anyOf": [
-              {
-                "additionalProperties": true,
-                "type": "object"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Credentials"
-          }
-        },
-        "type": "object",
-        "required": [
-          "name",
-          "description",
-          "tool_definition"
-        ],
-        "title": "SkillCreate"
-      },
-      "SkillOut": {
-        "properties": {
-          "name": {
-            "type": "string",
-            "title": "Name"
-          },
-          "description": {
-            "type": "string",
-            "title": "Description"
-          },
-          "display_name": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Display Name"
-          },
-          "managed": {
-            "type": "boolean",
-            "title": "Managed",
-            "default": false
-          },
-          "tool_definition": {
-            "anyOf": [
-              {
-                "additionalProperties": true,
-                "type": "object"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Tool Definition"
-          },
-          "input_parameters": {
-            "anyOf": [
-              {
-                "additionalProperties": true,
-                "type": "object"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Input Parameters"
-          },
-          "credentials": {
-            "anyOf": [
-              {
-                "additionalProperties": true,
-                "type": "object"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Credentials"
-          },
-          "id": {
-            "type": "integer",
-            "title": "Id"
-          }
-        },
-        "type": "object",
-        "required": [
-          "name",
-          "description",
-          "id"
-        ],
-        "title": "SkillOut"
-      },
-      "SkillUpdate": {
-        "properties": {
-          "name": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Name"
-          },
-          "description": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Description"
-          },
-          "display_name": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Display Name"
-          },
-          "managed": {
-            "anyOf": [
-              {
-                "type": "boolean"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Managed"
-          },
-          "tool_definition": {
-            "anyOf": [
-              {
-                "additionalProperties": true,
-                "type": "object"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Tool Definition"
-          },
-          "input_parameters": {
-            "anyOf": [
-              {
-                "additionalProperties": true,
-                "type": "object"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Input Parameters"
-          },
-          "credentials": {
-            "anyOf": [
-              {
-                "additionalProperties": true,
-                "type": "object"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Credentials"
-          }
-        },
-        "type": "object",
-        "title": "SkillUpdate"
-      },
-      "SkillsOut": {
-        "properties": {
-          "data": {
-            "items": {
-              "$ref": "#/components/schemas/SkillOut"
-            },
-            "type": "array",
-            "title": "Data"
-          },
-          "count": {
-            "type": "integer",
-            "title": "Count"
-          }
-        },
-        "type": "object",
-        "required": [
-          "data",
-          "count"
-        ],
-        "title": "SkillsOut"
       },
       "SubgraphCreate": {
         "properties": {
@@ -7947,129 +7540,11 @@
         ],
         "title": "SubgraphsOut"
       },
-      "TTSRequest": {
-        "properties": {
-          "text": {
-            "type": "string",
-            "title": "Text",
-            "description": "The text to convert to speech"
-          },
-          "voice_type": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Voice Type",
-            "description": "The voice type to use",
-            "default": "BV700_V2_streaming"
-          },
-          "encoding": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Encoding",
-            "description": "The audio encoding format",
-            "default": "mp3"
-          },
-          "speed_ratio": {
-            "anyOf": [
-              {
-                "type": "number"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Speed Ratio",
-            "description": "Speech speed ratio",
-            "default": 1
-          },
-          "volume_ratio": {
-            "anyOf": [
-              {
-                "type": "number"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Volume Ratio",
-            "description": "Speech volume ratio",
-            "default": 1
-          },
-          "pitch_ratio": {
-            "anyOf": [
-              {
-                "type": "number"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Pitch Ratio",
-            "description": "Speech pitch ratio",
-            "default": 1
-          },
-          "text_type": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Text Type",
-            "description": "Text type (plain or ssml)",
-            "default": "plain"
-          },
-          "with_frontend": {
-            "anyOf": [
-              {
-                "type": "integer"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "With Frontend",
-            "description": "Whether to use frontend processing",
-            "default": 1
-          },
-          "frontend_type": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Frontend Type",
-            "description": "Frontend type",
-            "default": "unitTson"
-          }
-        },
-        "type": "object",
-        "required": [
-          "text"
-        ],
-        "title": "TTSRequest"
-      },
       "TeamChat": {
         "properties": {
           "messages": {
             "items": {
-              "$ref": "#/components/schemas/app__models__ChatMessage"
+              "$ref": "#/components/schemas/ChatMessage"
             },
             "type": "array",
             "title": "Messages"
@@ -8096,7 +7571,7 @@
           "message": {
             "anyOf": [
               {
-                "$ref": "#/components/schemas/app__models__ChatMessage"
+                "$ref": "#/components/schemas/ChatMessage"
               },
               {
                 "type": "null"
@@ -8409,6 +7884,175 @@
         ],
         "title": "Token"
       },
+      "Tool": {
+        "properties": {
+          "name": {
+            "type": "string",
+            "maxLength": 64,
+            "title": "Name"
+          },
+          "description": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 256
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Description"
+          },
+          "display_name": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 128
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Display Name"
+          },
+          "managed": {
+            "type": "boolean",
+            "title": "Managed",
+            "default": false
+          },
+          "tool_definition": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Tool Definition"
+          },
+          "input_parameters": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Input Parameters"
+          },
+          "provider_id": {
+            "type": "integer",
+            "title": "Provider Id"
+          },
+          "is_online": {
+            "type": "boolean",
+            "title": "Is Online",
+            "default": true
+          },
+          "id": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Id"
+          },
+          "owner_id": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Owner Id"
+          }
+        },
+        "type": "object",
+        "required": [
+          "name",
+          "provider_id"
+        ],
+        "title": "Tool"
+      },
+      "ToolBase": {
+        "properties": {
+          "name": {
+            "type": "string",
+            "pattern": "^[a-zA-Z0-9_-]{1,64}$",
+            "title": "Name",
+            "unique": true
+          },
+          "description": {
+            "type": "string",
+            "title": "Description"
+          },
+          "display_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Display Name"
+          },
+          "managed": {
+            "type": "boolean",
+            "title": "Managed",
+            "default": false
+          },
+          "tool_definition": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Tool Definition"
+          },
+          "input_parameters": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Input Parameters"
+          },
+          "provider_id": {
+            "type": "integer",
+            "title": "Provider Id"
+          },
+          "is_online": {
+            "type": "boolean",
+            "title": "Is Online",
+            "default": false
+          }
+        },
+        "type": "object",
+        "required": [
+          "name",
+          "description",
+          "provider_id"
+        ],
+        "title": "ToolBase"
+      },
       "ToolCall": {
         "properties": {
           "name": {
@@ -8446,19 +8090,69 @@
         "title": "ToolCall",
         "description": "Represents a request to call a tool.\n\nExample:\n\n    .. code-block:: python\n\n        {\n            \"name\": \"foo\",\n            \"args\": {\"a\": 1},\n            \"id\": \"123\"\n        }\n\n    This represents a request to call the tool named \"foo\" with arguments {\"a\": 1}\n    and an identifier of \"123\"."
       },
-      "ToolDefinitionValidate": {
+      "ToolCreate": {
         "properties": {
+          "name": {
+            "type": "string",
+            "pattern": "^[a-zA-Z0-9_-]{1,64}$",
+            "title": "Name",
+            "unique": true
+          },
+          "description": {
+            "type": "string",
+            "title": "Description"
+          },
+          "display_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Display Name"
+          },
+          "managed": {
+            "type": "boolean",
+            "title": "Managed",
+            "default": false
+          },
           "tool_definition": {
             "additionalProperties": true,
             "type": "object",
             "title": "Tool Definition"
+          },
+          "input_parameters": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Input Parameters"
+          },
+          "provider_id": {
+            "type": "integer",
+            "title": "Provider Id"
+          },
+          "is_online": {
+            "type": "boolean",
+            "title": "Is Online",
+            "default": false
           }
         },
         "type": "object",
         "required": [
-          "tool_definition"
+          "name",
+          "description",
+          "tool_definition",
+          "provider_id"
         ],
-        "title": "ToolDefinitionValidate"
+        "title": "ToolCreate"
       },
       "ToolInvokeResponse": {
         "properties": {
@@ -8509,6 +8203,846 @@
           "tool_call_id"
         ],
         "title": "ToolMessages"
+      },
+      "ToolOut": {
+        "properties": {
+          "id": {
+            "type": "integer",
+            "title": "Id"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "description": {
+            "type": "string",
+            "title": "Description"
+          },
+          "display_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Display Name"
+          },
+          "managed": {
+            "type": "boolean",
+            "title": "Managed"
+          },
+          "tool_definition": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Tool Definition"
+          },
+          "input_parameters": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Input Parameters"
+          },
+          "is_online": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Is Online"
+          },
+          "provider": {
+            "$ref": "#/components/schemas/ToolProviderOut"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "name",
+          "description",
+          "display_name",
+          "managed",
+          "tool_definition",
+          "input_parameters",
+          "provider"
+        ],
+        "title": "ToolOut"
+      },
+      "ToolOutIdWithAndName": {
+        "properties": {
+          "id": {
+            "type": "integer",
+            "title": "Id"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "description": {
+            "type": "string",
+            "title": "Description"
+          },
+          "display_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Display Name"
+          },
+          "input_parameters": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Input Parameters"
+          },
+          "is_online": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Is Online"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "name",
+          "description",
+          "display_name",
+          "input_parameters"
+        ],
+        "title": "ToolOutIdWithAndName"
+      },
+      "ToolProvider": {
+        "properties": {
+          "provider_name": {
+            "type": "string",
+            "maxLength": 64,
+            "title": "Provider Name"
+          },
+          "mcp_endpoint_url": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Mcp Endpoint Url"
+          },
+          "mcp_server_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Mcp Server Id"
+          },
+          "mcp_connection_type": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Mcp Connection Type"
+          },
+          "icon": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Icon"
+          },
+          "description": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 256
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Description"
+          },
+          "credentials": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Credentials"
+          },
+          "is_available": {
+            "type": "boolean",
+            "title": "Is Available",
+            "default": false
+          },
+          "tool_type": {
+            "$ref": "#/components/schemas/ToolType",
+            "default": "builtin"
+          },
+          "id": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Id"
+          },
+          "display_name": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 128
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Display Name"
+          }
+        },
+        "type": "object",
+        "required": [
+          "provider_name"
+        ],
+        "title": "ToolProvider"
+      },
+      "ToolProviderCreate": {
+        "properties": {
+          "provider_name": {
+            "type": "string",
+            "pattern": "^[\\w\\u4e00-\\u9fa5_-]{1,64}$",
+            "title": "Provider Name",
+            "unique": true
+          },
+          "mcp_endpoint_url": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Mcp Endpoint Url"
+          },
+          "mcp_server_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Mcp Server Id"
+          },
+          "mcp_connection_type": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Mcp Connection Type"
+          },
+          "icon": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Icon"
+          },
+          "description": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Description"
+          },
+          "credentials": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Credentials"
+          },
+          "is_available": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Is Available"
+          },
+          "tool_type": {
+            "$ref": "#/components/schemas/ToolType",
+            "default": "builtin"
+          },
+          "display_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Display Name"
+          }
+        },
+        "type": "object",
+        "required": [
+          "provider_name"
+        ],
+        "title": "ToolProviderCreate"
+      },
+      "ToolProviderOut": {
+        "properties": {
+          "id": {
+            "type": "integer",
+            "title": "Id"
+          },
+          "provider_name": {
+            "type": "string",
+            "title": "Provider Name"
+          },
+          "display_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Display Name"
+          },
+          "mcp_endpoint_url": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Mcp Endpoint Url"
+          },
+          "mcp_server_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Mcp Server Id"
+          },
+          "mcp_connection_type": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Mcp Connection Type"
+          },
+          "icon": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Icon"
+          },
+          "tool_type": {
+            "$ref": "#/components/schemas/ToolType"
+          },
+          "description": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Description"
+          },
+          "credentials": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Credentials"
+          },
+          "is_available": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Is Available"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "provider_name",
+          "display_name",
+          "mcp_endpoint_url",
+          "mcp_server_id",
+          "mcp_connection_type",
+          "icon",
+          "tool_type",
+          "description",
+          "credentials"
+        ],
+        "title": "ToolProviderOut"
+      },
+      "ToolProviderUpdate": {
+        "properties": {
+          "provider_name": {
+            "anyOf": [
+              {
+                "type": "string",
+                "pattern": "^[\\w\\u4e00-\\u9fa5_-]{1,64}$"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Provider Name",
+            "unique": true
+          },
+          "mcp_endpoint_url": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Mcp Endpoint Url"
+          },
+          "mcp_server_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Mcp Server Id"
+          },
+          "mcp_connection_type": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Mcp Connection Type"
+          },
+          "icon": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Icon"
+          },
+          "description": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Description"
+          },
+          "credentials": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Credentials"
+          },
+          "is_available": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Is Available"
+          },
+          "tool_type": {
+            "$ref": "#/components/schemas/ToolType",
+            "default": "builtin"
+          },
+          "display_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Display Name"
+          }
+        },
+        "type": "object",
+        "title": "ToolProviderUpdate"
+      },
+      "ToolProviderWithToolsListOut": {
+        "properties": {
+          "id": {
+            "type": "integer",
+            "title": "Id"
+          },
+          "provider_name": {
+            "type": "string",
+            "title": "Provider Name"
+          },
+          "display_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Display Name"
+          },
+          "mcp_endpoint_url": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Mcp Endpoint Url"
+          },
+          "mcp_server_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Mcp Server Id"
+          },
+          "mcp_connection_type": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Mcp Connection Type"
+          },
+          "icon": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Icon"
+          },
+          "tool_type": {
+            "$ref": "#/components/schemas/ToolType"
+          },
+          "description": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Description"
+          },
+          "credentials": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Credentials"
+          },
+          "is_available": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Is Available"
+          },
+          "tools": {
+            "items": {
+              "$ref": "#/components/schemas/ToolOutIdWithAndName"
+            },
+            "type": "array",
+            "title": "Tools"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "provider_name",
+          "display_name",
+          "mcp_endpoint_url",
+          "mcp_server_id",
+          "mcp_connection_type",
+          "icon",
+          "tool_type",
+          "description",
+          "credentials",
+          "tools"
+        ],
+        "title": "ToolProviderWithToolsListOut"
+      },
+      "ToolType": {
+        "type": "string",
+        "enum": [
+          "builtin",
+          "api",
+          "mcp"
+        ],
+        "title": "ToolType"
+      },
+      "ToolUpdate": {
+        "properties": {
+          "name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Name"
+          },
+          "description": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Description"
+          },
+          "display_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Display Name"
+          },
+          "managed": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Managed"
+          },
+          "tool_definition": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Tool Definition"
+          },
+          "input_parameters": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Input Parameters"
+          },
+          "provider_id": {
+            "type": "integer",
+            "title": "Provider Id"
+          },
+          "is_online": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Is Online"
+          }
+        },
+        "type": "object",
+        "required": [
+          "provider_id"
+        ],
+        "title": "ToolUpdate"
+      },
+      "ToolsOut": {
+        "properties": {
+          "data": {
+            "items": {
+              "$ref": "#/components/schemas/ToolOut"
+            },
+            "type": "array",
+            "title": "Data"
+          },
+          "count": {
+            "type": "integer",
+            "title": "Count"
+          }
+        },
+        "type": "object",
+        "required": [
+          "data",
+          "count"
+        ],
+        "title": "ToolsOut"
       },
       "UpdateLanguageMe": {
         "properties": {
@@ -9032,64 +9566,6 @@
           "type"
         ],
         "title": "ValidationError"
-      },
-      "app__core__langmanus__server__chat_request__ChatMessage": {
-        "properties": {
-          "role": {
-            "type": "string",
-            "title": "Role",
-            "description": "The role of the message sender (user or assistant)"
-          },
-          "content": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "items": {
-                  "$ref": "#/components/schemas/ContentItem"
-                },
-                "type": "array"
-              }
-            ],
-            "title": "Content",
-            "description": "The content of the message, either a string or a list of content items"
-          }
-        },
-        "type": "object",
-        "required": [
-          "role",
-          "content"
-        ],
-        "title": "ChatMessage"
-      },
-      "app__models__ChatMessage": {
-        "properties": {
-          "type": {
-            "$ref": "#/components/schemas/ChatMessageType"
-          },
-          "content": {
-            "type": "string",
-            "title": "Content"
-          },
-          "imgdata": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Imgdata"
-          }
-        },
-        "type": "object",
-        "required": [
-          "type",
-          "content"
-        ],
-        "title": "ChatMessage"
       }
     },
     "securitySchemes": {

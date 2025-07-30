@@ -41,6 +41,7 @@ export default function ProviderUpdate({
   const showToast = useCustomToast();
   const providerInfo = useModelProviderContext();
   const [show, setShow] = useState(false);
+  const [isAuthenticating, setIsAuthenticating] = useState(false);
 
   const bgColor = useColorModeValue("white", "gray.800");
   const borderColor = useColorModeValue("gray.100", "gray.700");
@@ -58,27 +59,71 @@ export default function ProviderUpdate({
       base_url: providerInfo!.base_url,
       api_key: providerInfo!.api_key,
       description: providerInfo!.description,
+      is_available: providerInfo!.is_available, // Keep this for comparison
     },
   });
 
-  const updateProvider = async (data: ModelProviderUpdate) => {
-    return await ProviderService.updateProvider({
-      modelProviderId: providerInfo!.id,
-      requestBody: data,
-    });
+  // Authentication Mutation
+  const authenticateMutation = useMutation(
+    async () => {
+      return await ProviderService.providerAuthenticate({
+        providerId: providerInfo!.id as number,
+      });
+    },
+    {
+      onMutate: () => {
+        setIsAuthenticating(true);
+      },
+      onSuccess: (data) => {
+        if (data.success) {
+          showToast("Authentication Success", data.message, "success");
+        } else {
+          showToast("Authentication Failed", data.message, "error");
+        }
+      },
+      onError: (err: ApiError) => {
+        const errDetail = err.body?.detail;
+        showToast("Authentication Error", `${errDetail || "Failed to authenticate provider"}`, "error");
+      },
+      onSettled: () => {
+        queryClient.invalidateQueries("provider");
+        queryClient.invalidateQueries("providerId");
+        setIsAuthenticating(false);
+        setIsModalOpen(false);
+      },
+    }
+  );
+
+  const handleAuthenticate = () => {
+    authenticateMutation.mutate();
   };
 
-  const mutation = useMutation(updateProvider, {
+  // Update Provider Mutation
+  const mutation = useMutation(
+    async (data: ModelProviderUpdate) => {
+        return await ProviderService.updateProvider({
+            modelProviderId: providerInfo!.id,
+            requestBody: data,
+        });
+    }, 
+    {
     onSuccess: (data) => {
-      showToast("Success!", "Provider updated successfully.", "success");
       reset(data);
-      setIsModalOpen(false);
+       // If API key or base URL was updated, trigger authentication
+      if (data.api_key !== providerInfo!.api_key || data.base_url !== providerInfo!.base_url) {
+        handleAuthenticate();
+      } else {
+        showToast("Success!", "Provider updated successfully.", "success");
+        queryClient.invalidateQueries("provider");
+        setIsModalOpen(false);
+      }
     },
     onError: (err: ApiError) => {
       const errDetail = err.body?.detail;
       showToast("Something went wrong.", `${errDetail}`, "error");
     },
     onSettled: () => {
+       // This invalidates the detailed view if you have one
       queryClient.invalidateQueries("providerId");
     },
   });
@@ -96,10 +141,11 @@ export default function ProviderUpdate({
   return (
     <Modal
       isOpen={isModalOpen}
-      onClose={() => setIsModalOpen(false)}
+      onClose={isAuthenticating ? () => {} : () => setIsModalOpen(false)} // Prevent closing while authenticating
       size={{ base: "sm", md: "md" }}
       isCentered
       motionPreset="slideInBottom"
+      closeOnOverlayClick={!isAuthenticating}
     >
       <ModalOverlay bg="blackAlpha.300" backdropFilter="blur(10px)" />
       <ModalContent
@@ -122,6 +168,7 @@ export default function ProviderUpdate({
         </ModalHeader>
 
         <ModalCloseButton
+          isDisabled={isAuthenticating}
           position="absolute"
           right={4}
           top={4}
@@ -136,7 +183,7 @@ export default function ProviderUpdate({
         <ModalBody py={6}>
           <VStack spacing={6}>
             <FormControl isInvalid={!!errors.api_key}>
-              <FormLabel fontSize="sm" fontWeight="500" color="gray.700">
+              <FormLabel fontSize="sm" fontWeight="500">
                 API Key
               </FormLabel>
               <InputGroup size="md">
@@ -144,18 +191,7 @@ export default function ProviderUpdate({
                   {...register("api_key", { required: "API Key is required" })}
                   type={show ? "text" : "password"}
                   bg={inputBgColor}
-                  border="1px solid"
-                  borderColor={borderColor}
                   borderRadius="lg"
-                  fontSize="sm"
-                  transition="all 0.2s"
-                  _hover={{
-                    borderColor: "gray.300",
-                  }}
-                  _focus={{
-                    borderColor: "ui.main",
-                    boxShadow: "0 0 0 1px var(--chakra-colors-ui-main)",
-                  }}
                 />
                 <InputRightElement>
                   <IconButton
@@ -164,11 +200,7 @@ export default function ProviderUpdate({
                     size="sm"
                     variant="ghost"
                     onClick={() => setShow(!show)}
-                    transition="all 0.2s"
                     borderRadius="lg"
-                    _hover={{
-                      bg: "gray.100",
-                    }}
                   />
                 </InputRightElement>
               </InputGroup>
@@ -180,24 +212,13 @@ export default function ProviderUpdate({
             </FormControl>
 
             <FormControl isInvalid={!!errors.base_url}>
-              <FormLabel fontSize="sm" fontWeight="500" color="gray.700">
+              <FormLabel fontSize="sm" fontWeight="500">
                 Base URL
               </FormLabel>
               <Input
                 {...register("base_url", { required: "Base URL is required" })}
                 bg={inputBgColor}
-                border="1px solid"
-                borderColor={borderColor}
                 borderRadius="lg"
-                fontSize="sm"
-                transition="all 0.2s"
-                _hover={{
-                  borderColor: "gray.300",
-                }}
-                _focus={{
-                  borderColor: "ui.main",
-                  boxShadow: "0 0 0 1px var(--chakra-colors-ui-main)",
-                }}
               />
               {errors.base_url && (
                 <Text fontSize="sm" color="red.500" mt={1}>
@@ -207,7 +228,7 @@ export default function ProviderUpdate({
             </FormControl>
 
             <FormControl isInvalid={!!errors.description}>
-              <FormLabel fontSize="sm" fontWeight="500" color="gray.700">
+              <FormLabel fontSize="sm" fontWeight="500">
                 Description
               </FormLabel>
               <Input
@@ -215,18 +236,7 @@ export default function ProviderUpdate({
                   required: "Description is required",
                 })}
                 bg={inputBgColor}
-                border="1px solid"
-                borderColor={borderColor}
                 borderRadius="lg"
-                fontSize="sm"
-                transition="all 0.2s"
-                _hover={{
-                  borderColor: "gray.300",
-                }}
-                _focus={{
-                  borderColor: "ui.main",
-                  boxShadow: "0 0 0 1px var(--chakra-colors-ui-main)",
-                }}
               />
               {errors.description && (
                 <Text fontSize="sm" color="red.500" mt={1}>
@@ -241,15 +251,13 @@ export default function ProviderUpdate({
           <Button
             variant="primary"
             type="submit"
-            isLoading={isSubmitting}
-            isDisabled={!isDirty}
+            isLoading={isSubmitting || isAuthenticating}
+            loadingText={isAuthenticating ? 'Authenticating...' : 'Saving...'}
+            isDisabled={!isDirty || isSubmitting || isAuthenticating}
             transition="all 0.2s"
             _hover={{
-              transform: "translateY(-1px)",
-              boxShadow: "md",
-            }}
-            _active={{
-              transform: "translateY(0)",
+                transform: "translateY(-1px)",
+                boxShadow: "md",
             }}
           >
             Save
@@ -257,10 +265,7 @@ export default function ProviderUpdate({
           <Button
             onClick={onCancel}
             variant="ghost"
-            transition="all 0.2s"
-            _hover={{
-              bg: "gray.100",
-            }}
+            isDisabled={isAuthenticating}
           >
             Cancel
           </Button>

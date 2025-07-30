@@ -1,7 +1,7 @@
 const translation = {
   team: {
     all: "All",
-    chatbot: "Chat Assistant",
+    chatbot: "React-Agent",
     ragbot: "Knowledge Retrieval",
   },
   tools: {

@@ -65,7 +65,7 @@ Inside your provider directory, create a `config.py` file:
 ```python
 from langchain_openai import ChatOpenAI  # or other appropriate base class
 from crewai import LLM
-from app.models import ModelCategory, ModelCapability
+from app.db.models import ModelCategory, ModelCapability
 
 # Basic provider configuration
 PROVIDER_CONFIG = {
@@ -165,7 +165,7 @@ Here's a complete example for a new provider:
 ```python
 from langchain_openai import ChatOpenAI
 from crewai import LLM
-from app.models import ModelCategory, ModelCapability
+from app.db.models import ModelCategory, ModelCapability
 
 PROVIDER_CONFIG = {
     "provider_name": "NewAI",

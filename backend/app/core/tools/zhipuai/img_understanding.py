@@ -1,10 +1,11 @@
 import base64
 
+import zhipuai
 from langchain.tools import StructuredTool
 from pydantic import BaseModel, Field
-from zhipuai import ZhipuAI
 
-from app.core.tools.utils import get_credential_value
+from app.core.tools.response_formatter import format_tool_response
+from app.core.tools.tool_manager import get_tool_provider_credential_value
 
 
 class ImageUnderstandingInput(BaseModel):
@@ -16,7 +17,7 @@ class ImageUnderstandingInput(BaseModel):
 
 def img_4v(image_url: str, qry: str):
     if image_url is None:
-        return "Please provide an image path or url"
+        return format_tool_response(False, error="Please provide an image path or url")
 
     if (
         image_url.startswith("http")
@@ -29,28 +30,33 @@ def img_4v(image_url: str, qry: str):
             with open(image_url, "rb") as img_file:
                 img_base = base64.b64encode(img_file.read()).decode("utf-8")
         except Exception as e:
-            return f"Error: {str(e)}"
+            return format_tool_response(False, error=str(e))
 
-    api_key = get_credential_value("Image Understanding", "ZHIPUAI_API_KEY")
+    api_key = get_tool_provider_credential_value("zhipuai", "ZHIPUAI_API_KEY")
 
     if not api_key:
-        return "Error: ZhipuAI API Key is not set."
+        return format_tool_response(False, error="ZhipuAI API Key is not set.")
 
-    client = ZhipuAI(api_key=api_key)
-    response = client.chat.completions.create(
-        model="glm-4v",
-        messages=[
-            {
-                "role": "user",
-                "content": [
-                    {"type": "image_url", "image_url": {"url": img_base}},
-                    {"type": "text", "text": qry},
-                ],
-            }
-        ],
-    )
+    try:
+        client = zhipuai(api_key=api_key)
+        response = client.chat.completions.create(
+            model="glm-4v",
+            messages=[
+                {
+                    "role": "user",
+                    "content": [
+                        {"type": "image_url", "image_url": {"url": img_base}},
+                        {"type": "text", "text": qry},
+                    ],
+                }
+            ],
+        )
 
-    return response.choices[0].message
+        return format_tool_response(True, response.choices[0].message)
+    except Exception as e:
+        return format_tool_response(
+            False, error=f"Image understanding failed: {str(e)}"
+        )
 
 
 img_understanding = StructuredTool.from_function(

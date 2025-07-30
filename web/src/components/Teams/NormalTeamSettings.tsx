@@ -14,7 +14,6 @@ import useCustomToast from "@/hooks/useCustomToast";
 
 import EditTeamMember from "../Members";
 import DebugPreview from "./DebugPreview";
-import TeamInforCard from "./TeamInfo";
 
 export default function NormalTeamSettings({
   teamData,
@@ -70,9 +69,6 @@ export default function NormalTeamSettings({
       gap={4}
     >
       <Box w="30%" display="flex" flexDirection="column" gap={4}>
-        <Box>
-          <TeamInforCard teamData={teamData} />
-        </Box>
         <Box
           flex={1}
           overflowY="auto"

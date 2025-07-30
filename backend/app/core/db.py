@@ -6,11 +6,10 @@ from sqlmodel import Session, create_engine, select
 from app.core.config import settings
 from app.core.model_providers.model_provider_manager import \
     model_provider_manager
-from app.core.tools import managed_tools
 from app.curd import users
-from app.models import (AccessScope, ActionType, Group, ModelProvider, Models,
-                        Resource, ResourceType, Role, RoleAccess, Skill, User,
-                        UserCreate)
+from app.db.models import (AccessScope, ActionType, Group, ModelProvider,
+                           Models, Resource, ResourceType, Role, RoleAccess,
+                           User, UserCreate)
 
 logger = logging.getLogger(__name__)
 
@@ -161,14 +160,10 @@ engine = create_engine(str(settings.SQLALCHEMY_DATABASE_URI))
 # make sure all SQLModel models are imported (app.models) before initializing DB
 # otherwise, SQLModel might fail to initialize relationships properly
 # for more details: https://github.com/tiangolo/full-stack-fastapi-template/issues/28
-def print_skills_info(session: Session) -> None:
-    print("\nSkills Information:")
-    skills = session.exec(select(Skill).order_by(Skill.id)).all()
-    for skill in skills:
-        print(f"Skill: {skill.name} (ID: {skill.id})")
-        print(f"  Display Name: {skill.display_name}")
-        print(f"  Description: {skill.description}")
-        print()
+
+
+from app.core.tools.tool_manager import get_all_tool_providers
+from app.db.models import Tool, ToolProvider, ToolType
 
 
 def init_db(session: Session) -> None:
@@ -207,62 +202,124 @@ def init_db(session: Session) -> None:
         session.flush()
 
     # 现在处理skills
-    existing_skills = session.exec(select(Skill)).all()
-    existing_skills_dict = {skill.name: skill for skill in existing_skills}
+    providers = get_all_tool_providers()
+    for provider_name, provider_info in providers.items():
+        db_provider = session.exec(
+            select(ToolProvider).where(ToolProvider.provider_name == provider_name)
+        ).first()
 
-    for skill_name, skill_info in managed_tools.items():
-        if skill_name in existing_skills_dict:
-            existing_skill = existing_skills_dict[skill_name]
+        # 根据credentials判断是否需要鉴权
+        needs_auth = provider_info.credentials and provider_info.credentials != {}
 
-            # 更新非凭证字段
-            existing_skill.description = skill_info.description
-            existing_skill.display_name = skill_info.display_name
-            existing_skill.input_parameters = skill_info.input_parameters
-            if not existing_skill.resource_id:
-                existing_skill.resource_id = skill_resource.id
+        # 不需要鉴权的provider默认可用，需要鉴权的默认不可用
+        is_available = not needs_auth
 
-            # 更新凭证结构，但保留现有值
-            if existing_skill.credentials is None:
-                existing_skill.credentials = {}
+        if db_provider:
+            db_provider.icon = provider_info.icon
+            db_provider.description = provider_info.description
+            db_provider.display_name = provider_info.display_name
+            # 保留原有字段
+            if hasattr(provider_info, "mcp_endpoint_url"):
+                db_provider.mcp_endpoint_url = provider_info.mcp_endpoint_url
+            if hasattr(provider_info, "mcp_server_id"):
+                db_provider.mcp_server_id = provider_info.mcp_server_id
+            if hasattr(provider_info, "mcp_connection_type"):
+                db_provider.mcp_connection_type = provider_info.mcp_connection_type
+            if hasattr(provider_info, "tool_type"):
+                db_provider.tool_type = provider_info.tool_type
+            else:
+                # 默认设置为内置工具
+                db_provider.tool_type = ToolType.BUILTIN
 
-            if skill_info.credentials:
-                for key, value in skill_info.credentials.items():
-                    if key not in existing_skill.credentials:
-                        existing_skill.credentials[key] = value
-                    else:
-                        existing_value = existing_skill.credentials[key].get("value")
-                        existing_skill.credentials[key] = value
-                        if existing_value:
-                            existing_skill.credentials[key]["value"] = existing_value
+            # 如果数据库中没有凭据，则使用配置中的凭据
+            if not db_provider.credentials:
+                db_provider.credentials = provider_info.credentials
 
-            session.add(existing_skill)
+            # 只有在数据库中没有设置is_available时才设置默认值
+            # 这样可以保留已经鉴权过的状态
+            if db_provider.is_available is None:
+                db_provider.is_available = is_available
         else:
-            new_skill = Skill(
-                name=skill_name,
-                description=skill_info.description,
-                managed=True,
-                owner_id=user.id,
-                resource_id=skill_resource.id,  # 设置resource_id
-                display_name=skill_info.display_name,
-                input_parameters=skill_info.input_parameters,
-                credentials=skill_info.credentials if skill_info.credentials else {},
-            )
-            session.add(new_skill)
+            # 创建新的提供者时，设置默认值
+            provider_args = {
+                "provider_name": provider_name,
+                "display_name": provider_info.display_name,
+                "icon": provider_info.icon,
+                "description": provider_info.description,
+                "credentials": provider_info.credentials,
+                "is_available": is_available,
+                "tool_type": getattr(provider_info, "tool_type", ToolType.BUILTIN),
+            }
 
-    # 删除不再存在的managed skills
-    for skill_name in list(existing_skills_dict.keys()):
-        if skill_name not in managed_tools and existing_skills_dict[skill_name].managed:
-            session.delete(existing_skills_dict[skill_name])
+            # 添加可选字段
+            if hasattr(provider_info, "mcp_endpoint_url"):
+                provider_args["mcp_endpoint_url"] = provider_info.mcp_endpoint_url
+            if hasattr(provider_info, "mcp_server_id"):
+                provider_args["mcp_server_id"] = provider_info.mcp_server_id
+            if hasattr(provider_info, "mcp_connection_type"):
+                provider_args["mcp_connection_type"] = provider_info.mcp_connection_type
 
+            db_provider = ToolProvider(**provider_args)
+            session.add(db_provider)
+        session.flush()
+
+        # 处理Tool
+        existing_tools = session.exec(
+            select(Tool).where(Tool.provider_id == db_provider.id)
+        ).all()
+        existing_tools_dict = {tool.name: tool for tool in existing_tools}
+
+        for tool_info in provider_info.tools:
+            tool_name = tool_info.name
+
+            # 根据provider是否可用决定tool的在线状态
+            # 不需要鉴权的provider下的tool默认在线
+            # 需要鉴权的provider下的tool默认离线
+            is_online = db_provider.is_available
+
+            if tool_name in existing_tools_dict:
+                existing_tool = existing_tools_dict[tool_name]
+                existing_tool.description = tool_info.description
+                existing_tool.display_name = tool_info.display_name
+                existing_tool.input_parameters = tool_info.input_parameters
+                existing_tool.tool_definition = tool_info.tool_definition or {}
+
+                # 只有在数据库中没有设置is_online时才设置默认值
+                # 这样可以保留已经鉴权过的状态
+                if existing_tool.is_online is None:
+                    existing_tool.is_online = is_online
+
+                session.add(existing_tool)
+            else:
+                # 创建新工具时，设置默认值
+                tool_args = {
+                    "name": tool_name,
+                    "description": tool_info.description,
+                    "managed": tool_info.managed,
+                    "display_name": tool_info.display_name,
+                    "input_parameters": tool_info.input_parameters,
+                    "tool_definition": tool_info.tool_definition or {},
+                    "provider_id": db_provider.id,
+                    "is_online": is_online,  # 根据provider可用性设置
+                }
+                new_tool = Tool(**tool_args)
+                session.add(new_tool)
+
+        # 删除不再存在的tool
+        for tool_name in list(existing_tools_dict.keys()):
+            if tool_name not in [t.name for t in provider_info.tools]:
+                session.delete(existing_tools_dict[tool_name])
     session.commit()
-
-    # 打印 skills 信息
-    print_skills_info(session)
 
 
 def init_modelprovider_model_db(session: Session) -> None:
     providers = model_provider_manager.get_all_providers()
 
+    # 获取数据库中所有现有的providers
+    existing_providers = session.exec(select(ModelProvider)).all()
+    existing_provider_names = {p.provider_name for p in existing_providers}
+
+    # 处理现有的和新的providers
     for provider_name in sorted(providers.keys()):
         provider_data = providers[provider_name]
 
@@ -277,12 +334,15 @@ def init_modelprovider_model_db(session: Session) -> None:
             db_provider.description = provider_data["description"]
             if not db_provider.api_key:
                 db_provider.set_api_key(provider_data["api_key"])
+                # 如果设置了新的API密钥，默认设置为未鉴权（不可用）
+                db_provider.is_available = False
         else:
             db_provider = ModelProvider(
                 provider_name=provider_data["provider_name"],
                 base_url=provider_data["base_url"],
                 icon=provider_data["icon"],
                 description=provider_data["description"],
+                is_available=False,  # 新创建的提供商默认设置为不可用，需要鉴权
             )
             db_provider.set_api_key(provider_data["api_key"])
             session.add(db_provider)
@@ -309,12 +369,14 @@ def init_modelprovider_model_db(session: Session) -> None:
                 model.capabilities = model_info["capabilities"]
                 # 更新元数据
                 model.meta_ = meta_
+                # 不修改现有模型的is_online状态，保持原状态
             else:
                 new_model = Models(
                     ai_model_name=model_info["name"],
                     provider_id=db_provider.id,
                     categories=model_info["categories"],
                     capabilities=model_info["capabilities"],
+                    is_online=False,  # 新模型默认为离线，直到提供商鉴权通过
                     meta_=meta_,  # 添加元数据
                 )
                 session.add(new_model)
@@ -324,20 +386,31 @@ def init_modelprovider_model_db(session: Session) -> None:
         ):
             session.delete(existing_models[model_name])
 
+    # 删除不再存在的providers
+    providers_to_remove = existing_provider_names - set(providers.keys())
+    for provider_name in providers_to_remove:
+        provider_to_delete = session.exec(
+            select(ModelProvider).where(ModelProvider.provider_name == provider_name)
+        ).first()
+        if provider_to_delete:
+            # 由于设置了cascade="all, delete-orphan"，删除provider时会自动删除关联的models
+            session.delete(provider_to_delete)
+            logger.info(f"Removed provider {provider_name} and its associated models")
+
     session.commit()
 
     # 打印当前数据库状态
-    providers = session.exec(select(ModelProvider).order_by(ModelProvider.id)).all()
-    for provider in providers:
-        print(f"\nProvider: {provider.provider_name} (ID: {provider.id})")
-        # print(f"  Base URL: {provider.base_url}")
-        # print(f"  API Key: {'***************'  if provider.api_key else 'None'}")
-        # print(f"  Description: {provider.description}")
-        models = session.exec(
-            select(Models).where(Models.provider_id == provider.id).order_by(Models.id)
-        ).all()
-        for model in models:
-            print(f"\n  - Model: {model.ai_model_name} (ID: {model.id})")
-            print(f"    Categories: {', '.join(model.categories)}")
-            print(f"    Capabilities: {', '.join(model.capabilities)}")
-            print(f"    Metadata: {model.meta_}")
+    # providers = session.exec(select(ModelProvider).order_by(ModelProvider.id)).all()
+    # for provider in providers:
+    #     print(f"\nProvider: {provider.provider_name} (ID: {provider.id})")
+    #     # print(f"  Base URL: {provider.base_url}")
+    #     # print(f"  API Key: {'***************'  if provider.api_key else 'None'}")
+    #     # print(f"  Description: {provider.description}")
+    #     models = session.exec(
+    #         select(Models).where(Models.provider_id == provider.id).order_by(Models.id)
+    #     ).all()
+    #     for model in models:
+    #         print(f"\n  - Model: {model.ai_model_name} (ID: {model.id})")
+    #         print(f"    Categories: {', '.join(model.categories)}")
+    #         print(f"    Capabilities: {', '.join(model.capabilities)}")
+    #         print(f"    Metadata: {model.meta_}")

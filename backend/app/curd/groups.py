@@ -2,7 +2,7 @@ from typing import Any
 
 from sqlmodel import Session, select
 
-from app.models import Group, GroupCreate, GroupUpdate
+from app.db.models import Group, GroupCreate, GroupUpdate
 
 
 def create_group(*, session: Session, group_create: GroupCreate) -> Group:

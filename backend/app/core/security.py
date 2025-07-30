@@ -9,7 +9,7 @@ from passlib.context import CryptContext
 from sqlmodel import Session
 
 from app.core.config import settings
-from app.models import ActionType, Resource, ResourceType, User
+from app.db.models import ActionType, Resource, ResourceType, User
 
 
 class SecurityManager:
@@ -171,3 +171,5 @@ verify_password = security_manager.verify_password
 get_password_hash = security_manager.get_password_hash
 generate_apikey = security_manager.generate_apikey
 generate_short_apikey = security_manager.generate_short_apikey
+encrypt_token = security_manager.encrypt_api_key
+decrypt_token = security_manager.decrypt_api_key

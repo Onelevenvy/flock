@@ -3,8 +3,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useTranslation } from "react-i18next";
 import { FaToolbox } from "react-icons/fa";
-import { FaBook, FaHouseChimney } from "react-icons/fa6";
-import { FiHome } from "react-icons/fi";
+import { FaBook } from "react-icons/fa6";
 import {
   IoChatboxEllipsesOutline,
   IoChatbubbleEllipses,
@@ -12,8 +11,6 @@ import {
 import { LuBookCopy } from "react-icons/lu";
 import { PiToolboxLight } from "react-icons/pi";
 import { RiRobot2Fill, RiRobot2Line } from "react-icons/ri";
-import { GiArchiveResearch } from "react-icons/gi";
-import { TbDeviceImacSearch } from "react-icons/tb";
 interface SidebarItemsProps {
   onClose?: () => void;
 }
@@ -25,12 +22,7 @@ const SidebarItems = ({ onClose }: SidebarItemsProps) => {
   const { t } = useTranslation();
 
   const items = [
-    {
-      activeIcon: FaHouseChimney,
-      inactiveIcon: FiHome,
-      title: t("sidebar.home"),
-      path: "/dashboard",
-    },
+  
     {
       activeIcon: IoChatbubbleEllipses,
       inactiveIcon: IoChatboxEllipsesOutline,
@@ -56,12 +48,12 @@ const SidebarItems = ({ onClose }: SidebarItemsProps) => {
       path: "/knowledge",
     },
 
-    {
-      activeIcon: GiArchiveResearch,
-      inactiveIcon: TbDeviceImacSearch,
-      title: t("sidebar.research"),
-      path: "/research",
-    },
+    // {
+    //   activeIcon: GiArchiveResearch,
+    //   inactiveIcon: TbDeviceImacSearch,
+    //   title: t("sidebar.research"),
+    //   path: "/research",
+    // },
   ];
 
   return (

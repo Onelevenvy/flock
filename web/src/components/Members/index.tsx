@@ -5,6 +5,7 @@ import {
   FormControl,
   FormErrorMessage,
   FormLabel,
+  HStack,
   Input,
   Modal,
   ModalBody,
@@ -14,21 +15,26 @@ import {
   ModalHeader,
   ModalOverlay,
   Select,
+  SimpleGrid,
   Slider,
   SliderFilledTrack,
   SliderThumb,
   SliderTrack,
+  Text,
   Textarea,
   Tooltip,
+  IconButton,
 } from "@chakra-ui/react";
+import { CircleMinus } from 'lucide-react';
 import { Select as MultiSelect, chakraComponents } from "chakra-react-select";
 import { type Ref, forwardRef, useState, useEffect } from "react";
 import { Controller, type SubmitHandler, useForm } from "react-hook-form";
 import { useTranslation } from "react-i18next";
 import { useMutation, useQueryClient } from "react-query";
-
+import { FaTools } from "react-icons/fa";
 import { useModelQuery } from "@/hooks/useModelQuery";
-import { useSkillsQuery } from "@/hooks/useSkillsQuery";
+import { useQuery } from "react-query";
+import { ToolproviderService } from "@/client/services/ToolproviderService";
 import { useUploadsQuery } from "@/hooks/useUploadsQuery";
 
 import {
@@ -38,8 +44,10 @@ import {
   MembersService,
   type TeamUpdate,
 } from "../../client";
+import ToolsIcon from "../Icons/Tools/index";
 import useCustomToast from "../../hooks/useCustomToast";
 import ModelSelect from "../Common/ModelProvider";
+import ToolSelector from "./ToolSelector";
 
 interface EditTeamMemberProps {
   member: MemberOut;
@@ -143,11 +151,17 @@ const EditTeamMember = forwardRef<HTMLFormElement, EditTeamMemberProps>(
     const [selectedModelProvider, setSelectedModelProvider] =
       useState<string>("openai");
     const {
-      data: skills,
-      isLoading: isLoadingSkills,
-      isError: isErrorSkills,
-      error: errorSkills,
-    } = useSkillsQuery();
+      data: toolProviders,
+      isLoading: isLoadingToolProviders,
+      isError: isErrorToolProviders,
+      error: errorToolProviders,
+    } = useQuery({
+      queryKey: ["toolProviders"],
+      queryFn: () => ToolproviderService.readProviderListWithTools(),
+    });
+
+
+
     const {
       data: uploads,
       isLoading: isLoadingUploads,
@@ -162,8 +176,8 @@ const EditTeamMember = forwardRef<HTMLFormElement, EditTeamMemberProps>(
       error: errorModel,
     } = useModelQuery();
 
-    if (isErrorSkills || isErrorUploads || isErrorModel) {
-      const error = errorSkills || errorUploads || errorModel;
+    if (isErrorToolProviders || isErrorUploads || isErrorModel) {
+      const error = errorToolProviders || errorUploads || errorModel;
       const errDetail = (error as ApiError).body?.detail;
 
       showToast("Something went wrong.", `${errDetail}`, "error");
@@ -182,10 +196,10 @@ const EditTeamMember = forwardRef<HTMLFormElement, EditTeamMemberProps>(
       criteriaMode: "all",
       values: {
         ...member,
-        skills: member.skills.map((skill) => ({
-          ...skill,
-          label: skill.name,
-          value: skill.id,
+        tools: member.tools.map((tool) => ({
+          ...tool,
+          label: tool.name,
+          value: tool.id,
         })),
         uploads: member.uploads.map((upload) => ({
           ...upload,
@@ -230,19 +244,11 @@ const EditTeamMember = forwardRef<HTMLFormElement, EditTeamMemberProps>(
 
     const memberConfig = ALLOWED_MEMBER_CONFIGS[watch("type") as MemberTypes];
 
-    const skillOptions = skills
-      ? skills.data
-          // Remove 'ask-human' tool if 'enableHumanTool' is false
-          .filter(
-            (skill) =>
-              skill.name !== "ask-human" || memberConfig.enableHumanTool,
-          )
-          .map((skill) => ({
-            ...skill,
-            label: skill.name,
-            value: skill.id,
-          }))
-      : [];
+    // 工具选择器模态框状态
+    const [isToolSelectorOpen, setIsToolSelectorOpen] = useState(false);
+    const [isPageToolSelectorOpen, setIsPageToolSelectorOpen] = useState(false);
+
+
 
     const uploadOptions = uploads
       ? uploads.data.map((upload) => ({
@@ -360,32 +366,164 @@ const EditTeamMember = forwardRef<HTMLFormElement, EditTeamMemberProps>(
               {memberConfig.enableSkillTools && (
                 <Controller
                   control={control}
-                  name="skills"
-                  render={({
-                    field: { onChange, onBlur, value, name, ref },
-                    fieldState: { error },
-                  }) => (
-                    <FormControl mt={4} px="6" isInvalid={!!error} id="skills">
-                      <FormLabel>{t("team.teamsetting.tools")}</FormLabel>
-                      <MultiSelect
-                        isLoading={isLoadingSkills}
-                        isMulti
-                        name={name}
-                        ref={ref}
-                        onChange={onChange}
-                        onBlur={onBlur}
-                        value={value}
-                        options={skillOptions}
-                        placeholder="Select skills"
-                        closeMenuOnSelect={false}
-                        components={customSelectOption}
-                      />
-                      <FormErrorMessage>{error?.message}</FormErrorMessage>
+                  name="tools"
+                  render={({ field, fieldState }) => (
+                    <FormControl mt={4} px="6" isInvalid={!!fieldState.error} id="tools">
+                      <HStack justify="space-between" align="center" mb={2}>
+                        <FormLabel mb={0}>{t("team.teamsetting.tools")}</FormLabel>
+                        <Button 
+                          leftIcon={<FaTools />}
+                          onClick={() => setIsPageToolSelectorOpen(true)}
+                          size="sm"
+                          variant="outline"
+                        >
+                          Add tools
+                        </Button>
+                        <ToolSelector
+                          isOpen={isPageToolSelectorOpen}
+                          onClose={() => setIsPageToolSelectorOpen(false)}
+                          providers={toolProviders?.providers || []}
+                          selectedTools={(field.value || []).map(tool => ({
+                            id: tool.id || 0,
+                            name: tool.name,
+                            description: tool.description || '',
+                            display_name: tool.display_name || null,
+                            input_parameters: tool.input_parameters || null,
+                            is_online: tool.is_online || null,
+                          }))}
+                          onSelect={(tool) => {
+                            const currentTools = field.value || [];
+                            // 查找工具所属的提供商ID
+                            let providerId = 0;
+                            if (toolProviders?.providers) {
+                              for (const provider of toolProviders.providers) {
+                                if (provider.tools.some(t => t.id === tool.id)) {
+                                  providerId = provider.id;
+                                  break;
+                                }
+                              }
+                            }
+                            const newTools = [...currentTools, {
+                              name: tool.name,
+                              description: tool.description || '',
+                              display_name: tool.display_name || undefined,
+                              input_parameters: tool.input_parameters || undefined,
+                              is_online: tool.is_online || undefined,
+                              provider_id: providerId,
+                              id: tool.id,
+                            }];
+                            field.onChange(newTools);
+                          }}
+                          onDeselect={(tool) => {
+                            const currentTools = field.value || [];
+                            const newTools = currentTools.filter(t => t.id !== tool.id);
+                            field.onChange(newTools);
+                          }}
+                          onBatchChange={(tools, selected) => {
+                            const currentTools = field.value || [];
+                            if (selected) {
+                              // 添加工具
+                              const newTools = [...currentTools];
+                              tools.forEach(tool => {
+                                // 检查工具是否已存在
+                                if (!newTools.some(t => t.id === tool.id)) {
+                                  // 查找工具所属的提供商ID
+                                  let providerId = 0;
+                                  if (toolProviders?.providers) {
+                                    for (const provider of toolProviders.providers) {
+                                      if (provider.tools.some(t => t.id === tool.id)) {
+                                        providerId = provider.id;
+                                        break;
+                                      }
+                                    }
+                                  }
+                                  newTools.push({
+                                    name: tool.name,
+                                    description: tool.description || '',
+                                    display_name: tool.display_name || undefined,
+                                    input_parameters: tool.input_parameters || undefined,
+                                    is_online: tool.is_online || undefined,
+                                    provider_id: providerId,
+                                    id: tool.id,
+                                  });
+                                }
+                              });
+                              field.onChange(newTools);
+                            } else {
+                              // 移除工具
+                              const toolIdsToRemove = new Set(tools.map(t => t.id));
+                              const newTools = currentTools.filter(t => !toolIdsToRemove.has(t.id!));
+                              field.onChange(newTools);
+                            }
+                          }}
+                        />
+                      </HStack>
+                      {field.value && field.value.length > 0 && (
+                        <Box mt={3}>
+                          <SimpleGrid columns={2} spacing={3}>
+                            {field.value.map((tool) => {
+                              // 查找工具所属的提供商
+                              let provider = null;
+                              if (toolProviders?.providers) {
+                                for (const p of toolProviders.providers) {
+                                  if (p.tools.some(t => t.id === tool.id)) {
+                                    provider = p;
+                                    break;
+                                  }
+                                }
+                              }
+                              
+                              return (
+                                <HStack
+                                  key={tool.id}
+                                  role="group"
+                                  justify="space-between"
+                                  p={3}
+                                  boxShadow="sm"
+                                  borderWidth="1px"
+                                  borderColor="gray.200"
+                                  borderRadius="lg"
+                                  w="100%"
+                                >
+                                  <HStack flex="1" spacing={2} overflow="hidden">
+                                    <Box flexShrink={0} w={7} h={7} borderRadius="lg" bg="primary.50" display="flex" alignItems="center" justifyContent="center">
+                                      {provider && provider.icon && (
+                                        <ToolsIcon 
+                                          tools_name={provider.provider_name || ''} 
+                                          color={`${provider.tool_type === 'builtin' ? "blue" : "purple"}.500`} 
+                                        />
+                                      )}
+                                    </Box>
+                                    <Text fontSize="sm" fontWeight="medium" isTruncated>
+                                      {tool.display_name || tool.name}
+                                    </Text>
+                                  </HStack>
+                                  <IconButton
+                                    aria-label="Remove tool"
+                                    icon={<CircleMinus size={16} />}
+                                    variant="ghost"
+                                    size="sm"
+                                    isRound
+                                    opacity={0}
+                                    transition="opacity 0.2s"
+                                    _groupHover={{ opacity: 1 }}
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      const newTools = field.value!.filter(t => t.id !== tool.id);
+                                      field.onChange(newTools);
+                                    }}
+                                  />
+                                </HStack>
+                              );
+                            })}
+                          </SimpleGrid>
+                        </Box>
+                      )}
+                      <FormErrorMessage>{fieldState.error?.message}</FormErrorMessage>
                     </FormControl>
                   )}
                 />
               )}
-
               {memberConfig.enableUploadTools && (
                 <Controller
                   control={control}
@@ -394,10 +532,10 @@ const EditTeamMember = forwardRef<HTMLFormElement, EditTeamMemberProps>(
                     field: { onChange, onBlur, value, name, ref },
                     fieldState: { error },
                   }) => (
-                    <FormControl mt={4} px="6" isInvalid={!!error} id="uploads">
-                      <FormLabel>{t("team.teamsetting.knowledge")}</FormLabel>
+                    <FormControl mt={4} isInvalid={!!error} id="uploads">
+                      <FormLabel>Knowledge Base</FormLabel>
                       <MultiSelect
-                        // isDisabled={}
+                        isDisabled={!memberConfig.enableUploadTools}
                         isLoading={isLoadingUploads}
                         isMulti
                         name={name}
@@ -416,7 +554,7 @@ const EditTeamMember = forwardRef<HTMLFormElement, EditTeamMemberProps>(
                 />
               )}
               {memberConfig.enableInterrupt && (
-                <FormControl mt={4} px="6">
+                <FormControl mt={4}>
                   <FormLabel htmlFor="interrupt">Human In The Loop</FormLabel>
                   <Checkbox {...register("interrupt")}>
                     Require approval before executing actions
@@ -548,27 +686,162 @@ const EditTeamMember = forwardRef<HTMLFormElement, EditTeamMemberProps>(
               {memberConfig.enableSkillTools && (
                 <Controller
                   control={control}
-                  name="skills"
+                  name="tools"
                   render={({
                     field: { onChange, onBlur, value, name, ref },
                     fieldState: { error },
                   }) => (
                     <FormControl mt={4} isInvalid={!!error} id="skills">
-                      <FormLabel>Skills</FormLabel>
-                      <MultiSelect
-                        isDisabled={!memberConfig.enableSkillTools}
-                        isLoading={isLoadingSkills}
-                        isMulti
-                        name={name}
-                        ref={ref}
-                        onChange={onChange}
-                        onBlur={onBlur}
-                        value={value}
-                        options={skillOptions}
-                        placeholder="Select skills"
-                        closeMenuOnSelect={false}
-                        components={customSelectOption}
-                      />
+                      <HStack justify="space-between" align="center" mb={2}>
+                        <FormLabel mb={0}>Tools</FormLabel>
+                        <Button 
+                          leftIcon={<FaTools/>}
+                          onClick={() => setIsToolSelectorOpen(true)}
+                          size="sm"
+                          variant="outline"
+                        >
+                          Add tools
+                        </Button>
+                        <ToolSelector
+                          isOpen={isToolSelectorOpen}
+                          onClose={() => setIsToolSelectorOpen(false)}
+                          providers={toolProviders?.providers || []}
+                          selectedTools={(value || []).map(tool => ({
+                            id: tool.id || 0,
+                            name: tool.name,
+                            description: tool.description || '',
+                            display_name: tool.display_name || null,
+                            input_parameters: tool.input_parameters || null,
+                            is_online: tool.is_online || null,
+                          }))}
+                          onSelect={(tool) => {
+                            const currentTools = value || [];
+                            // 查找工具所属的提供商ID
+                            let providerId = 0;
+                            if (toolProviders?.providers) {
+                              for (const provider of toolProviders.providers) {
+                                if (provider.tools.some(t => t.id === tool.id)) {
+                                  providerId = provider.id;
+                                  break;
+                                }
+                              }
+                            }
+                            const newTools = [...currentTools, {
+                              name: tool.name,
+                              description: tool.description || '',
+                              display_name: tool.display_name || undefined,
+                              input_parameters: tool.input_parameters || undefined,
+                              is_online: tool.is_online || undefined,
+                              provider_id: providerId,
+                              id: tool.id,
+                            }];
+                            onChange(newTools);
+                          }}
+                          onDeselect={(tool) => {
+                            const currentTools = value || [];
+                            const newTools = currentTools.filter(t => t.id !== tool.id);
+                            onChange(newTools);
+                          }}
+                          onBatchChange={(tools, selected) => {
+                            const currentTools = value || [];
+                            if (selected) {
+                              // 添加工具
+                              const newTools = [...currentTools];
+                              tools.forEach(tool => {
+                                // 检查工具是否已存在
+                                if (!newTools.some(t => t.id === tool.id)) {
+                                  // 查找工具所属的提供商ID
+                                  let providerId = 0;
+                                  if (toolProviders?.providers) {
+                                    for (const provider of toolProviders.providers) {
+                                      if (provider.tools.some(t => t.id === tool.id)) {
+                                        providerId = provider.id;
+                                        break;
+                                      }
+                                    }
+                                  }
+                                  newTools.push({
+                                    name: tool.name,
+                                    description: tool.description || '',
+                                    display_name: tool.display_name || undefined,
+                                    input_parameters: tool.input_parameters || undefined,
+                                    is_online: tool.is_online || undefined,
+                                    provider_id: providerId,
+                                    id: tool.id,
+                                  });
+                                }
+                              });
+                              onChange(newTools);
+                            } else {
+                              // 移除工具
+                              const toolIdsToRemove = new Set(tools.map(t => t.id));
+                              const newTools = currentTools.filter(t => !toolIdsToRemove.has(t.id!));
+                              onChange(newTools);
+                            }
+                          }}
+                        />
+                      </HStack>
+                      {value && value.length > 0 && (
+                        <Box mt={3}>
+                          <SimpleGrid columns={2} spacing={3}>
+                            {value.map((tool) => {
+                              // 查找工具所属的提供商
+                              let provider = null;
+                              if (toolProviders?.providers) {
+                                for (const p of toolProviders.providers) {
+                                  if (p.tools.some(t => t.id === tool.id)) {
+                                    provider = p;
+                                    break;
+                                  }
+                                }
+                              }
+                              
+                              return (
+                                <HStack
+                                  key={tool.id}
+                                  role="group"
+                                  justify="space-between"
+                                  p={3}
+                                  boxShadow="sm"
+                                  borderWidth="1px"
+                                  borderColor="gray.200"
+                                  borderRadius="lg"
+                                  w="100%"
+                                >
+                                  <HStack flex="1" spacing={2} overflow="hidden">
+                                    <Box flexShrink={0} w={7} h={7} borderRadius="lg" bg="primary.50" display="flex" alignItems="center" justifyContent="center">
+                                      {provider && provider.icon && (
+                                        <ToolsIcon 
+                                          tools_name={provider.provider_name || ''} 
+                                          color={`${provider.tool_type === 'builtin' ? "blue" : "purple"}.500`} 
+                                        />
+                                      )}
+                                    </Box>
+                                    <Text fontSize="xs" fontWeight="medium" isTruncated>
+                                      {tool.display_name || tool.name}
+                                    </Text>
+                                  </HStack>
+                                  <IconButton
+                                    aria-label="Remove tool"
+                                    icon={<CircleMinus size={16} />}
+                                    variant="ghost"
+                                    size="sm"
+                                    isRound
+                                    opacity={0}
+                                    transition="opacity 0.2s"
+                                    _groupHover={{ opacity: 1 }}
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      const newTools = value.filter(t => t.id !== tool.id);
+                                      onChange(newTools);
+                                    }}
+                                  />
+                                </HStack>
+                              );
+                            })}
+                          </SimpleGrid>
+                        </Box>
+                      )}
                       <FormErrorMessage>{error?.message}</FormErrorMessage>
                     </FormControl>
                   )}

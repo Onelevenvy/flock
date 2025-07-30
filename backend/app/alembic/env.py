@@ -22,7 +22,7 @@ fileConfig(config.config_file_name)
 # target_metadata = mymodel.Base.metadata
 # target_metadata = None
 
-from app.models import SQLModel  # noqa
+from app.db.models import SQLModel  # noqa
 
 target_metadata = SQLModel.metadata
 
@@ -36,7 +36,7 @@ def get_url():
     user = os.getenv("POSTGRES_USER", "postgres")
     password = os.getenv("POSTGRES_PASSWORD", "flock123456")
     server = os.getenv("POSTGRES_SERVER", "localhost")
-    port = os.getenv("POSTGRES_PORT", "5432")
+    port = os.getenv("POSTGRES_PORT", "5433")
     db = os.getenv("POSTGRES_DB", "flock")
     # user = "postgres"
     # password = "flock123456"

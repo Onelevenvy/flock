@@ -153,7 +153,7 @@ indent-style = "space"
 skip-magic-trailing-comma = false
 line-ending = "auto"
 
-[[project.source]]
-name = "mirrors"
+[[tool.poetry.source]]
+name = "tsinghua"
 url = "https://pypi.tuna.tsinghua.edu.cn/simple/"
-priority = "primary" 
+priority = "default"

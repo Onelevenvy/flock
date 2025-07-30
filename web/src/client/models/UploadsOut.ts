@@ -3,9 +3,10 @@
 /* tslint:disable */
 /* eslint-disable */
 
-import type { UploadOut } from "./UploadOut";
+import type { UploadOut } from './UploadOut';
 
 export type UploadsOut = {
-  data: Array<UploadOut>;
-  count: number;
+    data: Array<UploadOut>;
+    count: number;
 };
+

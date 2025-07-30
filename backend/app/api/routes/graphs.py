@@ -5,8 +5,8 @@ from sqlmodel import func, select
 
 from app.api.deps import CurrentUser, SessionDep, check_team_permission
 from app.core.security import resource_manager
-from app.models import (ActionType, Graph, GraphCreate, GraphOut, GraphsOut,
-                        GraphUpdate, ResourceType, Team)
+from app.db.models import (ActionType, Graph, GraphCreate, GraphOut, GraphsOut,
+                           GraphUpdate, ResourceType, Team)
 
 router = APIRouter()
 

@@ -8,26 +8,28 @@ from pydantic import BaseModel, Field
 from typing_extensions import NotRequired, TypedDict
 
 from app.core.rag.qdrant import QdrantStore
-from app.core.tools import managed_tools
 from app.core.tools.api_tool import dynamic_api_tool
 from app.core.tools.retriever_tool import create_retriever_tool_custom_modified
 
 
-class GraphSkill(BaseModel):
-    name: str = Field(description="The name of the skill")
+class GraphTool(BaseModel):
+    id: int = Field(description="The id of the tool")
+    name: str = Field(description="The name of the tool")
     definition: dict[str, Any] | None = Field(
-        description="The skill definition. For api tool calling. Optional."
+        description="The tool definition. For api tool calling. Optional."
     )
-    managed: bool = Field("Whether the skill is managed or user created.")
+    managed: bool = Field(description="Whether the tool is managed or user created.")
 
-    @property
-    def tool(self) -> BaseTool:
+    async def get_tool(self) -> BaseTool:
         if self.managed:
-            return managed_tools[self.name].tool
+            # Use get_tool_by_tool_id to fetch tool by its unique ID
+            from app.core.tools import get_tool_by_tool_id
+
+            return await get_tool_by_tool_id(self.id)
         elif self.definition:
             return dynamic_api_tool(self.definition)
         else:
-            raise ValueError("Skill is not managed and no definition provided.")
+            raise ValueError("tool is not managed and no definition provided.")
 
 
 class GraphUpload(BaseModel):
@@ -59,12 +61,12 @@ class GraphPerson(BaseModel):
 
 
 class GraphMember(GraphPerson):
-    tools: list[GraphSkill | GraphUpload] = Field(
+    tools: list[GraphTool | GraphUpload] = Field(
         description="The list of tools that the person can use."
     )
     interrupt: bool = Field(
         default=False,
-        description="Whether to interrupt the person or not before skill use",
+        description="Whether to interrupt the person or not before tool use",
     )
 
 

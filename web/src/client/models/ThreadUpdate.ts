@@ -4,6 +4,7 @@
 /* eslint-disable */
 
 export type ThreadUpdate = {
-  query?: string | null;
-  updated_at?: string | null;
+    query?: (string | null);
+    updated_at?: (string | null);
 };
+

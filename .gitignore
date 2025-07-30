@@ -14,3 +14,4 @@ docker/build_images.sh
 
 conf.yaml
 .cursor
+.windsurf/*

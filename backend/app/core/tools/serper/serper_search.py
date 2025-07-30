@@ -1,10 +1,9 @@
-import json
-
 import requests
 from langchain.tools import StructuredTool
 from pydantic import BaseModel, Field
 
-from app.core.tools.utils import get_credential_value
+from app.core.tools.response_formatter import format_tool_response
+from app.core.tools.tool_manager import get_tool_provider_credential_value
 
 
 class SerperDevToolSchema(BaseModel):
@@ -17,10 +16,10 @@ def serper_search(search_query: str) -> str:
     """
     Search the internet using Serper API
     """
-    api_key = get_credential_value("Serper Search", "SERPER_API_KEY")
+    api_key = get_tool_provider_credential_value("serper", "SERPER_API_KEY")
 
     if not api_key:
-        return "Error: Serper API Key is not set."
+        return format_tool_response(False, error="Serper API Key is not set.")
 
     try:
         url = "https://google.serper.dev/search"
@@ -49,17 +48,14 @@ def serper_search(search_query: str) -> str:
                         )
                     except KeyError:
                         continue
-                return "\n".join(string)
-            return json.dumps(results)
+                return format_tool_response(True, "\n".join(string))
+            return format_tool_response(True, results)
         else:
-            error_message = {
-                "error": f"failed:{response.status_code}",
-                "data": response.text,
-            }
-            return json.dumps(error_message)
+            error_message = f"API request failed with status code {response.status_code}: {response.text}"
+            return format_tool_response(False, error=error_message)
 
     except Exception as e:
-        return json.dumps(f"Serper API request failed. {e}")
+        return format_tool_response(False, error=f"Serper API request failed: {str(e)}")
 
 
 serper = StructuredTool.from_function(

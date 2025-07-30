@@ -24,9 +24,10 @@ from app.core.graph.members import (GraphLeader, GraphMember, GraphTeam,
                                     SequentialWorkerNode, SummariserNode,
                                     WorkerNode)
 from app.core.graph.messages import ChatResponse, event_to_response
-from app.core.state import GraphSkill, GraphUpload
+from app.core.state import GraphTool, GraphUpload
 from app.core.workflow.build_workflow import initialize_graph
-from app.models import ChatMessage, Interrupt, InterruptDecision, Member, Team
+from app.db.models import (ChatMessage, Interrupt, InterruptDecision, Member,
+                           Team)
 
 
 def convert_hierarchical_team_to_dict(
@@ -90,9 +91,10 @@ def convert_hierarchical_team_to_dict(
             leader = members_lookup[member.source]
             leader_name = leader.name
             if member.type == "worker":
-                tools: list[GraphSkill | GraphUpload]
+                tools: list[GraphTool | GraphUpload]
                 tools = [
-                    GraphSkill(
+                    GraphTool(
+                        id=skill.id,
                         name=skill.name,
                         managed=skill.managed,
                         definition=skill.tool_definition,
@@ -160,14 +162,15 @@ def convert_sequential_team_to_dict(members: list[Member]) -> Mapping[str, Graph
     while queue:
         member_id = queue.popleft()
         memberModel = members_lookup[member_id]
-        tools: list[GraphSkill | GraphUpload]
+        tools: list[GraphTool | GraphUpload]
         tools = [
-            GraphSkill(
-                name=skill.name,
-                managed=skill.managed,
-                definition=skill.tool_definition,
+            GraphTool(
+                id=tool.id,
+                name=tool.name,
+                managed=tool.managed,
+                definition=tool.tool_definition,
             )
-            for skill in memberModel.skills
+            for tool in memberModel.tools
         ]
         tools += [
             GraphUpload(
@@ -207,7 +210,7 @@ def convert_chatbot_chatrag_team_to_dict(
 
     member = members[0]
     assert member.id is not None, "member.id is unexpectedly None"
-    tools: list[GraphSkill | GraphUpload]
+    tools: list[GraphTool | GraphUpload]
     if workflow_type == "ragbot":
         tools = [
             GraphUpload(
@@ -230,12 +233,13 @@ def convert_chatbot_chatrag_team_to_dict(
             for upload in member.uploads
             if upload.owner_id is not None
         ] + [
-            GraphSkill(
-                name=skill.name,
-                managed=skill.managed,
-                definition=skill.tool_definition,
+            GraphTool(
+                id=tool.id,
+                name=tool.name,
+                managed=tool.managed,
+                definition=tool.tool_definition,
             )
-            for skill in member.skills
+            for tool in member.tools
         ]
     else:
         raise ValueError("Invalid tasktype. Expected 'ragbot' or 'chatbot'.")
@@ -287,7 +291,7 @@ def should_continue(state: GraphTeamState) -> str:
     if messages and isinstance(messages[-1], AIMessage) and messages[-1].tool_calls:
         # TODO: what if multiple tool_calls?
         for tool_call in messages[-1].tool_calls:
-            if tool_call["name"] == "ask-human":
+            if tool_call["name"] == "ask_human":
                 return "call_human"
         else:
             return "call_tools"
@@ -298,7 +302,7 @@ def should_continue(state: GraphTeamState) -> str:
 def create_tools_condition(
     current_member_name: str,
     next_member_name: str,
-    tools: list[GraphSkill | GraphUpload],
+    tools: list[GraphTool | GraphUpload],
 ) -> dict[Hashable, str]:
     """Creates the mapping for conditional edges
     The tool node must be in format: '{current_member_name}_tools'
@@ -314,7 +318,7 @@ def create_tools_condition(
     }
 
     for tool in tools:
-        if tool.name == "ask-human":
+        if tool.name == "ask_human":
             mapping["call_human"] = f"{current_member_name}_askHuman_tool"
         else:
             mapping["call_tools"] = f"{current_member_name}_tools"
@@ -325,7 +329,7 @@ def askhuman_node(state: GraphTeamState) -> None:
     """Dummy node for ask human tool"""
 
 
-def create_hierarchical_graph(
+async def create_hierarchical_graph(
     teams: dict[str, GraphTeam],
     leader_name: str,
     checkpointer: BaseCheckpointSaver | None = None,
@@ -387,13 +391,13 @@ def create_hierarchical_graph(
                 normal_tools: list[BaseTool] = []
 
                 for tool in member.tools:
-                    if tool.name == "ask-human":
-                        # Handling Ask-Human tool
+                    if tool.name == "ask_human":
+                        # Handling ask_human tool
                         interrupt_member_names.append(f"{name}_askHuman_tool")
                         build.add_node(f"{name}_askHuman_tool", askhuman_node)
                         build.add_edge(f"{name}_askHuman_tool", name)
                     else:
-                        normal_tools.append(tool.tool)
+                        normal_tools.append(await tool.get_tool())
 
                 if normal_tools:
                     # Add node for normal tools
@@ -405,8 +409,10 @@ def create_hierarchical_graph(
                         interrupt_member_names.append(f"{name}_tools")
 
         elif isinstance(member, GraphLeader):
-            subgraph = create_hierarchical_graph(
-                teams, leader_name=name, checkpointer=checkpointer
+            subgraph = await create_hierarchical_graph(
+                teams,
+                leader_name=member.name,
+                checkpointer=checkpointer,
             )
             enter = partial(enter_chain, team=teams[name])
             build.add_node(
@@ -439,7 +445,7 @@ def create_hierarchical_graph(
     return graph
 
 
-def create_sequential_graph(
+async def create_sequential_graph(
     team: Mapping[str, GraphMember], checkpointer: BaseCheckpointSaver
 ) -> CompiledGraph:
     """
@@ -474,13 +480,13 @@ def create_sequential_graph(
             normal_tools: list[BaseTool] = []
 
             for tool in member.tools:
-                if tool.name == "ask-human":
-                    # Handling Ask-Human tool
+                if tool.name == "ask_human":
+                    # Handling ask_human tool
                     interrupt_member_names.append(f"{member.name}_askHuman_tool")
                     graph.add_node(f"{member.name}_askHuman_tool", askhuman_node)
                     graph.add_edge(f"{member.name}_askHuman_tool", member.name)
                 else:
-                    normal_tools.append(tool.tool)
+                    normal_tools.append(await tool.get_tool())
 
             if normal_tools:
                 # Add node for normal tools
@@ -523,7 +529,7 @@ def create_sequential_graph(
     return graph
 
 
-def create_chatbot_ragbot_graph(
+async def create_chatbot_ragbot_graph(
     team: Mapping[str, GraphMember], checkpointer: BaseCheckpointSaver
 ) -> CompiledGraph:
     """
@@ -556,14 +562,19 @@ def create_chatbot_ragbot_graph(
 
         normal_tools: list[BaseTool] = []
 
-        for tool in member.tools:
-            if tool.name == "ask-human":
-                # Handling Ask-Human tool
+        graph_skills = [
+            GraphTool(id=t.id, name=t.name, definition=t.definition, managed=t.managed)
+            for t in member.tools
+        ]
+
+        for skill in graph_skills:
+            if skill.name == "ask_human":
+                # Handling ask_human tool
                 interrupt_member_names.append(f"{member.name}_askHuman_tool")
                 graph.add_node(f"{member.name}_askHuman_tool", askhuman_node)
                 graph.add_edge(f"{member.name}_askHuman_tool", member.name)
             else:
-                normal_tools.append(tool.tool)
+                normal_tools.append(await skill.get_tool())
 
         if normal_tools:
             # Add node for normal tools
@@ -643,7 +654,7 @@ async def generator(
             if team.workflow == "hierarchical":
                 teams = convert_hierarchical_team_to_dict(team, members)
                 team_leader = list(teams.keys())[0]
-                root = create_hierarchical_graph(
+                root = await create_hierarchical_graph(
                     teams, leader_name=team_leader, checkpointer=checkpointer
                 )
                 state: dict[str, Any] | None = {
@@ -656,7 +667,7 @@ async def generator(
             elif team.workflow == "sequential":
 
                 member_dict = convert_sequential_team_to_dict(members)
-                root = create_sequential_graph(member_dict, checkpointer)
+                root = await create_sequential_graph(member_dict, checkpointer)
                 first_member = list(member_dict.values())[0]
                 state = {
                     "history": formatted_messages,
@@ -678,7 +689,7 @@ async def generator(
                 member_dict = convert_chatbot_chatrag_team_to_dict(
                     members, workflow_type=team.workflow
                 )
-                root = create_chatbot_ragbot_graph(member_dict, checkpointer)
+                root = await create_chatbot_ragbot_graph(member_dict, checkpointer)
                 first_member = list(member_dict.values())[0]
                 state = {
                     "history": formatted_messages,
@@ -700,7 +711,7 @@ async def generator(
                     members, workflow_type=team.workflow
                 )
 
-                root = create_chatbot_ragbot_graph(member_dict, checkpointer)
+                root = await create_chatbot_ragbot_graph(member_dict, checkpointer)
 
                 first_member = list(member_dict.values())[0]
                 state = {
@@ -722,7 +733,7 @@ async def generator(
 
                 graph_config = team.graphs[0].config
 
-                root = initialize_graph(
+                root = await initialize_graph(
                     graph_config, checkpointer, save_graph_img=False
                 )
 
@@ -779,10 +790,10 @@ async def generator(
                                 ToolMessage(
                                     tool_call_id=tool_call["id"],
                                     content=interrupt.tool_message,
-                                    name="ask-human",
+                                    name="ask_human",
                                 )
                                 for tool_call in tool_calls
-                                if tool_call["name"] == "ask-human"
+                                if tool_call["name"] == "ask_human"
                             ]
                         }
             elif interrupt and interrupt.interaction_type is not None:
@@ -873,7 +884,7 @@ async def generator(
                     if not isinstance(message, AIMessage):
                         return
                     for tool_call in message.tool_calls:
-                        if tool_call["name"] == "ask-human":
+                        if tool_call["name"] == "ask_human":
                             response = ChatResponse(
                                 type="interrupt",
                                 name="human",

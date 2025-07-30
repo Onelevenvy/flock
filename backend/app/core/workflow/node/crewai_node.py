@@ -6,7 +6,7 @@ from langchain_core.runnables import RunnableConfig
 
 from app.core.model_providers.model_provider_manager import \
     model_provider_manager
-from app.core.tools.tool_manager import managed_tools
+from app.core.tools.tool_manager import get_tool_by_name
 from app.core.workflow.utils.db_utils import get_model_info
 
 from ...state import (ReturnWorkflowTeamState, WorkflowTeamState,
@@ -83,7 +83,7 @@ Even though you don't perform tasks by yourself, you have a lot of experience in
 
     def _get_tool_instance(self, tool_name: str):
         """Get tool instance by name"""
-        for tool_id, tool_info in managed_tools.items():
+        for tool_id, tool_info in get_tool_by_name.items():
             if tool_info.display_name == tool_name:
                 return tool_info.tool
         return None
