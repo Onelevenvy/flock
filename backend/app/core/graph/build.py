@@ -94,6 +94,7 @@ def convert_hierarchical_team_to_dict(
                 tools: list[GraphSkill | GraphUpload]
                 tools = [
                     GraphSkill(
+                        id=skill.id,
                         name=skill.name,
                         managed=skill.managed,
                         definition=skill.tool_definition,
@@ -164,6 +165,7 @@ def convert_sequential_team_to_dict(members: list[Member]) -> Mapping[str, Graph
         tools: list[GraphSkill | GraphUpload]
         tools = [
             GraphSkill(
+                id=skill.id,
                 name=skill.name,
                 managed=skill.managed,
                 definition=skill.tool_definition,
@@ -232,6 +234,7 @@ def convert_chatbot_chatrag_team_to_dict(
             if upload.owner_id is not None
         ] + [
             GraphSkill(
+                id=tool.id,
                 name=tool.name,
                 managed=tool.managed,
                 definition=tool.tool_definition,
@@ -326,7 +329,7 @@ def askhuman_node(state: GraphTeamState) -> None:
     """Dummy node for ask human tool"""
 
 
-def create_hierarchical_graph(
+async def create_hierarchical_graph(
     teams: dict[str, GraphTeam],
     leader_name: str,
     checkpointer: BaseCheckpointSaver | None = None,
@@ -394,7 +397,7 @@ def create_hierarchical_graph(
                         build.add_node(f"{name}_askHuman_tool", askhuman_node)
                         build.add_edge(f"{name}_askHuman_tool", name)
                     else:
-                        normal_tools.append(tool.tool)
+                        normal_tools.append(await tool.get_tool())
 
                 if normal_tools:
                     # Add node for normal tools
@@ -406,8 +409,10 @@ def create_hierarchical_graph(
                         interrupt_member_names.append(f"{name}_tools")
 
         elif isinstance(member, GraphLeader):
-            subgraph = create_hierarchical_graph(
-                teams, leader_name=name, checkpointer=checkpointer
+            subgraph = await create_hierarchical_graph(
+                teams,
+                leader_name=member.name,
+                checkpointer=checkpointer,
             )
             enter = partial(enter_chain, team=teams[name])
             build.add_node(
@@ -440,7 +445,7 @@ def create_hierarchical_graph(
     return graph
 
 
-def create_sequential_graph(
+async def create_sequential_graph(
     team: Mapping[str, GraphMember], checkpointer: BaseCheckpointSaver
 ) -> CompiledGraph:
     """
@@ -481,7 +486,7 @@ def create_sequential_graph(
                     graph.add_node(f"{member.name}_askHuman_tool", askhuman_node)
                     graph.add_edge(f"{member.name}_askHuman_tool", member.name)
                 else:
-                    normal_tools.append(tool.tool)
+                    normal_tools.append(await tool.get_tool())
 
             if normal_tools:
                 # Add node for normal tools
@@ -524,7 +529,7 @@ def create_sequential_graph(
     return graph
 
 
-def create_chatbot_ragbot_graph(
+async def create_chatbot_ragbot_graph(
     team: Mapping[str, GraphMember], checkpointer: BaseCheckpointSaver
 ) -> CompiledGraph:
     """
@@ -557,14 +562,19 @@ def create_chatbot_ragbot_graph(
 
         normal_tools: list[BaseTool] = []
 
-        for tool in member.tools:
-            if tool.name == "ask-human":
+        graph_skills = [
+            GraphSkill(id=t.id, name=t.name, definition=t.definition, managed=t.managed)
+            for t in member.tools
+        ]
+
+        for skill in graph_skills:
+            if skill.name == "ask-human":
                 # Handling Ask-Human tool
                 interrupt_member_names.append(f"{member.name}_askHuman_tool")
                 graph.add_node(f"{member.name}_askHuman_tool", askhuman_node)
                 graph.add_edge(f"{member.name}_askHuman_tool", member.name)
             else:
-                normal_tools.append(tool.tool)
+                normal_tools.append(await skill.get_tool())
 
         if normal_tools:
             # Add node for normal tools
@@ -644,7 +654,7 @@ async def generator(
             if team.workflow == "hierarchical":
                 teams = convert_hierarchical_team_to_dict(team, members)
                 team_leader = list(teams.keys())[0]
-                root = create_hierarchical_graph(
+                root = await create_hierarchical_graph(
                     teams, leader_name=team_leader, checkpointer=checkpointer
                 )
                 state: dict[str, Any] | None = {
@@ -657,7 +667,7 @@ async def generator(
             elif team.workflow == "sequential":
 
                 member_dict = convert_sequential_team_to_dict(members)
-                root = create_sequential_graph(member_dict, checkpointer)
+                root = await create_sequential_graph(member_dict, checkpointer)
                 first_member = list(member_dict.values())[0]
                 state = {
                     "history": formatted_messages,
@@ -679,7 +689,7 @@ async def generator(
                 member_dict = convert_chatbot_chatrag_team_to_dict(
                     members, workflow_type=team.workflow
                 )
-                root = create_chatbot_ragbot_graph(member_dict, checkpointer)
+                root = await create_chatbot_ragbot_graph(member_dict, checkpointer)
                 first_member = list(member_dict.values())[0]
                 state = {
                     "history": formatted_messages,
@@ -701,7 +711,7 @@ async def generator(
                     members, workflow_type=team.workflow
                 )
 
-                root = create_chatbot_ragbot_graph(member_dict, checkpointer)
+                root = await create_chatbot_ragbot_graph(member_dict, checkpointer)
 
                 first_member = list(member_dict.values())[0]
                 state = {

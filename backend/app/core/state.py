@@ -8,22 +8,24 @@ from pydantic import BaseModel, Field
 from typing_extensions import NotRequired, TypedDict
 
 from app.core.rag.qdrant import QdrantStore
-from app.core.tools import get_tool_by_name
+from app.core.tools import get_tool_by_tool_id
 from app.core.tools.api_tool import dynamic_api_tool
 from app.core.tools.retriever_tool import create_retriever_tool_custom_modified
 
 
 class GraphSkill(BaseModel):
+    id: int = Field(description="The id of the skill")
     name: str = Field(description="The name of the skill")
     definition: dict[str, Any] | None = Field(
         description="The skill definition. For api tool calling. Optional."
     )
-    managed: bool = Field("Whether the skill is managed or user created.")
+    managed: bool = Field(description="Whether the skill is managed or user created.")
 
-    @property
-    def tool(self) -> BaseTool:
+    async def get_tool(self) -> BaseTool:
         if self.managed:
-            return get_tool_by_name[self.name].tool
+            # Use get_tool_by_tool_id to fetch tool by its unique ID
+            from app.core.tools import get_tool_by_tool_id
+            return await get_tool_by_tool_id(self.id)
         elif self.definition:
             return dynamic_api_tool(self.definition)
         else:
