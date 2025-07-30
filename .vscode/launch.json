@@ -10,7 +10,8 @@
       "request": "launch",
       "program": "${file}",
       "justMyCode": false,
-      "console": "integratedTerminal"
+      "console": "integratedTerminal",
+      "envFile": "${workspaceFolder}/.env"
     },
     {
         "name": "debugpy: Celery Worker",
