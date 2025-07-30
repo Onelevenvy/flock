@@ -9,7 +9,7 @@ from app.core.model_providers.model_provider_manager import \
 from app.core.state import (ReturnWorkflowTeamState, WorkflowTeamState,
                             format_messages, parse_variables,
                             update_node_outputs)
-from app.core.tools.tool_manager import get_tool_by_name
+from app.core.tools.tool_manager import get_tool_by_tool_id_list
 from app.core.workflow.utils.db_utils import get_model_info
 from app.core.workflow.utils.tools_utils import get_retrieval_tool
 
@@ -35,19 +35,40 @@ class AgentNode:
         self.model_info = get_model_info(model_name)
         self.system_prompt = system_message
         self.user_prompt = user_message
+        self.tools = tools
+        self.retrieval_tools = retrieval_tools
         # 准备工具列表
         self.tools_list = []
 
         # 添加常规工具
-        if tools:
-            for tool_name in tools:
-                tool = get_tool_by_name(tool_name)
-                if tool:
-                    self.tools_list.append(tool)
+        
+        # 初始化模型
+        try:
+            # 创建模型配置
+            self.model_config = {
+                "provider_name": self.model_info["provider_name"],
+                "model": self.model_info["ai_model_name"],
+                "temperature": temperature,
+                "api_key": self.model_info["api_key"],
+                "base_url": self.model_info["base_url"],
+            }
+
+            # 初始化模型
+            self.llm = model_provider_manager.init_model(**self.model_config)
+
+        except ValueError:
+            raise ValueError(f"Model {model_name} is not supported as a chat model.")
+
+    async def bind_tools(self):
+        if self.tools:
+            tool_id_list=[tool["id"] for tool in self.tools]
+            _tools = await get_tool_by_tool_id_list(tool_id_list)
+            if _tools:
+                self.tools_list.extend(_tools)
 
         # 添加知识库工具
-        if retrieval_tools:
-            for kb_tool in retrieval_tools:
+        if self.retrieval_tools: 
+            for kb_tool in self.retrieval_tools: 
                 if isinstance(kb_tool, dict):
                     retrieval_tool = get_retrieval_tool(
                         kb_tool["name"],
@@ -66,23 +87,7 @@ class AgentNode:
                     )
                     if retrieval_tool:
                         self.tools_list.append(retrieval_tool)
-
-        # 初始化模型
-        try:
-            # 创建模型配置
-            self.model_config = {
-                "provider_name": self.model_info["provider_name"],
-                "model": self.model_info["ai_model_name"],
-                "temperature": temperature,
-                "api_key": self.model_info["api_key"],
-                "base_url": self.model_info["base_url"],
-            }
-
-            # 初始化模型
-            self.llm = model_provider_manager.init_model(**self.model_config)
-
-        except ValueError:
-            raise ValueError(f"Model {model_name} is not supported as a chat model.")
+        return self.tools_list
 
     async def work(
         self, state: WorkflowTeamState, config: RunnableConfig
@@ -167,10 +172,11 @@ class AgentNode:
             }  # 最后一条用户类型的消息
 
         # 创建React Agent
+        self.tools_list = await self.bind_tools()
         self.agent = create_react_agent(
             model=self.llm,
             tools=self.tools_list,
-            messages_modifier=prompt,
+            prompt=prompt,
         )
         # 调用Agent
         agent_result = await self.agent.ainvoke(agent_input)
