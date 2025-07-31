@@ -47,7 +47,8 @@ interface NodeConfigItem {
   };
   initialData?: Record<string, any>;
   inputVariables: string[];
-  outputVariables: string[] | ((data: any) => string[]);
+  outputVariables: string[] | ((data: any) => { name: string; type: string }[]);
+  outputSchema?: any
 }
 
 export const nodeConfig: Record<string, NodeConfigItem> = {
@@ -62,6 +63,9 @@ export const nodeConfig: Record<string, NodeConfigItem> = {
     },
     inputVariables: [],
     outputVariables: ["query"],
+    outputSchema: {          
+      query: 'String'
+    }
   },
   end: {
     display: "End",
@@ -91,6 +95,10 @@ export const nodeConfig: Record<string, NodeConfigItem> = {
     },
     inputVariables: [],
     outputVariables: ["response"],
+    outputSchema: {           
+      response: 'String'
+    }
+    
   },
   agent: {
     display: "Agent",
@@ -102,6 +110,9 @@ export const nodeConfig: Record<string, NodeConfigItem> = {
       targets: ["left", "right"],
     },
     outputVariables: ["response"],
+    outputSchema: {           
+      response: 'String'
+    },
     inputVariables: [],
     initialData: {
       model: "glm-4-flash",
@@ -136,6 +147,9 @@ export const nodeConfig: Record<string, NodeConfigItem> = {
     },
     inputVariables: [],
     outputVariables: ["response"],
+    outputSchema: {            
+      response: 'String'
+    }
   },
   plugin: {
     display: "Plugin",
@@ -157,6 +171,9 @@ export const nodeConfig: Record<string, NodeConfigItem> = {
     },
     inputVariables: [],
     outputVariables: ["response"],
+    outputSchema: {           
+      response: 'String'
+    }
   },
 
   retrieval: {
@@ -177,6 +194,9 @@ export const nodeConfig: Record<string, NodeConfigItem> = {
     },
     inputVariables: [],
     outputVariables: ["response"],
+    outputSchema: {           
+      response: 'String'
+    }
   },
   toolretrieval: {
     display: "Retrieval As Tools",
@@ -192,6 +212,9 @@ export const nodeConfig: Record<string, NodeConfigItem> = {
     },
     inputVariables: [],
     outputVariables: ["response"],
+    outputSchema: {           
+      response: 'String'
+    }
   },
   crewai: {
     display: "CrewAI",
@@ -211,6 +234,9 @@ export const nodeConfig: Record<string, NodeConfigItem> = {
     },
     inputVariables: [],
     outputVariables: ["response"],
+    outputSchema: {           
+      response: 'String'
+    }
   },
   classifier: {
     icon: LuBrainCircuit,
@@ -222,6 +248,9 @@ export const nodeConfig: Record<string, NodeConfigItem> = {
       targets: ["input"],
     },
     outputVariables: ["class_name"],
+    outputSchema: {           
+      class_name: 'String'
+    },
     inputVariables: ["Input"],
     initialData: {
       categories: [
@@ -245,6 +274,9 @@ export const nodeConfig: Record<string, NodeConfigItem> = {
     },
     inputVariables: [],
     outputVariables: ["response"],
+    outputSchema: {           
+      response: 'String'
+    }
   },
   code: {
     display: "Code Execution",
@@ -256,6 +288,9 @@ export const nodeConfig: Record<string, NodeConfigItem> = {
       targets: ["left"],
     },
     outputVariables: ["code_result"],
+    outputSchema: {           
+      code_result: 'String'
+    },
     inputVariables: [],
     initialData: {
       code: "",
@@ -287,6 +322,9 @@ export const nodeConfig: Record<string, NodeConfigItem> = {
     },
     inputVariables: [],
     outputVariables: ["result"],
+    outputSchema: {           
+      result: 'String'
+    }
   },
   human: {
     display: "Human Interaction",
@@ -299,6 +337,10 @@ export const nodeConfig: Record<string, NodeConfigItem> = {
     },
     inputVariables: [],
     outputVariables: ["response", "action"],
+    outputSchema: {                  // <-- 在这里加上 Schema
+      response: 'String',
+      action: 'String'
+    },
     initialData: {
       interaction_type: "tool_review",
       routes: {
@@ -326,6 +368,9 @@ export const nodeConfig: Record<string, NodeConfigItem> = {
     },
     inputVariables: ["Input"],
     outputVariables: ["response"],
+    outputSchema: {           
+      response: 'String'
+    }
   },
   parameterExtractor: {
     display: "Parameter Extractor",
@@ -342,10 +387,13 @@ export const nodeConfig: Record<string, NodeConfigItem> = {
       toolImport: null,
     },
     inputVariables: ["Input"],
-    outputVariables: (data: any) => {
+    outputVariables: (data: any): { name: string; type: string }[] => {
       if (data && Array.isArray(data.parameters)) {
-        // 返回 ["city", "dest", "content", "name"]
-        return data.parameters.map((param: any) => Object.keys(param)[0]);
+        return data.parameters.map((param: any) => {
+          const name = Object.keys(param)[0];
+          const type = param[name]?.type || 'any';
+          return { name, type }; // 确保返回的是包含 name 和 type 的对象
+        });
       }
       return [];
     },
