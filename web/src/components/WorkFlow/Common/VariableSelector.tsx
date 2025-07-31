@@ -7,23 +7,21 @@ import {
   Text,
   VStack,
   useStyleConfig,
-  ChakraProps,
+  type ChakraProps,
 } from "@chakra-ui/react";
 import React, { useState, useRef, useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import type { VariableReference } from "../FlowVis/variableSystem";
 
+// --- 辅助函数 (保持不变) ---
 
 function parseValueToHTML(value: string): string {
   const regex = /\${(.*?)}/g;
   const encodedValue = value.replace(/</g, '&lt;').replace(/>/g, '&gt;');
-  
   return encodedValue.replace(regex, (match, variableName) => {
-
       return `<span class="variable-badge" contentEditable="false">${match}</span>`;
   });
 }
-
 
 function parseHTMLToValue(html: string): string {
   const tempDiv = document.createElement('div');
@@ -32,7 +30,7 @@ function parseHTMLToValue(html: string): string {
   return tempDiv.textContent || "";
 }
 
-
+// --- 组件 Props (保持不变) ---
 interface VariableSelectorProps {
   label: string | null;
   value: string;
@@ -47,9 +45,7 @@ export default function VariableSelector(props: VariableSelectorProps) {
   const { t } = useTranslation();
   const editorRef = useRef<HTMLDivElement>(null);
   const [isPopoverOpen, setIsPopoverOpen] = useState(false);
-
   const { label, value, onChange, placeholder, availableVariables, minHeight } = props;
-
   const styles = useStyleConfig("Textarea", {}) as ChakraProps;
 
   useEffect(() => {
@@ -61,16 +57,15 @@ export default function VariableSelector(props: VariableSelectorProps) {
   const handleInput = (event: React.FormEvent<HTMLDivElement>) => {
       const plainText = parseHTMLToValue(event.currentTarget.innerHTML);
       if (plainText.trim() === "") {
-        onChange("");
-    } else {
-        onChange(plainText);
-    }
+          onChange("");
+      } else {
+          onChange(plainText);
+      }
   };
   
   const handleInsertVariable = (variableName: string) => {
       const editor = editorRef.current;
       if (!editor) return;
-
       editor.focus();
       const selection = window.getSelection();
       if (!selection || selection.rangeCount === 0) return;
@@ -85,7 +80,6 @@ export default function VariableSelector(props: VariableSelectorProps) {
       variableNode.className = 'variable-badge';
       variableNode.setAttribute('contentEditable', 'false');
       variableNode.innerText = `\${${variableName}}`;
-      
       const spaceNode = document.createTextNode('\u00A0');
 
       range.deleteContents();
@@ -98,17 +92,14 @@ export default function VariableSelector(props: VariableSelectorProps) {
 
       selection.removeAllRanges();
       selection.addRange(range);
-
       onChange(parseHTMLToValue(editor.innerHTML));
       setIsPopoverOpen(false);
   };
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLDivElement>) => {
-      // if (e.key === '{' && e.shiftKey) 
-      if (e.key === '/')
-        {
-           e.preventDefault();
-           setIsPopoverOpen(true);
+      if (e.key === '/') {
+          e.preventDefault();
+          setIsPopoverOpen(true);
       }
   };
 
@@ -118,7 +109,28 @@ export default function VariableSelector(props: VariableSelectorProps) {
           <style>{`.variable-badge { background-color: #EBF8FF; color: #2C5282; font-weight: 500; border-radius: 6px; padding: 2px 8px; margin: 0 2px; display: inline-block; }`}</style>
           <Popover isOpen={isPopoverOpen} onClose={() => setIsPopoverOpen(false)} placement="bottom-start" autoFocus={false} >
               <PopoverTrigger>
-                  <Box ref={editorRef} contentEditable onInput={handleInput} onKeyDown={handleKeyDown} {...styles} py={2} px={4} minHeight={minHeight} overflowY="auto" sx={{ '&:empty:before': { content: `"${placeholder || ''}"`, color: 'gray.400', cursor: 'text' } }} />
+              <span>
+                  <Box 
+                      ref={editorRef} 
+                      contentEditable 
+                      onInput={handleInput} 
+                      onKeyDown={handleKeyDown} 
+                      // --- 核心修改在这里 ---
+                      // 将 {...styles} 合并到 sx 属性中
+                      sx={{
+                          ...styles, // 应用 Textarea 的基础样式
+                          py: 2,
+                          px: 4,
+                          minHeight: minHeight,
+                          overflowY: "auto",
+                          '&:empty:before': { 
+                              content: `"${placeholder || ''}"`, 
+                              color: 'gray.400', 
+                              cursor: 'text' 
+                          }
+                      }}
+                  />
+              </span>
               </PopoverTrigger>
               <PopoverContent width="auto" minWidth="250px" maxWidth="400px" boxShadow="lg" border="1px solid" borderColor="gray.100" borderRadius="lg" p={2} bg="white" _focus={{ outline: "none" }}>
                   <VStack align="stretch" spacing={1}>
