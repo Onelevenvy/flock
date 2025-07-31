@@ -685,7 +685,6 @@ async def generator(
                     "all_messages": formatted_messages,
                 }
 
-           
             elif team.workflow in ["chatbot"]:
                 member_dict = convert_chatbot_chatrag_team_to_dict(
                     members, workflow_type=team.workflow

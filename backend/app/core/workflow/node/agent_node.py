@@ -40,9 +40,6 @@ class AgentNode:
         # 准备工具列表
         self.tools_list = []
 
-        # 添加常规工具
-        
-        # 初始化模型
         try:
             # 创建模型配置
             self.model_config = {
@@ -61,14 +58,14 @@ class AgentNode:
 
     async def bind_tools(self):
         if self.tools:
-            tool_id_list=[tool["id"] for tool in self.tools]
+            tool_id_list = [tool["id"] for tool in self.tools]
             _tools = await get_tool_by_tool_id_list(tool_id_list)
             if _tools:
                 self.tools_list.extend(_tools)
 
         # 添加知识库工具
-        if self.retrieval_tools: 
-            for kb_tool in self.retrieval_tools: 
+        if self.retrieval_tools:
+            for kb_tool in self.retrieval_tools:
                 if isinstance(kb_tool, dict):
                     retrieval_tool = get_retrieval_tool(
                         kb_tool["name"],

@@ -22,7 +22,6 @@ class SubgraphNode:
         # 初始化时编译子图
         self.subgraph_config, self.subgraph_name = get_subgraph_by_id(subgraph_id)
 
-
     async def _build_subgraph(self):
         """Build and compile subgraph"""
         from app.core.workflow.build_workflow import initialize_graph

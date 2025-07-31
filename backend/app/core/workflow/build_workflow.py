@@ -25,7 +25,6 @@ from .node.human_node import HumanNode
 from .node.ifelse.ifelse_node import IfElseNode
 from .node.input_node import InputNode
 from .node.llm_node import LLMNode
-
 from .node.retrieval_node import RetrievalNode
 from .node.subgraph_node import SubgraphNode
 
@@ -678,6 +677,7 @@ def _add_plugin_node(graph_builder, node_id, node_data):
     graph_builder.add_node(
         node_id, PluginNode(node_id, node_data["toolName"], node_data["args"]).work
     )
+
 
 async def _add_agent_node(graph_builder, node_id, node_data):
     """Add agent node to graph"""

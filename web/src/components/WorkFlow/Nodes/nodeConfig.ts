@@ -10,7 +10,6 @@ import {
   FaUserCog,
   FaProjectDiagram,
   FaCrosshairs,
-  FaMicrochip,
   FaUserAstronaut,
 } from "react-icons/fa";
 import { FaBookAtlas, FaPeopleGroup } from "react-icons/fa6";

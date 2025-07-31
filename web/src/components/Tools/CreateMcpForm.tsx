@@ -186,7 +186,7 @@ export function CreateMcpForm({ isOpen, onClose, onSuccess, editProvider }: Crea
           <ModalBody py={6}>
             <VStack spacing={6} align="stretch">
               <FormControl>
-                <FormLabel fontSize="sm" fontWeight="medium">Name and Icon</FormLabel>
+                <FormLabel fontSize="sm" fontWeight="medium">Name</FormLabel>
                 <Input
                   ref={initialRef}
                   placeholder="Name your MCP service"

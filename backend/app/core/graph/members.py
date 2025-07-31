@@ -472,4 +472,3 @@ class ChatBotNode(BaseNode):
                 "messages": [],
                 "all_messages": state["messages"] + [result],
             }
-
