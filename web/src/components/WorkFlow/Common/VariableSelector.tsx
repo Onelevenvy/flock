@@ -14,7 +14,7 @@ import { useTranslation } from "react-i18next";
 import { VariableReference } from "../FlowVis/variableSystem";
 
 interface VariableSelectorProps {
-  label: string;
+  label: string | null;
   value: string;
   onChange: (value: string) => void;
   placeholder?: string;

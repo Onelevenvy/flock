@@ -270,19 +270,7 @@ const SharedNodeMenu: React.FC<SharedNodeMenuProps> = ({
                                       }}
                                     >
                                       <HStack spacing={3} overflow="hidden">
-                                        <Box
-                                          as={IconButton}
-                                          borderRadius="lg"
-                                          bg="blue.50"
-                                          flexShrink={0}
-                                          size={"sm"}
-                                        >
-                                          <ToolsIcon
-                                            tools_name={(provider.display_name || provider.provider_name)!.replace(/ /g, "_")}
-                                            color="blue.500"
-                                            boxSize={4}
-                                          />
-                                        </Box>
+                                        
                                         <Text
                                           fontSize="xs"
                                           fontWeight="500"

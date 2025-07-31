@@ -146,6 +146,11 @@ export const nodeConfig: Record<string, NodeConfigItem> = {
     initialData: {
       toolName: "",
       args: "",
+      tool: {
+        id: 2,
+        name: "Math Calculator",
+        provider: "math",
+      },
     },
     allowedConnections: {
       sources: ["right"],

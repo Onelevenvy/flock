@@ -64,7 +64,6 @@ type MemberTypes =
   | "freelancer"
   | "freelancer_root"
   | "chatbot"
-  | "ragbot"
   | "workflow";
 
 interface MemberConfigs {
@@ -126,15 +125,9 @@ const ALLOWED_MEMBER_CONFIGS: Record<MemberTypes, MemberConfigs> = {
     enableInterrupt: true,
     enableHumanTool: true,
   },
-  ragbot: {
-    selection: ["ragbot"],
-    enableSkillTools: false,
-    enableUploadTools: true,
-    enableInterrupt: false,
-    enableHumanTool: false,
-  },
+
   workflow: {
-    selection: ["ragbot"],
+    selection: ["workflow"],
     enableSkillTools: false,
     enableUploadTools: true,
     enableInterrupt: false,

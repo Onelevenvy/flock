@@ -102,7 +102,6 @@ function Teams() {
       sequential: "green",
       hierarchical: "purple",
       chatbot: "yellow",
-      ragbot: "orange",
       workflow: "blue",
     };
     return colors[workflow as keyof typeof colors] || "gray";

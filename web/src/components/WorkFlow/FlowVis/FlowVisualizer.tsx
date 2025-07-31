@@ -59,6 +59,7 @@ import CustomButton from "@/components/Common/CustomButton";
 import { useTranslation } from "react-i18next";
 import { FiEye, FiEyeOff } from "react-icons/fi";
 import PublishMenu from "./PublishMenu";
+import { useToolProvidersQuery } from "@/hooks/useToolProvidersQuery";
 
 const FlowVisualizer: React.FC<FlowVisualizerProps> = ({
   nodeTypes,
@@ -85,6 +86,7 @@ const FlowVisualizer: React.FC<FlowVisualizerProps> = ({
   );
 
   const { contextMenu, onNodeContextMenu, closeContextMenu } = useContextMenu();
+  const { data: toolProvidersData } = useToolProvidersQuery();
 
   const reactFlowInstance = useReactFlow();
   const toast = useToast();
@@ -382,16 +384,24 @@ const FlowVisualizer: React.FC<FlowVisualizerProps> = ({
           },
         };
       } else if (type === "plugin") {
+        const providers = toolProvidersData?.providers || [];
+        // 从所有 provider 中查找当前拖拽的 tool 属于哪一个，以获取 provider 名称
+        const provider = providers.find(p => p.tools.some(t => t.id === tool.id));
+
         // 处理插件类型的节点
         newNode = {
-          id: `${tool.display_name}-${nodes.length + 1}`, // 确保每个插件节点唯一
+          id: `${tool.name}-${nodes.length + 1}`,
           type: "plugin",
           position,
           data: {
-            label: tool.display_name,
-            toolName: tool.display_name,
+            label: tool.display_name || tool.name,
             args: "",
-            ...tool.initialData,
+            // 创建新的、正确的 tool 对象并保存
+            tool: {
+              id: tool.id,
+              name: tool.display_name || tool.name,
+              provider: provider?.provider_name || 'unknown'
+            }
           },
         };
       } else {
@@ -1125,7 +1135,7 @@ const FlowVisualizer: React.FC<FlowVisualizerProps> = ({
           <Box h="full" overflow="hidden">
             <DebugPreview
               teamId={teamId}
-              triggerSubmit={() => {}}
+              triggerSubmit={() => { }}
               useDeployButton={false}
               useApiKeyButton={false}
               isWorkflow={true}

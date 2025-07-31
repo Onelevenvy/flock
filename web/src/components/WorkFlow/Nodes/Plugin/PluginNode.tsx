@@ -1,18 +1,23 @@
+import { Text, VStack } from "@chakra-ui/react";
 import React from "react";
 import { Handle, type NodeProps, Position } from "reactflow";
 
 import ToolsIcon from "@/components/Icons/Tools";
-import { useToolProvidersQuery } from "@/hooks/useToolProvidersQuery";
-
 import { BaseNode } from "../Base/BaseNode";
 import { nodeConfig } from "../nodeConfig";
 
-const PluginNode: React.FC<NodeProps> = (props) => {
-  const { data: skills } = useToolProvidersQuery();
-  const toolName =
-    skills?.data.find((skill) => skill.name === props.data.toolName)
-      ?.display_name || props.data.toolName;
+// 定义节点将存储的工具数据类型
+interface SavedTool {
+  id: number;
+  name: string;
+  provider: string;
+}
+
+const PluginNode: React.FC<NodeProps<{ tool: SavedTool; label: string }>> = (props) => {
   const { colorScheme } = nodeConfig.plugin;
+  const providerName = props.data.tool?.provider || "unknown";
+
+  const toolDisplayName = props.data.tool?.name || props.data.label;
 
   const handleStyle = {
     background: "var(--chakra-colors-ui-wfhandlecolor)",
@@ -25,35 +30,20 @@ const PluginNode: React.FC<NodeProps> = (props) => {
   return (
     <BaseNode
       {...props}
-      icon={<ToolsIcon tools_name={toolName.replace(/ /g, "_")} w={6} h={6} />}
+      icon={<ToolsIcon tools_name={providerName} w={6} h={6} />}
       colorScheme={colorScheme}
     >
-      <Handle
-        type="target"
-        position={Position.Left}
-        id="left"
-        style={handleStyle}
-      />
-      <Handle
-        type="target"
-        position={Position.Right}
-        id="right"
-        style={handleStyle}
-      />
-      <Handle
-        type="source"
-        position={Position.Left}
-        id="left"
-        style={handleStyle}
-      />
-      <Handle
-        type="source"
-        position={Position.Right}
-        id="right"
-        style={handleStyle}
-      />
+      <Handle type="target" position={Position.Left} id="left" style={handleStyle} />
+      <Handle type="target" position={Position.Right} id="right" style={handleStyle} />
+      <Handle type="source" position={Position.Left} id="left" style={handleStyle} />
+      <Handle type="source" position={Position.Right} id="right" style={handleStyle} />
     </BaseNode>
   );
 };
 
-export default React.memo(PluginNode);
+export default React.memo(PluginNode, (prevProps, nextProps) => {
+  return (
+    prevProps.data.label === nextProps.data.label &&
+    prevProps.data.tool?.id === nextProps.data.tool?.id
+  );
+});
