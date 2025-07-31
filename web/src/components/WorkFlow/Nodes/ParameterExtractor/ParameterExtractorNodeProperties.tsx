@@ -315,6 +315,7 @@ const ParameterExtractorNodeProperties: React.FC<
               const paramName = Object.keys(parameter)[0];
               const paramData = parameter[paramName];
               return (
+                // 容器样式保持不变
                 <HStack
                   key={paramName}
                   justify="space-between"
@@ -324,13 +325,30 @@ const ParameterExtractorNodeProperties: React.FC<
                   borderRadius="md"
                   boxShadow="sm"
                 >
-                  <Text fontSize="sm" fontWeight="500" fontFamily="monospace">
-                    {/* 显示为 ${node.id.paramName} 的格式，更清晰 */}
+                  {/* --- 开始修改 --- */}
+                  {/* 修改前: 显示完整的 ${...} 格式 */}
+                  {/* <Text fontSize="sm" fontWeight="500" fontFamily="monospace">
                     {`\${${node.id}.${paramName}}`}
+                  </Text> 
+                  */}
+                  
+                  {/* 修改后: 只显示参数名 */}
+                  <Text fontSize="sm" fontWeight="500">
+                    {paramName}
                   </Text>
+                  
+                  {/* 修改前: 只显示类型 */}
+                  {/*
                   <Text fontSize="xs" color="gray.500">
                     {paramData.type}
                   </Text>
+                  */}
+
+                  {/* 修改后: 显示带括号的类型，更清晰 */}
+                   <Text fontSize="xs" color="gray.500">
+                    ({paramData.type})
+                  </Text>
+                  {/* --- 结束修改 --- */}
                 </HStack>
               );
             })
