@@ -22,7 +22,7 @@ import { FaListAlt } from "react-icons/fa";
 import { useTranslation } from "react-i18next";
 
 import { AgentConfig, TaskConfig } from "../../types";
-import { useVariableInsertion } from "@/hooks/graphs/useVariableInsertion";
+
 import VariableSelector from "../../Common/VariableSelector";
 import { VariableReference } from "../../FlowVis/variableSystem";
 
@@ -77,15 +77,7 @@ const TaskModal: React.FC<TaskModalProps> = ({
     return true;
   };
 
-  const descriptionVariableHook = useVariableInsertion<HTMLTextAreaElement>({
-    onValueChange: (value) => setValue("description", value),
-    availableVariables,
-  });
 
-  const expectedOutputVariableHook = useVariableInsertion<HTMLTextAreaElement>({
-    onValueChange: (value) => setValue("expected_output", value),
-    availableVariables,
-  });
 
   return (
     <Modal isOpen={isOpen} onClose={onClose} size="xl">

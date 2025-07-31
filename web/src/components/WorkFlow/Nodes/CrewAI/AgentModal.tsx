@@ -28,7 +28,7 @@ import { DEFAULT_MANAGER } from "./constants";
 import { v4 } from "uuid";
 import { useToolProvidersQuery } from "@/hooks/useToolProvidersQuery";
 import ToolsIcon from "@/components/Icons/Tools";
-import { useVariableInsertion } from "@/hooks/graphs/useVariableInsertion";
+
 import VariableSelector from "../../Common/VariableSelector";
 import type { VariableReference } from "../../FlowVis/variableSystem";
 
@@ -157,20 +157,7 @@ const AgentModal: React.FC<AgentModalProps> = ({
       });
   };
 
-  const roleVariableHook = useVariableInsertion<HTMLTextAreaElement>({
-      onValueChange: (value) => setValue("role", value),
-      availableVariables,
-  });
 
-  const goalVariableHook = useVariableInsertion<HTMLTextAreaElement>({
-      onValueChange: (value) => setValue("goal", value),
-      availableVariables,
-  });
-
-  const backstoryVariableHook = useVariableInsertion<HTMLTextAreaElement>({
-      onValueChange: (value) => setValue("backstory", value),
-      availableVariables,
-  });
 
   return (
       <Modal isOpen={isOpen} onClose={onClose} size="xl">

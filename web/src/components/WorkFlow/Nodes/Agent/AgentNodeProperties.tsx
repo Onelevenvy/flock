@@ -16,7 +16,7 @@ import { GiArchiveResearch } from "react-icons/gi";
 
 import ModelSelect from "@/components/Common/ModelProvider";
 import ToolsIcon from "@/components/Icons/Tools";
-import { useVariableInsertion } from "@/hooks/graphs/useVariableInsertion";
+
 import { useModelQuery } from "@/hooks/useModelQuery";
 import { useToolProvidersQuery } from "@/hooks/useToolProvidersQuery";
 import { useUploadsQuery } from "@/hooks/useUploadsQuery";
@@ -131,28 +131,6 @@ const AgentNodeProperties: React.FC<AgentNodePropertiesProps> = ({
         [node.id, onNodeDataChange],
     );
 
-    const {
-        showVariables: showSystemVariables,
-        setShowVariables: setShowSystemVariables,
-        inputRef: systemInputRef,
-        handleKeyDown: handleSystemKeyDown,
-        insertVariable: insertSystemVariable,
-    } = useVariableInsertion<HTMLTextAreaElement>({
-        onValueChange: (value) => handleSystemPromptChange(value),
-        availableVariables,
-    });
-    const {
-        showVariables: showUserVariables,
-        setShowVariables: setShowUserVariables,
-        inputRef: userInputRef,
-        handleKeyDown: handleUserKeyDown,
-        insertVariable: insertUserVariable,
-    } = useVariableInsertion<HTMLTextAreaElement>({
-        onValueChange: (value) => handleUserPromptChange(value),
-        availableVariables,
-    });
-
-    // --- 核心修改区域: 工具管理回调函数 ---
 
     const handleSelectTool = useCallback((tool: ToolOutIdWithAndName) => {
         const currentTools: SavedTool[] = node.data.tools || [];

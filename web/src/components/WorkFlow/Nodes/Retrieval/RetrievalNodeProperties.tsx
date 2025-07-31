@@ -2,7 +2,7 @@ import { Box, Text, VStack, Select } from "@chakra-ui/react";
 import type React from "react";
 import { useCallback, useState, useEffect } from "react";
 
-import { useVariableInsertion } from "@/hooks/graphs/useVariableInsertion";
+
 import { useUploadsQuery } from "@/hooks/useUploadsQuery";
 import { VariableReference } from "../../FlowVis/variableSystem";
 import VariableSelector from "../../Common/VariableSelector";
@@ -67,16 +67,7 @@ const RetrievalProperties: React.FC<RetrievalPropertiesProps> = ({
     [node.id, onNodeDataChange, uploads],
   );
 
-  const {
-    showVariables,
-    setShowVariables,
-    inputRef,
-    handleKeyDown,
-    insertVariable,
-  } = useVariableInsertion<HTMLTextAreaElement>({
-    onValueChange: (value) => handleQueryChange(value),
-    availableVariables,
-  });
+
 
   return (
     <VStack align="stretch" spacing={4}>

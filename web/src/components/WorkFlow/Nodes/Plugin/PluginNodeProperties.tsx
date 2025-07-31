@@ -9,7 +9,7 @@ import {
   HStack, 
 } from "@chakra-ui/react";
 import React, { useCallback, useMemo, useState, useEffect } from "react";
-import { useVariableInsertion } from "@/hooks/graphs/useVariableInsertion";
+
 import { useToolProvidersQuery } from "@/hooks/useToolProvidersQuery";
 import type { VariableReference } from "../../FlowVis/variableSystem";
 import VariableSelector from "../../Common/VariableSelector";
@@ -31,8 +31,7 @@ const ParameterInput: React.FC<ParameterInputProps> = ({
   onChange, 
   availableVariables 
 }) => {
-  // 1. 移除整个 useVariableInsertion hook，不再需要它
-  // const variableInsertionHook = useVariableInsertion(...);
+
 
   const hasLongDescription = paramDetails.description && paramDetails.description.length > 50;
 
