@@ -98,12 +98,12 @@ def validate_tool(tool_definition: dict[str, Any]) -> Any:
 
 
 @router.post("/invoke")
-def invoke_tools(tool_name: str, args: dict) -> ToolInvokeResponse:
+async def invoke_tools(tool_id:int,tool_name: str, args: dict) -> ToolInvokeResponse:
     """
     Invoke a tool by name with the provided arguments.
     """
     try:
-        result = invoke_tool(tool_name, args)
+        result = await invoke_tool(tool_id,tool_name, args)
         return result
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e))

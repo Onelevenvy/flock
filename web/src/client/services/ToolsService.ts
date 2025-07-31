@@ -163,9 +163,11 @@ export class ToolsService {
      * @throws ApiError
      */
     public static invokeTools({
+        toolId,
         toolName,
         requestBody,
     }: {
+        toolId: number,
         toolName: string,
         requestBody: Record<string, any>,
     }): CancelablePromise<ToolInvokeResponse> {
@@ -173,6 +175,7 @@ export class ToolsService {
             method: 'POST',
             url: '/api/v1/tools/invoke',
             query: {
+                'tool_id': toolId,
                 'tool_name': toolName,
             },
             body: requestBody,

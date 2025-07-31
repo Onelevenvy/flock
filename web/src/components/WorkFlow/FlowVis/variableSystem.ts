@@ -5,13 +5,14 @@ import { nodeConfig, NodeType } from "../Nodes/nodeConfig";
 export interface VariableReference {
   nodeId: string;
   variableName: string;
+  variableType: string;
 }
 
 export function parseVariableReference(ref: string): VariableReference | null {
   const match = ref.match(/\$\{(\w+)\.(\w+)\}/);
 
   if (match) {
-    return { nodeId: match[1], variableName: match[2] };
+    return { nodeId: match[1], variableName: match[2] , variableType: 'unknown'};
   }
 
   return null;
@@ -20,7 +21,7 @@ export function parseVariableReference(ref: string): VariableReference | null {
 function getUpstreamNodes(
   nodeId: string,
   nodes: Node[],
-  edges: Edge[],
+  edges: Edge[]
 ): Node[] {
   const upstreamNodeIds = new Set<string>();
   const queue = [nodeId];
@@ -39,6 +40,7 @@ function getUpstreamNodes(
 
   return nodes.filter((node) => upstreamNodeIds.has(node.id));
 }
+
 export function getAvailableVariables(
   currentNodeId: string,
   nodes: Node[],
@@ -48,19 +50,33 @@ export function getAvailableVariables(
 
   return upstreamNodes.flatMap((node) => {
     const nodeType = node.type as NodeType;
+    const config = nodeConfig[nodeType];
+    
+    let outputVars: { name: string; type: string }[] = [];
 
-    return nodeConfig[nodeType].outputVariables.map((variableName) => ({
+    if (typeof config.outputVariables === 'function') {
+      outputVars = config.outputVariables(node.data);
+    } 
+   
+    else if (Array.isArray(config.outputVariables)) {
+      outputVars = config.outputVariables.map((variableName) => {
+        const type = (config.outputSchema && config.outputSchema[variableName]) ? config.outputSchema[variableName] : 'any';
+        return { name: variableName, type: type };
+      });
+    }
+
+    return outputVars.map(({ name, type }) => ({
       nodeId: node.id,
-      variableName,
+      variableName: name,
+      variableType: type,
     }));
   });
 }
-
 export function validateVariableReferences(
   nodeId: string,
   data: any,
   nodes: Node[],
-  edges: Edge[],
+  edges: Edge[]
 ): string[] {
   const availableVariables = getAvailableVariables(nodeId, nodes, edges);
   const errors: string[] = [];
@@ -72,7 +88,7 @@ export function validateVariableReferences(
       if (
         ref &&
         !availableVariables.some(
-          (v) => v.nodeId === ref.nodeId && v.variableName === ref.variableName,
+          (v) => v.nodeId === ref.nodeId && v.variableName === ref.variableName
         )
       ) {
         errors.push(`Invalid variable reference: ${value} in field ${key}`);

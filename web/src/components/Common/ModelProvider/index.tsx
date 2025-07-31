@@ -20,6 +20,7 @@ import { FaEye } from "react-icons/fa";
 import type { ModelsOut } from "@/client/models/ModelsOut";
 import ModelProviderIcon from "../../Icons/models";
 
+
 interface ModelSelectProps<T extends FieldValues> {
   models: ModelsOut | undefined;
   control: Control<T>;
@@ -155,6 +156,9 @@ function ModelSelect<T extends FieldValues>({
                         {groupedModels![providerName].map((model) => (
                           <MenuItem
                             key={model.id}
+                            // --- 主要修改点 ---
+                            // 如果 model.is_online 是 false, null 或 undefined，则禁用该选项
+                            isDisabled={!model.is_online}
                             onClick={() => {
                               field.onChange(model.ai_model_name);
                               onModelSelect(model.ai_model_name);

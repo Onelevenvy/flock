@@ -75,7 +75,7 @@ const RetrievalProperties: React.FC<RetrievalPropertiesProps> = ({
         label="Query"
         value={queryInput}
         onChange={handleQueryChange}
-        placeholder="Enter query. Use '/' to insert variables."
+        placeholder="Enter query. Use 'shift + {' to insert variables."
         availableVariables={availableVariables}
         minHeight="80px"
       />

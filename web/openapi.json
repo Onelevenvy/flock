@@ -1686,6 +1686,15 @@
         "operationId": "invoke_tools",
         "parameters": [
           {
+            "name": "tool_id",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Tool Id"
+            }
+          },
+          {
             "name": "tool_name",
             "in": "query",
             "required": true,

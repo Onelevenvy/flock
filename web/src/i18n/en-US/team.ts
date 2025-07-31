@@ -322,7 +322,7 @@ const translation = {
     variableSelector: {
       availableVariables: "Available Variables",
       noVariables: "No variables available",
-      placeholder: "Write here. Use '/' to insert variables.",
+      placeholder: "Write here. Use 'shift + {' to insert variables.",
     },
   },
 };

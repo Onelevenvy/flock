@@ -40,7 +40,7 @@ const AnswerProperties: React.FC<AnswerPropertiesProps> = ({
         label="Answer"
         value={answerInput}
         onChange={handleAnswerChange}
-        placeholder="Write your answer here. Use '/' to insert variables."
+        placeholder="Write your answer here. Use 'shift + {' to insert variables."
         availableVariables={availableVariables}
         minHeight="120px"
       />

@@ -420,7 +420,7 @@ const FlowVisualizer: React.FC<FlowVisualizerProps> = ({
 
       setNodes((nds) => nds.concat(newNode));
     },
-    [nodes, reactFlowInstance, setNodes, generateUniqueName, onNodeDataChange],
+    [nodes, reactFlowInstance, setNodes, generateUniqueName, onNodeDataChange,toolProvidersData],
   );
   const closePropertiesPanel = useCallback(() => {
     setSelectedNodeId(null);
@@ -563,17 +563,23 @@ const FlowVisualizer: React.FC<FlowVisualizerProps> = ({
       let newNode: CustomNode;
 
       if (nodeType === "plugin") {
+        const providers = toolProvidersData?.providers || [];
+        const provider = providers.find(p => p.tools.some(t => t.id === tool.id));
         newNode = {
-          id: `${tool.display_name}-${nodes.length + 1}`,
+          id: `${tool.name}-${nodes.length + 1}`, 
           type: "plugin",
           position: { x: newNodeX, y: newNodeY },
           data: {
-            label: tool.display_name,
-            toolName: tool.display_name,
-            args: "",
-            ...tool.initialData,
+              label: tool.display_name || tool.name,
+              args: "",
+              
+              tool: {
+                  id: tool.id,
+                  name: tool.display_name || tool.name,
+                  provider: provider?.provider_name || 'unknown'
+              }
           },
-        };
+      };
       } else {
         const newNodeId = `${nodeType}-${nodes.length + 1}`;
 
@@ -647,6 +653,7 @@ const FlowVisualizer: React.FC<FlowVisualizerProps> = ({
       setEdges,
       onNodeDataChange,
       generateUniqueName,
+      toolProvidersData
     ],
   );
 

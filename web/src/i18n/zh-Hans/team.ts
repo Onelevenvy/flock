@@ -316,7 +316,7 @@ const translation = {
     variableSelector: {
       availableVariables: "可用变量",
       noVariables: "没有可用变量",
-      placeholder: "在此处编写。使用 '/' 插入变量。",
+      placeholder: "在此处编写。使用 'shift + {' 插入变量。",
     },
   },
 };

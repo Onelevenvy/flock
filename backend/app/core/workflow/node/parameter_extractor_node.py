@@ -164,7 +164,7 @@ class ParameterExtractorNode:
         result = await chain.ainvoke(input_json)
 
         # Update node outputs
-        new_output = {self.node_id: {"parameters": result}}
+        new_output = {self.node_id: result}
         state["node_outputs"] = update_node_outputs(state["node_outputs"], new_output)
 
         return_state: ReturnWorkflowTeamState = {
