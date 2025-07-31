@@ -106,7 +106,7 @@ export default function VariableSelector(props: VariableSelectorProps) {
   return (
       <Box>
           {label && (<Text fontWeight="600" mb={2} color="gray.700" fontSize="sm">{label}</Text>)}
-          <style>{`.variable-badge { background-color: #EBF8FF; color: #2C5282; font-weight: 500; border-radius: 6px; padding: 2px 8px; margin: 0 2px; display: inline-block; }`}</style>
+          <style>{`.variable-badge { background-color: #EBF8FF; color: #2C5282; font-weight: 500; border-radius: 6px; padding: 2px 8px; margin: 0 2px; display: inline-block; font-size: 0.8em }`}</style>
           <Popover isOpen={isPopoverOpen} onClose={() => setIsPopoverOpen(false)} placement="bottom-start" autoFocus={false} >
               <PopoverTrigger>
               <span>
