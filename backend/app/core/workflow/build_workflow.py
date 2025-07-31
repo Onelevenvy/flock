@@ -25,7 +25,7 @@ from .node.human_node import HumanNode
 from .node.ifelse.ifelse_node import IfElseNode
 from .node.input_node import InputNode
 from .node.llm_node import LLMNode
-from .node.mcp.mcp_node import MCPNode
+
 from .node.retrieval_node import RetrievalNode
 from .node.subgraph_node import SubgraphNode
 
@@ -233,8 +233,6 @@ async def initialize_graph(
                 _add_parameter_extractor_node(graph_builder, node_id, node_data)
             elif node_type == "plugin":
                 _add_plugin_node(graph_builder, node_id, node_data)
-            elif node_type == "mcpTool":
-                _add_mcp_node(graph_builder, node_id, node_data)
             elif node_type == "agent":
                 await _add_agent_node(graph_builder, node_id, node_data)
 
@@ -551,11 +549,6 @@ def _add_edge(graph_builder, edge, nodes, conditional_edges):
             graph_builder.add_edge(edge["source"], END)
         else:
             graph_builder.add_edge(edge["source"], edge["target"])
-    elif source_node["type"] == "mcpTool":
-        if target_node["type"] == "end":
-            graph_builder.add_edge(edge["source"], END)
-        else:
-            graph_builder.add_edge(edge["source"], edge["target"])
     elif source_node["type"] == "agent":
         if target_node["type"] == "end":
             graph_builder.add_edge(edge["source"], END)
@@ -685,19 +678,6 @@ def _add_plugin_node(graph_builder, node_id, node_data):
     graph_builder.add_node(
         node_id, PluginNode(node_id, node_data["toolName"], node_data["args"]).work
     )
-
-
-def _add_mcp_node(graph_builder, node_id, node_data):
-    graph_builder.add_node(
-        node_id,
-        MCPNode(
-            node_id=node_id,
-            model_name=node_data["model"],
-            input=node_data["input"],
-            mcp_config=node_data["mcp_config"],
-        ).work,
-    )
-
 
 async def _add_agent_node(graph_builder, node_id, node_data):
     """Add agent node to graph"""
