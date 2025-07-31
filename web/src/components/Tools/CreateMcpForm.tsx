@@ -32,14 +32,14 @@ export function CreateMcpForm({ isOpen, onClose, onSuccess, editProvider }: Crea
   const showToast = useCustomToast();
   const queryClient = useQueryClient();
   const isEditMode = !!editProvider;
-  const initialRef = useRef<HTMLInputElement>(null);
+  const initialRef = useRef<HTMLInputElement | null>(null!);
   
   const [formData, setFormData] = useState({
     provider_name: "",
     mcp_endpoint_url: "",
     mcp_server_id: "",
     mcp_connection_type: "sse", // 默认值
-    icon: ""
+    icon: "mcp"
   });
 
   useEffect(() => {
@@ -169,7 +169,7 @@ export function CreateMcpForm({ isOpen, onClose, onSuccess, editProvider }: Crea
     <Modal 
       isOpen={isOpen} 
       onClose={onClose}
-      initialFocusRef={initialRef}
+      initialFocusRef={initialRef as React.RefObject<HTMLInputElement>}
       size="md"
     >
       <ModalOverlay />

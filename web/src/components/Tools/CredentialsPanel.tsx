@@ -266,7 +266,7 @@ const CredentialsPanel: React.FC<CredentialsPanelProps> = ({
               <ToolsIcon
                 h="6"
                 w="6"
-                tools_name={(providerState.display_name || providerState.provider_name)
+                tools_name={(providerState.icon || providerState.provider_name)
                   .toLowerCase()
                   .replace(/ /g, "_")}
                 color={`${providerState.tool_type === 'builtin' ? "blue" : "purple"}.500`}

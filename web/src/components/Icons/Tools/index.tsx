@@ -424,6 +424,14 @@ const get_current_time = createIcon({
   ),
 });
 
+const mcp = createIcon(
+  {
+    displayName: "get_current_time",
+  viewBox: "0 0 16 16",
+  path: (  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="17" viewBox="0 0 16 17"><path fill="#4e649d" fillRule="evenodd" d="m14.557 8.468l-.055.054l-5.804 5.691a.183.183 0 0 0-.003.259l.003.003l1.192 1.17a.55.55 0 0 1 .011.776l-.01.01a.575.575 0 0 1-.803 0l-1.192-1.168a1.28 1.28 0 0 1 0-1.836l5.805-5.692a1.647 1.647 0 0 0 .031-2.328l-.031-.032l-.034-.032a1.725 1.725 0 0 0-2.405-.002l-4.781 4.69h-.002l-.065.065a.575.575 0 0 1-.803 0a.55.55 0 0 1-.01-.776l.01-.01l4.849-4.756c.65-.636.663-1.678.027-2.329l-.029-.03a1.725 1.725 0 0 0-2.407 0L1.635 8.489a.575.575 0 0 1-.802 0a.55.55 0 0 1-.011-.776l.011-.01L7.25 1.407a2.875 2.875 0 0 1 4.01 0c.63.613.929 1.49.803 2.36c.88-.125 1.77.166 2.406.787l.034.033a2.743 2.743 0 0 1 .053 3.88m-1.691-1.553a.55.55 0 0 0 .01-.776l-.01-.01a.575.575 0 0 0-.803 0l-4.746 4.654a1.725 1.725 0 0 1-2.407 0a1.647 1.647 0 0 1 0-2.36l4.747-4.655a.55.55 0 0 0 .011-.776l-.011-.01a.575.575 0 0 0-.803 0L4.108 7.635a2.743 2.743 0 0 0 0 3.933a2.876 2.876 0 0 0 4.011 0z" clipRule="evenodd"/></svg>)
+  }
+)
+
 const iconMap: { [key: string]: React.FC } = {
   openweather: OpenWeather,
   google: GoogleTranslate,
@@ -439,9 +447,10 @@ const iconMap: { [key: string]: React.FC } = {
   workflow: FaProjectDiagram,
   baidu: baidu,
   get_current_time: get_current_time,
+  mcp:mcp,
 };
 
-const DefaultIcon = Wikipedia;
+const DefaultIcon = mcp;
 
 const ToolsIcon = ({
   tools_name,

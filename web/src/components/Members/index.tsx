@@ -482,7 +482,7 @@ const EditTeamMember = forwardRef<HTMLFormElement, EditTeamMemberProps>(
                                     <Box flexShrink={0} w={7} h={7} borderRadius="lg" bg="primary.50" display="flex" alignItems="center" justifyContent="center">
                                       {provider && provider.icon && (
                                         <ToolsIcon 
-                                          tools_name={provider.provider_name || ''} 
+                                          tools_name={provider.icon || provider.provider_name || ''} 
                                           color={`${provider.tool_type === 'builtin' ? "blue" : "purple"}.500`} 
                                         />
                                       )}

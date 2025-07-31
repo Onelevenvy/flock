@@ -310,7 +310,7 @@ export default function Tools() {
                       <ToolsIcon
                         h="6"
                         w="6"
-                        tools_name={(provider.provider_name!)
+                        tools_name={(provider.icon || provider.provider_name!)
                         }
                         color={`${provider.tool_type === 'builtin' ? "blue" : "purple"}.500`}
                       />

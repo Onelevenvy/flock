@@ -44,30 +44,30 @@ const SharedNodeMenu: React.FC<SharedNodeMenuProps> = ({
 
   const handleNodeInteraction =
     (nodeType: NodeType | string, tool?: any) =>
-    (event: React.MouseEvent | React.DragEvent) => {
-      if (isDraggable && event.type === "dragstart") {
-        const dragEvent = event as React.DragEvent;
-        dragEvent.dataTransfer.setData(
-          "application/reactflow",
-          JSON.stringify({
-            tool:
-              nodeType === "subgraph"
-                ? {
+      (event: React.MouseEvent | React.DragEvent) => {
+        if (isDraggable && event.type === "dragstart") {
+          const dragEvent = event as React.DragEvent;
+          dragEvent.dataTransfer.setData(
+            "application/reactflow",
+            JSON.stringify({
+              tool:
+                nodeType === "subgraph"
+                  ? {
                     name: tool.name,
                     id: tool.id,
                     description: tool.description,
                   }
-                : nodeType === "plugin"
-                  ? tool
-                  : nodeType,
-            type: nodeType,
-          }),
-        );
-        dragEvent.dataTransfer.effectAllowed = "move";
-      } else if (!isDraggable) {
-        onNodeSelect(nodeType, tool);
-      }
-    };
+                  : nodeType === "plugin"
+                    ? tool
+                    : nodeType,
+              type: nodeType,
+            }),
+          );
+          dragEvent.dataTransfer.effectAllowed = "move";
+        } else if (!isDraggable) {
+          onNodeSelect(nodeType, tool);
+        }
+      };
 
   return (
     <Box
@@ -216,7 +216,7 @@ const SharedNodeMenu: React.FC<SharedNodeMenuProps> = ({
                                     <ToolsIcon
                                       h="6"
                                       w="6"
-                                      tools_name={(provider.provider_name!)}
+                                      tools_name={(provider.icon || provider.provider_name!)}
                                       color={`${provider.tool_type === 'builtin' ? "blue" : "purple"}.500`}
                                     />
                                   </Box>
@@ -254,9 +254,9 @@ const SharedNodeMenu: React.FC<SharedNodeMenuProps> = ({
                                       onDragStart={
                                         isDraggable && isOnline
                                           ? (event) => {
-                                              event.stopPropagation();
-                                              handleNodeInteraction("plugin", tool)(event);
-                                            }
+                                            event.stopPropagation();
+                                            handleNodeInteraction("plugin", tool)(event);
+                                          }
                                           : undefined
                                       }
                                       _hover={isOnline ? {
@@ -270,11 +270,11 @@ const SharedNodeMenu: React.FC<SharedNodeMenuProps> = ({
                                       }}
                                     >
                                       <HStack spacing={3} overflow="hidden">
-                                        
+
                                         <Text
                                           fontSize="xs"
                                           fontWeight="500"
-                                          color="gray.700"
+                                          color={isOnline ? "gray.700" : "gray.400"}
                                           noOfLines={1}
                                           overflow="hidden"
                                           textOverflow="ellipsis"
