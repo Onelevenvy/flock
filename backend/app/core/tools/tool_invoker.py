@@ -8,7 +8,7 @@ from langgraph.prebuilt import ToolNode
 from pydantic import BaseModel
 
 from app.core.tools.response_formatter import format_tool_response
-from app.core.tools.tool_manager import get_tool_by_name
+from app.core.tools.tool_manager import get_tool_by_tool_id
 
 
 class ToolMessages(BaseModel):
@@ -52,35 +52,33 @@ def format_and_invoke_tool(tool: BaseTool, **kwargs) -> str:
         return format_tool_response(False, error=str(e))
 
 
-def invoke_tool(tool_name: str, args: dict) -> ToolInvokeResponse:
+async def invoke_tool(tool_id: int, tool_name: str, args: dict) -> ToolInvokeResponse:
     """
     Invoke a tool by name with the provided arguments.
 
     Args:
-        tool_name: 工具名称，必须是provider_name:tool_name格式
+        tool_id: tool id
+        tool_name: 工具名称，
         args: 工具调用参数
 
     Returns:
         ToolInvokeResponse: 工具调用响应
     """
-    # 确保工具名称是provider_name:tool_name格式
-    if ":" not in tool_name:
+
+    if not tool_id:
         return ToolInvokeResponse(
             messages=[],
-            error=f"Invalid tool name format: {tool_name}. Must be in 'provider_name:tool_name' format",
+            error=f"Invalid tool,tool id : {tool_id},tool name : {tool_name}",
         )
 
     tool_call_id = str(uuid.uuid4())
-
-    # 从完整名称中提取简单工具名称用于显示
-    _, simple_tool_name = tool_name.split(":", 1)
 
     # Create the AIMessage for the tool call
     message_with_tool_call = AIMessage(
         content="",
         tool_calls=[
             {
-                "name": simple_tool_name,  # 使用简单名称作为显示名称
+                "name": tool_name,  # 使用简单名称作为显示名称
                 "args": args,
                 "id": tool_call_id,
                 "type": "tool_call",
@@ -89,10 +87,9 @@ def invoke_tool(tool_name: str, args: dict) -> ToolInvokeResponse:
     )
 
     try:
-        # 使用完整的provider_name:tool_name格式获取工具
-        tool_node = ToolNode(tools=[get_tool_by_name(tool_name)])
-        result = tool_node.invoke({"messages": [message_with_tool_call]})
 
+        tool_node = ToolNode(tools=[await get_tool_by_tool_id(tool_id)])
+        result = await tool_node.ainvoke({"messages": [message_with_tool_call]})
         messages = [
             ToolMessages(
                 content=msg.content,
@@ -102,6 +99,7 @@ def invoke_tool(tool_name: str, args: dict) -> ToolInvokeResponse:
             for msg in result["messages"]
         ]
         return ToolInvokeResponse(messages=messages)
+
     except Exception as e:
         # 返回易于识别的错误信息
         return ToolInvokeResponse(messages=[], error=str(e))

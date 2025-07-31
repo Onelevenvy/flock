@@ -675,7 +675,7 @@ def _add_parameter_extractor_node(graph_builder, node_id, node_data):
 
 def _add_plugin_node(graph_builder, node_id, node_data):
     graph_builder.add_node(
-        node_id, PluginNode(node_id, node_data["toolName"], node_data["args"]).work
+        node_id, PluginNode(node_id, node_data["tool"], node_data["args"]).work
     )
 
 
