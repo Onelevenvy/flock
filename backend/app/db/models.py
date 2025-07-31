@@ -845,57 +845,7 @@ class ProvidersListWithToolsOut(SQLModel):
     providers: list[ToolProviderWithToolsListOut]
 
 
-# ===============SKILL========================
 
-
-# class SkillBase(SQLModel):
-#     name: str
-#     description: str
-#     display_name: str | None = None
-#     managed: bool = False
-#     tool_definition: dict[str, Any] | None = Field(
-#         default_factory=dict, sa_column=Column(JSON)
-#     )
-#     input_parameters: dict[str, Any] | None = Field(
-#         default_factory=dict, sa_column=Column(JSON)  # 用于存储输入参数
-#     )
-#     credentials: dict[str, Any] | None = Field(
-#         default_factory=dict, sa_column=Column(JSON)  # 新增字段,用于存储凭证信息
-#     )
-
-
-# class SkillCreate(SkillBase):
-#     tool_definition: dict[str, Any]  # Tool definition is required if not managed
-#     managed: bool = Field(default=False, const=False)  # Managed must be False
-#     credentials: dict[str, Any] | None = None  # 新增字段
-
-
-# class SkillUpdate(SkillBase):
-#     name: str | None = None  # type: ignore[assignment]
-#     description: str | None = None  # type: ignore[assignment]
-#     managed: bool | None = None  # type: ignore[assignment]
-#     tool_definition: dict[str, Any] | None = None
-#     credentials: dict[str, Any] | None = None  # 新增字段
-
-
-# class Skill(SkillBase, table=True):
-#     id: int | None = Field(default=None, primary_key=True)
-#     resource_id: int = Field(foreign_key="resource.id", nullable=False)
-#     members: list["Member"] = Relationship(
-#         back_populates="skills",
-#         link_model=MemberSkillsLink,
-#     )
-#     owner_id: int | None = Field(default=None, foreign_key="user.id", nullable=False)
-#     owner: User | None = Relationship(back_populates="skills")
-
-
-# class SkillsOut(SQLModel):
-#     data: list["SkillOut"]
-#     count: int
-
-
-# class SkillOut(SkillBase):
-#     id: int
 
 
 class ToolDefinitionValidate(SQLModel):
@@ -1327,7 +1277,7 @@ class SubgraphUpdate(SubgraphBase):
 
 class Subgraph(SubgraphBase, table=True):
     id: int | None = Field(default=None, primary_key=True)
-    resource_id: int = Field(foreign_key="resource.id", nullable=False)
+    resource_id: int | None = Field(default=None, foreign_key="resource.id", nullable=True)
     owner_id: int | None = Field(default=None, foreign_key="user.id", nullable=False)
     owner: User | None = Relationship(back_populates="subgraphs")
     team_id: int = Field(foreign_key="team.id", nullable=False)

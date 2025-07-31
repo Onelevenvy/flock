@@ -22,12 +22,6 @@ class SubgraphNode:
         # 初始化时编译子图
         self.subgraph_config, self.subgraph_name = get_subgraph_by_id(subgraph_id)
 
-    async def __aenter__(self):
-        self.subgraph = await self._build_subgraph()
-        return self
-
-    async def __aexit__(self, exc_type, exc_val, exc_tb):
-        pass
 
     async def _build_subgraph(self):
         """Build and compile subgraph"""
@@ -53,6 +47,8 @@ class SubgraphNode:
         )
         if not input_text and state.get("all_messages"):
             input_text = state["all_messages"][-1].content
+
+        self.subgraph = await self._build_subgraph()
 
         if input_text:
 

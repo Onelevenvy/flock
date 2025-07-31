@@ -685,27 +685,7 @@ async def generator(
                     "all_messages": formatted_messages,
                 }
 
-            elif team.workflow in ["ragbot"]:
-                member_dict = convert_chatbot_chatrag_team_to_dict(
-                    members, workflow_type=team.workflow
-                )
-                root = await create_chatbot_ragbot_graph(member_dict, checkpointer)
-                first_member = list(member_dict.values())[0]
-                state = {
-                    "history": formatted_messages,
-                    "team": GraphTeam(
-                        name=first_member.name,
-                        role=first_member.role,
-                        backstory=first_member.backstory,
-                        members=member_dict,  # type: ignore[arg-type]
-                        provider=first_member.provider,
-                        model=first_member.model,
-                        temperature=first_member.temperature,
-                    ),
-                    "messages": [],
-                    "next": first_member.name,
-                    "all_messages": formatted_messages,
-                }
+           
             elif team.workflow in ["chatbot"]:
                 member_dict = convert_chatbot_chatrag_team_to_dict(
                     members, workflow_type=team.workflow
