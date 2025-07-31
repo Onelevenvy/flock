@@ -60,7 +60,7 @@ const AddTeam = ({ isOpen, onClose }: AddTeamProps) => {
   const { t } = useTranslation();
   const queryClient = useQueryClient();
   const showToast = useCustomToast();
-  const [selectedWorkflow, setSelectedWorkflow] = useState<string>("chatbot");
+  const [selectedWorkflow, setSelectedWorkflow] = useState<string>("workflow");
 
   const bgColor = useColorModeValue("white", "gray.800");
   const borderColor = useColorModeValue("gray.100", "gray.700");
