@@ -85,11 +85,6 @@ const RetrievalProperties: React.FC<RetrievalPropertiesProps> = ({
         value={queryInput}
         onChange={handleQueryChange}
         placeholder="Enter query. Use '/' to insert variables."
-        showVariables={showVariables}
-        setShowVariables={setShowVariables}
-        inputRef={inputRef as React.RefObject<HTMLTextAreaElement>}
-        handleKeyDown={handleKeyDown}
-        insertVariable={insertVariable}
         availableVariables={availableVariables}
         minHeight="80px"
       />

@@ -5,158 +5,131 @@ import {
   PopoverContent,
   PopoverTrigger,
   Text,
-  Textarea,
   VStack,
+  useStyleConfig,
+  ChakraProps,
 } from "@chakra-ui/react";
-import React from "react";
+import React, { useState, useRef, useEffect } from "react";
 import { useTranslation } from "react-i18next";
+import type { VariableReference } from "../FlowVis/variableSystem";
 
-import { VariableReference } from "../FlowVis/variableSystem";
+
+function parseValueToHTML(value: string): string {
+  const regex = /\${(.*?)}/g;
+  const encodedValue = value.replace(/</g, '&lt;').replace(/>/g, '&gt;');
+  
+  return encodedValue.replace(regex, (match, variableName) => {
+
+      return `<span class="variable-badge" contentEditable="false">${match}</span>`;
+  });
+}
+
+
+function parseHTMLToValue(html: string): string {
+  const tempDiv = document.createElement('div');
+  tempDiv.innerHTML = html;
+  tempDiv.querySelectorAll('br').forEach(br => br.replaceWith('\n'));
+  return tempDiv.textContent || "";
+}
+
 
 interface VariableSelectorProps {
   label: string | null;
   value: string;
   onChange: (value: string) => void;
   placeholder?: string;
-  showVariables: boolean;
-  setShowVariables: (show: boolean) => void;
-  inputRef: React.RefObject<HTMLTextAreaElement | null>;
-  handleKeyDown: (e: React.KeyboardEvent) => void;
-  insertVariable: (variable: string) => void;
   availableVariables: VariableReference[];
   minHeight?: string;
+  rows?: number;
 }
 
-const VariableSelector: React.FC<VariableSelectorProps> = ({
-  label,
-  value,
-  onChange,
-  placeholder,
-  showVariables,
-  setShowVariables,
-  inputRef,
-  handleKeyDown,
-  insertVariable,
-  availableVariables = [],
-  minHeight = "100px",
-}) => {
+export default function VariableSelector(props: VariableSelectorProps) {
   const { t } = useTranslation();
+  const editorRef = useRef<HTMLDivElement>(null);
+  const [isPopoverOpen, setIsPopoverOpen] = useState(false);
+
+  const { label, value, onChange, placeholder, availableVariables, minHeight } = props;
+
+  const styles = useStyleConfig("Textarea", {}) as ChakraProps;
+
+  useEffect(() => {
+      if (editorRef.current && parseHTMLToValue(editorRef.current.innerHTML) !== value) {
+          editorRef.current.innerHTML = parseValueToHTML(value);
+      }
+  }, [value]);
+
+  const handleInput = (event: React.FormEvent<HTMLDivElement>) => {
+      const plainText = parseHTMLToValue(event.currentTarget.innerHTML);
+      onChange(plainText);
+  };
+  
+  const handleInsertVariable = (variableName: string) => {
+      const editor = editorRef.current;
+      if (!editor) return;
+
+      editor.focus();
+      const selection = window.getSelection();
+      if (!selection || selection.rangeCount === 0) return;
+      
+      let range = selection.getRangeAt(0);
+      if (!editor.contains(range.commonAncestorContainer)) {
+          range.selectNodeContents(editor);
+          range.collapse(false);
+      }
+      
+      const variableNode = document.createElement('span');
+      variableNode.className = 'variable-badge';
+      variableNode.setAttribute('contentEditable', 'false');
+      variableNode.innerText = `\${${variableName}}`;
+      
+      const spaceNode = document.createTextNode('\u00A0');
+
+      range.deleteContents();
+      range.insertNode(variableNode);
+      range.setStartAfter(variableNode);
+      range.collapse(true);
+      range.insertNode(spaceNode);
+      range.setStartAfter(spaceNode);
+      range.collapse(true);
+
+      selection.removeAllRanges();
+      selection.addRange(range);
+
+      onChange(parseHTMLToValue(editor.innerHTML));
+      setIsPopoverOpen(false);
+  };
+
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLDivElement>) => {
+      // if (e.key === '{' && e.shiftKey) 
+      if (e.key === '/')
+        {
+           e.preventDefault();
+           setIsPopoverOpen(true);
+      }
+  };
 
   return (
-    <Box>
-      <Text fontWeight="600" mb={2} color="gray.700" fontSize="sm">
-        {label}
-      </Text>
-      <Popover
-        isOpen={showVariables}
-        onClose={() => setShowVariables(false)}
-        placement="bottom-start"
-        autoFocus={false}
-      >
-        <PopoverTrigger>
-          <Textarea
-            ref={inputRef}
-            value={value}
-            onChange={(e) => onChange(e.target.value)}
-            onKeyDown={handleKeyDown}
-            placeholder={
-              placeholder || String(t("workflow.variableSelector.placeholder"))
-            }
-            style={{
-              whiteSpace: "pre-wrap",
-              minHeight: minHeight,
-            }}
-            bg="ui.inputbgcolor"
-            borderColor="gray.200"
-            borderRadius="lg"
-            fontSize="sm"
-            transition="all 0.2s"
-            _hover={{
-              borderColor: "gray.300",
-              transform: "translateY(-1px)",
-              boxShadow: "sm",
-            }}
-            _focus={{
-              borderColor: "blue.500",
-              boxShadow: "0 0 0 1px var(--chakra-colors-blue-500)",
-              transform: "translateY(-1px)",
-            }}
-          />
-        </PopoverTrigger>
-        <PopoverContent
-          width="auto"
-          minWidth="250px"
-          maxWidth="400px"
-          boxShadow="lg"
-          border="1px solid"
-          borderColor="gray.100"
-          borderRadius="lg"
-          p={2}
-          bg="white"
-          _focus={{
-            outline: "none",
-          }}
-        >
-          <VStack align="stretch" spacing={1}>
-            <Text
-              fontSize="sm"
-              fontWeight="600"
-              color="gray.600"
-              p={2}
-              borderBottom="1px solid"
-              borderColor="gray.100"
-            >
-              {t("workflow.variableSelector.availableVariables")}
-            </Text>
-            {availableVariables?.length > 0 ? (
-              availableVariables.map((v) => (
-                <Button
-                  key={`${v.nodeId}.${v.variableName}`}
-                  onClick={() =>
-                    insertVariable(`${v.nodeId}.${v.variableName}`)
-                  }
-                  size="sm"
-                  variant="ghost"
-                  justifyContent="flex-start"
-                  px={3}
-                  py={2}
-                  height="auto"
-                  transition="all 0.2s"
-                  _hover={{
-                    bg: "blue.50",
-                    transform: "translateX(2px)",
-                  }}
-                  leftIcon={
-                    <Box
-                      as="span"
-                      bg="blue.50"
-                      color="blue.600"
-                      px={2}
-                      py={1}
-                      borderRadius="md"
-                      fontSize="xs"
-                      fontWeight="600"
-                      transition="all 0.2s"
-                    >
-                      {v.nodeId}
-                    </Box>
-                  }
-                >
-                  <Text fontSize="sm" ml={2} color="gray.700">
-                    {v.variableName}
-                  </Text>
-                </Button>
-              ))
-            ) : (
-              <Text fontSize="sm" color="gray.500" textAlign="center" p={4}>
-                {t("workflow.variableSelector.noVariables")}
-              </Text>
-            )}
-          </VStack>
-        </PopoverContent>
-      </Popover>
-    </Box>
+      <Box>
+          {label && (<Text fontWeight="600" mb={2} color="gray.700" fontSize="sm">{label}</Text>)}
+          <style>{`.variable-badge { background-color: #EBF8FF; color: #2C5282; font-weight: 500; border-radius: 6px; padding: 2px 8px; margin: 0 2px; display: inline-block; }`}</style>
+          <Popover isOpen={isPopoverOpen} onClose={() => setIsPopoverOpen(false)} placement="bottom-start" autoFocus={false} >
+              <PopoverTrigger>
+                  <Box ref={editorRef} contentEditable onInput={handleInput} onKeyDown={handleKeyDown} {...styles} py={2} px={4} minHeight={minHeight} overflowY="auto" sx={{ '&:empty:before': { content: `"${placeholder || ''}"`, color: 'gray.400', cursor: 'text' } }} />
+              </PopoverTrigger>
+              <PopoverContent width="auto" minWidth="250px" maxWidth="400px" boxShadow="lg" border="1px solid" borderColor="gray.100" borderRadius="lg" p={2} bg="white" _focus={{ outline: "none" }}>
+                  <VStack align="stretch" spacing={1}>
+                      <Text fontSize="sm" fontWeight="600" color="gray.600" p={2} borderBottom="1px solid" borderColor="gray.100">{t("workflow.variableSelector.availableVariables")}</Text>
+                      {availableVariables?.length > 0 ? (
+                          availableVariables.map((v) => (
+                              <Button key={`${v.nodeId}.${v.variableName}`} onClick={() => handleInsertVariable(`${v.nodeId}.${v.variableName}`)} size="sm" variant="ghost" justifyContent="flex-start" px={3} py={2} height="auto" transition="all 0.2s" _hover={{ bg: "blue.50", transform: "translateX(2px)" }}
+                                  leftIcon={<Box as="span" bg="blue.50" color="blue.600" px={2} py={1} borderRadius="md" fontSize="xs" fontWeight="600">{v.nodeId}</Box>}>
+                                  <Text fontSize="sm" ml={2} color="gray.700">{v.variableName}</Text>
+                              </Button>
+                          ))
+                      ) : (<Text fontSize="sm" color="gray.500" textAlign="center" p={4}>{t("workflow.variableSelector.noVariables")}</Text>)}
+                  </VStack>
+              </PopoverContent>
+          </Popover>
+      </Box>
   );
-};
-
-export default VariableSelector;
+}

@@ -34,7 +34,7 @@ import { LogicalOperator } from "../types";
 import HumanNodeProperties from "./Human/HumanNodeProperties";
 import SubgraphNodeProperties from "./Subgraph/SubgraphNodeProperties";
 import ParameterExtractorNodeProperties from "./ParameterExtractor/ParameterExtractorNodeProperties";
-import MCPNodeProperties from "./MCPTool/MCPNodeProperties";
+
 import AgentNodeProperties from "./Agent/AgentNodeProperties";
 
 interface NodeConfigItem {
@@ -344,23 +344,6 @@ export const nodeConfig: Record<string, NodeConfigItem> = {
     },
     inputVariables: ["Input"],
     outputVariables: ["parameters"],
-  },
-  mcpTool: {
-    display: "MCP Tool",
-    icon: FaMicrochip,
-    colorScheme: "purple",
-    properties: MCPNodeProperties,
-    allowedConnections: {
-      sources: ["right"],
-      targets: ["left"],
-    },
-    outputVariables: ["response"],
-    inputVariables: [],
-    initialData: {
-      model: "",
-      input: "",
-      mcp_config: {},
-    },
   },
 };
 

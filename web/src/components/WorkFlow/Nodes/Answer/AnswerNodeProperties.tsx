@@ -51,11 +51,6 @@ const AnswerProperties: React.FC<AnswerPropertiesProps> = ({
         value={answerInput}
         onChange={handleAnswerChange}
         placeholder="Write your answer here. Use '/' to insert variables."
-        showVariables={showVariables}
-        setShowVariables={setShowVariables}
-        inputRef={inputRef}
-        handleKeyDown={handleKeyDown}
-        insertVariable={insertVariable}
         availableVariables={availableVariables}
         minHeight="120px"
       />

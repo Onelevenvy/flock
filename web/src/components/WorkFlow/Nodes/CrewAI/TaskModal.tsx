@@ -164,11 +164,6 @@ const TaskModal: React.FC<TaskModalProps> = ({
                 placeholder={String(
                   t("workflow.nodes.crewai.taskModal.descriptionPlaceholder"),
                 )}
-                showVariables={descriptionVariableHook.showVariables}
-                setShowVariables={descriptionVariableHook.setShowVariables}
-                inputRef={descriptionVariableHook.inputRef}
-                handleKeyDown={descriptionVariableHook.handleKeyDown}
-                insertVariable={descriptionVariableHook.insertVariable}
                 availableVariables={availableVariables}
                 minHeight="100px"
               />
@@ -208,11 +203,6 @@ const TaskModal: React.FC<TaskModalProps> = ({
                     "workflow.nodes.crewai.taskModal.expectedOutputPlaceholder",
                   ),
                 )}
-                showVariables={expectedOutputVariableHook.showVariables}
-                setShowVariables={expectedOutputVariableHook.setShowVariables}
-                inputRef={expectedOutputVariableHook.inputRef}
-                handleKeyDown={expectedOutputVariableHook.handleKeyDown}
-                insertVariable={expectedOutputVariableHook.insertVariable}
                 availableVariables={availableVariables}
                 minHeight="100px"
               />

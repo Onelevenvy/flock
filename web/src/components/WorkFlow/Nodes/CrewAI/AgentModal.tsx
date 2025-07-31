@@ -249,11 +249,6 @@ const AgentModal: React.FC<AgentModalProps> = ({
                               placeholder={
                                   isManager ? "Crew Manager" : "e.g., Research Specialist"
                               }
-                              showVariables={roleVariableHook.showVariables}
-                              setShowVariables={roleVariableHook.setShowVariables}
-                              inputRef={roleVariableHook.inputRef}
-                              handleKeyDown={roleVariableHook.handleKeyDown}
-                              insertVariable={roleVariableHook.insertVariable}
                               availableVariables={availableVariables}
                               minHeight="80px"
                           />
@@ -263,11 +258,6 @@ const AgentModal: React.FC<AgentModalProps> = ({
                               value={watch("goal") || ""}
                               onChange={(value) => setValue("goal", value)}
                               placeholder="Agent's primary objective"
-                              showVariables={goalVariableHook.showVariables}
-                              setShowVariables={goalVariableHook.setShowVariables}
-                              inputRef={goalVariableHook.inputRef}
-                              handleKeyDown={goalVariableHook.handleKeyDown}
-                              insertVariable={goalVariableHook.insertVariable}
                               availableVariables={availableVariables}
                               minHeight="80px"
                           />
@@ -277,11 +267,6 @@ const AgentModal: React.FC<AgentModalProps> = ({
                               value={watch("backstory") || ""}
                               onChange={(value) => setValue("backstory", value)}
                               placeholder="Agent's background and expertise"
-                              showVariables={backstoryVariableHook.showVariables}
-                              setShowVariables={backstoryVariableHook.setShowVariables}
-                              inputRef={backstoryVariableHook.inputRef}
-                              handleKeyDown={backstoryVariableHook.handleKeyDown}
-                              insertVariable={backstoryVariableHook.insertVariable}
                               availableVariables={availableVariables}
                               minHeight="120px"
                           />

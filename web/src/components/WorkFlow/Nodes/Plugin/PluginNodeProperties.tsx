@@ -23,30 +23,39 @@ interface ParameterInputProps {
   onChange: (paramName: string, value: string) => void;
   availableVariables: VariableReference[];
 }
-const ParameterInput: React.FC<ParameterInputProps> = ({ paramName, paramDetails, value, onChange, availableVariables }) => {
-  const variableInsertionHook = useVariableInsertion<HTMLTextAreaElement>({ onValueChange: (newValue) => onChange(paramName, newValue), availableVariables });
+
+const ParameterInput: React.FC<ParameterInputProps> = ({ 
+  paramName, 
+  paramDetails, 
+  value, 
+  onChange, 
+  availableVariables 
+}) => {
+  // 1. 移除整个 useVariableInsertion hook，不再需要它
+  // const variableInsertionHook = useVariableInsertion(...);
+
   const hasLongDescription = paramDetails.description && paramDetails.description.length > 50;
+
   return (
       <FormControl key={paramName} isRequired={paramDetails.required}>
           <HStack justify="space-between" align="center" mb={1}>
               <FormLabel mb={0} fontWeight="medium" color="gray.800">
                   {paramName}
-                  <Text as="span" fontSize="xs" color="gray.500" ml={2} fontWeight="normal">({paramDetails.type})</Text>
+                  <Text as="span" fontSize="xs" color="gray.500" ml={2} fontWeight="normal">
+                      ({paramDetails.type})
+                  </Text>
               </FormLabel>
           </HStack>
           <Tooltip label={paramDetails.description} isDisabled={!hasLongDescription} placement="top-start" hasArrow>
-              <VariableSelector 
-              value={value}
-               onChange={(newValue) => onChange(paramName, newValue)} 
-               placeholder={hasLongDescription ? `Hover for description...` : paramDetails.description}
-                showVariables={variableInsertionHook.showVariables} setShowVariables={variableInsertionHook.setShowVariables}
-                 inputRef={variableInsertionHook.inputRef as React.RefObject<HTMLTextAreaElement>} 
-                 handleKeyDown={variableInsertionHook.handleKeyDown} 
-                 insertVariable={variableInsertionHook.insertVariable} 
-                 availableVariables={availableVariables}
-                 minHeight="60px" 
-                label={null}
-                 />
+              <VariableSelector
+                  label={null} 
+                  value={value}
+                  onChange={(newValue) => onChange(paramName, newValue)}
+                  placeholder={hasLongDescription ? `Hover for description...` : paramDetails.description}
+                  availableVariables={availableVariables}
+                  minHeight="40px"
+                  rows={1}
+              />
           </Tooltip>
       </FormControl>
   );
