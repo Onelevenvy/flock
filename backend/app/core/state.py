@@ -157,7 +157,7 @@ class WorkflowTeamState(TypedDict):
     next: str
     main_task: list[AnyMessage]
     task: list[AnyMessage]
-    node_outputs: Annotated[dict[str, Any], update_node_outputs]  # 修改这一行
+    node_outputs: Annotated[dict[str, Any], update_node_outputs]  
 
 
 # When returning teamstate, is it possible to exclude fields that you dont want to update
