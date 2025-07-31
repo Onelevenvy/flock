@@ -4,7 +4,6 @@ import { useCallback, useState, useEffect } from "react";
 import { useTranslation } from "react-i18next";
 
 import ModelSelect from "@/components/Common/ModelProvider";
-import { useVariableInsertion } from "@/hooks/graphs/useVariableInsertion";
 import { useModelQuery } from "@/hooks/useModelQuery";
 import { VariableReference } from "../../FlowVis/variableSystem";
 import VariableSelector from "../../Common/VariableSelector";
@@ -85,16 +84,7 @@ const LLMNodeProperties: React.FC<LLMNodePropertiesProps> = ({
     [node.id, onNodeDataChange],
   );
 
-  const {
-    showVariables,
-    setShowVariables,
-    inputRef,
-    handleKeyDown,
-    insertVariable,
-  } = useVariableInsertion<HTMLTextAreaElement>({
-    onValueChange: (value) => handleSystemPromptChange(value),
-    availableVariables,
-  });
+
 
   return (
     <VStack align="stretch" spacing={4}>
@@ -147,11 +137,6 @@ const LLMNodeProperties: React.FC<LLMNodePropertiesProps> = ({
         label={String(t("workflow.nodes.llm.systemPrompt"))}
         value={systemPromptInput}
         onChange={handleSystemPromptChange}
-        showVariables={showVariables}
-        setShowVariables={setShowVariables}
-        inputRef={inputRef}
-        handleKeyDown={handleKeyDown}
-        insertVariable={insertVariable}
         availableVariables={availableVariables}
         minHeight="100px"
         placeholder={String(t("workflow.nodes.llm.placeholder"))}

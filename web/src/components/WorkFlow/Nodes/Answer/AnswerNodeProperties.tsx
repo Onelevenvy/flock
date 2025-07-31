@@ -2,7 +2,6 @@ import { VStack } from "@chakra-ui/react";
 import type React from "react";
 import { useCallback, useState, useEffect } from "react";
 
-import { useVariableInsertion } from "@/hooks/graphs/useVariableInsertion";
 import { VariableReference } from "../../FlowVis/variableSystem";
 import VariableSelector from "../../Common/VariableSelector";
 
@@ -33,16 +32,7 @@ const AnswerProperties: React.FC<AnswerPropertiesProps> = ({
     [node.id, onNodeDataChange],
   );
 
-  const {
-    showVariables,
-    setShowVariables,
-    inputRef,
-    handleKeyDown,
-    insertVariable,
-  } = useVariableInsertion<HTMLTextAreaElement>({
-    onValueChange: (value) => handleAnswerChange(value),
-    availableVariables,
-  });
+
 
   return (
     <VStack align="stretch" spacing={4}>
@@ -51,11 +41,6 @@ const AnswerProperties: React.FC<AnswerPropertiesProps> = ({
         value={answerInput}
         onChange={handleAnswerChange}
         placeholder="Write your answer here. Use '/' to insert variables."
-        showVariables={showVariables}
-        setShowVariables={setShowVariables}
-        inputRef={inputRef}
-        handleKeyDown={handleKeyDown}
-        insertVariable={insertVariable}
         availableVariables={availableVariables}
         minHeight="120px"
       />

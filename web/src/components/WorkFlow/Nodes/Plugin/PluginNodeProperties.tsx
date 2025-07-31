@@ -1,72 +1,132 @@
-import { Text, VStack } from "@chakra-ui/react";
-import type React from "react";
-import { useCallback, useState } from "react";
+import {
+  Text,
+  VStack,
+  FormControl,
+  FormLabel,
+  Spinner,
+  Box,
+  Tooltip,
+  HStack, 
+} from "@chakra-ui/react";
+import React, { useCallback, useMemo, useState, useEffect } from "react";
 
-import { useVariableInsertion } from "@/hooks/graphs/useVariableInsertion";
 import { useToolProvidersQuery } from "@/hooks/useToolProvidersQuery";
-import { VariableReference } from "../../FlowVis/variableSystem";
+import type { VariableReference } from "../../FlowVis/variableSystem";
 import VariableSelector from "../../Common/VariableSelector";
+import type { ToolProviderWithToolsListOut } from "@/client";
 
+
+interface ParameterInputProps {
+  paramName: string;
+  paramDetails: any;
+  value: string;
+  onChange: (paramName: string, value: string) => void;
+  availableVariables: VariableReference[];
+}
+
+const ParameterInput: React.FC<ParameterInputProps> = ({ 
+  paramName, 
+  paramDetails, 
+  value, 
+  onChange, 
+  availableVariables 
+}) => {
+
+
+  const hasLongDescription = paramDetails.description && paramDetails.description.length > 50;
+
+  return (
+      <FormControl key={paramName} isRequired={paramDetails.required}>
+          <HStack justify="space-between" align="center" mb={1}>
+              <FormLabel mb={0} fontWeight="medium" color="gray.800">
+                  {paramName}
+                  <Text as="span" fontSize="xs" color="gray.500" ml={2} fontWeight="normal">
+                      ({paramDetails.type})
+                  </Text>
+              </FormLabel>
+          </HStack>
+          <Tooltip label={paramDetails.description} isDisabled={!hasLongDescription} placement="top-start" hasArrow>
+              <VariableSelector
+                  label={null} 
+                  value={value}
+                  onChange={(newValue) => onChange(paramName, newValue)}
+                  placeholder={hasLongDescription ? "" : paramDetails.description}
+                  availableVariables={availableVariables}
+                  minHeight="40px"
+                  rows={1}
+              />
+          </Tooltip>
+      </FormControl>
+  );
+};
+
+// --- 主组件 ---
 interface PluginNodePropertiesProps {
   node: any;
   onNodeDataChange: (nodeId: string, key: string, value: any) => void;
   availableVariables: VariableReference[];
 }
-
 const PluginNodeProperties: React.FC<PluginNodePropertiesProps> = ({
   node,
   onNodeDataChange,
   availableVariables,
 }) => {
-  const { data: skills } = useToolProvidersQuery();
-  const tool = skills?.data.find(
-    (skill) => skill.display_name === node.data.toolName,
-  );
-  const [loading, setLoading] = useState(false);
+  const { data: toolProvidersData, isLoading } = useToolProvidersQuery();
+  const providers: ToolProviderWithToolsListOut[] = toolProvidersData?.providers || [];
+  const [argValues, setArgValues] = useState<Record<string, any>>({});
+  
+ 
 
-  const handleInputChange = useCallback(
-    (value: string) => {
-      onNodeDataChange(node.id, "args", value);
-    },
-    [node.id, onNodeDataChange],
-  );
+  const selectedTool = useMemo(() => {
+      if (!node.data.tool?.id) return null;
+      for (const provider of providers) {
+          const foundTool = provider.tools.find(t => t.id === node.data.tool.id);
+          if (foundTool) return foundTool;
+      }
+      return null;
+  }, [node.data.tool?.id, providers]);
 
-  const variableInsertionHook = useVariableInsertion<HTMLTextAreaElement>({
-    onValueChange: handleInputChange,
-    availableVariables,
-  });
 
-  // 添加一个函数来格式化输入参数
-  const formatInputSchema = useCallback(() => {
-    if (!tool?.input_parameters) return null;
-    return Object.entries(tool.input_parameters).map(([key, value]) => (
-      <Text key={key} ml={4} fontSize="sm" color="gray.600">
-        {key}: {(value as any).type}
-      </Text>
-    ));
-  }, [tool?.input_parameters]);
+
+
+  useEffect(() => {
+      try {
+          const existingArgs = node.data.args ? JSON.parse(node.data.args) : {};
+          if (JSON.stringify(existingArgs) !== JSON.stringify(argValues)) {
+             setArgValues(existingArgs);
+          }
+      } catch (e) {
+          setArgValues({});
+      }
+  }, [node.data.args]);
+
+  const handleArgChange = useCallback((paramName: string, value: string) => {
+      const newArgValues = { ...argValues, [paramName]: value };
+      setArgValues(newArgValues);
+      onNodeDataChange(node.id, "args", JSON.stringify(newArgValues, null, 2));
+  }, [argValues, node.id, onNodeDataChange]);
+
+  if (isLoading) {
+      return <Box display="flex" justifyContent="center" p={4}><Spinner /></Box>;
+  }
+  
+  if (!selectedTool?.input_parameters || Object.keys(selectedTool.input_parameters).length === 0) {
+      return <Text p={2} fontSize="sm" color="gray.500">No input parameters for this tool.</Text>;
+  }
 
   return (
-    <VStack align="stretch" spacing={4}>
-      <VStack align="stretch" spacing={1}>
-        <Text fontWeight="bold" mb={2} color="gray.700">
-          Input Schema:
-        </Text>
-        {formatInputSchema()}
+      <VStack align="stretch" spacing={4}>
+          {Object.entries(selectedTool.input_parameters).map(([paramName, paramDetails]) => (
+              <ParameterInput
+                  key={paramName}
+                  paramName={paramName}
+                  paramDetails={paramDetails}
+                  value={argValues[paramName] || ""}
+                  onChange={handleArgChange}
+                  availableVariables={availableVariables}
+              />
+          ))}
       </VStack>
-      <VariableSelector
-        label="Args"
-        value={node.data.args || ""}
-        onChange={handleInputChange}
-        showVariables={variableInsertionHook.showVariables}
-        setShowVariables={variableInsertionHook.setShowVariables}
-        inputRef={variableInsertionHook.inputRef as React.RefObject<HTMLTextAreaElement>}
-        handleKeyDown={variableInsertionHook.handleKeyDown}
-        insertVariable={variableInsertionHook.insertVariable}
-        availableVariables={availableVariables}
-        minHeight="80px"
-      />
-    </VStack>
   );
 };
 

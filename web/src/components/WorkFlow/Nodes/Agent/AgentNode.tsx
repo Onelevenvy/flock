@@ -96,7 +96,7 @@ const AgentNode: React.FC<NodeProps> = (props) => {
                 {/* --- 核心修改区域: 显示工具信息 --- */}
                 {tools.length > 0 && (
                     <VStack align="stretch" spacing={1}>
-                        <Text fontSize="xs" fontWeight="500" color="gray.600" pl={1}>
+                        <Text fontSize="xs" fontWeight="500" color="gray.600" pl={1} textAlign="left">
                             Tools:
                         </Text>
                         {/* 使用新的对象结构来渲染 */}

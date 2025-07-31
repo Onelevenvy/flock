@@ -7,7 +7,7 @@ export interface NodeData {
   onChange?: (key: string, value: any) => void;
   model?: string;
   temperature?: number;
-  tool?: string[];
+  tool?: string[] | SavedTool;
   [key: string]: any;
 }
 

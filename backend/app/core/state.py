@@ -205,4 +205,4 @@ def parse_variables(text: str, node_outputs: dict, is_code: bool = False) -> str
         else:
             return str_value
 
-    return re.sub(r"\{([^}]+)\}", replace_variable, text)
+    return re.sub(r"\${([^}]+)}", replace_variable, text)

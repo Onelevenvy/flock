@@ -845,9 +845,6 @@ class ProvidersListWithToolsOut(SQLModel):
     providers: list[ToolProviderWithToolsListOut]
 
 
-
-
-
 class ToolDefinitionValidate(SQLModel):
     tool_definition: dict[str, Any]
 
@@ -1277,7 +1274,9 @@ class SubgraphUpdate(SubgraphBase):
 
 class Subgraph(SubgraphBase, table=True):
     id: int | None = Field(default=None, primary_key=True)
-    resource_id: int | None = Field(default=None, foreign_key="resource.id", nullable=True)
+    resource_id: int | None = Field(
+        default=None, foreign_key="resource.id", nullable=True
+    )
     owner_id: int | None = Field(default=None, foreign_key="user.id", nullable=False)
     owner: User | None = Relationship(back_populates="subgraphs")
     team_id: int = Field(foreign_key="team.id", nullable=False)

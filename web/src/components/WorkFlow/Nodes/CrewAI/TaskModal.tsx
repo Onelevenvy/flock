@@ -22,7 +22,7 @@ import { FaListAlt } from "react-icons/fa";
 import { useTranslation } from "react-i18next";
 
 import { AgentConfig, TaskConfig } from "../../types";
-import { useVariableInsertion } from "@/hooks/graphs/useVariableInsertion";
+
 import VariableSelector from "../../Common/VariableSelector";
 import { VariableReference } from "../../FlowVis/variableSystem";
 
@@ -77,15 +77,7 @@ const TaskModal: React.FC<TaskModalProps> = ({
     return true;
   };
 
-  const descriptionVariableHook = useVariableInsertion<HTMLTextAreaElement>({
-    onValueChange: (value) => setValue("description", value),
-    availableVariables,
-  });
 
-  const expectedOutputVariableHook = useVariableInsertion<HTMLTextAreaElement>({
-    onValueChange: (value) => setValue("expected_output", value),
-    availableVariables,
-  });
 
   return (
     <Modal isOpen={isOpen} onClose={onClose} size="xl">
@@ -164,11 +156,6 @@ const TaskModal: React.FC<TaskModalProps> = ({
                 placeholder={String(
                   t("workflow.nodes.crewai.taskModal.descriptionPlaceholder"),
                 )}
-                showVariables={descriptionVariableHook.showVariables}
-                setShowVariables={descriptionVariableHook.setShowVariables}
-                inputRef={descriptionVariableHook.inputRef}
-                handleKeyDown={descriptionVariableHook.handleKeyDown}
-                insertVariable={descriptionVariableHook.insertVariable}
                 availableVariables={availableVariables}
                 minHeight="100px"
               />
@@ -208,11 +195,6 @@ const TaskModal: React.FC<TaskModalProps> = ({
                     "workflow.nodes.crewai.taskModal.expectedOutputPlaceholder",
                   ),
                 )}
-                showVariables={expectedOutputVariableHook.showVariables}
-                setShowVariables={expectedOutputVariableHook.setShowVariables}
-                inputRef={expectedOutputVariableHook.inputRef}
-                handleKeyDown={expectedOutputVariableHook.handleKeyDown}
-                insertVariable={expectedOutputVariableHook.insertVariable}
                 availableVariables={availableVariables}
                 minHeight="100px"
               />

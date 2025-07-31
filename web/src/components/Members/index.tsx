@@ -64,7 +64,6 @@ type MemberTypes =
   | "freelancer"
   | "freelancer_root"
   | "chatbot"
-  | "ragbot"
   | "workflow";
 
 interface MemberConfigs {
@@ -126,15 +125,9 @@ const ALLOWED_MEMBER_CONFIGS: Record<MemberTypes, MemberConfigs> = {
     enableInterrupt: true,
     enableHumanTool: true,
   },
-  ragbot: {
-    selection: ["ragbot"],
-    enableSkillTools: false,
-    enableUploadTools: true,
-    enableInterrupt: false,
-    enableHumanTool: false,
-  },
+
   workflow: {
-    selection: ["ragbot"],
+    selection: ["workflow"],
     enableSkillTools: false,
     enableUploadTools: true,
     enableInterrupt: false,
@@ -489,7 +482,7 @@ const EditTeamMember = forwardRef<HTMLFormElement, EditTeamMemberProps>(
                                     <Box flexShrink={0} w={7} h={7} borderRadius="lg" bg="primary.50" display="flex" alignItems="center" justifyContent="center">
                                       {provider && provider.icon && (
                                         <ToolsIcon 
-                                          tools_name={provider.provider_name || ''} 
+                                          tools_name={provider.icon || provider.provider_name || ''} 
                                           color={`${provider.tool_type === 'builtin' ? "blue" : "purple"}.500`} 
                                         />
                                       )}

@@ -10,7 +10,6 @@ import {
   FaUserCog,
   FaProjectDiagram,
   FaCrosshairs,
-  FaMicrochip,
   FaUserAstronaut,
 } from "react-icons/fa";
 import { FaBookAtlas, FaPeopleGroup } from "react-icons/fa6";
@@ -34,7 +33,7 @@ import { LogicalOperator } from "../types";
 import HumanNodeProperties from "./Human/HumanNodeProperties";
 import SubgraphNodeProperties from "./Subgraph/SubgraphNodeProperties";
 import ParameterExtractorNodeProperties from "./ParameterExtractor/ParameterExtractorNodeProperties";
-import MCPNodeProperties from "./MCPTool/MCPNodeProperties";
+
 import AgentNodeProperties from "./Agent/AgentNodeProperties";
 
 interface NodeConfigItem {
@@ -146,6 +145,11 @@ export const nodeConfig: Record<string, NodeConfigItem> = {
     initialData: {
       toolName: "",
       args: "",
+      tool: {
+        id: 2,
+        name: "Math Calculator",
+        provider: "math",
+      },
     },
     allowedConnections: {
       sources: ["right"],
@@ -339,23 +343,6 @@ export const nodeConfig: Record<string, NodeConfigItem> = {
     },
     inputVariables: ["Input"],
     outputVariables: ["parameters"],
-  },
-  mcpTool: {
-    display: "MCP Tool",
-    icon: FaMicrochip,
-    colorScheme: "purple",
-    properties: MCPNodeProperties,
-    allowedConnections: {
-      sources: ["right"],
-      targets: ["left"],
-    },
-    outputVariables: ["response"],
-    inputVariables: [],
-    initialData: {
-      model: "",
-      input: "",
-      mcp_config: {},
-    },
   },
 };
 
