@@ -297,6 +297,50 @@ const ParameterExtractorNodeProperties: React.FC<
                   onDeselect={() => {}} // 取消选择的逻辑在此处不需要
               />
           )}
+          <Box>
+        <Text fontWeight="bold" color="gray.700" mb={2}>
+          可引用变量:
+        </Text>
+        <VStack
+          spacing={2}
+          align="stretch"
+          borderWidth="1px"
+          borderColor="gray.200"
+          borderRadius="md"
+          p={3}
+          bg="gray.50"
+        >
+          {node.data.parameters && node.data.parameters.length > 0 ? (
+            node.data.parameters.map((parameter: ParameterSchema) => {
+              const paramName = Object.keys(parameter)[0];
+              const paramData = parameter[paramName];
+              return (
+                <HStack
+                  key={paramName}
+                  justify="space-between"
+                  w="full"
+                  bg="white"
+                  p={2}
+                  borderRadius="md"
+                  boxShadow="sm"
+                >
+                  <Text fontSize="sm" fontWeight="500" fontFamily="monospace">
+                    {/* 显示为 ${node.id.paramName} 的格式，更清晰 */}
+                    {`\${${node.id}.${paramName}}`}
+                  </Text>
+                  <Text fontSize="xs" color="gray.500">
+                    {paramData.type}
+                  </Text>
+                </HStack>
+              );
+            })
+          ) : (
+            <Text fontSize="sm" color="gray.500">
+              暂无可用变量，请添加要提取的参数。
+            </Text>
+          )}
+        </VStack>
+      </Box>
       </VStack>
   );
 };

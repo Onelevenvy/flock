@@ -47,7 +47,7 @@ interface NodeConfigItem {
   };
   initialData?: Record<string, any>;
   inputVariables: string[];
-  outputVariables: string[];
+  outputVariables: string[] | ((data: any) => string[]);
 }
 
 export const nodeConfig: Record<string, NodeConfigItem> = {
@@ -342,7 +342,13 @@ export const nodeConfig: Record<string, NodeConfigItem> = {
       toolImport: null,
     },
     inputVariables: ["Input"],
-    outputVariables: ["parameters"],
+    outputVariables: (data: any) => {
+      if (data && Array.isArray(data.parameters)) {
+        // 返回 ["city", "dest", "content", "name"]
+        return data.parameters.map((param: any) => Object.keys(param)[0]);
+      }
+      return [];
+    },
   },
 };
 
