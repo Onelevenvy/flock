@@ -97,7 +97,7 @@ export default function VariableSelector(props: VariableSelectorProps) {
   };
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLDivElement>) => {
-      if (e.key === '/') {
+    if (e.key === '{' && e.shiftKey) {
           e.preventDefault();
           setIsPopoverOpen(true);
       }
@@ -115,8 +115,6 @@ export default function VariableSelector(props: VariableSelectorProps) {
                       contentEditable 
                       onInput={handleInput} 
                       onKeyDown={handleKeyDown} 
-                      // --- 核心修改在这里 ---
-                      // 将 {...styles} 合并到 sx 属性中
                       sx={{
                           ...styles, // 应用 Textarea 的基础样式
                           py: 2,
