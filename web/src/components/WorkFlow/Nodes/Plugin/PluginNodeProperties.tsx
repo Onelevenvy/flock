@@ -50,7 +50,7 @@ const ParameterInput: React.FC<ParameterInputProps> = ({
                   label={null} 
                   value={value}
                   onChange={(newValue) => onChange(paramName, newValue)}
-                  placeholder={hasLongDescription ? `Hover for description...` : paramDetails.description}
+                  placeholder={hasLongDescription ? "" : paramDetails.description}
                   availableVariables={availableVariables}
                   minHeight="40px"
                   rows={1}

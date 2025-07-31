@@ -60,7 +60,11 @@ export default function VariableSelector(props: VariableSelectorProps) {
 
   const handleInput = (event: React.FormEvent<HTMLDivElement>) => {
       const plainText = parseHTMLToValue(event.currentTarget.innerHTML);
-      onChange(plainText);
+      if (plainText.trim() === "") {
+        onChange("");
+    } else {
+        onChange(plainText);
+    }
   };
   
   const handleInsertVariable = (variableName: string) => {
