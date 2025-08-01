@@ -55,11 +55,8 @@ class LLMNode(LLMBaseNode):
 
         if "node_outputs" not in state:
             state["node_outputs"] = {}
-
-        history_messages = state.get("all_messages", [])
-
+        history_messages = state.get("messages", [])
         human_message_input: HumanMessage | None = None
-
         final_prompt_for_model = []
         if self.system_prompt:
 
@@ -86,7 +83,7 @@ class LLMNode(LLMBaseNode):
             if history_messages:
 
                 final_prompt_for_model.extend(history_messages)
-            human_message_input = HumanMessage(content=parsed_user_prompt)
+            human_message_input = HumanMessage(content=parsed_user_prompt,name="user")
             final_prompt_for_model.append(human_message_input)
 
         # 检查消息是否包含图片
@@ -115,8 +112,7 @@ class LLMNode(LLMBaseNode):
         state["node_outputs"] = update_node_outputs(state["node_outputs"], new_output)
 
         return_state: ReturnWorkflowState = {
-            "messages": [result] if result.tool_calls else [],
-            "all_messages": [human_message_input] + [result],
+            "messages":[human_message_input] + [result],      
             "node_outputs": state["node_outputs"],
         }
         return return_state

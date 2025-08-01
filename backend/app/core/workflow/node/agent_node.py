@@ -12,7 +12,7 @@ from app.core.state import (ReturnWorkflowState, WorkflowState,
 from app.core.tools.tool_manager import get_tool_by_tool_id_list
 from app.core.workflow.utils.db_utils import get_model_info
 from app.core.workflow.utils.tools_utils import get_retrieval_tool
-
+from langchain_core.messages import AIMessage, HumanMessage, SystemMessage
 
 class AgentNode:
     """Agent Node that combines LLM with tools and knowledge bases"""
@@ -94,10 +94,8 @@ class AgentNode:
         if "node_outputs" not in state:
             state["node_outputs"] = {}
 
-        history = state.get("history", [])
-        messages = state.get("messages", [])
-        all_messages = state.get("all_messages", [])
 
+        system_prompt_2_agent = None
         if self.system_prompt:
             # First parse variables, then escape any remaining curly braces
             parsed_system_prompt = (
@@ -105,68 +103,29 @@ class AgentNode:
                 .replace("{", "{{")
                 .replace("}", "}}")
             )
+            system_prompt_2_agent=parsed_system_prompt
 
-            llm_node_prompts = ChatPromptTemplate.from_messages(
-                [
-                    (
-                        "system",
-                        "Perform the task given to you.\n"
-                        "If you are unable to perform the task, that's OK, you can ask human for help, or just say that you are unable to perform the task."
-                        "Execute what you can to make progress. "
-                        "And your role is:" + parsed_system_prompt + "\n"
-                        "And your name is:"
-                        + self.agent_name
-                        + "\n"
-                        + "please remember your name\n"
-                        "Stay true to your role and use your tools if necessary.\n\n",
-                    ),
-                    (
-                        "human",
-                        "Here is the previous conversation: \n\n {history_string} \n\n Provide your response.",
-                    ),
-                    MessagesPlaceholder(variable_name="messages"),
-                ]
+        history_messages = state.get("messages", [])
+        final_prompt_for_agent = []
+        human_message_input: HumanMessage | None = None
+
+    
+        if not self.user_prompt:
+            raise ValueError(
+                f"No input found in agnet node, Please check you node settings."
             )
 
         else:
-            llm_node_prompts = ChatPromptTemplate.from_messages(
-                [
-                    (
-                        "system",
-                        (
-                            "Perform the task given to you.\n"
-                            "If you are unable to perform the task, that's OK, you can ask human for help, or just say that you are unable to perform the task."
-                            "Execute what you can to make progress. "
-                            "Stay true to your role and use your tools if necessary.\n\n"
-                        ),
-                    ),
-                    (
-                        "human",
-                        "Here is the previous conversation: \n\n {history_string} \n\n Provide your response.",
-                    ),
-                    MessagesPlaceholder(variable_name="messages"),
-                ]
-            )
-
-        history = state.get("history", [])
-        messages = state.get("messages", [])
-        all_messages = state.get("all_messages", [])
-        prompt = llm_node_prompts.partial(history_string=format_messages(history))
-
-        # 准备Agent的输入状态
-        if self.user_prompt:
             parsed_user_prompt = (
                 parse_variables(self.user_prompt, state["node_outputs"])
                 .replace("{", "{{")
                 .replace("}", "}}")
             )
-            agent_input = {
-                "messages": [{"role": "user", "content": parsed_user_prompt}]
-            }
-        else:
-            agent_input = {
-                "messages": [{"role": "user", "content": all_messages[-1].content}]
-            }  # 最后一条用户类型的消息
+            if history_messages:
+
+                final_prompt_for_agent.extend(history_messages)
+            human_message_input = HumanMessage(content=parsed_user_prompt,name="user")
+            final_prompt_for_agent.append(human_message_input)
 
         # 创建React Agent
         if not self.tools_list:
@@ -174,32 +133,19 @@ class AgentNode:
         self.agent = create_react_agent(
             model=self.llm,
             tools=self.tools_list,
-            prompt=prompt,
+            prompt=system_prompt_2_agent,
         )
-        # 调用Agent
-        agent_result = await self.agent.ainvoke(agent_input)
 
-        # 获取最终回复
-        messages = agent_result["messages"]
-        # 从后往前找第一个不带工具调用的AI消息
-        for msg in reversed(messages):
-            if msg.type == "ai" and not hasattr(msg, "tool_calls"):
-                result = msg
-                break
-        else:
-            # 如果没有找到合适的AIMessage，使用最后一个消息
-            result = messages[-1]
+        agent_result = await self.agent.ainvoke({"messages":final_prompt_for_agent})
 
-        # 更新 node_outputs
-        new_output = {self.node_id: {"response": result.content}}
+       
+        new_output = {self.node_id: {"response":agent_result["messages"][-1]}}
         state["node_outputs"] = update_node_outputs(state["node_outputs"], new_output)
 
         return_state: ReturnWorkflowState = {
-            "history": history + [result],
-            "messages": (
-                [result] if hasattr(result, "tool_calls") and result.tool_calls else []
-            ),
-            "all_messages": messages + [result],
+     
+            "messages": agent_result["messages"],
+           
             "node_outputs": state["node_outputs"],
         }
 

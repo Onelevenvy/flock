@@ -717,8 +717,9 @@ async def generator(
                 )
 
                 state = {
+                    "input_msg":formatted_messages,
                     "all_messages": [],
-                    "messages": formatted_messages,
+                    "messages": [],
                 }
             else:
                 raise ValueError("Unsupported graph type ")

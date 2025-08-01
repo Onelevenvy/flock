@@ -150,14 +150,13 @@ def update_node_outputs(
 
 
 class WorkflowState(TypedDict):
-    all_messages: Annotated[list[AnyMessage], add_messages]
-    messages: Annotated[list[AnyMessage], add_or_replace_messages]
+    input_msg: any
+    messages: Annotated[list[AnyMessage], add_messages]
     node_outputs: Annotated[dict[str, Any], update_node_outputs]
 
 
 # When returning teamstate, is it possible to exclude fields that you dont want to update
 class ReturnWorkflowState(TypedDict):
-    all_messages: NotRequired[list[AnyMessage]]
     messages: NotRequired[list[AnyMessage]]
     node_outputs: Annotated[dict[str, Any], update_node_outputs]
 
