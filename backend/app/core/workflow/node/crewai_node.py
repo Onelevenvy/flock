@@ -193,9 +193,7 @@ Even though you don't perform tasks by yourself, you have a lot of experience in
         crewai_res_message = AIMessage(content=str(raw_result_str))
 
         return_state: ReturnWorkflowState = {
-            "history": state.get("history", []) + [crewai_res_message],
             "messages": [crewai_res_message],
-            "all_messages": state.get("all_messages", []) + [crewai_res_message],
             "node_outputs": state["node_outputs"],
         }
         return return_state

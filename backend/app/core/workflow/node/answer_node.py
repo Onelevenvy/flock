@@ -22,7 +22,7 @@ class AnswerNode:
             )
             result = AIMessage(content=parsed_input_schema)
         else:
-            messages = state.get("all_messages", [])
+            messages = state.get("messages", [])
             result = AIMessage(
                 content=messages[-1].content if messages else "No answer available."
             )
@@ -31,9 +31,6 @@ class AnswerNode:
         new_output = {self.node_id: {"response": result.content}}
         state["node_outputs"] = update_node_outputs(state["node_outputs"], new_output)
         return_state: ReturnWorkflowState = {
-            "history": state.get("history", []) + [result],
-            "messages": [result],
-            "all_messages": state.get("all_messages", []) + [result],
             "node_outputs": state["node_outputs"],
         }
         return return_state

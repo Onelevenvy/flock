@@ -54,9 +54,7 @@ class SubgraphNode:
             try:
                 # 执行子图
                 input_state = {
-                    "all_messages": [HumanMessage(content=input_text, name="user")],
                     "messages": [HumanMessage(content=input_text, name="user")],
-                    "history": [HumanMessage(content=input_text, name="user")],
                     "node_outputs": state["node_outputs"],
                 }
                 result = await self.subgraph.ainvoke(input_state)

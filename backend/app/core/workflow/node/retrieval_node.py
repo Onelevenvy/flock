@@ -49,9 +49,7 @@ class RetrievalNode:
         new_output = {self.node_id: {"response": result.content}}
         state["node_outputs"] = update_node_outputs(state["node_outputs"], new_output)
         return_state: ReturnWorkflowState = {
-            "history": state.get("history", []) + [result],
             "messages": [result],
-            "all_messages": state.get("all_messages", []) + [result],
             "node_outputs": state["node_outputs"],
         }
         return return_state

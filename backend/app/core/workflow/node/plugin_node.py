@@ -1,12 +1,12 @@
 import ast
 import json
 
+from langchain_core.messages import ToolMessage
 from langchain_core.runnables import RunnableConfig
 
 from app.core.state import (ReturnWorkflowState, WorkflowState,
                             parse_variables, update_node_outputs)
-from app.core.tools.tool_invoker import (ToolInvokeResponse, ToolMessages,
-                                         invoke_tool)
+from app.core.tools.tool_invoker import ToolInvokeResponse, invoke_tool
 
 
 def clean_dict_values(data):
@@ -64,7 +64,7 @@ class PluginNode:
         else:
             tool_result = ToolInvokeResponse(
                 messages=[
-                    ToolMessages(
+                    ToolMessage(
                         content="No args provided",
                         name=self.tool_data["name"],
                         tool_call_id="",
@@ -77,6 +77,7 @@ class PluginNode:
         state["node_outputs"] = update_node_outputs(state["node_outputs"], new_output)
 
         return_state: ReturnWorkflowState = {
+            "messages": tool_result.messages,
             "node_outputs": state["node_outputs"],
         }
 

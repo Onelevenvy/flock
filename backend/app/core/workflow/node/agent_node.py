@@ -1,18 +1,17 @@
 from typing import Any, Dict, List
 
-from langchain_core.prompts import ChatPromptTemplate, MessagesPlaceholder
+from langchain_core.messages import HumanMessage
 from langchain_core.runnables import RunnableConfig
 from langgraph.prebuilt import create_react_agent
 
 from app.core.model_providers.model_provider_manager import \
     model_provider_manager
 from app.core.state import (ReturnWorkflowState, WorkflowState,
-                            format_messages, parse_variables,
-                            update_node_outputs)
+                            parse_variables, update_node_outputs)
 from app.core.tools.tool_manager import get_tool_by_tool_id_list
 from app.core.workflow.utils.db_utils import get_model_info
 from app.core.workflow.utils.tools_utils import get_retrieval_tool
-from langchain_core.messages import AIMessage, HumanMessage, SystemMessage
+
 
 class AgentNode:
     """Agent Node that combines LLM with tools and knowledge bases"""
@@ -94,7 +93,6 @@ class AgentNode:
         if "node_outputs" not in state:
             state["node_outputs"] = {}
 
-
         system_prompt_2_agent = None
         if self.system_prompt:
             # First parse variables, then escape any remaining curly braces
@@ -103,13 +101,12 @@ class AgentNode:
                 .replace("{", "{{")
                 .replace("}", "}}")
             )
-            system_prompt_2_agent=parsed_system_prompt
+            system_prompt_2_agent = parsed_system_prompt
 
         history_messages = state.get("messages", [])
         final_prompt_for_agent = []
         human_message_input: HumanMessage | None = None
 
-    
         if not self.user_prompt:
             raise ValueError(
                 f"No input found in agnet node, Please check you node settings."
@@ -124,7 +121,7 @@ class AgentNode:
             if history_messages:
 
                 final_prompt_for_agent.extend(history_messages)
-            human_message_input = HumanMessage(content=parsed_user_prompt,name="user")
+            human_message_input = HumanMessage(content=parsed_user_prompt, name="user")
             final_prompt_for_agent.append(human_message_input)
 
         # 创建React Agent
@@ -136,16 +133,13 @@ class AgentNode:
             prompt=system_prompt_2_agent,
         )
 
-        agent_result = await self.agent.ainvoke({"messages":final_prompt_for_agent})
+        agent_result = await self.agent.ainvoke({"messages": final_prompt_for_agent})
 
-       
-        new_output = {self.node_id: {"response":agent_result["messages"][-1]}}
+        new_output = {self.node_id: {"response": agent_result["messages"][-1]}}
         state["node_outputs"] = update_node_outputs(state["node_outputs"], new_output)
 
         return_state: ReturnWorkflowState = {
-     
             "messages": agent_result["messages"],
-           
             "node_outputs": state["node_outputs"],
         }
 

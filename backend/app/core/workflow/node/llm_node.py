@@ -66,7 +66,6 @@ class LLMNode(LLMBaseNode):
                 .replace("}", "}}")
             )
 
-        
             final_prompt_for_model.append(SystemMessage(content=parsed_system_prompt))
 
         if not self.user_prompt:
@@ -83,7 +82,7 @@ class LLMNode(LLMBaseNode):
             if history_messages:
 
                 final_prompt_for_model.extend(history_messages)
-            human_message_input = HumanMessage(content=parsed_user_prompt,name="user")
+            human_message_input = HumanMessage(content=parsed_user_prompt, name="user")
             final_prompt_for_model.append(human_message_input)
 
         # 检查消息是否包含图片
@@ -112,7 +111,7 @@ class LLMNode(LLMBaseNode):
         state["node_outputs"] = update_node_outputs(state["node_outputs"], new_output)
 
         return_state: ReturnWorkflowState = {
-            "messages":[human_message_input] + [result],      
+            "messages": [human_message_input] + [result],
             "node_outputs": state["node_outputs"],
         }
         return return_state

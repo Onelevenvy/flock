@@ -117,9 +117,7 @@ class HumanNode:
                 )
 
                 return_state: ReturnWorkflowState = {
-                    "history": self.history + result,
                     "messages": result,
-                    "all_messages": self.all_messages + result,
                 }
                 next_node = self.routes.get("rejected", "call_llm")
                 return Command(goto=next_node, update=return_state)
@@ -147,9 +145,7 @@ class HumanNode:
                 )
 
                 return_state: ReturnWorkflowState = {
-                    "history": self.history + [updated_message],
                     "messages": [updated_message],
-                    "all_messages": self.all_messages + [updated_message],
                 }
                 next_node = self.routes.get("update", "run_tool")
                 return Command(goto=next_node, update=return_state)
@@ -168,9 +164,7 @@ class HumanNode:
                 result = HumanMessage(content=review_data, name="user", id=str(uuid4()))
                 next_node = self.routes.get("review", "call_llm")
                 return_state: ReturnWorkflowState = {
-                    "history": self.history + [result],
                     "messages": [result],
-                    "all_messages": self.all_messages + [result],
                 }
                 return Command(goto=next_node, update=return_state)
 
@@ -182,9 +176,7 @@ class HumanNode:
             result = HumanMessage(content=review_data, name="user", id=str(uuid4()))
             next_node = self.routes.get("continue", "call_llm")
             return_state: ReturnWorkflowState = {
-                "history": self.history + [result],
                 "messages": [result],
-                "all_messages": self.all_messages + [result],
             }
             return Command(goto=next_node, update=return_state)
         else:
