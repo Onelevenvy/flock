@@ -57,6 +57,7 @@ class LLMNode(LLMBaseNode):
         if "node_outputs" not in state:
             state["node_outputs"] = {}
 
+        parsed_system_prompt = None
         if self.system_prompt:
             # First parse variables, then escape any remaining curly braces
             parsed_system_prompt = (
@@ -69,79 +70,55 @@ class LLMNode(LLMBaseNode):
                 [
                     (
                         "system",
-                        "Perform the task given to you.\n"
-                        "If you are unable to perform the task, that's OK, you can ask human for help, or just say that you are unable to perform the task."
-                        "Execute what you can to make progress. "
-                        "And your role is:" + parsed_system_prompt + "\n"
-                        "And your name is:"
-                        + self.agent_name
-                        + "\n"
-                        + "please remember your name\n"
-                        "Stay true to your role and use your tools if necessary.\n\n",
+                        
+                        parsed_system_prompt 
                     ),
-                    (
-                        "human",
-                        "Here is the previous conversation: \n\n {history_string} \n\n Provide your response.",
-                    ),
+                    
                     MessagesPlaceholder(variable_name="messages"),
                 ]
             )
 
-        else:
-            llm_node_prompts = ChatPromptTemplate.from_messages(
-                [
-                    (
-                        "system",
-                        (
-                            "Perform the task given to you.\n"
-                            "If you are unable to perform the task, that's OK, you can ask human for help, or just say that you are unable to perform the task."
-                            "Execute what you can to make progress. "
-                            "Stay true to your role and use your tools if necessary.\n\n"
-                        ),
-                    ),
-                    (
-                        "human",
-                        "Here is the previous conversation: \n\n {history_string} \n\n Provide your response.",
-                    ),
-                    MessagesPlaceholder(variable_name="messages"),
-                ]
-            )
-        history = state.get("history", [])
+     
+        # history = state.get("history", [])
         messages = state.get("messages", [])
-        all_messages = state.get("all_messages", [])
-        prompt = llm_node_prompts.partial(history_string=format_messages(history))
-        chain: RunnableSerializable[dict[str, Any], AnyMessage] = prompt | self.model
+        # all_messages = state.get("all_messages", [])
+        prompt = llm_node_prompts
+        # prompt = parsed_system_prompt
+        if prompt:
+            chain: RunnableSerializable[dict[str, Any], AnyMessage] = prompt | self.model
+        else:
+            chain =self.model
 
         # 检查消息是否包含图片
-        if (
-            all_messages
-            and isinstance(all_messages[-1].content, list)
-            and any(
-                isinstance(item, dict)
-                and "type" in item
-                and item["type"] in ["text", "image_url"]
-                for item in all_messages[-1].content
-            )
-        ):
+        # if (
+        #     all_messages
+        #     and isinstance(all_messages[-1].content, list)
+        #     and any(
+        #         isinstance(item, dict)
+        #         and "type" in item
+        #         and item["type"] in ["text", "image_url"]
+        #         for item in all_messages[-1].content
+        #     )
+        # ):
 
-            from langchain_core.messages import HumanMessage
+        #     from langchain_core.messages import HumanMessage
 
-            # 创建新的临时状态用于处理图片消息
-            temp_state = [HumanMessage(content=all_messages[-1].content, name="user")]
+        #     # 创建新的临时状态用于处理图片消息
+        #     temp_state = [HumanMessage(content=all_messages[-1].content, name="user")]
 
-            result: AIMessage = await self.model.ainvoke(temp_state, config)
-        else:
+        #     result: AIMessage = await self.model.ainvoke(temp_state, config)
+        # else:
             # 普通消息保持原有处理方式
-            result: AIMessage = await chain.ainvoke(state, config)
+        result: AIMessage = await chain.ainvoke(state['all_messages'], config)
 
         # 更新 node_outputs
         new_output = {self.node_id: {"response": result.content}}
         state["node_outputs"] = update_node_outputs(state["node_outputs"], new_output)
 
         return_state: ReturnWorkflowTeamState = {
-            "history": history + [result],
+            # "history": history + [result],
             "messages": [result] if result.tool_calls else [],
-            "all_messages": messages + [result],
+            # "all_messages": messages + [result],
             "node_outputs": state["node_outputs"],
         }
         return return_state
