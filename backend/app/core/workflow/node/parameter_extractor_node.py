@@ -6,8 +6,8 @@ from app.core.model_providers.model_provider_manager import \
     model_provider_manager
 from app.core.workflow.utils.db_utils import get_model_info
 
-from ...state import (ReturnWorkflowTeamState, WorkflowTeamState,
-                      parse_variables, update_node_outputs)
+from ...state import (ReturnWorkflowState, WorkflowState, parse_variables,
+                      update_node_outputs)
 
 PARAMETER_EXTRACTOR_SYSTEM_PROMPT = """You are a helpful assistant tasked with extracting structured information based on specific criteria provided. Follow the guidelines below to ensure consistency and accuracy.
 
@@ -115,8 +115,8 @@ class ParameterExtractorNode:
         return combined_schema
 
     async def work(
-        self, state: WorkflowTeamState, config: RunnableConfig
-    ) -> ReturnWorkflowTeamState:
+        self, state: WorkflowState, config: RunnableConfig
+    ) -> ReturnWorkflowState:
         """Execute parameter extraction work"""
         if "node_outputs" not in state:
             state["node_outputs"] = {}
@@ -167,7 +167,7 @@ class ParameterExtractorNode:
         new_output = {self.node_id: result}
         state["node_outputs"] = update_node_outputs(state["node_outputs"], new_output)
 
-        return_state: ReturnWorkflowTeamState = {
+        return_state: ReturnWorkflowState = {
             "node_outputs": state["node_outputs"],
         }
 

@@ -3,7 +3,7 @@ import uuid
 from langchain_core.messages import HumanMessage, ToolMessage
 from langchain_core.runnables import RunnableConfig
 
-from app.core.state import (ReturnWorkflowTeamState, WorkflowTeamState,
+from app.core.state import (ReturnWorkflowState, WorkflowState,
                             parse_variables, update_node_outputs)
 from app.core.workflow.utils.db_utils import get_subgraph_by_id
 
@@ -34,8 +34,8 @@ class SubgraphNode:
         )
 
     async def work(
-        self, state: WorkflowTeamState, config: RunnableConfig
-    ) -> ReturnWorkflowTeamState:
+        self, state: WorkflowState, config: RunnableConfig
+    ) -> ReturnWorkflowState:
         """Execute subgraph workflow"""
         if "node_outputs" not in state:
             state["node_outputs"] = {}
@@ -71,7 +71,7 @@ class SubgraphNode:
                     state["node_outputs"], new_output
                 )
 
-                return_state: ReturnWorkflowTeamState = {
+                return_state: ReturnWorkflowState = {
                     "node_outputs": state["node_outputs"],
                 }
                 return return_state

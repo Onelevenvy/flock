@@ -15,7 +15,7 @@ from app.core.workflow.node.plugin_node import PluginNode
 from app.core.workflow.utils.tools_utils import get_retrieval_tool
 from app.db.models import InterruptType
 
-from ..state import WorkflowTeamState
+from ..state import WorkflowState
 from .node.agent_node import AgentNode
 from .node.answer_node import AnswerNode
 from .node.classifier_node import ClassifierNode
@@ -38,7 +38,7 @@ def validate_config(config: dict[str, Any]) -> bool:
 tool_name_to_node_id: dict[str, str] = {}
 
 
-def should_continue_tools(state: WorkflowTeamState) -> str:
+def should_continue_tools(state: WorkflowState) -> str:
     messages: list[AnyMessage] = state["messages"]
     if messages and isinstance(messages[-1], AIMessage) and messages[-1].tool_calls:
         for tool_call in messages[-1].tool_calls:
@@ -50,7 +50,7 @@ def should_continue_tools(state: WorkflowTeamState) -> str:
     return "default"
 
 
-def should_continue_classifier(state: WorkflowTeamState) -> str:
+def should_continue_classifier(state: WorkflowState) -> str:
     """专门处理分类器节点的条件判断"""
     if "node_outputs" in state:
         for node_id, outputs in state["node_outputs"].items():
@@ -59,7 +59,7 @@ def should_continue_classifier(state: WorkflowTeamState) -> str:
     return "default"
 
 
-def should_continue_ifelse(state: WorkflowTeamState) -> str:
+def should_continue_ifelse(state: WorkflowState) -> str:
     """处理 if-else 节点的条件判断"""
     if "node_outputs" in state:
         for node_id, outputs in state["node_outputs"].items():
@@ -175,7 +175,7 @@ async def initialize_graph(
         raise ValueError("Invalid configuration structure")
 
     try:
-        graph_builder = StateGraph(WorkflowTeamState)
+        graph_builder = StateGraph(WorkflowState)
         nodes = build_config["nodes"]
         edges = build_config["edges"]
 
@@ -373,16 +373,6 @@ async def _add_llm_node(
 ):
     model_name = node_data["model"]
 
-    if is_sequential:
-        node_class = LLMNode
-    elif is_hierarchical:
-        if llm_children[node_id]:
-            node_class = LLMNode
-        else:
-            node_class = LLMNode
-    else:
-        node_class = LLMNode
-
     tools_to_bind = await _get_tools_to_bind(node_id, edges, nodes)
 
     if node_data.get("type") == "subgraph":
@@ -391,12 +381,13 @@ async def _add_llm_node(
         graph_builder.add_node(
             node_id,
             RunnableLambda(
-                node_class(
+                LLMNode(
                     node_id,
                     model_name=model_name,
                     tools=tools_to_bind,
                     temperature=node_data["temperature"],
                     system_prompt=node_data.get("systemMessage", None),
+                    user_prompt=node_data.get("userMessage", None),
                     agent_name=node_data.get("label", node_id),
                 ).work
             ),

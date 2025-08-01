@@ -26,11 +26,13 @@ def convert_checkpoint_tuple_to_messages(
         list[ChatResponse]: A list of formatted messages.
     """
     checkpoint = checkpoint_tuple.checkpoint
-    all_messages: list[AnyMessage] = (
-        checkpoint["channel_values"]["all_messages"]
-        + checkpoint["channel_values"]["messages"]
-    )
+    channel_values = checkpoint.get("channel_values", {})
+    all_messages_list = channel_values.get("all_messages", [])
+    messages_list = channel_values.get("messages", [])
+    all_messages: list[AnyMessage] = all_messages_list + messages_list
+
     formatted_messages: list[ChatResponse] = []
+
     for message in all_messages:
         if isinstance(message, HumanMessage):
             content = ""

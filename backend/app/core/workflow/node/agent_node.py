@@ -6,7 +6,7 @@ from langgraph.prebuilt import create_react_agent
 
 from app.core.model_providers.model_provider_manager import \
     model_provider_manager
-from app.core.state import (ReturnWorkflowTeamState, WorkflowTeamState,
+from app.core.state import (ReturnWorkflowState, WorkflowState,
                             format_messages, parse_variables,
                             update_node_outputs)
 from app.core.tools.tool_manager import get_tool_by_tool_id_list
@@ -87,8 +87,8 @@ class AgentNode:
         return self.tools_list
 
     async def work(
-        self, state: WorkflowTeamState, config: RunnableConfig
-    ) -> ReturnWorkflowTeamState:
+        self, state: WorkflowState, config: RunnableConfig
+    ) -> ReturnWorkflowState:
         """执行Agent节点的工作"""
 
         if "node_outputs" not in state:
@@ -194,7 +194,7 @@ class AgentNode:
         new_output = {self.node_id: {"response": result.content}}
         state["node_outputs"] = update_node_outputs(state["node_outputs"], new_output)
 
-        return_state: ReturnWorkflowTeamState = {
+        return_state: ReturnWorkflowState = {
             "history": history + [result],
             "messages": (
                 [result] if hasattr(result, "tool_calls") and result.tool_calls else []

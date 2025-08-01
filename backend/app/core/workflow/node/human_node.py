@@ -6,7 +6,7 @@ from langchain_core.messages import AIMessage, HumanMessage, ToolMessage
 from langchain_core.runnables import RunnableConfig
 from langgraph.types import Command, interrupt
 
-from app.core.state import ReturnWorkflowTeamState, WorkflowTeamState
+from app.core.state import ReturnWorkflowState, WorkflowState
 from app.db.models import InterruptDecision, InterruptType
 
 
@@ -30,8 +30,8 @@ class HumanNode:
         self.last_message = None
 
     async def work(
-        self, state: WorkflowTeamState, config: RunnableConfig
-    ) -> ReturnWorkflowTeamState | Command[str]:
+        self, state: WorkflowState, config: RunnableConfig
+    ) -> ReturnWorkflowState | Command[str]:
         self.history = state.get("history", [])
         self.messages = state.get("messages", [])
         self.all_messages = state.get("all_messages", [])
@@ -116,7 +116,7 @@ class HumanNode:
                     AIMessage(content="I understand your concern. Let's try again.")
                 )
 
-                return_state: ReturnWorkflowTeamState = {
+                return_state: ReturnWorkflowState = {
                     "history": self.history + result,
                     "messages": result,
                     "all_messages": self.all_messages + result,
@@ -146,7 +146,7 @@ class HumanNode:
                     id=self.last_message.id,
                 )
 
-                return_state: ReturnWorkflowTeamState = {
+                return_state: ReturnWorkflowState = {
                     "history": self.history + [updated_message],
                     "messages": [updated_message],
                     "all_messages": self.all_messages + [updated_message],
@@ -167,7 +167,7 @@ class HumanNode:
             case InterruptDecision.REVIEW:
                 result = HumanMessage(content=review_data, name="user", id=str(uuid4()))
                 next_node = self.routes.get("review", "call_llm")
-                return_state: ReturnWorkflowTeamState = {
+                return_state: ReturnWorkflowState = {
                     "history": self.history + [result],
                     "messages": [result],
                     "all_messages": self.all_messages + [result],
@@ -181,7 +181,7 @@ class HumanNode:
         if action == InterruptDecision.CONTINUE:
             result = HumanMessage(content=review_data, name="user", id=str(uuid4()))
             next_node = self.routes.get("continue", "call_llm")
-            return_state: ReturnWorkflowTeamState = {
+            return_state: ReturnWorkflowState = {
                 "history": self.history + [result],
                 "messages": [result],
                 "all_messages": self.all_messages + [result],

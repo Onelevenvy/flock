@@ -2,8 +2,8 @@ from typing import Any
 
 from langchain_core.runnables import RunnableConfig
 
-from ....state import (ReturnWorkflowTeamState, WorkflowTeamState,
-                       parse_variables, update_node_outputs)
+from ....state import (ReturnWorkflowState, WorkflowState, parse_variables,
+                       update_node_outputs)
 
 
 class IfElseNode:
@@ -14,7 +14,7 @@ class IfElseNode:
         self.cases = cases
 
     def _evaluate_condition(
-        self, condition: dict[str, Any], state: WorkflowTeamState
+        self, condition: dict[str, Any], state: WorkflowState
     ) -> bool:
         """Evaluate a single condition"""
         # 解析变量
@@ -56,7 +56,7 @@ class IfElseNode:
                     f"Unknown operator: {condition['comparison_operator']}"
                 )
 
-    def _evaluate_case(self, case: dict[str, Any], state: WorkflowTeamState) -> bool:
+    def _evaluate_case(self, case: dict[str, Any], state: WorkflowState) -> bool:
         """Evaluate all conditions in a case"""
         if case["case_id"] == "false_else" or not case["conditions"]:
             return False
@@ -70,8 +70,8 @@ class IfElseNode:
             return any(results)
 
     async def work(
-        self, state: WorkflowTeamState, config: RunnableConfig
-    ) -> ReturnWorkflowTeamState:
+        self, state: WorkflowState, config: RunnableConfig
+    ) -> ReturnWorkflowState:
         """Execute the if-else logic"""
         if "node_outputs" not in state:
             state["node_outputs"] = {}
@@ -93,7 +93,7 @@ class IfElseNode:
         new_output = {self.node_id: {"result": result_case_id}}
         state["node_outputs"] = update_node_outputs(state["node_outputs"], new_output)
 
-        return_state: ReturnWorkflowTeamState = {
+        return_state: ReturnWorkflowState = {
             "node_outputs": state["node_outputs"],
         }
         return return_state

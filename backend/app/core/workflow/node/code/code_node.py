@@ -6,8 +6,8 @@ from textwrap import dedent
 from langchain_core.messages import ToolMessage
 from langchain_core.runnables import RunnableConfig
 
-from ....state import (ReturnWorkflowTeamState, WorkflowTeamState,
-                       parse_variables, update_node_outputs)
+from ....state import (ReturnWorkflowState, WorkflowState, parse_variables,
+                       update_node_outputs)
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -147,8 +147,8 @@ class CodeNode:
         self.executor = CodeExecutor(timeout=timeout, memory_limit=memory_limit)
 
     async def work(
-        self, state: WorkflowTeamState, config: RunnableConfig
-    ) -> ReturnWorkflowTeamState:
+        self, state: WorkflowState, config: RunnableConfig
+    ) -> ReturnWorkflowState:
         """Execute code and update state"""
         if "node_outputs" not in state:
             state["node_outputs"] = {}
@@ -188,7 +188,7 @@ class CodeNode:
                 state["node_outputs"], new_output
             )
 
-            return_state: ReturnWorkflowTeamState = {
+            return_state: ReturnWorkflowState = {
                 "history": state.get("history", []) + [result],
                 "messages": [result],
                 "all_messages": state.get("all_messages", []) + [result],
@@ -209,7 +209,7 @@ class CodeNode:
             state["node_outputs"] = update_node_outputs(
                 state["node_outputs"], new_output
             )
-            return_state: ReturnWorkflowTeamState = {
+            return_state: ReturnWorkflowState = {
                 "history": state.get("history", []) + [result],
                 "messages": [result],
                 "all_messages": state.get("all_messages", []) + [result],
