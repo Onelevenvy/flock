@@ -92,7 +92,7 @@ export const nodeConfig: Record<string, NodeConfigItem> = {
       model: "glm-4-flash",
       temperature: 0.1,
       systemMessage: "",
-      userMessage: "",
+      userMessage: "${start.query}",
     },
     inputVariables: [],
     outputVariables: ["response"],

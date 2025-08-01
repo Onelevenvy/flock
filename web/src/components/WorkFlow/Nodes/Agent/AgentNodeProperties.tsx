@@ -26,7 +26,7 @@ import { useForm } from "react-hook-form";
 import KBListModal from "../RetrievalTool/KBListModal";
 
 import ToolSelector from "@/components/Members/ToolSelector";
-import { ToolOutIdWithAndName, ToolProviderWithToolsListOut } from "@/client";
+import { ToolOutIdWithAndName } from "@/client";
 
 // 为保存的工具对象定义清晰的类型
 interface SavedTool {
@@ -79,8 +79,11 @@ const AgentNodeProperties: React.FC<AgentNodePropertiesProps> = ({
     const { data: toolProvidersData, isLoading: isLoadingSkills } = useToolProvidersQuery();
     const { data: uploads, isLoading: isLoadingKB } = useUploadsQuery();
 
-    // 假设API返回的数据结构是 { providers: [...] }
-    const providers: ToolProviderWithToolsListOut[] = toolProvidersData?.providers || [];
+  
+    const providers = useMemo(
+        () => toolProvidersData?.providers || [], 
+        [toolProvidersData]
+    );
 
     useEffect(() => {
         if (node && node.data.temperature !== undefined) {
@@ -258,6 +261,7 @@ const AgentNodeProperties: React.FC<AgentNodePropertiesProps> = ({
             />
             <VariableSelector
                 label="User Prompt"
+                required={true}
                 value={userPromptInput}
                 onChange={handleUserPromptChange}
                 availableVariables={availableVariables}

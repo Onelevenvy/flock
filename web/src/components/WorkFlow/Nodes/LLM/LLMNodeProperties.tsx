@@ -155,12 +155,13 @@ const LLMNodeProperties: React.FC<LLMNodePropertiesProps> = ({
 
       {/* 新增: User Prompt 输入区域 */}
       <VariableSelector
-        label="User Prompt" // 标签可以根据需要使用 i18n
+        label="User Prompt" 
+        required={true}
         value={userPromptInput}
         onChange={handleUserPromptChange}
         availableVariables={availableVariables}
         minHeight="100px"
-        placeholder="Enter user instructions or template..." // 占位符可以根据需要使用 i18n
+        placeholder="Enter user instructions or template..." 
       />
     </VStack>
   );

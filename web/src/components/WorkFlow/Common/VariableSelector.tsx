@@ -1,6 +1,7 @@
 import {
     Box,
     Button,
+    HStack,
     Popover,
     PopoverContent,
     PopoverTrigger,
@@ -31,26 +32,26 @@ function parseHTMLToValue(html: string): string {
 
 
 interface VariableSelectorProps {
-    label: string | null;
+    label: React.ReactNode;
     value: string;
     onChange: (value: string) => void;
     placeholder?: string;
     availableVariables: VariableReference[];
     minHeight?: string;
     rows?: number;
+    required?: boolean
 }
 
 export default function VariableSelector(props: VariableSelectorProps) {
+    
     const { t } = useTranslation();
     const editorRef = useRef<HTMLDivElement>(null);
     const [isPopoverOpen, setIsPopoverOpen] = useState(false);
-    const { label, value, onChange, placeholder, availableVariables, minHeight } = props;
+    const { label, value, onChange, placeholder, availableVariables, minHeight,required } = props;
     const styles = useStyleConfig("Textarea", {}) as ChakraProps;
 
- 
     const groupedVariables = useMemo(() => {
         return availableVariables.reduce((acc, v) => {
-           
             (acc[v.nodeId] = acc[v.nodeId] || []).push(v);
             return acc;
         }, {} as Record<string, VariableReference[]>);
@@ -73,31 +74,34 @@ export default function VariableSelector(props: VariableSelectorProps) {
     };
     
     const handleInsertVariable = (variableName: string) => {
-
         const editor = editorRef.current;
         if (!editor) return;
+
         editor.focus();
         const selection = window.getSelection();
         if (!selection || selection.rangeCount === 0) return;
+
         let range = selection.getRangeAt(0);
         if (!editor.contains(range.commonAncestorContainer)) {
             range.selectNodeContents(editor);
             range.collapse(false);
         }
+
         const variableNode = document.createElement('span');
         variableNode.className = 'variable-badge';
         variableNode.setAttribute('contentEditable', 'false');
         variableNode.innerText = `\${${variableName}}`;
-        const spaceNode = document.createTextNode('\u00A0');
+
         range.deleteContents();
         range.insertNode(variableNode);
+        
+        // 将光标移动到新插入的 "badge" 之后
         range.setStartAfter(variableNode);
         range.collapse(true);
-        range.insertNode(spaceNode);
-        range.setStartAfter(spaceNode);
-        range.collapse(true);
+
         selection.removeAllRanges();
         selection.addRange(range);
+        
         onChange(parseHTMLToValue(editor.innerHTML));
         setIsPopoverOpen(false);
     };
@@ -111,7 +115,18 @@ export default function VariableSelector(props: VariableSelectorProps) {
 
     return (
         <Box>
-            {label && (<Text fontWeight="600" mb={2} color="gray.700" fontSize="sm">{label}</Text>)}
+             {label && (
+                <HStack as="label" spacing={1} mb={2} alignItems="center">
+                    <Text fontWeight="600" color="gray.700" fontSize="sm">
+                        {label}
+                    </Text>
+                    {required && (
+                        <Text color="red.500" fontWeight="bold" as="span">
+                            *
+                        </Text>
+                    )}
+                </HStack>
+            )}
             <style>{`.variable-badge { background-color: #EBF8FF; color: #2C5282; font-weight: 500; border-radius: 6px; padding: 2px 8px; margin: 0 2px; display: inline-block; font-size: 0.8em; }`}</style>
             <Popover isOpen={isPopoverOpen} onClose={() => setIsPopoverOpen(false)} placement="bottom-start" autoFocus={false} >
                 <PopoverTrigger>
@@ -137,8 +152,6 @@ export default function VariableSelector(props: VariableSelectorProps) {
                     </span>
                 </PopoverTrigger>
                 <PopoverContent width="auto" minWidth="280px" maxWidth="400px" boxShadow="lg" border="1px solid" borderColor="gray.100" borderRadius="lg" p={2} bg="white" _focus={{ outline: "none" }}>
-                    
-            
                     <VStack align="stretch" spacing={2} maxH="300px" overflowY="auto">
                         <Text fontSize="sm" fontWeight="600" color="gray.600" p={2} pb={1}>
                             {t("workflow.variableSelector.availableVariables")}
@@ -156,7 +169,7 @@ export default function VariableSelector(props: VariableSelectorProps) {
                                     >
                                         {nodeId}
                                     </Text>
-                             
+                            
                                     <VStack align="stretch" spacing={1}>
                                     {vars.map((v) => (
                                         <Button 
@@ -164,16 +177,14 @@ export default function VariableSelector(props: VariableSelectorProps) {
                                             onClick={() => handleInsertVariable(`${v.nodeId}.${v.variableName}`)} 
                                             size="sm" 
                                             variant="ghost" 
-                                            justifyContent="space-between" // 两端对齐
+                                            justifyContent="space-between"
                                             px={3} py={2} height="auto" 
                                             transition="all 0.2s" 
                                             _hover={{ bg: "blue.50", transform: "translateX(2px)" }}
                                         >
-                                            {/* 左侧：变量名 */}
                                             <Text fontSize="sm" color="gray.700" fontWeight="normal">
                                                 {v.variableName}
                                             </Text>
-                                            {/* 右侧：变量类型 */}
                                             <Text fontSize="xs" color="gray.500" fontWeight="normal">
                                                 {v.variableType}
                                             </Text>

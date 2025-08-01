@@ -59,6 +59,8 @@ class LLMNode(LLMBaseNode):
         history_messages = state.get("all_messages", [])
 
         human_message_input: HumanMessage | None = None
+
+        final_prompt_for_model = []
         if self.system_prompt:
 
             parsed_system_prompt = (
@@ -67,8 +69,8 @@ class LLMNode(LLMBaseNode):
                 .replace("}", "}}")
             )
 
-        final_prompt_for_model = []
-        final_prompt_for_model.append(SystemMessage(content=parsed_system_prompt))
+        
+            final_prompt_for_model.append(SystemMessage(content=parsed_system_prompt))
 
         if not self.user_prompt:
             raise ValueError(
