@@ -140,8 +140,6 @@ services:
       start_period: 30s
 
 
-
-
 volumes:
   app-db-data:
   app-redis-data:

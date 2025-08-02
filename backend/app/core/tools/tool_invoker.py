@@ -3,7 +3,7 @@ import json
 import uuid
 
 from langchain.tools import BaseTool
-from langchain_core.messages import AIMessage
+from langchain_core.messages import AIMessage, ToolMessage
 from langgraph.prebuilt import ToolNode
 from pydantic import BaseModel
 
@@ -11,14 +11,8 @@ from app.core.tools.response_formatter import format_tool_response
 from app.core.tools.tool_manager import get_tool_by_tool_id
 
 
-class ToolMessages(BaseModel):
-    content: str
-    name: str
-    tool_call_id: str
-
-
 class ToolInvokeResponse(BaseModel):
-    messages: list[ToolMessages]
+    messages: list[ToolMessage]
     error: str | None = None  # 可选的错误信息
 
 
@@ -91,7 +85,7 @@ async def invoke_tool(tool_id: int, tool_name: str, args: dict) -> ToolInvokeRes
         tool_node = ToolNode(tools=[await get_tool_by_tool_id(tool_id)])
         result = await tool_node.ainvoke({"messages": [message_with_tool_call]})
         messages = [
-            ToolMessages(
+            ToolMessage(
                 content=msg.content,
                 name=msg.name,
                 tool_call_id=msg.tool_call_id,

@@ -6,7 +6,7 @@ from langchain_core.messages import AIMessage, HumanMessage, ToolMessage
 from langchain_core.runnables import RunnableConfig
 from langgraph.types import Command, interrupt
 
-from app.core.state import ReturnWorkflowTeamState, WorkflowTeamState
+from app.core.state import ReturnWorkflowState, WorkflowState
 from app.db.models import InterruptDecision, InterruptType
 
 
@@ -26,18 +26,18 @@ class HumanNode:
         self.interaction_type = interaction_type
         self.history = None
         self.messages = None
-        self.all_messages = None
+ 
         self.last_message = None
 
     async def work(
-        self, state: WorkflowTeamState, config: RunnableConfig
-    ) -> ReturnWorkflowTeamState | Command[str]:
+        self, state: WorkflowState, config: RunnableConfig
+    ) -> ReturnWorkflowState | Command[str]:
         self.history = state.get("history", [])
         self.messages = state.get("messages", [])
-        self.all_messages = state.get("all_messages", [])
+ 
 
         # 获取最后一条消息
-        self.last_message = state["all_messages"][-1]
+        self.last_message = state["messages"][-1]
 
         # 根据不同的交互类型构建中断数据
         interrupt_data = {
@@ -116,10 +116,8 @@ class HumanNode:
                     AIMessage(content="I understand your concern. Let's try again.")
                 )
 
-                return_state: ReturnWorkflowTeamState = {
-                    "history": self.history + result,
+                return_state: ReturnWorkflowState = {
                     "messages": result,
-                    "all_messages": self.all_messages + result,
                 }
                 next_node = self.routes.get("rejected", "call_llm")
                 return Command(goto=next_node, update=return_state)
@@ -146,10 +144,8 @@ class HumanNode:
                     id=self.last_message.id,
                 )
 
-                return_state: ReturnWorkflowTeamState = {
-                    "history": self.history + [updated_message],
+                return_state: ReturnWorkflowState = {
                     "messages": [updated_message],
-                    "all_messages": self.all_messages + [updated_message],
                 }
                 next_node = self.routes.get("update", "run_tool")
                 return Command(goto=next_node, update=return_state)
@@ -167,10 +163,8 @@ class HumanNode:
             case InterruptDecision.REVIEW:
                 result = HumanMessage(content=review_data, name="user", id=str(uuid4()))
                 next_node = self.routes.get("review", "call_llm")
-                return_state: ReturnWorkflowTeamState = {
-                    "history": self.history + [result],
+                return_state: ReturnWorkflowState = {
                     "messages": [result],
-                    "all_messages": self.all_messages + [result],
                 }
                 return Command(goto=next_node, update=return_state)
 
@@ -181,10 +175,8 @@ class HumanNode:
         if action == InterruptDecision.CONTINUE:
             result = HumanMessage(content=review_data, name="user", id=str(uuid4()))
             next_node = self.routes.get("continue", "call_llm")
-            return_state: ReturnWorkflowTeamState = {
-                "history": self.history + [result],
+            return_state: ReturnWorkflowState = {
                 "messages": [result],
-                "all_messages": self.all_messages + [result],
             }
             return Command(goto=next_node, update=return_state)
         else:

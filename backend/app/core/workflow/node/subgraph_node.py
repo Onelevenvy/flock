@@ -3,7 +3,7 @@ import uuid
 from langchain_core.messages import HumanMessage, ToolMessage
 from langchain_core.runnables import RunnableConfig
 
-from app.core.state import (ReturnWorkflowTeamState, WorkflowTeamState,
+from app.core.state import (ReturnWorkflowState, WorkflowState,
                             parse_variables, update_node_outputs)
 from app.core.workflow.utils.db_utils import get_subgraph_by_id
 
@@ -34,8 +34,8 @@ class SubgraphNode:
         )
 
     async def work(
-        self, state: WorkflowTeamState, config: RunnableConfig
-    ) -> ReturnWorkflowTeamState:
+        self, state: WorkflowState, config: RunnableConfig
+    ) -> ReturnWorkflowState:
         """Execute subgraph workflow"""
         if "node_outputs" not in state:
             state["node_outputs"] = {}
@@ -44,8 +44,8 @@ class SubgraphNode:
         input_text = (
             parse_variables(self.input, state["node_outputs"]) if self.input else None
         )
-        if not input_text and state.get("all_messages"):
-            input_text = state["all_messages"][-1].content
+        if not input_text and state.get("messages"):
+            input_text = state["messages"][-1].content
 
         self.subgraph = await self._build_subgraph()
 
@@ -54,13 +54,11 @@ class SubgraphNode:
             try:
                 # 执行子图
                 input_state = {
-                    "all_messages": [HumanMessage(content=input_text, name="user")],
                     "messages": [HumanMessage(content=input_text, name="user")],
-                    "history": [HumanMessage(content=input_text, name="user")],
                     "node_outputs": state["node_outputs"],
                 }
                 result = await self.subgraph.ainvoke(input_state)
-                subgraph_output = result["all_messages"][-1]
+                subgraph_output = result["messages"][-1]
                 subgraph_result = ToolMessage(
                     content=subgraph_output.content,
                     name=self.subgraph_name,
@@ -71,7 +69,7 @@ class SubgraphNode:
                     state["node_outputs"], new_output
                 )
 
-                return_state: ReturnWorkflowTeamState = {
+                return_state: ReturnWorkflowState = {
                     "node_outputs": state["node_outputs"],
                 }
                 return return_state

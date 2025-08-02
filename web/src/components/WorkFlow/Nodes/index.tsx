@@ -9,7 +9,7 @@ import PluginNode from "./Plugin/PluginNode";
 import RetrievalNode from "./Retrieval/RetrievalNode";
 import RetrievalToolNode from "./RetrievalTool/RetrievalToolNode";
 import StartNode from "./Start/StartNode";
-import ToolNode from "./Tool/ToolNode";
+
 import ClassifierNode from "./Classifier/ClassifierNode";
 import CodeNode from "./Code/CodeNode";
 import IfElseNode from "./IfElse/IfElseNode";
@@ -22,7 +22,7 @@ export const nodeTypes: NodeTypes = {
   start: StartNode,
   end: EndNode,
   llm: LLMNode,
-  tool: ToolNode,
+
   retrieval: RetrievalNode,
   toolretrieval: RetrievalToolNode,
   plugin: PluginNode,

@@ -2,7 +2,6 @@ import {
   FaPlay,
   FaRobot,
   FaStop,
-  FaTools,
   FaCommentDots,
   FaDatabase,
   FaCode,
@@ -23,7 +22,7 @@ import PluginNodeProperties from "./Plugin/PluginNodeProperties";
 import RetrievalProperties from "./Retrieval/RetrievalNodeProperties";
 import RetrievalToolNodeProperties from "./RetrievalTool/RetrievalToolNodeProperties";
 import StartNodeProperties from "./Start/StartNodeProperties";
-import ToolNodeProperties from "./Tool/ToolNodeProperties";
+
 import CrewAINodeProperties from "./CrewAI/CrewAINodeProperties";
 import ClassifierNodeProperties from "./Classifier/ClassifierNodeProperties";
 
@@ -91,7 +90,8 @@ export const nodeConfig: Record<string, NodeConfigItem> = {
     initialData: {
       model: "glm-4-flash",
       temperature: 0.1,
-      systemMessage: null,
+      systemMessage: "",
+      userMessage: "${start.query}",
     },
     inputVariables: [],
     outputVariables: ["response"],
@@ -120,36 +120,9 @@ export const nodeConfig: Record<string, NodeConfigItem> = {
       systemMessage: "",
       userMessage: "",
       tools: [{
-        id: 2,
-        name: "Math Calculator",
-        provider: "math",
       }],
       retrievalTools: [],
     },
-  },
-  tool: {
-    display: "Tools",
-    icon: FaTools,
-    colorScheme: "purple",
-    properties: ToolNodeProperties,
-    allowedConnections: {
-      sources: ["right"],
-      targets: ["left"],
-    },
-    initialData: {
-      tools: [
-        {
-          id: 2,
-          name: "Math Calculator",
-          provider: "math",
-        },
-      ],
-    },
-    inputVariables: [],
-    outputVariables: ["response"],
-    outputSchema: {            
-      response: 'String'
-    }
   },
   plugin: {
     display: "Plugin",

@@ -9,8 +9,8 @@ from app.core.model_providers.model_provider_manager import \
 from app.core.tools.tool_manager import get_tool_by_name
 from app.core.workflow.utils.db_utils import get_model_info
 
-from ...state import (ReturnWorkflowTeamState, WorkflowTeamState,
-                      parse_variables, update_node_outputs)
+from ...state import (ReturnWorkflowState, WorkflowState, parse_variables,
+                      update_node_outputs)
 
 
 class CrewAINode:
@@ -89,7 +89,7 @@ Even though you don't perform tasks by yourself, you have a lot of experience in
         return None
 
     def _create_agent(
-        self, agent_config: dict[str, Any], state: WorkflowTeamState
+        self, agent_config: dict[str, Any], state: WorkflowState
     ) -> Agent:
         """Create an agent from configuration with variable parsing"""
         tools = []
@@ -118,7 +118,7 @@ Even though you don't perform tasks by yourself, you have a lot of experience in
         self,
         task_config: dict[str, Any],
         agents: dict[str, Agent],
-        state: WorkflowTeamState,
+        state: WorkflowState,
     ) -> Task:
         """Create a task from configuration with variable parsing"""
         # Parse variables in task configuration
@@ -149,8 +149,8 @@ Even though you don't perform tasks by yourself, you have a lot of experience in
         )
 
     async def work(
-        self, state: WorkflowTeamState, config: RunnableConfig
-    ) -> ReturnWorkflowTeamState:
+        self, state: WorkflowState, config: RunnableConfig
+    ) -> ReturnWorkflowState:
         if "node_outputs" not in state:
             state["node_outputs"] = {}
 
@@ -192,10 +192,8 @@ Even though you don't perform tasks by yourself, you have a lot of experience in
         # Create AI message from result
         crewai_res_message = AIMessage(content=str(raw_result_str))
 
-        return_state: ReturnWorkflowTeamState = {
-            "history": state.get("history", []) + [crewai_res_message],
+        return_state: ReturnWorkflowState = {
             "messages": [crewai_res_message],
-            "all_messages": state.get("all_messages", []) + [crewai_res_message],
             "node_outputs": state["node_outputs"],
         }
         return return_state

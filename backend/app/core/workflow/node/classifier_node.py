@@ -8,8 +8,8 @@ from app.core.model_providers.model_provider_manager import \
     model_provider_manager
 from app.core.workflow.utils.db_utils import get_model_info
 
-from ...state import (ReturnWorkflowTeamState, WorkflowTeamState,
-                      parse_variables, update_node_outputs)
+from ...state import (ReturnWorkflowState, WorkflowState, parse_variables,
+                      update_node_outputs)
 
 CLASSIFIER_SYSTEM_PROMPT = """
 ### Job Description
@@ -61,8 +61,8 @@ class ClassifierNode:
         self.model_info = get_model_info(model_name)
 
     async def work(
-        self, state: WorkflowTeamState, config: RunnableConfig
-    ) -> ReturnWorkflowTeamState:
+        self, state: WorkflowState, config: RunnableConfig
+    ) -> ReturnWorkflowState:
         """Execute classification work"""
         if "node_outputs" not in state:
             state["node_outputs"] = {}
@@ -71,8 +71,8 @@ class ClassifierNode:
         input_text = (
             parse_variables(self.input, state["node_outputs"]) if self.input else None
         )
-        if not input_text and state.get("all_messages"):
-            input_text = state["all_messages"][-1].content
+        if not input_text and state.get("messages"):
+            input_text = state["messages"][-1].content
 
         # Initialize LLM with provider info
         llm = model_provider_manager.init_model(
@@ -170,7 +170,7 @@ class ClassifierNode:
         }
         state["node_outputs"] = update_node_outputs(state["node_outputs"], new_output)
 
-        return_state: ReturnWorkflowTeamState = {
+        return_state: ReturnWorkflowState = {
             "node_outputs": state["node_outputs"],
         }
 

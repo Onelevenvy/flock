@@ -1,13 +1,13 @@
-import { Box, Input, Text, VStack } from "@chakra-ui/react";
+import { Box, Input, Text, VStack, Divider } from "@chakra-ui/react"; // 导入 Divider
 import type React from "react";
 import { useCallback, useState, useEffect } from "react";
 import { useTranslation } from "react-i18next";
+import { useForm } from "react-hook-form";
 
 import ModelSelect from "@/components/Common/ModelProvider";
 import { useModelQuery } from "@/hooks/useModelQuery";
 import { VariableReference } from "../../FlowVis/variableSystem";
 import VariableSelector from "../../Common/VariableSelector";
-import { useForm } from "react-hook-form";
 
 interface FormValues {
   model: string;
@@ -28,6 +28,7 @@ const LLMNodeProperties: React.FC<LLMNodePropertiesProps> = ({
   const { t } = useTranslation();
   const [temperatureInput, setTemperatureInput] = useState("");
   const [systemPromptInput, setSystemPromptInput] = useState("");
+  const [userPromptInput, setUserPromptInput] = useState(""); // 新增: User Prompt 状态
 
   const { control, setValue } = useForm<FormValues>({
     mode: "onBlur",
@@ -47,6 +48,10 @@ const LLMNodeProperties: React.FC<LLMNodePropertiesProps> = ({
     if (node && node.data.systemMessage !== undefined) {
       setSystemPromptInput(node.data.systemMessage || "");
     }
+    // 新增: 从节点数据初始化 User Prompt
+    if (node && node.data.userMessage !== undefined) {
+      setUserPromptInput(node.data.userMessage || "");
+    }
     if (node && node.data.model) {
       setValue("model", node.data.model);
     }
@@ -63,13 +68,9 @@ const LLMNodeProperties: React.FC<LLMNodePropertiesProps> = ({
 
       if (selectedModel) {
         const providerName = selectedModel.provider.provider_name || "";
-
         onNodeDataChange(node.id, "model", modelName);
-
         onNodeDataChange(node.id, "provider", providerName);
-
         setValue("model", modelName);
-
         setValue("provider", providerName);
       }
     },
@@ -84,7 +85,14 @@ const LLMNodeProperties: React.FC<LLMNodePropertiesProps> = ({
     [node.id, onNodeDataChange],
   );
 
-
+  // 新增: User Prompt 的变更处理函数
+  const handleUserPromptChange = useCallback(
+    (value: string) => {
+      setUserPromptInput(value);
+      onNodeDataChange(node.id, "userMessage", value);
+    },
+    [node.id, onNodeDataChange],
+  );
 
   return (
     <VStack align="stretch" spacing={4}>
@@ -132,6 +140,9 @@ const LLMNodeProperties: React.FC<LLMNodePropertiesProps> = ({
           max={1}
         />
       </Box>
+      
+      {/* 新增: 分割线 */}
+      <Divider />
 
       <VariableSelector
         label={String(t("workflow.nodes.llm.systemPrompt"))}
@@ -140,6 +151,17 @@ const LLMNodeProperties: React.FC<LLMNodePropertiesProps> = ({
         availableVariables={availableVariables}
         minHeight="100px"
         placeholder={String(t("workflow.nodes.llm.placeholder"))}
+      />
+
+      {/* 新增: User Prompt 输入区域 */}
+      <VariableSelector
+        label="User Prompt" 
+        required={true}
+        value={userPromptInput}
+        onChange={handleUserPromptChange}
+        availableVariables={availableVariables}
+        minHeight="100px"
+        placeholder="Enter user instructions or template..." 
       />
     </VStack>
   );

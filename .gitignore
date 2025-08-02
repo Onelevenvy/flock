@@ -1,10 +1,10 @@
 .env
 .DS_Store
-/frontend/node_modules
+/web/node_modules
 /backend/.venv
 /web/.next
 *node_modules
-/EvoAGI/backend
+
 
 backend/fastembed_cache
 
@@ -14,4 +14,4 @@ docker/build_images.sh
 
 conf.yaml
 .cursor
-.windsurf/*
+.windsurf

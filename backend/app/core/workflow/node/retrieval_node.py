@@ -11,7 +11,7 @@ logger = logging.getLogger(__name__)
 from langchain_core.messages import AIMessage, ToolMessage
 from langchain_core.runnables import RunnableConfig
 
-from app.core.state import (ReturnWorkflowTeamState, WorkflowTeamState,
+from app.core.state import (ReturnWorkflowState, WorkflowState,
                             parse_variables, update_node_outputs)
 
 
@@ -24,8 +24,8 @@ class RetrievalNode:
         self.kb_id = kb_id
 
     async def work(
-        self, state: WorkflowTeamState, config: RunnableConfig
-    ) -> ReturnWorkflowTeamState:
+        self, state: WorkflowState, config: RunnableConfig
+    ) -> ReturnWorkflowState:
 
         if "node_outputs" not in state:
             state["node_outputs"] = {}
@@ -40,7 +40,7 @@ class RetrievalNode:
                 tool_call_id=str(uuid.uuid4()),
             )
         else:
-            messages = state.get("all_messages", [])
+            messages = state.get("messages", [])
             result = AIMessage(
                 content=messages[-1].content if messages else "No answer available."
             )
@@ -48,10 +48,8 @@ class RetrievalNode:
         # 更新 node_outputs
         new_output = {self.node_id: {"response": result.content}}
         state["node_outputs"] = update_node_outputs(state["node_outputs"], new_output)
-        return_state: ReturnWorkflowTeamState = {
-            "history": state.get("history", []) + [result],
+        return_state: ReturnWorkflowState = {
             "messages": [result],
-            "all_messages": state.get("all_messages", []) + [result],
             "node_outputs": state["node_outputs"],
         }
         return return_state

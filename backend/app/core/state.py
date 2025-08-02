@@ -149,25 +149,15 @@ def update_node_outputs(
         return {**node_outputs, **new_outputs}
 
 
-class WorkflowTeamState(TypedDict):
-    all_messages: Annotated[list[AnyMessage], add_messages]
-    messages: Annotated[list[AnyMessage], add_or_replace_messages]
-    history: Annotated[list[AnyMessage], add_messages]
-    team: GraphTeam
-    next: str
-    main_task: list[AnyMessage]
-    task: list[AnyMessage]
-    node_outputs: Annotated[dict[str, Any], update_node_outputs]  
+class WorkflowState(TypedDict):
+    input_msg: any
+    messages: Annotated[list[AnyMessage], add_messages]
+    node_outputs: Annotated[dict[str, Any], update_node_outputs]
 
 
 # When returning teamstate, is it possible to exclude fields that you dont want to update
-class ReturnWorkflowTeamState(TypedDict):
-    all_messages: NotRequired[list[AnyMessage]]
+class ReturnWorkflowState(TypedDict):
     messages: NotRequired[list[AnyMessage]]
-    history: NotRequired[list[AnyMessage]]
-    team: NotRequired[GraphTeam]
-    next: NotRequired[str | None]  # Returning None is valid for sequential graphs only
-    task: NotRequired[list[AnyMessage]]
     node_outputs: Annotated[dict[str, Any], update_node_outputs]
 
 

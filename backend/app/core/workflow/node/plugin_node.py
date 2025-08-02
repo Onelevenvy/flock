@@ -1,12 +1,14 @@
 import ast
 import json
 
+from langchain_core.messages import ToolMessage
 from langchain_core.runnables import RunnableConfig
 
-from app.core.state import (ReturnWorkflowTeamState, WorkflowTeamState,
+from app.core.state import (ReturnWorkflowState, WorkflowState,
                             parse_variables, update_node_outputs)
-from app.core.tools.tool_invoker import (ToolInvokeResponse, ToolMessages,
-                                         invoke_tool)
+from app.core.tools.tool_invoker import ToolInvokeResponse, invoke_tool
+
+
 def clean_dict_values(data):
     """
     Recursively cleans all string values in a dictionary or list
@@ -21,10 +23,11 @@ def clean_dict_values(data):
         return [clean_dict_values(elem) for elem in data]
     elif isinstance(data, str):
         # 如果是字符串，执行替换和strip操作
-        return data.replace('\xa0', ' ').strip()
+        return data.replace("\xa0", " ").strip()
     else:
         # 对于其他类型（如int, float, bool, None），保持原样
         return data
+
 
 def convert_str_to_dict(s: str) -> dict:
     """Convert a string representation of a Python dictionary to a dictionary object."""
@@ -46,21 +49,25 @@ class PluginNode:
         self.args = args
 
     async def work(
-        self, state: WorkflowTeamState, config: RunnableConfig
-    ) -> ReturnWorkflowTeamState:
+        self, state: WorkflowState, config: RunnableConfig
+    ) -> ReturnWorkflowState:
         if "node_outputs" not in state:
             state["node_outputs"] = {}
 
         if self.args:
             parsed_tool_args = parse_variables(self.args, state["node_outputs"])
-            temp_dict  = convert_str_to_dict(parsed_tool_args)
+            temp_dict = convert_str_to_dict(parsed_tool_args)
             parsed_tool_args_dict = clean_dict_values(temp_dict)
-            tool_result = await invoke_tool(self.tool_data["id"],self.tool_data['name'], parsed_tool_args_dict)
+            tool_result = await invoke_tool(
+                self.tool_data["id"], self.tool_data["name"], parsed_tool_args_dict
+            )
         else:
             tool_result = ToolInvokeResponse(
                 messages=[
-                    ToolMessages(
-                        content="No args provided", name=self.tool_data['name'], tool_call_id=""
+                    ToolMessage(
+                        content="No args provided",
+                        name=self.tool_data["name"],
+                        tool_call_id="",
                     )
                 ],
                 error="No args provided",
@@ -69,7 +76,8 @@ class PluginNode:
         new_output = {self.node_id: {"response": tool_result.messages[0].content}}
         state["node_outputs"] = update_node_outputs(state["node_outputs"], new_output)
 
-        return_state: ReturnWorkflowTeamState = {
+        return_state: ReturnWorkflowState = {
+            "messages": tool_result.messages,
             "node_outputs": state["node_outputs"],
         }
 
