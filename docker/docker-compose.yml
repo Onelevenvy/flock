@@ -1,4 +1,25 @@
+# docker-compose.yml
+
 services:
+  nginx:
+    image: nginx:1.25-alpine
+    container_name: flock-nginx
+    ports:
+
+      - "10080:80"
+      # 如果未来需要HTTPS, 可以映射 443 端口
+      # - "443:443"
+    volumes:
+
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+      
+    depends_on:
+      - frontend
+      - api
+    networks:
+      - flock-network # 加入我们定义的网络
+    restart: always
+
   frontend:
     image: jimmy1211/flock-frontend:0.0.6
     deploy:
@@ -7,11 +28,12 @@ services:
           memory: 1G
         reservations:
           memory: 256M
-    ports:
-      - 3000:3000
+    
     environment:
       - NODE_ENV=production
       - TZ=UTC
+     
+      - NEXT_PUBLIC_API_URL=/api
     env_file:
       - .env
     healthcheck:
@@ -22,6 +44,9 @@ services:
       start_period: 30s
     depends_on:
       - api
+    networks:
+      - flock-network 
+    restart: always
 
   api:
     image: jimmy1211/flock-backend:0.0.6
@@ -31,8 +56,8 @@ services:
           memory: 2G
         reservations:
           memory: 512M
-    ports:
-      - 8000:8000
+    # ports:
+    #   - 8000:8000
     environment:
       - DEBUG=true
       - SERVER_WORKER_AMOUNT=2
@@ -46,15 +71,18 @@ services:
     env_file:
       - .env
     volumes:
-      - app-upload-data:/app
+      - app-upload-data:/app/upload
       - app-backend-model-cache:/app/model_cache
       - app-data:/app/data
+     
       - ./entrypoint.sh:/app/docker-entrypoint-mount.sh
-    entrypoint: [ 'sh', '-c', "cp /app/docker-entrypoint-mount.sh /app/docker-entrypoint.sh && sed -i 's/\r$$//' /app/docker-entrypoint.sh && chmod +x /app/docker-entrypoint.sh && /app/docker-entrypoint.sh" ]
+    entrypoint: [ 'sh', '-c', "cp /app/docker-entrypoint-mount.sh /app/entrypoint.sh && sed -i 's/\r$$//' /app/entrypoint.sh && chmod +x /app/entrypoint.sh && /app/entrypoint.sh" ]
     depends_on:
       - db
       - redis
       - qdrant
+    networks:
+      - flock-network
     restart: always
     user: root
 
@@ -82,17 +110,20 @@ services:
     env_file:
       - .env
     volumes:
-      - app-upload-data:/app
+      - app-upload-data:/app/upload
       - app-backend-model-cache:/app/model_cache
       - app-data:/app/data
     depends_on:
       - redis
       - db
       - qdrant
+    networks:
+      - flock-network 
+    restart: always
+
 
   db:
     image: postgres:12
-    restart: always
 
     volumes:
       - app-db-data:/var/lib/postgresql/data/pgdata
@@ -111,11 +142,13 @@ services:
       timeout: 10s
       retries: 3
       start_period: 30s
+    networks:
+      - flock-network 
+    restart: always
 
   qdrant:
     image: qdrant/qdrant
-    restart: always
-
+   
     volumes:
       - app-qdrant-data:/qdrant/storage
     environment:
@@ -123,11 +156,13 @@ services:
     ports:
       - 6334:6334
       - 6333:6333
+    networks:
+      - flock-network 
+    restart: always
 
   redis:
     image: redis:alpine
-    restart: always
-
+   
     ports:
       - 6379:6379
     volumes:
@@ -138,13 +173,19 @@ services:
       timeout: 10s
       retries: 3
       start_period: 30s
+    networks:
+      - flock-network 
+    restart: always
 
+
+networks:
+  flock-network: 
+    driver: bridge
 
 volumes:
   app-db-data:
   app-redis-data:
   app-qdrant-data:
-  app-code-workspace:
   app-upload-data:
   app-backend-model-cache:
   app-data:
