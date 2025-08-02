@@ -52,67 +52,74 @@ class LLMNode(LLMBaseNode):
     async def work(
         self, state: WorkflowState, config: RunnableConfig
     ) -> ReturnWorkflowState:
+        
+       
 
         if "node_outputs" not in state:
             state["node_outputs"] = {}
         history_messages = state.get("messages", [])
-        human_message_input: HumanMessage | None = None
+
+       
         final_prompt_for_model = []
         if self.system_prompt:
-
             parsed_system_prompt = (
                 parse_variables(self.system_prompt, state["node_outputs"])
                 .replace("{", "{{")
                 .replace("}", "}}")
             )
-
             final_prompt_for_model.append(SystemMessage(content=parsed_system_prompt))
 
+       
         if not self.user_prompt:
             raise ValueError(
-                f"No input found in llm node, Please check you  node settings."
+                "No input found in llm node, Please check your node settings."
             )
-            # human_message_input =state.get("input_msg",[])[-1]   # 临时给subgraph 使用，后续用更完美的方式
+        
+        parsed_user_prompt = (
+            parse_variables(self.user_prompt, state["node_outputs"])
+            .replace("{", "{{")
+            .replace("}", "}}")
+        )
+        human_message_input = HumanMessage(content=parsed_user_prompt, name="user")
 
+        #  图片类的支持，待优化，暂时占位
+        # if (
+        #     history_messages
+        #     and isinstance(history_messages[-1].content, list)
+        #     and any(
+        #         isinstance(item, dict)
+        #         and "type" in item
+        #         and item["type"] in ["text", "image_url"]
+        #         for item in history_messages[-1].content
+        #     )
+        # ):
+
+        #     temp_state = [
+        #         HumanMessage(content=history_messages[-1].content, name="user")
+        #     ]
+
+        #     result: AIMessage = await self.model.ainvoke(temp_state, config)
+        
+        if not history_messages:
+            
+            messages_to_invoke = final_prompt_for_model + [human_message_input]
+            result: AIMessage = await self.model.ainvoke(messages_to_invoke, config)
+           
+            messages_for_return = messages_to_invoke + [result]
         else:
-            parsed_user_prompt = (
-                parse_variables(self.user_prompt, state["node_outputs"])
-                .replace("{", "{{")
-                .replace("}", "}}")
-            )
-            if history_messages:
+           
+            messages_to_invoke = history_messages + [human_message_input]
+            result: AIMessage = await self.model.ainvoke(messages_to_invoke, config)
+            
+            messages_for_return = [human_message_input] + [result]
 
-                final_prompt_for_model.extend(history_messages)
-            human_message_input = HumanMessage(content=parsed_user_prompt, name="user")
-            final_prompt_for_model.append(human_message_input)
-
-        # 检查消息是否包含图片
-        if (
-            history_messages
-            and isinstance(history_messages[-1].content, list)
-            and any(
-                isinstance(item, dict)
-                and "type" in item
-                and item["type"] in ["text", "image_url"]
-                for item in history_messages[-1].content
-            )
-        ):
-
-            temp_state = [
-                HumanMessage(content=history_messages[-1].content, name="user")
-            ]
-
-            result: AIMessage = await self.model.ainvoke(temp_state, config)
-        else:
-
-            result: AIMessage = await self.model.ainvoke(final_prompt_for_model, config)
-
-        # 更新 node_outputs
+       
         new_output = {self.node_id: {"response": result.content}}
         state["node_outputs"] = update_node_outputs(state["node_outputs"], new_output)
 
+
         return_state: ReturnWorkflowState = {
-            "messages": [human_message_input] + [result],
+            "messages": messages_for_return,
             "node_outputs": state["node_outputs"],
         }
         return return_state
