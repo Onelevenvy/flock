@@ -1,6 +1,6 @@
 from typing import Any, Dict, List
 
-from langchain_core.messages import HumanMessage
+from langchain_core.messages import HumanMessage,SystemMessage
 from langchain_core.runnables import RunnableConfig
 from langgraph.prebuilt import create_react_agent
 
@@ -86,58 +86,68 @@ class AgentNode:
         return self.tools_list
 
     async def work(
-        self, state: WorkflowState, config: RunnableConfig
-    ) -> ReturnWorkflowState:
-        """执行Agent节点的工作"""
+    self, state: WorkflowState, config: RunnableConfig
+) -> ReturnWorkflowState:
+    
+
 
         if "node_outputs" not in state:
             state["node_outputs"] = {}
+        history_messages = state.get("messages", [])
 
-        system_prompt_2_agent = None
+        system_message_for_history: SystemMessage | None = None
+        parsed_system_prompt_str = ""
         if self.system_prompt:
-            # First parse variables, then escape any remaining curly braces
-            parsed_system_prompt = (
+            parsed_system_prompt_str = (
                 parse_variables(self.system_prompt, state["node_outputs"])
                 .replace("{", "{{")
                 .replace("}", "}}")
             )
-            system_prompt_2_agent = parsed_system_prompt
-
-        history_messages = state.get("messages", [])
-        final_prompt_for_agent = []
-        human_message_input: HumanMessage | None = None
+            system_message_for_history = SystemMessage(content=parsed_system_prompt_str)
 
         if not self.user_prompt:
             raise ValueError(
-                f"No input found in agnet node, Please check you node settings."
+                "No input found in agent node, Please check your node settings."
             )
+        parsed_user_prompt = (
+            parse_variables(self.user_prompt, state["node_outputs"])
+            .replace("{", "{{")
+            .replace("}", "}}")
+        )
+        human_message_input = HumanMessage(content=parsed_user_prompt, name="user")
 
+
+
+        final_prompt_for_agent = []
+        if not history_messages:
+            if system_message_for_history:
+                final_prompt_for_agent.append(system_message_for_history)
+            final_prompt_for_agent.append(human_message_input)
         else:
-            parsed_user_prompt = (
-                parse_variables(self.user_prompt, state["node_outputs"])
-                .replace("{", "{{")
-                .replace("}", "}}")
-            )
-            if history_messages:
-
-                final_prompt_for_agent.extend(history_messages)
-            human_message_input = HumanMessage(content=parsed_user_prompt, name="user")
+            final_prompt_for_agent.extend(history_messages)
             final_prompt_for_agent.append(human_message_input)
 
-        # 创建React Agent
+
         if not self.tools_list:
             await self.bind_tools()
+            
+        # 创建 Agent 实例
         self.agent = create_react_agent(
             model=self.llm,
-            tools=self.tools_list,
-            prompt=system_prompt_2_agent,
+            tools=self.tools_list,  # Agent 的指令模板依然使用解析后的字符串
         )
 
-        agent_result = await self.agent.ainvoke({"messages": final_prompt_for_agent})
+        # 调用 Agent
+        agent_result = await self.agent.ainvoke(
+            {"messages": final_prompt_for_agent}, config=config
+        )
 
-        new_output = {self.node_id: {"response": agent_result["messages"][-1]}}
+      
+        final_response_message = agent_result["messages"][-1]
+        new_output = {self.node_id: {"response": final_response_message.content}}
         state["node_outputs"] = update_node_outputs(state["node_outputs"], new_output)
 
+ 
         return_state: ReturnWorkflowState = {
             "messages": agent_result["messages"],
             "node_outputs": state["node_outputs"],

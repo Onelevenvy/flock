@@ -71,8 +71,8 @@ class ClassifierNode:
         input_text = (
             parse_variables(self.input, state["node_outputs"]) if self.input else None
         )
-        if not input_text and state.get("all_messages"):
-            input_text = state["all_messages"][-1].content
+        if not input_text and state.get("messages"):
+            input_text = state["messages"][-1].content
 
         # Initialize LLM with provider info
         llm = model_provider_manager.init_model(

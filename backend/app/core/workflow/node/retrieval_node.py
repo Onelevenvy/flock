@@ -40,7 +40,7 @@ class RetrievalNode:
                 tool_call_id=str(uuid.uuid4()),
             )
         else:
-            messages = state.get("all_messages", [])
+            messages = state.get("messages", [])
             result = AIMessage(
                 content=messages[-1].content if messages else "No answer available."
             )

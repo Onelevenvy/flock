@@ -26,7 +26,7 @@ class HumanNode:
         self.interaction_type = interaction_type
         self.history = None
         self.messages = None
-        self.all_messages = None
+ 
         self.last_message = None
 
     async def work(
@@ -34,10 +34,10 @@ class HumanNode:
     ) -> ReturnWorkflowState | Command[str]:
         self.history = state.get("history", [])
         self.messages = state.get("messages", [])
-        self.all_messages = state.get("all_messages", [])
+ 
 
         # 获取最后一条消息
-        self.last_message = state["all_messages"][-1]
+        self.last_message = state["messages"][-1]
 
         # 根据不同的交互类型构建中断数据
         interrupt_data = {
