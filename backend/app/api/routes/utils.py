@@ -26,7 +26,7 @@ def test_email(email_to: EmailStr) -> Message:
     return Message(message="Test email sent")
 
 
-@router.get("/health", status_code=200, tags=["Health Check"])
+@router.get("/health", status_code=200)
 def health_check():
     """
     健康检查端点，返回 200 OK 表示服务正常。
