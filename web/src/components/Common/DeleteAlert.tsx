@@ -42,7 +42,7 @@ const Delete = ({ type, id, isOpen, onClose }: DeleteProps) => {
     } else if (type === "Team") {
       await TeamsService.deleteTeam({ id: id });
     } else if (type === "Skill") {
-      await ToolsService.deleteSkill({ id: id });
+      await ToolsService.deleteTool({ toolId: id });
     } else if (type === "Upload") {
       await UploadsService.deleteUpload({ id: id });
     } else {

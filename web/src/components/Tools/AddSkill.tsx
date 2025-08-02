@@ -16,7 +16,7 @@ import { Controller, type SubmitHandler, useForm } from "react-hook-form";
 import { useMutation, useQueryClient } from "react-query";
 
 // import SkillEditor, { skillPlaceholder } from "./SkillEditor"
-import { type ApiError, type SkillCreate, ToolsService } from "../../client";
+import { type ApiError, type ToolCreate, ToolsService } from "../../client";
 import useCustomToast from "../../hooks/useCustomToast";
 
 interface AddSkillProps {
@@ -36,7 +36,7 @@ const AddSkill = ({ isOpen, onClose }: AddSkillProps) => {
     setError,
     clearErrors,
     formState: { errors, isSubmitting, isValid },
-  } = useForm<SkillCreate>({
+  } = useForm<ToolCreate>({
     mode: "onBlur",
     criteriaMode: "all",
     defaultValues: {
@@ -46,8 +46,8 @@ const AddSkill = ({ isOpen, onClose }: AddSkillProps) => {
     },
   });
 
-  const addSkill = async (data: SkillCreate) => {
-    await ToolsService.createSkill({ requestBody: data });
+  const addSkill = async (data: ToolCreate) => {
+    await ToolsService.createTool({ requestBody: data });
   };
 
   const mutation = useMutation(addSkill, {
@@ -66,7 +66,7 @@ const AddSkill = ({ isOpen, onClose }: AddSkillProps) => {
     },
   });
 
-  const onSubmit: SubmitHandler<SkillCreate> = (data) => {
+  const onSubmit: SubmitHandler<ToolCreate> = (data) => {
     mutation.mutate(data);
   };
 

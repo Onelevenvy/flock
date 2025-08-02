@@ -1,21 +1,10 @@
 #!/bin/bash
-set -ex
+# entrypoint.sh (This is the final UV version)
 
-echo "Starting entrypoint script..."
+set -e
 
-# Create necessary directories if they don't exist
-echo "Creating directories..."
-mkdir -p /app/upload /app/model_cache /app/data
-
-# Set proper permissions
-echo "Setting permissions..."
-chown -R nobody:nogroup /app/upload /app/model_cache /app/data /app
-chmod -R 777 /app/upload /app/model_cache /app/data /app
-
-echo "Directory permissions set, starting application..."
-
+# Worker mode: Start Celery worker
 if [[ "${MODE}" == "worker" ]]; then
-    # Get the number of available CPU cores
     if [ "${CELERY_AUTO_SCALE,,}" = "true" ]; then
         AVAILABLE_CORES=$(nproc)
         MAX_WORKERS=${CELERY_MAX_WORKERS:-$AVAILABLE_CORES}
@@ -24,19 +13,29 @@ if [[ "${MODE}" == "worker" ]]; then
     else
         CONCURRENCY_OPTION="-c ${CELERY_WORKER_AMOUNT:-1}"
     fi
+    
+    # Use uv run to start celery
+    exec uv run celery -A app.core.celery_app.celery_app worker $CONCURRENCY_OPTION --loglevel ${LOG_LEVEL:-INFO}
 
-    exec poetry run celery -A app.core.celery_app.celery_app worker $CONCURRENCY_OPTION --loglevel ${LOG_LEVEL:-INFO}
+# API mode (default)
 else
+    # Debug mode: Use uvicorn with hot-reload
     if [[ "${DEBUG}" == "true" ]]; then
-        poetry run alembic upgrade head
-        exec poetry run uvicorn app.main:app --host=${HOST:-0.0.0.0} --port=${PORT:-8000} --reload --log-level debug
+        # Use uv run to perform database migrations
+        uv run alembic upgrade head
+        # Use uv run to start uvicorn
+        exec uv run uvicorn app.main:app --host=${HOST:-0.0.0.0} --port=${PORT:-8000} --reload --log-level debug
+        
+    # Production mode: Use gunicorn
     else
-        poetry run alembic upgrade head
-        exec poetry run gunicorn \
+        # Use uv run to perform database migrations
+        uv run alembic upgrade head
+        # Use uv run to start gunicorn
+        exec uv run gunicorn \
             --bind "${HOST:-0.0.0.0}:${PORT:-8000}" \
             --workers ${SERVER_WORKER_AMOUNT:-1} \
             --worker-class uvicorn.workers.UvicornWorker \
             --timeout ${GUNICORN_TIMEOUT:-120} \
             app.main:app
     fi
-fi 
+fi

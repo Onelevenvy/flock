@@ -5,14 +5,12 @@ services:
     image: nginx:1.25-alpine
     container_name: flock-nginx
     ports:
-
-      - "10080:80"
+      - "4433:80"
       # 如果未来需要HTTPS, 可以映射 443 端口
       # - "443:443"
     volumes:
+      - ./nginx/flock.conf:/etc/nginx/conf.d/default.conf:ro
 
-      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
-      
     depends_on:
       - frontend
       - api
@@ -21,18 +19,18 @@ services:
     restart: always
 
   frontend:
-    image: jimmy1211/flock-frontend:0.0.6
+    image: flock-frontend:0.1.0
     deploy:
       resources:
         limits:
           memory: 1G
         reservations:
           memory: 256M
-    
+
     environment:
       - NODE_ENV=production
       - TZ=UTC
-     
+
       - NEXT_PUBLIC_API_URL=/api
     env_file:
       - .env
@@ -45,11 +43,11 @@ services:
     depends_on:
       - api
     networks:
-      - flock-network 
+      - flock-network
     restart: always
 
   api:
-    image: jimmy1211/flock-backend:0.0.6
+    image: flock-backend:0.1.0
     deploy:
       resources:
         limits:
@@ -58,6 +56,8 @@ services:
           memory: 512M
     # ports:
     #   - 8000:8000
+    env_file:
+      - .env
     environment:
       - DEBUG=true
       - SERVER_WORKER_AMOUNT=2
@@ -68,15 +68,21 @@ services:
       - CELERY_BROKER_URL=redis://redis:6379/0
       - CELERY_RESULT_BACKEND=redis://redis:6379/0
       - HOME=/app/data
-    env_file:
-      - .env
+      - POSTGRES_SERVER=db # 在容器内，主机名是服务名 db
+      - POSTGRES_PORT=5432
+
     volumes:
       - app-upload-data:/app/upload
       - app-backend-model-cache:/app/model_cache
       - app-data:/app/data
-     
+
       - ./entrypoint.sh:/app/docker-entrypoint-mount.sh
-    entrypoint: [ 'sh', '-c', "cp /app/docker-entrypoint-mount.sh /app/entrypoint.sh && sed -i 's/\r$$//' /app/entrypoint.sh && chmod +x /app/entrypoint.sh && /app/entrypoint.sh" ]
+    entrypoint:
+      [
+        "sh",
+        "-c",
+        "cp /app/docker-entrypoint-mount.sh /app/entrypoint.sh && sed -i 's/\r$$//' /app/entrypoint.sh && chmod +x /app/entrypoint.sh && /app/entrypoint.sh",
+      ]
     depends_on:
       - db
       - redis
@@ -87,7 +93,7 @@ services:
     user: root
 
   celery_worker:
-    image: jimmy1211/flock-backend:0.0.6
+    image: flock-backend:0.1.0
     deploy:
       resources:
         limits:
@@ -107,20 +113,29 @@ services:
       - CELERY_BROKER_URL=redis://redis:6379/0
       - CELERY_RESULT_BACKEND=redis://redis:6379/0
       - HOME=/app/data
+      - POSTGRES_SERVER=db
+      - POSTGRES_PORT=5432
     env_file:
       - .env
+    user: root
     volumes:
       - app-upload-data:/app/upload
       - app-backend-model-cache:/app/model_cache
       - app-data:/app/data
+      - ./entrypoint.sh:/app/docker-entrypoint-mount.sh
+    entrypoint:
+      [
+        "sh",
+        "-c",
+        "cp /app/docker-entrypoint-mount.sh /app/entrypoint.sh && sed -i 's/\r$//' /app/entrypoint.sh && chmod +x /app/entrypoint.sh && /app/entrypoint.sh",
+      ]
     depends_on:
       - redis
       - db
       - qdrant
     networks:
-      - flock-network 
+      - flock-network
     restart: always
-
 
   db:
     image: postgres:12
@@ -143,12 +158,12 @@ services:
       retries: 3
       start_period: 30s
     networks:
-      - flock-network 
+      - flock-network
     restart: always
 
   qdrant:
     image: qdrant/qdrant
-   
+
     volumes:
       - app-qdrant-data:/qdrant/storage
     environment:
@@ -157,12 +172,12 @@ services:
       - 6334:6334
       - 6333:6333
     networks:
-      - flock-network 
+      - flock-network
     restart: always
 
   redis:
     image: redis:alpine
-   
+
     ports:
       - 6379:6379
     volumes:
@@ -174,12 +189,11 @@ services:
       retries: 3
       start_period: 30s
     networks:
-      - flock-network 
+      - flock-network
     restart: always
 
-
 networks:
-  flock-network: 
+  flock-network:
     driver: bridge
 
 volumes:

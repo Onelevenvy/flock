@@ -83,7 +83,7 @@ const MessageBox: React.FC<MessageBoxProps> = ({
   const { activeNodeName } = useWorkflowStore();
 
   const [userScrolling, setUserScrolling] = useState(false);
-  const scrollTimeout = useRef<NodeJS.Timeout>();
+  const scrollTimeout = useRef<NodeJS.Timeout | null>(null);
 
   const [toolParams, setToolParams] = useState<Record<string, any>>({});
   const [feedbackMessage, setFeedbackMessage] = useState("");
