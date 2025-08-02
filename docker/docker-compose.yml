@@ -17,7 +17,7 @@ services:
     restart: always
 
   frontend:
-    image: flock-frontend:0.1.0
+    image: jimmy1211/flock-frontend:0.1.0
     deploy:
       resources:
         limits:
@@ -45,7 +45,7 @@ services:
     restart: always
 
   api:
-    image: flock-backend:0.1.0
+    image: jimmy1211/flock-backend:0.1.0
     deploy:
       resources:
         limits:
@@ -91,7 +91,7 @@ services:
     user: root
 
   celery_worker:
-    image: flock-backend:0.1.0
+    image: jimmy1211/flock-backend:0.1.0
     deploy:
       resources:
         limits:
