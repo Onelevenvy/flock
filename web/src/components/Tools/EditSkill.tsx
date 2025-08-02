@@ -19,14 +19,14 @@ import { useMutation, useQueryClient } from "react-query";
 
 import {
   type ApiError,
-  type SkillOut,
-  type SkillUpdate,
+  type ToolOut,
+  type ToolUpdate,
   ToolsService,
 } from "../../client";
 import useCustomToast from "../../hooks/useCustomToast";
 
 interface EditSkillProps {
-  skill: SkillOut;
+  skill: ToolOut;
   isOpen: boolean;
   onClose: () => void;
 }
@@ -43,14 +43,14 @@ const EditSkill = ({ skill, isOpen, onClose }: EditSkillProps) => {
     setError,
     clearErrors,
     formState: { isSubmitting, errors, isDirty, isValid },
-  } = useForm<SkillUpdate>({
+  } = useForm<ToolUpdate>({
     mode: "onBlur",
     criteriaMode: "all",
     defaultValues: skill,
   });
 
-  const updateSkill = async (data: SkillUpdate) => {
-    return await ToolsService.updateSkill({ id: skill.id, requestBody: data });
+  const updateSkill = async (data: ToolUpdate) => {
+    return await ToolsService.updateTool({ toolId: skill.id, requestBody: data });
   };
 
   const mutation = useMutation(updateSkill, {
@@ -69,7 +69,7 @@ const EditSkill = ({ skill, isOpen, onClose }: EditSkillProps) => {
     },
   });
 
-  const onSubmit: SubmitHandler<SkillUpdate> = async (data) => {
+  const onSubmit: SubmitHandler<ToolUpdate> = async (data) => {
     mutation.mutate(data);
   };
 

@@ -25,7 +25,10 @@ interface DeleteProps {
 const DeleteConfirmation = ({ isOpen, onClose }: DeleteProps) => {
   const queryClient = useQueryClient();
   const showToast = useCustomToast();
-  const cancelRef = React.useRef<HTMLButtonElement | null>(null);
+  // ---- THIS IS THE DEFINITIVE FIX ----
+  // We tell TypeScript to trust us that `null` is a valid initial value for this type.
+  const cancelRef = React.useRef<HTMLButtonElement>(null!);
+  // ---- END OF FIX ----
   const { logout, currentUser } = useAuth();
 
   const bgColor = useColorModeValue("white", "gray.800");

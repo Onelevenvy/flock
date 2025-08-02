@@ -1,6 +1,6 @@
 from typing import Any, Dict, List
 
-from langchain_core.messages import HumanMessage,SystemMessage
+from langchain_core.messages import HumanMessage, SystemMessage
 from langchain_core.runnables import RunnableConfig
 from langgraph.prebuilt import create_react_agent
 
@@ -86,10 +86,8 @@ class AgentNode:
         return self.tools_list
 
     async def work(
-    self, state: WorkflowState, config: RunnableConfig
-) -> ReturnWorkflowState:
-    
-
+        self, state: WorkflowState, config: RunnableConfig
+    ) -> ReturnWorkflowState:
 
         if "node_outputs" not in state:
             state["node_outputs"] = {}
@@ -116,8 +114,6 @@ class AgentNode:
         )
         human_message_input = HumanMessage(content=parsed_user_prompt, name="user")
 
-
-
         final_prompt_for_agent = []
         if not history_messages:
             if system_message_for_history:
@@ -127,10 +123,9 @@ class AgentNode:
             final_prompt_for_agent.extend(history_messages)
             final_prompt_for_agent.append(human_message_input)
 
-
         if not self.tools_list:
             await self.bind_tools()
-            
+
         # 创建 Agent 实例
         self.agent = create_react_agent(
             model=self.llm,
@@ -142,12 +137,10 @@ class AgentNode:
             {"messages": final_prompt_for_agent}, config=config
         )
 
-      
         final_response_message = agent_result["messages"][-1]
         new_output = {self.node_id: {"response": final_response_message.content}}
         state["node_outputs"] = update_node_outputs(state["node_outputs"], new_output)
 
- 
         return_state: ReturnWorkflowState = {
             "messages": agent_result["messages"],
             "node_outputs": state["node_outputs"],

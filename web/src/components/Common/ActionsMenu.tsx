@@ -16,7 +16,7 @@ import EditTeam from "@/components/Teams/EditTeam";
 import EditSkill from "@/components/Tools/EditSkill";
 import EditUpload from "@/components/Uploads/EditUpload";
 import type {
-  SkillOut,
+  ToolOut,
   TeamOut,
   UploadOut,
   UserOut,
@@ -26,7 +26,7 @@ import type {
 
 interface ActionsMenuProps {
   type: string;
-  value: UserOut | TeamOut | SkillOut | UploadOut | GroupOut | RoleOut;
+  value: UserOut | TeamOut | ToolOut | UploadOut | GroupOut | RoleOut;
   disabled?: boolean;
   onEdit?: () => void;
 }
@@ -120,7 +120,7 @@ const ActionsMenu = ({ type, value, disabled, onEdit }: ActionsMenuProps) => {
             />
           ) : type === "Skill" ? (
             <EditSkill
-              skill={value as SkillOut}
+              skill={value as ToolOut}
               isOpen={editUserModal.isOpen}
               onClose={editUserModal.onClose}
             />

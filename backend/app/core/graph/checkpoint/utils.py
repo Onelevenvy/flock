@@ -121,6 +121,7 @@ def convert_checkpoint_tuple_to_messages(
         return formatted_messages
     return formatted_messages
 
+
 async def get_checkpoint_tuples(thread_id: str) -> CheckpointTuple | None:
     """
     Retrieve the latest checkpoint tuple for a given thread ID.

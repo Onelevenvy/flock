@@ -1,7 +1,7 @@
 "use client";
 
 import { Box, Flex, Text, VStack, useColorModeValue } from "@chakra-ui/react";
-import { useEffect, useRef, useState } from "react";
+import { JSX, useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { BsBoxFill, BsSun, BsSunFill } from "react-icons/bs";
 import { LuLanguages } from "react-icons/lu";
