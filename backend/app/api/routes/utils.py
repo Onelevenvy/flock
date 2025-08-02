@@ -24,3 +24,11 @@ def test_email(email_to: EmailStr) -> Message:
         html_content=email_data.html_content,
     )
     return Message(message="Test email sent")
+
+
+@router.get("/health", status_code=200, tags=["Health Check"])
+def health_check():
+    """
+    健康检查端点，返回 200 OK 表示服务正常。
+    """
+    return {"status": "ok"}

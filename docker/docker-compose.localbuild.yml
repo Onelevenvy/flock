@@ -19,18 +19,6 @@ services:
       - NODE_ENV=production
       - API_URL=http://backend:8000
       - TZ=UTC
-    labels:
-      - traefik.enable=true
-      - traefik.docker.network=docker_default
-      - traefik.constraint-label=docker_default
-      - traefik.http.routers.${STACK_NAME}-frontend-http.rule=Host(`${DOMAIN}`)
-      - traefik.http.routers.${STACK_NAME}-frontend-http.entrypoints=http
-      - traefik.http.routers.${STACK_NAME}-frontend-http.middlewares=https-redirect
-      - traefik.http.routers.${STACK_NAME}-frontend-https.rule=Host(`${DOMAIN}`)
-      - traefik.http.routers.${STACK_NAME}-frontend-https.entrypoints=https
-      - traefik.http.routers.${STACK_NAME}-frontend-https.tls=true
-      - traefik.http.routers.${STACK_NAME}-frontend-https.tls.certresolver=le
-      - traefik.http.services.${STACK_NAME}-frontend.loadbalancer.server.port=3000
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:3000"]
       interval: 30s

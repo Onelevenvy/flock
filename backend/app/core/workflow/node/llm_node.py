@@ -52,14 +52,11 @@ class LLMNode(LLMBaseNode):
     async def work(
         self, state: WorkflowState, config: RunnableConfig
     ) -> ReturnWorkflowState:
-        
-       
 
         if "node_outputs" not in state:
             state["node_outputs"] = {}
         history_messages = state.get("messages", [])
 
-       
         final_prompt_for_model = []
         if self.system_prompt:
             parsed_system_prompt = (
@@ -69,12 +66,11 @@ class LLMNode(LLMBaseNode):
             )
             final_prompt_for_model.append(SystemMessage(content=parsed_system_prompt))
 
-       
         if not self.user_prompt:
             raise ValueError(
                 "No input found in llm node, Please check your node settings."
             )
-        
+
         parsed_user_prompt = (
             parse_variables(self.user_prompt, state["node_outputs"])
             .replace("{", "{{")
@@ -99,24 +95,22 @@ class LLMNode(LLMBaseNode):
         #     ]
 
         #     result: AIMessage = await self.model.ainvoke(temp_state, config)
-        
+
         if not history_messages:
-            
+
             messages_to_invoke = final_prompt_for_model + [human_message_input]
             result: AIMessage = await self.model.ainvoke(messages_to_invoke, config)
-           
+
             messages_for_return = messages_to_invoke + [result]
         else:
-           
+
             messages_to_invoke = history_messages + [human_message_input]
             result: AIMessage = await self.model.ainvoke(messages_to_invoke, config)
-            
+
             messages_for_return = [human_message_input] + [result]
 
-       
         new_output = {self.node_id: {"response": result.content}}
         state["node_outputs"] = update_node_outputs(state["node_outputs"], new_output)
-
 
         return_state: ReturnWorkflowState = {
             "messages": messages_for_return,
