@@ -22,7 +22,7 @@ def get_node_label(node_id: str, nodes: list[Dict[str, Any]] | None = None) -> s
 class ChatResponse(BaseModel):
     type: str  # ai | human | tool
     id: str
-    name: str
+    name: str | None ="ai"
     content: str | None = None
     imgdata: str | None = None
     tool_calls: list[ToolCall] | None = None

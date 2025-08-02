@@ -72,6 +72,7 @@ class LLMNode(LLMBaseNode):
             raise ValueError(
                 f"No input found in llm node, Please check you  node settings."
             )
+            # human_message_input =state.get("input_msg",[])[-1]   # 临时给subgraph 使用，后续用更完美的方式
 
         else:
             parsed_user_prompt = (

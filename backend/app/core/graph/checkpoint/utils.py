@@ -60,14 +60,14 @@ def convert_checkpoint_tuple_to_messages(
         elif (
             isinstance(message, AIMessage)
             and message.id
-            and message.name
+            # and message.name
             and isinstance(message.content, str)
         ):
             formatted_messages.append(
                 ChatResponse(
                     type="ai",
                     id=message.id,
-                    name=message.name,
+                    name=message.name if message.name is not None else "ai",
                     tool_calls=message.tool_calls,
                     content=message.content,
                 )
@@ -94,32 +94,32 @@ def convert_checkpoint_tuple_to_messages(
             )
         else:
             continue
-
-    last_message = all_messages[-1]
-    if last_message.type == "ai" and last_message.tool_calls:
-        # Check if any tool in last message is asking for human input
-        for tool_call in last_message.tool_calls:
-            if tool_call["name"] == "ask-human":
+    if all_messages:
+        last_message = all_messages[-1]
+        if last_message.type == "ai" and last_message.tool_calls:
+            # Check if any tool in last message is asking for human input
+            for tool_call in last_message.tool_calls:
+                if tool_call["name"] == "ask-human":
+                    formatted_messages.append(
+                        ChatResponse(
+                            type="interrupt",
+                            name="human",
+                            tool_calls=last_message.tool_calls,
+                            id=str(uuid4()),
+                        )
+                    )
+                    break
+            else:
                 formatted_messages.append(
                     ChatResponse(
                         type="interrupt",
-                        name="human",
+                        name="interrupt",
                         tool_calls=last_message.tool_calls,
                         id=str(uuid4()),
                     )
                 )
-                break
-        else:
-            formatted_messages.append(
-                ChatResponse(
-                    type="interrupt",
-                    name="interrupt",
-                    tool_calls=last_message.tool_calls,
-                    id=str(uuid4()),
-                )
-            )
+        return formatted_messages
     return formatted_messages
-
 
 async def get_checkpoint_tuples(thread_id: str) -> CheckpointTuple | None:
     """

@@ -44,8 +44,8 @@ class SubgraphNode:
         input_text = (
             parse_variables(self.input, state["node_outputs"]) if self.input else None
         )
-        if not input_text and state.get("all_messages"):
-            input_text = state["all_messages"][-1].content
+        if not input_text and state.get("messages"):
+            input_text = state["messages"][-1].content
 
         self.subgraph = await self._build_subgraph()
 
@@ -58,7 +58,7 @@ class SubgraphNode:
                     "node_outputs": state["node_outputs"],
                 }
                 result = await self.subgraph.ainvoke(input_state)
-                subgraph_output = result["all_messages"][-1]
+                subgraph_output = result["messages"][-1]
                 subgraph_result = ToolMessage(
                     content=subgraph_output.content,
                     name=self.subgraph_name,
