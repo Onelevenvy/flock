@@ -5,20 +5,15 @@
 <p align="center">
   <a href="./docs/README_cn.md">简体中文</a> |
   <a href="./README.md">English</a> |
-  <a href="./docs/README_ja.md">日本語</a> |
   <a href="#how-to-get-started">Getting Started</a>
 </p>
 
 > [!NOTE]
 >
-> ### 🎉 What's New 2025/6/6
+> ### 🎉 What's New 2025/8/2
 >
-> - **LangManus Integration**: Added support for LangManus, enabling more powerful agent orchestration capabilities! Special thanks to the open-source LangManus and [deer-flow ](https://github.com/bytedance/deer-flow)! Key features:
->   - 🧠 Enhanced agent coordination and workflow management
->   - 🔄 Seamless integration with existing workflow nodes
->   - 🛠️ Advanced agent interaction patterns
->   - 🔗 Improved multi-agent collaboration capabilities
->
+> - **New MCP Tolls**: Added support for Streamble HTTP MCP Tools
+> <img src="assets/mcp_tool.png" alt="mcp" width="500" />
 > ### 🎉 What's New 2025/5/9
 >
 > - **Agent Node Support**: Added dedicated Agent Node for seamless agent integration in workflows! Key features:
@@ -135,16 +130,6 @@ They are all excellent open-source projects, thanks🙇‍.
 
 Project tech stack: LangChain + LangGraph + React + Next.js + Chakra UI + PostgreSQL
 
-> [!NOTE]
->
-> ### 🤖 Model System
->
-> Flock supports various model providers and makes it easy to add new ones. Check out our [Models Guide](./docs/Add_New_Model_Providers_Guide.md) to learn about supported models and how to add support for new providers.
-
-> ### 🛠️ Tools System
->
-> Flock comes with various built-in tools and supports easy integration of custom tools. Check out our [Tools Guide](./docs/Add_New_Tools_Guide.md) to learn about available tools and how to add your own.
-
 ### 💡RoadMap
 
 1 APP
@@ -165,7 +150,7 @@ Project tech stack: LangChain + LangGraph + React + Next.js + Chakra UI + Postgr
 - [x] Siliconflow
 - [x] Ollama
 - [x] Qwen
-- [ ] Xinference
+- [x] Xinference
 
 3 Ohters
 
@@ -199,14 +184,15 @@ cd flock/docker
 # Copy the environment configuration file
 cp ../.env.example .env
 
-# Modify environment variables in .env file as needed
-# If deploying locally, you can keep the default values
-# If deploying on a server, modify API_URL and NEXT_PUBLIC_API_URL values, for example:
-API_URL=http://192.168.1.166:8000 
-NEXT_PUBLIC_API_URL=http://192.168.1.166:8000
-
 # Start docker compose
 docker compose up -d
+
+#  Access Frontend
+# Local environment
+http://localhost:4433
+
+# Server environment
+http://your_server_ip:4433
 ```
 
 #### 1.2 Method 2: Locally Build Frontend and Backend Images

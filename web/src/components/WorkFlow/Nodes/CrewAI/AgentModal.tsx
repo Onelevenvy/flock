@@ -34,7 +34,7 @@ import type { VariableReference } from "../../FlowVis/variableSystem";
 
 // 1. 导入 ToolSelector 和相关类型
 import ToolSelector from "@/components/Members/ToolSelector";
-import type { ToolOutIdWithAndName, ToolProviderWithToolsListOut } from "@/client";
+import type { ToolOutIdWithAndName } from "@/client";
 
 // 2. 为保存的工具对象定义清晰的类型
 interface SavedTool {
@@ -82,7 +82,11 @@ const AgentModal: React.FC<AgentModalProps> = ({
 
   const [isToolSelectorOpen, setIsToolSelectorOpen] = useState(false);
   const { data: toolProvidersData } = useToolProvidersQuery();
-  const providers: ToolProviderWithToolsListOut[] = toolProvidersData?.providers || [];
+
+  const providers = useMemo(
+          () => toolProvidersData?.providers || [], 
+          [toolProvidersData]
+      );
 
   // 3. 将 state 的类型从 string[] 修改为 SavedTool[]
   const [selectedTools, setSelectedTools] = useState<SavedTool[]>(
