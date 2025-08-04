@@ -85,6 +85,7 @@ dev = [
     "ruff>=0.2.2",
     "pre-commit>=3.6.2",
     "types-python-jose>=3.3.4.20240106",
+    "isort">=6.0.1",
     "types-passlib>=1.7.7.20240106"
 ]
 test = [
