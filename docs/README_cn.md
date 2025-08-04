@@ -3,19 +3,15 @@
 <p align="center">
   <a href="./README_cn.md">简体中文</a> |
   <a href="../README.md">English</a> |
-  <a href="./README_ja.md">日本語</a> |
   <a href="#如何开始">快速开始</a>
 </p>
 
 > [!TIP]
 >
-> ### 🎉 最新更新 2025/6/6
+> ### 🎉 最新更新 2025/8/2
 >
-> - **LangManus集成**: 新增对LangManus的支持，实现更强大的代理编排能力！特别感谢开源的LangManus和[deer-flow ](https://github.com/bytedance/deer-flow)！主要特性：
->   - 🧠 增强的代理协调和工作流管理
->   - 🔄 与现有工作流节点无缝集成
->   - 🛠️ 高级代理交互模式
->   - 🔗 改进的多代理协作能力
+> - **New MCP Tolls**: 增加对Streamble HTTP 协议的MCP工具的支持
+> <img src="assets/mcp_tool.png" alt="mcp" width="500" />
 >
 > ### 🎉 最新更新 2025/5/9
 >
@@ -133,16 +129,6 @@ Flock 的工作流系统由各种类型的节点组成，每种节点都有特�
 
 项目技术栈：LangChain + LangGraph + React + Next.js + Chakra UI + PostgreSQL
 
-> [!NOTE]
->
-> ### 🤖 模型系统
->
-> Flock 支持多种模型提供商，并且易于添加新的模型。查看我们的 [模型指南](./docs/Add_New_Model_Providers_Guide.md) 了解支持的模型以及如何添加新的提供商支持。
-
-> ### 🛠️ 工具系统
->
-> Flock 内置多种工具，并支持轻松集成自定义工具。查看我们的 [工具指南](./docs/Add_New_Tools_Guide.md) 了解可用工具以及如何添加自己的工具。
-
 ### 🏘️ 亮点特性
 
 - 持久化对话：保存并维护聊天历史，使您能够继续之前的对话。
@@ -169,14 +155,15 @@ cd flock/docker
 # 复制环境配置文件
 cp ../.env.example .env
 
-# 按需修改 .env 文件中的环境变量
-# 如果您是本机部署，可以保持默认值
-# 如果您是服务器部署，请修改 API_URL 和 NEXT_PUBLIC_API_URL 的值，例如
-API_URL=http://192.168.1.166:8000 
-NEXT_PUBLIC_API_URL=http://192.168.1.166:8000
-
 # 启动 docker compose
 docker compose  up -d
+
+# 访问前端界面
+# 本地部署
+http://localhost:4433
+
+# 服务器部署
+http://your_server_ip:4433
 
 ```
 
