@@ -718,7 +718,6 @@ async def generator(
 
                 state = {
                     "input_msg": formatted_messages,
-                    "all_messages": [],
                     "messages": [],
                 }
             else:
