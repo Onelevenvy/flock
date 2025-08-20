@@ -64,6 +64,31 @@ const ZhipuAIIcon = createIcon({
   ),
 });
 
+const Icon302ai = createIcon({
+  displayName: "302AIIcon",
+  path: (
+    <svg id="_图层_1" data-name="图层 1" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 513.24 512.3">
+  <g>
+    <circle
+      className="cls-3"
+      cx="281.41"
+      cy="280.46"
+      r="231.83"
+      fill="#3f3faa"
+    />
+    <circle
+      className="cls-2"
+      cx="231.83"
+      cy="231.83"
+      r="231.83"
+      fill="#8e47f0"
+    />
+  </g>
+  <path className="cls-1" d="M228.26,386.12c-16.47,0-32.38-5.44-45.57-15.73-15.66-12.21-25.64-29.8-28.07-49.51-.74-6.02-.77-11.99-.09-17.86-4.58,.89-9.32,1.35-14.15,1.35-41,0-74.36-33.36-74.36-74.36s33.36-74.36,74.36-74.36c5.86,0,11.57,.68,17.04,1.97-.32-2.8-.48-5.64-.48-8.49,0-41,33.36-74.36,74.36-74.36s74.36,33.36,74.36,74.36c0,2.38-.11,4.75-.34,7.11,6.02-1.05,12.2-1.37,18.43-.9,40.89,3.03,71.69,38.77,68.66,79.66-1.47,19.81-10.57,37.86-25.61,50.83-15.05,12.97-34.26,19.31-54.05,17.83-3.6-.27-7.14-.79-10.6-1.55,.02,.17,.04,.34,.07,.51,2.44,19.71-2.94,39.19-15.15,54.86-12.21,15.67-29.8,25.64-49.51,28.08-3.11,.38-6.21,.57-9.29,.57Zm-41.27-98.21c-5.22,9.04-7.29,19.29-6,29.71,1.57,12.67,7.97,23.97,18.04,31.81,10.06,7.85,22.58,11.31,35.25,9.74,12.67-1.57,23.97-7.97,31.81-18.04,7.85-10.07,11.31-22.59,9.74-35.25-1.03-8.36-4.21-16.21-9.23-22.86-3.28-3.17-6.28-6.65-8.97-10.44-4.25-5.98-2.85-14.28,3.13-18.53,5.98-4.26,14.28-2.85,18.53,3.12,.99,1.39,2.04,2.72,3.16,3.98,.89,.63,1.72,1.38,2.47,2.24,.45,.53,.9,1.06,1.33,1.6,7.8,7.05,17.76,11.36,28.46,12.15,26.34,1.97,49.24-17.84,51.19-44.12,1.95-26.28-17.84-49.24-44.12-51.19-10.07-.75-19.9,1.63-28.47,6.88-4.07,3.34-9.92,4.07-14.82,1.38-6.43-3.53-8.79-11.61-5.26-18.04,3.83-6.98,5.85-14.91,5.85-22.93,0-26.35-21.44-47.79-47.79-47.79s-47.79,21.44-47.79,47.79c0,9.43,2.74,18.54,7.92,26.36,.25,.38,.48,.77,.69,1.17,13.94,13.52,22.61,32.45,22.61,53.36,0,23.37-10.83,44.25-27.74,57.89Zm-46.62-105.68c-26.35,0-47.79,21.44-47.79,47.79s21.44,47.79,47.79,47.79,47.79-21.44,47.79-47.79-21.44-47.79-47.79-47.79Z"/>
+</svg>
+  ),
+});
+
 const SiliconFlowIcon = createIcon({
   displayName: "SiliconflowIcon",
 
@@ -412,6 +437,76 @@ const GoogleGeminiIcon = createIcon({
     </svg>
   ),
 });
+
+const XinferenceIcon = createIcon({
+  displayName: "XinferenceIcon",
+
+  path: (
+   <svg
+              width="24"
+              height="24"
+              viewBox="0 0 24 24"
+              fill="none"
+              xmlns="http://www.w3.org/2000/svg"
+            >
+              <g id="Xorbits Square" clipPath="url(#clip0_9850_26870)">
+                <path
+                  id="Vector"
+                  d="M8.00391 12.3124C8.69334 13.0754 9.47526 13.7494 10.3316 14.3188C11.0667 14.8105 11.8509 15.2245 12.6716 15.5541C14.1617 14.1465 15.3959 12.4907 16.3192 10.6606L21.7051 0L12.3133 7.38353C10.5832 8.74456 9.12178 10.416 8.00391 12.3124Z"
+                  fill="url(#paint0_linear_9850_26870)"
+                />
+                <path
+                  id="Vector_2"
+                  d="M7.23504 18.9512C6.56092 18.5012 5.92386 18.0265 5.3221 17.5394L2.06445 24L7.91975 19.3959C7.69034 19.2494 7.46092 19.103 7.23504 18.9512Z"
+                  fill="url(#paint1_linear_9850_26870)"
+                />
+                <path
+                  id="Vector_3"
+                  d="M19.3161 8.57474C21.0808 10.9147 21.5961 13.5159 20.3996 15.3053C18.6526 17.9189 13.9161 17.8183 9.82024 15.0812C5.72435 12.3441 3.82024 8.0065 5.56729 5.39297C6.76377 3.60356 9.36318 3.0865 12.2008 3.81886C7.29318 1.73474 2.62376 1.94121 0.813177 4.64474C-1.45976 8.04709 1.64435 14.1177 7.74494 18.1889C13.8455 22.26 20.6361 22.8124 22.9091 19.4118C24.7179 16.703 23.1173 12.3106 19.3161 8.57474Z"
+                  fill="url(#paint2_linear_9850_26870)"
+                />
+              </g>
+              <defs>
+                <linearGradient
+                  id="paint0_linear_9850_26870"
+                  x1="2.15214"
+                  y1="24.3018"
+                  x2="21.2921"
+                  y2="0.0988218"
+                  gradientUnits="userSpaceOnUse"
+                >
+                  <stop stopColor="#E9A85E" />
+                  <stop offset="1" stopColor="#F52B76" />
+                </linearGradient>
+                <linearGradient
+                  id="paint1_linear_9850_26870"
+                  x1="2.06269"
+                  y1="24.2294"
+                  x2="21.2027"
+                  y2="0.028252"
+                  gradientUnits="userSpaceOnUse"
+                >
+                  <stop stopColor="#E9A85E" />
+                  <stop offset="1" stopColor="#F52B76" />
+                </linearGradient>
+                <linearGradient
+                  id="paint2_linear_9850_26870"
+                  x1="-0.613606"
+                  y1="3.843"
+                  x2="21.4449"
+                  y2="18.7258"
+                  gradientUnits="userSpaceOnUse"
+                >
+                  <stop stopColor="#6A0CF5" />
+                  <stop offset="1" stopColor="#AB66F3" />
+                </linearGradient>
+                <clipPath id="clip0_9850_26870">
+                  <rect width="24" height="24" fill="white" />
+                </clipPath>
+              </defs>
+            </svg>
+  ),
+});
 const iconMap: { [key: string]: React.FC } = {
   openai: OpenAIIcon,
   zhipuai: ZhipuAIIcon,
@@ -419,18 +514,21 @@ const iconMap: { [key: string]: React.FC } = {
   siliconflow: SiliconFlowIcon,
   qwen: QwenIcon,
   google: GoogleGeminiIcon,
+  "302.ai": Icon302ai,
+  xinference: XinferenceIcon,
   default: OpenAIIcon,
 };
 
 const getProviderFromModelName = (modelName: string): string => {
   const lowerModelName = modelName.toLowerCase();
 
-  if (lowerModelName.includes("//")) return "siliconflow";
-  if (lowerModelName.includes("gpt")) return "openai";
-  if (lowerModelName.includes("glm")) return "zhipuai";
-  if (lowerModelName.includes("llama")) return "ollama";
-  if (lowerModelName.includes("qwen")) return "qwen";
-  if (lowerModelName.includes("gemini")) return "google";
+  // if (lowerModelName.includes("//")) return "siliconflow";
+  // if (lowerModelName.includes("gpt")) return "openai";
+  // if (lowerModelName.includes("glm")) return "zhipuai";
+  // if (lowerModelName.includes("llama")) return "ollama";
+  // if (lowerModelName.includes("qwen")) return "qwen";
+  // if (lowerModelName.includes("gemini")) return "google";
+  // if (lowerModelName.includes("302ai")) return "302ai";
 
   // 添加更多模型名称到提供商的映射
   return "default";

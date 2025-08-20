@@ -151,6 +151,7 @@ Project tech stack: LangChain + LangGraph + React + Next.js + Chakra UI + Postgr
 - [x] Ollama
 - [x] Qwen
 - [x] Xinference
+- [x] 302.AI
 
 3 Ohters
 
