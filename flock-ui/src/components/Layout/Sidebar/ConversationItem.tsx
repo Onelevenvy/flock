@@ -44,7 +44,7 @@ export function ConversationItem({
         style={{ flex: 1, padding: '6px 8px', display: 'flex', alignItems: 'center', gap: 8, minWidth: 0 }}
         onClick={onSelect}
       >
-        <IconMessage size={14} color={isActive ? '#6366f1' : 'var(--flock-text-dim)'} style={{ flexShrink: 0 }} />
+        <IconMessage size={14} color={isActive ? 'var(--flock-accent)' : 'var(--flock-text-secondary)'} style={{ flexShrink: 0 }} />
         {editing ? (
           <TextInput
             size="xs"
@@ -64,12 +64,12 @@ export function ConversationItem({
           <Text
             size="sm"
             fw={isActive ? 600 : 400}
-            c={isActive ? 'var(--flock-text-bright)' : 'dimmed'}
             style={{
               flex: 1,
               overflow: 'hidden',
               textOverflow: 'ellipsis',
               whiteSpace: 'nowrap',
+              color: isActive ? 'var(--flock-text-primary)' : 'var(--flock-text-secondary)',
             }}
           >
             {conv.title}

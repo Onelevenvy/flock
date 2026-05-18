@@ -229,7 +229,7 @@ export function Sidebar() {
                   gap: 12,
                   padding: '8px 12px',
                   borderRadius: 8,
-                  color: isActive ? 'var(--mantine-color-indigo-4)' : 'var(--flock-text-dim)',
+                  color: isActive ? 'var(--flock-accent)' : 'var(--flock-text-secondary)',
                   background: isActive ? 'var(--flock-accent-soft)' : 'transparent',
                   fontWeight: isActive ? 600 : 500,
                   transition: 'all 0.2s ease',
@@ -252,7 +252,7 @@ export function Sidebar() {
               justifyContent: 'space-between',
               padding: '8px 12px',
               borderRadius: 8,
-              color: 'var(--flock-text-dim)',
+              color: 'var(--flock-text-secondary)',
               marginTop: 4,
             }}
             onClick={() => setMoreOpened(!moreOpened)}
@@ -277,7 +277,7 @@ export function Sidebar() {
                       gap: 12,
                       padding: '8px 12px',
                       borderRadius: 8,
-                      color: isActive ? 'var(--mantine-color-indigo-4)' : 'var(--flock-text-dim)',
+                      color: isActive ? 'var(--flock-accent)' : 'var(--flock-text-secondary)',
                       background: isActive ? 'var(--flock-accent-soft)' : 'transparent',
                       fontWeight: isActive ? 600 : 500,
                       transition: 'all 0.2s ease',
@@ -303,7 +303,7 @@ export function Sidebar() {
             justifyContent: 'space-between',
           }}
         >
-          <Text size="xs" fw={600} c="dimmed" style={{ letterSpacing: '0.05em', textTransform: 'uppercase' }}>
+          <Text size="xs" fw={600} style={{ color: 'var(--flock-text-secondary)', letterSpacing: '0.05em', textTransform: 'uppercase' }}>
             {t('sidebar.workspace')}
           </Text>
           <Group gap={4} wrap="nowrap">

@@ -36,11 +36,11 @@ function ThinkingBlock({ text, defaultCollapsed }: { text: string; defaultCollap
   return (
     <Box
       style={{
-        background: 'rgba(139, 92, 246, 0.06)',
+        background: 'var(--flock-bg-surface)',
         borderRadius: 6,
         padding: '6px 10px',
         marginBottom: 6,
-        border: '1px solid rgba(139, 92, 246, 0.12)',
+        border: '1px solid var(--flock-border-dim)',
       }}
     >
       <Group
@@ -48,11 +48,11 @@ function ThinkingBlock({ text, defaultCollapsed }: { text: string; defaultCollap
         style={{ cursor: 'pointer' }}
         onClick={() => setCollapsed((v) => !v)}
       >
-        <IconBrain size={13} color="var(--flock-accent)" />
-        <Text size="xs" fw={600} style={{ color: 'var(--flock-accent)' }}>
+        <IconBrain size={13} color="var(--flock-text-secondary)" />
+        <Text size="xs" fw={600} style={{ color: 'var(--flock-text-secondary)' }}>
           思考过程
         </Text>
-        <ActionIcon size="xs" variant="transparent" color="violet">
+        <ActionIcon size="xs" variant="transparent" color="gray">
           {collapsed ? <IconChevronRight size={11} /> : <IconChevronDown size={11} />}
         </ActionIcon>
       </Group>

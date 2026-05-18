@@ -55,12 +55,12 @@ export function WorkspaceTreeNode({
           <Text
             size="sm"
             fw={isWsActive ? 600 : 500}
-            c={isWsActive ? 'var(--flock-text-bright)' : 'dimmed'}
             style={{
               flex: 1,
               overflow: 'hidden',
               textOverflow: 'ellipsis',
               whiteSpace: 'nowrap',
+              color: isWsActive ? 'var(--flock-text-primary)' : 'var(--flock-text-secondary)',
             }}
           >
             {ws.name}
