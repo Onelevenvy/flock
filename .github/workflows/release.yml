@@ -46,8 +46,6 @@ jobs:
 
       - name: Rust cache
         uses: swatinem/rust-cache@v2
-        with:
-          workspaces: './src-tauri -> target'
 
       - name: Install pnpm
         uses: pnpm/action-setup@v3
@@ -55,6 +53,7 @@ jobs:
           version: 9
       
       - name: Install frontend dependencies
+        working-directory: flock-ui
         run: pnpm install
 
       - name: Build and Release
@@ -62,6 +61,7 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
+          projectPath: flock-ui
           tagName: ${{ github.ref_name }}
           releaseName: 'App Production ${{ github.ref_name }}'
           releaseBody: '🚀 Automated release from GitHub Actions. See assets below to download.'
