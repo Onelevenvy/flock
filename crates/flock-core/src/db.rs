@@ -446,6 +446,7 @@ impl DbManager {
             ("debug",   serde_json::to_string(&DebugConfig::default())?),
             ("max_running_sessions", serde_json::to_string(&4)?),
             ("max_cached_sessions", serde_json::to_string(&10)?),
+            ("enable_title_summary", serde_json::to_string(&false)?),
         ];
 
         for (key, json) in entries {

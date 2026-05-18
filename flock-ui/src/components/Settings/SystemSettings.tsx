@@ -12,6 +12,7 @@ import {
   Button,
   Badge,
   Tooltip,
+  Switch,
 } from '@mantine/core';
 import {
   IconSun,
@@ -40,6 +41,7 @@ export default function SystemSettings() {
   // 并发与缓存限制配置
   const [maxRunning, setMaxRunning] = useState<number>(4);
   const [maxCached, setMaxCached] = useState<number>(10);
+  const [enableTitleSummary, setEnableTitleSummary] = useState<boolean>(false);
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
@@ -48,16 +50,18 @@ export default function SystemSettings() {
 
   const loadSystemInfo = async () => {
     try {
-      const [path, dir, dbMaxRunning, dbMaxCached] = await Promise.all([
+      const [path, dir, dbMaxRunning, dbMaxCached, dbEnableTitleSummary] = await Promise.all([
         invoke<string>('get_db_path'),
         invoke<string | null>('get_workdir'),
         invoke<number | null>('get_app_config', { key: 'max_running_sessions' }),
         invoke<number | null>('get_app_config', { key: 'max_cached_sessions' }),
+        invoke<boolean | null>('get_app_config', { key: 'enable_title_summary' }),
       ]);
       setDbPath(path);
       setWorkdir(dir || '__not_bound__');
       if (dbMaxRunning !== null) setMaxRunning(dbMaxRunning);
       if (dbMaxCached !== null) setMaxCached(dbMaxCached);
+      if (dbEnableTitleSummary !== null) setEnableTitleSummary(dbEnableTitleSummary);
     } catch (e) {
       console.error('Failed to load system info:', e);
     }
@@ -69,6 +73,7 @@ export default function SystemSettings() {
       await Promise.all([
         invoke('set_app_config', { key: 'max_running_sessions', value: maxRunning }),
         invoke('set_app_config', { key: 'max_cached_sessions', value: maxCached }),
+        invoke('set_app_config', { key: 'enable_title_summary', value: enableTitleSummary }),
       ]);
       notifications.show({
         title: t('common.success'),
@@ -271,6 +276,31 @@ export default function SystemSettings() {
               />
             </Grid.Col>
           </Grid>
+
+          <Divider color="var(--flock-border-subtle)" />
+
+          {/* 自动总结标题 */}
+          <Group justify="space-between" align="center">
+            <Group gap={6} wrap="nowrap">
+              <Text size="sm" fw={500}>{t('systemSettings.enableTitleSummary')}</Text>
+              <Tooltip
+                label={t('systemSettings.enableTitleSummaryTooltip')}
+                multiline
+                w={280}
+                withArrow
+                position="top"
+              >
+                <IconHelpCircle size={14} color="var(--flock-text-dim)" style={{ cursor: 'help' }} />
+              </Tooltip>
+            </Group>
+            <Switch
+              checked={enableTitleSummary}
+              onChange={(e) => setEnableTitleSummary(e.currentTarget.checked)}
+              styles={{
+                track: { cursor: 'pointer' },
+              }}
+            />
+          </Group>
 
           <Divider color="var(--flock-border-subtle)" />
 
