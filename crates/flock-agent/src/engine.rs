@@ -323,11 +323,26 @@ impl AgentEngine {
         session_id: Option<&str>,
     ) -> anyhow::Result<()> {
         if let Some(mgr) = &self.session_manager {
-            let sid = session_id
-                .map(|s| s.to_string())
-                .unwrap_or_else(|| uuid::Uuid::new_v4().to_string());
-            let session = mgr.create(provider_name, &self.model, cwd, &sid).await?;
-            self.current_session = Some(session);
+            match session_id {
+                Some(sid) => {
+                    let session = mgr.create(provider_name, &self.model, cwd, sid).await?;
+                    self.current_session = Some(session);
+                }
+                None => {
+                    let sid = uuid::Uuid::new_v4().to_string();
+                    let now = chrono::Utc::now();
+                    self.current_session = Some(Session {
+                        id: sid,
+                        created_at: now,
+                        updated_at: now,
+                        provider: provider_name.to_string(),
+                        model: self.model.clone(),
+                        cwd: cwd.to_string(),
+                        total_usage: TokenUsage::default(),
+                        messages: Vec::new(),
+                    });
+                }
+            }
         }
         Ok(())
     }
