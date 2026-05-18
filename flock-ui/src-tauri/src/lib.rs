@@ -91,6 +91,8 @@ pub fn run() {
             commands::activate_provider,
             commands::get_active_model,
             commands::set_active_model,
+            commands::upsert_custom_model,
+            commands::test_custom_model_connection,
             // 系统配置
             commands::get_app_config,
             commands::set_app_config,

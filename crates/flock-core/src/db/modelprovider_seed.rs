@@ -49,20 +49,16 @@ fn anthropic_compatible() -> (ModelProvider, Vec<ModelSeed>) {
         id: "anthropic_compatible".into(),
         provider_name: "anthropic_compatible".into(),
         provider_type: "anthropic".into(),
-        base_url: Some("https://token-plan-cn.xiaomimimo.com/anthropic".into()),
+        base_url: None,
         api_key: None,
         icon: Some("anthropic_compatible".into()),
         description: Some("Anthropic Compatible models".into()),
-        test_model: Some("mimo-v2.5-pro".into()),
+        test_model: None,
         is_available: false,
         created_at: String::new(),
         updated_at: String::new(),
     };
-    let models = vec![
-        ModelSeed { id: "anthropic_compatible:mimo-v2.5-pro", model_name: "mimo-v2.5-pro", categories: &["chat"], capabilities: &["vision"] },
-
-    ];
-    (provider, models)
+    (provider, vec![])
 }
 fn openai() -> (ModelProvider, Vec<ModelSeed>) {
     let provider = ModelProvider {
@@ -90,19 +86,16 @@ fn openai_compatible() -> (ModelProvider, Vec<ModelSeed>) {
         id: "openai_compatible".into(),
         provider_name: "openai_compatible".into(),
         provider_type: "openai".into(),
-        base_url: Some("https://token-plan-cn.xiaomimimo.com/v1".into()),
+        base_url: None,
         api_key: None,
         icon: Some("openai_compatible".into()),
         description: Some("OpenAI Compatible models".into()),
-        test_model: Some("mimo-v2.5-pro".into()),
+        test_model: None,
         is_available: false,
         created_at: String::new(),
         updated_at: String::new(),
     };
-    let models = vec![
-        ModelSeed { id: "openai_compatible:mimo-v2.5-pro", model_name: "mimo-v2.5-pro", categories: &["chat"], capabilities: &["vision"] },
-    ];
-    (provider, models)
+    (provider, vec![])
 }
 
 fn siliconflow() -> (ModelProvider, Vec<ModelSeed>) {

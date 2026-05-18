@@ -644,6 +644,37 @@ impl DbManager {
         Ok(models)
     }
 
+    pub async fn get_model(&self, provider_id: &str, model_name: &str) -> Result<Option<Model>> {
+        let r = sqlx::query(
+            "SELECT id, provider_id, model_name, categories, capabilities, is_online, meta,
+                    created_at, updated_at
+             FROM model WHERE provider_id = ?1 AND model_name = ?2",
+        )
+            .bind(provider_id)
+            .bind(model_name)
+            .fetch_optional(&self.pool)
+            .await?;
+
+        if let Some(r) = r {
+            Ok(Some(Model {
+                id: r.get("id"),
+                provider_id: r.get("provider_id"),
+                model_name: r.get("model_name"),
+                categories: modelproviders::parse_json_array(r.try_get("categories").ok()),
+                capabilities: modelproviders::parse_json_array(r.try_get("capabilities").ok()),
+                is_online: r.get::<i64, _>("is_online") != 0,
+                meta: r
+                    .try_get::<String, _>("meta")
+                    .ok()
+                    .and_then(|s| serde_json::from_str(&s).ok()),
+                created_at: r.get("created_at"),
+                updated_at: r.get("updated_at"),
+            }))
+        } else {
+            Ok(None)
+        }
+    }
+
     pub async fn upsert_model(&self, model: &Model) -> Result<()> {
         let categories = serde_json::to_string(&model.categories)?;
         let capabilities = serde_json::to_string(&model.capabilities)?;
