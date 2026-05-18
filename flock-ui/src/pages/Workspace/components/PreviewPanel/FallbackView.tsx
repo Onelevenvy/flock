@@ -38,18 +38,20 @@ export function FallbackView({ fileName, ext, filePath, activeWorkspaceId }: Fal
           width: 80,
           height: 80,
           borderRadius: 20,
-          background: 'linear-gradient(135deg, #4b5563 0%, #6b7280 100%)', // Neutral Gray
+          background: 'var(--flock-accent-soft)',
+          border: '1.5px dashed var(--flock-accent)',
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
-          boxShadow: '0 8px 24px rgba(0,0,0,0.12)',
+          boxShadow: '0 4px 16px var(--flock-accent-soft)',
           marginBottom: 20,
-          color: '#ffffff',
-          fontSize: 22,
+          color: 'var(--flock-accent)',
+          fontSize: 18,
           fontWeight: 700,
+          letterSpacing: '0.05em',
         }}
       >
-        FILE
+        {ext.substring(0, 4).toUpperCase() || 'FILE'}
       </Box>
 
       <Text size="lg" fw={700} style={{ color: 'var(--flock-text-bright)', marginBottom: 8 }}>
@@ -62,11 +64,12 @@ export function FallbackView({ fileName, ext, filePath, activeWorkspaceId }: Fal
 
       <Button
         size="md"
-        variant="outline"
-        color="gray"
+        color="indigo"
         leftSection={<IconExternalLink size={16} />}
         style={{
+          background: 'linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%)',
           borderRadius: 12,
+          boxShadow: '0 4px 16px rgba(99, 102, 241, 0.25)',
         }}
         onClick={handleOpen}
       >
