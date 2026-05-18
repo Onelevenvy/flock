@@ -12,9 +12,9 @@ repository.workspace = true
 [dependencies]
 flock-core.workspace     = true
 
-langgraph-prebuilt = { path = "../../../langgraph-rust/crates/langgraph-prebuilt" }
-langgraph-derive = { path = "../../../langgraph-rust/crates/langgraph-derive" }
-langgraph-checkpoint = { path = "../../../langgraph-rust/crates/langgraph-checkpoint" }
+langgraph-prebuilt.workspace = true
+langgraph-derive.workspace = true
+langgraph-checkpoint.workspace = true
 
 tokio.workspace       = true
 futures.workspace     = true
