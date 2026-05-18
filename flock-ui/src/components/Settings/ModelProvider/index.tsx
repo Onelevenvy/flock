@@ -30,6 +30,7 @@ import { invoke } from '@tauri-apps/api/core';
 import { notifications } from '@mantine/notifications';
 import { useTranslation } from 'react-i18next';
 import ProviderSettings from './ProviderSettings';
+import { ProviderIcon } from '../../Icons';
 
 interface ModelProvider {
   id: string;
@@ -57,14 +58,7 @@ interface ModelItem {
   updated_at: string;
 }
 
-const PROVIDER_ICONS: Record<string, string> = {
-  anthropic: '🟣',
-  openai: '🟢',
-  siliconflow: '🔵',
-  zhipuai: '🟡',
-  deepseek: '🔷',
-  ollama: '⚪',
-};
+
 
 interface DefaultConfig {
   provider: string;
@@ -432,7 +426,6 @@ export default function ModelProviderPage() {
                 <Group gap="lg">
                   <Box 
                     style={{
-                      fontSize: '32px',
                       background: 'var(--flock-bg-surface)',
                       width: 56,
                       height: 56,
@@ -440,9 +433,11 @@ export default function ModelProviderPage() {
                       alignItems: 'center',
                       justifyContent: 'center',
                       borderRadius: 14,
+                      border: '1px solid var(--flock-border-subtle)',
+                      boxShadow: '0 4px 12px rgba(0,0,0,0.03)',
                     }}
                   >
-                    {PROVIDER_ICONS[provider.id] || '🔧'}
+                    <ProviderIcon name={provider.id} size={32} />
                   </Box>
                   <Box>
                     <Group gap="xs" align="center">

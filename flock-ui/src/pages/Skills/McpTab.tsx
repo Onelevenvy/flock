@@ -21,7 +21,6 @@ import {
   Tooltip,
 } from '@mantine/core';
 import {
-  IconPlug,
   IconX,
   IconPlus,
   IconRefresh,
@@ -34,6 +33,7 @@ import { invoke } from '@tauri-apps/api/core';
 import { notifications } from '@mantine/notifications';
 import { useTranslation } from 'react-i18next';
 import type { McpServerInfo, Tool } from './types';
+import { ToolsIcon } from '../../components/Icons';
 
 function McpServerDetailPanel({
   server,
@@ -110,9 +110,21 @@ function McpServerDetailPanel({
 
       <Box px="md" pb="md">
         <Group gap="sm" mb="xs">
-          <ThemeIcon size={40} radius="md" variant="light" color="violet">
-            <IconPlug size={22} />
-          </ThemeIcon>
+          <Box
+            style={{
+              width: 40,
+              height: 40,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              borderRadius: 10,
+              background: 'var(--flock-bg-surface)',
+              border: '1px solid var(--flock-border-subtle)',
+              boxShadow: '0 2px 8px rgba(0,0,0,0.03)',
+            }}
+          >
+            <ToolsIcon name={server.name} size={24} />
+          </Box>
           <Box style={{ flex: 1, minWidth: 0 }}>
             <Text size="sm" fw={600} style={{ color: 'var(--flock-text-bright)' }} truncate>
               {server.name}
@@ -480,9 +492,21 @@ export function McpTab() {
                 className="hover-card-lift"
               >
                 <Group gap="sm" mb="sm">
-                  <ThemeIcon size={36} radius="md" variant="light" color="violet">
-                    <IconPlug size={20} />
-                  </ThemeIcon>
+                  <Box
+                    style={{
+                      width: 36,
+                      height: 36,
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      borderRadius: 8,
+                      background: 'var(--flock-bg-surface)',
+                      border: '1px solid var(--flock-border-subtle)',
+                      boxShadow: '0 2px 8px rgba(0,0,0,0.02)',
+                    }}
+                  >
+                    <ToolsIcon name={server.name} size={20} />
+                  </Box>
                   <Box style={{ flex: 1, minWidth: 0 }}>
                     <Text size="sm" fw={600} truncate style={{ color: 'var(--flock-text-bright)' }}>
                       {server.name}

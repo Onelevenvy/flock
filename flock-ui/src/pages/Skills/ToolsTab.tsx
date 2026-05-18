@@ -16,7 +16,6 @@ import {
   ScrollArea,
 } from '@mantine/core';
 import {
-  IconRobot,
   IconTool,
   IconX,
   IconEye,
@@ -29,6 +28,7 @@ import { notifications } from '@mantine/notifications';
 import { useTranslation } from 'react-i18next';
 import type { ToolProvider, Tool } from './types';
 import { getProviderDescription, formatLabel, parseInputSchema } from './helpers';
+import { ToolsIcon } from '../../components/Icons';
 
 function ProviderDetailPanel({
   provider,
@@ -160,9 +160,21 @@ function ProviderDetailPanel({
 
       <Box px="md" pb="md">
         <Group gap="sm" mb="xs">
-          <ThemeIcon size={40} radius="md" variant="light" color="indigo">
-            <IconRobot size={22} />
-          </ThemeIcon>
+          <Box
+            style={{
+              width: 40,
+              height: 40,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              borderRadius: 10,
+              background: 'var(--flock-bg-surface)',
+              border: '1px solid var(--flock-border-subtle)',
+              boxShadow: '0 2px 8px rgba(0,0,0,0.03)',
+            }}
+          >
+            <ToolsIcon name={provider.id} size={24} />
+          </Box>
           <Box style={{ flex: 1, minWidth: 0 }}>
             <Text size="sm" fw={600} style={{ color: 'var(--flock-text-bright)' }} truncate>
               {provider.provider_name}
@@ -347,9 +359,21 @@ export function ToolsTab() {
                 className="hover-card-lift"
               >
                 <Group gap="sm" mb="sm">
-                  <ThemeIcon size={36} radius="md" variant="light" color="indigo">
-                    <IconRobot size={20} />
-                  </ThemeIcon>
+                  <Box
+                    style={{
+                      width: 36,
+                      height: 36,
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      borderRadius: 8,
+                      background: 'var(--flock-bg-surface)',
+                      border: '1px solid var(--flock-border-subtle)',
+                      boxShadow: '0 2px 8px rgba(0,0,0,0.02)',
+                    }}
+                  >
+                    <ToolsIcon name={provider.id} size={20} />
+                  </Box>
                   <Box style={{ flex: 1, minWidth: 0 }}>
                     <Text size="sm" fw={600} truncate style={{ color: 'var(--flock-text-bright)' }}>{provider.provider_name}</Text>
                   </Box>
