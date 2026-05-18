@@ -30,7 +30,7 @@ import { invoke } from '@tauri-apps/api/core';
 import { notifications } from '@mantine/notifications';
 import { useTranslation } from 'react-i18next';
 import ProviderSettings from './ProviderSettings';
-import { ProviderIcon } from '../../Icons';
+import { ModelProviderIconLong, ModelIcon } from '../../Icons';
 
 interface ModelProvider {
   id: string;
@@ -427,8 +427,9 @@ export default function ModelProviderPage() {
                   <Box 
                     style={{
                       background: 'var(--flock-bg-surface)',
-                      width: 56,
                       height: 56,
+                      minWidth: 56,
+                      padding: '0 16px',
                       display: 'flex',
                       alignItems: 'center',
                       justifyContent: 'center',
@@ -437,7 +438,7 @@ export default function ModelProviderPage() {
                       boxShadow: '0 4px 12px rgba(0,0,0,0.03)',
                     }}
                   >
-                    <ProviderIcon name={provider.id} size={32} />
+                    <ModelProviderIconLong name={provider.id} size={28} />
                   </Box>
                   <Box>
                     <Group gap="xs" align="center">
@@ -470,9 +471,6 @@ export default function ModelProviderPage() {
                         {hasApiKey ? t('settings.model.configured') : t('settings.model.notConfigured')}
                       </Badge>
                     </Group>
-                    <Text size="sm" c="dimmed" mt={4} style={{ maxWidth: 500 }}>
-                      {provider.description || provider.base_url}
-                    </Text>
                   </Box>
                 </Group>
 
@@ -579,8 +577,24 @@ export default function ModelProviderPage() {
                       }}
                     >
                       <Group gap="md">
+                        <Box 
+                          style={{
+                            background: 'var(--flock-bg-raised)',
+                            width: 36,
+                            height: 36,
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            borderRadius: 8,
+                            border: '1px solid var(--flock-border-subtle)',
+                            opacity: model.is_online ? 1 : 0.6,
+                            boxShadow: '0 2px 6px rgba(0,0,0,0.02)',
+                          }}
+                        >
+                          <ModelIcon name={model.model_name} provider={provider.id} size={20} />
+                        </Box>
                         <Box>
-                          <Text size="sm" fw={600} c={model.is_online ? 'white' : 'dimmed'}>
+                          <Text size="sm" fw={600} c={model.is_online ? 'var(--flock-text-bright)' : 'dimmed'}>
                             {model.model_name}
                           </Text>
                           <Group gap={6} mt={4}>
