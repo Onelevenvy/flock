@@ -60,9 +60,9 @@ export function WorkspacePicker({
                   color: 'var(--flock-text-primary)',
                 }}
               >
-                <IconFolder size={13} color={ws.id === activeWorkspaceId ? 'var(--mantine-color-indigo-4)' : 'var(--flock-text-dim)'} />
+                <IconFolder size={13} color={ws.id === activeWorkspaceId ? 'var(--flock-accent)' : 'var(--flock-text-secondary)'} />
                 <Text size="xs" style={{ flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{ws.name}</Text>
-                {ws.id === activeWorkspaceId && <IconCheck size={12} color="var(--mantine-color-indigo-4)" />}
+                {ws.id === activeWorkspaceId && <IconCheck size={12} color="var(--flock-accent)" />}
               </UnstyledButton>
             ))}
           </Stack>

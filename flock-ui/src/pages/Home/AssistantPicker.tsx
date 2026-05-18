@@ -43,12 +43,12 @@ export function AssistantPicker({
               padding: '5px 14px 5px 8px',
               borderRadius: 20,
               border: isActive
-                ? '1.5px solid var(--mantine-color-indigo-4)'
+                ? '1.5px solid var(--flock-accent)'
                 : '1.5px solid var(--flock-border-dim)',
               background: isActive ? 'var(--flock-accent-soft)' : 'var(--flock-bg-raised)',
-              color: isActive ? 'var(--mantine-color-indigo-4)' : 'var(--flock-text-dim)',
+              color: isActive ? 'var(--flock-accent)' : 'var(--flock-text-secondary)',
               fontSize: 13,
-              fontWeight: isActive ? 600 : 400,
+              fontWeight: isActive ? 600 : 500,
               transition: 'all 0.18s ease',
               boxShadow: isActive ? '0 2px 8px rgba(99,102,241,0.18)' : 'none',
             }}
@@ -66,14 +66,14 @@ export function AssistantPicker({
             >
               {a.icon}
             </Avatar>
-            <Text size="xs" fw={isActive ? 600 : 400}>{a.name}</Text>
+            <Text size="xs" fw={isActive ? 600 : 500}>{a.name}</Text>
             {isActive && (
               <Box
                 style={{
                   width: 6,
                   height: 6,
                   borderRadius: '50%',
-                  background: 'var(--mantine-color-indigo-4)',
+                  background: 'var(--flock-accent)',
                   marginLeft: 2,
                   animation: 'pulse 1.5s ease-in-out infinite',
                 }}

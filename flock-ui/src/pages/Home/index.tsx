@@ -366,7 +366,7 @@ export function HomeView() {
               border: 'none',
               padding: 0,
               fontSize: '12px',
-              color: 'var(--mantine-color-indigo-4)',
+              color: 'var(--flock-accent)',
               textDecoration: 'underline',
               cursor: 'pointer'
             }}

@@ -143,7 +143,7 @@ export function AssistantPage() {
         {builtinList.length > 0 && (
           <Box mb="xl">
             <Group gap="xs" mb="md">
-              <IconBrain size={16} color="var(--mantine-color-violet-4)" />
+              <IconBrain size={16} color="var(--flock-accent)" />
               <Text size="sm" fw={600} c="dimmed" style={{ letterSpacing: '0.05em', textTransform: 'uppercase' }}>
                 {t('assistant.builtinTitle')}
               </Text>
@@ -166,7 +166,7 @@ export function AssistantPage() {
         {/* 我的助手 */}
         <Box>
           <Group gap="xs" mb="md">
-            <IconWand size={16} color="var(--mantine-color-indigo-4)" />
+            <IconWand size={16} color="var(--flock-accent)" />
             <Text size="sm" fw={600} c="dimmed" style={{ letterSpacing: '0.05em', textTransform: 'uppercase' }}>
               {t('assistant.myAssistantsTitle')}
             </Text>
