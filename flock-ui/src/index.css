@@ -146,7 +146,7 @@ body {
 
 /* ---- Markdown body styles ---- */
 .markdown-body {
-  color: var(--flock-text-secondary);
+  color: var(--flock-text-primary);
   word-break: break-word;
   max-width: 68ch;
 }
@@ -180,11 +180,11 @@ body {
 .markdown-body code {
   font-family: 'JetBrains Mono', 'Cascadia Code', Consolas, monospace;
   font-size: 0.875em;
-  background: var(--flock-accent-soft);
+  background: var(--flock-bg-surface);
   border: 1px solid var(--flock-border-dim);
   border-radius: 4px;
-  padding: 1px 5px;
-  color: #a5b4fc;
+  padding: 2px 6px;
+  color: var(--flock-accent);
 }
 
 .markdown-body pre {

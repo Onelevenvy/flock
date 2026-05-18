@@ -17,6 +17,7 @@ import {
 import { invoke } from '@tauri-apps/api/core';
 import { PendingApproval, ToolCategory } from '../../../types/protocol';
 import { useAgentStore } from '../../../store/agentStore';
+import { useUiStore } from '../../../store/uiStore';
 
 interface ToolApprovalInlineProps {
   approval: PendingApproval | null;
@@ -54,6 +55,8 @@ const CATEGORY_CONFIG: Record<
 
 export function ToolApprovalInline({ approval }: ToolApprovalInlineProps) {
   const removePendingApproval = useAgentStore((s) => s.removePendingApproval);
+  const theme = useUiStore((s) => s.theme);
+  const isDark = theme === 'dark';
 
   const handleApprove = useCallback(
     async (scope: 'once' | 'always') => {
@@ -137,7 +140,7 @@ export function ToolApprovalInline({ approval }: ToolApprovalInlineProps) {
         <ThemeIcon size="sm" color={config.color} variant="light" radius="sm">
           {config.icon}
         </ThemeIcon>
-        <Text size="sm" fw={600} c={`${config.color}.3`}>
+        <Text size="sm" fw={600} c={isDark ? `${config.color}.3` : `${config.color}.8`}>
           {tool.name}
         </Text>
         <Badge size="xs" color={config.color} variant="dot">
@@ -183,11 +186,12 @@ export function ToolApprovalInline({ approval }: ToolApprovalInlineProps) {
       {/* 操作区 */}
       <Box
         style={{
-          padding: '8px 14px 10px',
+          padding: '10px 14px',
           borderTop: '1px solid var(--flock-border-dim)',
           display: 'flex',
-          alignItems: 'center',
-          gap: 16,
+          flexDirection: 'column',
+          alignItems: 'flex-start',
+          gap: 10,
         }}
       >
         {/* 允许一次 */}
@@ -213,7 +217,7 @@ export function ToolApprovalInline({ approval }: ToolApprovalInlineProps) {
               Enter
             </Text>
           </Box>
-          <Text size="xs" c="teal.4" fw={500}>
+          <Text size="xs" c={isDark ? 'teal.4' : 'teal.8'} fw={600}>
             是，允许一次
           </Text>
         </Group>
@@ -241,7 +245,7 @@ export function ToolApprovalInline({ approval }: ToolApprovalInlineProps) {
               A
             </Text>
           </Box>
-          <Text size="xs" c="indigo.4" fw={500}>
+          <Text size="xs" c={isDark ? 'indigo.4' : 'indigo.8'} fw={600}>
             是，始终允许
           </Text>
         </Group>
@@ -249,7 +253,7 @@ export function ToolApprovalInline({ approval }: ToolApprovalInlineProps) {
         {/* 拒绝 */}
         <Group
           gap={6}
-          style={{ cursor: 'pointer', marginLeft: 'auto' }}
+          style={{ cursor: 'pointer' }}
           onClick={handleDeny}
           className="approval-btn"
         >
@@ -269,8 +273,8 @@ export function ToolApprovalInline({ approval }: ToolApprovalInlineProps) {
               Esc
             </Text>
           </Box>
-          <Text size="xs" c="red.4" fw={500}>
-            否 (esc)
+          <Text size="xs" c={isDark ? 'red.4' : 'red.8'} fw={600}>
+            否，拒绝
           </Text>
         </Group>
       </Box>

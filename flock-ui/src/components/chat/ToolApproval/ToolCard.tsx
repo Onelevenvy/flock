@@ -108,7 +108,14 @@ export function ToolCard({ chunk }: ToolCardProps) {
           {/* 参数 */}
           <Box>
             <Text size="xs" c="dimmed" mb={2}>参数</Text>
-            <Code block style={{ fontSize: '11px', background: 'var(--flock-bg-deepest)' }}>
+            <Code
+              block
+              style={{
+                fontSize: '11px',
+                background: 'var(--flock-bg-deepest)',
+                color: 'var(--flock-text-primary)',
+              }}
+            >
               {JSON.stringify(chunk.tool.args, null, 2)}
             </Code>
           </Box>

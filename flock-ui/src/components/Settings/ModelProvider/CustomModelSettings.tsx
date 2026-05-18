@@ -116,7 +116,10 @@ export default function CustomModelSettings({ provider, onClose, onSaved }: Prop
           data-1p-ignore="true"
           data-lpignore="true"
           styles={{
-            input: { background: 'var(--flock-bg-surface)' },
+            input: { 
+              background: 'var(--flock-bg-surface)',
+              color: 'var(--flock-text-primary)',
+            },
           }}
         />
 
@@ -130,7 +133,10 @@ export default function CustomModelSettings({ provider, onClose, onSaved }: Prop
           data-1p-ignore="true"
           data-lpignore="true"
           styles={{
-            input: { background: 'var(--flock-bg-surface)' },
+            input: { 
+              background: 'var(--flock-bg-surface)',
+              color: 'var(--flock-text-primary)',
+            },
           }}
         />
 
@@ -144,7 +150,10 @@ export default function CustomModelSettings({ provider, onClose, onSaved }: Prop
           data-1p-ignore="true"
           data-lpignore="true"
           styles={{
-            input: { background: 'var(--flock-bg-surface)' },
+            input: { 
+              background: 'var(--flock-bg-surface)',
+              color: 'var(--flock-text-primary)',
+            },
           }}
           visibilityToggleIcon={({ reveal }) =>
             reveal ? <Text size="xs">{t('common.hide')}</Text> : <Text size="xs">{t('common.show')}</Text>

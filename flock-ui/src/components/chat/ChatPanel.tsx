@@ -48,8 +48,8 @@ function ThinkingBlock({ text, defaultCollapsed }: { text: string; defaultCollap
         style={{ cursor: 'pointer' }}
         onClick={() => setCollapsed((v) => !v)}
       >
-        <IconBrain size={13} color="rgba(139,92,246,0.8)" />
-        <Text size="xs" c="violet.4" fw={500}>
+        <IconBrain size={13} color="var(--flock-accent)" />
+        <Text size="xs" fw={600} style={{ color: 'var(--flock-accent)' }}>
           思考过程
         </Text>
         <ActionIcon size="xs" variant="transparent" color="violet">
@@ -59,13 +59,12 @@ function ThinkingBlock({ text, defaultCollapsed }: { text: string; defaultCollap
       <Collapse in={!collapsed}>
         <Text
           size="xs"
-          c="dimmed"
           mt={6}
           style={{
             whiteSpace: 'pre-wrap',
             fontFamily: '"JetBrains Mono", monospace',
             lineHeight: 1.65,
-            opacity: 0.7,
+            color: 'var(--flock-text-secondary)',
           }}
         >
           {text}

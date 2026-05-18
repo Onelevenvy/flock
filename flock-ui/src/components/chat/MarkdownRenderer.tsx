@@ -98,7 +98,9 @@ export function MarkdownRenderer({ content }: MarkdownRendererProps) {
             <code
               className={className}
               style={{
-                background: 'rgba(255, 255, 255, 0.08)',
+                background: 'var(--flock-bg-surface)',
+                color: 'var(--flock-accent)',
+                border: '1px solid var(--flock-border-dim)',
                 padding: '2px 6px',
                 borderRadius: '4px',
                 fontFamily: 'monospace',

@@ -355,11 +355,15 @@ export default function ModelProviderPage() {
               input: {
                 background: 'var(--flock-bg-surface)',
                 border: '1px solid var(--flock-border-dim)',
+                color: 'var(--flock-text-primary)',
                 height: 32,
               },
               dropdown: {
                 background: 'var(--flock-bg-raised)',
                 border: '1px solid var(--flock-border-dim)',
+              },
+              option: {
+                color: 'var(--flock-text-primary)',
               },
             }}
           />
@@ -411,11 +415,15 @@ export default function ModelProviderPage() {
               input: {
                 background: 'var(--flock-bg-surface)',
                 border: '1px solid var(--flock-border-dim)',
+                color: 'var(--flock-text-primary)',
                 height: 32,
               },
               dropdown: {
                 background: 'var(--flock-bg-raised)',
                 border: '1px solid var(--flock-border-dim)',
+              },
+              option: {
+                color: 'var(--flock-text-primary)',
               },
             }}
           />
