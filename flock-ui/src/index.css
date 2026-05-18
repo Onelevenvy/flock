@@ -1,0 +1,299 @@
+/* =====================================================
+   Flock Agent UI — Global Styles
+   ===================================================== */
+
+/* --- Google Fonts --- */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+
+/* --- Reset & base --- */
+*, *::before, *::after {
+  box-sizing: border-box;
+}
+
+:root {
+  font-family: 'Inter', 'PingFang SC', 'Microsoft YaHei', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  line-height: 1.5;
+  font-weight: 400;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* ---- Light theme (default) ---- */
+[data-theme="light"] {
+  color-scheme: light;
+  --flock-bg-deepest: #f0f2f5;
+  --flock-bg-deep: #f7f8fa;
+  --flock-bg-base: #ffffff;
+  --flock-bg-raised: #ffffff;
+  --flock-bg-surface: #f8f9fa;
+  --flock-bg-hover: #f1f3f5;
+  --flock-border-subtle: #e9ecef;
+  --flock-border-dim: #dee2e6;
+  --flock-border-base: #ced4da;
+  --flock-text-muted: #adb5bd;
+  --flock-text-dim: #868e96;
+  --flock-text-secondary: #495057;
+  --flock-text-primary: #343a40;
+  --flock-text-bright: #212529;
+  --flock-accent: #6366f1;
+  --flock-accent-soft: rgba(99, 102, 241, 0.08);
+}
+
+/* ---- Dark theme ---- */
+[data-theme="dark"] {
+  color-scheme: dark;
+  --flock-bg-deepest: #0f0f13;
+  --flock-bg-deep: #14141a;
+  --flock-bg-base: #1c1d24;
+  --flock-bg-raised: #262730;
+  --flock-bg-surface: #181920;
+  --flock-bg-hover: #23242e;
+  --flock-border-subtle: rgba(255, 255, 255, 0.05);
+  --flock-border-dim: rgba(255, 255, 255, 0.08);
+  --flock-border-base: rgba(255, 255, 255, 0.15);
+  --flock-text-muted: #6c7086;
+  --flock-text-dim: #888d9e;
+  --flock-text-secondary: #a0a5b5;
+  --flock-text-primary: #cdd6f4;
+  --flock-text-bright: #eff1f5;
+  --flock-accent: #818cf8;
+  --flock-accent-soft: rgba(129, 140, 248, 0.12);
+}
+
+body {
+  margin: 0;
+  padding: 0;
+  min-height: 100vh;
+  background: var(--flock-bg-deepest);
+  color: var(--flock-text-secondary);
+  overflow: hidden;
+}
+
+#root {
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+/* ---- Scrollbar ---- */
+::-webkit-scrollbar {
+  width: 5px;
+  height: 5px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: rgba(99, 102, 241, 0.12);
+  border-radius: 3px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(99, 102, 241, 0.22);
+}
+
+/* ---- Cursor blink animation ---- */
+@keyframes blink {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0; }
+}
+
+/* ---- Fade in animation (opacity only, no layout shift) ---- */
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+/* ---- Pulse animation for active indicator dot ---- */
+@keyframes pulse {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.4; transform: scale(0.75); }
+}
+
+/* ---- Home input card focus ---- */
+.home-input-card:focus-within {
+  border-color: var(--flock-accent) !important;
+  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.12), 0 8px 32px rgba(0,0,0,0.10) !important;
+}
+
+
+/* ---- Sidebar item hover ---- */
+.ws-item:hover {
+  background: var(--flock-bg-hover) !important;
+}
+
+/* ---- File tree item hover ---- */
+.file-item:hover {
+  background: var(--flock-bg-hover);
+}
+.file-item:hover .file-actions {
+  opacity: 1 !important;
+}
+
+/* ---- Input bar focus glow ---- */
+.input-bar-wrapper:focus-within {
+  border-color: var(--flock-accent) !important;
+  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.15);
+}
+
+/* ---- Tool approval inline buttons ---- */
+.approval-btn {
+  opacity: 0.85;
+  transition: opacity 0.12s ease;
+}
+.approval-btn:hover {
+  opacity: 1;
+}
+
+/* ---- Markdown body styles ---- */
+.markdown-body {
+  color: var(--flock-text-secondary);
+  word-break: break-word;
+  max-width: 68ch;
+}
+
+.markdown-body h1,
+.markdown-body h2,
+.markdown-body h3,
+.markdown-body h4 {
+  color: var(--flock-text-bright);
+  font-weight: 600;
+  margin: 0.75em 0 0.4em;
+  line-height: 1.3;
+}
+
+.markdown-body h1 { font-size: 1.4em; }
+.markdown-body h2 { font-size: 1.2em; }
+.markdown-body h3 { font-size: 1.05em; }
+
+.markdown-body p {
+  margin: 0.4em 0;
+}
+
+.markdown-body p:first-child {
+  margin-top: 0;
+}
+
+.markdown-body p:last-child {
+  margin-bottom: 0;
+}
+
+.markdown-body code {
+  font-family: 'JetBrains Mono', 'Cascadia Code', Consolas, monospace;
+  font-size: 0.875em;
+  background: var(--flock-accent-soft);
+  border: 1px solid var(--flock-border-dim);
+  border-radius: 4px;
+  padding: 1px 5px;
+  color: #a5b4fc;
+}
+
+.markdown-body pre {
+  background: var(--flock-bg-deepest);
+  border: 1px solid var(--flock-border-subtle);
+  border-radius: 8px;
+  padding: 12px 16px;
+  overflow-x: auto;
+  margin: 8px 0;
+}
+
+.markdown-body pre code {
+  background: transparent;
+  border: none;
+  padding: 0;
+  color: var(--flock-text-primary);
+  font-size: 13px;
+}
+
+.markdown-body blockquote {
+  background: var(--flock-accent-soft);
+  border-radius: 6px;
+  padding: 8px 12px;
+  margin: 8px 0;
+  color: var(--flock-text-dim);
+  font-style: italic;
+}
+
+.markdown-body ul,
+.markdown-body ol {
+  padding-left: 1.4em;
+  margin: 0.4em 0;
+}
+
+.markdown-body li {
+  margin: 0.2em 0;
+  line-height: 1.65;
+}
+
+.markdown-body table {
+  border-collapse: collapse;
+  width: 100%;
+  margin: 8px 0;
+  font-size: 13px;
+}
+
+.markdown-body th,
+.markdown-body td {
+  border: 1px solid var(--flock-border-subtle);
+  padding: 6px 10px;
+  text-align: left;
+}
+
+.markdown-body th {
+  background: var(--flock-accent-soft);
+  font-weight: 600;
+  color: var(--flock-text-primary);
+}
+
+.markdown-body tr:nth-child(even) td {
+  background: rgba(99, 102, 241, 0.03);
+}
+
+.markdown-body a {
+  color: #818cf8;
+  text-decoration: none;
+}
+
+.markdown-body a:hover {
+  text-decoration: underline;
+}
+
+.markdown-body hr {
+  border: none;
+  border-top: 1px solid var(--flock-border-subtle);
+  margin: 12px 0;
+}
+
+.markdown-body strong {
+  color: var(--flock-text-bright);
+  font-weight: 600;
+}
+
+/* ---- Message animation ---- */
+.message-enter {
+  animation: fadeIn 0.2s ease-out;
+}
+
+/* ---- Surface card utility (tinted, no blur) ---- */
+.surface-card {
+  background: var(--flock-bg-raised);
+  border: 1px solid var(--flock-border-subtle);
+  border-radius: 12px;
+}
+
+/* ---- Hover background utility ---- */
+.hover-bg-raised:hover {
+  background: var(--flock-bg-hover);
+}
+
+/* ---- Card hover lift effect ---- */
+.hover-card-lift:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+  border-color: var(--flock-border-dim);
+}
+
+/* ---- Close button rotate effect ---- */
+.hover-rotate-close:hover {
+  transform: rotate(90deg);
+  background: var(--flock-bg-hover);
+}

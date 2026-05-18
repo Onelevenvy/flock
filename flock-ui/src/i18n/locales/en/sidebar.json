@@ -1,0 +1,22 @@
+{
+  "home": "Home",
+  "assistant": "Assistants",
+  "skills": "Skills",
+  "workflow": "Workflows",
+  "collaboration": "Collaboration",
+  "schedule": "Scheduler",
+  "more": "More",
+  "workspace": "Workspaces",
+  "refresh": "Refresh",
+  "newWorkspace": "New Workspace",
+  "noWorkspace": "No workspaces yet",
+  "workspaceName": "Workspace Name",
+  "workspaceNameDesc": "Will create a folder at ./flock_install/workspace/<name>",
+  "workspacePlaceholder": "e.g., my-project",
+  "deleteWorkspaceConfirm": "Are you sure you want to delete this workspace? This action is irreversible!",
+  "deleteConversationConfirm": "Are you sure you want to delete this conversation?",
+  "rename": "Rename",
+  "deleteConversation": "Delete",
+  "noConversation": "No conversations",
+  "deleteWorkspace": "Delete Workspace"
+}

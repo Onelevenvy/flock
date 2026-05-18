@@ -1,0 +1,13 @@
+{
+  "toggleSidebar": "切换侧边栏",
+  "agentStatus": "Agent: {{status}}",
+  "status": {
+    "disconnected": "未连接",
+    "connecting": "连接中",
+    "ready": "就绪",
+    "thinking": "思考中",
+    "error": "错误"
+  },
+  "defaultAssistant": "通用助手 XiaoF",
+  "customAssistant": "自定义助手"
+}

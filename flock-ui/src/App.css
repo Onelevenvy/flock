@@ -1,0 +1,68 @@
+/* App.css — Component-level overrides */
+
+/* Mantine Modal blur overlay */
+.mantine-Modal-overlay {
+  backdrop-filter: blur(4px);
+}
+
+/* Mantine ScrollArea */
+.mantine-ScrollArea-scrollbar {
+  width: 4px !important;
+}
+
+/* Remove default Mantine body styles that fight with our layout */
+.mantine-AppShell-root {
+  height: 100vh;
+}
+
+/* Badge dot alignment */
+.mantine-Badge-root {
+  display: inline-flex;
+  align-items: center;
+}
+
+/* Select dropdown */
+.mantine-Select-dropdown {
+  background: var(--flock-bg-raised) !important;
+  border: 1px solid var(--flock-border-dim) !important;
+}
+
+.mantine-Select-option:hover {
+  background: var(--flock-accent-soft) !important;
+}
+
+.mantine-Select-option[data-selected] {
+  background: rgba(99, 102, 241, 0.15) !important;
+}
+
+/* Menu dropdown */
+.mantine-Menu-dropdown {
+  background: var(--flock-bg-raised) !important;
+  border: 1px solid var(--flock-border-dim) !important;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
+}
+
+.mantine-Menu-item:hover {
+  background: var(--flock-bg-hover) !important;
+}
+
+/* Notification */
+.mantine-Notification-root {
+  border-radius: 10px !important;
+  border: 1px solid var(--flock-border-dim) !important;
+}
+
+/* Modal content */
+.mantine-Modal-content {
+  background: var(--flock-bg-raised) !important;
+  border: 1px solid var(--flock-border-dim) !important;
+}
+
+.mantine-Modal-header {
+  background: var(--flock-bg-raised) !important;
+  border-bottom: 1px solid var(--flock-border-subtle) !important;
+}
+
+.mantine-Modal-body {
+  background: var(--flock-bg-raised) !important;
+}

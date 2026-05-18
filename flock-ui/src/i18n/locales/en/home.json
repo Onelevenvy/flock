@@ -1,0 +1,14 @@
+{
+  "welcome": "Hi, XiaoF is here to serve you",
+  "selectWorkspaceFirst": "Please select a workspace...",
+  "thinking": "XiaoF thinking...",
+  "sendMessage": "Send a message to {{name}}...",
+  "sendMessagePlaceholder": "Type a message",
+  "sendEnter": "Send (Enter)",
+  "pleaseSelectWorkspace": "Please select a workspace first",
+  "connectingAgent": "Connecting {{name}}...",
+  "disclaimer": "{{name}} · {{workspace}} · AI may make mistakes, please double check important info",
+  "startDialogHelp": "Select a workspace to start chatting",
+  "approval": "Approval",
+  "runMode": "Run Mode"
+}

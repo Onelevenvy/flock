@@ -1,0 +1,38 @@
+[package]
+name = "app"
+version = "0.1.0"
+description = "Flock Agent Desktop UI"
+authors = ["Flock Team"]
+license = "Apache-2.0"
+edition = "2021"
+rust-version = "1.77.2"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[lib]
+name = "app_lib"
+crate-type = ["staticlib", "cdylib", "rlib"]
+
+[build-dependencies]
+tauri-build = { version = "2.6.1", features = [] }
+
+[dependencies]
+flock-core.workspace = true
+flock-agent.workspace = true
+flock-tools.workspace = true
+flock-skills.workspace = true
+langgraph-prebuilt.workspace = true
+langgraph-providers.workspace = true
+
+serde_json.workspace = true
+serde.workspace = true
+reqwest.workspace = true
+log = "0.4"
+tauri = { version = "2.11.1", features = [] }
+tauri-plugin-log = "2"
+tauri-plugin-shell = "2"
+tauri-plugin-dialog = "2"
+tokio.workspace = true
+anyhow.workspace = true
+chrono.workspace = true
+workspace-hack.workspace = true

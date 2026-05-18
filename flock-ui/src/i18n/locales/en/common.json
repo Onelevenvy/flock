@@ -1,0 +1,13 @@
+{
+  "loading": "Loading...",
+  "error": "Error",
+  "success": "Saved successfully",
+  "failed": "Save failed",
+  "confirm": "Confirm",
+  "cancel": "Cancel",
+  "create": "Create",
+  "reset": "Reset",
+  "hide": "Hide",
+  "show": "Show",
+  "add": "Add"
+}

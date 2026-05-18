@@ -1,0 +1,139 @@
+[workspace]
+resolver = "2"
+members = [
+    "crates/flock-core",
+    "crates/flock-tools",
+    "crates/flock-skills",
+    "crates/flock-agent",
+    "flock-ui/src-tauri",
+    "workspace-hack",
+]
+
+[workspace.lints.rust]
+unused = "allow"
+unused_imports = "allow"
+
+
+[workspace.package]
+version = "0.1.21"
+edition = "2024"
+license = "Apache-2.0"
+repository = "https://github.com/iOfficeAI/flock"
+
+[workspace.dependencies]
+# Internal crates
+flock-core      = { path = "crates/flock-core" }
+flock-tools     = { path = "crates/flock-tools" }
+flock-skills    = { path = "crates/flock-skills" }
+flock-agent     = { path = "crates/flock-agent" }
+
+# LangGraph (local path to Rust reimplementation)
+langgraph                    = { path = "../langgraph-rust/crates/langgraph" }
+langgraph-derive             = { path = "../langgraph-rust/crates/langgraph-derive" }
+langgraph-checkpoint         = { path = "../langgraph-rust/crates/langgraph-checkpoint" }
+langgraph-checkpoint-sqlite  = { path = "../langgraph-rust/crates/langgraph-checkpoint-sqlite" }
+langgraph-prebuilt           = { path = "../langgraph-rust/crates/langgraph-prebuilt" }
+langgraph-providers          = { path = "../langgraph-rust/crates/langgraph-providers", features = ["openai", "anthropic"] }
+
+# Async runtime
+tokio   = { version = "1", features = ["full"] }
+tokio-stream = "0.1"
+futures = "0.3"
+
+# HTTP client
+# HTTP client — use rustls to avoid native OpenSSL dep during cross-compilation
+reqwest = { version = "0.12", features = ["json", "stream", "rustls-tls"], default-features = false }
+
+# Serialization
+serde      = { version = "1", features = ["derive"] }
+serde_json = "1"
+
+# Async trait support
+async-trait = "0.1"
+
+# CLI argument parsing
+clap = { version = "4", features = ["derive", "env"] }
+
+# Error handling
+thiserror = "2"
+anyhow    = "1"
+
+# File globbing
+glob = "0.3"
+
+# LRU cache (for file state tracking)
+lru = "0.18"
+
+# Date/time
+chrono = { version = "0.4", features = ["serde"] }
+
+# TOML config parsing
+toml = "1.0"
+
+# YAML frontmatter parsing (for skill files)
+serde_yaml = "0.9"
+
+# XDG/platform config directory
+dirs = "6"
+
+# Logging facade
+log = "0.4"
+
+# Regular expressions (for argument substitution in skills)
+regex = "1"
+
+# File system change notification (for skill hot-reload)
+notify = "8"
+
+# Terminal color support
+crossterm = "0.29"
+
+# TTY detection
+is-terminal = "0.4"
+
+# AWS SigV4 signing (for Bedrock provider)
+aws-sigv4            = "1"
+aws-credential-types = { version = "1", features = ["hardcoded-credentials"] }
+aws-config           = { version = "1", features = ["behavior-version-latest"] }
+aws-sdk-sts          = { version = "1", default-features = false, features = ["rt-tokio", "default-https-client", "sigv4a"] }
+
+# Pin rustls-webpki to fix RUSTSEC-2026-{0098,0099,0104}
+rustls-webpki = "0.103.13"
+
+# JWT creation (for Vertex GCP service account auth)
+jsonwebtoken = "10"
+
+# Base64 encoding
+base64 = "0.22"
+
+# URL parsing
+url = "2"
+
+unicode-width = "0.2.2"
+
+# Math expression evaluation
+meval = "0.2"
+
+# UUID generation
+uuid = { version = "1", features = ["v4"] }
+
+# SQLite (for session metadata alongside langgraph checkpoints)
+sqlx = { version = "0.8", default-features = false, features = ["runtime-tokio", "sqlite"] }
+
+# Cryptography (AES-256-GCM for API key encryption)
+ring = "0.17"
+
+# Unix file flags (O_NOFOLLOW) for secure bundled skill file extraction
+libc = "0.2"
+hostname = "0.4"
+
+# workspace-hack (managed by cargo-hakari for build speed)
+workspace-hack = { path = "workspace-hack" }
+
+# Test utilities
+wiremock    = "0.6"
+tokio-test  = "0.4"
+tempfile    = "3"
+mockall     = "0.14"
+rstest      = "0.26"
+serial_test = "3"

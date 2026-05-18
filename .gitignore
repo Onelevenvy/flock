@@ -1,0 +1,68 @@
+# Rust build artifacts
+/target/
+**/*.rs.bk
+./flock-ui/.claude
+# Cargo lock (binary project should commit it, but ignore for libraries)
+# Cargo.lock  # keep committed for binary projects
+
+# Environment and secrets
+.env
+.env.*
+!.env.example
+
+# IDE
+.vscode/
+.idea/
+.claude/
+*.swp
+*.swo
+*~
+.DS_Store
+
+# Temporary files
+.tmp/
+
+# Git worktrees
+.worktree/
+.worktrees/
+worktree/
+worktrees/
+
+# flock session data
+.flock/
+
+# Debug artifacts
+*.pdb
+*.dSYM/
+
+# Test coverage
+*.profraw
+*.profdata
+tarpaulin-report.html
+lcov.info
+coverage/
+
+# Superpowers brainstorm tool (runtime files, session data)
+.superpowers/
+docs/superpowers/
+
+# Superset
+.superset/
+.flockrs/*
+
+checkpoints.db
+checkpoints.db-shm
+checkpoints.db-wal
+
+flock_install/workspace/*
+flock_install/*.db
+flock_install/*.db-shm
+flock_install/*.db-wal
+
+crates/flock-app/
+.config/*
+.cargo
+
+
+
+

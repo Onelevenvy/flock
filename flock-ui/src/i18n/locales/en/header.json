@@ -1,0 +1,13 @@
+{
+  "toggleSidebar": "Toggle Sidebar",
+  "agentStatus": "Agent: {{status}}",
+  "status": {
+    "disconnected": "Disconnected",
+    "connecting": "Connecting",
+    "ready": "Ready",
+    "thinking": "Thinking",
+    "error": "Error"
+  },
+  "defaultAssistant": "General Assistant XiaoF",
+  "customAssistant": "Custom Assistant"
+}

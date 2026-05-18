@@ -1,0 +1,22 @@
+{
+  "home": "首页",
+  "assistant": "助手",
+  "skills": "技能",
+  "workflow": "工作流",
+  "collaboration": "协作",
+  "schedule": "定时任务",
+  "more": "更多功能",
+  "workspace": "工作空间",
+  "refresh": "刷新",
+  "newWorkspace": "新建工作空间",
+  "noWorkspace": "还没有工作空间",
+  "workspaceName": "工作空间名称",
+  "workspaceNameDesc": "将在 ./flock_install/workspace/<名称> 创建目录",
+  "workspacePlaceholder": "例: my-project",
+  "deleteWorkspaceConfirm": "确定要删除该工作空间吗？此操作不可逆！",
+  "deleteConversationConfirm": "确定要删除该对话吗？",
+  "rename": "重命名",
+  "deleteConversation": "删除对话",
+  "noConversation": "暂无对话",
+  "deleteWorkspace": "删除工作空间"
+}

@@ -1,0 +1,14 @@
+## workspace-hack
+##
+## This crate is managed by cargo-hakari. It unifies feature flags across the
+## workspace to speed up builds. Run `cargo hakari generate` to regenerate it.
+## See https://docs.rs/cargo-hakari for details.
+
+[package]
+name = "workspace-hack"
+version = "0.1.0"
+edition = "2021"
+publish = false
+
+# Hakari-managed dependency list will be placed here after first `cargo hakari generate`.
+[dependencies]
