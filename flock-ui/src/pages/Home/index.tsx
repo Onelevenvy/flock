@@ -80,39 +80,10 @@ export function HomeView() {
   }, [selectedHomeAssistantId, activeConversationId, conversationAssistants, selectedAssistant.id, assistants, setSelectedHomeAssistantId]);
 
   const activeWs = workspaces.find(w => w.id === activeWorkspaceId);
-  const isStreaming = status === 'thinking';
-  const canSend = status === 'ready' && value.trim().length > 0 && !!activeWorkspaceId;
+  const isStreaming = !!activeConversationId && status === 'thinking';
+  const canSend = (status === 'ready' || (status === 'thinking' && !activeConversationId)) && value.trim().length > 0 && !!activeWorkspaceId;
 
-  // 🚀 Auto-connect/initialize agent when workspace is active and agent is disconnected
-  useEffect(() => {
-    let active = true;
-    if (activeWorkspaceId && status === 'disconnected' && workspaces.length > 0) {
-      const targetWs = workspaces.find(w => w.id === activeWorkspaceId);
-      if (targetWs) {
-        setStatus('connecting');
-        invoke('start_agent', {
-          workdir: targetWs.path,
-          sessionId: activeConversationId || null,
-          assistantId: selectedAssistant.id === '__xiaof__' ? null : selectedAssistant.id,
-          projectDir: null,
-          apiKey: null,
-          extraArgs: null,
-        }).then(() => {
-          if (active) {
-            setStatus('ready');
-          }
-        }).catch((e) => {
-          if (active) {
-            console.error('Failed to auto-connect agent:', e);
-            setStatus('error');
-          }
-        });
-      }
-    }
-    return () => {
-      active = false;
-    };
-  }, [activeWorkspaceId, status, workspaces, activeConversationId, selectedAssistant, setStatus]);
+
 
   const placeholder = !activeWorkspaceId
     ? t('home.selectWorkspaceFirst')
@@ -208,7 +179,7 @@ export function HomeView() {
     addUserMessage(userUiId, content);
     try {
       await invoke('send_message', { 
-        sessionId: activeConversationId || null, 
+        sessionId: convId || null, 
         msgId: streamMsgId, 
         content 
       });
@@ -383,6 +354,44 @@ export function HomeView() {
         <Text size="xs" c="dimmed" mt={12} style={{ opacity: 0.6 }}>
           {t('home.connectingAgent', { name: selectedAssistant.name })}
         </Text>
+      )}
+      {status === 'error' && (
+        <Group gap={6} mt={12}>
+          <Text size="xs" color="red" style={{ opacity: 0.8 }}>
+            Agent 连接失败
+          </Text>
+          <button
+            style={{
+              background: 'none',
+              border: 'none',
+              padding: 0,
+              fontSize: '12px',
+              color: 'var(--mantine-color-indigo-4)',
+              textDecoration: 'underline',
+              cursor: 'pointer'
+            }}
+            onClick={async () => {
+              if (!activeWorkspaceId || !activeWs) return;
+              setStatus('connecting');
+              try {
+                await invoke('start_agent', {
+                  workdir: activeWs.path,
+                  sessionId: activeConversationId || null,
+                  assistantId: selectedAssistant.id === '__xiaof__' ? null : selectedAssistant.id,
+                  projectDir: null,
+                  apiKey: null,
+                  extraArgs: null,
+                });
+                setStatus('ready');
+              } catch (e: any) {
+                setStatus('error');
+                useAgentStore.getState().setError(String(e));
+              }
+            }}
+          >
+            点击重试
+          </button>
+        </Group>
       )}
       {status === 'ready' && activeWs && (
         <Text size="xs" c="dimmed" mt={10} style={{ opacity: 0.45, fontSize: 11 }}>

@@ -29,7 +29,7 @@ use langgraph_prebuilt::BaseChatModel;
 use crate::approval::ToolApproval;
 use crate::context_compression::state::CompactState;
 use crate::context_compression::{auto, emergency, estimate, micro};
-use crate::output::OutputSink;
+use crate::sinks::OutputSink;
 
 use super::state::AgentState;
 
@@ -282,7 +282,7 @@ pub fn make_llm_node(
                 format!(
                     "{}\n\n{}",
                     ctx.system_prompt,
-                    crate::plan::prompt::plan_mode_instructions()
+                    crate::tools::plan::prompt::plan_mode_instructions()
                 )
             } else {
                 ctx.system_prompt.clone()

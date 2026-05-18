@@ -373,9 +373,6 @@ export function Sidebar() {
             </Avatar>
             <Box style={{ flex: 1, overflow: 'hidden' }}>
               <Text size="sm" fw={600} truncate>Jimmy</Text>
-              <Badge size="xs" variant="light" color="gray" style={{ textTransform: 'none' }}>
-                Free
-              </Badge>
             </Box>
             <IconSettings size={18} color="var(--flock-text-dim)" />
           </UnstyledButton>

@@ -345,8 +345,8 @@ impl Runnable for FlockToolNode {
                         if let Some(content) = plan_content {
                             if let Some(session_id) = &self.ctx.session_id {
                                 let plan_dir = std::path::Path::new(&self.ctx.plan_config.plan_directory);
-                                let path = crate::plan::file::plan_file_path(plan_dir, session_id);
-                                if let Err(e) = crate::plan::file::write_plan(&path, content) {
+                                let path = crate::tools::plan::file::plan_file_path(plan_dir, session_id);
+                                if let Err(e) = crate::tools::plan::file::write_plan(&path, content) {
                                     self.ctx.output.emit_error(&format!("Failed to save plan: {e}"));
                                 } else {
                                     self.ctx.output.emit_info(&format!("Plan saved to: {}", path.display()));

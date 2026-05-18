@@ -14,8 +14,8 @@ use flock_tools::registry::ToolRegistry;
 use langgraph_prebuilt::BaseChatModel;
 
 use crate::engine::AgentEngine;
-use crate::output::null_sink::NullSink;
-use crate::output::OutputSink;
+use crate::sinks::null_sink::NullSink;
+use crate::sinks::OutputSink;
 
 // Re-export from flock-types — single source of truth
 pub use flock_core::types::spawner::{ForkOverrides, Spawner, SubAgentConfig, SubAgentResult};

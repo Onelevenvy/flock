@@ -8,6 +8,9 @@ import './App.css';
 import { useEventStream } from './hooks/useEventStream';
 import { useAgentStore } from './store/agentStore';
 import { useUiStore } from './store/uiStore';
+import { useWorkspaceStore } from './store/workspaceStore';
+import { useWorkspacesQuery } from './hooks/useWorkspaces';
+import { invoke } from '@tauri-apps/api/core';
 import { MainLayout } from './components/Layout/MainLayout';
 import { useTranslation } from 'react-i18next';
 
@@ -34,6 +37,61 @@ function AppInner() {
 
   const errorMessage = useAgentStore((s) => s.errorMessage);
   const setError = useAgentStore((s) => s.setError);
+
+  const activeWorkspaceId = useWorkspaceStore((s) => s.activeWorkspaceId);
+  const activeConversationId = useWorkspaceStore((s) => s.activeConversationId);
+  const conversationAssistants = useWorkspaceStore((s) => s.conversationAssistants);
+  const status = useAgentStore((s) => s.status);
+  const setStatus = useAgentStore((s) => s.setStatus);
+  const setWorkdir = useAgentStore((s) => s.setWorkdir);
+  const { data: workspaces = [] } = useWorkspacesQuery();
+
+  // 全局自动连接：只要有活跃的工作空间且处于 disconnected 状态，立刻初始化 Agent
+  useEffect(() => {
+    let active = true;
+    if (activeWorkspaceId && status === 'disconnected' && workspaces.length > 0) {
+      const targetWs = workspaces.find((w) => w.id === activeWorkspaceId);
+      if (targetWs) {
+        const assistantId = activeConversationId
+          ? conversationAssistants[activeConversationId] || null
+          : null;
+        setStatus('connecting');
+        setWorkdir(targetWs.path);
+        invoke('start_agent', {
+          workdir: targetWs.path,
+          sessionId: activeConversationId || null,
+          assistantId: assistantId === '__xiaof__' ? null : assistantId,
+          projectDir: null,
+          apiKey: null,
+          extraArgs: null,
+        })
+          .then(() => {
+            if (active) {
+              setStatus('ready');
+            }
+          })
+          .catch((e) => {
+            if (active) {
+              console.error('Failed to auto-connect agent:', e);
+              setStatus('error');
+              setError(String(e));
+            }
+          });
+      }
+    }
+    return () => {
+      active = false;
+    };
+  }, [
+    activeWorkspaceId,
+    status,
+    workspaces,
+    activeConversationId,
+    conversationAssistants,
+    setStatus,
+    setWorkdir,
+    setError,
+  ]);
 
   useEffect(() => {
     if (errorMessage) {

@@ -18,6 +18,7 @@ import {
 import { invoke } from '@tauri-apps/api/core';
 import { useAgentStore } from '../../store/agentStore';
 import { useWorkspaceStore } from '../../store/workspaceStore';
+import { useWorkspacesQuery } from '../../hooks/useWorkspaces';
 import { v4 as uuidv4 } from 'uuid';
 import { ModelSelector } from '../Settings/ModelSelector';
 
@@ -83,9 +84,11 @@ export function InputBar() {
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
   const status = useAgentStore((s) => s.status);
+  const setStatus = useAgentStore((s) => s.setStatus);
   const addUserMessage = useAgentStore((s) => s.addUserMessage);
   const setError = useAgentStore((s) => s.setError);
   const { activeWorkspaceId, activeConversationId } = useWorkspaceStore();
+  const { data: workspaces = [] } = useWorkspacesQuery();
   const isStreaming = status === 'thinking';
   const canSend = status === 'ready' && value.trim().length > 0 && !!activeWorkspaceId;
 
@@ -95,6 +98,8 @@ export function InputBar() {
     ? 'Agent 未连接，正在启动...'
     : status === 'connecting'
     ? '正在连接 Agent...'
+    : status === 'error'
+    ? 'Agent 连接失败，请点击上方重试...'
     : isStreaming
     ? 'Agent 思考中...'
     : '输入消息（Enter 发送，Shift+Enter 换行）';
@@ -143,6 +148,48 @@ export function InputBar() {
         flexShrink: 0,
       }}
     >
+      {status === 'error' && (
+        <Group gap={6} mb={8} justify="center">
+          <Text size="xs" color="red" style={{ opacity: 0.8 }}>
+            Agent 连接异常，无法发送消息
+          </Text>
+          <button
+            style={{
+              background: 'none',
+              border: 'none',
+              padding: 0,
+              fontSize: '12px',
+              color: 'var(--mantine-color-indigo-4)',
+              textDecoration: 'underline',
+              cursor: 'pointer'
+            }}
+            onClick={async () => {
+              if (!activeWorkspaceId) return;
+              const targetWs = workspaces.find(w => w.id === activeWorkspaceId);
+              if (!targetWs) return;
+              const assistants = useWorkspaceStore.getState().conversationAssistants;
+              const assistantId = activeConversationId ? (assistants[activeConversationId] || null) : null;
+              setStatus('connecting');
+              try {
+                await invoke('start_agent', {
+                  workdir: targetWs.path,
+                  sessionId: activeConversationId || null,
+                  assistantId: assistantId === '__xiaof__' ? null : assistantId,
+                  projectDir: null,
+                  apiKey: null,
+                  extraArgs: null,
+                });
+                setStatus('ready');
+              } catch (e: any) {
+                setStatus('error');
+                setError(String(e));
+              }
+            }}
+          >
+            点击重试
+          </button>
+        </Group>
+      )}
       {/* 输入框主体 */}
       <Box
         className="input-bar-wrapper"

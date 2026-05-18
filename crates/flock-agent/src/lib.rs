@@ -9,10 +9,10 @@ pub mod context;
 pub mod engine;
 pub mod graph;
 pub mod tool_executor;
-pub mod output;
-pub mod plan;
+pub mod sinks;
 pub mod session;
 pub mod tools;
+
 
 pub mod spawner;
 pub mod http_recording;

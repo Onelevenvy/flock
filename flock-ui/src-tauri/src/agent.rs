@@ -11,7 +11,7 @@ use tokio::sync::Mutex;
 
 use flock_agent::agent_setup::{AgentBuilder, AssistantOverrides};
 use flock_agent::engine::AgentEngine;
-use flock_agent::output::OutputSink;
+use flock_agent::sinks::OutputSink;
 use flock_core::config::settings::{CliArgs, Config};
 use flock_core::db::DbManager;
 use flock_core::ipc_interface::approval::{ToolApprovalManager, ToolApprovalResult};
