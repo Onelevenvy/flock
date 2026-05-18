@@ -348,9 +348,33 @@ impl Config {
         let provider = resolved_provider.provider_type;
         let provider_config = resolved_provider.effective_config;
 
+        // Fetch model meta if an active model is set
+        let mut model_meta_base_url = None;
+        let mut model_meta_api_key = None;
+        if let Some(m_name) = &active_model_name {
+            if let Ok(Some(m)) = db.get_model(&provider_label, m_name).await {
+                if let Some(meta) = m.meta {
+                    if let Some(bu) = meta.get("base_url").and_then(|v| v.as_str()) {
+                        model_meta_base_url = Some(bu.to_string());
+                    }
+                    if let Some(enc) = meta.get("api_key_encrypted").and_then(|v| v.as_str()) {
+                        if let Some(nonce) = meta.get("api_key_nonce").and_then(|v| v.as_str()) {
+                            // Decrypt it
+                            if let Ok(salt) = db.get_or_create_salt().await {
+                                if let Ok(decrypted) = crate::crypto::decrypt_value(enc, nonce, &salt) {
+                                    model_meta_api_key = Some(decrypted);
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
         let base_url = cli
             .base_url
             .clone()
+            .or(model_meta_base_url)
             .or_else(|| provider_config.base_url.clone())
             .unwrap_or_else(|| match provider {
                 ProviderType::Anthropic => "https://api.anthropic.com".into(),
@@ -362,7 +386,7 @@ impl Config {
         let model = cli
             .model
             .clone()
-            .or(active_model_name)
+            .or(active_model_name.clone())
             .or(provider_config.model.clone())
             .or(default_cfg.model.clone())
             .unwrap_or_else(|| match provider {
@@ -379,7 +403,7 @@ impl Config {
             .clone()
             .or(default_cfg.system_prompt.clone());
 
-        let api_key = resolve_db_api_key(&db, cli, &provider_config, provider, &provider_label).await?;
+        let api_key = resolve_db_api_key(&db, cli, &provider_config, provider, &provider_label, model_meta_api_key).await?;
 
         let mut tools = tools;
         if cli.auto_approve {
@@ -573,11 +597,19 @@ async fn resolve_db_api_key(
     provider_config: &ProviderConfig,
     provider: ProviderType,
     provider_label: &str,
+    model_meta_api_key: Option<String>,
 ) -> anyhow::Result<String> {
     // CLI arg takes precedence
     if let Some(key) = &cli.api_key {
         if !key.is_empty() {
             return Ok(key.clone());
+        }
+    }
+
+    // Model-level credentials take next precedence
+    if let Some(key) = model_meta_api_key {
+        if !key.is_empty() {
+            return Ok(key);
         }
     }
 

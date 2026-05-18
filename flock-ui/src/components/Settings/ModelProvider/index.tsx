@@ -25,11 +25,13 @@ import {
   IconCube,
   IconSparkles,
   IconHelpCircle,
+  IconTrash,
 } from '@tabler/icons-react';
 import { invoke } from '@tauri-apps/api/core';
 import { notifications } from '@mantine/notifications';
 import { useTranslation } from 'react-i18next';
 import ProviderSettings from './ProviderSettings';
+import CustomModelSettings from './CustomModelSettings';
 import { ModelProviderIconLong, ModelIcon } from '../../Icons';
 
 interface ModelProvider {
@@ -80,6 +82,7 @@ export default function ModelProviderPage() {
   const [expanded, setExpanded] = useState<Record<string, boolean>>({});
   const [loading, setLoading] = useState(true);
   const [editingProvider, setEditingProvider] = useState<ModelProvider | null>(null);
+  const [addingCustomModel, setAddingCustomModel] = useState<ModelProvider | null>(null);
   const [testingProvider, setTestingProvider] = useState<string | null>(null);
   const [testResult, setTestResult] = useState<{ id: string; ok: boolean; msg: string } | null>(null);
   const [connectedProviders, setConnectedProviders] = useState<Set<string>>(new Set());
@@ -170,6 +173,28 @@ export default function ModelProviderPage() {
         }
         break;
       }
+    }
+  };
+
+  const handleDeleteModel = async (modelId: string, providerId: string) => {
+    try {
+      await invoke('delete_model', { id: modelId });
+      setModelsMap((prev) => ({
+        ...prev,
+        [providerId]: prev[providerId].filter((m) => m.id !== modelId),
+      }));
+      notifications.show({
+        title: t('common.success', 'Success'),
+        message: 'Model removed successfully',
+        color: 'teal',
+      });
+    } catch (e) {
+      console.error('Failed to delete model:', e);
+      notifications.show({
+        title: t('common.error', 'Error'),
+        message: String(e),
+        color: 'red',
+      });
     }
   };
 
@@ -400,7 +425,8 @@ export default function ModelProviderPage() {
       {providers.map((provider) => {
         const models = modelsMap[provider.id] || [];
         const isExpanded = expanded[provider.id] || false;
-        const hasApiKey = !!provider.api_key;
+        const isCustomProvider = provider.id === 'openai_compatible' || provider.id === 'anthropic_compatible';
+        const isConfigured = !!provider.api_key || (isCustomProvider && models.length > 0);
         const onlineCount = models.filter((m) => m.is_online).length;
 
         return (
@@ -464,18 +490,18 @@ export default function ModelProviderPage() {
                       <Badge
                         size="sm"
                         variant="gradient"
-                        gradient={hasApiKey ? { from: 'teal', to: 'indigo', deg: 105 } : { from: 'orange', to: 'red', deg: 105 }}
-                        leftSection={hasApiKey ? <IconCheck size={12} /> : <IconX size={12} />}
+                        gradient={isConfigured ? { from: 'teal', to: 'indigo', deg: 105 } : { from: 'orange', to: 'red', deg: 105 }}
+                        leftSection={isConfigured ? <IconCheck size={12} /> : <IconX size={12} />}
                         style={{ textTransform: 'none' }}
                       >
-                        {hasApiKey ? t('settings.model.configured') : t('settings.model.notConfigured')}
+                        {isConfigured ? t('settings.model.configured') : t('settings.model.notConfigured')}
                       </Badge>
                     </Group>
                   </Box>
                 </Group>
 
                 <Group gap="sm">
-                  {hasApiKey && (
+                  {!!provider.api_key && (
                     <Tooltip label={testingProvider === provider.id ? t('settings.model.connecting') : t('settings.model.testConnection')}>
                       <ActionIcon
                         variant="light"
@@ -490,17 +516,19 @@ export default function ModelProviderPage() {
                       </ActionIcon>
                     </Tooltip>
                   )}
-                  <Tooltip label={t('settings.model.configureParams')}>
-                    <ActionIcon
-                      variant="subtle"
-                      color="gray"
-                      size="lg"
-                      radius="md"
-                      onClick={() => setEditingProvider(provider)}
-                    >
-                      <IconSettings size={20} />
-                    </ActionIcon>
-                  </Tooltip>
+                  {provider.id !== 'openai_compatible' && provider.id !== 'anthropic_compatible' && (
+                    <Tooltip label={t('settings.model.configureParams')}>
+                      <ActionIcon
+                        variant="subtle"
+                        color="gray"
+                        size="lg"
+                        radius="md"
+                        onClick={() => setEditingProvider(provider)}
+                      >
+                        <IconSettings size={20} />
+                      </ActionIcon>
+                    </Tooltip>
+                  )}
                 </Group>
               </Group>
 
@@ -537,6 +565,11 @@ export default function ModelProviderPage() {
                     <Badge variant="dot" color="green" size="md" radius="sm">
                       {t('settings.model.enabledCount', { count: onlineCount })}
                     </Badge>
+                  )}
+                  {(provider.id === 'openai_compatible' || provider.id === 'anthropic_compatible') && (
+                    <Button variant="light" size="xs" color="indigo" onClick={() => { setAddingCustomModel(provider); setExpanded((prev) => ({ ...prev, [provider.id]: true })); }}>
+                      {t('settings.model.addCustomModel', 'Add Custom Model')}
+                    </Button>
                   )}
                 </Group>
                 <Button
@@ -620,7 +653,19 @@ export default function ModelProviderPage() {
                           withArrow
                           disabled={testingProvider === provider.id}
                         >
-                          <Box>
+                          <Group gap="sm">
+                            {(provider.id === 'openai_compatible' || provider.id === 'anthropic_compatible') && (
+                              <Tooltip label={t('common.delete', 'Delete')}>
+                                <ActionIcon
+                                  variant="subtle"
+                                  color="red"
+                                  size="sm"
+                                  onClick={() => handleDeleteModel(model.id, provider.id)}
+                                >
+                                  <IconTrash size={16} />
+                                </ActionIcon>
+                              </Tooltip>
+                            )}
                             <Switch
                               size="md"
                               checked={model.is_online}
@@ -635,7 +680,7 @@ export default function ModelProviderPage() {
                                 )
                               }
                             />
-                          </Box>
+                          </Group>
                         </Tooltip>
                       </Group>
                     </Group>
@@ -652,6 +697,14 @@ export default function ModelProviderPage() {
         <ProviderSettings
           provider={editingProvider}
           onClose={() => setEditingProvider(null)}
+          onSaved={loadData}
+        />
+      )}
+
+      {addingCustomModel && (
+        <CustomModelSettings
+          provider={addingCustomModel}
+          onClose={() => setAddingCustomModel(null)}
           onSaved={loadData}
         />
       )}

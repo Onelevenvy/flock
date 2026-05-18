@@ -223,5 +223,90 @@ pub async fn set_active_model(
         .map_err(|e| format!("保存活跃模型失败: {}", e))
 }
 
+/// 创建自定义模型并加密其专属 API Key
+#[tauri::command]
+pub async fn upsert_custom_model(
+    db: State<'_, SharedDbManager>,
+    provider_id: String,
+    model_name: String,
+    base_url: String,
+    api_key: String,
+) -> Result<(), String> {
+    let db_inner = db.inner().clone();
+    
+    // Encrypt the custom API key
+    let salt = db_inner.get_or_create_salt().await
+        .map_err(|e| format!("无法获取加密盐: {}", e))?;
+    
+    let (encrypted_key, nonce) = flock_core::crypto::encrypt_value(&api_key, &salt)
+        .map_err(|e| format!("加密失败: {}", e))?;
 
+    let meta = serde_json::json!({
+        "base_url": base_url,
+        "api_key_encrypted": encrypted_key,
+        "api_key_nonce": nonce,
+    });
 
+    let model = flock_core::db::Model {
+        id: format!("{}:{}", provider_id, model_name),
+        provider_id: provider_id.clone(),
+        model_name,
+        categories: vec!["chat".to_string()],
+        capabilities: vec![],
+        is_online: true,
+        meta: Some(meta),
+        created_at: String::new(), // Will be handled by DB
+        updated_at: String::new(),
+    };
+
+    db_inner.upsert_model(&model).await
+        .map_err(|e| format!("保存自定义模型失败: {}", e))?;
+
+    // 联动激活 Provider 外壳状态
+    if let Ok(Some(mut provider)) = db_inner.get_provider(&provider_id).await {
+        if !provider.is_available {
+            provider.is_available = true;
+            let _ = db_inner.upsert_provider(&provider).await;
+        }
+    }
+
+    Ok(())
+}
+
+/// 测试自定义模型连通性（不保存到数据库）
+#[tauri::command]
+pub async fn test_custom_model_connection(
+    db: State<'_, SharedDbManager>,
+    provider_id: String,
+    model_name: String,
+    base_url: String,
+    api_key: String,
+) -> Result<String, String> {
+    let db_inner = db.inner().clone();
+    
+    // 1. 获取 provider 以得知 provider_type
+    let provider = db_inner.get_provider(&provider_id).await
+        .map_err(|e| format!("数据库错误: {}", e))?
+        .ok_or_else(|| "找不到该提供商".to_string())?;
+
+    // 2. 构造测试模型
+    use flock_core::model_factory::{create_model, ModelProviderParams};
+    let model = create_model(ModelProviderParams {
+        provider_type: provider.provider_type,
+        model: model_name.clone(),
+        api_key,
+        base_url: Some(base_url),
+        max_tokens: Some(64),
+    }).map_err(|e| format!("创建模型实例失败: {}", e))?;
+
+    let test_msg = langgraph_prebuilt::Message::Human {
+        content: langgraph_prebuilt::MessageContent::Text("Hi, reply with just 'OK'.".to_string()),
+        id: None,
+    };
+
+    let config = std::collections::HashMap::new();
+    match model.invoke(&[test_msg], &config) {
+        Ok(_) => Ok("连接成功!".to_string()),
+        Err(e) => Err(format!("连接失败: {}", e)),
+    }
+}

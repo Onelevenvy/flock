@@ -453,8 +453,13 @@ impl AgentEngine {
                     let protocol_writer = self.protocol_writer.clone();
 
                     tokio::spawn(async move {
-                        if let Err(e) = super::summary::run_background_summary(db, thread_id, messages, default_provider, protocol_writer).await {
-                            eprintln!("[summary] Background auto summary failed: {}", e);
+                        let enable_summary: Option<bool> = db.get_config("enable_title_summary").await;
+                        if enable_summary.unwrap_or(false) {
+                            if let Err(e) = super::summary::run_background_summary(db, thread_id, messages, default_provider, protocol_writer).await {
+                                eprintln!("[summary] Background auto summary failed: {}", e);
+                            }
+                        } else {
+                            log::info!("[summary] Chat list title summary is disabled, skipping auto-summary.");
                         }
                     });
                 }

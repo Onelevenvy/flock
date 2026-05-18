@@ -20,5 +20,7 @@
   "os": "Operating System",
   "clientVersion": "Client Version",
   "langSettings": "Language Settings",
-  "langSelect": "Language"
+  "langSelect": "Language",
+  "enableTitleSummary": "Enable Chat Title Summarization",
+  "enableTitleSummaryTooltip": "When enabled, after the first turn of a new session, the system will call AI in the background to summarize a short title for the session. When disabled, summarization is skipped and the default title is used."
 }

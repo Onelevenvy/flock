@@ -20,5 +20,7 @@
   "os": "操作系统",
   "clientVersion": "客户端版本",
   "langSettings": "界面语言设置",
-  "langSelect": "语言 (Language)"
+  "langSelect": "语言 (Language)",
+  "enableTitleSummary": "启用聊天列表标题自动总结",
+  "enableTitleSummaryTooltip": "开启后，在新会话的首个回合结束后，后台会自动调用 AI 为当前会话生成一个简短的标题。关闭后则不进行总结，保持默认的标题。"
 }
