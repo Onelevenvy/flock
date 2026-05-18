@@ -11,7 +11,7 @@ use flock_core::config::hooks::HookEngine;
 use crate::approval::ToolApproval;
 use crate::context_compression::state::CompactState;
 use crate::sinks::OutputSink;
-use crate::plan::state::PlanState;
+use crate::tools::plan::state::PlanState;
 use crate::session::Session;
 use super::AgentEngine;
 

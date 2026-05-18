@@ -80,8 +80,8 @@ export function HomeView() {
   }, [selectedHomeAssistantId, activeConversationId, conversationAssistants, selectedAssistant.id, assistants, setSelectedHomeAssistantId]);
 
   const activeWs = workspaces.find(w => w.id === activeWorkspaceId);
-  const isStreaming = status === 'thinking';
-  const canSend = status === 'ready' && value.trim().length > 0 && !!activeWorkspaceId;
+  const isStreaming = !!activeConversationId && status === 'thinking';
+  const canSend = (status === 'ready' || (status === 'thinking' && !activeConversationId)) && value.trim().length > 0 && !!activeWorkspaceId;
 
 
 
@@ -179,7 +179,7 @@ export function HomeView() {
     addUserMessage(userUiId, content);
     try {
       await invoke('send_message', { 
-        sessionId: activeConversationId || null, 
+        sessionId: convId || null, 
         msgId: streamMsgId, 
         content 
       });

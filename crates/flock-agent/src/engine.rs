@@ -13,13 +13,13 @@ use flock_tools::registry::ToolRegistry;
 
 use crate::approval::ToolApproval;
 use crate::context_compression::state::CompactState;
-use crate::sinks::OutputSink;
-use crate::plan::state::PlanState;
 use crate::session::{Session, SessionManager};
+use crate::sinks::OutputSink;
+use crate::tools::plan::state::PlanState;
 
-mod init;
-mod run;
-mod summary;
+pub mod init;
+pub mod run;
+pub mod summary;
 
 pub struct AgentEngine {
     pub(crate) provider: Arc<dyn BaseChatModel>,
@@ -202,7 +202,7 @@ impl AgentEngine {
             }
         } else if let Some(new_budget) = thinking_budget
             && let Some(flock_core::types::llm::ThinkingConfig::Enabled { budget_tokens }) =
-                &mut self.thinking
+            &mut self.thinking
         {
             *budget_tokens = new_budget;
             changes.push(format!("thinking budget: {new_budget}"));

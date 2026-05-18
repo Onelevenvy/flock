@@ -23,12 +23,13 @@ impl AgentEngine {
                 Some(sid) => {
                     let session = mgr.create(provider_name, &self.model, cwd, sid).await?;
                     self.current_session = Some(session);
+                    self.thread_id = sid.to_string(); // 🚀 Keep thread_id in sync!
                 }
                 None => {
                     let sid = uuid::Uuid::new_v4().to_string();
                     let now = chrono::Utc::now();
                     self.current_session = Some(Session {
-                        id: sid,
+                        id: sid.clone(),
                         created_at: now,
                         updated_at: now,
                         provider: provider_name.to_string(),
@@ -37,6 +38,7 @@ impl AgentEngine {
                         total_usage: TokenUsage::default(),
                         messages: Vec::new(),
                     });
+                    self.thread_id = sid; // 🚀 Keep thread_id in sync!
                 }
             }
         }

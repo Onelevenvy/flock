@@ -10,9 +10,9 @@ pub mod engine;
 pub mod graph;
 pub mod tool_executor;
 pub mod sinks;
-pub mod plan;
 pub mod session;
 pub mod tools;
+
 
 pub mod spawner;
 pub mod http_recording;

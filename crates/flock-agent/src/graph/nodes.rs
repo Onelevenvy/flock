@@ -282,7 +282,7 @@ pub fn make_llm_node(
                 format!(
                     "{}\n\n{}",
                     ctx.system_prompt,
-                    crate::plan::prompt::plan_mode_instructions()
+                    crate::tools::plan::prompt::plan_mode_instructions()
                 )
             } else {
                 ctx.system_prompt.clone()
