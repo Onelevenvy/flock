@@ -365,6 +365,13 @@ export const WorkflowIcon: React.FC<IconProps> = ({ size = 24, ...props }) => (
   </svg>
 );
 
+export const BashIcon: React.FC<IconProps> = ({ size = 24, ...props }) => (
+  <svg xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" viewBox="0 0 24 24">
+  <path d="M0 0h24v24H0z" fill="none" />
+  <path fill="currentColor" d="M4 20q-.825 0-1.412-.587T2 18V6q0-.825.588-1.412T4 4h16q.825 0 1.413.588T22 6v12q0 .825-.587 1.413T20 20zm0-2h16V8H4zm4.675-5l-1.9-1.9q-.3-.3-.288-.7t.313-.7q.3-.275.7-.287t.7.287l2.6 2.6q.3.3.3.7t-.3.7l-2.6 2.6q-.275.275-.687.288T6.8 16.3q-.275-.275-.275-.7t.275-.7zM13 17q-.425 0-.712-.288T12 16t.288-.712T13 15h4q.425 0 .713.288T18 16t-.288.713T17 17z" />
+</svg>
+);
+
 // ==========================================
 // 2. Helper ToolsIcon Component
 // ==========================================
@@ -387,6 +394,8 @@ const toolIconMap: Record<string, React.FC<IconProps>> = {
   baidu: BaiduIcon,
   get_current_time: GetCurrentTimeIcon,
   mcp: McpIcon,
+  bash: BashIcon,
+  builtin: BashIcon,
 };
 
 export interface ToolsIconProps extends IconProps {
@@ -412,6 +421,7 @@ export const ToolsIcon: React.FC<ToolsIconProps> = ({ name = '', ...props }) => 
   else if (normalizedKey.includes('siliconflow')) matchedKey = 'siliconflow';
   else if (normalizedKey.includes('spark')) matchedKey = 'spark';
   else if (normalizedKey.includes('zhipu')) matchedKey = 'zhipuai';
+  else if (normalizedKey.includes('builtin') || normalizedKey.includes('bash')) matchedKey = 'bash';
 
   const IconComp = toolIconMap[matchedKey];
   if (!IconComp) {
