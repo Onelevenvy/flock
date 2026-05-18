@@ -55,25 +55,9 @@ Flock is a desktop application that provides an interactive interface for AI age
 - Node.js 18+
 - npm or yarn
 
-#### Local Dependencies (Important)
+#### Dependencies
 
-This project currently relies on local paths for the `langgraph-rust` crates:
-
-```toml
-# LangGraph (local path to Rust reimplementation)
-langgraph                    = { path = "../langgraph-rust/crates/langgraph" }
-langgraph-derive             = { path = "../langgraph-rust/crates/langgraph-derive" }
-langgraph-checkpoint         = { path = "../langgraph-rust/crates/langgraph-checkpoint" }
-langgraph-checkpoint-sqlite  = { path = "../langgraph-rust/crates/langgraph-checkpoint-sqlite" }
-langgraph-prebuilt           = { path = "../langgraph-rust/crates/langgraph-prebuilt" }
-langgraph-providers          = { path = "../langgraph-rust/crates/langgraph-providers", features = ["openai", "anthropic"] }
-```
-
-To build and run Flock, you must:
-1. Clone the `langgraph-rust` repository from [https://github.com/Onelevenvy/langgraph-rust](https://github.com/Onelevenvy/langgraph-rust).
-2. Place the cloned `langgraph-rust` folder in the **same parent directory** as this `flock` project folder (so that `../langgraph-rust` resolves correctly).
-
-*Note: These dependencies will be published to crates.io in the future, at which point local paths will no longer be required.*
+This project relies on [langgraph-rs](https://github.com/Onelevenvy/langgraph-rs), which is automatically resolved as a Git dependency in `Cargo.toml`.
 
 ### Build & Run
 

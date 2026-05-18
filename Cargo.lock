@@ -97,7 +97,7 @@ dependencies = [
  "flock-core",
  "flock-skills",
  "flock-tools",
- "langgraph-prebuilt",
+ "langgraph-prebuilt 0.1.0 (git+https://github.com/Onelevenvy/langgraph-rs)",
  "langgraph-providers",
  "log",
  "reqwest 0.12.28",
@@ -1214,11 +1214,11 @@ dependencies = [
  "futures",
  "glob",
  "is-terminal",
- "langgraph",
- "langgraph-checkpoint",
+ "langgraph 0.1.0 (git+https://github.com/Onelevenvy/langgraph-rs)",
+ "langgraph-checkpoint 0.1.0 (git+https://github.com/Onelevenvy/langgraph-rs)",
  "langgraph-checkpoint-sqlite",
- "langgraph-derive",
- "langgraph-prebuilt",
+ "langgraph-derive 0.1.0 (git+https://github.com/Onelevenvy/langgraph-rs)",
+ "langgraph-prebuilt 0.1.0 (git+https://github.com/Onelevenvy/langgraph-rs)",
  "langgraph-providers",
  "log",
  "mockall",
@@ -1249,7 +1249,7 @@ dependencies = [
  "dirs",
  "glob",
  "hostname",
- "langgraph-prebuilt",
+ "langgraph-prebuilt 0.1.0 (git+https://github.com/Onelevenvy/langgraph-rs)",
  "langgraph-providers",
  "libc",
  "log",
@@ -1306,9 +1306,9 @@ dependencies = [
  "flock-core",
  "futures",
  "glob",
- "langgraph-checkpoint",
- "langgraph-derive",
- "langgraph-prebuilt",
+ "langgraph-checkpoint 0.1.0",
+ "langgraph-derive 0.1.0",
+ "langgraph-prebuilt 0.1.0",
  "lru",
  "meval",
  "reqwest 0.12.28",
@@ -2485,7 +2485,25 @@ version = "0.1.0"
 dependencies = [
  "async-trait",
  "chrono",
- "langgraph-checkpoint",
+ "langgraph-checkpoint 0.1.0",
+ "parking_lot",
+ "serde",
+ "serde_json",
+ "thiserror 2.0.18",
+ "tokio",
+ "tokio-stream",
+ "tracing",
+ "uuid",
+]
+
+[[package]]
+name = "langgraph"
+version = "0.1.0"
+source = "git+https://github.com/Onelevenvy/langgraph-rs#7c08750b19abfe4f34c1c6741e3989a5e150c3ca"
+dependencies = [
+ "async-trait",
+ "chrono",
+ "langgraph-checkpoint 0.1.0 (git+https://github.com/Onelevenvy/langgraph-rs)",
  "parking_lot",
  "serde",
  "serde_json",
@@ -2514,11 +2532,30 @@ dependencies = [
 ]
 
 [[package]]
-name = "langgraph-checkpoint-sqlite"
+name = "langgraph-checkpoint"
 version = "0.1.0"
+source = "git+https://github.com/Onelevenvy/langgraph-rs#7c08750b19abfe4f34c1c6741e3989a5e150c3ca"
 dependencies = [
  "async-trait",
- "langgraph-checkpoint",
+ "chrono",
+ "dashmap",
+ "parking_lot",
+ "rmp-serde",
+ "serde",
+ "serde_json",
+ "thiserror 2.0.18",
+ "tokio",
+ "tracing",
+ "uuid",
+]
+
+[[package]]
+name = "langgraph-checkpoint-sqlite"
+version = "0.1.0"
+source = "git+https://github.com/Onelevenvy/langgraph-rs#7c08750b19abfe4f34c1c6741e3989a5e150c3ca"
+dependencies = [
+ "async-trait",
+ "langgraph-checkpoint 0.1.0 (git+https://github.com/Onelevenvy/langgraph-rs)",
  "serde",
  "serde_json",
  "sqlx",
@@ -2537,14 +2574,41 @@ dependencies = [
 ]
 
 [[package]]
+name = "langgraph-derive"
+version = "0.1.0"
+source = "git+https://github.com/Onelevenvy/langgraph-rs#7c08750b19abfe4f34c1c6741e3989a5e150c3ca"
+dependencies = [
+ "proc-macro2",
+ "quote",
+ "syn 2.0.117",
+]
+
+[[package]]
 name = "langgraph-prebuilt"
 version = "0.1.0"
 dependencies = [
  "async-stream",
  "async-trait",
  "futures",
- "langgraph",
- "langgraph-checkpoint",
+ "langgraph 0.1.0",
+ "langgraph-checkpoint 0.1.0",
+ "serde",
+ "serde_json",
+ "thiserror 2.0.18",
+ "tokio",
+ "tokio-stream",
+]
+
+[[package]]
+name = "langgraph-prebuilt"
+version = "0.1.0"
+source = "git+https://github.com/Onelevenvy/langgraph-rs#7c08750b19abfe4f34c1c6741e3989a5e150c3ca"
+dependencies = [
+ "async-stream",
+ "async-trait",
+ "futures",
+ "langgraph 0.1.0 (git+https://github.com/Onelevenvy/langgraph-rs)",
+ "langgraph-checkpoint 0.1.0 (git+https://github.com/Onelevenvy/langgraph-rs)",
  "serde",
  "serde_json",
  "thiserror 2.0.18",
@@ -2555,13 +2619,14 @@ dependencies = [
 [[package]]
 name = "langgraph-providers"
 version = "0.1.0"
+source = "git+https://github.com/Onelevenvy/langgraph-rs#7c08750b19abfe4f34c1c6741e3989a5e150c3ca"
 dependencies = [
  "async-stream",
  "async-trait",
  "futures",
- "langgraph",
- "langgraph-checkpoint",
- "langgraph-prebuilt",
+ "langgraph 0.1.0 (git+https://github.com/Onelevenvy/langgraph-rs)",
+ "langgraph-checkpoint 0.1.0 (git+https://github.com/Onelevenvy/langgraph-rs)",
+ "langgraph-prebuilt 0.1.0 (git+https://github.com/Onelevenvy/langgraph-rs)",
  "reqwest 0.12.28",
  "reqwest-eventsource",
  "serde",
