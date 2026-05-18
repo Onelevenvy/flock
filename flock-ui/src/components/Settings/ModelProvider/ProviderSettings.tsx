@@ -12,6 +12,7 @@ import { invoke } from '@tauri-apps/api/core';
 import { notifications } from '@mantine/notifications';
 import { IconCheck, IconX } from '@tabler/icons-react';
 import { useTranslation } from 'react-i18next';
+import { ProviderIcon } from '../../Icons';
 
 interface ModelProvider {
   id: string;
@@ -114,6 +115,7 @@ export default function ProviderSettings({ provider, onClose, onSaved }: Props) 
       onClose={onClose}
       title={
         <Group gap="xs">
+          <ProviderIcon name={provider.id} size={20} />
           <Text fw={600} size="md">
             {t('settings.provider.settingsTitle', { name: provider.provider_name })}
           </Text>
