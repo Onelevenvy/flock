@@ -29,7 +29,7 @@ use langgraph_prebuilt::BaseChatModel;
 use crate::approval::ToolApproval;
 use crate::context_compression::state::CompactState;
 use crate::context_compression::{auto, emergency, estimate, micro};
-use crate::output::OutputSink;
+use crate::sinks::OutputSink;
 
 use super::state::AgentState;
 

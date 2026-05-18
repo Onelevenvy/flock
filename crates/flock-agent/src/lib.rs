@@ -9,7 +9,7 @@ pub mod context;
 pub mod engine;
 pub mod graph;
 pub mod tool_executor;
-pub mod output;
+pub mod sinks;
 pub mod plan;
 pub mod session;
 pub mod tools;

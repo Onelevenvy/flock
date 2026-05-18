@@ -7,7 +7,7 @@ use flock_core::model_factory::{create_model, ModelProviderParams};
 use flock_tools::mcp::manager::McpManager;
 use langgraph_prebuilt::BaseChatModel;
 use crate::engine::AgentEngine;
-use crate::output::OutputSink;
+use crate::sinks::OutputSink;
 use crate::session::Session;
 
 /// Result of bootstrapping an agent engine with all features initialized.
