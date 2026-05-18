@@ -37,6 +37,7 @@
   --flock-text-bright: #212529;
   --flock-accent: #6366f1;
   --flock-accent-soft: rgba(99, 102, 241, 0.08);
+  --mantine-color-dimmed: #5c6370; /* Crisp Slate Gray for extreme readability in Light theme */
 }
 
 /* ---- Dark theme ---- */
@@ -58,6 +59,7 @@
   --flock-text-bright: #eff1f5;
   --flock-accent: #818cf8;
   --flock-accent-soft: rgba(129, 140, 248, 0.12);
+  --mantine-color-dimmed: #9ea3b0; /* Legible, balanced gray for Dark theme */
 }
 
 body {

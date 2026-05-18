@@ -635,7 +635,7 @@ export default function ModelProviderPage() {
                           <ModelIcon name={model.model_name} provider={provider.id} size={20} />
                         </Box>
                         <Box>
-                          <Text size="sm" fw={600} c={model.is_online ? 'var(--flock-text-bright)' : 'dimmed'}>
+                          <Text size="sm" fw={600} style={{ color: model.is_online ? 'var(--flock-text-primary)' : 'var(--flock-text-dim)' }}>
                             {model.model_name}
                           </Text>
                           <Group gap={6} mt={4}>
