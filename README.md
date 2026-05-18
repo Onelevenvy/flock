@@ -1,6 +1,10 @@
 # Flock
 
-A multi-provider AI agent desktop application built with Rust and Tauri.
+English | [简体中文](docs/README_zh.md)
+
+A multi AI agent desktop application built with Rust and Tauri.
+
+![Flock Main Screenshot](./docs/resources/main.jpg)
 
 > **Note**: This project is built on top of [langgraph-rust](https://github.com/Onelevenvy/langgraph-rust), which is my personal Rust implementation of the LangGraph framework.
 
@@ -50,6 +54,26 @@ Flock is a desktop application that provides an interactive interface for AI age
 - Rust 1.77.2+
 - Node.js 18+
 - npm or yarn
+
+#### Local Dependencies (Important)
+
+This project currently relies on local paths for the `langgraph-rust` crates:
+
+```toml
+# LangGraph (local path to Rust reimplementation)
+langgraph                    = { path = "../langgraph-rust/crates/langgraph" }
+langgraph-derive             = { path = "../langgraph-rust/crates/langgraph-derive" }
+langgraph-checkpoint         = { path = "../langgraph-rust/crates/langgraph-checkpoint" }
+langgraph-checkpoint-sqlite  = { path = "../langgraph-rust/crates/langgraph-checkpoint-sqlite" }
+langgraph-prebuilt           = { path = "../langgraph-rust/crates/langgraph-prebuilt" }
+langgraph-providers          = { path = "../langgraph-rust/crates/langgraph-providers", features = ["openai", "anthropic"] }
+```
+
+To build and run Flock, you must:
+1. Clone the `langgraph-rust` repository from [https://github.com/Onelevenvy/langgraph-rust](https://github.com/Onelevenvy/langgraph-rust).
+2. Place the cloned `langgraph-rust` folder in the **same parent directory** as this `flock` project folder (so that `../langgraph-rust` resolves correctly).
+
+*Note: These dependencies will be published to crates.io in the future, at which point local paths will no longer be required.*
 
 ### Build & Run
 
