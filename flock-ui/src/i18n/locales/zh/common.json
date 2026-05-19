@@ -9,5 +9,9 @@
   "reset": "重置修改",
   "hide": "隐藏",
   "show": "显示",
-  "add": "添加"
+  "add": "添加",
+  "edit": "编辑",
+  "preview": "预览",
+  "close": "关闭",
+  "settings": "设置"
 }

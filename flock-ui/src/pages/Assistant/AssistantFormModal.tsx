@@ -156,32 +156,29 @@ export function AssistantFormModal({
       <ScrollArea mah="72vh" styles={{ viewport: { maxHeight: '72vh' } }} offsetScrollbars>
         <Stack gap="md" pt="xs" pb="xl" px="xs">
           {/* 名称及头像 — 同行 */}
-          <TextInput
-            label={
-              <Text size="sm" fw={500} mb={6} style={{ color: 'var(--flock-text-secondary)' }}>
-                {t('assistant.form.nameAndAvatar')}
-              </Text>
-            }
-            placeholder={t('assistant.form.namePlaceholder')}
-            value={name}
-            onChange={(e) => setName(e.currentTarget.value)}
-            required
-            disabled={isBuiltin}
-            leftSection={
+          <Stack gap={4}>
+            <Text size="sm" fw={500} mb={2} style={{ color: 'var(--flock-text-secondary)', display: 'flex', alignItems: 'center' }}>
+              <span style={{ color: '#fa5252', marginRight: 4 }}>*</span>
+              {t('assistant.form.nameAndAvatar')}
+            </Text>
+            <Group gap="xs" style={{ width: '100%', alignItems: 'center' }}>
               <IconPicker value={icon} onChange={setIcon} />
-            }
-            leftSectionWidth={52}
-            styles={{
-              input: {
-                background: 'var(--flock-bg-surface)',
-                border: '1px solid var(--flock-border-dim)',
-                paddingLeft: 60,
-              },
-              section: {
-                pointerEvents: 'all',
-              },
-            }}
-          />
+              <TextInput
+                placeholder={t('assistant.form.namePlaceholder')}
+                value={name}
+                onChange={(e) => setName(e.currentTarget.value)}
+                disabled={isBuiltin}
+                style={{ flex: 1 }}
+                styles={{
+                  input: {
+                    background: 'var(--flock-bg-surface)',
+                    border: '1px solid var(--flock-border-dim)',
+                    height: 38,
+                  },
+                }}
+              />
+            </Group>
+          </Stack>
 
           {/* 描述 */}
           <Textarea

@@ -29,6 +29,7 @@ import {
   IconBoxMultiple,
   IconBolt,
   IconCalendarTime,
+  IconPuzzle,
   IconLayoutGrid,
 } from '@tabler/icons-react';
 import { invoke } from '@tauri-apps/api/core';
@@ -36,6 +37,7 @@ import { useWorkspaceStore } from '../../../store/workspaceStore';
 import { useUiStore } from '../../../store/uiStore';
 import { useAgentStore } from '../../../store/agentStore';
 import SettingsModal from '../../Settings/SettingsModal';
+import { ThemeToggle } from '../../Settings/ThemeToggle';
 import { FlockLogo } from './FlockLogo';
 import { WorkspaceTreeNode } from './WorkspaceTreeNode';
 import {
@@ -194,6 +196,7 @@ export function Sidebar() {
     { label: t('sidebar.workflow'), icon: IconRoute, view: 'workflow' as const },
     { label: t('sidebar.collaboration'), icon: IconBoxMultiple, view: 'collaboration' as const },
     { label: t('sidebar.schedule'), icon: IconCalendarTime, view: 'schedule' as const },
+    { label: t('sidebar.extension'), icon: IconPuzzle , view: 'extension' as const },
   ];
 
   if (isSidebarCollapsed) return null;
@@ -353,29 +356,46 @@ export function Sidebar() {
           )}
         </ScrollArea>
 
-        {/* 底部设置按钮 */}
-        <Box style={{ padding: '16px', borderTop: '1px solid var(--flock-border-dim)' }}>
-          <UnstyledButton
-            onClick={() => setSettingsOpen(true)}
-            style={{
-              width: '100%',
-              display: 'flex',
-              alignItems: 'center',
-              gap: 12,
-              padding: '6px',
-              borderRadius: 8,
-              transition: 'background 0.2s',
-            }}
-            className="hover-bg-raised"
-          >
-            <Avatar src={null} alt="jimmy" radius="xl" color="blue" size="md">
-              <IconUserCircle size={26} />
-            </Avatar>
-            <Box style={{ flex: 1, overflow: 'hidden' }}>
-              <Text size="sm" fw={600} truncate>Jimmy</Text>
-            </Box>
-            <IconSettings size={18} color="var(--flock-text-dim)" />
-          </UnstyledButton>
+        {/* 底部设置及快捷切换主题 */}
+        <Box style={{ padding: '12px 16px', borderTop: '1px solid var(--flock-border-dim)' }}>
+          <Group justify="space-between" align="center" gap="xs">
+            <UnstyledButton
+              onClick={() => setSettingsOpen(true)}
+              style={{
+                flex: 1,
+                display: 'flex',
+                alignItems: 'center',
+                gap: 10,
+                padding: '6px 8px',
+                borderRadius: 8,
+                transition: 'background 0.2s',
+                minWidth: 0,
+              }}
+              className="hover-bg-raised"
+            >
+              <Avatar src={null} alt="jimmy" radius="xl" color="blue" size="sm">
+                <IconUserCircle size={22} />
+              </Avatar>
+              <Box style={{ flex: 1, overflow: 'hidden' }}>
+                <Text size="sm" fw={600} truncate>Jimmy</Text>
+              </Box>
+            </UnstyledButton>
+
+            <Group gap={4} wrap="nowrap" style={{ flexShrink: 0 }}>
+              <ThemeToggle />
+              <Tooltip label={t('common.settings') || '设置'} withArrow>
+                <ActionIcon
+                  variant="subtle"
+                  color="gray"
+                  size="sm"
+                  onClick={() => setSettingsOpen(true)}
+                  aria-label="Settings"
+                >
+                  <IconSettings size={16} />
+                </ActionIcon>
+              </Tooltip>
+            </Group>
+          </Group>
         </Box>
       </Box>
 
