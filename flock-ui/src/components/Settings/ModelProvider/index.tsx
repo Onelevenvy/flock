@@ -497,8 +497,8 @@ export default function ModelProviderPage() {
                       </Group>
                       <Badge
                         size="sm"
-                        variant="gradient"
-                        gradient={isConfigured ? { from: 'teal', to: 'blue', deg: 105 } : { from: 'orange', to: 'red', deg: 105 }}
+                        variant="light"
+                        color={isConfigured ? 'teal' : 'orange'}
                         leftSection={isConfigured ? <IconCheck size={12} /> : <IconX size={12} />}
                         style={{ textTransform: 'none' }}
                       >

@@ -4,7 +4,7 @@ English | [简体中文](docs/README_zh.md)
 
 A multi AI agent desktop application built with Rust and Tauri.
 
-![Flock Main Screenshot](./docs/resources/main.jpg)
+![Flock Main Screenshot](./docs/resources/main.png)
 ![Flock Chat Screenshot](./docs/resources/chat.png)
 
 > **Note**: This project is built on top of [langgraph-rust](https://github.com/Onelevenvy/langgraph-rust), which is my personal Rust implementation of the LangGraph framework.

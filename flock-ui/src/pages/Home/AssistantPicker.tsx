@@ -50,7 +50,7 @@ export function AssistantPicker({
               fontSize: 13,
               fontWeight: isActive ? 600 : 500,
               transition: 'all 0.18s ease',
-              boxShadow: isActive ? '0 2px 8px rgba(99,102,241,0.18)' : 'none',
+              boxShadow: isActive ? '0 2px 8px rgba(21, 90, 239, 0.18)' : 'none',
             }}
           >
             <Avatar
@@ -58,7 +58,7 @@ export function AssistantPicker({
               radius="xl"
               style={{
                 background: isActive
-                  ? 'linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%)'
+                  ? 'var(--flock-accent)'
                   : 'var(--flock-bg-surface)',
                 fontSize: 13,
                 border: '1px solid transparent',

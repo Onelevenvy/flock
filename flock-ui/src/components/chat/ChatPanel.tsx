@@ -144,7 +144,7 @@ function MessageBubble({ message }: { message: ChatMessage }) {
           size={32}
           radius="xl"
           style={{
-            background: 'linear-gradient(135deg, var(--flock-accent) 0%, #36bffa 100%)',
+            background: 'var(--flock-accent)',
             border: '1px solid rgba(21, 90, 239, 0.25)',
             boxShadow: '0 2px 8px rgba(21, 90, 239, 0.2)',
             flexShrink: 0,

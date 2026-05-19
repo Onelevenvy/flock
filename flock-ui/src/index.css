@@ -61,8 +61,8 @@ body, input, button, select, textarea {
   --flock-text-secondary: #d4d4d8; /* zinc-300 */
   --flock-text-primary: #f4f4f5; /* zinc-100 */
   --flock-text-bright: #ffffff;
-  --flock-accent: #36bffa; /* Dify classic blue in dark mode */
-  --flock-accent-soft: rgba(54, 191, 250, 0.12);
+  --flock-accent: #155aef; /* Solid classic blue globally */
+  --flock-accent-soft: rgba(21, 90, 239, 0.16);
   --mantine-color-dimmed: #a1a1aa;
 }
 
