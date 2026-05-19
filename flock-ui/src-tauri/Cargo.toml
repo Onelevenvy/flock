@@ -1,6 +1,6 @@
 [package]
-name = "app"
-version = "0.1.0"
+name = "flock-desktop"
+version.workspace = true
 description = "Flock Agent Desktop UI"
 authors = ["Flock Team"]
 license = "Apache-2.0"

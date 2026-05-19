@@ -23,7 +23,7 @@ export const SOURCE_COLORS: Record<string, string> = {
   Bundled: 'blue',
   User: 'green',
   Project: 'orange',
-  Mcp: 'violet',
+  Mcp: 'grape',
   Legacy: 'gray',
   Managed: 'teal',
 };

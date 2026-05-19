@@ -647,7 +647,7 @@ export default function ModelProviderPage() {
                                 </Badge>
                               ))}
                             {model.capabilities.includes('vision') && (
-                              <Badge size="xs" variant="outline" color="violet" radius="xs">
+                              <Badge size="xs" variant="outline" color="cyan" radius="xs">
                                 vision
                               </Badge>
                             )}

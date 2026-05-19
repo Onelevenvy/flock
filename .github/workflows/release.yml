@@ -31,6 +31,53 @@ jobs:
         with:
           node-version: lts/*
 
+      - name: Sync version from Git tag
+        shell: bash
+        run: |
+          cat << 'EOF' > sync-version.js
+          const fs = require('fs');
+          const path = require('path');
+          const tagVersion = process.env.GITHUB_REF_NAME || '';
+          if (!tagVersion) {
+            console.log('No Git tag found in environment. Skipping version sync.');
+            process.exit(0);
+          }
+          const version = tagVersion.startsWith('v') ? tagVersion.slice(1) : tagVersion;
+          console.log(`Syncing project versions to: ${version}`);
+          
+          // 1. Update Cargo.toml
+          const cargoPath = 'Cargo.toml';
+          if (fs.existsSync(cargoPath)) {
+            let content = fs.readFileSync(cargoPath, 'utf8');
+            content = content.replace(/(\[workspace\.package\]\s*\n\s*version\s*=\s*")[^"]+(")/, `$1\${version}$2`);
+            fs.writeFileSync(cargoPath, content, 'utf8');
+            console.log('Updated workspace Cargo.toml');
+          }
+          
+          // 2. Update package.json
+          const pkgPath = path.join('flock-ui', 'package.json');
+          if (fs.existsSync(pkgPath)) {
+            const pkg = JSON.parse(fs.readFileSync(pkgPath, 'utf8'));
+            pkg.version = version;
+            fs.writeFileSync(pkgPath, JSON.stringify(pkg, null, 2) + '\n', 'utf8');
+            console.log('Updated package.json');
+          }
+          
+          // 3. Update tauri.conf.json
+          const tauriConfPath = path.join('flock-ui', 'src-tauri', 'tauri.conf.json');
+          if (fs.existsSync(tauriConfPath)) {
+            const conf = JSON.parse(fs.readFileSync(tauriConfPath, 'utf8'));
+            conf.version = version;
+            conf.productName = 'Flock';
+            if (conf.app && conf.app.windows && conf.app.windows[0]) {
+              conf.app.windows[0].title = 'Flock';
+            }
+            fs.writeFileSync(tauriConfPath, JSON.stringify(conf, null, 2) + '\n', 'utf8');
+            console.log('Updated tauri.conf.json');
+          }
+          EOF
+          node sync-version.js
+
      
       - name: Install Linux dependencies (Ubuntu only)
         if: matrix.platform == 'ubuntu-22.04'
@@ -67,7 +114,7 @@ jobs:
         with:
           projectPath: flock-ui
           tagName: ${{ github.ref_name }}
-          releaseName: 'App Production ${{ github.ref_name }}'
+          releaseName: 'Flock ${{ github.ref_name }}'
           releaseBody: '🚀 Automated release from GitHub Actions. See assets below to download.'
           releaseDraft: true 
           prerelease: false
