@@ -34,7 +34,7 @@ export function PlaceholderPage({ title, icon: Icon, description }: PlaceholderP
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
-            color: 'var(--mantine-color-indigo-4)',
+            color: 'var(--flock-accent)',
           }}
         >
           <Icon size={40} stroke={1.5} />

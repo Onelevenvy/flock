@@ -39,9 +39,10 @@ export function AssistantCard({
             size={40}
             radius="xl"
             style={{
-              background: 'linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%)',
+              background: 'linear-gradient(135deg, #155aef 0%, #36bffa 100%)',
               fontSize: 20,
               flexShrink: 0,
+              boxShadow: '0 2px 6px rgba(21, 90, 239, 0.2)',
             }}
           >
             {assistant.icon}
@@ -89,7 +90,7 @@ export function AssistantCard({
 
       <Group gap={6} wrap="wrap">
         {assistant.is_builtin && (
-          <Badge size="xs" variant="light" color="violet" radius="sm">
+          <Badge size="xs" variant="light" color="blue" radius="sm">
             {t('assistant.card.builtinTag')}
           </Badge>
         )}
@@ -115,7 +116,7 @@ export function AssistantCard({
 
       <Button
         variant="light"
-        color="indigo"
+        color="blue"
         fullWidth
         leftSection={<IconMessageCircle size={15} />}
         mt="xs"

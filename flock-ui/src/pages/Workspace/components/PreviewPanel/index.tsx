@@ -116,7 +116,7 @@ export function PreviewPanel({ embedded = false }: PreviewPanelProps) {
           <Badge
             size="xs"
             variant="dot"
-            color={isCode || isMarkdown ? 'indigo' : 'teal'}
+            color={isCode || isMarkdown ? 'blue' : 'teal'}
             style={{ textTransform: 'lowercase' }}
           >
             {previewFile.extension || 'txt'}
@@ -124,7 +124,7 @@ export function PreviewPanel({ embedded = false }: PreviewPanelProps) {
           <Text
             size="sm"
             fw={500}
-            style={{ fontFamily: 'monospace', color: 'var(--flock-text-primary)' }}
+            style={{ fontFamily: 'var(--mantine-font-family-monospace)', color: 'var(--flock-text-primary)' }}
           >
             {fileName}
           </Text>
@@ -170,7 +170,7 @@ export function PreviewPanel({ embedded = false }: PreviewPanelProps) {
           flexShrink: 0,
         }}
       >
-        <Text size="xs" c="dimmed" style={{ fontFamily: 'monospace', opacity: 0.55 }}>
+        <Text size="xs" c="dimmed" style={{ fontFamily: 'var(--mantine-font-family-monospace)', opacity: 0.55 }}>
           {previewFile.path}
         </Text>
       </Box>

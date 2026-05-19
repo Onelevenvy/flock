@@ -302,7 +302,7 @@ export function FileTreePanel() {
         style={{ borderBottom: '1px solid var(--flock-border-dim)' }}
       >
         <Box>
-          <Text size="xs" fw={600} c="dimmed" style={{ letterSpacing: '0.05em', textTransform: 'uppercase' }}>
+          <Text size="xs" fw={600} style={{ color: 'var(--flock-text-secondary)', letterSpacing: '0.05em', textTransform: 'uppercase' }}>
             文件
           </Text>
           {activeWs && (

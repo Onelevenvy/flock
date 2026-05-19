@@ -105,7 +105,7 @@ export default function SystemSettings() {
         padding="xl"
       >
         <Group gap="xs" mb="xl">
-          <ThemeIcon variant="light" color="indigo" radius="md">
+          <ThemeIcon variant="light" color="blue" radius="md">
             {theme === 'dark' ? <IconMoon size={18} /> : <IconSun size={18} />}
           </ThemeIcon>
           <Text fw={700} size="md">
@@ -307,13 +307,13 @@ export default function SystemSettings() {
           <Group justify="flex-end">
             <Button
               variant="filled"
-              color="indigo"
+              color="blue"
               leftSection={<IconSettings size={16} />}
               onClick={handleSaveSettings}
               loading={saving}
               styles={{
                 root: {
-                  boxShadow: '0 4px 12px rgba(99, 102, 241, 0.25)',
+                  boxShadow: '0 4px 12px rgba(21, 90, 239, 0.25)',
                 },
               }}
             >
@@ -349,7 +349,7 @@ export default function SystemSettings() {
               <Text size="xs" fw={600} c="dimmed" style={{ textTransform: 'uppercase', letterSpacing: 0.5 }}>
                 {t('systemSettings.workspaceDir')}
               </Text>
-              <Text size="sm" fw={500} style={{ wordBreak: 'break-all', fontFamily: 'monospace' }}>
+              <Text size="sm" fw={500} style={{ wordBreak: 'break-all', fontFamily: 'var(--mantine-font-family-monospace)' }}>
                 {workdir === '__not_bound__' ? t('systemSettings.notBound') : (workdir || t('common.loading'))}
               </Text>
             </div>
@@ -364,7 +364,7 @@ export default function SystemSettings() {
               <Text size="xs" fw={600} c="dimmed" style={{ textTransform: 'uppercase', letterSpacing: 0.5 }}>
                 {t('systemSettings.databasePath')}
               </Text>
-              <Text size="sm" fw={500} style={{ wordBreak: 'break-all', fontFamily: 'monospace' }}>
+              <Text size="sm" fw={500} style={{ wordBreak: 'break-all', fontFamily: 'var(--mantine-font-family-monospace)' }}>
                 {dbPath || t('common.loading')}
               </Text>
             </div>

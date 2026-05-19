@@ -23,7 +23,7 @@ import { v4 as uuidv4 } from 'uuid';
 import { ModelSelector } from '../Settings/ModelSelector';
 
 const MODE_OPTIONS = [
-  { value: 'default', label: '审批模式', icon: IconShieldCheck, color: 'indigo' },
+  { value: 'default', label: '审批模式', icon: IconShieldCheck, color: 'blue' },
   { value: 'auto_edit', label: 'AutoEdit', icon: IconBolt, color: 'teal' },
   { value: 'yolo', label: 'YOLO', icon: IconFlame, color: 'red' },
 ];
@@ -159,7 +159,7 @@ export function InputBar() {
               border: 'none',
               padding: 0,
               fontSize: '12px',
-              color: 'var(--mantine-color-indigo-4)',
+              color: 'var(--flock-accent)',
               textDecoration: 'underline',
               cursor: 'pointer'
             }}
@@ -234,14 +234,14 @@ export function InputBar() {
           <Group gap={8}>
             <ModelSelector />
             {value.length > 0 && (
-              <Text size="xs" c="dimmed" style={{ opacity: 0.5, fontSize: 11 }}>
+              <Text size="xs" style={{ color: 'var(--flock-text-dim)', fontSize: 11 }}>
                 {value.length} 字
               </Text>
             )}
           </Group>
 
           <Group gap={6}>
-            <Text size="xs" c="dimmed" style={{ opacity: 0.4, fontSize: 11 }}>
+            <Text size="xs" style={{ color: 'var(--flock-text-dim)', opacity: 0.8, fontSize: 11 }}>
               {canSend ? 'Enter 发送' : ''}
             </Text>
 
@@ -263,14 +263,14 @@ export function InputBar() {
               <Tooltip label={canSend ? '发送 (Enter)' : placeholder} withArrow>
                 <ActionIcon
                   size="md"
-                  color="indigo"
+                  color="blue"
                   variant={canSend ? 'filled' : 'subtle'}
                   radius="md"
                   onClick={handleSend}
                   disabled={!canSend}
                   style={{
                     transition: 'all 0.15s ease',
-                    boxShadow: canSend ? '0 2px 8px rgba(99,102,241,0.35)' : 'none',
+                    boxShadow: canSend ? '0 2px 8px rgba(21, 90, 239, 0.3)' : 'none',
                   }}
                 >
                   <IconSend size={16} />
@@ -282,7 +282,7 @@ export function InputBar() {
       </Box>
 
       {/* 底部提示 */}
-      <Text size="xs" c="dimmed" mt={6} style={{ textAlign: 'center', opacity: 0.4, fontSize: 11 }}>
+      <Text size="xs" style={{ color: 'var(--flock-text-dim)', textAlign: 'center', opacity: 0.8, fontSize: 11 }} mt={6}>
         Flock Agent · AI 可能产生错误，请注意核实重要信息
       </Text>
     </Box>

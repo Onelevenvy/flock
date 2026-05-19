@@ -110,7 +110,7 @@ export function AssistantPage() {
       {/* 页头 */}
       <Group gap="sm" px="xl" pt="md" pb="sm" justify="space-between">
         <Group gap="sm">
-          <ThemeIcon size={36} radius="md" variant="gradient" gradient={{ from: 'indigo', to: 'violet' }}>
+          <ThemeIcon size={36} radius="md" variant="gradient" gradient={{ from: 'blue', to: 'cyan' }}>
             <IconRobot size={20} />
           </ThemeIcon>
           <Box>
@@ -124,12 +124,12 @@ export function AssistantPage() {
         </Group>
         <Button
           leftSection={<IconPlus size={16} />}
-          color="indigo"
+          color="blue"
           size="sm"
           onClick={handleOpenCreate}
           style={{
-            background: 'linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%)',
-            boxShadow: '0 2px 10px rgba(99, 102, 241, 0.3)',
+            background: 'linear-gradient(135deg, #155aef 0%, #36bffa 100%)',
+            boxShadow: '0 2px 10px rgba(21, 90, 239, 0.25)',
           }}
         >
           {t('assistant.createBtn')}
@@ -143,11 +143,11 @@ export function AssistantPage() {
         {builtinList.length > 0 && (
           <Box mb="xl">
             <Group gap="xs" mb="md">
-              <IconBrain size={16} color="var(--mantine-color-violet-4)" />
+              <IconBrain size={16} color="var(--flock-accent)" />
               <Text size="sm" fw={600} c="dimmed" style={{ letterSpacing: '0.05em', textTransform: 'uppercase' }}>
                 {t('assistant.builtinTitle')}
               </Text>
-              <Badge size="xs" variant="light" color="violet">{builtinList.length}</Badge>
+              <Badge size="xs" variant="light" color="teal">{builtinList.length}</Badge>
             </Group>
             <SimpleGrid cols={{ base: 1, sm: 2, md: 3, lg: 4 }} spacing="md">
               {builtinList.map(a => (
@@ -166,11 +166,11 @@ export function AssistantPage() {
         {/* 我的助手 */}
         <Box>
           <Group gap="xs" mb="md">
-            <IconWand size={16} color="var(--mantine-color-indigo-4)" />
+            <IconWand size={16} color="var(--flock-accent)" />
             <Text size="sm" fw={600} c="dimmed" style={{ letterSpacing: '0.05em', textTransform: 'uppercase' }}>
               {t('assistant.myAssistantsTitle')}
             </Text>
-            <Badge size="xs" variant="light" color="indigo">{userList.length}</Badge>
+            <Badge size="xs" variant="light" color="blue">{userList.length}</Badge>
           </Group>
           {userList.length === 0 ? (
             <Box
@@ -181,7 +181,7 @@ export function AssistantPage() {
                 borderRadius: 16,
               }}
             >
-              <ThemeIcon size={56} radius="xl" variant="light" color="indigo" mx="auto" mb="md">
+              <ThemeIcon size={56} radius="xl" variant="light" color="blue" mx="auto" mb="md">
                 <IconRobot size={28} />
               </ThemeIcon>
               <Text size="sm" c="dimmed" mb={4}>
@@ -193,7 +193,7 @@ export function AssistantPage() {
               <Button
                 leftSection={<IconSparkles size={16} />}
                 variant="light"
-                color="indigo"
+                color="blue"
                 size="sm"
                 onClick={handleOpenCreate}
               >

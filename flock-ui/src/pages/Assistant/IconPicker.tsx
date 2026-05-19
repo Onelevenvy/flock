@@ -73,7 +73,7 @@ export function IconPicker({
                 fontSize: 18,
                 cursor: 'pointer',
                 border: value === emoji
-                  ? '2px solid var(--mantine-color-indigo-4)'
+                  ? '2px solid var(--flock-accent)'
                   : '2px solid transparent',
                 background: value === emoji ? 'var(--flock-accent-soft)' : 'var(--flock-bg-surface)',
                 transition: 'all 0.15s ease',
@@ -90,7 +90,7 @@ export function IconPicker({
                     width: 13,
                     height: 13,
                     borderRadius: '50%',
-                    background: 'var(--mantine-color-indigo-5)',
+                    background: 'var(--flock-accent)',
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center',

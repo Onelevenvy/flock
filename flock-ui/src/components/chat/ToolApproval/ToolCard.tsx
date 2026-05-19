@@ -66,20 +66,20 @@ export function ToolCard({ chunk }: ToolCardProps) {
       radius="sm"
       style={{
         background: 'var(--flock-bg-surface)',
-        border: `1px solid color-mix(in srgb, var(--mantine-color-${catColor}-7) 30%, var(--flock-border-dim))`,
+        border: '1px solid var(--flock-border-dim)',
         marginTop: 4,
         marginBottom: 4,
       }}
     >
       <Group justify="space-between" gap="xs">
         <Group gap="xs" style={{ flex: 1, minWidth: 0 }}>
-          <ThemeIcon size="xs" color={catColor} variant="light" radius="sm">
+          <ThemeIcon size="xs" color="blue" variant="light" radius="sm">
             {catIcon}
           </ThemeIcon>
-          <Text size="xs" fw={600} c={catColor} style={{ whiteSpace: 'nowrap' }}>
+          <Text size="xs" fw={700} style={{ color: 'var(--flock-text-primary)', whiteSpace: 'nowrap' }}>
             {chunk.tool.name}
           </Text>
-          <Text size="xs" c="dimmed" style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+          <Text size="xs" style={{ color: 'var(--flock-text-secondary)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
             {chunk.tool.description}
           </Text>
         </Group>
@@ -108,7 +108,14 @@ export function ToolCard({ chunk }: ToolCardProps) {
           {/* 参数 */}
           <Box>
             <Text size="xs" c="dimmed" mb={2}>参数</Text>
-            <Code block style={{ fontSize: '11px', background: 'var(--flock-bg-deepest)' }}>
+            <Code
+              block
+              style={{
+                fontSize: '11px',
+                background: 'var(--flock-bg-deepest)',
+                color: 'var(--flock-text-primary)',
+              }}
+            >
               {JSON.stringify(chunk.tool.args, null, 2)}
             </Code>
           </Box>

@@ -17,16 +17,16 @@ import { useTranslation } from 'react-i18next';
 const mantineTheme = createTheme({
   fontFamily: '"Inter", "PingFang SC", "Microsoft YaHei", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif',
   fontFamilyMonospace: '"JetBrains Mono", "Cascadia Code", Consolas, monospace',
-  primaryColor: 'indigo',
+  primaryColor: 'blue',
   defaultRadius: 'md',
   colors: {
     dark: [
-      '#d1d2e3', '#a5a7bf', '#8b8da5', '#6b6d85', '#3d3f52',
-      '#2a2c3d', '#21222f', '#171824', '#13141f', '#10111a',
+      '#f4f4f5', '#e4e4e7', '#d4d4d8', '#a1a1aa', '#71717a',
+      '#52525b', '#3f3f46', '#27272a', '#18181b', '#09090b',
     ],
-    indigo: [
-      '#eef2ff', '#e0e7ff', '#c7d2fe', '#a5b4fc', '#818cf8',
-      '#6366f1', '#4f46e5', '#4338ca', '#3730a3', '#312e81',
+    blue: [
+      '#edf5ff', '#d0e5ff', '#a5cdff', '#76aeff', '#438bff',
+      '#155aef', '#1c64f2', '#003bb3', '#002a80', '#00174d',
     ],
   },
 });

@@ -140,7 +140,10 @@ export default function ProviderSettings({ provider, onClose, onSaved }: Props) 
           value={apiKey}
           onChange={(e) => setApiKey(e.currentTarget.value)}
           styles={{
-            input: { background: 'var(--flock-bg-surface)' },
+            input: { 
+              background: 'var(--flock-bg-surface)',
+              color: 'var(--flock-text-primary)',
+            },
           }}
           visibilityToggleIcon={({ reveal }) =>
             reveal ? <Text size="xs">{t('common.hide')}</Text> : <Text size="xs">{t('common.show')}</Text>
@@ -153,7 +156,10 @@ export default function ProviderSettings({ provider, onClose, onSaved }: Props) 
           value={baseUrl}
           onChange={(e) => setBaseUrl(e.currentTarget.value)}
           styles={{
-            input: { background: 'var(--flock-bg-surface)' },
+            input: { 
+              background: 'var(--flock-bg-surface)',
+              color: 'var(--flock-text-primary)',
+            },
           }}
         />
 
@@ -163,7 +169,10 @@ export default function ProviderSettings({ provider, onClose, onSaved }: Props) 
           value={testModel}
           onChange={(e) => setTestModel(e.currentTarget.value)}
           styles={{
-            input: { background: 'var(--flock-bg-surface)' },
+            input: { 
+              background: 'var(--flock-bg-surface)',
+              color: 'var(--flock-text-primary)',
+            },
           }}
         />
 
@@ -173,7 +182,7 @@ export default function ProviderSettings({ provider, onClose, onSaved }: Props) 
           </Button>
           <Button
             variant="filled"
-            color="indigo"
+            color="blue"
             onClick={handleSave}
             loading={saving}
           >

@@ -1,7 +1,7 @@
 {
   "$schema": "../node_modules/@tauri-apps/cli/config.schema.json",
-  "productName": "Flock UI",
-  "version": "0.1.0",
+  "productName": "Flock",
+  "version": "0.2.0",
   "identifier": "com.flock.agent",
   "build": {
     "frontendDist": "../dist",
@@ -12,7 +12,7 @@
   "app": {
     "windows": [
       {
-        "title": "Flock Agent",
+        "title": "Flock",
         "width": 1400,
         "height": 800,
         "minWidth": 900,

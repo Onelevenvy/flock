@@ -229,7 +229,7 @@ export function Sidebar() {
                   gap: 12,
                   padding: '8px 12px',
                   borderRadius: 8,
-                  color: isActive ? 'var(--mantine-color-indigo-4)' : 'var(--flock-text-dim)',
+                  color: isActive ? 'var(--flock-accent)' : 'var(--flock-text-secondary)',
                   background: isActive ? 'var(--flock-accent-soft)' : 'transparent',
                   fontWeight: isActive ? 600 : 500,
                   transition: 'all 0.2s ease',
@@ -252,7 +252,7 @@ export function Sidebar() {
               justifyContent: 'space-between',
               padding: '8px 12px',
               borderRadius: 8,
-              color: 'var(--flock-text-dim)',
+              color: 'var(--flock-text-secondary)',
               marginTop: 4,
             }}
             onClick={() => setMoreOpened(!moreOpened)}
@@ -277,7 +277,7 @@ export function Sidebar() {
                       gap: 12,
                       padding: '8px 12px',
                       borderRadius: 8,
-                      color: isActive ? 'var(--mantine-color-indigo-4)' : 'var(--flock-text-dim)',
+                      color: isActive ? 'var(--flock-accent)' : 'var(--flock-text-secondary)',
                       background: isActive ? 'var(--flock-accent-soft)' : 'transparent',
                       fontWeight: isActive ? 600 : 500,
                       transition: 'all 0.2s ease',
@@ -303,7 +303,7 @@ export function Sidebar() {
             justifyContent: 'space-between',
           }}
         >
-          <Text size="xs" fw={600} c="dimmed" style={{ letterSpacing: '0.05em', textTransform: 'uppercase' }}>
+          <Text size="xs" fw={600} style={{ color: 'var(--flock-text-secondary)', letterSpacing: '0.05em', textTransform: 'uppercase' }}>
             {t('sidebar.workspace')}
           </Text>
           <Group gap={4} wrap="nowrap">
@@ -327,7 +327,7 @@ export function Sidebar() {
               <Button
                 size="xs"
                 variant="light"
-                color="indigo"
+                color="blue"
                 leftSection={<IconPlus size={12} />}
                 onClick={() => setShowNewWs(true)}
               >
@@ -368,7 +368,7 @@ export function Sidebar() {
             }}
             className="hover-bg-raised"
           >
-            <Avatar src={null} alt="jimmy" radius="xl" color="indigo" size="md">
+            <Avatar src={null} alt="jimmy" radius="xl" color="blue" size="md">
               <IconUserCircle size={26} />
             </Avatar>
             <Box style={{ flex: 1, overflow: 'hidden' }}>
@@ -385,7 +385,7 @@ export function Sidebar() {
         onClose={() => { setShowNewWs(false); setNewWsName(''); }}
         title={
           <Group gap="xs">
-            <IconPlus size={18} color="#6366f1" />
+            <IconPlus size={18} color="var(--flock-accent)" />
             <Text fw={600} size="md">{t('sidebar.newWorkspace')}</Text>
           </Group>
         }
@@ -422,7 +422,7 @@ export function Sidebar() {
               {t('common.cancel')}
             </Button>
             <Button
-              color="indigo"
+              color="blue"
               loading={creating}
               onClick={handleCreateWorkspace}
               disabled={!newWsName.trim()}

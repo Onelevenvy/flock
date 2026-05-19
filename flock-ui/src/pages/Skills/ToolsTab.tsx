@@ -236,7 +236,7 @@ function ProviderDetailPanel({
               </Box>
             ))}
           </Stack>
-          <Button size="xs" color="indigo" fullWidth mt="sm" mb="sm" loading={saving} onClick={handleSaveCredentials}>
+          <Button size="xs" color="blue" fullWidth mt="sm" mb="sm" loading={saving} onClick={handleSaveCredentials}>
             {t('skills.tools.authBtn')}
           </Button>
           <Divider />
@@ -351,7 +351,7 @@ export function ToolsTab() {
                 onClick={() => setSelectedProvider(provider)}
                 style={{
                   borderRadius: 12,
-                  border: `1px solid ${selectedProvider?.id === provider.id ? 'var(--mantine-color-indigo-4)' : 'var(--flock-border-subtle)'}`,
+                  border: `1px solid ${selectedProvider?.id === provider.id ? 'var(--flock-accent)' : 'var(--flock-border-subtle)'}`,
                   background: selectedProvider?.id === provider.id ? 'var(--flock-accent-soft)' : 'var(--flock-bg-surface)',
                   cursor: 'pointer',
                   transition: 'all 0.2s ease',

@@ -36,11 +36,11 @@ function ThinkingBlock({ text, defaultCollapsed }: { text: string; defaultCollap
   return (
     <Box
       style={{
-        background: 'rgba(139, 92, 246, 0.06)',
+        background: 'var(--flock-bg-surface)',
         borderRadius: 6,
         padding: '6px 10px',
         marginBottom: 6,
-        border: '1px solid rgba(139, 92, 246, 0.12)',
+        border: '1px solid var(--flock-border-dim)',
       }}
     >
       <Group
@@ -48,24 +48,23 @@ function ThinkingBlock({ text, defaultCollapsed }: { text: string; defaultCollap
         style={{ cursor: 'pointer' }}
         onClick={() => setCollapsed((v) => !v)}
       >
-        <IconBrain size={13} color="rgba(139,92,246,0.8)" />
-        <Text size="xs" c="violet.4" fw={500}>
+        <IconBrain size={13} color="var(--flock-text-secondary)" />
+        <Text size="xs" fw={600} style={{ color: 'var(--flock-text-secondary)' }}>
           思考过程
         </Text>
-        <ActionIcon size="xs" variant="transparent" color="violet">
+        <ActionIcon size="xs" variant="transparent" color="gray">
           {collapsed ? <IconChevronRight size={11} /> : <IconChevronDown size={11} />}
         </ActionIcon>
       </Group>
       <Collapse in={!collapsed}>
         <Text
           size="xs"
-          c="dimmed"
           mt={6}
           style={{
             whiteSpace: 'pre-wrap',
-            fontFamily: '"JetBrains Mono", monospace',
+            fontFamily: 'var(--mantine-font-family-monospace)',
             lineHeight: 1.65,
-            opacity: 0.7,
+            color: 'var(--flock-text-secondary)',
           }}
         >
           {text}
@@ -89,7 +88,7 @@ function ChunkRenderer({ chunk, isStreaming }: { chunk: MessageChunk; isStreamin
               display: 'inline-block',
               width: 8,
               height: 16,
-              background: 'rgba(99,102,241,0.8)',
+              background: 'rgba(21, 90, 239, 0.8)',
               borderRadius: 2,
               marginLeft: 3,
               animation: 'blink 0.9s step-end infinite',
@@ -142,9 +141,9 @@ function MessageBubble({ message }: { message: ChatMessage }) {
           size={32}
           radius="xl"
           style={{
-            background: 'linear-gradient(135deg, var(--flock-accent) 0%, #7c3aed 100%)',
-            border: '1px solid rgba(99,102,241,0.3)',
-            boxShadow: '0 2px 8px rgba(99,102,241,0.3)',
+            background: 'linear-gradient(135deg, var(--flock-accent) 0%, #36bffa 100%)',
+            border: '1px solid rgba(21, 90, 239, 0.25)',
+            boxShadow: '0 2px 8px rgba(21, 90, 239, 0.2)',
             flexShrink: 0,
           }}
         >
@@ -177,7 +176,7 @@ function MessageBubble({ message }: { message: ChatMessage }) {
             ))}
             {message.streaming && message.chunks.length === 0 && (
               <Group gap={4}>
-                <Loader size={12} type="dots" color="indigo" />
+                <Loader size={12} type="dots" color="blue" />
                 <Text size="xs" c="dimmed">思考中...</Text>
               </Group>
             )}
@@ -250,7 +249,7 @@ function EmptyState() {
               justifyContent: 'center',
             }}
           >
-            <IconSparkles size={32} color="rgba(99,102,241,0.7)" />
+            <IconSparkles size={32} color="rgba(21, 90, 239, 0.7)" />
           </Box>
           <Stack align="center" gap={6}>
             <Text fw={600} size="lg" c="var(--flock-text-bright)">
@@ -275,7 +274,7 @@ function EmptyState() {
               justifyContent: 'center',
             }}
           >
-            <IconMessage size={28} color="rgba(99,102,241,0.6)" />
+            <IconMessage size={28} color="rgba(21, 90, 239, 0.6)" />
           </Box>
           <Stack align="center" gap={6}>
             <Text fw={500} size="md" c="var(--flock-text-primary)">
@@ -287,7 +286,7 @@ function EmptyState() {
           </Stack>
           <Button
             variant="light"
-            color="indigo"
+            color="blue"
             size="sm"
             leftSection={<IconPlus size={14} />}
             onClick={handleNewConv}

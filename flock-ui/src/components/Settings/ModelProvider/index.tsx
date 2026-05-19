@@ -304,7 +304,7 @@ export default function ModelProviderPage() {
   if (loading) {
     return (
       <Box style={{ display: 'flex', justifyContent: 'center', padding: 40 }}>
-        <Loader size="md" color="indigo" />
+        <Loader size="md" color="blue" />
       </Box>
     );
   }
@@ -322,7 +322,7 @@ export default function ModelProviderPage() {
       >
         <Group justify="space-between" align="center">
           <Group gap="sm" style={{ flex: 1 }}>
-            <ThemeIcon variant="light" color="indigo" size="md" radius="md">
+            <ThemeIcon variant="light" color="blue" size="md" radius="md">
               <IconCube size={18} />
             </ThemeIcon>
             <Box style={{ flex: 1 }}>
@@ -355,11 +355,15 @@ export default function ModelProviderPage() {
               input: {
                 background: 'var(--flock-bg-surface)',
                 border: '1px solid var(--flock-border-dim)',
+                color: 'var(--flock-text-primary)',
                 height: 32,
               },
               dropdown: {
                 background: 'var(--flock-bg-raised)',
                 border: '1px solid var(--flock-border-dim)',
+              },
+              option: {
+                color: 'var(--flock-text-primary)',
               },
             }}
           />
@@ -411,11 +415,15 @@ export default function ModelProviderPage() {
               input: {
                 background: 'var(--flock-bg-surface)',
                 border: '1px solid var(--flock-border-dim)',
+                color: 'var(--flock-text-primary)',
                 height: 32,
               },
               dropdown: {
                 background: 'var(--flock-bg-raised)',
                 border: '1px solid var(--flock-border-dim)',
+              },
+              option: {
+                color: 'var(--flock-text-primary)',
               },
             }}
           />
@@ -490,7 +498,7 @@ export default function ModelProviderPage() {
                       <Badge
                         size="sm"
                         variant="gradient"
-                        gradient={isConfigured ? { from: 'teal', to: 'indigo', deg: 105 } : { from: 'orange', to: 'red', deg: 105 }}
+                        gradient={isConfigured ? { from: 'teal', to: 'blue', deg: 105 } : { from: 'orange', to: 'red', deg: 105 }}
                         leftSection={isConfigured ? <IconCheck size={12} /> : <IconX size={12} />}
                         style={{ textTransform: 'none' }}
                       >
@@ -499,13 +507,13 @@ export default function ModelProviderPage() {
                     </Group>
                   </Box>
                 </Group>
-
+ 
                 <Group gap="sm">
                   {!!provider.api_key && (
                     <Tooltip label={testingProvider === provider.id ? t('settings.model.connecting') : t('settings.model.testConnection')}>
                       <ActionIcon
                         variant="light"
-                        color={testResult?.id === provider.id ? (testResult.ok ? 'teal' : 'red') : 'indigo'}
+                        color={testResult?.id === provider.id ? (testResult.ok ? 'teal' : 'red') : 'blue'}
                         size="lg"
                         radius="md"
                         onClick={() => handleTestConnection(provider.id)}
@@ -567,14 +575,14 @@ export default function ModelProviderPage() {
                     </Badge>
                   )}
                   {(provider.id === 'openai_compatible' || provider.id === 'anthropic_compatible') && (
-                    <Button variant="light" size="xs" color="indigo" onClick={() => { setAddingCustomModel(provider); setExpanded((prev) => ({ ...prev, [provider.id]: true })); }}>
+                    <Button variant="light" size="xs" color="blue" onClick={() => { setAddingCustomModel(provider); setExpanded((prev) => ({ ...prev, [provider.id]: true })); }}>
                       {t('settings.model.addCustomModel', 'Add Custom Model')}
                     </Button>
                   )}
                 </Group>
                 <Button
                   variant="subtle"
-                  color="indigo"
+                  color="blue"
                   size="sm"
                   leftSection={isExpanded ? <IconChevronUp size={16} /> : <IconChevronDown size={16} />}
                   onClick={() => toggleExpand(provider.id)}
@@ -627,7 +635,7 @@ export default function ModelProviderPage() {
                           <ModelIcon name={model.model_name} provider={provider.id} size={20} />
                         </Box>
                         <Box>
-                          <Text size="sm" fw={600} c={model.is_online ? 'var(--flock-text-bright)' : 'dimmed'}>
+                          <Text size="sm" fw={600} style={{ color: model.is_online ? 'var(--flock-text-primary)' : 'var(--flock-text-dim)' }}>
                             {model.model_name}
                           </Text>
                           <Group gap={6} mt={4}>
@@ -639,7 +647,7 @@ export default function ModelProviderPage() {
                                 </Badge>
                               ))}
                             {model.capabilities.includes('vision') && (
-                              <Badge size="xs" variant="outline" color="violet" radius="xs">
+                              <Badge size="xs" variant="outline" color="cyan" radius="xs">
                                 vision
                               </Badge>
                             )}
@@ -671,10 +679,10 @@ export default function ModelProviderPage() {
                               checked={model.is_online}
                               disabled={!provider.is_available}
                               onChange={() => handleToggleOnline(model.id, model.is_online)}
-                              color="indigo"
+                              color="blue"
                               thumbIcon={
                                 model.is_online ? (
-                                  <IconCheck size={12} color="var(--mantine-color-indigo-6)" stroke={3} />
+                                  <IconCheck size={12} color="var(--flock-accent)" stroke={3} />
                                 ) : (
                                   <IconX size={12} color="var(--flock-text-dim)" stroke={3} strokeWidth={3} />
                                 )

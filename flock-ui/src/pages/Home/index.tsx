@@ -53,7 +53,7 @@ export function HomeView() {
   const { data: assistants = [] } = useAssistantsQuery();
 
   const MODE_OPTIONS = [
-    { value: 'default', label: t('home.approval'), icon: IconShieldCheck, color: 'indigo' },
+    { value: 'default', label: t('home.approval'), icon: IconShieldCheck, color: 'blue' },
     { value: 'auto_edit', label: 'AutoEdit', icon: IconBolt, color: 'teal' },
     { value: 'yolo', label: 'YOLO', icon: IconFlame, color: 'red' },
   ];
@@ -330,14 +330,14 @@ export function HomeView() {
               <Tooltip label={canSend ? t('home.sendEnter') : !activeWorkspaceId ? t('home.pleaseSelectWorkspace') : t('home.sendMessagePlaceholder')} withArrow>
                 <ActionIcon
                   size="md"
-                  color="indigo"
+                  color="blue"
                   variant={canSend ? 'filled' : 'subtle'}
                   radius="xl"
                   onClick={handleSend}
                   disabled={!canSend}
                   style={{
-                    background: canSend ? 'linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%)' : undefined,
-                    boxShadow: canSend ? '0 2px 10px rgba(99,102,241,0.35)' : 'none',
+                    background: canSend ? 'linear-gradient(135deg, #155aef 0%, #36bffa 100%)' : undefined,
+                    boxShadow: canSend ? '0 2px 10px rgba(21, 90, 239, 0.25)' : 'none',
                     transition: 'all 0.2s ease',
                   }}
                 >
@@ -366,7 +366,7 @@ export function HomeView() {
               border: 'none',
               padding: 0,
               fontSize: '12px',
-              color: 'var(--mantine-color-indigo-4)',
+              color: 'var(--flock-accent)',
               textDecoration: 'underline',
               cursor: 'pointer'
             }}

@@ -23,6 +23,7 @@ import {
 import { invoke } from '@tauri-apps/api/core';
 import { PendingApproval, ToolCategory } from '../../../types/protocol';
 import { useAgentStore } from '../../../store/agentStore';
+import { useUiStore } from '../../../store/uiStore';
 
 interface ToolApprovalModalProps {
   approval: PendingApproval | null;
@@ -60,6 +61,8 @@ const CATEGORY_CONFIG: Record<
 
 export function ToolApprovalModal({ approval }: ToolApprovalModalProps) {
   const removePendingApproval = useAgentStore((s) => s.removePendingApproval);
+  const theme = useUiStore((s) => s.theme);
+  const isDark = theme === 'dark';
 
   if (!approval) return null;
 
@@ -128,7 +131,7 @@ export function ToolApprovalModal({ approval }: ToolApprovalModalProps) {
             border: `1px solid color-mix(in srgb, var(--mantine-color-${config.color}-7) 40%, transparent)`,
           }}
         >
-          <Text size="xs" c={config.color}>
+          <Text size="xs" c={isDark ? `${config.color}.3` : `${config.color}.9`} fw={500}>
             {config.description}
           </Text>
         </Box>

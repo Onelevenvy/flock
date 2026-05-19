@@ -39,7 +39,7 @@ export function WorkspaceTreeNode({
         gap={0}
         style={{
           borderRadius: 8,
-          background: isWsActive ? 'rgba(99, 102, 241, 0.06)' : 'transparent',
+          background: isWsActive ? 'rgba(21, 90, 239, 0.06)' : 'transparent',
           transition: 'all 0.15s ease',
           cursor: 'pointer',
         }}
@@ -55,12 +55,12 @@ export function WorkspaceTreeNode({
           <Text
             size="sm"
             fw={isWsActive ? 600 : 500}
-            c={isWsActive ? 'var(--flock-text-bright)' : 'dimmed'}
             style={{
               flex: 1,
               overflow: 'hidden',
               textOverflow: 'ellipsis',
               whiteSpace: 'nowrap',
+              color: isWsActive ? 'var(--flock-text-primary)' : 'var(--flock-text-secondary)',
             }}
           >
             {ws.name}
@@ -91,7 +91,7 @@ export function WorkspaceTreeNode({
         <Stack gap={0} mt={2}>
           {isLoading ? (
             <Group gap={6} pl={32} py={4}>
-              <Loader size={10} color="indigo" />
+              <Loader size={10} color="blue" />
               <Text size="xs" c="dimmed">{t('common.loading')}</Text>
             </Group>
           ) : conversations.length === 0 ? (

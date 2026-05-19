@@ -119,7 +119,7 @@ export default function XiaofSettings() {
   if (loading) {
     return (
       <Group justify="center" p={50}>
-        <Loader size="md" color="indigo" />
+        <Loader size="md" color="blue" />
         <Text size="sm" c="dimmed">
           {t('settings.xiaof.loading')}
         </Text>
@@ -145,7 +145,7 @@ export default function XiaofSettings() {
               {t('settings.xiaof.toolApproval')}
             </Text>
           </Group>
-          <Badge color="indigo" variant="light">
+          <Badge color="blue" variant="light">
             {t('settings.xiaof.securityPolicy')}
           </Badge>
         </Group>
@@ -218,7 +218,7 @@ export default function XiaofSettings() {
               {t('settings.xiaof.contextCompaction')}
             </Text>
           </Group>
-          <Badge color="violet" variant="light">
+          <Badge color="blue" variant="light">
             {t('settings.xiaof.performanceOptimization')}
           </Badge>
         </Group>
@@ -312,13 +312,13 @@ export default function XiaofSettings() {
         </Button>
         <Button
           variant="filled"
-          color="indigo"
+          color="blue"
           leftSection={<IconSettings size={16} />}
           onClick={handleSave}
           loading={saving}
           styles={{
             root: {
-              boxShadow: '0 4px 12px rgba(99, 102, 241, 0.25)',
+              boxShadow: '0 4px 12px rgba(21, 90, 239, 0.25)',
             },
           }}
         >
