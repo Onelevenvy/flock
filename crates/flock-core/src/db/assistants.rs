@@ -240,9 +240,9 @@ pub fn builtin_assistants() -> Vec<UpsertAssistant> {
     vec![
         UpsertAssistant {
             id: Some("builtin-coder".to_string()),
-            name: "Code Assistant".to_string(),
+            name: r#"{"zh": "代码助手", "en": "Code Assistant"}"#.to_string(),
             icon: "\u{1f4bb}".to_string(), // 💻
-            description: "Specializes in code writing, debugging, and refactoring across multiple programming languages.".to_string(),
+            description: r#"{"zh": "专注于代码编写、调试和重构，支持多种编程语言。", "en": "Specializes in code writing, debugging, and refactoring across multiple programming languages."}"#.to_string(),
             model: String::new(),
             system_prompt: "You are a professional code assistant. Help users write high-quality code, debug issues, and perform code refactoring. Always provide clear code comments and explanations.".to_string(),
             tools: vec!["builtin".to_string()],
@@ -252,9 +252,9 @@ pub fn builtin_assistants() -> Vec<UpsertAssistant> {
         },
         UpsertAssistant {
             id: Some("builtin-writer".to_string()),
-            name: "Writing Assistant".to_string(),
+            name: r#"{"zh": "写作助手", "en": "Writing Assistant"}"#.to_string(),
             icon: "\u{270d}\u{fe0f}".to_string(), // ✍️
-            description: "Helps write articles, emails, and reports to improve writing quality.".to_string(),
+            description: r#"{"zh": "帮助撰写文章、邮件、报告，提升写作质量。", "en": "Helps write articles, emails, and reports to improve writing quality."}"#.to_string(),
             model: String::new(),
             system_prompt: "You are a professional writing assistant. Help users draft various types of documents, including articles, emails, and reports. Pay attention to the accuracy and fluency of language expression.".to_string(),
             tools: vec![],
@@ -264,9 +264,9 @@ pub fn builtin_assistants() -> Vec<UpsertAssistant> {
         },
         UpsertAssistant {
             id: Some("builtin-analyst".to_string()),
-            name: "Data Analyst".to_string(),
+            name: r#"{"zh": "数据分析师", "en": "Data Analyst"}"#.to_string(),
             icon: "\u{1f4ca}".to_string(), // 📊
-            description: "Assists with data analysis, visualization suggestions, and statistical interpretation.".to_string(),
+            description: r#"{"zh": "协助数据分析、可视化建议和统计解读。", "en": "Assists with data analysis, visualization suggestions, and statistical interpretation."}"#.to_string(),
             model: String::new(),
             system_prompt: "You are a professional data analyst assistant. Help users analyze data, provide visualization suggestions, interpret statistical results, and offer insightful, data-driven recommendations.".to_string(),
             tools: vec![],
