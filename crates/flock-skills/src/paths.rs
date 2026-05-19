@@ -35,22 +35,41 @@ pub fn workspace_skills_dir() -> PathBuf {
         return default_path;
     }
 
-    // 2. 检查 Tauri 打包后的资源目录（Tauri 默认会把打包好的 resources 放在不同平台的资源文件夹中）
+    // 2. 检查 Tauri 打包后的各种可能资源目录
     if let Ok(exe_path) = std::env::current_exe() {
         if let Some(exe_dir) = exe_path.parent() {
-            // Windows & Linux: <exe_dir>/resources/skills
+            // A. Windows/Linux: 带有 _up_ 的相对打包路径（使用简单字符串配置资源时的旧布局）
+            // 例如：<exe_dir>/_up_/_up_/flock_install/skills
+            let win_linux_up = exe_dir.join("_up_").join("_up_").join("flock_install").join("skills");
+            if win_linux_up.is_dir() {
+                return win_linux_up;
+            }
+
+            // B. Windows/Linux: <exe_dir>/resources/_up_/_up_/flock_install/skills
+            let win_linux_resource_up = exe_dir.join("resources").join("_up_").join("_up_").join("flock_install").join("skills");
+            if win_linux_resource_up.is_dir() {
+                return win_linux_resource_up;
+            }
+
+            // C. Windows/Linux: <exe_dir>/resources/skills （使用 target 映射时的新布局）
             let win_linux_resource = exe_dir.join("resources").join("skills");
             if win_linux_resource.is_dir() {
                 return win_linux_resource;
             }
 
-            // macOS: <exe_dir>/../Resources/skills
+            // D. macOS: <exe_dir>/../Resources/_up_/_up_/flock_install/skills
+            let macos_resource_up = exe_dir.join("..").join("Resources").join("_up_").join("_up_").join("flock_install").join("skills");
+            if macos_resource_up.is_dir() {
+                return macos_resource_up;
+            }
+
+            // E. macOS: <exe_dir>/../Resources/skills
             let macos_resource = exe_dir.join("..").join("Resources").join("skills");
             if macos_resource.is_dir() {
                 return macos_resource;
             }
 
-            // 备用：直接在可执行文件同级目录寻找 skills
+            // F. 备用：直接在可执行文件同级目录寻找 skills
             let direct_skills = exe_dir.join("skills");
             if direct_skills.is_dir() {
                 return direct_skills;
