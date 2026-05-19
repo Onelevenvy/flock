@@ -292,6 +292,14 @@ function McpServerFormModal({
       notifications.show({ title: t('skills.mcp.nameRequired'), message: t('skills.mcp.nameRequiredMsg'), color: 'red', autoClose: 3000 });
       return;
     }
+    if (transport === 'stdio' && !command.trim()) {
+      notifications.show({ title: t('common.failed'), message: t('skills.mcp.commandRequiredMsg'), color: 'red', autoClose: 3000 });
+      return;
+    }
+    if (transport !== 'stdio' && !url.trim()) {
+      notifications.show({ title: t('common.failed'), message: t('skills.mcp.urlRequiredMsg'), color: 'red', autoClose: 3000 });
+      return;
+    }
     setSaving(true);
     try {
       const server: McpServerInfo = {
@@ -364,6 +372,7 @@ function McpServerFormModal({
               value={command}
               onChange={(e) => setCommand(e.currentTarget.value)}
               description={t('skills.mcp.commandDesc')}
+              required
             />
             <TextInput
               label={t('skills.mcp.args')}
@@ -388,6 +397,7 @@ function McpServerFormModal({
               value={url}
               onChange={(e) => setUrl(e.currentTarget.value)}
               description={t('skills.mcp.urlDesc')}
+              required
             />
             <TextInput
               label={t('skills.mcp.headers')}

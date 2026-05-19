@@ -45,6 +45,8 @@
     "connectToViewTools": "Connect to view tools list",
     "nameRequired": "Name is required",
     "nameRequiredMsg": "Server name cannot be empty",
+    "commandRequiredMsg": "Command cannot be empty",
+    "urlRequiredMsg": "URL cannot be empty",
     "updatedToast": "Updated",
     "addedToast": "Added",
     "upsertSuccessMsg": "MCP Server \"{{name}}\" {{action}} successfully",
