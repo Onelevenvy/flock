@@ -133,7 +133,7 @@ impl SessionManager {
 
         let title_updated = final_summary != existing_summary && !final_summary.is_empty();
 
-        sqlx::query(
+        let result = sqlx::query(
             "UPDATE session_metadata
              SET messages = ?1, msg_count = ?2, updated_at = ?3, summary = ?4, model = ?5
              WHERE thread_id = ?6",
@@ -147,6 +147,26 @@ impl SessionManager {
         .execute(&self.pool)
         .await
         .map_err(|e| anyhow::anyhow!("Failed to save session metadata: {}", e))?;
+
+        if result.rows_affected() == 0 && msg_count > 0 {
+            sqlx::query(
+                "INSERT INTO session_metadata
+                 (thread_id, provider, cwd, model, summary, messages, msg_count, created_at, updated_at, workspace_id)
+                 VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, '')",
+            )
+            .bind(&session.id)
+            .bind(&session.provider)
+            .bind(&session.cwd)
+            .bind(&session.model)
+            .bind(&final_summary)
+            .bind(&messages_json)
+            .bind(msg_count as i64)
+            .bind(session.created_at.to_rfc3339())
+            .bind(&updated_at)
+            .execute(&self.pool)
+            .await
+            .map_err(|e| anyhow::anyhow!("Failed to insert session metadata: {}", e))?;
+        }
 
         Ok(if title_updated { Some(final_summary) } else { None })
     }

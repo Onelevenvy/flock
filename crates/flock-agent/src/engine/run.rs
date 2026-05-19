@@ -21,8 +21,17 @@ impl AgentEngine {
         if let Some(mgr) = &self.session_manager {
             match session_id {
                 Some(sid) => {
-                    let session = mgr.create(provider_name, &self.model, cwd, sid).await?;
-                    self.current_session = Some(session);
+                    let now = chrono::Utc::now();
+                    self.current_session = Some(Session {
+                        id: sid.to_string(),
+                        created_at: now,
+                        updated_at: now,
+                        provider: provider_name.to_string(),
+                        model: self.model.clone(),
+                        cwd: cwd.to_string(),
+                        total_usage: TokenUsage::default(),
+                        messages: Vec::new(),
+                    });
                     self.thread_id = sid.to_string(); // 🚀 Keep thread_id in sync!
                 }
                 None => {
