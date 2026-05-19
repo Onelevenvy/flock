@@ -349,7 +349,7 @@ export default function SystemSettings() {
               <Text size="xs" fw={600} c="dimmed" style={{ textTransform: 'uppercase', letterSpacing: 0.5 }}>
                 {t('systemSettings.workspaceDir')}
               </Text>
-              <Text size="sm" fw={500} style={{ wordBreak: 'break-all', fontFamily: 'monospace' }}>
+              <Text size="sm" fw={500} style={{ wordBreak: 'break-all', fontFamily: 'var(--mantine-font-family-monospace)' }}>
                 {workdir === '__not_bound__' ? t('systemSettings.notBound') : (workdir || t('common.loading'))}
               </Text>
             </div>
@@ -364,7 +364,7 @@ export default function SystemSettings() {
               <Text size="xs" fw={600} c="dimmed" style={{ textTransform: 'uppercase', letterSpacing: 0.5 }}>
                 {t('systemSettings.databasePath')}
               </Text>
-              <Text size="sm" fw={500} style={{ wordBreak: 'break-all', fontFamily: 'monospace' }}>
+              <Text size="sm" fw={500} style={{ wordBreak: 'break-all', fontFamily: 'var(--mantine-font-family-monospace)' }}>
                 {dbPath || t('common.loading')}
               </Text>
             </div>

@@ -165,13 +165,13 @@ function McpServerDetailPanel({
           {server.command && (
             <Group justify="space-between">
               <Text size="xs" c="dimmed">{t('skills.mcp.command')}</Text>
-              <Text size="xs" truncate style={{ maxWidth: 200, fontFamily: 'monospace' }}>{server.command}</Text>
+              <Text size="xs" truncate style={{ maxWidth: 200, fontFamily: 'var(--mantine-font-family-monospace)' }}>{server.command}</Text>
             </Group>
           )}
           {server.url && (
             <Group justify="space-between">
               <Text size="xs" c="dimmed">URL</Text>
-              <Text size="xs" truncate style={{ maxWidth: 200, fontFamily: 'monospace' }}>{server.url}</Text>
+              <Text size="xs" truncate style={{ maxWidth: 200, fontFamily: 'var(--mantine-font-family-monospace)' }}>{server.url}</Text>
             </Group>
           )}
           {server.args && (

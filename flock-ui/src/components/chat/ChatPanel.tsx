@@ -62,7 +62,7 @@ function ThinkingBlock({ text, defaultCollapsed }: { text: string; defaultCollap
           mt={6}
           style={{
             whiteSpace: 'pre-wrap',
-            fontFamily: '"JetBrains Mono", monospace',
+            fontFamily: 'var(--mantine-font-family-monospace)',
             lineHeight: 1.65,
             color: 'var(--flock-text-secondary)',
           }}

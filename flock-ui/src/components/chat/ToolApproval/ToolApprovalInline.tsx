@@ -157,7 +157,7 @@ export function ToolApprovalInline({ approval }: ToolApprovalInlineProps) {
           <Text
             size="xs"
             style={{
-              fontFamily: '"JetBrains Mono", monospace',
+              fontFamily: 'var(--mantine-font-family-monospace)',
               color: 'var(--flock-text-dim)',
               whiteSpace: 'pre-wrap',
               wordBreak: 'break-all',
