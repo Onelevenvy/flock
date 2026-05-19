@@ -52,5 +52,18 @@
   "lastRun": "上次运行",
   "manualOnly": "手动触发",
   "runError": "执行出错",
-  "runNowTip": "立即触发执行一次"
+  "runNowTip": "立即触发执行一次",
+  "descManual": "手动触发",
+  "descHourly": "每小时整点",
+  "descDaily": "每天 {{time}}",
+  "descWeekdays": "工作日 {{time}}",
+  "descWeekly": "每周{{day}} {{time}}",
+  "descCustom": "Cron: {{expr}}",
+  "day0": "周日",
+  "day1": "周一",
+  "day2": "周二",
+  "day3": "周三",
+  "day4": "周四",
+  "day5": "周五",
+  "day6": "周六"
 }

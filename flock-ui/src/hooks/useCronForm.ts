@@ -32,26 +32,59 @@ export function buildSchedule(
 ) {
   switch (preset) {
     case 'manual':
-      return { kind: 'manual', value: '', desc: '手动触发' };
+      return {
+        kind: 'manual',
+        value: '',
+        desc: JSON.stringify({ key: 'schedule.descManual' })
+      };
     case 'hourly':
-      return { kind: 'cron', value: '0 * * * *', desc: '每小时整点' };
+      return {
+        kind: 'cron',
+        value: '0 * * * *',
+        desc: JSON.stringify({ key: 'schedule.descHourly' })
+      };
     case 'daily': {
       const [hh, mm] = dailyTime.split(':');
-      return { kind: 'cron', value: `${parseInt(mm)} ${parseInt(hh)} * * *`, desc: `每天 ${dailyTime}` };
+      return {
+        kind: 'cron',
+        value: `${parseInt(mm)} ${parseInt(hh)} * * *`,
+        desc: JSON.stringify({ key: 'schedule.descDaily', params: { time: dailyTime } })
+      };
     }
     case 'weekdays': {
       const [hh, mm] = dailyTime.split(':');
-      return { kind: 'cron', value: `${parseInt(mm)} ${parseInt(hh)} * * 1-5`, desc: `工作日 ${dailyTime}` };
+      return {
+        kind: 'cron',
+        value: `${parseInt(mm)} ${parseInt(hh)} * * 1-5`,
+        desc: JSON.stringify({ key: 'schedule.descWeekdays', params: { time: dailyTime } })
+      };
     }
     case 'weekly': {
       const [hh, mm] = weeklyTime.split(':');
-      const dayLabel = WEEKDAY_OPTIONS.find(d => d.value === weeklyDay)?.label || `星期${weeklyDay}`;
-      return { kind: 'cron', value: `${parseInt(mm)} ${parseInt(hh)} * * ${weeklyDay}`, desc: `每周${dayLabel} ${weeklyTime}` };
+      return {
+        kind: 'cron',
+        value: `${parseInt(mm)} ${parseInt(hh)} * * ${weeklyDay}`,
+        desc: JSON.stringify({
+          key: 'schedule.descWeekly',
+          params: { dayKey: `schedule.day${weeklyDay}`, time: weeklyTime }
+        })
+      };
     }
     case 'custom':
-      return { kind: 'cron', value: customCron.trim(), desc: `Cron: ${customCron.trim()}` };
+      return {
+        kind: 'cron',
+        value: customCron.trim(),
+        desc: JSON.stringify({
+          key: 'schedule.descCustom',
+          params: { expr: customCron.trim() }
+        })
+      };
     default:
-      return { kind: 'manual', value: '', desc: '手动触发' };
+      return {
+        kind: 'manual',
+        value: '',
+        desc: JSON.stringify({ key: 'schedule.descManual' })
+      };
   }
 }
 

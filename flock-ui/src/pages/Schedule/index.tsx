@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import i18n from '../../i18n';
 import {
   Box,
   Text,
@@ -41,6 +42,26 @@ import {
   useRunCronJobNowMutation,
 } from '../../hooks/useCronJobs';
 import type { CronJob } from './types';
+
+function parseScheduleDesc(descStr: string | undefined | null, t: any): string {
+  if (!descStr) return '';
+  const trimmed = descStr.trim();
+  if (trimmed.startsWith('{') && trimmed.endsWith('}')) {
+    try {
+      const obj = JSON.parse(trimmed);
+      if (obj.key) {
+        let params = { ...obj.params };
+        if (params.dayKey) {
+          params.day = t(params.dayKey);
+        }
+        return t(obj.key, params);
+      }
+    } catch {
+      return descStr;
+    }
+  }
+  return descStr;
+}
 
 export function SchedulePage() {
   const { t } = useTranslation();
@@ -238,7 +259,7 @@ export function SchedulePage() {
                           />
                         </Group>
                         <Text size="xs" c="dimmed" truncate>
-                          {job.schedule_desc}
+                          {parseScheduleDesc(job.schedule_desc, t)}
                         </Text>
                       </Box>
                     </Group>
