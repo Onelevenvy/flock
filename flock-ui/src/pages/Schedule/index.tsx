@@ -199,7 +199,6 @@ export function SchedulePage() {
       <Box style={{ flex: 1, overflowY: 'auto' }} pr="2px">
         {jobs.length === 0 && !loading ? (
           <Box
-            py={64}
             style={{
               display: 'flex',
               flexDirection: 'column',
@@ -209,9 +208,10 @@ export function SchedulePage() {
               border: '2px dashed var(--flock-border-dim)',
               background: 'var(--flock-bg-surface)',
               textAlign: 'center',
+              maxWidth: 500,
+              margin: '40px auto 0',
+              padding: '64px 32px',
             }}
-            mx="auto"
-            style={{ maxWidth: 500, marginTop: 40 }}
           >
             <Box
               style={{
