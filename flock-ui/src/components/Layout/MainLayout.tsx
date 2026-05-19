@@ -10,7 +10,7 @@ import { SchedulePage } from '../../pages/Schedule';
 import { useUiStore } from '../../store/uiStore';
 import { useWorkspaceStore } from '../../store/workspaceStore';
 import { useAgentStore } from '../../store/agentStore';
-import { IconRoute, IconBoxMultiple, IconLego, IconCalendarTime } from '@tabler/icons-react';
+import { IconRoute, IconBoxMultiple, IconLego } from '@tabler/icons-react';
 import { useTranslation } from 'react-i18next';
 
 export function MainLayout() {

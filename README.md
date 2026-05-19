@@ -113,7 +113,7 @@ While langgraph-rust is not the official LangGraph Rust implementation, it provi
 
 - [ ] **Workflow**: Visual workflow builder for complex agent orchestration
 - [ ] **Multi-Agent**: Support for multiple agents collaborating on tasks
-- [ ] **Scheduled Tasks**: Automated task execution with cron-like scheduling
+- [x] **Scheduled Tasks**: Automated task execution with cron-like scheduling
 - [ ] **Sandbox**: Isolated execution environment for code and commands
 - [ ] **Browser Tools**: Web browsing and interaction capabilities for agents
 - [ ] **Extensions**: Integration with Claude Code, OpenCode, OpenClaw, Hermes, and other third-party agents

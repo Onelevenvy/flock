@@ -222,7 +222,6 @@ export function AssistantFormModal({
             <Group justify="space-between">
               <Group gap={6}>
                 <Text size="sm" fw={500}>{t('assistant.form.promptLabel')}</Text>
-                <Badge size="xs" variant="light" color="orange">Prompt</Badge>
               </Group>
             </Group>
 
@@ -315,7 +314,6 @@ export function AssistantFormModal({
             label={
               <Group gap={6}>
                 <Text size="sm" fw={500}>{t('assistant.form.toolsLabel')}</Text>
-                <Badge size="xs" variant="light" color="blue">{t('assistant.form.toolsBadge')}</Badge>
               </Group>
             }
             placeholder={t('assistant.form.toolsPlaceholder')}
@@ -340,7 +338,6 @@ export function AssistantFormModal({
             label={
               <Group gap={6}>
                 <Text size="sm" fw={500}>{t('assistant.form.skillsLabel')}</Text>
-                <Badge size="xs" variant="light" color="teal">{t('assistant.form.skillsBadge')}</Badge>
               </Group>
             }
             placeholder={t('assistant.form.skillsPlaceholder')}
