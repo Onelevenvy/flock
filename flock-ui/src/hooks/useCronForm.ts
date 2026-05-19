@@ -106,7 +106,7 @@ export function useCronForm({ opened, jobToEdit, onSuccess, onClose }: UseCronFo
   // Assistants list (prepend default if missing)
   const assistants: Assistant[] = rawAssistants.some(a => a.id === '__xiaof__')
     ? rawAssistants
-    : [{ id: '__xiaof__', name: '默认助手 (小F)', icon: '🤖', description: '', is_builtin: true, model: '', system_prompt: '', tools: [], skills: [], sort_order: -1 } as Assistant, ...rawAssistants];
+    : [{ id: '__xiaof__', name: '默认助手 (小F)', icon: '🤖', description: '', is_builtin: true, model: '', system_prompt: '', tools: [], skills: [], sort_order: -1 } as any as Assistant, ...rawAssistants];
   const loading = createMutation.isPending || updateMutation.isPending;
 
   // Init/reset on open

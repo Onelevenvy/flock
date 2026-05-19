@@ -15,7 +15,7 @@
   "descriptionPlaceholder": "可选：简要说明此任务的目的",
   "assistant": "执行助手",
   "executionMode": "执行模式",
-  "executionModeTip": "新建会话：每次创建全新会话，上下文从零开始。\n复用会话：在上次会话中追加消息，保留历史上下文。",
+  "executionModeTip": "新建模式将以干净环境启动定时执行；复用模式会在上次同一个会话中继续问答，保持历史上下文的记忆连贯性。",
   "modeNew": "每次新建会话",
   "modeExisting": "复用上次会话",
   "prompt": "执行指令",

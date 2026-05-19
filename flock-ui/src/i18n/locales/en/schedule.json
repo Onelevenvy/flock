@@ -15,7 +15,7 @@
   "descriptionPlaceholder": "Optional: briefly describe the purpose of this task",
   "assistant": "Assistant",
   "executionMode": "Execution Mode",
-  "executionModeTip": "New conversation: starts fresh each time with no prior context.\nResume conversation: appends to the last session, retaining history.",
+  "executionModeTip": "New conversation mode starts the task with a clean slate each time. Resume mode appends to the last conversation to maintain persistent context and memory continuity.",
   "modeNew": "New conversation each time",
   "modeExisting": "Resume last conversation",
   "prompt": "Prompt",

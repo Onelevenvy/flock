@@ -13,7 +13,7 @@ import {
   Box,
   Tooltip,
   UnstyledButton,
-  Badge,
+  Radio,
 } from '@mantine/core';
 import {
   IconCalendarTime,
@@ -43,16 +43,15 @@ interface ScheduleOption {
   labelKey: string;
   descKey: string;
   icon: React.ReactNode;
-  badge?: string;
 }
 
 const SCHEDULE_OPTIONS: ScheduleOption[] = [
   { value: 'manual',   labelKey: 'schedule.presetManual',   descKey: 'schedule.presetManualDesc',   icon: <IconClick size={16} /> },
-  { value: 'hourly',   labelKey: 'schedule.presetHourly',   descKey: 'schedule.presetHourlyDesc',   icon: <IconClock size={16} />,       badge: '0 * * * *' },
+  { value: 'hourly',   labelKey: 'schedule.presetHourly',   descKey: 'schedule.presetHourlyDesc',   icon: <IconClock size={16} /> },
   { value: 'daily',    labelKey: 'schedule.presetDaily',    descKey: 'schedule.presetDailyDesc',    icon: <IconCalendar size={16} /> },
-  { value: 'weekdays', labelKey: 'schedule.presetWeekdays', descKey: 'schedule.presetWeekdaysDesc', icon: <IconCalendarWeek size={16} />, badge: '1-5' },
+  { value: 'weekdays', labelKey: 'schedule.presetWeekdays', descKey: 'schedule.presetWeekdaysDesc', icon: <IconCalendarWeek size={16} /> },
   { value: 'weekly',   labelKey: 'schedule.presetWeekly',   descKey: 'schedule.presetWeeklyDesc',   icon: <IconCalendarTime size={16} /> },
-  { value: 'custom',   labelKey: 'schedule.presetCustom',   descKey: 'schedule.presetCustomDesc',   icon: <IconCode size={16} />,        badge: 'Cron' },
+  { value: 'custom',   labelKey: 'schedule.presetCustom',   descKey: 'schedule.presetCustomDesc',   icon: <IconCode size={16} /> },
 ];
 
 const inputStyle = {
@@ -71,7 +70,7 @@ function LabelWithTip({ label, tip }: { label: string; tip: string }) {
   return (
     <Group gap={5} wrap="nowrap" mb={4}>
       <Text size="sm" fw={500}>{label}</Text>
-      <Tooltip label={tip} multiline w={230} withArrow position="top">
+      <Tooltip label={tip} multiline w={250} withArrow position="top">
         <IconHelpCircle size={13} color="var(--flock-text-dim)" style={{ cursor: 'help' }} />
       </Tooltip>
     </Group>
@@ -110,7 +109,8 @@ export function CreateTaskModal({ opened, onClose, onSuccess, jobToEdit }: Creat
         },
       }}
     >
-      <ScrollArea mah="76vh" offsetScrollbars>
+      {/* 滚动区域：完全对齐 AssistantFormModal，对 viewport 施加最大高度以确保完美滚动 */}
+      <ScrollArea mah="72vh" styles={{ viewport: { maxHeight: '72vh' } }} offsetScrollbars>
         <Stack gap="md" pt="xs" pb="xl" px="xs">
 
           {/* 工作空间 */}
@@ -142,31 +142,49 @@ export function CreateTaskModal({ opened, onClose, onSuccess, jobToEdit }: Creat
             styles={inputStyle}
           />
 
-          {/* 执行助手 + 执行模式（模式有 tooltip） */}
-          <Group grow align="flex-start">
-            <Select
-              label={t('schedule.assistant')}
-              value={form.assistantId}
-              onChange={form.setAssistantId}
-              data={form.assistants.map(a => ({ value: a.id, label: `${a.icon} ${a.name}` }))}
-              styles={inputStyle}
+          {/* 执行助手 (独立一行) */}
+          <Select
+            label={t('schedule.assistant')}
+            value={form.assistantId}
+            onChange={form.setAssistantId}
+            data={form.assistants.map(a => ({ value: a.id, label: `${a.icon} ${a.name}` }))}
+            styles={inputStyle}
+          />
+
+          {/* 执行模式 (独立一行，改为 Radio 单选组) */}
+          <Box>
+            <LabelWithTip
+              label={t('schedule.executionMode')}
+              tip={t('schedule.executionModeTip')}
             />
-            <Select
-              label={
-                <LabelWithTip
-                  label={t('schedule.executionMode')}
-                  tip={t('schedule.executionModeTip')}
-                />
-              }
+            <Radio.Group
               value={form.executionMode}
-              onChange={v => form.setExecutionMode((v as any) || 'new_conversation')}
-              data={[
-                { value: 'new_conversation', label: t('schedule.modeNew') },
-                { value: 'existing',         label: t('schedule.modeExisting') },
-              ]}
-              styles={inputStyle}
-            />
-          </Group>
+              onChange={v => form.setExecutionMode(v as any)}
+            >
+              <Group gap="xl" mt="xs">
+                <Radio
+                  value="new_conversation"
+                  label={t('schedule.modeNew')}
+                  styles={{
+                    radio: {
+                      background: 'var(--flock-bg-surface)',
+                      borderColor: 'var(--flock-border-dim)',
+                    },
+                  }}
+                />
+                <Radio
+                  value="existing"
+                  label={t('schedule.modeExisting')}
+                  styles={{
+                    radio: {
+                      background: 'var(--flock-bg-surface)',
+                      borderColor: 'var(--flock-border-dim)',
+                    },
+                  }}
+                />
+              </Group>
+            </Radio.Group>
+          </Box>
 
           {/* 执行指令 */}
           <Textarea
@@ -220,11 +238,6 @@ export function CreateTaskModal({ opened, onClose, onSuccess, jobToEdit }: Creat
                       <Text size="xs" fw={active ? 700 : 500} style={{ color: active ? 'var(--flock-text-bright)' : 'var(--flock-text-muted)' }} truncate>
                         {t(opt.labelKey)}
                       </Text>
-                      {opt.badge && (
-                        <Badge size="xs" variant="light" color={active ? 'blue' : 'gray'} radius="sm" style={{ marginLeft: 'auto', fontSize: 9, flexShrink: 0 }}>
-                          {opt.badge}
-                        </Badge>
-                      )}
                     </Group>
                     <Text size="xs" c="dimmed" style={{ fontSize: 10, lineHeight: 1.3 }}>
                       {t(opt.descKey)}
@@ -290,6 +303,7 @@ export function CreateTaskModal({ opened, onClose, onSuccess, jobToEdit }: Creat
         </Stack>
       </ScrollArea>
 
+      {/* 固定 Footer：完全不在 ScrollArea 内部，对齐 AssistantFormModal 的结构样式 */}
       <Divider color="var(--flock-border-subtle)" />
       <Group justify="flex-end" pt="md" px="xs">
         <Button variant="subtle" onClick={onClose} disabled={form.loading}>
