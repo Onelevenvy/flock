@@ -1,6 +1,7 @@
 import { Box, Text, Button } from '@mantine/core';
 import { IconExternalLink } from '@tabler/icons-react';
 import { invoke } from '@tauri-apps/api/core';
+import { useTranslation } from 'react-i18next';
 
 interface OfficeViewProps {
   fileName: string;
@@ -10,6 +11,8 @@ interface OfficeViewProps {
 }
 
 export function OfficeView({ fileName, ext, filePath, activeWorkspaceId }: OfficeViewProps) {
+  const { t } = useTranslation();
+  
   const handleOpen = async () => {
     try {
       await invoke('open_workspace_file_in_system', {
@@ -62,7 +65,7 @@ export function OfficeView({ fileName, ext, filePath, activeWorkspaceId }: Offic
       </Text>
 
       <Text size="sm" c="dimmed" style={{ maxWidth: 360, marginBottom: 24, lineHeight: 1.5 }}>
-        这是一个 {ext.toUpperCase()} 办公文档。为了获得最完美、无损的排版效果，请使用系统默认软件直接打开编辑。
+        {t('workspace.officeDesc', { ext: ext.toUpperCase() })}
       </Text>
 
       <Button
@@ -76,11 +79,11 @@ export function OfficeView({ fileName, ext, filePath, activeWorkspaceId }: Offic
         }}
         onClick={handleOpen}
       >
-        在系统应用中打开
+        {t('workspace.openInSystem')}
       </Button>
 
       <Text size="xs" c="dimmed" style={{ marginTop: 16, opacity: 0.6 }}>
-        💡 提示：在本地 Office / WPS 中编辑并保存后，工作空间会自动实时同步。
+        {t('workspace.officeTip')}
       </Text>
     </Box>
   );

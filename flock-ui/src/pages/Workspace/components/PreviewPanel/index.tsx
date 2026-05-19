@@ -14,6 +14,7 @@ import {
   IconCopy,
   IconCheck,
 } from '@tabler/icons-react';
+import { useTranslation } from 'react-i18next';
 import { useUiStore } from '../../../../store/uiStore';
 import { useWorkspaceStore } from '../../../../store/workspaceStore';
 import { invoke } from '@tauri-apps/api/core';
@@ -45,6 +46,7 @@ interface PreviewPanelProps {
 }
 
 export function PreviewPanel({ embedded = false }: PreviewPanelProps) {
+  const { t } = useTranslation();
   const { isPreviewOpen, previewFile, setPreviewFile } = useUiStore();
   const { activeWorkspaceId } = useWorkspaceStore();
   const [absPath, setAbsPath] = useState<string>('');
@@ -134,7 +136,7 @@ export function PreviewPanel({ embedded = false }: PreviewPanelProps) {
           {(isCode || isMarkdown) && (
             <CopyButton value={previewFile.content} timeout={2000}>
               {({ copied, copy }) => (
-                <Tooltip label={copied ? '已复制' : '复制内容'} withArrow>
+                <Tooltip label={copied ? t('chat.copied') : t('workspace.copyContent')} withArrow>
                   <ActionIcon
                     size="sm"
                     variant="subtle"
@@ -147,7 +149,7 @@ export function PreviewPanel({ embedded = false }: PreviewPanelProps) {
               )}
             </CopyButton>
           )}
-          <Tooltip label="关闭预览" withArrow>
+          <Tooltip label={t('workspace.closePreview')} withArrow>
             <ActionIcon
               size="sm"
               variant="subtle"

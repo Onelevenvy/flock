@@ -49,7 +49,7 @@ jobs:
           const cargoPath = 'Cargo.toml';
           if (fs.existsSync(cargoPath)) {
             let content = fs.readFileSync(cargoPath, 'utf8');
-            content = content.replace(/(\[workspace\.package\]\s*\n\s*version\s*=\s*")[^"]+(")/, `$1\${version}$2`);
+            content = content.replace(/(\[workspace\.package\]\s*\n\s*version\s*=\s*")[^"]+(")/, '$1' + version + '$2');
             fs.writeFileSync(cargoPath, content, 'utf8');
             console.log('Updated workspace Cargo.toml');
           }
