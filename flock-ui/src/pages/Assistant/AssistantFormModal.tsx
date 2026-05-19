@@ -375,7 +375,7 @@ export function AssistantFormModal({
           loading={saving}
           leftSection={isEditing ? <IconCheck size={16} /> : <IconPlus size={16} />}
           onClick={handleSave}
-          style={{ background: 'linear-gradient(135deg, #155aef 0%, #36bffa 100%)' }}
+          style={{ background: 'var(--flock-accent)' }}
         >
           {isEditing ? t('common.saveChanges') : t('assistant.createBtn')}
         </Button>

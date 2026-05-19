@@ -32,12 +32,12 @@ export function IconPicker({
           onClick={() => setOpened(o => !o)}
           style={{
             cursor: 'pointer',
-            background: 'linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%)',
+            background: 'var(--flock-accent)',
             fontSize: 20,
             flexShrink: 0,
             border: '2px solid var(--flock-border-dim)',
             transition: 'box-shadow 0.2s',
-            boxShadow: opened ? '0 0 0 3px rgba(99,102,241,0.3)' : undefined,
+            boxShadow: opened ? '0 0 0 3px rgba(21, 90, 239, 0.3)' : undefined,
           }}
         >
           {value}

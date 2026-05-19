@@ -8,7 +8,7 @@ export function FlockLogo() {
           width: 28,
           height: 28,
           borderRadius: 8,
-          background: 'linear-gradient(135deg, #155aef 0%, #36bffa 100%)',
+          background: 'var(--flock-accent)',
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',

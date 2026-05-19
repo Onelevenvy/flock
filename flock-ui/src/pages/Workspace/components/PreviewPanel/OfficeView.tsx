@@ -73,7 +73,7 @@ export function OfficeView({ fileName, ext, filePath, activeWorkspaceId }: Offic
         color="blue"
         leftSection={<IconExternalLink size={16} />}
         style={{
-          background: 'linear-gradient(135deg, #155aef 0%, #36bffa 100%)',
+          background: 'var(--flock-accent)',
           borderRadius: 12,
           boxShadow: '0 4px 16px rgba(21, 90, 239, 0.2)',
         }}

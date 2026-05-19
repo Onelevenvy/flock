@@ -336,7 +336,7 @@ export function HomeView() {
                   onClick={handleSend}
                   disabled={!canSend}
                   style={{
-                    background: canSend ? 'linear-gradient(135deg, #155aef 0%, #36bffa 100%)' : undefined,
+                    background: canSend ? 'var(--flock-accent)' : undefined,
                     boxShadow: canSend ? '0 2px 10px rgba(21, 90, 239, 0.25)' : 'none',
                     transition: 'all 0.2s ease',
                   }}

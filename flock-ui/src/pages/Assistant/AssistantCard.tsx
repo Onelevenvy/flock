@@ -39,7 +39,7 @@ export function AssistantCard({
             size={40}
             radius="xl"
             style={{
-              background: 'linear-gradient(135deg, #155aef 0%, #36bffa 100%)',
+              background: 'var(--flock-accent)',
               fontSize: 20,
               flexShrink: 0,
               boxShadow: '0 2px 6px rgba(21, 90, 239, 0.2)',

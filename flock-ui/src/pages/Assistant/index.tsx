@@ -110,7 +110,7 @@ export function AssistantPage() {
       {/* 页头 */}
       <Group gap="sm" px="xl" pt="md" pb="sm" justify="space-between">
         <Group gap="sm">
-          <ThemeIcon size={36} radius="md" variant="gradient" gradient={{ from: 'blue', to: 'cyan' }}>
+          <ThemeIcon size={36} radius="md" style={{ background: 'var(--flock-accent)' }}>
             <IconRobot size={20} />
           </ThemeIcon>
           <Box>
@@ -128,7 +128,7 @@ export function AssistantPage() {
           size="sm"
           onClick={handleOpenCreate}
           style={{
-            background: 'linear-gradient(135deg, #155aef 0%, #36bffa 100%)',
+            background: 'var(--flock-accent)',
             boxShadow: '0 2px 10px rgba(21, 90, 239, 0.25)',
           }}
         >
