@@ -5,14 +5,15 @@ import {
   Group,
   Button,
   SimpleGrid,
-  Badge,
   Switch,
   ActionIcon,
   Stack,
-  Card,
   Tooltip,
   LoadingOverlay,
   Menu,
+  Avatar,
+  Badge,
+  ThemeIcon,
 } from '@mantine/core';
 import {
   IconCalendarTime,
@@ -25,11 +26,10 @@ import {
   IconClock,
   IconDotsVertical,
   IconAlertCircle,
-  IconRotate,
+  IconClick,
 } from '@tabler/icons-react';
 import { invoke } from '@tauri-apps/api/core';
 import { notifications } from '@mantine/notifications';
-import { useTranslation } from 'react-i18next';
 import { CreateTaskModal } from './CreateTaskModal';
 import { useWorkspacesQuery } from '../../hooks/useWorkspaces';
 import type { CronJob } from './types';
@@ -41,19 +41,15 @@ interface Assistant {
 }
 
 export function SchedulePage() {
-  const { t } = useTranslation();
   const { data: workspaces = [] } = useWorkspacesQuery();
 
   const [jobs, setJobs] = useState<CronJob[]>([]);
   const [assistants, setAssistants] = useState<Assistant[]>([]);
   const [loading, setLoading] = useState(true);
-
-  // 弹窗状态
   const [modalOpened, setModalOpened] = useState(false);
   const [editingJob, setEditingJob] = useState<CronJob | null>(null);
 
-  // 加载数据
-  const fetchJobsAndAssistants = useCallback(async () => {
+  const fetchData = useCallback(async () => {
     setLoading(true);
     try {
       const [jobsData, assistantsData] = await Promise.all([
@@ -63,73 +59,60 @@ export function SchedulePage() {
       setJobs(jobsData);
       setAssistants(assistantsData);
     } catch (e) {
-      console.error('Failed to fetch schedule data:', e);
       notifications.show({ title: '加载失败', message: String(e), color: 'red' });
     } finally {
       setLoading(false);
     }
   }, []);
 
-  useEffect(() => {
-    fetchJobsAndAssistants();
-  }, [fetchJobsAndAssistants]);
+  useEffect(() => { fetchData(); }, [fetchData]);
 
-  // 处理启用/禁用切换
-  const handleToggleEnabled = async (jobId: string, currentVal: boolean) => {
+  const handleToggleEnabled = async (jobId: string, current: boolean) => {
     try {
-      await invoke('set_cron_job_enabled', { id: jobId, enabled: !currentVal });
+      await invoke('set_cron_job_enabled', { id: jobId, enabled: !current });
       notifications.show({
-        title: !currentVal ? '任务已启用' : '任务已禁用',
-        message: !currentVal ? '调度器将在后台自动运行此任务' : '此任务已暂停调度',
-        color: !currentVal ? 'teal' : 'gray',
-        autoClose: 3000,
+        title: !current ? '任务已启用' : '任务已禁用',
+        message: !current ? '调度器将自动运行此任务' : '此任务已暂停',
+        color: !current ? 'teal' : 'gray',
+        autoClose: 2500,
       });
-      fetchJobsAndAssistants();
+      fetchData();
     } catch (e: any) {
       notifications.show({ title: '切换失败', message: String(e), color: 'red' });
     }
   };
 
-  // 处理删除任务
-  const handleDeleteJob = async (jobId: string) => {
-    if (window.confirm('您确定要删除这个定时自动化任务吗？此操作不可逆。')) {
-      try {
-        await invoke('delete_cron_job', { id: jobId });
-        notifications.show({ title: '已删除', message: '定时任务已被彻底移除', color: 'teal' });
-        fetchJobsAndAssistants();
-      } catch (e: any) {
-        notifications.show({ title: '删除失败', message: String(e), color: 'red' });
-      }
+  const handleDelete = async (jobId: string) => {
+    if (!window.confirm('确定删除此定时任务？此操作不可撤销。')) return;
+    try {
+      await invoke('delete_cron_job', { id: jobId });
+      notifications.show({ title: '已删除', message: '定时任务已移除', color: 'teal' });
+      fetchData();
+    } catch (e: any) {
+      notifications.show({ title: '删除失败', message: String(e), color: 'red' });
     }
   };
 
-  // 处理立即执行一次
   const handleRunNow = async (job: CronJob) => {
     try {
       await invoke('run_cron_job_now', { id: job.id });
       notifications.show({
         title: '已触发执行',
-        message: '定时任务已在后台启动，新会话已生成。您可以在侧边栏查看执行进度。',
+        message: '任务已在后台启动，可在侧边栏查看进度。',
         color: 'blue',
-        autoClose: 6000,
+        autoClose: 5000,
       });
-      // 稍微等待下重新刷新状态
-      setTimeout(fetchJobsAndAssistants, 1500);
+      setTimeout(fetchData, 1500);
     } catch (e: any) {
       notifications.show({ title: '触发失败', message: String(e), color: 'red' });
     }
   };
 
-  // 格式化时间戳
   const formatTime = (ts: number | null) => {
-    if (!ts) return '无';
-    const date = new Date(ts);
-    return date.toLocaleString('zh-CN', {
-      month: '2-digit',
-      day: '2-digit',
-      hour: '2-digit',
-      minute: '2-digit',
-      second: '2-digit',
+    if (!ts) return '—';
+    return new Date(ts).toLocaleString('zh-CN', {
+      month: '2-digit', day: '2-digit',
+      hour: '2-digit', minute: '2-digit',
     });
   };
 
@@ -142,105 +125,67 @@ export function SchedulePage() {
         overflow: 'hidden',
         minWidth: 0,
         background: 'var(--flock-bg-base)',
-        borderRadius: '16px',
+        borderRadius: 16,
         border: '1px solid var(--flock-border-subtle)',
-        boxShadow: '0 4px 20px rgba(0, 0, 0, 0.03)',
-        padding: '24px',
+        padding: 24,
         position: 'relative',
       }}
     >
       <LoadingOverlay visible={loading} />
 
-      {/* 顶部 Header */}
-      <Group justify="space-between" mb="lg" style={{ borderBottom: '1px solid var(--flock-border-subtle)', paddingBottom: 16 }}>
+      {/* 页头 */}
+      <Group justify="space-between" mb="lg" pb="md" style={{ borderBottom: '1px solid var(--flock-border-subtle)' }}>
         <Group gap="sm">
-          <Box
-            style={{
-              width: 44,
-              height: 44,
-              borderRadius: 12,
-              background: 'var(--flock-accent-soft)',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              color: 'var(--flock-accent)',
-              boxShadow: '0 4px 12px rgba(21, 90, 239, 0.1)',
-            }}
-          >
-            <IconCalendarTime size={24} stroke={1.5} />
-          </Box>
+          <ThemeIcon variant="light" color="blue" size="lg" radius="md">
+            <IconCalendarTime size={20} />
+          </ThemeIcon>
           <Stack gap={0}>
-            <Text fw={700} size="xl" style={{ color: 'var(--flock-text-bright)' }}>
-              定时自动化 (Cron)
+            <Text fw={700} size="lg" style={{ color: 'var(--flock-text-bright)' }}>
+              定时自动化
             </Text>
             <Text size="xs" c="dimmed">
-              设置触发规则与提示词，让 AI 助手在后台帮您自动静默执行各种周期性任务。
+              让 AI 助手在后台按计划静默执行您的周期性任务
             </Text>
           </Stack>
         </Group>
         <Button
           size="sm"
-          leftSection={<IconPlus size={16} />}
-          onClick={() => {
-            setEditingJob(null);
-            setModalOpened(true);
-          }}
-          style={{
-            background: 'var(--flock-accent)',
-            boxShadow: '0 2px 8px rgba(21, 90, 239, 0.25)',
-          }}
-          className="hover-card-lift"
+          leftSection={<IconPlus size={15} />}
+          onClick={() => { setEditingJob(null); setModalOpened(true); }}
+          style={{ background: 'var(--flock-accent)' }}
         >
-          新建定时任务
+          新建任务
         </Button>
       </Group>
 
-      {/* 核心卡片列表 */}
-      <Box style={{ flex: 1, overflowY: 'auto' }} pr="2px">
+      {/* 内容区 */}
+      <Box style={{ flex: 1, overflowY: 'auto' }}>
         {jobs.length === 0 && !loading ? (
           <Box
             style={{
-              display: 'flex',
-              flexDirection: 'column',
-              alignItems: 'center',
-              justifyContent: 'center',
-              borderRadius: 16,
-              border: '2px dashed var(--flock-border-dim)',
-              background: 'var(--flock-bg-surface)',
+              display: 'flex', flexDirection: 'column',
+              alignItems: 'center', justifyContent: 'center',
               textAlign: 'center',
-              maxWidth: 500,
-              margin: '40px auto 0',
-              padding: '64px 32px',
+              maxWidth: 440, margin: '48px auto 0',
+              padding: '48px 32px',
+              borderRadius: 14,
+              border: '1px dashed var(--flock-border-dim)',
+              background: 'var(--flock-bg-surface)',
             }}
           >
-            <Box
-              style={{
-                width: 60,
-                height: 60,
-                borderRadius: 20,
-                background: 'var(--flock-bg-hover)',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                color: 'var(--flock-text-dim)',
-                marginBottom: 16,
-              }}
-            >
-              <IconCalendarTime size={32} />
-            </Box>
-            <Text size="md" fw={600} style={{ color: 'var(--flock-text-bright)', marginBottom: 8 }}>
-              暂无定时自动化任务
+            <ThemeIcon variant="light" color="gray" size={56} radius="xl" mb="md">
+              <IconCalendarTime size={28} />
+            </ThemeIcon>
+            <Text size="sm" fw={600} mb={6} style={{ color: 'var(--flock-text-bright)' }}>
+              暂无定时任务
             </Text>
-            <Text size="xs" c="dimmed" style={{ maxWidth: 320, marginBottom: 20 }}>
-              您可以创建一个定时任务，例如“每天早上 9 点总结昨日工作区变更”或“每半小时检查代码状态”。
+            <Text size="xs" c="dimmed" mb="lg" style={{ maxWidth: 280 }}>
+              创建一个定时任务，例如"每天早上 9 点总结昨日工作区代码变更"
             </Text>
             <Button
               size="xs"
-              leftSection={<IconPlus size={14} />}
-              onClick={() => {
-                setEditingJob(null);
-                setModalOpened(true);
-              }}
+              leftSection={<IconPlus size={13} />}
+              onClick={() => { setEditingJob(null); setModalOpened(true); }}
               style={{ background: 'var(--flock-accent)' }}
             >
               立即创建
@@ -248,243 +193,203 @@ export function SchedulePage() {
           </Box>
         ) : (
           <SimpleGrid cols={{ base: 1, md: 2, lg: 3 }} spacing="md">
-            {jobs.map((job) => {
-              const wsName = workspaces.find((w) => w.id === job.workspace_id)?.name || job.workspace_id;
-              
-              const matchedAssistant = assistants.find((a) => a.id === job.assistant_id);
-              const assistantName = job.assistant_id === '__xiaof__' 
-                ? '默认助手 (小F)' 
-                : (matchedAssistant?.name || job.assistant_id);
-              const assistantIcon = matchedAssistant?.icon || '🤖';
-
-              const isOk = job.last_status === 'ok';
+            {jobs.map(job => {
+              const wsName = workspaces.find(w => w.id === job.workspace_id)?.name || job.workspace_id;
+              const matchedA = assistants.find(a => a.id === job.assistant_id);
+              const aName = job.assistant_id === '__xiaof__' ? '默认助手 (小F)' : (matchedA?.name || job.assistant_id);
+              const aIcon = matchedA?.icon || '🤖';
+              const isRunning = job.enabled && job.last_status !== 'error';
 
               return (
-                <Card
+                <Box
                   key={job.id}
                   p="md"
-                  radius="lg"
-                  withBorder
                   style={{
+                    borderRadius: 14,
+                    border: '1px solid var(--flock-border-subtle)',
                     background: 'var(--flock-bg-surface)',
-                    borderColor: 'var(--flock-border-dim)',
-                    transition: 'all 0.28s cubic-bezier(0.25, 0.8, 0.25, 1)',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    gap: 12,
+                    transition: 'all 0.2s ease',
+                    position: 'relative',
                   }}
                   className="hover-card-lift"
                 >
-                  <Stack gap="sm">
-                    {/* 卡片头部：开关与状态 */}
-                    <Group justify="space-between" align="center">
-                      <Group gap={6}>
-                        {/* 生命力状态灯 */}
-                        {job.enabled ? (
-                          isOk ? (
-                            <Box
-                              style={{
-                                width: 8,
-                                height: 8,
-                                borderRadius: '50%',
-                                background: '#0ca678', // teal
-                                boxShadow: '0 0 8px rgba(12, 166, 120, 0.6)',
-                                animation: 'pulse 2s infinite',
-                              }}
-                            />
-                          ) : (
-                            <Box
-                              style={{
-                                width: 8,
-                                height: 8,
-                                borderRadius: '50%',
-                                background: '#fa5252', // red
-                                boxShadow: '0 0 8px rgba(250, 82, 82, 0.6)',
-                              }}
-                            />
-                          )
-                        ) : (
+                  {/* 卡片头：图标 + 名称 + 菜单（与 AssistantCard 结构一致） */}
+                  <Group gap="sm" wrap="nowrap" justify="space-between">
+                    <Group gap="sm" wrap="nowrap" style={{ minWidth: 0 }}>
+                      <Avatar
+                        size={40}
+                        radius="xl"
+                        style={{
+                          background: job.enabled ? 'var(--flock-accent)' : 'var(--flock-bg-hover)',
+                          fontSize: 18,
+                          flexShrink: 0,
+                          boxShadow: job.enabled ? '0 2px 6px rgba(21, 90, 239, 0.2)' : 'none',
+                        }}
+                      >
+                        <IconCalendarTime size={20} color={job.enabled ? '#fff' : 'var(--flock-text-dim)'} />
+                      </Avatar>
+                      <Box style={{ minWidth: 0 }}>
+                        <Group gap={4} wrap="nowrap">
+                          <Text size="sm" fw={700} truncate style={{ color: 'var(--flock-text-bright)' }}>
+                            {job.name}
+                          </Text>
+                          {/* 呼吸灯 */}
                           <Box
                             style={{
-                              width: 8,
-                              height: 8,
-                              borderRadius: '50%',
-                              background: '#868e96', // gray
+                              width: 7, height: 7, borderRadius: '50%', flexShrink: 0,
+                              background: job.enabled ? (isRunning ? '#0ca678' : '#fa5252') : '#52525b',
+                              boxShadow: job.enabled && isRunning ? '0 0 6px rgba(12,166,120,0.6)' : 'none',
+                              animation: job.enabled && isRunning ? 'pulse 2.4s infinite' : 'none',
                             }}
                           />
-                        )}
-                        <Text size="xs" fw={600} style={{ color: 'var(--flock-text-bright)' }}>
-                          {job.enabled ? (isOk ? '调度运行中' : '运行异常') : '已暂停'}
+                        </Group>
+                        <Text size="xs" c="dimmed" truncate>
+                          {job.schedule_desc}
                         </Text>
-                      </Group>
-
-                      <Group gap="xs">
-                        <Switch
-                          checked={job.enabled}
-                          onChange={() => handleToggleEnabled(job.id, job.enabled)}
-                          size="xs"
-                          color="teal"
-                          styles={{
-                            track: {
-                              cursor: 'pointer',
-                            }
-                          }}
-                        />
-                        <Menu shadow="md" width={120} position="bottom-end">
-                          <Menu.Target>
-                            <ActionIcon variant="subtle" color="gray" size="sm">
-                              <IconDotsVertical size={16} />
-                            </ActionIcon>
-                          </Menu.Target>
-                          <Menu.Dropdown style={{ background: 'var(--flock-bg-raised)', border: '1px solid var(--flock-border-dim)' }}>
-                            <Menu.Item
-                              leftSection={<IconEdit size={14} />}
-                              onClick={() => {
-                                setEditingJob(job);
-                                setModalOpened(true);
-                              }}
-                            >
-                              编辑任务
-                            </Menu.Item>
-                            <Menu.Item
-                              leftSection={<IconTrash size={14} color="var(--mantine-color-red-6)" />}
-                              color="red"
-                              onClick={() => handleDeleteJob(job.id)}
-                            >
-                              删除任务
-                            </Menu.Item>
-                          </Menu.Dropdown>
-                        </Menu>
-                      </Group>
+                      </Box>
                     </Group>
 
-                    {/* 卡片主体：名称与描述 */}
-                    <Stack gap={4}>
-                      <Text fw={700} size="md" style={{ color: 'var(--flock-text-bright)' }} lineClamp={1}>
-                        {job.name}
-                      </Text>
-                      <Text size="xs" c="dimmed" lineClamp={2} style={{ minHeight: 34 }}>
-                        {job.description || '暂无任务描述'}
-                      </Text>
+                    <Group gap={4} style={{ flexShrink: 0 }}>
+                      <Switch
+                        checked={job.enabled}
+                        onChange={() => handleToggleEnabled(job.id, job.enabled)}
+                        size="xs"
+                        color="teal"
+                        onClick={e => e.stopPropagation()}
+                      />
+                      <Menu shadow="md" position="bottom-end" withinPortal>
+                        <Menu.Target>
+                          <ActionIcon size="sm" variant="subtle" color="gray">
+                            <IconDotsVertical size={14} />
+                          </ActionIcon>
+                        </Menu.Target>
+                        <Menu.Dropdown>
+                          <Menu.Item
+                            leftSection={<IconEdit size={14} />}
+                            onClick={() => { setEditingJob(job); setModalOpened(true); }}
+                          >
+                            编辑任务
+                          </Menu.Item>
+                          <Menu.Item
+                            leftSection={<IconTrash size={14} />}
+                            color="red"
+                            onClick={() => handleDelete(job.id)}
+                          >
+                            删除任务
+                          </Menu.Item>
+                        </Menu.Dropdown>
+                      </Menu>
+                    </Group>
+                  </Group>
+
+                  {/* 描述 */}
+                  <Text size="xs" c="dimmed" lineClamp={2} style={{ minHeight: 32 }}>
+                    {job.description || '暂无描述'}
+                  </Text>
+
+                  {/* 元信息 Badges */}
+                  <Group gap={6} wrap="wrap">
+                    <Badge size="xs" variant="light" color="gray" radius="sm" leftSection={<IconFolder size={10} />}>
+                      {wsName}
+                    </Badge>
+                    <Badge size="xs" variant="light" color="blue" radius="sm" leftSection={<IconRobot size={10} />}>
+                      {aIcon} {aName}
+                    </Badge>
+                    {job.run_count > 0 && (
+                      <Badge size="xs" variant="light" color="teal" radius="sm">
+                        已运行 {job.run_count} 次
+                      </Badge>
+                    )}
+                  </Group>
+
+                  {/* Prompt 预览（极客风格等宽字体） */}
+                  <Box
+                    style={{
+                      padding: '7px 10px',
+                      background: 'var(--flock-bg-deepest)',
+                      border: '1px solid var(--flock-border-subtle)',
+                      borderRadius: 8,
+                    }}
+                  >
+                    <Text
+                      size="xs"
+                      style={{
+                        fontFamily: 'var(--mantine-font-family-monospace)',
+                        color: 'var(--flock-text-dim)',
+                        lineHeight: 1.4,
+                        fontSize: 11,
+                        whiteSpace: 'pre-wrap',
+                      }}
+                      lineClamp={2}
+                    >
+                      {job.prompt}
+                    </Text>
+                  </Box>
+
+                  {/* 底部：时间信息 + 立即执行按钮 */}
+                  <Group justify="space-between" align="flex-end" pt={4} style={{ borderTop: '1px solid var(--flock-border-subtle)' }}>
+                    <Stack gap={2}>
+                      <Group gap={4}>
+                        <IconClock size={10} color="var(--flock-text-dim)" />
+                        <Text style={{ fontSize: 10, color: 'var(--flock-text-dim)' }}>
+                          {job.enabled && job.schedule_kind !== 'manual'
+                            ? `下次 ${formatTime(job.next_run_at)}`
+                            : '手动触发'}
+                        </Text>
+                      </Group>
+                      {job.last_run_at && (
+                        <Text style={{ fontSize: 10, color: 'var(--flock-text-dim)' }}>
+                          上次 {formatTime(job.last_run_at)}
+                        </Text>
+                      )}
+                      {job.last_status === 'error' && job.last_error && (
+                        <Tooltip label={job.last_error} withArrow multiline w={200}>
+                          <Group gap={3} style={{ cursor: 'help' }}>
+                            <IconAlertCircle size={10} color="#f87171" />
+                            <Text style={{ fontSize: 10, color: '#f87171' }}>执行出错</Text>
+                          </Group>
+                        </Tooltip>
+                      )}
                     </Stack>
 
-                    {/* 配置关系组：工作区、助手、执行模式 */}
-                    <Box style={{ background: 'var(--flock-bg-deepest)', padding: 10, borderRadius: 8 }}>
-                      <Stack gap={6}>
-                        <Group gap={6} wrap="nowrap">
-                          <IconFolder size={12} color="var(--flock-text-dim)" />
-                          <Text size="xs" c="dimmed" truncate style={{ flex: 1 }}>
-                            工作区: <span style={{ color: 'var(--flock-text-bright)', fontWeight: 500 }}>{wsName}</span>
-                          </Text>
-                        </Group>
-                        <Group gap={6} wrap="nowrap">
-                          <IconRobot size={12} color="var(--flock-text-dim)" />
-                          <Text size="xs" c="dimmed" truncate style={{ flex: 1 }}>
-                            助手: <span style={{ color: 'var(--flock-text-bright)', fontWeight: 500 }}>{assistantIcon} {assistantName}</span>
-                          </Text>
-                        </Group>
-                        <Group gap={6} wrap="nowrap">
-                          <IconClock size={12} color="var(--flock-text-dim)" />
-                          <Text size="xs" c="dimmed" truncate style={{ flex: 1 }}>
-                            频率: <span style={{ color: 'var(--flock-text-bright)', fontWeight: 500 }}>{job.schedule_desc}</span>
-                          </Text>
-                        </Group>
-                      </Stack>
-                    </Box>
-
-                    {/* 极客 Prompt 预览 */}
-                    <Box
-                      style={{
-                        padding: 8,
-                        background: 'rgba(0,0,0,0.1)',
-                        border: '1px solid var(--flock-border-subtle)',
-                        borderRadius: 6,
-                        maxHeight: 64,
-                        overflow: 'hidden',
-                      }}
-                    >
-                      <Text
-                        size="xs"
-                        style={{
-                          fontFamily: 'var(--mantine-font-family-monospace)',
-                          whiteSpace: 'pre-wrap',
-                          color: '#a1a1aa',
-                          lineHeight: 1.3,
-                        }}
-                        lineClamp={3}
+                    <Tooltip label="立即触发执行一次" withArrow>
+                      <ActionIcon
+                        onClick={() => handleRunNow(job)}
+                        size="md"
+                        radius="md"
+                        variant="light"
+                        color="blue"
                       >
-                        {job.prompt}
-                      </Text>
-                    </Box>
-
-                    {/* 底部信息：时间参数及一键立即运行 */}
-                    <Group justify="space-between" align="flex-end" pt="xs" style={{ borderTop: '1px solid var(--flock-border-subtle)' }}>
-                      <Stack gap={2}>
-                        <Text size="xxs" style={{ color: 'var(--flock-text-dim)', fontSize: 10 }}>
-                          下次运行: {job.enabled && job.schedule_kind !== 'manual' ? formatTime(job.next_run_at) : '无'}
-                        </Text>
-                        <Text size="xxs" style={{ color: 'var(--flock-text-dim)', fontSize: 10 }}>
-                          上次运行: {formatTime(job.last_run_at)} {job.run_count > 0 && `(第 ${job.run_count} 次)`}
-                        </Text>
-                        {!isOk && job.last_error && (
-                          <Tooltip label={job.last_error} withArrow>
-                            <Group gap={4} style={{ cursor: 'pointer' }}>
-                              <IconAlertCircle size={10} color="#fa5252" />
-                              <Text size="xxs" color="red" fw={500} style={{ fontSize: 10 }}>查看错误</Text>
-                            </Group>
-                          </Tooltip>
-                        )}
-                      </Stack>
-
-                      <Tooltip label="立即静默触发执行一次" withArrow>
-                        <ActionIcon
-                          onClick={() => handleRunNow(job)}
-                          size="md"
-                          radius="md"
-                          style={{
-                            background: 'var(--flock-accent-soft)',
-                            color: 'var(--flock-accent)',
-                          }}
-                          className="hover-card-lift"
-                        >
-                          <IconPlayerPlay size={16} fill="currentColor" />
-                        </ActionIcon>
-                      </Tooltip>
-                    </Group>
-                  </Stack>
-                </Card>
+                        <IconPlayerPlay size={15} fill="currentColor" />
+                      </ActionIcon>
+                    </Tooltip>
+                  </Group>
+                </Box>
               );
             })}
           </SimpleGrid>
         )}
       </Box>
 
-      {/* 创建与编辑 Modal */}
       <CreateTaskModal
         opened={modalOpened}
-        onClose={() => {
-          setModalOpened(false);
-          setEditingJob(null);
-        }}
-        onSuccess={fetchJobsAndAssistants}
+        onClose={() => { setModalOpened(false); setEditingJob(null); }}
+        onSuccess={fetchData}
         jobToEdit={editingJob}
       />
 
-      {/* 注入呼吸灯 CSS 动画 */}
       <style>{`
         @keyframes pulse {
-          0% {
-            transform: scale(0.95);
-            box-shadow: 0 0 0 0 rgba(12, 166, 120, 0.7);
-          }
-          70% {
-            transform: scale(1);
-            box-shadow: 0 0 0 6px rgba(12, 166, 120, 0);
-          }
-          100% {
-            transform: scale(0.95);
-            box-shadow: 0 0 0 0 rgba(12, 166, 120, 0);
-          }
+          0%   { transform: scale(0.9); box-shadow: 0 0 0 0 rgba(12,166,120,0.6); }
+          70%  { transform: scale(1);   box-shadow: 0 0 0 5px rgba(12,166,120,0); }
+          100% { transform: scale(0.9); box-shadow: 0 0 0 0 rgba(12,166,120,0); }
         }
       `}</style>
     </Box>
   );
 }
+
 export default SchedulePage;
