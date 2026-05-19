@@ -186,7 +186,7 @@ export function SchedulePage() {
               const wsName = workspaces.find(w => w.id === job.workspace_id)?.name || job.workspace_id;
               const matchedA = assistants.find((a: any) => a.id === job.assistant_id);
               const aName = job.assistant_id === '__xiaof__'
-                ? '默认助手 (小F)'
+                ? 'XiaoF'
                 : ((matchedA as any)?.name || job.assistant_id);
               const aIcon = (matchedA as any)?.icon || '🤖';
               const isRunning = job.enabled && job.last_status !== 'error';

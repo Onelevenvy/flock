@@ -167,22 +167,10 @@ export function CreateTaskModal({ opened, onClose, onSuccess, jobToEdit }: Creat
                 <Radio
                   value="new_conversation"
                   label={t('schedule.modeNew')}
-                  styles={{
-                    radio: {
-                      background: 'var(--flock-bg-surface)',
-                      borderColor: 'var(--flock-border-dim)',
-                    },
-                  }}
                 />
                 <Radio
                   value="existing"
                   label={t('schedule.modeExisting')}
-                  styles={{
-                    radio: {
-                      background: 'var(--flock-bg-surface)',
-                      borderColor: 'var(--flock-border-dim)',
-                    },
-                  }}
                 />
               </Group>
             </Radio.Group>
