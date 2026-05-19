@@ -1,6 +1,7 @@
 mod agent;
 mod commands;
 mod workspace;
+mod cron_scheduler;
 
 use std::sync::Arc;
 use tauri::Manager;
@@ -16,10 +17,11 @@ pub type SharedDbManager = Arc<flock_core::db::DbManager>;
 pub fn run() {
     // 初始化共享 Agent 状态
     let agent_state: SharedAgentState = Arc::new(Mutex::new(AgentState::new()));
+    let scheduler_agent = agent_state.clone();
 
     tauri::Builder::default()
         .plugin(tauri_plugin_dialog::init())
-        .setup(|app| {
+        .setup(move |app| {
             if cfg!(debug_assertions) {
                 app.handle().plugin(
                     tauri_plugin_log::Builder::default()
@@ -47,7 +49,15 @@ pub fn run() {
             let db_arc = Arc::new(db_manager) as SharedDbManager;
             // Make DB available to tools for credential resolution.
             flock_tools::init_db_manager(db_arc.clone());
-            app.manage(db_arc);
+            app.manage(db_arc.clone());
+
+            // 启动后台定时任务调度引擎
+            let scheduler_db = db_arc.clone();
+            let scheduler_app = app.handle().clone();
+            tauri::async_runtime::spawn(async move {
+                cron_scheduler::start(scheduler_db, scheduler_agent, scheduler_app).await;
+            });
+
             Ok(())
         })
         .manage(agent_state)
@@ -117,6 +127,13 @@ pub fn run() {
             commands::create_assistant,
             commands::update_assistant,
             commands::delete_assistant,
+            // 定时自动 Cron
+            commands::list_cron_jobs,
+            commands::create_cron_job,
+            commands::update_cron_job,
+            commands::delete_cron_job,
+            commands::set_cron_job_enabled,
+            commands::run_cron_job_now,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

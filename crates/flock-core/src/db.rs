@@ -6,6 +6,7 @@ pub mod modelproviders;
 pub mod modelprovider_seed;
 pub mod sessions;
 pub mod toolproviders;
+pub mod cron;
 
 use std::path::{Path, PathBuf};
 
@@ -36,6 +37,9 @@ pub use mcpserver::McpServer;
 
 // Re-export assistant types.
 pub use assistants::{AssistantRecord, UpsertAssistant};
+
+// Re-export cron types.
+pub use cron::{CronJobRecord, UpsertCronJob};
 
 /// Database manager: handles migrations, config KV, and provider/model CRUD.
 pub struct DbManager {

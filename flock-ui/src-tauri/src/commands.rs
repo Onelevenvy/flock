@@ -6,6 +6,7 @@ mod models;
 mod skills;
 mod workspace;
 mod settings;
+mod cron;
 
 pub use agent::*;
 pub use assistant::*;
@@ -15,3 +16,4 @@ pub use models::*;
 pub use skills::*;
 pub use workspace::*;
 pub use settings::*;
+pub use cron::*;

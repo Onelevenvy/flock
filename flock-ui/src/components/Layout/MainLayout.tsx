@@ -6,6 +6,7 @@ import { AssistantPage } from '../../pages/Assistant';
 import { HomeView } from '../../pages/Home';
 import { WorkspaceView } from '../../pages/Workspace';
 import { PlaceholderPage } from '../../pages/Placeholder';
+import { SchedulePage } from '../../pages/Schedule';
 import { useUiStore } from '../../store/uiStore';
 import { useWorkspaceStore } from '../../store/workspaceStore';
 import { useAgentStore } from '../../store/agentStore';
@@ -56,7 +57,7 @@ export function MainLayout() {
         ) : currentView === 'extension' ? (
           <PlaceholderPage title={t('placeholder.extension')} icon={IconLego} description={t('placeholder.extensionDesc')} />
         ) : currentView === 'schedule' ? (
-          <PlaceholderPage title={t('sidebar.schedule')} icon={IconCalendarTime} description={t('placeholder.scheduleDesc')} />
+          <SchedulePage />
         ) : showWorkspace ? (
           /* 工作区模式：展示独立集成的 Workspace 视图 */
           <WorkspaceView />

@@ -146,4 +146,30 @@ pub const MIGRATIONS: &[(i64, &str, &str)] = &[
         );
         CREATE INDEX IF NOT EXISTS idx_assistant_builtin ON assistant(is_builtin);",
     ),
+    (
+        10,
+        "create_cron_job",
+        "CREATE TABLE IF NOT EXISTS cron_job (
+            id                  TEXT PRIMARY KEY,
+            name                TEXT NOT NULL,
+            description         TEXT NOT NULL DEFAULT '',
+            enabled             INTEGER NOT NULL DEFAULT 1,
+            schedule_kind       TEXT NOT NULL,
+            schedule_value      TEXT NOT NULL,
+            schedule_desc       TEXT NOT NULL DEFAULT '',
+            execution_mode      TEXT NOT NULL DEFAULT 'new_conversation',
+            prompt              TEXT NOT NULL,
+            workspace_id        TEXT NOT NULL,
+            assistant_id        TEXT NOT NULL,
+            next_run_at         INTEGER,
+            last_run_at         INTEGER,
+            last_status         TEXT NOT NULL DEFAULT 'ok',
+            last_error          TEXT,
+            run_count           INTEGER NOT NULL DEFAULT 0,
+            last_conversation_id TEXT,
+            created_at          TEXT NOT NULL DEFAULT (datetime('now')),
+            updated_at          TEXT NOT NULL DEFAULT (datetime('now'))
+        );
+        CREATE INDEX IF NOT EXISTS idx_cron_job_workspace ON cron_job(workspace_id);",
+    ),
 ];
