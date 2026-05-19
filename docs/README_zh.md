@@ -5,6 +5,7 @@
 基于 Rust 和 Tauri 构建的多AI智能体（Agent）桌面应用。
 
 ![Flock 主界面截图](./resources/main.jpg)
+![Flock 聊天界面截图](./resources/chat.png)
 
 > **注意**：本项目基于 [langgraph-rust](https://github.com/Onelevenvy/langgraph-rust) 构建，这是我个人对 LangGraph 框架的 Rust 实现。
 
