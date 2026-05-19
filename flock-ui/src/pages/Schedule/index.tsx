@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState } from 'react';
 import {
   Box,
   Text,
@@ -26,85 +26,67 @@ import {
   IconClock,
   IconDotsVertical,
   IconAlertCircle,
-  IconClick,
 } from '@tabler/icons-react';
-import { invoke } from '@tauri-apps/api/core';
 import { notifications } from '@mantine/notifications';
+import { useTranslation } from 'react-i18next';
 import { CreateTaskModal } from './CreateTaskModal';
 import { useWorkspacesQuery } from '../../hooks/useWorkspaces';
+import { useAssistantsQuery } from '../../hooks/useAssistants';
+import {
+  useCronJobsQuery,
+  useToggleCronJobMutation,
+  useDeleteCronJobMutation,
+  useRunCronJobNowMutation,
+} from '../../hooks/useCronJobs';
 import type { CronJob } from './types';
 
-interface Assistant {
-  id: string;
-  name: string;
-  icon: string;
-}
-
 export function SchedulePage() {
+  const { t } = useTranslation();
   const { data: workspaces = [] } = useWorkspacesQuery();
+  const { data: jobs = [], isLoading, refetch } = useCronJobsQuery();
+  const { data: assistants = [] } = useAssistantsQuery();
+  const toggleMutation = useToggleCronJobMutation();
+  const deleteMutation = useDeleteCronJobMutation();
+  const runNowMutation = useRunCronJobNowMutation();
 
-  const [jobs, setJobs] = useState<CronJob[]>([]);
-  const [assistants, setAssistants] = useState<Assistant[]>([]);
-  const [loading, setLoading] = useState(true);
   const [modalOpened, setModalOpened] = useState(false);
   const [editingJob, setEditingJob] = useState<CronJob | null>(null);
 
-  const fetchData = useCallback(async () => {
-    setLoading(true);
-    try {
-      const [jobsData, assistantsData] = await Promise.all([
-        invoke<CronJob[]>('list_cron_jobs'),
-        invoke<Assistant[]>('list_assistants'),
-      ]);
-      setJobs(jobsData);
-      setAssistants(assistantsData);
-    } catch (e) {
-      notifications.show({ title: '加载失败', message: String(e), color: 'red' });
-    } finally {
-      setLoading(false);
-    }
-  }, []);
-
-  useEffect(() => { fetchData(); }, [fetchData]);
-
   const handleToggleEnabled = async (jobId: string, current: boolean) => {
     try {
-      await invoke('set_cron_job_enabled', { id: jobId, enabled: !current });
+      await toggleMutation.mutateAsync({ id: jobId, enabled: !current });
       notifications.show({
-        title: !current ? '任务已启用' : '任务已禁用',
-        message: !current ? '调度器将自动运行此任务' : '此任务已暂停',
+        title: !current ? t('schedule.enabled') : t('schedule.disabled'),
+        message: !current ? t('schedule.enabledMsg') : t('schedule.disabledMsg'),
         color: !current ? 'teal' : 'gray',
         autoClose: 2500,
       });
-      fetchData();
     } catch (e: any) {
-      notifications.show({ title: '切换失败', message: String(e), color: 'red' });
+      notifications.show({ title: t('common.failed'), message: String(e), color: 'red' });
     }
   };
 
   const handleDelete = async (jobId: string) => {
-    if (!window.confirm('确定删除此定时任务？此操作不可撤销。')) return;
+    if (!window.confirm(t('schedule.deleteConfirm'))) return;
     try {
-      await invoke('delete_cron_job', { id: jobId });
-      notifications.show({ title: '已删除', message: '定时任务已移除', color: 'teal' });
-      fetchData();
+      await deleteMutation.mutateAsync(jobId);
+      notifications.show({ title: t('common.success'), message: t('schedule.deleteSuccess'), color: 'teal' });
     } catch (e: any) {
-      notifications.show({ title: '删除失败', message: String(e), color: 'red' });
+      notifications.show({ title: t('common.failed'), message: String(e), color: 'red' });
     }
   };
 
   const handleRunNow = async (job: CronJob) => {
     try {
-      await invoke('run_cron_job_now', { id: job.id });
+      await runNowMutation.mutateAsync(job.id);
       notifications.show({
-        title: '已触发执行',
-        message: '任务已在后台启动，可在侧边栏查看进度。',
+        title: t('schedule.triggered'),
+        message: t('schedule.triggeredMsg'),
         color: 'blue',
         autoClose: 5000,
       });
-      setTimeout(fetchData, 1500);
     } catch (e: any) {
-      notifications.show({ title: '触发失败', message: String(e), color: 'red' });
+      notifications.show({ title: t('common.failed'), message: String(e), color: 'red' });
     }
   };
 
@@ -131,7 +113,7 @@ export function SchedulePage() {
         position: 'relative',
       }}
     >
-      <LoadingOverlay visible={loading} />
+      <LoadingOverlay visible={isLoading} />
 
       {/* 页头 */}
       <Group justify="space-between" mb="lg" pb="md" style={{ borderBottom: '1px solid var(--flock-border-subtle)' }}>
@@ -141,10 +123,10 @@ export function SchedulePage() {
           </ThemeIcon>
           <Stack gap={0}>
             <Text fw={700} size="lg" style={{ color: 'var(--flock-text-bright)' }}>
-              定时自动化
+              {t('sidebar.schedule')}
             </Text>
             <Text size="xs" c="dimmed">
-              让 AI 助手在后台按计划静默执行您的周期性任务
+              {t('schedule.pageDesc')}
             </Text>
           </Stack>
         </Group>
@@ -154,13 +136,13 @@ export function SchedulePage() {
           onClick={() => { setEditingJob(null); setModalOpened(true); }}
           style={{ background: 'var(--flock-accent)' }}
         >
-          新建任务
+          {t('schedule.newBtn')}
         </Button>
       </Group>
 
       {/* 内容区 */}
       <Box style={{ flex: 1, overflowY: 'auto' }}>
-        {jobs.length === 0 && !loading ? (
+        {jobs.length === 0 && !isLoading ? (
           <Box
             style={{
               display: 'flex', flexDirection: 'column',
@@ -177,10 +159,10 @@ export function SchedulePage() {
               <IconCalendarTime size={28} />
             </ThemeIcon>
             <Text size="sm" fw={600} mb={6} style={{ color: 'var(--flock-text-bright)' }}>
-              暂无定时任务
+              {t('schedule.empty')}
             </Text>
             <Text size="xs" c="dimmed" mb="lg" style={{ maxWidth: 280 }}>
-              创建一个定时任务，例如"每天早上 9 点总结昨日工作区代码变更"
+              {t('schedule.emptyDesc')}
             </Text>
             <Button
               size="xs"
@@ -188,16 +170,18 @@ export function SchedulePage() {
               onClick={() => { setEditingJob(null); setModalOpened(true); }}
               style={{ background: 'var(--flock-accent)' }}
             >
-              立即创建
+              {t('schedule.newBtn')}
             </Button>
           </Box>
         ) : (
           <SimpleGrid cols={{ base: 1, md: 2, lg: 3 }} spacing="md">
             {jobs.map(job => {
               const wsName = workspaces.find(w => w.id === job.workspace_id)?.name || job.workspace_id;
-              const matchedA = assistants.find(a => a.id === job.assistant_id);
-              const aName = job.assistant_id === '__xiaof__' ? '默认助手 (小F)' : (matchedA?.name || job.assistant_id);
-              const aIcon = matchedA?.icon || '🤖';
+              const matchedA = assistants.find((a: any) => a.id === job.assistant_id);
+              const aName = job.assistant_id === '__xiaof__'
+                ? '默认助手 (小F)'
+                : ((matchedA as any)?.name || job.assistant_id);
+              const aIcon = (matchedA as any)?.icon || '🤖';
               const isRunning = job.enabled && job.last_status !== 'error';
 
               return (
@@ -216,7 +200,7 @@ export function SchedulePage() {
                   }}
                   className="hover-card-lift"
                 >
-                  {/* 卡片头：图标 + 名称 + 菜单（与 AssistantCard 结构一致） */}
+                  {/* 卡片头：图标 + 名称 + 菜单 */}
                   <Group gap="sm" wrap="nowrap" justify="space-between">
                     <Group gap="sm" wrap="nowrap" style={{ minWidth: 0 }}>
                       <Avatar
@@ -236,7 +220,7 @@ export function SchedulePage() {
                           <Text size="sm" fw={700} truncate style={{ color: 'var(--flock-text-bright)' }}>
                             {job.name}
                           </Text>
-                          {/* 呼吸灯 */}
+                          {/* 状态呼吸灯 */}
                           <Box
                             style={{
                               width: 7, height: 7, borderRadius: '50%', flexShrink: 0,
@@ -271,14 +255,14 @@ export function SchedulePage() {
                             leftSection={<IconEdit size={14} />}
                             onClick={() => { setEditingJob(job); setModalOpened(true); }}
                           >
-                            编辑任务
+                            {t('common.edit')}
                           </Menu.Item>
                           <Menu.Item
                             leftSection={<IconTrash size={14} />}
                             color="red"
                             onClick={() => handleDelete(job.id)}
                           >
-                            删除任务
+                            {t('common.delete')}
                           </Menu.Item>
                         </Menu.Dropdown>
                       </Menu>
@@ -287,7 +271,7 @@ export function SchedulePage() {
 
                   {/* 描述 */}
                   <Text size="xs" c="dimmed" lineClamp={2} style={{ minHeight: 32 }}>
-                    {job.description || '暂无描述'}
+                    {job.description || t('schedule.noDesc')}
                   </Text>
 
                   {/* 元信息 Badges */}
@@ -300,12 +284,12 @@ export function SchedulePage() {
                     </Badge>
                     {job.run_count > 0 && (
                       <Badge size="xs" variant="light" color="teal" radius="sm">
-                        已运行 {job.run_count} 次
+                        {t('schedule.runCount', { count: job.run_count })}
                       </Badge>
                     )}
                   </Group>
 
-                  {/* Prompt 预览（极客风格等宽字体） */}
+                  {/* Prompt 预览 */}
                   <Box
                     style={{
                       padding: '7px 10px',
@@ -316,6 +300,7 @@ export function SchedulePage() {
                   >
                     <Text
                       size="xs"
+                      lineClamp={2}
                       style={{
                         fontFamily: 'var(--mantine-font-family-monospace)',
                         color: 'var(--flock-text-dim)',
@@ -323,45 +308,45 @@ export function SchedulePage() {
                         fontSize: 11,
                         whiteSpace: 'pre-wrap',
                       }}
-                      lineClamp={2}
                     >
                       {job.prompt}
                     </Text>
                   </Box>
 
-                  {/* 底部：时间信息 + 立即执行按钮 */}
+                  {/* 底部：时间 + 立即执行 */}
                   <Group justify="space-between" align="flex-end" pt={4} style={{ borderTop: '1px solid var(--flock-border-subtle)' }}>
                     <Stack gap={2}>
                       <Group gap={4}>
                         <IconClock size={10} color="var(--flock-text-dim)" />
                         <Text style={{ fontSize: 10, color: 'var(--flock-text-dim)' }}>
                           {job.enabled && job.schedule_kind !== 'manual'
-                            ? `下次 ${formatTime(job.next_run_at)}`
-                            : '手动触发'}
+                            ? `${t('schedule.nextRun')} ${formatTime(job.next_run_at)}`
+                            : t('schedule.manualOnly')}
                         </Text>
                       </Group>
                       {job.last_run_at && (
                         <Text style={{ fontSize: 10, color: 'var(--flock-text-dim)' }}>
-                          上次 {formatTime(job.last_run_at)}
+                          {t('schedule.lastRun')} {formatTime(job.last_run_at)}
                         </Text>
                       )}
                       {job.last_status === 'error' && job.last_error && (
                         <Tooltip label={job.last_error} withArrow multiline w={200}>
                           <Group gap={3} style={{ cursor: 'help' }}>
                             <IconAlertCircle size={10} color="#f87171" />
-                            <Text style={{ fontSize: 10, color: '#f87171' }}>执行出错</Text>
+                            <Text style={{ fontSize: 10, color: '#f87171' }}>{t('schedule.runError')}</Text>
                           </Group>
                         </Tooltip>
                       )}
                     </Stack>
 
-                    <Tooltip label="立即触发执行一次" withArrow>
+                    <Tooltip label={t('schedule.runNowTip')} withArrow>
                       <ActionIcon
                         onClick={() => handleRunNow(job)}
                         size="md"
                         radius="md"
                         variant="light"
                         color="blue"
+                        loading={runNowMutation.isPending}
                       >
                         <IconPlayerPlay size={15} fill="currentColor" />
                       </ActionIcon>
@@ -377,7 +362,7 @@ export function SchedulePage() {
       <CreateTaskModal
         opened={modalOpened}
         onClose={() => { setModalOpened(false); setEditingJob(null); }}
-        onSuccess={fetchData}
+        onSuccess={() => refetch()}
         jobToEdit={editingJob}
       />
 
