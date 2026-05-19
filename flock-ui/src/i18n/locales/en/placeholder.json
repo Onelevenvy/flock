@@ -2,6 +2,6 @@
   "workflowDesc": "Workflow editor is coming soon, stay tuned...",
   "collaborationDesc": "Multi-agent collaboration and orchestration is under development...",
   "extension": "Extensions",
-  "extensionDesc": "Integrating external extension tools like OpenClaw and Hermes...",
+  "extensionDesc": "Integrating external extension tools like OpenCode, OpenClaw and Hermes...",
   "scheduleDesc": "Automated schedule tasks scheduler is under development..."
 }

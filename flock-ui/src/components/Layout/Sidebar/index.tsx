@@ -29,6 +29,7 @@ import {
   IconBoxMultiple,
   IconBolt,
   IconCalendarTime,
+  IconPuzzle,
   IconLayoutGrid,
 } from '@tabler/icons-react';
 import { invoke } from '@tauri-apps/api/core';
@@ -194,6 +195,7 @@ export function Sidebar() {
     { label: t('sidebar.workflow'), icon: IconRoute, view: 'workflow' as const },
     { label: t('sidebar.collaboration'), icon: IconBoxMultiple, view: 'collaboration' as const },
     { label: t('sidebar.schedule'), icon: IconCalendarTime, view: 'schedule' as const },
+    { label: t('sidebar.extension'), icon: IconPuzzle , view: 'extension' as const },
   ];
 
   if (isSidebarCollapsed) return null;

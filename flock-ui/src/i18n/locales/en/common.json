@@ -9,5 +9,8 @@
   "reset": "Reset",
   "hide": "Hide",
   "show": "Show",
-  "add": "Add"
+  "add": "Add",
+  "edit": "Edit",
+  "preview": "Preview",
+  "close": "Close"
 }
