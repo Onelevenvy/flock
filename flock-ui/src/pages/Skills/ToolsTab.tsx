@@ -151,6 +151,7 @@ function ProviderDetailPanel({
         overflow: 'hidden',
         minHeight: 0,
       }}
+      onClick={(e) => e.stopPropagation()}
     >
       <Group justify="space-between" p="md" pb="sm">
         <ActionIcon variant="subtle" color="gray" size="sm" onClick={onClose}>
@@ -330,7 +331,10 @@ export function ToolsTab() {
   const filteredProviders = providers.filter((p) => !p.id.startsWith('mcp:'));
 
   return (
-    <Box style={{ height: '100%', display: 'flex', gap: 16, minHeight: 0, overflow: 'hidden' }}>
+    <Box
+      style={{ height: '100%', display: 'flex', gap: 16, minHeight: 0, overflow: 'hidden' }}
+      onClick={() => setSelectedProvider(null)}
+    >
       <LoadingOverlay visible={loading} />
       <ScrollArea style={{ flex: 1, minHeight: 0 }}>
         {filteredProviders.length === 0 && !loading ? (
@@ -348,7 +352,7 @@ export function ToolsTab() {
               <Box
                 key={provider.id}
                 p="md"
-                onClick={() => setSelectedProvider(provider)}
+                onClick={(e) => { e.stopPropagation(); setSelectedProvider(provider); }}
                 style={{
                   borderRadius: 12,
                   border: `1px solid ${selectedProvider?.id === provider.id ? 'var(--flock-accent)' : 'var(--flock-border-subtle)'}`,

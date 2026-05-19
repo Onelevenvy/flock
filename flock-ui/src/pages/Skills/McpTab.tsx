@@ -101,6 +101,7 @@ function McpServerDetailPanel({
         overflow: 'hidden',
         minHeight: 0,
       }}
+      onClick={(e) => e.stopPropagation()}
     >
       <Group justify="space-between" p="md" pb="sm">
         <ActionIcon variant="subtle" color="gray" size="sm" onClick={onClose}>
@@ -460,11 +461,14 @@ export function McpTab() {
     : [];
 
   return (
-    <Box style={{ height: '100%', display: 'flex', gap: 16, minHeight: 0, overflow: 'hidden' }}>
+    <Box
+      style={{ height: '100%', display: 'flex', gap: 16, minHeight: 0, overflow: 'hidden' }}
+      onClick={() => setSelectedServer(null)}
+    >
       <LoadingOverlay visible={loading} />
 
       <ScrollArea style={{ flex: 1, minHeight: 0 }}>
-        <Group justify="flex-end" mb="md">
+        <Group justify="flex-end" mb="md" onClick={(e) => e.stopPropagation()}>
           <Button
             size="xs"
             variant="light"
@@ -490,7 +494,7 @@ export function McpTab() {
               <Box
                 key={server.id}
                 p="md"
-                onClick={() => setSelectedServer(server)}
+                onClick={(e) => { e.stopPropagation(); setSelectedServer(server); }}
                 style={{
                   borderRadius: 12,
                   border: `1px solid ${selectedServer?.id === server.id ? 'var(--flock-accent)' : 'var(--flock-border-subtle)'}`,
