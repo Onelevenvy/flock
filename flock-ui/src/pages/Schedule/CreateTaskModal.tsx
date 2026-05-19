@@ -120,6 +120,7 @@ export function CreateTaskModal({ opened, onClose, onSuccess, jobToEdit }: Creat
             value={form.workspaceId}
             onChange={form.setWorkspaceId}
             data={form.workspaces.map(w => ({ value: w.id, label: w.name }))}
+            required
             styles={inputStyle}
           />
 
@@ -129,6 +130,7 @@ export function CreateTaskModal({ opened, onClose, onSuccess, jobToEdit }: Creat
             placeholder={t('schedule.taskNamePlaceholder')}
             value={form.name}
             onChange={e => form.setName(e.currentTarget.value)}
+            required
             styles={inputStyle}
           />
 
@@ -194,6 +196,7 @@ export function CreateTaskModal({ opened, onClose, onSuccess, jobToEdit }: Creat
             onChange={e => form.setPrompt(e.currentTarget.value)}
             minRows={4}
             autosize
+            required
             styles={{
               input: {
                 ...inputStyle.input,
