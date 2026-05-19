@@ -31,6 +31,7 @@ import {
   IconCalendarTime,
   IconPuzzle,
   IconLayoutGrid,
+  IconBrandGithub,
 } from '@tabler/icons-react';
 import { invoke } from '@tauri-apps/api/core';
 import { useWorkspaceStore } from '../../../store/workspaceStore';
@@ -193,9 +194,9 @@ export function Sidebar() {
   ];
 
   const SECONDARY_MENUS = [
+    { label: t('sidebar.schedule'), icon: IconCalendarTime, view: 'schedule' as const },
     { label: t('sidebar.workflow'), icon: IconRoute, view: 'workflow' as const },
     { label: t('sidebar.collaboration'), icon: IconBoxMultiple, view: 'collaboration' as const },
-    { label: t('sidebar.schedule'), icon: IconCalendarTime, view: 'schedule' as const },
     { label: t('sidebar.extension'), icon: IconPuzzle , view: 'extension' as const },
   ];
 
@@ -360,7 +361,10 @@ export function Sidebar() {
         <Box style={{ padding: '12px 16px', borderTop: '1px solid var(--flock-border-dim)' }}>
           <Group justify="space-between" align="center" gap="xs">
             <UnstyledButton
-              onClick={() => setSettingsOpen(true)}
+              onClick={() => {
+                invoke('open_external_url', { url: 'https://github.com/Onelevenvy/flock' })
+                  .catch(console.error);
+              }}
               style={{
                 flex: 1,
                 display: 'flex',
@@ -373,11 +377,11 @@ export function Sidebar() {
               }}
               className="hover-bg-raised"
             >
-              <Avatar src={null} alt="jimmy" radius="xl" color="blue" size="sm">
-                <IconUserCircle size={22} />
+              <Avatar src={null} radius="xl" color="gray" size="sm" style={{ background: 'var(--flock-bg-surface)' }}>
+                <IconBrandGithub size={18} style={{ color: 'var(--flock-text-bright)' }} />
               </Avatar>
               <Box style={{ flex: 1, overflow: 'hidden' }}>
-                <Text size="sm" fw={600} truncate>Jimmy</Text>
+                <Text size="sm" fw={600} truncate style={{ color: 'var(--flock-text-bright)' }}>flock</Text>
               </Box>
             </UnstyledButton>
 
