@@ -104,14 +104,6 @@ export function AssistantCard({
             {t('assistant.card.skillsCount', { count: assistant.skills.length })}
           </Badge>
         )}
-        {assistant.system_prompt && (
-          <Badge size="xs" variant="light" color="orange" radius="sm">
-            <Group gap={3}>
-              <IconMessageCircle size={10} />
-              {t('assistant.card.promptTag')}
-            </Group>
-          </Badge>
-        )}
       </Group>
 
       <Button

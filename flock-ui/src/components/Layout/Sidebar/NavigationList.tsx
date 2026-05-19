@@ -7,7 +7,7 @@ import {
   IconCalendarTime,
   IconRoute,
   IconBoxMultiple,
-  IconPuzzle,
+  IconLego,
   IconLayoutGrid,
   IconChevronDown,
   IconChevronRight,
@@ -32,7 +32,7 @@ export function NavigationList() {
     { label: t('sidebar.schedule'), icon: IconCalendarTime, view: 'schedule' as const },
     { label: t('sidebar.workflow'), icon: IconRoute, view: 'workflow' as const },
     { label: t('sidebar.collaboration'), icon: IconBoxMultiple, view: 'collaboration' as const },
-    { label: t('sidebar.extension'), icon: IconPuzzle , view: 'extension' as const },
+    { label: t('sidebar.extension'), icon: IconLego , view: 'extension' as const },
   ];
 
   return (
