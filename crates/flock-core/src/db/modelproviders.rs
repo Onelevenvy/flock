@@ -51,6 +51,298 @@ pub(super) fn parse_json_array(val: Option<String>) -> Vec<String> {
         .unwrap_or_default()
 }
 
-// Provider CRUD methods are implemented on DbManager in mod.rs via delegation,
-// or directly here if we choose to move them. For now we keep the implementations
-// in mod.rs to minimize the diff. These structs and helpers are the extracted types.
+impl super::DbManager {
+    /// Seed built-in providers and models. Now supports syncing existing data
+    /// while preserving user-set API keys and availability status.
+    pub(super) async fn seed_builtin_providers(&self) -> anyhow::Result<()> {
+        let builtin = super::modelprovider_seed::builtin_providers();
+
+        for (provider, models) in builtin {
+            // 1. Upsert Provider
+            // We do NOT update api_key fields here to preserve user-entered keys.
+            // We also DO NOT update is_available here (unless we want to force reset,
+            // but usually we want to keep user activation status).
+            sqlx::query(
+                "INSERT INTO model_provider
+                    (id, provider_name, provider_type, base_url, api_key_encrypted, api_key_nonce,
+                     icon, description, test_model, is_available, created_at, updated_at)
+                 VALUES (?1, ?2, ?3, ?4, NULL, NULL, ?5, ?6, ?7, ?8, datetime('now'), datetime('now'))
+                 ON CONFLICT(id) DO UPDATE SET
+                    provider_name = EXCLUDED.provider_name,
+                    provider_type = EXCLUDED.provider_type,
+                    base_url = EXCLUDED.base_url,
+                    icon = EXCLUDED.icon,
+                    description = EXCLUDED.description,
+                    test_model = EXCLUDED.test_model,
+                    updated_at = datetime('now')"
+            )
+                .bind(&provider.id)
+                .bind(&provider.provider_name)
+                .bind(&provider.provider_type)
+                .bind(&provider.base_url)
+                .bind(&provider.icon)
+                .bind(&provider.description)
+                .bind(&provider.test_model)
+                .bind(provider.is_available as i64)
+                .execute(self.pool())
+                .await?;
+
+            // 2. Sync Models
+            let mut current_model_ids = Vec::new();
+            for ms in models {
+                current_model_ids.push(ms.id.to_string());
+                let categories = serde_json::to_string(&ms.categories)?;
+                let capabilities = serde_json::to_string(&ms.capabilities)?;
+
+                sqlx::query(
+                    "INSERT INTO model
+                        (id, provider_id, model_name, categories, capabilities, is_online,
+                         created_at, updated_at)
+                     VALUES (?1, ?2, ?3, ?4, ?5, 0, datetime('now'), datetime('now'))
+                     ON CONFLICT(id) DO UPDATE SET
+                        model_name = EXCLUDED.model_name,
+                        categories = EXCLUDED.categories,
+                        capabilities = EXCLUDED.capabilities,
+                        updated_at = datetime('now')"
+                )
+                    .bind(ms.id)
+                    .bind(&provider.id)
+                    .bind(ms.model_name)
+                    .bind(&categories)
+                    .bind(&capabilities)
+                    .execute(self.pool())
+                    .await?;
+            }
+
+            // 3. Remove models for this provider that are no longer in the seed list
+            if !current_model_ids.is_empty() {
+                let placeholders: String = current_model_ids.iter()
+                    .enumerate()
+                    .map(|(i, _)| format!("?{}", i + 2))
+                    .collect::<Vec<_>>()
+                    .join(",");
+
+                let query_str = format!(
+                    "DELETE FROM model WHERE provider_id = ?1 AND id NOT IN ({})",
+                    placeholders
+                );
+
+                let mut q = sqlx::query(&query_str).bind(&provider.id);
+                for mid in current_model_ids {
+                    q = q.bind(mid);
+                }
+                q.execute(self.pool()).await?;
+            }
+        }
+
+        Ok(())
+    }
+
+    pub async fn list_providers(&self) -> anyhow::Result<Vec<ModelProvider>> {
+        let rows = sqlx::query(
+            "SELECT id, provider_name, provider_type, base_url, api_key_encrypted, api_key_nonce,
+                    icon, description, test_model, is_available, created_at, updated_at
+             FROM model_provider ORDER BY provider_name",
+        )
+            .fetch_all(self.pool())
+            .await?;
+
+        let salt = self.get_or_create_salt().await?;
+
+        let mut providers = Vec::new();
+        for r in rows {
+            let api_key = decrypt_api_key_from_row(&r, &salt);
+            providers.push(ModelProvider {
+                id: r.get("id"),
+                provider_name: r.get("provider_name"),
+                provider_type: r.get("provider_type"),
+                base_url: r.try_get("base_url").ok(),
+                api_key,
+                icon: r.try_get("icon").ok(),
+                description: r.try_get("description").ok(),
+                test_model: r.try_get("test_model").ok(),
+                is_available: r.get::<i64, _>("is_available") != 0,
+                created_at: r.get("created_at"),
+                updated_at: r.get("updated_at"),
+            });
+        }
+        Ok(providers)
+    }
+
+    pub async fn get_provider(&self, id: &str) -> anyhow::Result<Option<ModelProvider>> {
+        let r = sqlx::query(
+            "SELECT id, provider_name, provider_type, base_url, api_key_encrypted, api_key_nonce,
+                    icon, description, test_model, is_available, created_at, updated_at
+             FROM model_provider WHERE id = ?1",
+        )
+            .bind(id)
+            .fetch_optional(self.pool())
+            .await?;
+
+        let Some(r) = r else { return Ok(None) };
+        let salt = self.get_or_create_salt().await?;
+        let api_key = decrypt_api_key_from_row(&r, &salt);
+
+        Ok(Some(ModelProvider {
+            id: r.get("id"),
+            provider_name: r.get("provider_name"),
+            provider_type: r.get("provider_type"),
+            base_url: r.try_get("base_url").ok(),
+            api_key,
+            icon: r.try_get("icon").ok(),
+            description: r.try_get("description").ok(),
+            test_model: r.try_get("test_model").ok(),
+            is_available: r.get::<i64, _>("is_available") != 0,
+            created_at: r.get("created_at"),
+            updated_at: r.get("updated_at"),
+        }))
+    }
+
+    pub async fn upsert_provider(&self, provider: &ModelProvider) -> anyhow::Result<()> {
+        let salt = self.get_or_create_salt().await?;
+
+        let (enc_key, nonce) = if let Some(ref key) = provider.api_key {
+            if key.is_empty() {
+                (None, None)
+            } else {
+                let (ct, n) = crypto::encrypt_value(key, &salt)?;
+                (Some(ct), Some(n))
+            }
+        } else {
+            (None, None)
+        };
+
+        sqlx::query(
+            "INSERT INTO model_provider
+                (id, provider_name, provider_type, base_url, api_key_encrypted, api_key_nonce,
+                 icon, description, test_model, is_available, created_at, updated_at)
+             VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, datetime('now'), datetime('now'))
+             ON CONFLICT(id) DO UPDATE SET
+                provider_name = ?2, provider_type = ?3, base_url = ?4,
+                api_key_encrypted = COALESCE(?5, api_key_encrypted),
+                api_key_nonce = COALESCE(?6, api_key_nonce),
+                icon = ?7, description = ?8, test_model = ?9, is_available = ?10,
+                updated_at = datetime('now')",
+        )
+            .bind(&provider.id)
+            .bind(&provider.provider_name)
+            .bind(&provider.provider_type)
+            .bind(&provider.base_url)
+            .bind(&enc_key)
+            .bind(&nonce)
+            .bind(&provider.icon)
+            .bind(&provider.description)
+            .bind(&provider.test_model)
+            .bind(provider.is_available as i64)
+            .execute(self.pool())
+            .await?;
+
+        Ok(())
+    }
+
+    pub async fn delete_provider(&self, id: &str) -> anyhow::Result<()> {
+        sqlx::query("DELETE FROM model_provider WHERE id = ?1")
+            .bind(id)
+            .execute(self.pool())
+            .await?;
+        Ok(())
+    }
+
+    pub async fn list_models(&self, provider_id: &str) -> anyhow::Result<Vec<Model>> {
+        let rows = sqlx::query(
+            "SELECT id, provider_id, model_name, categories, capabilities, is_online, meta,
+                    created_at, updated_at
+             FROM model WHERE provider_id = ?1 ORDER BY model_name",
+        )
+            .bind(provider_id)
+            .fetch_all(self.pool())
+            .await?;
+
+        let mut models = Vec::new();
+        for r in rows {
+            models.push(Model {
+                id: r.get("id"),
+                provider_id: r.get("provider_id"),
+                model_name: r.get("model_name"),
+                categories: parse_json_array(r.try_get("categories").ok()),
+                capabilities: parse_json_array(r.try_get("capabilities").ok()),
+                is_online: r.get::<i64, _>("is_online") != 0,
+                meta: r
+                    .try_get::<String, _>("meta")
+                    .ok()
+                    .and_then(|s| serde_json::from_str(&s).ok()),
+                created_at: r.get("created_at"),
+                updated_at: r.get("updated_at"),
+            });
+        }
+        Ok(models)
+    }
+
+    pub async fn get_model(&self, provider_id: &str, model_name: &str) -> anyhow::Result<Option<Model>> {
+        let r = sqlx::query(
+            "SELECT id, provider_id, model_name, categories, capabilities, is_online, meta,
+                    created_at, updated_at
+             FROM model WHERE provider_id = ?1 AND model_name = ?2",
+        )
+            .bind(provider_id)
+            .bind(model_name)
+            .fetch_optional(self.pool())
+            .await?;
+
+        if let Some(r) = r {
+            Ok(Some(Model {
+                id: r.get("id"),
+                provider_id: r.get("provider_id"),
+                model_name: r.get("model_name"),
+                categories: parse_json_array(r.try_get("categories").ok()),
+                capabilities: parse_json_array(r.try_get("capabilities").ok()),
+                is_online: r.get::<i64, _>("is_online") != 0,
+                meta: r
+                    .try_get::<String, _>("meta")
+                    .ok()
+                    .and_then(|s| serde_json::from_str(&s).ok()),
+                created_at: r.get("created_at"),
+                updated_at: r.get("updated_at"),
+            }))
+        } else {
+            Ok(None)
+        }
+    }
+
+    pub async fn upsert_model(&self, model: &Model) -> anyhow::Result<()> {
+        let categories = serde_json::to_string(&model.categories)?;
+        let capabilities = serde_json::to_string(&model.capabilities)?;
+        let meta = model.meta.as_ref().map(|v| v.to_string());
+
+        sqlx::query(
+            "INSERT INTO model
+                (id, provider_id, model_name, categories, capabilities, is_online, meta,
+                 created_at, updated_at)
+             VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, datetime('now'), datetime('now'))
+             ON CONFLICT(id) DO UPDATE SET
+                provider_id = ?2, model_name = ?3, categories = ?4,
+                capabilities = ?5, is_online = ?6, meta = ?7,
+                updated_at = datetime('now')",
+        )
+            .bind(&model.id)
+            .bind(&model.provider_id)
+            .bind(&model.model_name)
+            .bind(&categories)
+            .bind(&capabilities)
+            .bind(model.is_online as i64)
+            .bind(&meta)
+            .execute(self.pool())
+            .await?;
+
+        Ok(())
+    }
+
+    pub async fn delete_model(&self, id: &str) -> anyhow::Result<()> {
+        sqlx::query("DELETE FROM model WHERE id = ?1")
+            .bind(id)
+            .execute(self.pool())
+            .await?;
+        Ok(())
+    }
+}
+

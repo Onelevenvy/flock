@@ -234,3 +234,46 @@ fn uuid_like() -> String {
         .as_millis();
     format!("{:x}{:06x}", ts, (ts ^ (ts >> 16)) & 0xFFFFFF)
 }
+
+/// Default built-in assistants seeded on every startup.
+pub fn builtin_assistants() -> Vec<UpsertAssistant> {
+    vec![
+        UpsertAssistant {
+            id: Some("builtin-coder".to_string()),
+            name: "Code Assistant".to_string(),
+            icon: "\u{1f4bb}".to_string(), // 💻
+            description: "Specializes in code writing, debugging, and refactoring across multiple programming languages.".to_string(),
+            model: String::new(),
+            system_prompt: "You are a professional code assistant. Help users write high-quality code, debug issues, and perform code refactoring. Always provide clear code comments and explanations.".to_string(),
+            tools: vec!["builtin".to_string()],
+            skills: vec![],
+            is_builtin: true,
+            sort_order: 0,
+        },
+        UpsertAssistant {
+            id: Some("builtin-writer".to_string()),
+            name: "Writing Assistant".to_string(),
+            icon: "\u{270d}\u{fe0f}".to_string(), // ✍️
+            description: "Helps write articles, emails, and reports to improve writing quality.".to_string(),
+            model: String::new(),
+            system_prompt: "You are a professional writing assistant. Help users draft various types of documents, including articles, emails, and reports. Pay attention to the accuracy and fluency of language expression.".to_string(),
+            tools: vec![],
+            skills: vec![],
+            is_builtin: true,
+            sort_order: 1,
+        },
+        UpsertAssistant {
+            id: Some("builtin-analyst".to_string()),
+            name: "Data Analyst".to_string(),
+            icon: "\u{1f4ca}".to_string(), // 📊
+            description: "Assists with data analysis, visualization suggestions, and statistical interpretation.".to_string(),
+            model: String::new(),
+            system_prompt: "You are a professional data analyst assistant. Help users analyze data, provide visualization suggestions, interpret statistical results, and offer insightful, data-driven recommendations.".to_string(),
+            tools: vec![],
+            skills: vec![],
+            is_builtin: true,
+            sort_order: 2,
+        },
+    ]
+}
+
