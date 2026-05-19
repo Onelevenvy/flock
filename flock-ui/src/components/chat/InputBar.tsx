@@ -16,6 +16,7 @@ import {
   IconFlame,
 } from '@tabler/icons-react';
 import { invoke } from '@tauri-apps/api/core';
+import { useTranslation } from 'react-i18next';
 import { useAgentStore } from '../../store/agentStore';
 import { useWorkspaceStore } from '../../store/workspaceStore';
 import { useWorkspacesQuery } from '../../hooks/useWorkspaces';
@@ -23,12 +24,13 @@ import { v4 as uuidv4 } from 'uuid';
 import { ModelSelector } from '../Settings/ModelSelector';
 
 const MODE_OPTIONS = [
-  { value: 'default', label: '审批模式', icon: IconShieldCheck, color: 'blue' },
-  { value: 'auto_edit', label: 'AutoEdit', icon: IconBolt, color: 'teal' },
-  { value: 'yolo', label: 'YOLO', icon: IconFlame, color: 'red' },
+  { value: 'default', labelKey: 'chat.mode.default', labelDefault: '审批模式', icon: IconShieldCheck, color: 'blue' },
+  { value: 'auto_edit', labelKey: 'chat.mode.autoEdit', labelDefault: 'AutoEdit', icon: IconBolt, color: 'teal' },
+  { value: 'yolo', labelKey: 'chat.mode.yolo', labelDefault: 'YOLO', icon: IconFlame, color: 'red' },
 ];
 
 function ModeSelector() {
+  const { t } = useTranslation();
   const capabilities = useAgentStore((s) => s.capabilities);
   const status = useAgentStore((s) => s.status);
   const setCapabilities = useAgentStore((s) => s.setCapabilities);
@@ -48,6 +50,7 @@ function ModeSelector() {
 
   const activeOption = MODE_OPTIONS.find(o => o.value === currentMode) || MODE_OPTIONS[0];
   const ActiveIcon = activeOption.icon;
+  const activeLabel = activeOption.labelKey ? t(activeOption.labelKey, activeOption.labelDefault) : activeOption.labelDefault;
 
   if (status === 'disconnected' || status === 'error' || !capabilities) {
     return null;
@@ -56,30 +59,34 @@ function ModeSelector() {
   return (
     <Menu shadow="md" width={140} position="top-end">
       <Menu.Target>
-        <Tooltip label={`运行模式: ${activeOption.label}`} withArrow>
+        <Tooltip label={`${t('chat.runningMode')}: ${activeLabel}`} withArrow>
           <ActionIcon size="md" variant="subtle" color={activeOption.color} radius="md">
             <ActiveIcon size={18} />
           </ActionIcon>
         </Tooltip>
       </Menu.Target>
       <Menu.Dropdown>
-        <Menu.Label>运行模式</Menu.Label>
-        {MODE_OPTIONS.map(opt => (
-          <Menu.Item
-            key={opt.value}
-            leftSection={<opt.icon size={14} color={`var(--mantine-color-${opt.color}-5)`} />}
-            onClick={() => handleModeChange(opt.value)}
-            style={{ fontWeight: currentMode === opt.value ? 600 : 400 }}
-          >
-            {opt.label}
-          </Menu.Item>
-        ))}
+        <Menu.Label>{t('chat.runningMode')}</Menu.Label>
+        {MODE_OPTIONS.map(opt => {
+          const label = opt.labelKey ? t(opt.labelKey, opt.labelDefault) : opt.labelDefault;
+          return (
+            <Menu.Item
+              key={opt.value}
+              leftSection={<opt.icon size={14} color={`var(--mantine-color-${opt.color}-5)`} />}
+              onClick={() => handleModeChange(opt.value)}
+              style={{ fontWeight: currentMode === opt.value ? 600 : 400 }}
+            >
+              {label}
+            </Menu.Item>
+          );
+        })}
       </Menu.Dropdown>
     </Menu>
   );
 }
 
 export function InputBar() {
+  const { t } = useTranslation();
   const [value, setValue] = useState('');
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
@@ -93,16 +100,16 @@ export function InputBar() {
   const canSend = status === 'ready' && value.trim().length > 0 && !!activeWorkspaceId;
 
   const placeholder = !activeWorkspaceId
-    ? '请先在左侧选择或新建工作空间...'
+    ? t('chat.chooseWorkspace')
     : status === 'disconnected'
-    ? 'Agent 未连接，正在启动...'
+    ? t('chat.agentDisconnected')
     : status === 'connecting'
-    ? '正在连接 Agent...'
+    ? t('chat.agentConnecting')
     : status === 'error'
-    ? 'Agent 连接失败，请点击上方重试...'
+    ? t('chat.agentConnectFailed')
     : isStreaming
-    ? 'Agent 思考中...'
-    : '输入消息（Enter 发送，Shift+Enter 换行）';
+    ? t('chat.agentThinking')
+    : t('chat.inputPlaceholder');
 
   const handleSend = async () => {
     if (!canSend) return;
@@ -151,7 +158,7 @@ export function InputBar() {
       {status === 'error' && (
         <Group gap={6} mb={8} justify="center">
           <Text size="xs" color="red" style={{ opacity: 0.8 }}>
-            Agent 连接异常，无法发送消息
+            {t('chat.agentError')}
           </Text>
           <button
             style={{
@@ -186,7 +193,7 @@ export function InputBar() {
               }
             }}
           >
-            点击重试
+            {t('chat.retry')}
           </button>
         </Group>
       )}
@@ -235,20 +242,20 @@ export function InputBar() {
             <ModelSelector />
             {value.length > 0 && (
               <Text size="xs" style={{ color: 'var(--flock-text-dim)', fontSize: 11 }}>
-                {value.length} 字
+                {value.length} {t('chat.characterCount')}
               </Text>
             )}
           </Group>
 
           <Group gap={6}>
             <Text size="xs" style={{ color: 'var(--flock-text-dim)', opacity: 0.8, fontSize: 11 }}>
-              {canSend ? 'Enter 发送' : ''}
+              {canSend ? t('chat.enterToSend') : ''}
             </Text>
 
             <ModeSelector />
 
             {isStreaming ? (
-              <Tooltip label="停止生成" withArrow>
+              <Tooltip label={t('chat.stopGeneration')} withArrow>
                 <ActionIcon
                   size="md"
                   color="red"
@@ -260,7 +267,7 @@ export function InputBar() {
                 </ActionIcon>
               </Tooltip>
             ) : (
-              <Tooltip label={canSend ? '发送 (Enter)' : placeholder} withArrow>
+              <Tooltip label={canSend ? t('chat.sendEnter') : placeholder} withArrow>
                 <ActionIcon
                   size="md"
                   color="blue"
@@ -283,7 +290,7 @@ export function InputBar() {
 
       {/* 底部提示 */}
       <Text size="xs" style={{ color: 'var(--flock-text-dim)', textAlign: 'center', opacity: 0.8, fontSize: 11 }} mt={6}>
-        Flock Agent · AI 可能产生错误，请注意核实重要信息
+        {t('chat.disclaimer')}
       </Text>
     </Box>
   );

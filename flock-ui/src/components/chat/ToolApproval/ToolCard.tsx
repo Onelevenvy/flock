@@ -25,6 +25,7 @@ import {
   IconTerminal2,
   IconPlug,
 } from '@tabler/icons-react';
+import { useTranslation } from 'react-i18next';
 import { ToolRequestChunk, ToolCategory } from '../../../types/protocol';
 
 const CATEGORY_COLOR: Record<ToolCategory, string> = {
@@ -42,12 +43,12 @@ const CATEGORY_ICON: Record<ToolCategory, React.ReactNode> = {
 };
 
 const STATUS_CONFIG = {
-  pending: { color: 'yellow', icon: <IconLoader size={14} />, label: '等待审批' },
-  approved: { color: 'green', icon: <IconCheck size={14} />, label: '已批准' },
-  denied: { color: 'red', icon: <IconX size={14} />, label: '已拒绝' },
-  running: { color: 'blue', icon: <Loader size={14} />, label: '执行中' },
-  done: { color: 'teal', icon: <IconCheck size={14} />, label: '完成' },
-  cancelled: { color: 'gray', icon: <IconBan size={14} />, label: '已取消' },
+  pending: { color: 'yellow', icon: <IconLoader size={14} />, key: 'chat.status.pending' },
+  approved: { color: 'green', icon: <IconCheck size={14} />, key: 'chat.status.approved' },
+  denied: { color: 'red', icon: <IconX size={14} />, key: 'chat.status.denied' },
+  running: { color: 'blue', icon: <Loader size={14} />, key: 'chat.status.running' },
+  done: { color: 'teal', icon: <IconCheck size={14} />, key: 'chat.status.done' },
+  cancelled: { color: 'gray', icon: <IconBan size={14} />, key: 'chat.status.cancelled' },
 };
 
 interface ToolCardProps {
@@ -55,10 +56,12 @@ interface ToolCardProps {
 }
 
 export function ToolCard({ chunk }: ToolCardProps) {
+  const { t } = useTranslation();
   const [expanded, setExpanded] = useState(false);
   const catColor = CATEGORY_COLOR[chunk.tool.category] || 'gray';
   const catIcon = CATEGORY_ICON[chunk.tool.category];
   const statusCfg = STATUS_CONFIG[chunk.status] || STATUS_CONFIG.pending;
+  const statusLabel = t(statusCfg.key);
 
   return (
     <Paper
@@ -91,7 +94,7 @@ export function ToolCard({ chunk }: ToolCardProps) {
             size="xs"
             leftSection={statusCfg.icon}
           >
-            {statusCfg.label}
+            {statusLabel}
           </Badge>
           <ActionIcon
             size="xs"
@@ -107,7 +110,7 @@ export function ToolCard({ chunk }: ToolCardProps) {
         <Stack gap="xs" mt="xs">
           {/* 参数 */}
           <Box>
-            <Text size="xs" c="dimmed" mb={2}>参数</Text>
+            <Text size="xs" c="dimmed" mb={2}>{t('chat.params')}</Text>
             <Code
               block
               style={{
@@ -124,7 +127,7 @@ export function ToolCard({ chunk }: ToolCardProps) {
           {chunk.result && (
             <Box>
               <Text size="xs" c="dimmed" mb={2}>
-                输出 {chunk.result_status === 'error' && <Badge color="red" size="xs">Error</Badge>}
+                {t('chat.output')} {chunk.result_status === 'error' && <Badge color="red" size="xs">Error</Badge>}
               </Text>
               <ScrollArea.Autosize mah={150}>
                 <Code

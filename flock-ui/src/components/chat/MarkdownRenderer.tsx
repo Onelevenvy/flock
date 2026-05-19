@@ -15,12 +15,15 @@ import remarkMath from 'remark-math';
 import rehypeMathjax from 'rehype-mathjax';
 import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
 import { vscDarkPlus } from 'react-syntax-highlighter/dist/esm/styles/prism';
+import { useTranslation } from 'react-i18next';
 
 interface MarkdownRendererProps {
   content: string;
 }
 
 export function MarkdownRenderer({ content }: MarkdownRendererProps) {
+  const { t } = useTranslation();
+
   return (
     <ReactMarkdown
       remarkPlugins={[remarkMath]}
@@ -58,7 +61,7 @@ export function MarkdownRenderer({ content }: MarkdownRendererProps) {
                   </Text>
                   <CopyButton value={codeString} timeout={2000}>
                     {({ copied, copy }) => (
-                      <Tooltip label={copied ? '已复制' : '复制代码'} withArrow>
+                      <Tooltip label={copied ? t('chat.copied') : t('chat.copyCode')} withArrow>
                         <ActionIcon
                           size="xs"
                           variant="transparent"

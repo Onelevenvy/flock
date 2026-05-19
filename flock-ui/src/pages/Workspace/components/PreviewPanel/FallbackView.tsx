@@ -1,6 +1,7 @@
 import { Box, Text, Button } from '@mantine/core';
 import { IconExternalLink } from '@tabler/icons-react';
 import { invoke } from '@tauri-apps/api/core';
+import { useTranslation } from 'react-i18next';
 
 interface FallbackViewProps {
   fileName: string;
@@ -10,6 +11,8 @@ interface FallbackViewProps {
 }
 
 export function FallbackView({ fileName, ext, filePath, activeWorkspaceId }: FallbackViewProps) {
+  const { t } = useTranslation();
+
   const handleOpen = async () => {
     try {
       await invoke('open_workspace_file_in_system', {
@@ -59,7 +62,7 @@ export function FallbackView({ fileName, ext, filePath, activeWorkspaceId }: Fal
       </Text>
 
       <Text size="sm" c="dimmed" style={{ maxWidth: 360, marginBottom: 24, lineHeight: 1.5 }}>
-        这是一个 {ext.toUpperCase() || '未知'} 格式的文件，暂不支持在应用内直接预览。
+        {t('workspace.fallbackDesc', { ext: ext.toUpperCase() || t('workspace.unknown') })}
       </Text>
 
       <Button
@@ -73,7 +76,7 @@ export function FallbackView({ fileName, ext, filePath, activeWorkspaceId }: Fal
         }}
         onClick={handleOpen}
       >
-        使用外部应用打开
+        {t('workspace.openExternal')}
       </Button>
     </Box>
   );

@@ -26,6 +26,7 @@ import {
   IconMarkdown,
 } from '@tabler/icons-react';
 import { invoke } from '@tauri-apps/api/core';
+import { useTranslation } from 'react-i18next';
 import { useUiStore, FileEntry } from '../../../store/uiStore';
 import { useWorkspaceStore } from '../../../store/workspaceStore';
 import { useWorkspacesQuery } from '../../../hooks/useWorkspaces';
@@ -95,6 +96,7 @@ function FileTreeItem({
   depth: number;
   workspaceId: string;
 }) {
+  const { t } = useTranslation();
   const { expandedDirs, toggleExpandDir, setPreviewFile } = useUiStore();
   const [children, setChildren] = useState<FileEntry[]>(entry.children || []);
   const [loading, setLoading] = useState(false);
@@ -201,7 +203,7 @@ function FileTreeItem({
 
         {!entry.is_dir && (
           <Group gap={4} style={{ flexShrink: 0, opacity: 0 }} className="file-actions">
-            <Tooltip label="预览" withArrow position="left">
+            <Tooltip label={t('workspace.preview')} withArrow position="left">
               <ActionIcon size={16} variant="transparent" color="gray" onClick={(e) => { e.stopPropagation(); handlePreview(); }}>
                 <IconEye size={12} />
               </ActionIcon>
@@ -227,7 +229,7 @@ function FileTreeItem({
               c="dimmed"
               style={{ paddingLeft: paddingLeft + 14, paddingBottom: 4, opacity: 0.5, fontSize: 11 }}
             >
-              (空目录)
+              {t('workspace.emptyDir')}
             </Text>
           )}
         </>
@@ -238,6 +240,7 @@ function FileTreeItem({
 
 // ---- 文件树面板 ----
 export function FileTreePanel() {
+  const { t } = useTranslation();
   const { isFileTreeOpen, fileTreeRefreshKey, setFileTreeOpen } = useUiStore();
   const { activeWorkspaceId } = useWorkspaceStore();
   const { data: workspaces = [] } = useWorkspacesQuery();
@@ -303,7 +306,7 @@ export function FileTreePanel() {
       >
         <Box>
           <Text size="xs" fw={600} style={{ color: 'var(--flock-text-secondary)', letterSpacing: '0.05em', textTransform: 'uppercase' }}>
-            文件
+            {t('workspace.file')}
           </Text>
           {activeWs && (
             <Text size="xs" c="dimmed" style={{ opacity: 0.5, fontSize: 10, marginTop: 1 }}>
@@ -311,7 +314,7 @@ export function FileTreePanel() {
             </Text>
           )}
         </Box>
-        <Tooltip label="刷新" withArrow>
+        <Tooltip label={t('workspace.refresh')} withArrow>
           <ActionIcon
             size="xs"
             variant="subtle"
@@ -327,7 +330,7 @@ export function FileTreePanel() {
       <ScrollArea style={{ flex: 1 }} py={4}>
         {!activeWorkspaceId ? (
           <Box py={24} style={{ textAlign: 'center' }}>
-            <Text size="xs" c="dimmed">请先选择工作空间</Text>
+            <Text size="xs" c="dimmed">{t('workspace.selectWorkspace')}</Text>
           </Box>
         ) : loading ? (
           <Box py={24} style={{ display: 'flex', justifyContent: 'center' }}>
@@ -335,7 +338,7 @@ export function FileTreePanel() {
           </Box>
         ) : files.length === 0 ? (
           <Box py={24} style={{ textAlign: 'center' }}>
-            <Text size="xs" c="dimmed">工作空间为空</Text>
+            <Text size="xs" c="dimmed">{t('workspace.workspaceEmpty')}</Text>
           </Box>
         ) : (
           files.map((entry) => (

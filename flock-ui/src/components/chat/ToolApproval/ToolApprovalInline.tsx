@@ -15,6 +15,7 @@ import {
   IconPlug,
 } from '@tabler/icons-react';
 import { invoke } from '@tauri-apps/api/core';
+import { useTranslation } from 'react-i18next';
 import { PendingApproval, ToolCategory } from '../../../types/protocol';
 import { useAgentStore } from '../../../store/agentStore';
 import { useUiStore } from '../../../store/uiStore';
@@ -25,35 +26,36 @@ interface ToolApprovalInlineProps {
 
 const CATEGORY_CONFIG: Record<
   ToolCategory,
-  { color: string; label: string; icon: React.ReactNode; riskText: string }
+  { color: string; label: string; icon: React.ReactNode; riskKey: string }
 > = {
   info: {
     color: 'blue',
     label: 'Info',
     icon: <IconEye size={14} />,
-    riskText: '只读操作',
+    riskKey: 'chat.approval.riskRead',
   },
   edit: {
     color: 'orange',
     label: 'Edit',
     icon: <IconEdit size={14} />,
-    riskText: '修改文件',
+    riskKey: 'chat.approval.riskWrite',
   },
   exec: {
     color: 'red',
     label: 'Exec',
     icon: <IconTerminal2 size={14} />,
-    riskText: '执行命令，请谨慎',
+    riskKey: 'chat.approval.riskExec',
   },
   mcp: {
     color: 'grape',
     label: 'MCP',
     icon: <IconPlug size={14} />,
-    riskText: '外部工具调用',
+    riskKey: 'chat.approval.riskMcp',
   },
 };
 
 export function ToolApprovalInline({ approval }: ToolApprovalInlineProps) {
+  const { t } = useTranslation();
   const removePendingApproval = useAgentStore((s) => s.removePendingApproval);
   const theme = useUiStore((s) => s.theme);
   const isDark = theme === 'dark';
@@ -102,6 +104,7 @@ export function ToolApprovalInline({ approval }: ToolApprovalInlineProps) {
 
   const { tool } = approval;
   const config = CATEGORY_CONFIG[tool.category] || CATEGORY_CONFIG.exec;
+  const riskText = t(config.riskKey);
   const argsStr = JSON.stringify(tool.args, null, 2);
 
   // 对 args 做人性化展示：取最显眼的字段
@@ -144,7 +147,7 @@ export function ToolApprovalInline({ approval }: ToolApprovalInlineProps) {
           {tool.name}
         </Text>
         <Badge size="xs" color={config.color} variant="dot">
-          {config.riskText}
+          {riskText}
         </Badge>
         <Text size="xs" c="dimmed" style={{ marginLeft: 'auto', opacity: 0.5 }}>
           {tool.description}
@@ -218,7 +221,7 @@ export function ToolApprovalInline({ approval }: ToolApprovalInlineProps) {
             </Text>
           </Box>
           <Text size="xs" c={isDark ? 'teal.4' : 'teal.8'} fw={600}>
-            是，允许一次
+            {t('chat.approval.btnApproveOnce')}
           </Text>
         </Group>
 
@@ -246,7 +249,7 @@ export function ToolApprovalInline({ approval }: ToolApprovalInlineProps) {
             </Text>
           </Box>
           <Text size="xs" c={isDark ? 'blue.4' : 'blue.8'} fw={600}>
-            是，始终允许
+            {t('chat.approval.btnApproveAlways')}
           </Text>
         </Group>
 
@@ -274,7 +277,7 @@ export function ToolApprovalInline({ approval }: ToolApprovalInlineProps) {
             </Text>
           </Box>
           <Text size="xs" c={isDark ? 'red.4' : 'red.8'} fw={600}>
-            否，拒绝
+            {t('chat.approval.btnDeny')}
           </Text>
         </Group>
       </Box>

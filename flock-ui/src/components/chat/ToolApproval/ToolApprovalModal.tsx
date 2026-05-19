@@ -21,6 +21,7 @@ import {
   IconShieldCheck,
 } from '@tabler/icons-react';
 import { invoke } from '@tauri-apps/api/core';
+import { useTranslation } from 'react-i18next';
 import { PendingApproval, ToolCategory } from '../../../types/protocol';
 import { useAgentStore } from '../../../store/agentStore';
 import { useUiStore } from '../../../store/uiStore';
@@ -31,35 +32,36 @@ interface ToolApprovalModalProps {
 
 const CATEGORY_CONFIG: Record<
   ToolCategory,
-  { color: string; label: string; icon: React.ReactNode; description: string }
+  { color: string; label: string; icon: React.ReactNode; descriptionKey: string }
 > = {
   info: {
     color: 'blue',
     label: 'Info',
     icon: <IconEye size={18} />,
-    description: '只读操作，不修改任何文件',
+    descriptionKey: 'chat.approval.descRead',
   },
   edit: {
     color: 'orange',
     label: 'Edit',
     icon: <IconEdit size={18} />,
-    description: '将修改文件内容',
+    descriptionKey: 'chat.approval.descWrite',
   },
   exec: {
     color: 'red',
     label: 'Exec',
     icon: <IconTerminal2 size={18} />,
-    description: '将执行系统命令，请谨慎确认',
+    descriptionKey: 'chat.approval.descExec',
   },
   mcp: {
     color: 'grape',
     label: 'MCP',
     icon: <IconPlug size={18} />,
-    description: '外部 MCP 工具调用',
+    descriptionKey: 'chat.approval.descMcp',
   },
 };
 
 export function ToolApprovalModal({ approval }: ToolApprovalModalProps) {
+  const { t } = useTranslation();
   const removePendingApproval = useAgentStore((s) => s.removePendingApproval);
   const theme = useUiStore((s) => s.theme);
   const isDark = theme === 'dark';
@@ -68,6 +70,7 @@ export function ToolApprovalModal({ approval }: ToolApprovalModalProps) {
 
   const { call_id, tool } = approval;
   const config = CATEGORY_CONFIG[tool.category] || CATEGORY_CONFIG.exec;
+  const description = t(config.descriptionKey);
   const argsStr = JSON.stringify(tool.args, null, 2);
 
   const handleApprove = async (scope: 'once' | 'always') => {
@@ -89,7 +92,7 @@ export function ToolApprovalModal({ approval }: ToolApprovalModalProps) {
           <ThemeIcon color={config.color} size="md" radius="sm">
             {config.icon}
           </ThemeIcon>
-          <Text fw={600} size="md">工具调用请求</Text>
+          <Text fw={600} size="md">{t('chat.approval.title')}</Text>
         </Group>
       }
       size="lg"
@@ -132,14 +135,14 @@ export function ToolApprovalModal({ approval }: ToolApprovalModalProps) {
           }}
         >
           <Text size="xs" c={isDark ? `${config.color}.3` : `${config.color}.9`} fw={500}>
-            {config.description}
+            {description}
           </Text>
         </Box>
 
         {/* 参数预览 */}
         <Stack gap="4">
           <Text size="xs" c="dimmed" tt="uppercase" fw={600}>
-            参数
+            {t('chat.params')}
           </Text>
           <ScrollArea.Autosize mah={200}>
             <Code
@@ -163,7 +166,7 @@ export function ToolApprovalModal({ approval }: ToolApprovalModalProps) {
             leftSection={<IconX size={16} />}
             onClick={handleDeny}
           >
-            拒绝
+            {t('chat.approval.deny')}
           </Button>
           <Button
             variant="light"
@@ -171,7 +174,7 @@ export function ToolApprovalModal({ approval }: ToolApprovalModalProps) {
             leftSection={<IconCheck size={16} />}
             onClick={() => handleApprove('once')}
           >
-            本次允许
+            {t('chat.approval.approveOnce')}
           </Button>
           <Button
             variant="filled"
@@ -179,10 +182,11 @@ export function ToolApprovalModal({ approval }: ToolApprovalModalProps) {
             leftSection={<IconShieldCheck size={16} />}
             onClick={() => handleApprove('always')}
           >
-            始终允许
+            {t('chat.approval.approveAlways')}
           </Button>
         </Group>
       </Stack>
     </Modal>
   );
 }
+

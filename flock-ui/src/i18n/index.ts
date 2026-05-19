@@ -10,6 +10,7 @@ import zhHome from './locales/zh/home.json';
 import zhPlaceholder from './locales/zh/placeholder.json';
 import zhAssistant from './locales/zh/assistant.json';
 import zhSkills from './locales/zh/skills.json';
+import zhChat from './locales/zh/chat.json';
 
 import enCommon from './locales/en/common.json';
 import enSidebar from './locales/en/sidebar.json';
@@ -20,6 +21,7 @@ import enHome from './locales/en/home.json';
 import enPlaceholder from './locales/en/placeholder.json';
 import enAssistant from './locales/en/assistant.json';
 import enSkills from './locales/en/skills.json';
+import enChat from './locales/en/chat.json';
 
 const savedLang = localStorage.getItem('flock-lang') || 'zh';
 
@@ -38,6 +40,7 @@ i18n
           placeholder: zhPlaceholder,
           assistant: zhAssistant,
           skills: zhSkills,
+          chat: zhChat,
         },
       },
       en: {
@@ -51,6 +54,7 @@ i18n
           placeholder: enPlaceholder,
           assistant: enAssistant,
           skills: enSkills,
+          chat: enChat,
         },
       },
     },

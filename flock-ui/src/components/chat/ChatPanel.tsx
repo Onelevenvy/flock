@@ -23,6 +23,7 @@ import {
   IconSparkles,
   IconPlus,
 } from '@tabler/icons-react';
+import { useTranslation } from 'react-i18next';
 import { ChatMessage, MessageChunk } from '../../types/protocol';
 import { ToolCard } from './ToolApproval/ToolCard';
 import { useWorkspaceStore } from '../../store/workspaceStore';
@@ -33,6 +34,7 @@ import { MarkdownRenderer } from './MarkdownRenderer';
 // ---- 思考块 ----
 function ThinkingBlock({ text, defaultCollapsed }: { text: string; defaultCollapsed: boolean }) {
   const [collapsed, setCollapsed] = useState(defaultCollapsed);
+  const { t } = useTranslation();
   return (
     <Box
       style={{
@@ -50,7 +52,7 @@ function ThinkingBlock({ text, defaultCollapsed }: { text: string; defaultCollap
       >
         <IconBrain size={13} color="var(--flock-text-secondary)" />
         <Text size="xs" fw={600} style={{ color: 'var(--flock-text-secondary)' }}>
-          思考过程
+          {t('chat.thinkingProcess')}
         </Text>
         <ActionIcon size="xs" variant="transparent" color="gray">
           {collapsed ? <IconChevronRight size={11} /> : <IconChevronDown size={11} />}
@@ -111,6 +113,7 @@ function ChunkRenderer({ chunk, isStreaming }: { chunk: MessageChunk; isStreamin
 // ---- 消息气泡 ----
 function MessageBubble({ message }: { message: ChatMessage }) {
   const isUser = message.role === 'user';
+  const { t } = useTranslation();
 
   return (
     <Box
@@ -177,7 +180,7 @@ function MessageBubble({ message }: { message: ChatMessage }) {
             {message.streaming && message.chunks.length === 0 && (
               <Group gap={4}>
                 <Loader size={12} type="dots" color="blue" />
-                <Text size="xs" c="dimmed">思考中...</Text>
+                <Text size="xs" c="dimmed">{t('chat.thinking')}</Text>
               </Group>
             )}
           </Stack>
@@ -196,7 +199,7 @@ function MessageBubble({ message }: { message: ChatMessage }) {
             </Text>
             {message.usage.cache_read_tokens && (
               <Badge size="xs" variant="transparent" color="teal">
-                缓存 {message.usage.cache_read_tokens}
+                {t('chat.cache')} {message.usage.cache_read_tokens}
               </Badge>
             )}
           </Group>
@@ -213,6 +216,7 @@ function EmptyState() {
   const { mutateAsync: createConversation } = useCreateConversationMutation();
   const clearMessages = useAgentStore((s) => s.clearMessages);
   const activeWs = workspaces.find((w) => w.id === activeWorkspaceId);
+  const { t } = useTranslation();
 
   const handleNewConv = async () => {
     if (!activeWorkspaceId) return;
@@ -253,10 +257,10 @@ function EmptyState() {
           </Box>
           <Stack align="center" gap={6}>
             <Text fw={600} size="lg" c="var(--flock-text-bright)">
-              欢迎使用 Flock Agent
+              {t('chat.welcomeTitle')}
             </Text>
             <Text size="sm" c="dimmed" style={{ textAlign: 'center', maxWidth: 320 }}>
-              请在左侧创建或选择一个工作空间，然后开始与 AI 对话
+              {t('chat.welcomeDesc')}
             </Text>
           </Stack>
         </Stack>
@@ -281,7 +285,7 @@ function EmptyState() {
               {activeWs?.name}
             </Text>
             <Text size="sm" c="dimmed" style={{ textAlign: 'center', maxWidth: 280 }}>
-              在下方输入框开始新的对话
+              {t('chat.startNewConv')}
             </Text>
           </Stack>
           <Button
@@ -291,7 +295,7 @@ function EmptyState() {
             leftSection={<IconPlus size={14} />}
             onClick={handleNewConv}
           >
-            新建对话
+            {t('chat.newConv')}
           </Button>
         </Stack>
       )}
