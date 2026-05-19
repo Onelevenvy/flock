@@ -27,7 +27,7 @@ import { invoke } from '@tauri-apps/api/core';
 import { notifications } from '@mantine/notifications';
 import { useTranslation } from 'react-i18next';
 import type { ToolProvider, Tool } from './types';
-import { getProviderDescription, formatLabel, parseInputSchema } from './helpers';
+import { getProviderDescription, getProviderName, formatLabel, parseInputSchema } from './helpers';
 import { ToolsIcon } from '../../components/Icons';
 
 function ProviderDetailPanel({
@@ -94,7 +94,7 @@ function ProviderDetailPanel({
       notifications.show({
         id: `testing-${provider.id}`,
         title: t('skills.tools.verifyingTitle'),
-        message: t('skills.tools.verifyingMsg', { name: provider.provider_name }),
+        message: t('skills.tools.verifyingMsg', { name: getProviderName(provider) }),
         loading: true,
         autoClose: false,
         withCloseButton: false,
@@ -178,7 +178,7 @@ function ProviderDetailPanel({
           </Box>
           <Box style={{ flex: 1, minWidth: 0 }}>
             <Text size="sm" fw={600} style={{ color: 'var(--flock-text-bright)' }} truncate>
-              {provider.provider_name}
+              {getProviderName(provider)}
             </Text>
             {provider.is_available ? (
               <Group gap={4}>
@@ -379,7 +379,7 @@ export function ToolsTab() {
                     <ToolsIcon name={provider.id} size={20} />
                   </Box>
                   <Box style={{ flex: 1, minWidth: 0 }}>
-                    <Text size="sm" fw={600} truncate style={{ color: 'var(--flock-text-bright)' }}>{provider.provider_name}</Text>
+                    <Text size="sm" fw={600} truncate style={{ color: 'var(--flock-text-bright)' }}>{getProviderName(provider)}</Text>
                   </Box>
                 </Group>
                 <Box mb="sm" style={{ minHeight: 36 }}>

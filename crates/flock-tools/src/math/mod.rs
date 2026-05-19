@@ -32,10 +32,11 @@ impl MathTool {
 pub fn provider_info() -> ProviderInfo {
     ProviderInfo {
         provider_id: "math".to_string(),
-        provider_name: "Math Calculator".to_string(),
-        description: "数学表达式计算工具，支持基本运算、函数和常量".to_string(),
+        provider_name: r#"{"zh": "数学计算器", "en": "Math Calculator"}"#.to_string(),
+        description: r#"{"zh": "数学表达式计算工具，支持基本运算、函数和常量", "en": "Mathematical expression calculator tool supporting basic operations, functions, and constants."}"#.to_string(),
         icon: None,
         credentials_schema: None,
         test_input: None,
     }
 }
+
