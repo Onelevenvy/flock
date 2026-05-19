@@ -133,7 +133,7 @@ export function AssistantFormModal({
       onClose={onClose}
       title={
         <Group gap="xs">
-          <ThemeIcon variant="light" color="indigo" size="md" radius="md">
+          <ThemeIcon variant="light" color="blue" size="md" radius="md">
             {isEditing ? <IconEdit size={16} /> : <IconPlus size={16} />}
           </ThemeIcon>
           <Text fw={700} size="md">
@@ -240,8 +240,8 @@ export function AssistantFormModal({
                     padding: '4px 0',
                     fontSize: 13,
                     fontWeight: activeTab === 'edit' ? 600 : 400,
-                    color: activeTab === 'edit' ? 'var(--mantine-color-indigo-filled, #4f46e5)' : 'var(--flock-text-dim, #888)',
-                    borderBottom: activeTab === 'edit' ? '2px solid var(--mantine-color-indigo-filled, #4f46e5)' : '2px solid transparent',
+                    color: activeTab === 'edit' ? 'var(--flock-accent)' : 'var(--flock-text-dim, #888)',
+                    borderBottom: activeTab === 'edit' ? '2px solid var(--flock-accent)' : '2px solid transparent',
                     transition: 'all 0.2s ease',
                   }}
                 >
@@ -256,8 +256,8 @@ export function AssistantFormModal({
                     padding: '4px 0',
                     fontSize: 13,
                     fontWeight: activeTab === 'preview' ? 600 : 400,
-                    color: activeTab === 'preview' ? 'var(--mantine-color-indigo-filled, #4f46e5)' : 'var(--flock-text-dim, #888)',
-                    borderBottom: activeTab === 'preview' ? '2px solid var(--mantine-color-indigo-filled, #4f46e5)' : '2px solid transparent',
+                    color: activeTab === 'preview' ? 'var(--flock-accent)' : 'var(--flock-text-dim, #888)',
+                    borderBottom: activeTab === 'preview' ? '2px solid var(--flock-accent)' : '2px solid transparent',
                     transition: 'all 0.2s ease',
                   }}
                 >
@@ -371,11 +371,11 @@ export function AssistantFormModal({
           {t('common.cancel')}
         </Button>
         <Button
-          color="indigo"
+          color="blue"
           loading={saving}
           leftSection={isEditing ? <IconCheck size={16} /> : <IconPlus size={16} />}
           onClick={handleSave}
-          style={{ background: 'linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%)' }}
+          style={{ background: 'linear-gradient(135deg, #155aef 0%, #36bffa 100%)' }}
         >
           {isEditing ? t('common.saveChanges') : t('assistant.createBtn')}
         </Button>

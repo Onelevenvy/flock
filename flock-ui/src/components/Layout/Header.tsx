@@ -21,7 +21,7 @@ const STATUS_COLOR: Record<string, string> = {
   disconnected: 'gray',
   connecting: 'yellow',
   ready: 'teal',
-  thinking: 'violet',
+  thinking: 'blue',
   error: 'red',
 };
 
@@ -75,7 +75,7 @@ export function Header() {
         {assistantId && assistantId !== '__xiaof__' ? (
           <Badge
             variant="light"
-            color="indigo"
+            color="blue"
             size="sm"
             style={{ textTransform: 'none', fontWeight: 600, height: 22 }}
           >

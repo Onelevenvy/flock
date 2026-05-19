@@ -64,12 +64,12 @@ export function FallbackView({ fileName, ext, filePath, activeWorkspaceId }: Fal
 
       <Button
         size="md"
-        color="indigo"
+        color="blue"
         leftSection={<IconExternalLink size={16} />}
         style={{
-          background: 'linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%)',
+          background: 'linear-gradient(135deg, #155aef 0%, #36bffa 100%)',
           borderRadius: 12,
-          boxShadow: '0 4px 16px rgba(99, 102, 241, 0.25)',
+          boxShadow: '0 4px 16px rgba(21, 90, 239, 0.2)',
         }}
         onClick={handleOpen}
       >

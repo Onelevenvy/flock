@@ -23,7 +23,7 @@ import { v4 as uuidv4 } from 'uuid';
 import { ModelSelector } from '../Settings/ModelSelector';
 
 const MODE_OPTIONS = [
-  { value: 'default', label: '审批模式', icon: IconShieldCheck, color: 'indigo' },
+  { value: 'default', label: '审批模式', icon: IconShieldCheck, color: 'blue' },
   { value: 'auto_edit', label: 'AutoEdit', icon: IconBolt, color: 'teal' },
   { value: 'yolo', label: 'YOLO', icon: IconFlame, color: 'red' },
 ];
@@ -263,14 +263,14 @@ export function InputBar() {
               <Tooltip label={canSend ? '发送 (Enter)' : placeholder} withArrow>
                 <ActionIcon
                   size="md"
-                  color="indigo"
+                  color="blue"
                   variant={canSend ? 'filled' : 'subtle'}
                   radius="md"
                   onClick={handleSend}
                   disabled={!canSend}
                   style={{
                     transition: 'all 0.15s ease',
-                    boxShadow: canSend ? '0 2px 8px rgba(99,102,241,0.35)' : 'none',
+                    boxShadow: canSend ? '0 2px 8px rgba(21, 90, 239, 0.3)' : 'none',
                   }}
                 >
                   <IconSend size={16} />

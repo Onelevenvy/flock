@@ -51,7 +51,7 @@ export default function SettingsModal({ opened, onClose }: Props) {
       onClose={onClose}
       title={
         <Group gap="xs">
-          <ThemeIcon variant="light" color="indigo" size="md" radius="md">
+          <ThemeIcon variant="light" color="blue" size="md" radius="md">
             <IconSettings size={18} />
           </ThemeIcon>
           <Text fw={700} size="lg" style={{ letterSpacing: '0.5px' }}>{t('settings.title')}</Text>
@@ -131,7 +131,7 @@ export default function SettingsModal({ opened, onClose }: Props) {
                     size={20} 
                     stroke={isActive ? 2.5 : 1.5}
                     style={{
-                      filter: isActive ? 'drop-shadow(0 0 8px rgba(99, 102, 241, 0.4))' : 'none'
+                      filter: isActive ? 'drop-shadow(0 0 8px rgba(21, 90, 239, 0.4))' : 'none'
                     }}
                   />
                   <Box style={{ flex: 1 }}>

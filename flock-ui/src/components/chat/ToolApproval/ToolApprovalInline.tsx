@@ -245,7 +245,7 @@ export function ToolApprovalInline({ approval }: ToolApprovalInlineProps) {
               A
             </Text>
           </Box>
-          <Text size="xs" c={isDark ? 'indigo.4' : 'indigo.8'} fw={600}>
+          <Text size="xs" c={isDark ? 'blue.4' : 'blue.8'} fw={600}>
             是，始终允许
           </Text>
         </Group>

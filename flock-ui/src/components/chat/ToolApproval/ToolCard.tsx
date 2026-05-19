@@ -73,7 +73,7 @@ export function ToolCard({ chunk }: ToolCardProps) {
     >
       <Group justify="space-between" gap="xs">
         <Group gap="xs" style={{ flex: 1, minWidth: 0 }}>
-          <ThemeIcon size="xs" color="indigo" variant="light" radius="sm">
+          <ThemeIcon size="xs" color="blue" variant="light" radius="sm">
             {catIcon}
           </ThemeIcon>
           <Text size="xs" fw={700} style={{ color: 'var(--flock-text-primary)', whiteSpace: 'nowrap' }}>

@@ -407,7 +407,7 @@ function McpServerFormModal({
 
         <Group justify="flex-end" mt="sm">
           <Button variant="subtle" onClick={onClose}>{t('common.cancel')}</Button>
-          <Button color="indigo" loading={saving} onClick={handleSave}>
+          <Button color="blue" loading={saving} onClick={handleSave}>
             {editServer ? t('common.confirm') : t('common.add')}
           </Button>
         </Group>
@@ -458,7 +458,7 @@ export function McpTab() {
           <Button
             size="xs"
             variant="light"
-            color="indigo"
+            color="blue"
             leftSection={<IconPlus size={14} />}
             onClick={() => { setEditServer(null); setShowForm(true); }}
           >
@@ -483,7 +483,7 @@ export function McpTab() {
                 onClick={() => setSelectedServer(server)}
                 style={{
                   borderRadius: 12,
-                  border: `1px solid ${selectedServer?.id === server.id ? 'var(--mantine-color-violet-4)' : 'var(--flock-border-subtle)'}`,
+                  border: `1px solid ${selectedServer?.id === server.id ? 'var(--flock-accent)' : 'var(--flock-border-subtle)'}`,
                   background: selectedServer?.id === server.id ? 'var(--flock-accent-soft)' : 'var(--flock-bg-surface)',
                   cursor: 'pointer',
                   transition: 'all 0.2s ease',

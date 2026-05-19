@@ -8,12 +8,12 @@ export function FlockLogo() {
           width: 28,
           height: 28,
           borderRadius: 8,
-          background: 'linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%)',
+          background: 'linear-gradient(135deg, #155aef 0%, #36bffa 100%)',
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
           flexShrink: 0,
-          boxShadow: '0 2px 8px rgba(99,102,241,0.4)',
+          boxShadow: '0 2px 8px rgba(21, 90, 239, 0.3)',
         }}
       >
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none">

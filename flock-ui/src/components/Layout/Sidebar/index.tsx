@@ -327,7 +327,7 @@ export function Sidebar() {
               <Button
                 size="xs"
                 variant="light"
-                color="indigo"
+                color="blue"
                 leftSection={<IconPlus size={12} />}
                 onClick={() => setShowNewWs(true)}
               >
@@ -368,7 +368,7 @@ export function Sidebar() {
             }}
             className="hover-bg-raised"
           >
-            <Avatar src={null} alt="jimmy" radius="xl" color="indigo" size="md">
+            <Avatar src={null} alt="jimmy" radius="xl" color="blue" size="md">
               <IconUserCircle size={26} />
             </Avatar>
             <Box style={{ flex: 1, overflow: 'hidden' }}>
@@ -385,7 +385,7 @@ export function Sidebar() {
         onClose={() => { setShowNewWs(false); setNewWsName(''); }}
         title={
           <Group gap="xs">
-            <IconPlus size={18} color="#6366f1" />
+            <IconPlus size={18} color="var(--flock-accent)" />
             <Text fw={600} size="md">{t('sidebar.newWorkspace')}</Text>
           </Group>
         }
@@ -422,7 +422,7 @@ export function Sidebar() {
               {t('common.cancel')}
             </Button>
             <Button
-              color="indigo"
+              color="blue"
               loading={creating}
               onClick={handleCreateWorkspace}
               disabled={!newWsName.trim()}

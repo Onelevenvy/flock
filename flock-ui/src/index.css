@@ -21,45 +21,45 @@
 /* ---- Light theme (default) ---- */
 [data-theme="light"] {
   color-scheme: light;
-  --flock-bg-deepest: #f0f2f5;
-  --flock-bg-deep: #f7f8fa;
+  --flock-bg-deepest: #f2f4f7;
+  --flock-bg-deep: rgba(242, 244, 247, 0.9);
   --flock-bg-base: #ffffff;
   --flock-bg-raised: #ffffff;
-  --flock-bg-surface: #f8f9fa;
-  --flock-bg-hover: #f1f3f5;
-  --flock-border-subtle: #e9ecef;
-  --flock-border-dim: #dee2e6;
-  --flock-border-base: #ced4da;
-  --flock-text-muted: #adb5bd;
-  --flock-text-dim: #868e96;
-  --flock-text-secondary: #495057;
-  --flock-text-primary: #343a40;
-  --flock-text-bright: #212529;
-  --flock-accent: #6366f1;
-  --flock-accent-soft: rgba(99, 102, 241, 0.08);
-  --mantine-color-dimmed: #5c6370; /* Crisp Slate Gray for extreme readability in Light theme */
+  --flock-bg-surface: #f9fafb;
+  --flock-bg-hover: rgba(16, 24, 40, 0.04);
+  --flock-border-subtle: rgba(16, 24, 40, 0.05);
+  --flock-border-dim: rgba(16, 24, 40, 0.08);
+  --flock-border-base: rgba(16, 24, 40, 0.14);
+  --flock-text-muted: #9ca3af; /* zinc-400 */
+  --flock-text-dim: #6b7280; /* zinc-500 */
+  --flock-text-secondary: #3f3f46; /* zinc-700 */
+  --flock-text-primary: #18181b; /* zinc-900 */
+  --flock-text-bright: #09090b; /* zinc-950 */
+  --flock-accent: #155aef; /* Dify classic core blue */
+  --flock-accent-soft: rgba(21, 90, 239, 0.08);
+  --mantine-color-dimmed: #6b7280;
 }
 
 /* ---- Dark theme ---- */
 [data-theme="dark"] {
   color-scheme: dark;
-  --flock-bg-deepest: #0f0f13;
-  --flock-bg-deep: #14141a;
-  --flock-bg-base: #1c1d24;
-  --flock-bg-raised: #262730;
-  --flock-bg-surface: #181920;
-  --flock-bg-hover: #23242e;
-  --flock-border-subtle: rgba(255, 255, 255, 0.05);
+  --flock-bg-deepest: #161618; /* Dify app-detail-bg core titanium dark */
+  --flock-bg-deep: #1c1c1f;
+  --flock-bg-base: #222225;
+  --flock-bg-raised: #2a2b2f;
+  --flock-bg-surface: #1c1c1f;
+  --flock-bg-hover: rgba(255, 255, 255, 0.06);
+  --flock-border-subtle: rgba(255, 255, 255, 0.04);
   --flock-border-dim: rgba(255, 255, 255, 0.08);
   --flock-border-base: rgba(255, 255, 255, 0.15);
-  --flock-text-muted: #6c7086;
-  --flock-text-dim: #888d9e;
-  --flock-text-secondary: #a0a5b5;
-  --flock-text-primary: #cdd6f4;
-  --flock-text-bright: #eff1f5;
-  --flock-accent: #818cf8;
-  --flock-accent-soft: rgba(129, 140, 248, 0.12);
-  --mantine-color-dimmed: #9ea3b0; /* Legible, balanced gray for Dark theme */
+  --flock-text-muted: #52525b; /* zinc-600 */
+  --flock-text-dim: #a1a1aa; /* zinc-400 */
+  --flock-text-secondary: #d4d4d8; /* zinc-300 */
+  --flock-text-primary: #f4f4f5; /* zinc-100 */
+  --flock-text-bright: #ffffff;
+  --flock-accent: #36bffa; /* Dify classic blue in dark mode */
+  --flock-accent-soft: rgba(54, 191, 250, 0.12);
+  --mantine-color-dimmed: #a1a1aa;
 }
 
 body {
@@ -86,11 +86,11 @@ body {
   background: transparent;
 }
 ::-webkit-scrollbar-thumb {
-  background: rgba(99, 102, 241, 0.12);
+  background: rgba(21, 90, 239, 0.15);
   border-radius: 3px;
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: rgba(99, 102, 241, 0.22);
+  background: rgba(21, 90, 239, 0.3);
 }
 
 /* ---- Cursor blink animation ---- */
@@ -114,7 +114,7 @@ body {
 /* ---- Home input card focus ---- */
 .home-input-card:focus-within {
   border-color: var(--flock-accent) !important;
-  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.12), 0 8px 32px rgba(0,0,0,0.10) !important;
+  box-shadow: 0 0 0 3px rgba(21, 90, 239, 0.15), 0 8px 32px rgba(0,0,0,0.08) !important;
 }
 
 
@@ -134,7 +134,7 @@ body {
 /* ---- Input bar focus glow ---- */
 .input-bar-wrapper:focus-within {
   border-color: var(--flock-accent) !important;
-  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.15);
+  box-shadow: 0 0 0 3px rgba(21, 90, 239, 0.18);
 }
 
 /* ---- Tool approval inline buttons ---- */
@@ -247,11 +247,11 @@ body {
 }
 
 .markdown-body tr:nth-child(even) td {
-  background: rgba(99, 102, 241, 0.03);
+  background: rgba(21, 90, 239, 0.03);
 }
 
 .markdown-body a {
-  color: #818cf8;
+  color: var(--flock-accent);
   text-decoration: none;
 }
 
@@ -288,10 +288,13 @@ body {
 }
 
 /* ---- Card hover lift effect ---- */
+.hover-card-lift {
+  transition: all 0.28s cubic-bezier(0.25, 0.8, 0.25, 1) !important;
+}
 .hover-card-lift:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
-  border-color: var(--flock-border-dim);
+  transform: translateY(-4px) scale(1.012);
+  box-shadow: 0 12px 24px rgba(21, 90, 239, 0.08), 0 4px 12px rgba(0, 0, 0, 0.03) !important;
+  border-color: var(--flock-accent) !important;
 }
 
 /* ---- Close button rotate effect ---- */

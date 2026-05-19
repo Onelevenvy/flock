@@ -116,7 +116,7 @@ export function PreviewPanel({ embedded = false }: PreviewPanelProps) {
           <Badge
             size="xs"
             variant="dot"
-            color={isCode || isMarkdown ? 'indigo' : 'teal'}
+            color={isCode || isMarkdown ? 'blue' : 'teal'}
             style={{ textTransform: 'lowercase' }}
           >
             {previewFile.extension || 'txt'}

@@ -182,7 +182,7 @@ export default function ProviderSettings({ provider, onClose, onSaved }: Props) 
           </Button>
           <Button
             variant="filled"
-            color="indigo"
+            color="blue"
             onClick={handleSave}
             loading={saving}
           >

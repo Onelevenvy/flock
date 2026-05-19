@@ -236,7 +236,7 @@ function ProviderDetailPanel({
               </Box>
             ))}
           </Stack>
-          <Button size="xs" color="indigo" fullWidth mt="sm" mb="sm" loading={saving} onClick={handleSaveCredentials}>
+          <Button size="xs" color="blue" fullWidth mt="sm" mb="sm" loading={saving} onClick={handleSaveCredentials}>
             {t('skills.tools.authBtn')}
           </Button>
           <Divider />

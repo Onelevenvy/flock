@@ -166,7 +166,7 @@ export default function CustomModelSettings({ provider, onClose, onSaved }: Prop
           </Button>
           <Button
             variant="filled"
-            color="indigo"
+            color="blue"
             onClick={handleSave}
             loading={saving}
             disabled={!modelName || !baseUrl || !apiKey}
