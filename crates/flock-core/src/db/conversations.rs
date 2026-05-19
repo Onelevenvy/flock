@@ -304,3 +304,14 @@ pub fn parse_rfc3339_to_secs(ts: &str) -> u64 {
         0
     }
 }
+
+impl DbManager {
+    /// 检查指定的会话ID在数据库元数据中是否存在
+    pub async fn has_conversation(&self, conv_id: &str) -> anyhow::Result<bool> {
+        let row = sqlx::query("SELECT 1 FROM session_metadata WHERE thread_id = ?1")
+            .bind(conv_id)
+            .fetch_optional(self.pool())
+            .await?;
+        Ok(row.is_some())
+    }
+}

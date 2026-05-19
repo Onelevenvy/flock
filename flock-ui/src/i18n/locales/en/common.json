@@ -11,6 +11,8 @@
   "show": "Show",
   "add": "Add",
   "edit": "Edit",
+  "delete": "Delete",
+  "saveChanges": "Save Changes",
   "preview": "Preview",
   "close": "Close",
   "settings": "Settings"
