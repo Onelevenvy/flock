@@ -25,7 +25,7 @@ import enSkills from './locales/en/skills.json';
 import enChat from './locales/en/chat.json';
 import enSchedule from './locales/en/schedule.json';
 
-const savedLang = localStorage.getItem('flock-lang') || 'zh';
+const savedLang = localStorage.getItem('flock-lang') || 'en';
 
 i18n
   .use(initReactI18next)
@@ -63,7 +63,7 @@ i18n
       },
     },
     lng: savedLang,
-    fallbackLng: 'zh',
+    fallbackLng: 'en',
     interpolation: {
       escapeValue: false, // react already safes from xss
     },
