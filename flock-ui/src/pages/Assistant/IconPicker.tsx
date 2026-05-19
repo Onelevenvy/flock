@@ -27,17 +27,17 @@ export function IconPicker({
     >
       <Popover.Target>
         <Avatar
-          size={40}
-          radius="xl"
+          size={38}
+          radius="md"
           onClick={() => setOpened(o => !o)}
           style={{
             cursor: 'pointer',
-            background: 'var(--flock-accent)',
+            background: 'var(--flock-bg-base)',
             fontSize: 20,
             flexShrink: 0,
-            border: '2px solid var(--flock-border-dim)',
-            transition: 'box-shadow 0.2s',
-            boxShadow: opened ? '0 0 0 3px rgba(21, 90, 239, 0.3)' : undefined,
+            border: '1px solid var(--flock-border-base)',
+            transition: 'all 0.2s ease',
+            boxShadow: opened ? '0 0 0 2px var(--flock-accent)' : undefined,
           }}
         >
           {value}
