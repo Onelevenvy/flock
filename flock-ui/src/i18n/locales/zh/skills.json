@@ -1,5 +1,9 @@
 {
   "title": "技能",
+  "subtitle": "管理和配置内置工具、MCP 服务与外部技能",
+  "tabTools": "内置工具",
+  "tabMcp": "MCP 服务",
+  "tabSkills": "外部技能",
   "tools": {
     "verifyingTitle": "正在验证",
     "verifyingMsg": "正在测试 {{name}} 的连通性...",

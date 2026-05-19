@@ -1,5 +1,9 @@
 {
   "title": "Skills",
+  "subtitle": "Configure and manage your built-in tools, MCP servers, and external skills",
+  "tabTools": "Built-in Tools",
+  "tabMcp": "MCP Services",
+  "tabSkills": "External Skills",
   "tools": {
     "verifyingTitle": "Verifying",
     "verifyingMsg": "Testing connectivity for {{name}}...",
