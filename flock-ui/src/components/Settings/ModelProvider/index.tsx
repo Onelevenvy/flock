@@ -32,6 +32,8 @@ import { notifications } from '@mantine/notifications';
 import { useTranslation } from 'react-i18next';
 import ProviderSettings from './ProviderSettings';
 import CustomModelSettings from './CustomModelSettings';
+import { reconnectCurrentAgent } from '../../../lib/agentConnection';
+import { useWorkspacesQuery } from '../../../hooks/useWorkspaces';
 import { ModelProviderIconLong, ModelIcon } from '../../Icons';
 
 interface ModelProvider {
@@ -88,6 +90,7 @@ export default function ModelProviderPage() {
   const [connectedProviders, setConnectedProviders] = useState<Set<string>>(new Set());
   const [defaultCfg, setDefaultCfg] = useState<DefaultConfig | null>(null);
   const [summaryCfg, setSummaryCfg] = useState<SummaryModelConfig | null>(null);
+  const { data: workspaces = [] } = useWorkspacesQuery();
 
   const loadData = useCallback(async () => {
     try {
@@ -220,6 +223,7 @@ export default function ModelProviderPage() {
 
       // Linkage: sync active_model as well
       await invoke('set_active_model', { providerId, modelName });
+      await reconnectCurrentAgent(workspaces);
 
       notifications.show({
         title: t('settings.model.setDefaultSuccess'),

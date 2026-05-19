@@ -251,6 +251,7 @@ pub async fn start_agent(
     extra_args: Vec<String>,
 ) -> Result<()> {
     let sid = session_id.clone().unwrap_or_else(|| "default".to_string());
+    let force_restart = extra_args.iter().any(|arg| arg == "--force-restart");
 
     let db_manager: Arc<DbManager> = app.state::<Arc<DbManager>>().inner().clone();
     let max_cached: usize = db_manager.get_config("max_cached_sessions").await.unwrap_or(10);
@@ -259,7 +260,11 @@ pub async fn start_agent(
     {
         let mut s = state.lock().await;
         if let Some(handle) = s.sessions.get_mut(&sid) {
-            if handle.workdir == workdir && handle.assistant_id == assistant_id {
+            if force_restart {
+                log::info!("Force restarting session {}...", sid);
+                let _ = handle.tx.send(SessionCommand::Stop).await;
+                s.sessions.remove(&sid);
+            } else if handle.workdir == workdir && handle.assistant_id == assistant_id {
                 log::info!("Agent already started for session: {}, updating last used time.", sid);
                 handle.last_used = Instant::now();
                 return Ok(());
@@ -298,6 +303,7 @@ pub async fn start_agent(
             "--provider" => provider = iter.next().cloned(),
             "--api-key" => api_key = iter.next().cloned(),
             "--project-dir" => project_dir = iter.next().map(PathBuf::from),
+            "--force-restart" => {}
             _ => {}
         }
     }

@@ -2,6 +2,8 @@ import { useState, useEffect } from 'react';
 import { Select, Group, Text, Tooltip, Loader } from '@mantine/core';
 import { IconCube, IconCheck } from '@tabler/icons-react';
 import { invoke } from '@tauri-apps/api/core';
+import { useWorkspacesQuery } from '../../hooks/useWorkspaces';
+import { reconnectCurrentAgent } from '../../lib/agentConnection';
 
 interface ModelProvider {
   id: string;
@@ -33,6 +35,7 @@ export function ModelSelector() {
   const [models, setModels] = useState<Model[]>([]);
   const [activeModel, setActiveModelState] = useState<ActiveModel | null>(null);
   const [loading, setLoading] = useState(false);
+  const { data: workspaces = [] } = useWorkspacesQuery();
 
   useEffect(() => {
     loadData();
@@ -93,6 +96,7 @@ export function ModelSelector() {
     try {
       await invoke('set_active_model', { providerId, modelName });
       setActiveModelState({ provider_id: providerId, model_name: modelName });
+      await reconnectCurrentAgent(workspaces);
     } catch (e) {
       console.error('Failed to set active model:', e);
     }

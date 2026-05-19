@@ -9,7 +9,7 @@ import { useEventStream } from './hooks/useEventStream';
 import { useAgentStore } from './store/agentStore';
 import { useUiStore } from './store/uiStore';
 import { useWorkspaceStore } from './store/workspaceStore';
-import { useWorkspacesQuery } from './hooks/useWorkspaces';
+import { useConversationsQuery, useWorkspacesQuery } from './hooks/useWorkspaces';
 import { invoke } from '@tauri-apps/api/core';
 import { MainLayout } from './components/Layout/MainLayout';
 import { useTranslation } from 'react-i18next';
@@ -41,25 +41,49 @@ function AppInner() {
   const activeWorkspaceId = useWorkspaceStore((s) => s.activeWorkspaceId);
   const activeConversationId = useWorkspaceStore((s) => s.activeConversationId);
   const conversationAssistants = useWorkspaceStore((s) => s.conversationAssistants);
+  const setActiveConversation = useWorkspaceStore((s) => s.setActiveConversation);
   const status = useAgentStore((s) => s.status);
   const setStatus = useAgentStore((s) => s.setStatus);
   const setWorkdir = useAgentStore((s) => s.setWorkdir);
   const { data: workspaces = [] } = useWorkspacesQuery();
+  const {
+    data: conversations = [],
+    isFetched: conversationsFetched,
+    isFetching: conversationsFetching,
+  } = useConversationsQuery(activeWorkspaceId);
+
+  useEffect(() => {
+    if (!activeConversationId || !conversationsFetched || conversationsFetching) return;
+    if (!conversations.some((conv) => conv.id === activeConversationId)) {
+      setActiveConversation(null);
+    }
+  }, [activeConversationId, conversations, conversationsFetched, conversationsFetching, setActiveConversation]);
 
   // 全局自动连接：只要有活跃的工作空间且处于 disconnected 状态，立刻初始化 Agent
   useEffect(() => {
     let active = true;
     if (activeWorkspaceId && status === 'disconnected' && workspaces.length > 0) {
+      if (activeConversationId && (!conversationsFetched || conversationsFetching)) {
+        return () => {
+          active = false;
+        };
+      }
+
       const targetWs = workspaces.find((w) => w.id === activeWorkspaceId);
       if (targetWs) {
-        const assistantId = activeConversationId
-          ? conversationAssistants[activeConversationId] || null
+        const sessionExists = !!activeConversationId
+          && conversationsFetched
+          && !conversationsFetching
+          && conversations.some((conv) => conv.id === activeConversationId);
+        const sessionId = sessionExists ? activeConversationId : null;
+        const assistantId = sessionId
+          ? conversationAssistants[sessionId] || null
           : null;
         setStatus('connecting');
         setWorkdir(targetWs.path);
         invoke('start_agent', {
           workdir: targetWs.path,
-          sessionId: activeConversationId || null,
+          sessionId,
           assistantId: assistantId === '__xiaof__' ? null : assistantId,
           projectDir: null,
           apiKey: null,
@@ -88,6 +112,9 @@ function AppInner() {
     workspaces,
     activeConversationId,
     conversationAssistants,
+    conversations,
+    conversationsFetched,
+    conversationsFetching,
     setStatus,
     setWorkdir,
     setError,
