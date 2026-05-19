@@ -29,7 +29,37 @@ pub fn user_commands_dir() -> Option<PathBuf> {
 /// - Auto-detects exe directory (with target/ special case for dev)
 /// - Falls back to `skills` inside the `flock_install` directory
 pub fn workspace_skills_dir() -> PathBuf {
-    flock_core::config::db_path::install_root().join("skills")
+    // 1. 优先检查默认安装目录（比如开发环境下的 <exe_dir>/flock_install/skills，或通过环境变量指定的路径）
+    let default_path = flock_core::config::db_path::install_root().join("skills");
+    if default_path.is_dir() {
+        return default_path;
+    }
+
+    // 2. 检查 Tauri 打包后的资源目录（Tauri 默认会把打包好的 resources 放在不同平台的资源文件夹中）
+    if let Ok(exe_path) = std::env::current_exe() {
+        if let Some(exe_dir) = exe_path.parent() {
+            // Windows & Linux: <exe_dir>/resources/skills
+            let win_linux_resource = exe_dir.join("resources").join("skills");
+            if win_linux_resource.is_dir() {
+                return win_linux_resource;
+            }
+
+            // macOS: <exe_dir>/../Resources/skills
+            let macos_resource = exe_dir.join("..").join("Resources").join("skills");
+            if macos_resource.is_dir() {
+                return macos_resource;
+            }
+
+            // 备用：直接在可执行文件同级目录寻找 skills
+            let direct_skills = exe_dir.join("skills");
+            if direct_skills.is_dir() {
+                return direct_skills;
+            }
+        }
+    }
+
+    // 如果以上路径都不存在，回退到默认路径
+    default_path
 }
 
 // ---------------------------------------------------------------------------
