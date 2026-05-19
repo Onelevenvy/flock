@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import i18n from '../../i18n';
 import {
   Box,
   Text,
@@ -14,6 +15,8 @@ import {
   Avatar,
   Badge,
   ThemeIcon,
+  ScrollArea,
+  Divider,
 } from '@mantine/core';
 import {
   IconCalendarTime,
@@ -39,6 +42,26 @@ import {
   useRunCronJobNowMutation,
 } from '../../hooks/useCronJobs';
 import type { CronJob } from './types';
+
+function parseScheduleDesc(descStr: string | undefined | null, t: any): string {
+  if (!descStr) return '';
+  const trimmed = descStr.trim();
+  if (trimmed.startsWith('{') && trimmed.endsWith('}')) {
+    try {
+      const obj = JSON.parse(trimmed);
+      if (obj.key) {
+        let params = { ...obj.params };
+        if (params.dayKey) {
+          params.day = t(params.dayKey);
+        }
+        return t(obj.key, params);
+      }
+    } catch {
+      return descStr;
+    }
+  }
+  return descStr;
+}
 
 export function SchedulePage() {
   const { t } = useTranslation();
@@ -107,41 +130,46 @@ export function SchedulePage() {
         overflow: 'hidden',
         minWidth: 0,
         background: 'var(--flock-bg-base)',
-        borderRadius: 16,
+        borderRadius: '16px',
         border: '1px solid var(--flock-border-subtle)',
-        padding: 24,
+        boxShadow: '0 4px 20px rgba(0, 0, 0, 0.03)',
         position: 'relative',
       }}
     >
       <LoadingOverlay visible={isLoading} />
 
       {/* 页头 */}
-      <Group justify="space-between" mb="lg" pb="md" style={{ borderBottom: '1px solid var(--flock-border-subtle)' }}>
+      <Group gap="sm" px="xl" pt="md" pb="sm" justify="space-between">
         <Group gap="sm">
-          <ThemeIcon variant="light" color="blue" size="lg" radius="md">
+          <ThemeIcon size={36} radius="md" style={{ background: 'var(--flock-accent)' }}>
             <IconCalendarTime size={20} />
           </ThemeIcon>
-          <Stack gap={0}>
+          <Box>
             <Text fw={700} size="lg" style={{ color: 'var(--flock-text-bright)' }}>
               {t('sidebar.schedule')}
             </Text>
             <Text size="xs" c="dimmed">
               {t('schedule.pageDesc')}
             </Text>
-          </Stack>
+          </Box>
         </Group>
         <Button
+          leftSection={<IconPlus size={16} />}
           size="sm"
-          leftSection={<IconPlus size={15} />}
           onClick={() => { setEditingJob(null); setModalOpened(true); }}
-          style={{ background: 'var(--flock-accent)' }}
+          style={{
+            background: 'var(--flock-accent)',
+            boxShadow: '0 2px 10px rgba(21, 90, 239, 0.25)',
+          }}
         >
           {t('schedule.newBtn')}
         </Button>
       </Group>
 
+      <Divider color="var(--flock-border-subtle)" />
+
       {/* 内容区 */}
-      <Box style={{ flex: 1, overflowY: 'auto' }}>
+      <ScrollArea style={{ flex: 1 }} px="xl" py="md">
         {jobs.length === 0 && !isLoading ? (
           <Box
             style={{
@@ -179,7 +207,7 @@ export function SchedulePage() {
               const wsName = workspaces.find(w => w.id === job.workspace_id)?.name || job.workspace_id;
               const matchedA = assistants.find((a: any) => a.id === job.assistant_id);
               const aName = job.assistant_id === '__xiaof__'
-                ? '默认助手 (小F)'
+                ? 'XiaoF'
                 : ((matchedA as any)?.name || job.assistant_id);
               const aIcon = (matchedA as any)?.icon || '🤖';
               const isRunning = job.enabled && job.last_status !== 'error';
@@ -231,7 +259,7 @@ export function SchedulePage() {
                           />
                         </Group>
                         <Text size="xs" c="dimmed" truncate>
-                          {job.schedule_desc}
+                          {parseScheduleDesc(job.schedule_desc, t)}
                         </Text>
                       </Box>
                     </Group>
@@ -357,7 +385,7 @@ export function SchedulePage() {
             })}
           </SimpleGrid>
         )}
-      </Box>
+      </ScrollArea>
 
       <CreateTaskModal
         opened={modalOpened}

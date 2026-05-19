@@ -1,4 +1,4 @@
-import { Box, Tabs, Text, Group } from '@mantine/core';
+import { Box, Tabs, Text, Group, ThemeIcon, Divider } from '@mantine/core';
 import { IconBolt, IconTool, IconSparkles, IconPlug } from '@tabler/icons-react';
 import { useTranslation } from 'react-i18next';
 import { ToolsTab } from './ToolsTab';
@@ -20,25 +20,38 @@ export function SkillsPage() {
         borderRadius: '16px',
         border: '1px solid var(--flock-border-subtle)',
         boxShadow: '0 4px 20px rgba(0, 0, 0, 0.03)',
+        position: 'relative',
       }}
     >
-      <Group gap="sm" px="xl" pt="md" pb="sm">
-        <IconBolt size={22} color="var(--flock-accent)" />
-        <Text fw={700} size="lg" style={{ color: 'var(--flock-text-bright)' }}>
-          {t('skills.title')}
-        </Text>
+      {/* 页头 */}
+      <Group gap="sm" px="xl" pt="md" pb="sm" justify="space-between">
+        <Group gap="sm">
+          <ThemeIcon size={36} radius="md" style={{ background: 'var(--flock-accent)' }}>
+            <IconBolt size={20} />
+          </ThemeIcon>
+          <Box>
+            <Text fw={700} size="lg" style={{ color: 'var(--flock-text-bright)' }}>
+              {t('skills.title')}
+            </Text>
+            <Text size="xs" c="dimmed">
+              {t('skills.subtitle')}
+            </Text>
+          </Box>
+        </Group>
       </Group>
 
-      <Tabs defaultValue="tools" px="xl" style={{ flex: 1, display: 'flex', flexDirection: 'column', minHeight: 0 }}>
+      <Divider color="var(--flock-border-subtle)" />
+
+      <Tabs defaultValue="tools" px="xl" pt="md" style={{ flex: 1, display: 'flex', flexDirection: 'column', minHeight: 0 }}>
         <Tabs.List>
           <Tabs.Tab value="tools" leftSection={<IconTool size={14} />}>
-            Tools
+            {t('skills.tabTools')}
           </Tabs.Tab>
           <Tabs.Tab value="mcp" leftSection={<IconPlug size={14} />}>
-            MCP
+            {t('skills.tabMcp')}
           </Tabs.Tab>
           <Tabs.Tab value="skills" leftSection={<IconSparkles size={14} />}>
-            Skills
+            {t('skills.tabSkills')}
           </Tabs.Tab>
         </Tabs.List>
 

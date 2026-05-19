@@ -1,12 +1,38 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { invoke } from '@tauri-apps/api/core';
+import { useTranslation } from 'react-i18next';
 import type { Assistant, UpsertAssistant } from '../types/assistant';
+
+function parseMultiLang(fieldVal: string | undefined | null, lang: string): string {
+  if (!fieldVal) return '';
+  const trimmed = fieldVal.trim();
+  if (trimmed.startsWith('{') && trimmed.endsWith('}')) {
+    try {
+      const parsed = JSON.parse(trimmed);
+      const currentLang = (lang || 'zh').split('-')[0];
+      return parsed[currentLang] || parsed['en'] || parsed['zh'] || fieldVal;
+    } catch {
+      return fieldVal;
+    }
+  }
+  return fieldVal;
+}
 
 // 1. 获取助手列表的 Hook
 export function useAssistantsQuery() {
+  const { i18n } = useTranslation();
+  const currentLang = i18n.language;
+
   return useQuery<Assistant[]>({
-    queryKey: ['assistants'],
-    queryFn: () => invoke<Assistant[]>('list_assistants'),
+    queryKey: ['assistants', currentLang],
+    queryFn: async () => {
+      const data = await invoke<Assistant[]>('list_assistants');
+      return data.map(a => ({
+        ...a,
+        name: parseMultiLang(a.name, currentLang),
+        description: parseMultiLang(a.description, currentLang),
+      }));
+    },
     // 数据默认在 5 分钟内是“新鲜”的，在此期间多次使用此 Hook 只会发起一次 Rust 调用，完美解决重复渲染的开销
     staleTime: 5 * 60 * 1000,
   });

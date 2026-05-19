@@ -101,6 +101,7 @@ function McpServerDetailPanel({
         overflow: 'hidden',
         minHeight: 0,
       }}
+      onClick={(e) => e.stopPropagation()}
     >
       <Group justify="space-between" p="md" pb="sm">
         <ActionIcon variant="subtle" color="gray" size="sm" onClick={onClose}>
@@ -292,6 +293,14 @@ function McpServerFormModal({
       notifications.show({ title: t('skills.mcp.nameRequired'), message: t('skills.mcp.nameRequiredMsg'), color: 'red', autoClose: 3000 });
       return;
     }
+    if (transport === 'stdio' && !command.trim()) {
+      notifications.show({ title: t('common.failed'), message: t('skills.mcp.commandRequiredMsg'), color: 'red', autoClose: 3000 });
+      return;
+    }
+    if (transport !== 'stdio' && !url.trim()) {
+      notifications.show({ title: t('common.failed'), message: t('skills.mcp.urlRequiredMsg'), color: 'red', autoClose: 3000 });
+      return;
+    }
     setSaving(true);
     try {
       const server: McpServerInfo = {
@@ -364,6 +373,7 @@ function McpServerFormModal({
               value={command}
               onChange={(e) => setCommand(e.currentTarget.value)}
               description={t('skills.mcp.commandDesc')}
+              required
             />
             <TextInput
               label={t('skills.mcp.args')}
@@ -388,6 +398,7 @@ function McpServerFormModal({
               value={url}
               onChange={(e) => setUrl(e.currentTarget.value)}
               description={t('skills.mcp.urlDesc')}
+              required
             />
             <TextInput
               label={t('skills.mcp.headers')}
@@ -450,11 +461,14 @@ export function McpTab() {
     : [];
 
   return (
-    <Box style={{ height: '100%', display: 'flex', gap: 16, minHeight: 0, overflow: 'hidden' }}>
+    <Box
+      style={{ height: '100%', display: 'flex', gap: 16, minHeight: 0, overflow: 'hidden' }}
+      onClick={() => setSelectedServer(null)}
+    >
       <LoadingOverlay visible={loading} />
 
       <ScrollArea style={{ flex: 1, minHeight: 0 }}>
-        <Group justify="flex-end" mb="md">
+        <Group justify="flex-end" mb="md" onClick={(e) => e.stopPropagation()}>
           <Button
             size="xs"
             variant="light"
@@ -480,7 +494,7 @@ export function McpTab() {
               <Box
                 key={server.id}
                 p="md"
-                onClick={() => setSelectedServer(server)}
+                onClick={(e) => { e.stopPropagation(); setSelectedServer(server); }}
                 style={{
                   borderRadius: 12,
                   border: `1px solid ${selectedServer?.id === server.id ? 'var(--flock-accent)' : 'var(--flock-border-subtle)'}`,

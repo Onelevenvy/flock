@@ -1,5 +1,9 @@
 {
   "title": "技能",
+  "subtitle": "管理和配置内置工具、MCP 服务与外部技能",
+  "tabTools": "内置工具",
+  "tabMcp": "MCP 服务",
+  "tabSkills": "外部技能",
   "tools": {
     "verifyingTitle": "正在验证",
     "verifyingMsg": "正在测试 {{name}} 的连通性...",
@@ -41,6 +45,8 @@
     "connectToViewTools": "连接后可查看工具列表",
     "nameRequired": "请输入名称",
     "nameRequiredMsg": "服务器名称不能为空",
+    "commandRequiredMsg": "启动命令不能为空",
+    "urlRequiredMsg": "URL 不能为空",
     "updatedToast": "已更新",
     "addedToast": "已添加",
     "upsertSuccessMsg": "MCP 服务器 \"{{name}}\" {{action}}成功",

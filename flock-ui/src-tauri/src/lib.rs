@@ -89,6 +89,7 @@ pub fn run() {
             commands::read_workspace_file,
             commands::get_workspace_file_absolute_path,
             commands::open_workspace_file_in_system,
+            commands::open_external_url,
             // 数据库配置
             commands::get_db_path,
             commands::list_providers,

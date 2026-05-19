@@ -52,5 +52,18 @@
   "lastRun": "Last",
   "manualOnly": "Manual trigger",
   "runError": "Error",
-  "runNowTip": "Run now (once)"
+  "runNowTip": "Run now (once)",
+  "descManual": "Manual Trigger",
+  "descHourly": "Every Hour",
+  "descDaily": "Daily at {{time}}",
+  "descWeekdays": "Weekdays at {{time}}",
+  "descWeekly": "Weekly on {{day}} at {{time}}",
+  "descCustom": "Cron: {{expr}}",
+  "day0": "Sunday",
+  "day1": "Monday",
+  "day2": "Tuesday",
+  "day3": "Wednesday",
+  "day4": "Thursday",
+  "day5": "Friday",
+  "day6": "Saturday"
 }

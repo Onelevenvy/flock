@@ -247,7 +247,7 @@ pub async fn trigger_job_execution(
     }
 
     if needs_create {
-        let title = format!("🕒 定时自动：{}", job.name);
+        let title = format!("🕒 ：{}", job.name);
         let conv_info = db.create_conversation(&job.workspace_id, &title).await?;
         conv_id = conv_info.id;
     }

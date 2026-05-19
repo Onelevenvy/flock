@@ -1,5 +1,9 @@
 {
   "title": "Skills",
+  "subtitle": "Configure and manage your built-in tools, MCP servers, and external skills",
+  "tabTools": "Built-in Tools",
+  "tabMcp": "MCP Services",
+  "tabSkills": "External Skills",
   "tools": {
     "verifyingTitle": "Verifying",
     "verifyingMsg": "Testing connectivity for {{name}}...",
@@ -41,6 +45,8 @@
     "connectToViewTools": "Connect to view tools list",
     "nameRequired": "Name is required",
     "nameRequiredMsg": "Server name cannot be empty",
+    "commandRequiredMsg": "Command cannot be empty",
+    "urlRequiredMsg": "URL cannot be empty",
     "updatedToast": "Updated",
     "addedToast": "Added",
     "upsertSuccessMsg": "MCP Server \"{{name}}\" {{action}} successfully",

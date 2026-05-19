@@ -27,7 +27,7 @@ import { invoke } from '@tauri-apps/api/core';
 import { notifications } from '@mantine/notifications';
 import { useTranslation } from 'react-i18next';
 import type { ToolProvider, Tool } from './types';
-import { getProviderDescription, formatLabel, parseInputSchema } from './helpers';
+import { getProviderDescription, getProviderName, formatLabel, parseInputSchema } from './helpers';
 import { ToolsIcon } from '../../components/Icons';
 
 function ProviderDetailPanel({
@@ -94,7 +94,7 @@ function ProviderDetailPanel({
       notifications.show({
         id: `testing-${provider.id}`,
         title: t('skills.tools.verifyingTitle'),
-        message: t('skills.tools.verifyingMsg', { name: provider.provider_name }),
+        message: t('skills.tools.verifyingMsg', { name: getProviderName(provider) }),
         loading: true,
         autoClose: false,
         withCloseButton: false,
@@ -151,6 +151,7 @@ function ProviderDetailPanel({
         overflow: 'hidden',
         minHeight: 0,
       }}
+      onClick={(e) => e.stopPropagation()}
     >
       <Group justify="space-between" p="md" pb="sm">
         <ActionIcon variant="subtle" color="gray" size="sm" onClick={onClose}>
@@ -177,7 +178,7 @@ function ProviderDetailPanel({
           </Box>
           <Box style={{ flex: 1, minWidth: 0 }}>
             <Text size="sm" fw={600} style={{ color: 'var(--flock-text-bright)' }} truncate>
-              {provider.provider_name}
+              {getProviderName(provider)}
             </Text>
             {provider.is_available ? (
               <Group gap={4}>
@@ -330,7 +331,10 @@ export function ToolsTab() {
   const filteredProviders = providers.filter((p) => !p.id.startsWith('mcp:'));
 
   return (
-    <Box style={{ height: '100%', display: 'flex', gap: 16, minHeight: 0, overflow: 'hidden' }}>
+    <Box
+      style={{ height: '100%', display: 'flex', gap: 16, minHeight: 0, overflow: 'hidden' }}
+      onClick={() => setSelectedProvider(null)}
+    >
       <LoadingOverlay visible={loading} />
       <ScrollArea style={{ flex: 1, minHeight: 0 }}>
         {filteredProviders.length === 0 && !loading ? (
@@ -348,7 +352,7 @@ export function ToolsTab() {
               <Box
                 key={provider.id}
                 p="md"
-                onClick={() => setSelectedProvider(provider)}
+                onClick={(e) => { e.stopPropagation(); setSelectedProvider(provider); }}
                 style={{
                   borderRadius: 12,
                   border: `1px solid ${selectedProvider?.id === provider.id ? 'var(--flock-accent)' : 'var(--flock-border-subtle)'}`,
@@ -375,7 +379,7 @@ export function ToolsTab() {
                     <ToolsIcon name={provider.id} size={20} />
                   </Box>
                   <Box style={{ flex: 1, minWidth: 0 }}>
-                    <Text size="sm" fw={600} truncate style={{ color: 'var(--flock-text-bright)' }}>{provider.provider_name}</Text>
+                    <Text size="sm" fw={600} truncate style={{ color: 'var(--flock-text-bright)' }}>{getProviderName(provider)}</Text>
                   </Box>
                 </Group>
                 <Box mb="sm" style={{ minHeight: 36 }}>

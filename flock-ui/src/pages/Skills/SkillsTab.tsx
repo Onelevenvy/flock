@@ -57,6 +57,7 @@ function SkillDetailPanel({
         overflow: 'hidden',
         minHeight: 0,
       }}
+      onClick={(e) => e.stopPropagation()}
     >
       <Group justify="space-between" p="md" pb="sm">
         <ActionIcon variant="subtle" color="gray" size="sm" onClick={onClose}>
@@ -308,11 +309,14 @@ export function SkillsTab() {
   const availableSources = Array.from(new Set(skills.map((s) => s.source))).sort();
 
   return (
-    <Box style={{ height: '100%', display: 'flex', gap: 16, minHeight: 0, overflow: 'hidden' }}>
+    <Box
+      style={{ height: '100%', display: 'flex', gap: 16, minHeight: 0, overflow: 'hidden' }}
+      onClick={() => setSelectedSkill(null)}
+    >
       <LoadingOverlay visible={loading} />
 
       <ScrollArea style={{ flex: 1, minHeight: 0 }}>
-        <Group mb="md" justify="space-between" align="flex-start">
+        <Group mb="md" justify="space-between" align="flex-start" onClick={(e) => e.stopPropagation()}>
           <Group gap="sm" style={{ flex: 1 }}>
             <TextInput
               placeholder={t('skills.skills.searchPlaceholder')}
@@ -339,7 +343,7 @@ export function SkillsTab() {
             variant="light"
             color="teal"
             leftSection={<IconFolderPlus size={14} />}
-            onClick={() => setShowImportModal(true)}
+            onClick={(e) => { e.stopPropagation(); setShowImportModal(true); }}
           >
             {t('skills.skills.importBtn')}
           </Button>
@@ -360,7 +364,7 @@ export function SkillsTab() {
               <Box
                 key={skill.name}
                 p="md"
-                onClick={() => setSelectedSkill(skill)}
+                onClick={(e) => { e.stopPropagation(); setSelectedSkill(skill); }}
                 style={{
                   borderRadius: 12,
                   border: `1px solid ${selectedSkill?.name === skill.name ? 'var(--mantine-color-teal-4)' : 'var(--flock-border-subtle)'}`,
