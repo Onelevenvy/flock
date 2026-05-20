@@ -1,4 +1,5 @@
 import { type Node } from 'reactflow';
+import { useRef, useState, useMemo } from 'react';
 import {
   Box,
   Text,
@@ -15,13 +16,358 @@ import {
   ThemeIcon,
   Badge,
   Button,
+  Popover,
+  Tooltip,
 } from '@mantine/core';
-import { IconX, IconPlus, IconTrash } from '@tabler/icons-react';
+import { IconX, IconPlus, IconTrash, IconBolt } from '@tabler/icons-react';
 import { useTranslation } from 'react-i18next';
 import { nodeConfig, type NodeType } from '../nodeConfig';
 import { v4 as uuidv4 } from 'uuid';
 import { useAvailableModels } from '../../../hooks/useAvailableModels';
 import { useAvailableTools } from '../../../hooks/useAvailableTools';
+import { useWorkflowStore } from '../../../store/workflowStore';
+
+// ── Variable Interpolation Support ──────────────────────────────────────────
+
+interface VariableOption {
+  label: string;
+  value: string;
+  nodeId: string;
+  nodeName: string;
+}
+
+function getAvailableVariables(currentNodeId: string, nodes: Node[]): VariableOption[] {
+  const vars: VariableOption[] = [];
+  nodes.forEach((node) => {
+    if (node.id === currentNodeId) return;
+    const nodeLabel = String(node.data?.label || node.id);
+    const nodeType = node.type;
+
+    if (nodeType === 'start') {
+      vars.push({
+        label: `${nodeLabel} (query)`,
+        value: `\${${node.id}.query}`,
+        nodeId: node.id,
+        nodeName: nodeLabel,
+      });
+    } else if (nodeType === 'classifier') {
+      vars.push({
+        label: `${nodeLabel} (category_id)`,
+        value: `\${${node.id}.category_id}`,
+        nodeId: node.id,
+        nodeName: nodeLabel,
+      });
+    } else if (nodeType === 'parameterExtractor') {
+      const parameters = node.data?.parameters as Array<{ name: string }> | undefined;
+      if (parameters && parameters.length > 0) {
+        parameters.forEach((p) => {
+          if (p.name) {
+            vars.push({
+              label: `${nodeLabel} (${p.name})`,
+              value: `\${${node.id}.${p.name}}`,
+              nodeId: node.id,
+              nodeName: nodeLabel,
+            });
+          }
+        });
+      } else {
+        vars.push({
+          label: `${nodeLabel} (response)`,
+          value: `\${${node.id}.response}`,
+          nodeId: node.id,
+          nodeName: nodeLabel,
+        });
+      }
+    } else {
+      vars.push({
+        label: `${nodeLabel} (response)`,
+        value: `\${${node.id}.response}`,
+        nodeId: node.id,
+        nodeName: nodeLabel,
+      });
+    }
+  });
+  return vars;
+}
+
+interface VariableTextInputProps extends Omit<React.ComponentPropsWithoutRef<typeof TextInput>, 'onChange'> {
+  currentNodeId: string;
+  onChange: (val: string) => void;
+}
+
+function VariableTextInput({ currentNodeId, onChange, value, ...props }: VariableTextInputProps) {
+  const { t } = useTranslation();
+  const inputRef = useRef<HTMLInputElement>(null);
+  const [popoverOpened, setPopoverOpened] = useState(false);
+  const nodes = useWorkflowStore((s) => s.nodes);
+
+  const variables = useMemo(() => getAvailableVariables(currentNodeId, nodes), [currentNodeId, nodes]);
+
+  const insertVariable = (varValue: string) => {
+    const input = inputRef.current;
+    if (!input) return;
+
+    const start = input.selectionStart ?? 0;
+    const end = input.selectionEnd ?? 0;
+    const currentText = String(value ?? '');
+
+    let textToInsert = varValue;
+    let newStart = start;
+    if (start > 0 && currentText[start - 1] === '/') {
+      newStart = start - 1;
+    }
+
+    const nextText = currentText.substring(0, newStart) + textToInsert + currentText.substring(end);
+
+    onChange(nextText);
+    setPopoverOpened(false);
+
+    setTimeout(() => {
+      input.focus();
+      const nextCursorPos = newStart + textToInsert.length;
+      input.setSelectionRange(nextCursorPos, nextCursorPos);
+    }, 50);
+  };
+
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (props.onKeyDown) props.onKeyDown(e);
+  };
+
+  const handleKeyUp = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === '/') {
+      setPopoverOpened(true);
+    }
+  };
+
+  const groupedVars = useMemo(() => {
+    const acc: Record<string, typeof variables> = {};
+    variables.forEach((v) => {
+      (acc[v.nodeName] = acc[v.nodeName] || []).push(v);
+    });
+    return acc;
+  }, [variables]);
+
+  return (
+    <Popover
+      opened={popoverOpened && variables.length > 0}
+      onChange={setPopoverOpened}
+      position="bottom-end"
+      withArrow
+      shadow="md"
+      withinPortal
+    >
+      <Popover.Target>
+        <TextInput
+          {...props}
+          ref={inputRef}
+          value={value}
+          onChange={(e) => onChange(e.target.value)}
+          onKeyDown={handleKeyDown}
+          onKeyUp={handleKeyUp}
+          rightSection={
+            variables.length > 0 && (
+              <Tooltip label={t('workflow.properties.insertVar', { defaultValue: '插入前序变量 (输入 /)' })} position="top">
+                <ActionIcon
+                  size="sm"
+                  variant="subtle"
+                  color="blue"
+                  onClick={() => setPopoverOpened((o) => !o)}
+                  style={{
+                    color: popoverOpened ? 'var(--flock-accent)' : 'var(--mantine-color-dimmed)',
+                    transition: 'all 0.2s',
+                  }}
+                >
+                  <IconBolt size={14} />
+                </ActionIcon>
+              </Tooltip>
+            )
+          }
+        />
+      </Popover.Target>
+      <Popover.Dropdown p="xs" style={{ background: 'var(--flock-bg-surface)', border: '1px solid var(--flock-border-subtle)', minWidth: 220, maxHeight: 250, overflowY: 'auto' }}>
+        <Text size="xs" fw={600} mb="xs" c="dimmed">
+          {t('workflow.properties.availableVars', { defaultValue: '选择前序节点输出参数' })}
+        </Text>
+        <Stack gap={6}>
+          {Object.entries(groupedVars).map(([nodeName, vars]) => (
+            <Box key={nodeName}>
+              <Text size="10px" fw={700} c="dimmed" mb={4} style={{ letterSpacing: '0.5px' }}>
+                {nodeName}
+              </Text>
+              <Stack gap={2}>
+                {vars.map((v) => (
+                  <Button
+                    key={v.value}
+                    size="xs"
+                    variant="subtle"
+                    justify="flex-start"
+                    onClick={() => insertVariable(v.value)}
+                    styles={{
+                      root: {
+                        height: 'auto',
+                        padding: '4px 6px',
+                        textAlign: 'left',
+                        color: 'var(--flock-text-bright)',
+                      },
+                      inner: {
+                        justifyContent: 'flex-start',
+                      }
+                    }}
+                  >
+                    <Text size="xs" style={{ fontFamily: 'monospace' }}>
+                      {v.value.substring(2, v.value.length - 1).split('.')[1]}
+                    </Text>
+                  </Button>
+                ))}
+              </Stack>
+            </Box>
+          ))}
+        </Stack>
+      </Popover.Dropdown>
+    </Popover>
+  );
+}
+
+interface VariableTextareaProps extends Omit<React.ComponentPropsWithoutRef<typeof Textarea>, 'onChange'> {
+  currentNodeId: string;
+  onChange: (val: string) => void;
+}
+
+function VariableTextarea({ currentNodeId, onChange, value, ...props }: VariableTextareaProps) {
+  const { t } = useTranslation();
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const [popoverOpened, setPopoverOpened] = useState(false);
+  const nodes = useWorkflowStore((s) => s.nodes);
+
+  const variables = useMemo(() => getAvailableVariables(currentNodeId, nodes), [currentNodeId, nodes]);
+
+  const insertVariable = (varValue: string) => {
+    const textarea = textareaRef.current;
+    if (!textarea) return;
+
+    const start = textarea.selectionStart ?? 0;
+    const end = textarea.selectionEnd ?? 0;
+    const currentText = String(value ?? '');
+
+    let textToInsert = varValue;
+    let newStart = start;
+    if (start > 0 && currentText[start - 1] === '/') {
+      newStart = start - 1;
+    }
+
+    const nextText = currentText.substring(0, newStart) + textToInsert + currentText.substring(end);
+
+    onChange(nextText);
+    setPopoverOpened(false);
+
+    setTimeout(() => {
+      textarea.focus();
+      const nextCursorPos = newStart + textToInsert.length;
+      textarea.setSelectionRange(nextCursorPos, nextCursorPos);
+    }, 50);
+  };
+
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+    if (props.onKeyDown) props.onKeyDown(e);
+  };
+
+  const handleKeyUp = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+    if (e.key === '/') {
+      setPopoverOpened(true);
+    }
+  };
+
+  const groupedVars = useMemo(() => {
+    const acc: Record<string, typeof variables> = {};
+    variables.forEach((v) => {
+      (acc[v.nodeName] = acc[v.nodeName] || []).push(v);
+    });
+    return acc;
+  }, [variables]);
+
+  return (
+    <Popover
+      opened={popoverOpened && variables.length > 0}
+      onChange={setPopoverOpened}
+      position="bottom-end"
+      withArrow
+      shadow="md"
+      withinPortal
+    >
+      <Popover.Target>
+        <Box style={{ position: 'relative' }}>
+          <Textarea
+            {...props}
+            ref={textareaRef}
+            value={value}
+            onChange={(e) => onChange(e.target.value)}
+            onKeyDown={handleKeyDown}
+            onKeyUp={handleKeyUp}
+            style={{ width: '100%' }}
+          />
+          {variables.length > 0 && (
+            <div style={{ position: 'absolute', right: 8, top: 4, zIndex: 2 }}>
+              <Tooltip label={t('workflow.properties.insertVar', { defaultValue: '插入前序变量 (输入 /)' })} position="top">
+                <ActionIcon
+                  size="sm"
+                  variant="subtle"
+                  color="blue"
+                  onClick={() => setPopoverOpened((o) => !o)}
+                  style={{
+                    color: popoverOpened ? 'var(--flock-accent)' : 'var(--mantine-color-dimmed)',
+                    transition: 'all 0.2s',
+                  }}
+                >
+                  <IconBolt size={14} />
+                </ActionIcon>
+              </Tooltip>
+            </div>
+          )}
+        </Box>
+      </Popover.Target>
+      <Popover.Dropdown p="xs" style={{ background: 'var(--flock-bg-surface)', border: '1px solid var(--flock-border-subtle)', minWidth: 220, maxHeight: 250, overflowY: 'auto' }}>
+        <Text size="xs" fw={600} mb="xs" c="dimmed">
+          {t('workflow.properties.availableVars', { defaultValue: '选择前序节点输出参数' })}
+        </Text>
+        <Stack gap={6}>
+          {Object.entries(groupedVars).map(([nodeName, vars]) => (
+            <Box key={nodeName}>
+              <Text size="10px" fw={700} c="dimmed" mb={4} style={{ letterSpacing: '0.5px' }}>
+                {nodeName}
+              </Text>
+              <Stack gap={2}>
+                {vars.map((v) => (
+                  <Button
+                    key={v.value}
+                    size="xs"
+                    variant="subtle"
+                    justify="flex-start"
+                    onClick={() => insertVariable(v.value)}
+                    styles={{
+                      root: {
+                        height: 'auto',
+                        padding: '4px 6px',
+                        textAlign: 'left',
+                        color: 'var(--flock-text-bright)',
+                      },
+                      inner: {
+                        justifyContent: 'flex-start',
+                      }
+                    }}
+                  >
+                    <Text size="xs" style={{ fontFamily: 'monospace' }}>
+                      {v.value.substring(2, v.value.length - 1).split('.')[1]}
+                    </Text>
+                  </Button>
+                ))}
+              </Stack>
+            </Box>
+          ))}
+        </Stack>
+      </Popover.Dropdown>
+    </Popover>
+  );
+}
 
 interface PropertiesPanelProps {
   node: Node;
@@ -173,11 +519,12 @@ function NodeSpecificFields({
 
     case 'answer':
       return (
-        <Textarea
+        <VariableTextarea
           label={t('workflow.properties.answer.template')}
           placeholder="${llm.response}"
           value={String(node.data.answer ?? '')}
-          onChange={(e) => onDataChange(node.id, 'answer', e.target.value)}
+          currentNodeId={node.id}
+          onChange={(val) => onDataChange(node.id, 'answer', val)}
           minRows={4}
           size="xs"
         />
@@ -217,11 +564,12 @@ function NodeSpecificFields({
 
     case 'human':
       return (
-        <Textarea
+        <VariableTextarea
           label={t('workflow.properties.human.title')}
           placeholder={t('workflow.properties.human.titlePlaceholder')}
           value={String(node.data.title ?? '')}
-          onChange={(e) => onDataChange(node.id, 'title', e.target.value)}
+          currentNodeId={node.id}
+          onChange={(val) => onDataChange(node.id, 'title', val)}
           minRows={2}
           size="xs"
         />
@@ -229,11 +577,12 @@ function NodeSpecificFields({
 
     case 'plugin':
       return (
-        <TextInput
+        <VariableTextInput
           label={t('workflow.properties.plugin.args')}
           placeholder='{"key": "value"}'
           value={String(node.data.args ?? '')}
-          onChange={(e) => onDataChange(node.id, 'args', e.target.value)}
+          currentNodeId={node.id}
+          onChange={(val) => onDataChange(node.id, 'args', val)}
           size="xs"
         />
       );
@@ -275,19 +624,21 @@ function LLMFields({ node, onDataChange, modelOptions, modelsLoading }: ModelFie
         decimalScale={1}
         size="xs"
       />
-      <Textarea
+      <VariableTextarea
         label={t('workflow.properties.llm.systemPrompt')}
         placeholder={t('workflow.properties.llm.systemPromptPlaceholder')}
         value={String(node.data.systemMessage ?? '')}
-        onChange={(e) => onDataChange(node.id, 'systemMessage', e.target.value)}
+        currentNodeId={node.id}
+        onChange={(val) => onDataChange(node.id, 'systemMessage', val)}
         minRows={3}
         size="xs"
       />
-      <Textarea
+      <VariableTextarea
         label={t('workflow.properties.llm.userPrompt')}
         placeholder="${start.query}"
         value={String(node.data.userMessage ?? '')}
-        onChange={(e) => onDataChange(node.id, 'userMessage', e.target.value)}
+        currentNodeId={node.id}
+        onChange={(val) => onDataChange(node.id, 'userMessage', val)}
         minRows={3}
         size="xs"
       />
@@ -345,11 +696,12 @@ function ClassifierFields({ node, onDataChange, modelOptions, modelsLoading }: M
 
   return (
     <>
-      <TextInput
+      <VariableTextInput
         label={t('workflow.properties.classifier.input')}
         placeholder="${start.query}"
         value={String(node.data.input ?? '')}
-        onChange={(e) => onDataChange(node.id, 'input', e.target.value)}
+        currentNodeId={node.id}
+        onChange={(val) => onDataChange(node.id, 'input', val)}
         size="xs"
       />
       <Select
@@ -513,17 +865,19 @@ function ParameterExtractorFields({
         clearable
         size="xs"
       />
-      <TextInput
+      <VariableTextInput
         label={t('workflow.properties.extractor.input')}
         placeholder="${start.query}"
         value={String(node.data.input ?? '')}
-        onChange={(e) => onDataChange(node.id, 'input', e.target.value)}
+        currentNodeId={node.id}
+        onChange={(val) => onDataChange(node.id, 'input', val)}
         size="xs"
       />
-      <Textarea
+      <VariableTextarea
         label={t('workflow.properties.extractor.instruction')}
         value={String(node.data.instruction ?? '')}
-        onChange={(e) => onDataChange(node.id, 'instruction', e.target.value)}
+        currentNodeId={node.id}
+        onChange={(val) => onDataChange(node.id, 'instruction', val)}
         minRows={2}
         size="xs"
       />

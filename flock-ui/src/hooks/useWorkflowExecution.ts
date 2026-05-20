@@ -31,9 +31,14 @@ export function useWorkflowExecution() {
     let unlisten: (() => void) | null = null;
 
     async function setupListener() {
-      unlisten = await listen<string>('workflow-event', (event) => {
+      unlisten = await listen<any>('workflow-event', (event) => {
         try {
-          const payload: WorkflowTauriEvent = JSON.parse(event.payload);
+          let payload: WorkflowTauriEvent;
+          if (typeof event.payload === 'string') {
+            payload = JSON.parse(event.payload);
+          } else {
+            payload = event.payload as WorkflowTauriEvent;
+          }
 
           if (payload.workflow_id !== store.activeWorkflowId) {
             // 如果不是当前活跃的工作流，忽略
@@ -84,14 +89,35 @@ export function useWorkflowExecution() {
               }
               break;
 
-            case 'node_done':
+            case 'node_done': {
               store.appendExecutionMessage({
                 type: 'info',
                 content: `✅ Node [${payload.node_id}] finished. Output: ${JSON.stringify(payload.output)}`,
                 nodeId: payload.node_id,
                 timestamp,
               });
+
+              // 补偿非流式返回：如果期间没有任何 text_delta 产生，在此一次性补偿以供 UI 聊天气泡显示
+              if (payload.output && typeof payload.output === 'object') {
+                const outputObj = payload.output as Record<string, unknown>;
+                const responseText = outputObj.response;
+                if (typeof responseText === 'string' && responseText.trim()) {
+                  // 检查是否已经存在该节点的 text_delta 消息
+                  const hasDeltas = store.executionMessages.some(
+                    (m) => m.nodeId === payload.node_id && m.type === 'text_delta'
+                  );
+                  if (!hasDeltas) {
+                    store.appendExecutionMessage({
+                      type: 'text_delta',
+                      content: responseText,
+                      nodeId: payload.node_id,
+                      timestamp,
+                    });
+                  }
+                }
+              }
               break;
+            }
 
             case 'workflow_interrupted':
               store.setExecutionStatus('idle'); // 暂停等待 HITL 输入
