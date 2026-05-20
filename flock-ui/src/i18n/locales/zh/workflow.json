@@ -1,0 +1,102 @@
+{
+  "title": "工作流",
+  "subtitle": "构建与管理你的 AI 工作流图",
+  "createBtn": "创建工作流",
+  "emptyTitle": "还没有工作流",
+  "emptyDesc": "点击「创建工作流」开始构建你的第一个 AI 工作流",
+  "savedToast": "工作流已保存",
+  "createdToast": "工作流已创建",
+  "deletedToast": "已删除",
+  "unsaved": "未保存",
+  "minimap": "小地图",
+  "debug": "调试执行",
+  "createModal": {
+    "title": "创建工作流",
+    "nameLabel": "工作流名称",
+    "namePlaceholder": "例: 客服自动化工作流",
+    "descLabel": "描述",
+    "descPlaceholder": "简单描述这个工作流的用途...",
+    "confirm": "创建并编辑"
+  },
+  "deleteModal": {
+    "title": "删除工作流",
+    "desc": "确定要删除工作流「{{name}}」吗？此操作不可撤销。",
+    "confirm": "确认删除"
+  },
+  "card": {
+    "noDesc": "暂无描述",
+    "nodes": "节点",
+    "edges": "连线"
+  },
+  "palette": {
+    "title": "节点"
+  },
+  "properties": {
+    "label": "节点名称",
+    "config": "配置",
+    "noConfig": "此节点无需配置",
+    "llm": {
+      "model": "模型",
+      "temperature": "温度",
+      "systemPrompt": "系统提示词",
+      "systemPromptPlaceholder": "你是一个...",
+      "userPrompt": "用户消息模板"
+    },
+    "agent": {
+      "tools": "工具列表",
+      "addTool": "添加工具"
+    },
+    "classifier": {
+      "input": "分类输入",
+      "categories": "分类列表",
+      "categoryName": "分类名称",
+      "addCategory": "添加分类"
+    },
+    "ifelse": {
+      "conditionPlaceholder": "条件（JSON）",
+      "addCase": "添加条件分支"
+    },
+    "answer": {
+      "template": "输出模板"
+    },
+    "code": {
+      "language": "语言",
+      "code": "代码"
+    },
+    "human": {
+      "title": "审查提示",
+      "titlePlaceholder": "请审查以下内容..."
+    },
+    "plugin": {
+      "args": "工具参数（JSON）"
+    },
+    "extractor": {
+      "input": "输入",
+      "instruction": "提取指令",
+      "parameters": "参数列表",
+      "paramName": "参数名",
+      "addParam": "添加参数"
+    }
+  },
+  "execution": {
+    "title": "调试输出",
+    "idle": "空闲",
+    "running": "运行中",
+    "done": "完成",
+    "error": "错误",
+    "noOutput": "尚无输出，点击运行按钮开始执行"
+  },
+  "nodes": {
+    "start": { "label": "开始" },
+    "end": { "label": "结束" },
+    "llm": { "label": "LLM" },
+    "agent": { "label": "Agent" },
+    "classifier": { "label": "分类器" },
+    "ifelse": { "label": "条件分支" },
+    "answer": { "label": "输出" },
+    "code": { "label": "代码" },
+    "human": { "label": "人工审查" },
+    "parameterExtractor": { "label": "参数提取" },
+    "plugin": { "label": "插件" }
+  }
+}

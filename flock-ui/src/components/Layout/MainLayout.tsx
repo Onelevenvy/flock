@@ -7,10 +7,11 @@ import { HomeView } from '../../pages/Home';
 import { WorkspaceView } from '../../pages/Workspace';
 import { PlaceholderPage } from '../../pages/Placeholder';
 import { SchedulePage } from '../../pages/Schedule';
+import { WorkflowPage } from '../../pages/Workflow';
 import { useUiStore } from '../../store/uiStore';
 import { useWorkspaceStore } from '../../store/workspaceStore';
 import { useAgentStore } from '../../store/agentStore';
-import { IconRoute, IconBoxMultiple, IconLego } from '@tabler/icons-react';
+import { IconBoxMultiple, IconLego } from '@tabler/icons-react';
 import { useTranslation } from 'react-i18next';
 
 export function MainLayout() {
@@ -51,7 +52,7 @@ export function MainLayout() {
         ) : currentView === 'assistant' ? (
           <AssistantPage />
         ) : currentView === 'workflow' ? (
-          <PlaceholderPage title={t('sidebar.workflow')} icon={IconRoute} description={t('placeholder.workflowDesc')} />
+          <WorkflowPage />
         ) : currentView === 'collaboration' ? (
           <PlaceholderPage title={t('sidebar.collaboration')} icon={IconBoxMultiple} description={t('placeholder.collaborationDesc')} />
         ) : currentView === 'extension' ? (

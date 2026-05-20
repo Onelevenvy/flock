@@ -26,6 +26,7 @@ export function NavigationList() {
     { label: t('sidebar.home'), icon: IconHome, view: 'home' as const },
     { label: t('sidebar.assistant'), icon: IconRobot, view: 'assistant' as const },
     { label: t('sidebar.skills'), icon: IconBolt, view: 'skills' as const },
+   
   ];
 
   const SECONDARY_MENUS = [

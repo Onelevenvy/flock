@@ -1,0 +1,102 @@
+{
+  "title": "Workflows",
+  "subtitle": "Build and manage your AI workflow graphs",
+  "createBtn": "Create Workflow",
+  "emptyTitle": "No workflows yet",
+  "emptyDesc": "Click \"Create Workflow\" to build your first AI workflow",
+  "savedToast": "Workflow saved",
+  "createdToast": "Workflow created",
+  "deletedToast": "Deleted",
+  "unsaved": "Unsaved",
+  "minimap": "Minimap",
+  "debug": "Debug Run",
+  "createModal": {
+    "title": "Create Workflow",
+    "nameLabel": "Workflow Name",
+    "namePlaceholder": "e.g. Customer Support Automation",
+    "descLabel": "Description",
+    "descPlaceholder": "Briefly describe what this workflow does...",
+    "confirm": "Create & Edit"
+  },
+  "deleteModal": {
+    "title": "Delete Workflow",
+    "desc": "Are you sure you want to delete \"{{name}}\"? This action cannot be undone.",
+    "confirm": "Delete"
+  },
+  "card": {
+    "noDesc": "No description",
+    "nodes": "nodes",
+    "edges": "edges"
+  },
+  "palette": {
+    "title": "Nodes"
+  },
+  "properties": {
+    "label": "Node Name",
+    "config": "Configuration",
+    "noConfig": "No configuration needed for this node",
+    "llm": {
+      "model": "Model",
+      "temperature": "Temperature",
+      "systemPrompt": "System Prompt",
+      "systemPromptPlaceholder": "You are a...",
+      "userPrompt": "User Message Template"
+    },
+    "agent": {
+      "tools": "Tools",
+      "addTool": "Add Tool"
+    },
+    "classifier": {
+      "input": "Classifier Input",
+      "categories": "Categories",
+      "categoryName": "Category Name",
+      "addCategory": "Add Category"
+    },
+    "ifelse": {
+      "conditionPlaceholder": "Condition (JSON)",
+      "addCase": "Add Condition Branch"
+    },
+    "answer": {
+      "template": "Output Template"
+    },
+    "code": {
+      "language": "Language",
+      "code": "Code"
+    },
+    "human": {
+      "title": "Review Prompt",
+      "titlePlaceholder": "Please review the following..."
+    },
+    "plugin": {
+      "args": "Tool Arguments (JSON)"
+    },
+    "extractor": {
+      "input": "Input",
+      "instruction": "Extraction Instruction",
+      "parameters": "Parameters",
+      "paramName": "Parameter Name",
+      "addParam": "Add Parameter"
+    }
+  },
+  "execution": {
+    "title": "Debug Output",
+    "idle": "Idle",
+    "running": "Running",
+    "done": "Done",
+    "error": "Error",
+    "noOutput": "No output yet. Click the run button to start."
+  },
+  "nodes": {
+    "start": { "label": "Start" },
+    "end": { "label": "End" },
+    "llm": { "label": "LLM" },
+    "agent": { "label": "Agent" },
+    "classifier": { "label": "Classifier" },
+    "ifelse": { "label": "If-Else" },
+    "answer": { "label": "Answer" },
+    "code": { "label": "Code" },
+    "human": { "label": "Human Review" },
+    "parameterExtractor": { "label": "Extractor" },
+    "plugin": { "label": "Plugin" }
+  }
+}

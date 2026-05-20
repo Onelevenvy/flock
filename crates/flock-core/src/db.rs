@@ -8,6 +8,7 @@ pub mod sessions;
 pub mod toolproviders;
 pub mod cron;
 pub mod app_config;
+pub mod workflow;
 
 use std::path::{Path, PathBuf};
 
@@ -38,6 +39,9 @@ pub use assistants::{AssistantRecord, UpsertAssistant};
 
 // Re-export cron types.
 pub use cron::{CronJobRecord, UpsertCronJob};
+
+// Re-export workflow types.
+pub use workflow::{WorkflowRecord, UpsertWorkflow};
 
 /// Database manager: handles migrations, config KV, and provider/model CRUD.
 pub struct DbManager {
