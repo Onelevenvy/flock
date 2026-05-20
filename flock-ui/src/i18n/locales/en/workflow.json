@@ -37,6 +37,8 @@
     "label": "Node Name",
     "config": "Configuration",
     "noConfig": "No configuration needed for this node",
+    "availableVars": "Select antecedent output parameter",
+    "insertVar": "Insert antecedent variable (type /)",
     "llm": {
       "model": "Model",
       "modelPlaceholder": "Select a model...",
@@ -90,19 +92,34 @@
     "done": "Done",
     "error": "Error",
     "noOutput": "No output yet. Click the run button to start.",
-    "newChat": "New Chat"
+    "newChat": "New Chat",
+    "humanReview": "Human Review Required",
+    "approve": "Approve",
+    "deny": "Deny",
+    "inputPlaceholder": "Enter initial query...",
+    "send": "Send"
   },
   "nodes": {
     "start": { "label": "Start" },
     "end": { "label": "End" },
     "llm": { "label": "LLM" },
     "agent": { "label": "Agent" },
-    "classifier": { "label": "Classifier" },
+    "classifier": { 
+      "label": "Classifier",
+      "others": "Others"
+    },
     "ifelse": { "label": "If-Else" },
     "answer": { "label": "Answer" },
     "code": { "label": "Code" },
     "human": { "label": "Human Review" },
     "parameterExtractor": { "label": "Extractor" },
-    "plugin": { "label": "Plugin" }
+    "plugin": { "label": "Plugin" },
+    "noModel": "No Model",
+    "classifierCount": "{{count}} Categories",
+    "noOutputTemplate": "No Output Template",
+    "toolLabel": "Tool: {{name}}",
+    "noTool": "No Tool",
+    "waitingHuman": "Waiting review",
+    "parameterCount": "{{count}} Parameters"
   }
 }

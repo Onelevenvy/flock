@@ -9,7 +9,7 @@ import {
   TextInput,
   Textarea,
 } from '@mantine/core';
-import { IconPlus, IconRoute } from '@tabler/icons-react';
+import { IconRoute } from '@tabler/icons-react';
 import { useTranslation } from 'react-i18next';
 import { useCreateWorkflow } from '../../../hooks/useWorkflow';
 

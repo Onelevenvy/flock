@@ -41,7 +41,7 @@ export function VariableTextInput({ currentNodeId, onChange, value, ...props }: 
     const end = input.selectionEnd ?? 0;
     const currentText = String(value ?? '');
 
-    let textToInsert = varValue;
+    const textToInsert = varValue;
     let newStart = start;
     if (start > 0 && currentText[start - 1] === '/') {
       newStart = start - 1;
@@ -144,7 +144,7 @@ export function VariableTextInput({ currentNodeId, onChange, value, ...props }: 
                       }
                     }}
                   >
-                    <Text size="xs" style={{ fontFamily: 'monospace' }}>
+                    <Text size="xs" style={{ fontFamily: 'var(--mantine-font-family-monospace)' }}>
                       {v.value.substring(2, v.value.length - 1).split('.')[1]}
                     </Text>
                   </Button>
@@ -184,7 +184,7 @@ export function VariableTextarea({ currentNodeId, onChange, value, ...props }: V
     const end = textarea.selectionEnd ?? 0;
     const currentText = String(value ?? '');
 
-    let textToInsert = varValue;
+    const textToInsert = varValue;
     let newStart = start;
     if (start > 0 && currentText[start - 1] === '/') {
       newStart = start - 1;
@@ -290,7 +290,7 @@ export function VariableTextarea({ currentNodeId, onChange, value, ...props }: V
                       }
                     }}
                   >
-                    <Text size="xs" style={{ fontFamily: 'monospace' }}>
+                    <Text size="xs" style={{ fontFamily: 'var(--mantine-font-family-monospace)' }}>
                       {v.value.substring(2, v.value.length - 1).split('.')[1]}
                     </Text>
                   </Button>

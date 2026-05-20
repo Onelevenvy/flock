@@ -201,7 +201,7 @@ function NodeSpecificFields({
             onChange={(e) => onDataChange(node.id, 'code', e.target.value)}
             minRows={6}
             size="xs"
-            styles={{ input: { fontFamily: 'monospace', fontSize: 12 } }}
+            styles={{ input: { fontFamily: 'var(--mantine-font-family-monospace)', fontSize: 12 } }}
           />
         </>
       );

@@ -131,7 +131,8 @@ export function ExecutionPanel({
 
   const isInterrupted =
     messages.length > 0 &&
-    messages[messages.length - 1].content.includes('⏳ 正在等待人工确认');
+    (messages[messages.length - 1].content.includes('⏳ 正在等待人工确认') ||
+     messages[messages.length - 1].content.includes('⏳ Waiting for human review'));
 
   const statusColor =
     status === 'running' ? 'blue'
@@ -255,7 +256,7 @@ export function ExecutionPanel({
               }}
             >
               <Text size="xs" fw={600} mb="xs" style={{ color: 'var(--flock-text-bright)' }}>
-                🧑‍💻 Human Review Required (需要人工确认)
+                🧑‍💻 {t('workflow.execution.humanReview', 'Human Review Required')}
               </Text>
               <Group gap="sm">
                 <Button
@@ -264,7 +265,7 @@ export function ExecutionPanel({
                   leftSection={<IconCheck size={12} />}
                   onClick={() => resumeWorkflow({ choice: 'approved' })}
                 >
-                  批准 (Approve)
+                  {t('workflow.execution.approve', 'Approve')}
                 </Button>
                 <Button
                   size="xs"
@@ -272,14 +273,14 @@ export function ExecutionPanel({
                   leftSection={<IconX size={12} />}
                   onClick={() => resumeWorkflow({ choice: 'denied' })}
                 >
-                  拒绝 (Deny)
+                  {t('workflow.execution.deny', 'Deny')}
                 </Button>
               </Group>
             </Box>
           ) : (
             <Group gap="xs">
               <TextInput
-                placeholder={t('workflow.execution.noOutput', 'Enter initial query...')}
+                placeholder={t('workflow.execution.inputPlaceholder', 'Enter initial query...')}
                 size="xs"
                 value={inputVal}
                 onChange={(e) => setInputVal(e.currentTarget.value)}

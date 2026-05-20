@@ -17,7 +17,7 @@ import ReactFlow, {
   useReactFlow,
 } from 'reactflow';
 import 'reactflow/dist/style.css';
-import { Box, Group, Button, ActionIcon, Tooltip, Divider, ThemeIcon, Badge, Text, Menu, Stack } from '@mantine/core';
+import { Box, Group, Button, ActionIcon, Tooltip, Divider, ThemeIcon, Badge, Text, Stack } from '@mantine/core';
 import {
   IconArrowLeft,
   IconDeviceFloppy,

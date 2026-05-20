@@ -37,6 +37,8 @@
     "label": "节点名称",
     "config": "配置",
     "noConfig": "此节点无需配置",
+    "availableVars": "选择前序节点输出参数",
+    "insertVar": "插入前序变量 (输入 /)",
     "llm": {
       "model": "模型",
       "modelPlaceholder": "选择一个模型...",
@@ -90,19 +92,34 @@
     "done": "完成",
     "error": "错误",
     "noOutput": "尚无输出，点击运行按钮开始执行",
-    "newChat": "新建会话"
+    "newChat": "新建会话",
+    "humanReview": "需要人工确认",
+    "approve": "批准",
+    "deny": "拒绝",
+    "inputPlaceholder": "输入初始查询...",
+    "send": "发送"
   },
   "nodes": {
     "start": { "label": "开始" },
     "end": { "label": "结束" },
     "llm": { "label": "LLM" },
     "agent": { "label": "Agent" },
-    "classifier": { "label": "分类器" },
+    "classifier": { 
+      "label": "分类器",
+      "others": "其它"
+    },
     "ifelse": { "label": "条件分支" },
     "answer": { "label": "输出" },
     "code": { "label": "代码" },
     "human": { "label": "人工审查" },
     "parameterExtractor": { "label": "参数提取" },
-    "plugin": { "label": "插件" }
+    "plugin": { "label": "插件" },
+    "noModel": "未选择模型",
+    "classifierCount": "{{count}} 个分类",
+    "noOutputTemplate": "无输出模板",
+    "toolLabel": "工具: {{name}}",
+    "noTool": "未选择工具",
+    "waitingHuman": "等待人工确认",
+    "parameterCount": "{{count}} 个参数"
   }
 }
