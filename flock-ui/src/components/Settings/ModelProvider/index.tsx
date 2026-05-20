@@ -34,7 +34,7 @@ import ProviderSettings from './ProviderSettings';
 import CustomModelSettings from './CustomModelSettings';
 import { reconnectCurrentAgent } from '../../../lib/agentConnection';
 import { useWorkspacesQuery } from '../../../hooks/useWorkspaces';
-import { ModelProviderIconLong, ModelIcon } from '../../Icons';
+import { ModelProviderIconLong, ModelIcon, ProviderIcon } from '../../Icons';
 
 interface ModelProvider {
   id: string;
@@ -466,17 +466,17 @@ export default function ModelProviderPage() {
                     style={{
                       background: 'var(--flock-bg-surface)',
                       height: 56,
-                      minWidth: 56,
-                      padding: '0 16px',
+                      width: 56,
                       display: 'flex',
                       alignItems: 'center',
                       justifyContent: 'center',
                       borderRadius: 14,
                       border: '1px solid var(--flock-border-subtle)',
                       boxShadow: '0 4px 12px rgba(0,0,0,0.03)',
+                      flexShrink: 0,
                     }}
                   >
-                    <ModelProviderIconLong name={provider.id} size={28} />
+                    <ProviderIcon name={provider.id} size={32} />
                   </Box>
                   <Box>
                     <Group gap="xs" align="center">

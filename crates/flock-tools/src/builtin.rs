@@ -14,7 +14,7 @@ pub fn provider_info() -> ProviderInfo {
         provider_id: "builtin".to_string(),
         provider_name: r#"{"zh": "内置工具", "en": "Built-in Tools"}"#.to_string(),
         description: r#"{"zh": "内置工具集，提供文件读写、Shell命令执行、代码搜索等基础开发能力", "en": "Built-in toolset providing basic development capabilities such as file read/write, shell command execution, and code search."}"#.to_string(),
-        icon: None,
+        icon: Some("builtin".to_string()),
         credentials_schema: None,
         test_input: None,
     }
