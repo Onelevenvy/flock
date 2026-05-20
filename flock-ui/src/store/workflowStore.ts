@@ -22,7 +22,7 @@ export interface WorkflowConfig {
 }
 
 export interface WorkflowExecutionMessage {
-  type: 'text_delta' | 'info' | 'error' | 'done';
+  type: 'text_delta' | 'thinking' | 'info' | 'error' | 'done';
   content: string;
   nodeId?: string;
   timestamp: number;

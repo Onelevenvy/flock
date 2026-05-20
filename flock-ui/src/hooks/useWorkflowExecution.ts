@@ -84,8 +84,8 @@ export function useWorkflowExecution() {
               case 'thinking':
                 if (payload.text) {
                   store.appendExecutionMessage({
-                    type: 'info',
-                    content: `🤔 [${payload.node_id}] Thinking: ${payload.text}`,
+                    type: 'thinking',
+                    content: payload.text,
                     nodeId: payload.node_id,
                     timestamp,
                   });

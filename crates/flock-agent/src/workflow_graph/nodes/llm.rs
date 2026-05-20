@@ -35,9 +35,16 @@ pub fn make_llm_workflow_node(
 
             let mut rx = ctx.provider.astream(&messages[..], &config);
             let mut assistant_text = String::new();
+            let mut thinking_text = String::new();
 
             while let Some(msg_res) = rx.next().await {
                 let msg = msg_res.map_err(|e| RunnableError::Node(e.to_string()))?;
+                if let Some(thinking) = msg.thinking() {
+                    if !thinking.is_empty() {
+                        ctx.sink.emit_thinking(&node_id, thinking);
+                        thinking_text.push_str(thinking);
+                    }
+                }
                 if let Some(content) = msg.text() {
                     if !content.is_empty() {
                         ctx.sink.emit_text_delta(&node_id, content);

@@ -24,7 +24,7 @@ import { ChatPanel } from '../../../components/chat/ChatPanel';
 import { ChatMessage } from '../../../types/protocol';
 
 export interface ExecutionMessage {
-  type: 'text_delta' | 'info' | 'error' | 'done';
+  type: 'text_delta' | 'thinking' | 'info' | 'error' | 'done';
   content: string;
   nodeId?: string;
   timestamp: number;
@@ -84,11 +84,11 @@ export function ExecutionPanel({
       });
     }
 
-    // 按节点流式聚合所有的 text_delta
+    // 按节点流式聚合所有的 text_delta 和 thinking
     let currentAssistantMsg: ChatMessage | null = null;
 
     for (const msg of messages) {
-      if (msg.type === 'text_delta') {
+      if (msg.type === 'text_delta' || msg.type === 'thinking') {
         const nodeId = msg.nodeId || 'assistant';
         const displayNodeName = `**[${nodeId}]**\n`;
 
@@ -100,19 +100,35 @@ export function ExecutionPanel({
           currentAssistantMsg = {
             id: `assistant-${nodeId}`,
             role: 'assistant',
-            chunks: [
-              {
-                kind: 'text',
-                text: displayNodeName + msg.content,
-              },
-            ],
+            chunks: [],
             streaming: status === 'running',
             timestamp: msg.timestamp,
           };
+        }
+
+        if (msg.type === 'thinking') {
+          let lastChunk = currentAssistantMsg.chunks[currentAssistantMsg.chunks.length - 1];
+          if (!lastChunk || lastChunk.kind !== 'thinking') {
+            lastChunk = {
+              kind: 'thinking',
+              text: msg.content,
+              collapsed: false,
+            };
+            currentAssistantMsg.chunks.push(lastChunk);
+          } else {
+            lastChunk.text += msg.content;
+          }
         } else {
-          // 追加内容
-          const lastChunk = currentAssistantMsg.chunks[currentAssistantMsg.chunks.length - 1];
-          if (lastChunk && lastChunk.kind === 'text') {
+          // text_delta
+          let lastChunk = currentAssistantMsg.chunks[currentAssistantMsg.chunks.length - 1];
+          if (!lastChunk || lastChunk.kind !== 'text') {
+            const prefix = currentAssistantMsg.chunks.length === 0 ? displayNodeName : '';
+            lastChunk = {
+              kind: 'text',
+              text: prefix + msg.content,
+            };
+            currentAssistantMsg.chunks.push(lastChunk);
+          } else {
             lastChunk.text += msg.content;
           }
         }
@@ -131,7 +147,7 @@ export function ExecutionPanel({
 
   // 2. 过滤出纯运行时日志
   const runLogs = useMemo(() => {
-    return messages.filter((m) => m.type !== 'text_delta');
+    return messages.filter((m) => m.type !== 'text_delta' && m.type !== 'thinking');
   }, [messages]);
 
   const isInterrupted =
