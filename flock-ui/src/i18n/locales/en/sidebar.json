@@ -12,7 +12,7 @@
   "newWorkspace": "New Workspace",
   "noWorkspace": "No workspaces yet",
   "workspaceName": "Workspace Name",
-  "workspaceNameDesc": "Will create a folder at ./resources/workspace/<name>",
+  "workspaceNameDesc": "Will create a folder at ./flock-data/workspace/<name>",
   "workspacePlaceholder": "e.g., my-project",
   "deleteWorkspaceConfirm": "Are you sure you want to delete this workspace? This action is irreversible!",
   "deleteConversationConfirm": "Are you sure you want to delete this conversation?",
