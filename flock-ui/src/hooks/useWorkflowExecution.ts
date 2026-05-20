@@ -29,6 +29,9 @@ export function useWorkflowExecution() {
   const unlistenRefs = useRef<(() => void)[]>([]);
 
   useEffect(() => {
+    // 切换工作流时自动清理当前调试状态与 thread_id，避免跨工作流数据与会话残留
+    store.clearExecution();
+
     let cancelled = false;
 
     async function setupListener() {
@@ -53,7 +56,6 @@ export function useWorkflowExecution() {
             switch (payload.type) {
               case 'workflow_start':
                 store.setExecutionStatus('running');
-                store.clearExecution();
                 store.appendExecutionMessage({
                   type: 'info',
                   content: `🚀 Workflow ${payload.workflow_id} execution started...`,
@@ -179,12 +181,29 @@ export function useWorkflowExecution() {
 
   const startWorkflow = async (input: string) => {
     if (!store.activeWorkflowId) return;
-    store.clearExecution();
+
+    let threadId = store.activeExecutionThreadId;
+    if (!threadId) {
+      // 开启全新调试会话时，清空之前会话痕迹并生成全新的隔离 thread_id
+      store.clearExecution();
+      threadId = `${store.activeWorkflowId}_run_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`;
+      store.setActiveExecutionThreadId(threadId);
+    }
+
     store.setExecutionStatus('running');
+
+    // 记录用户消息，以便 Chat 控制台能还原真实的多轮问答结构
+    store.appendExecutionMessage({
+      type: 'user',
+      content: input,
+      timestamp: Date.now(),
+    });
+
     try {
       await invoke('run_workflow', {
         workflowId: store.activeWorkflowId,
         input,
+        threadId,
       });
     } catch (e) {
       store.setExecutionStatus('error');
@@ -199,10 +218,14 @@ export function useWorkflowExecution() {
   const resumeWorkflow = async (choiceValue: unknown) => {
     if (!store.activeWorkflowId) return;
     store.setExecutionStatus('running');
+
+    const threadId = store.activeExecutionThreadId || store.activeWorkflowId;
+
     try {
       await invoke('run_workflow', {
         workflowId: store.activeWorkflowId,
         resumeValue: choiceValue,
+        threadId,
       });
     } catch (e) {
       store.setExecutionStatus('error');

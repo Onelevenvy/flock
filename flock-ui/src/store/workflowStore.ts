@@ -22,7 +22,7 @@ export interface WorkflowConfig {
 }
 
 export interface WorkflowExecutionMessage {
-  type: 'text_delta' | 'thinking' | 'info' | 'error' | 'done';
+  type: 'user' | 'text_delta' | 'thinking' | 'info' | 'error' | 'done';
   content: string;
   nodeId?: string;
   timestamp: number;
@@ -39,6 +39,7 @@ interface WorkflowStore {
   // 执行状态
   executionStatus: 'idle' | 'running' | 'done' | 'error';
   executionMessages: WorkflowExecutionMessage[];
+  activeExecutionThreadId: string | null;
   // 当前选中的节点 ID（属性面板用）
   selectedNodeId: string | null;
 
@@ -53,6 +54,7 @@ interface WorkflowStore {
   appendExecutionMessage: (msg: WorkflowExecutionMessage) => void;
   setExecutionStatus: (status: 'idle' | 'running' | 'done' | 'error') => void;
   updateNodeData: (nodeId: string, key: string, value: unknown) => void;
+  setActiveExecutionThreadId: (id: string | null) => void;
 }
 
 export const useWorkflowStore = create<WorkflowStore>()(
@@ -64,6 +66,7 @@ export const useWorkflowStore = create<WorkflowStore>()(
       isDirty: false,
       executionStatus: 'idle',
       executionMessages: [],
+      activeExecutionThreadId: null,
       selectedNodeId: null,
 
       setActiveWorkflowId: (id) => set({ activeWorkflowId: id }),
@@ -92,7 +95,7 @@ export const useWorkflowStore = create<WorkflowStore>()(
         }),
 
       clearExecution: () =>
-        set({ executionMessages: [], executionStatus: 'idle' }),
+        set({ executionMessages: [], executionStatus: 'idle', activeExecutionThreadId: null }),
 
       appendExecutionMessage: (msg) =>
         set((s) => ({
@@ -110,6 +113,8 @@ export const useWorkflowStore = create<WorkflowStore>()(
           ),
           isDirty: true,
         })),
+
+      setActiveExecutionThreadId: (id) => set({ activeExecutionThreadId: id }),
     }),
     {
       name: 'flock-workflow-store',

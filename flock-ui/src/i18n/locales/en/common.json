@@ -15,5 +15,6 @@
   "saveChanges": "Save Changes",
   "preview": "Preview",
   "close": "Close",
-  "settings": "Settings"
+  "settings": "Settings",
+  "save":"Save" 
 }

@@ -18,13 +18,15 @@ import {
   IconPlayerStop,
   IconCheck,
   IconSend,
+  IconPlus,
 } from '@tabler/icons-react';
 import { useTranslation } from 'react-i18next';
 import { ChatPanel } from '../../../components/chat/ChatPanel';
 import { ChatMessage } from '../../../types/protocol';
+import { useWorkflowStore } from '../../../store/workflowStore';
 
 export interface ExecutionMessage {
-  type: 'text_delta' | 'thinking' | 'info' | 'error' | 'done';
+  type: 'user' | 'text_delta' | 'thinking' | 'info' | 'error' | 'done';
   content: string;
   nodeId?: string;
   timestamp: number;
@@ -48,16 +50,14 @@ export function ExecutionPanel({
   resumeWorkflow,
 }: ExecutionPanelProps) {
   const { t } = useTranslation();
+  const { clearExecution } = useWorkflowStore();
   const [collapsed, setCollapsed] = useState(false);
   const [inputVal, setInputVal] = useState('');
-  const [lastQuery, setLastQuery] = useState('');
 
   const logScrollRef = useRef<HTMLDivElement>(null);
 
-  // 记录最后一次运行时的 query
   const handleStart = () => {
     if (!inputVal.trim()) return;
-    setLastQuery(inputVal);
     startWorkflow(inputVal);
     setInputVal('');
   };
@@ -73,22 +73,25 @@ export function ExecutionPanel({
   const chatMessages = useMemo<ChatMessage[]>(() => {
     const result: ChatMessage[] = [];
 
-    // 压入用户问题
-    if (lastQuery) {
-      result.push({
-        id: 'user-query',
-        role: 'user',
-        chunks: [{ kind: 'text', text: lastQuery }],
-        streaming: false,
-        timestamp: messages.length > 0 ? messages[0].timestamp - 1 : Date.now(),
-      });
-    }
-
-    // 按节点流式聚合所有的 text_delta 和 thinking
+    // 按节点流式聚合所有的 text_delta 和 thinking，以及随时压入 user 消息
     let currentAssistantMsg: ChatMessage | null = null;
 
     for (const msg of messages) {
-      if (msg.type === 'text_delta' || msg.type === 'thinking') {
+      if (msg.type === 'user') {
+        // 先把之前的助理消息压入
+        if (currentAssistantMsg) {
+          result.push(currentAssistantMsg);
+          currentAssistantMsg = null;
+        }
+        // 压入用户消息
+        result.push({
+          id: `user-${msg.timestamp}`,
+          role: 'user',
+          chunks: [{ kind: 'text', text: msg.content }],
+          streaming: false,
+          timestamp: msg.timestamp,
+        });
+      } else if (msg.type === 'text_delta' || msg.type === 'thinking') {
         const nodeId = msg.nodeId || 'assistant';
         const displayNodeName = `**[${nodeId}]**\n`;
 
@@ -143,7 +146,7 @@ export function ExecutionPanel({
     }
 
     return result;
-  }, [messages, lastQuery, status]);
+  }, [messages, status]);
 
   // 2. 过滤出纯运行时日志
   const runLogs = useMemo(() => {
@@ -203,6 +206,18 @@ export function ExecutionPanel({
         </Group>
 
         <Group gap="xs">
+          {status !== 'running' && messages.length > 0 && (
+            <Button
+              size="xs"
+              variant="subtle"
+              color="blue"
+              leftSection={<IconPlus size={12} />}
+              onClick={clearExecution}
+              style={{ height: 24, fontSize: 10, padding: '0 8px' }}
+            >
+              {t('workflow.execution.newChat', 'New Chat')}
+            </Button>
+          )}
           {status === 'running' && (
             <Button
               size="xs"

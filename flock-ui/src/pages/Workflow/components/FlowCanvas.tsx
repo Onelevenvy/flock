@@ -597,7 +597,12 @@ export function FlowCanvas({ workflowId, workflowData, onBack }: FlowCanvasProps
           status={executionStatus}
           messages={executionMessages}
           onClose={() => setShowExecution(false)}
-          startWorkflow={startWorkflow}
+          startWorkflow={async (input) => {
+            if (isDirty) {
+              await handleSave();
+            }
+            await startWorkflow(input);
+          }}
           stopWorkflow={stopWorkflow}
           resumeWorkflow={resumeWorkflow}
         />

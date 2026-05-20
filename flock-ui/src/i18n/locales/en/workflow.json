@@ -89,7 +89,8 @@
     "running": "Running",
     "done": "Done",
     "error": "Error",
-    "noOutput": "No output yet. Click the run button to start."
+    "noOutput": "No output yet. Click the run button to start.",
+    "newChat": "New Chat"
   },
   "nodes": {
     "start": { "label": "Start" },

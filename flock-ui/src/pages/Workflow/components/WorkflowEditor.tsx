@@ -21,18 +21,22 @@ interface WorkflowEditorProps {
 
 export function WorkflowEditor({ workflowId, onBack }: WorkflowEditorProps) {
   const { data: workflowData, isLoading } = useWorkflowQuery(workflowId);
-  const { loadWorkflowConfig } = useWorkflowStore();
+  const { loadWorkflowConfig, setActiveWorkflowId } = useWorkflowStore();
   const [ready, setReady] = useState(false);
 
   // Seed the canvas store from DB on first load of this workflow
   useEffect(() => {
     if (workflowData) {
+      setActiveWorkflowId(workflowId);
       loadWorkflowConfig(workflowData.config);
       setReady(true);
     }
     // Reset ready when switching workflows
-    return () => setReady(false);
-  }, [workflowId, workflowData, loadWorkflowConfig]);
+    return () => {
+      setReady(false);
+      setActiveWorkflowId(null);
+    };
+  }, [workflowId, workflowData, loadWorkflowConfig, setActiveWorkflowId]);
 
   if (isLoading || !workflowData || !ready) {
     return (

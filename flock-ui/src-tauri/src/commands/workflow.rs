@@ -132,6 +132,7 @@ pub async fn run_workflow(
     workflow_id: String,
     input: Option<String>,
     resume_value: Option<JsonValue>,
+    thread_id: Option<String>,
 ) -> Result<(), String> {
     // 1. 获取工作流配置
     let wf_record = db.get_workflow(&workflow_id).await
@@ -204,9 +205,10 @@ pub async fn run_workflow(
 
     // 7. 配置 thread_id
     let mut config = RunnableConfig::default();
+    let thread_id_val = thread_id.unwrap_or_else(|| workflow_id.clone());
     config.insert(
         "configurable".to_string(),
-        serde_json::json!({ "thread_id": &workflow_id }),
+        serde_json::json!({ "thread_id": thread_id_val }),
     );
 
     // 8. 决定初始输入（是全新启动还是 resume）

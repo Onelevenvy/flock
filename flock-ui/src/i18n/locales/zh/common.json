@@ -15,5 +15,6 @@
   "saveChanges": "保存修改",
   "preview": "预览",
   "close": "关闭",
-  "settings": "设置"
+  "settings": "设置",
+  "save":"保存"
 }

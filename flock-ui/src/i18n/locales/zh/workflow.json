@@ -89,7 +89,8 @@
     "running": "运行中",
     "done": "完成",
     "error": "错误",
-    "noOutput": "尚无输出，点击运行按钮开始执行"
+    "noOutput": "尚无输出，点击运行按钮开始执行",
+    "newChat": "新建会话"
   },
   "nodes": {
     "start": { "label": "开始" },
