@@ -504,6 +504,22 @@ export function FlowCanvas({ workflowId, workflowData, onBack }: FlowCanvasProps
             onDataChange={updateNodeData}
           />
         )}
+
+        {showExecution && (
+          <ExecutionPanel
+            status={executionStatus}
+            messages={executionMessages}
+            onClose={() => setShowExecution(false)}
+            startWorkflow={async (input) => {
+              if (isDirty) {
+                await handleSave();
+              }
+              await startWorkflow(input);
+            }}
+            stopWorkflow={stopWorkflow}
+            resumeWorkflow={resumeWorkflow}
+          />
+        )}
       </Box>
 
       {/* ── Edge click insertion floating Portal Menu ─────────────────── */}
@@ -591,22 +607,6 @@ export function FlowCanvas({ workflowId, workflowData, onBack }: FlowCanvasProps
         </>
       )}
 
-      {/* ── Execution panel ──────────────────────────────────────────────── */}
-      {showExecution && (
-        <ExecutionPanel
-          status={executionStatus}
-          messages={executionMessages}
-          onClose={() => setShowExecution(false)}
-          startWorkflow={async (input) => {
-            if (isDirty) {
-              await handleSave();
-            }
-            await startWorkflow(input);
-          }}
-          stopWorkflow={stopWorkflow}
-          resumeWorkflow={resumeWorkflow}
-        />
-      )}
     </Box>
   );
 }
