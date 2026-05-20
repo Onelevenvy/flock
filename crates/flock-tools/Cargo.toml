@@ -27,6 +27,7 @@ reqwest.workspace     = true
 glob.workspace        = true
 lru.workspace         = true
 meval.workspace       = true
+md-5.workspace        = true
 
 workspace-hack.workspace = true
 
