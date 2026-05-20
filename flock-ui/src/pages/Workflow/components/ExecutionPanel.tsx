@@ -1,4 +1,4 @@
-import { useRef, useEffect, useState, useMemo } from 'react';
+import { useState, useMemo } from 'react';
 import {
   Box,
   Text,
@@ -78,6 +78,7 @@ export function ExecutionPanel({
         // 如果还没有当前正在构建的 assistant 消息，或者虽然有但 nodeId 发生了变化，我们开启一条新的 assistant 消息
         if (!currentAssistantMsg || currentAssistantMsg.id !== `assistant-${nodeId}`) {
           if (currentAssistantMsg) {
+            currentAssistantMsg.streaming = false;
             result.push(currentAssistantMsg);
           }
           currentAssistantMsg = {

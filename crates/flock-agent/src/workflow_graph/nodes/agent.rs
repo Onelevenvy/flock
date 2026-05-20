@@ -43,10 +43,22 @@ pub fn make_agent_workflow_node(
 
             let provider = ctx.provider.bind_tools(bound_tools);
 
-            let mut local_messages = vec![
-                LgMessage::system(sys_prompt),
-                LgMessage::human(user_prompt),
-            ];
+            let mut local_messages = Vec::new();
+            if !sys_prompt.is_empty() {
+                local_messages.push(LgMessage::system(sys_prompt));
+            }
+            for m in &state.messages {
+                if let Ok(lg_msg) = serde_json::from_value::<LgMessage>(m.clone()) {
+                    local_messages.push(lg_msg);
+                }
+            }
+
+            let mut run_messages = Vec::new();
+            if !user_prompt.is_empty() {
+                let human_msg = LgMessage::human(user_prompt.clone());
+                local_messages.push(human_msg.clone());
+                run_messages.push(human_msg);
+            }
 
             let mut loop_count = 0;
             let max_loops = 10;
@@ -86,7 +98,8 @@ pub fn make_agent_workflow_node(
                 final_response = assistant_text.clone();
 
                 let ai_msg = LgMessage::ai_with_tool_calls(assistant_text.clone(), tool_calls.clone());
-                local_messages.push(ai_msg);
+                local_messages.push(ai_msg.clone());
+                run_messages.push(ai_msg);
 
                 if tool_calls.is_empty() {
                     break;
@@ -109,7 +122,8 @@ pub fn make_agent_workflow_node(
                         id: None,
                         status: "success".to_string(),
                     };
-                    local_messages.push(tool_msg);
+                    local_messages.push(tool_msg.clone());
+                    run_messages.push(tool_msg);
                 }
             }
 
@@ -127,6 +141,7 @@ pub fn make_agent_workflow_node(
             Ok(json!({
                 "node_outputs": outputs,
                 "current_node": node_id,
+                "messages": run_messages,
             }))
         })
     }

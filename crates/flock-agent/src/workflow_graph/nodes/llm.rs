@@ -28,10 +28,18 @@ pub fn make_llm_workflow_node(
             let sys_prompt = interpolate_string(sys_template, &state);
             let user_prompt = interpolate_string(user_template, &state);
 
-            let messages = vec![
-                LgMessage::system(sys_prompt),
-                LgMessage::human(user_prompt),
-            ];
+            let mut messages = Vec::new();
+            if !sys_prompt.is_empty() {
+                messages.push(LgMessage::system(sys_prompt));
+            }
+            for m in &state.messages {
+                if let Ok(lg_msg) = serde_json::from_value::<LgMessage>(m.clone()) {
+                    messages.push(lg_msg);
+                }
+            }
+            if !user_prompt.is_empty() {
+                messages.push(LgMessage::human(user_prompt.clone()));
+            }
 
             let mut rx = ctx.provider.astream(&messages[..], &config);
             let mut assistant_text = String::new();
@@ -67,6 +75,10 @@ pub fn make_llm_workflow_node(
             Ok(json!({
                 "node_outputs": outputs,
                 "current_node": node_id,
+                "messages": [
+                    LgMessage::human(user_prompt),
+                    LgMessage::ai(assistant_text)
+                ],
             }))
         })
     }
