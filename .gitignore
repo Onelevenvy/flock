@@ -54,10 +54,10 @@ checkpoints.db
 checkpoints.db-shm
 checkpoints.db-wal
 
-flock_install/workspace/*
-flock_install/*.db
-flock_install/*.db-shm
-flock_install/*.db-wal
+resources/workspace/*
+resources/*.db
+resources/*.db-shm
+resources/*.db-wal
 
 crates/flock-app/
 .config/*
