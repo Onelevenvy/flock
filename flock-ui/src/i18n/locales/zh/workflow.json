@@ -10,6 +10,8 @@
   "unsaved": "未保存",
   "minimap": "小地图",
   "debug": "调试执行",
+  "insertNode": "在此处插入节点",
+  "autoLayout": "画布整理",
   "createModal": {
     "title": "创建工作流",
     "nameLabel": "工作流名称",
@@ -37,6 +39,7 @@
     "noConfig": "此节点无需配置",
     "llm": {
       "model": "模型",
+      "modelPlaceholder": "选择一个模型...",
       "temperature": "温度",
       "systemPrompt": "系统提示词",
       "systemPromptPlaceholder": "你是一个...",
@@ -44,6 +47,8 @@
     },
     "agent": {
       "tools": "工具列表",
+      "toolsSelect": "绑定工具",
+      "toolsPlaceholder": "选择要绑定的工具...",
       "addTool": "添加工具"
     },
     "classifier": {

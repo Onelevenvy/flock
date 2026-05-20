@@ -10,6 +10,8 @@
   "unsaved": "Unsaved",
   "minimap": "Minimap",
   "debug": "Debug Run",
+  "insertNode": "Insert Node Here",
+  "autoLayout": "Auto Layout",
   "createModal": {
     "title": "Create Workflow",
     "nameLabel": "Workflow Name",
@@ -37,6 +39,7 @@
     "noConfig": "No configuration needed for this node",
     "llm": {
       "model": "Model",
+      "modelPlaceholder": "Select a model...",
       "temperature": "Temperature",
       "systemPrompt": "System Prompt",
       "systemPromptPlaceholder": "You are a...",
@@ -44,6 +47,8 @@
     },
     "agent": {
       "tools": "Tools",
+      "toolsSelect": "Bind Tools",
+      "toolsPlaceholder": "Select tools to bind...",
       "addTool": "Add Tool"
     },
     "classifier": {

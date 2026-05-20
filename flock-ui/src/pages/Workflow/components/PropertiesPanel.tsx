@@ -9,6 +9,7 @@ import {
   Textarea,
   NumberInput,
   Select,
+  MultiSelect,
   Stack,
   Divider,
   ThemeIcon,
@@ -19,6 +20,8 @@ import { IconX, IconPlus, IconTrash } from '@tabler/icons-react';
 import { useTranslation } from 'react-i18next';
 import { nodeConfig, type NodeType } from '../nodeConfig';
 import { v4 as uuidv4 } from 'uuid';
+import { useAvailableModels } from '../../../hooks/useAvailableModels';
+import { useAvailableTools } from '../../../hooks/useAvailableTools';
 
 interface PropertiesPanelProps {
   node: Node;
@@ -30,6 +33,9 @@ export function PropertiesPanel({ node, onClose, onDataChange }: PropertiesPanel
   const { t } = useTranslation();
   const type = node.type as NodeType;
   const cfg = nodeConfig[type];
+
+  const { groupedOptions: modelOptions, loading: modelsLoading } = useAvailableModels();
+  const { groupedOptions: toolOptions, loading: toolsLoading } = useAvailableTools();
 
   if (!cfg) return null;
   const Icon = cfg.icon;
@@ -82,7 +88,14 @@ export function PropertiesPanel({ node, onClose, onDataChange }: PropertiesPanel
           <Divider label={t('workflow.properties.config')} labelPosition="center" />
 
           {/* Type-specific fields */}
-          <NodeSpecificFields node={node} onDataChange={onDataChange} />
+          <NodeSpecificFields
+            node={node}
+            onDataChange={onDataChange}
+            modelOptions={modelOptions}
+            modelsLoading={modelsLoading}
+            toolOptions={toolOptions}
+            toolsLoading={toolsLoading}
+          />
         </Stack>
       </ScrollArea>
     </Box>
@@ -96,7 +109,21 @@ interface FieldsProps {
   onDataChange: (nodeId: string, key: string, value: unknown) => void;
 }
 
-function NodeSpecificFields({ node, onDataChange }: FieldsProps) {
+interface NodeSpecificFieldsProps extends FieldsProps {
+  modelOptions: any[];
+  modelsLoading: boolean;
+  toolOptions: any[];
+  toolsLoading: boolean;
+}
+
+function NodeSpecificFields({
+  node,
+  onDataChange,
+  modelOptions,
+  modelsLoading,
+  toolOptions,
+  toolsLoading,
+}: NodeSpecificFieldsProps) {
   const { t } = useTranslation();
   const type = node.type as NodeType;
 
@@ -110,13 +137,36 @@ function NodeSpecificFields({ node, onDataChange }: FieldsProps) {
       );
 
     case 'llm':
-      return <LLMFields node={node} onDataChange={onDataChange} />;
+      return (
+        <LLMFields
+          node={node}
+          onDataChange={onDataChange}
+          modelOptions={modelOptions}
+          modelsLoading={modelsLoading}
+        />
+      );
 
     case 'agent':
-      return <AgentFields node={node} onDataChange={onDataChange} />;
+      return (
+        <AgentFields
+          node={node}
+          onDataChange={onDataChange}
+          modelOptions={modelOptions}
+          modelsLoading={modelsLoading}
+          toolOptions={toolOptions}
+          toolsLoading={toolsLoading}
+        />
+      );
 
     case 'classifier':
-      return <ClassifierFields node={node} onDataChange={onDataChange} />;
+      return (
+        <ClassifierFields
+          node={node}
+          onDataChange={onDataChange}
+          modelOptions={modelOptions}
+          modelsLoading={modelsLoading}
+        />
+      );
 
     case 'ifelse':
       return <IfElseFields node={node} onDataChange={onDataChange} />;
@@ -156,7 +206,14 @@ function NodeSpecificFields({ node, onDataChange }: FieldsProps) {
       );
 
     case 'parameterExtractor':
-      return <ParameterExtractorFields node={node} onDataChange={onDataChange} />;
+      return (
+        <ParameterExtractorFields
+          node={node}
+          onDataChange={onDataChange}
+          modelOptions={modelOptions}
+          modelsLoading={modelsLoading}
+        />
+      );
 
     case 'human':
       return (
@@ -188,15 +245,24 @@ function NodeSpecificFields({ node, onDataChange }: FieldsProps) {
 
 // ── LLM fields ──────────────────────────────────────────────────────────────
 
-function LLMFields({ node, onDataChange }: FieldsProps) {
+interface ModelFieldsProps extends FieldsProps {
+  modelOptions: any[];
+  modelsLoading: boolean;
+}
+
+function LLMFields({ node, onDataChange, modelOptions, modelsLoading }: ModelFieldsProps) {
   const { t } = useTranslation();
   return (
     <>
-      <TextInput
+      <Select
         label={t('workflow.properties.llm.model')}
-        placeholder="e.g. gpt-4o"
+        placeholder={t('workflow.properties.llm.modelPlaceholder')}
+        data={modelOptions}
+        disabled={modelsLoading}
         value={String(node.data.model ?? '')}
-        onChange={(e) => onDataChange(node.id, 'model', e.target.value)}
+        onChange={(v) => onDataChange(node.id, 'model', v)}
+        searchable
+        clearable
         size="xs"
       />
       <NumberInput
@@ -231,56 +297,49 @@ function LLMFields({ node, onDataChange }: FieldsProps) {
 
 // ── Agent fields ─────────────────────────────────────────────────────────────
 
-function AgentFields({ node, onDataChange }: FieldsProps) {
+interface AgentFieldsProps extends ModelFieldsProps {
+  toolOptions: any[];
+  toolsLoading: boolean;
+}
+
+function AgentFields({
+  node,
+  onDataChange,
+  modelOptions,
+  modelsLoading,
+  toolOptions,
+  toolsLoading,
+}: AgentFieldsProps) {
   const { t } = useTranslation();
   const tools = (node.data.tools as string[]) ?? [];
 
   return (
     <>
-      <LLMFields node={node} onDataChange={onDataChange} />
+      <LLMFields
+        node={node}
+        onDataChange={onDataChange}
+        modelOptions={modelOptions}
+        modelsLoading={modelsLoading}
+      />
       <Divider label={t('workflow.properties.agent.tools')} labelPosition="center" />
-      <Stack gap={4}>
-        {tools.map((tool, i) => (
-          <Group key={i} gap={4}>
-            <TextInput
-              value={tool}
-              onChange={(e) => {
-                const next = [...tools];
-                next[i] = e.target.value;
-                onDataChange(node.id, 'tools', next);
-              }}
-              size="xs"
-              style={{ flex: 1 }}
-            />
-            <ActionIcon
-              size="xs"
-              variant="subtle"
-              color="red"
-              onClick={() => {
-                const next = tools.filter((_, idx) => idx !== i);
-                onDataChange(node.id, 'tools', next);
-              }}
-            >
-              <IconTrash size={12} />
-            </ActionIcon>
-          </Group>
-        ))}
-        <Button
-          size="xs"
-          variant="light"
-          leftSection={<IconPlus size={12} />}
-          onClick={() => onDataChange(node.id, 'tools', [...tools, ''])}
-        >
-          {t('workflow.properties.agent.addTool')}
-        </Button>
-      </Stack>
+      <MultiSelect
+        label={t('workflow.properties.agent.toolsSelect')}
+        placeholder={t('workflow.properties.agent.toolsPlaceholder')}
+        data={toolOptions}
+        disabled={toolsLoading}
+        value={tools}
+        onChange={(v) => onDataChange(node.id, 'tools', v)}
+        searchable
+        clearable
+        size="xs"
+      />
     </>
   );
 }
 
 // ── Classifier fields ─────────────────────────────────────────────────────────
 
-function ClassifierFields({ node, onDataChange }: FieldsProps) {
+function ClassifierFields({ node, onDataChange, modelOptions, modelsLoading }: ModelFieldsProps) {
   const { t } = useTranslation();
   const categories = (node.data.categories as { category_id: string; category_name: string }[]) ?? [];
 
@@ -293,11 +352,15 @@ function ClassifierFields({ node, onDataChange }: FieldsProps) {
         onChange={(e) => onDataChange(node.id, 'input', e.target.value)}
         size="xs"
       />
-      <TextInput
+      <Select
         label={t('workflow.properties.llm.model')}
-        placeholder="e.g. gpt-4o"
+        placeholder={t('workflow.properties.llm.modelPlaceholder')}
+        data={modelOptions}
+        disabled={modelsLoading}
         value={String(node.data.model ?? '')}
-        onChange={(e) => onDataChange(node.id, 'model', e.target.value)}
+        onChange={(v) => onDataChange(node.id, 'model', v)}
+        searchable
+        clearable
         size="xs"
       />
       <Divider label={t('workflow.properties.classifier.categories')} labelPosition="center" />
@@ -428,17 +491,26 @@ function IfElseFields({ node, onDataChange }: FieldsProps) {
 
 // ── ParameterExtractor fields ─────────────────────────────────────────────────
 
-function ParameterExtractorFields({ node, onDataChange }: FieldsProps) {
+function ParameterExtractorFields({
+  node,
+  onDataChange,
+  modelOptions,
+  modelsLoading,
+}: ModelFieldsProps) {
   const { t } = useTranslation();
   const parameters = (node.data.parameters as { name: string; type: string; description: string; required: boolean }[]) ?? [];
 
   return (
     <>
-      <TextInput
+      <Select
         label={t('workflow.properties.llm.model')}
-        placeholder="e.g. gpt-4o"
+        placeholder={t('workflow.properties.llm.modelPlaceholder')}
+        data={modelOptions}
+        disabled={modelsLoading}
         value={String(node.data.model ?? '')}
-        onChange={(e) => onDataChange(node.id, 'model', e.target.value)}
+        onChange={(v) => onDataChange(node.id, 'model', v)}
+        searchable
+        clearable
         size="xs"
       />
       <TextInput

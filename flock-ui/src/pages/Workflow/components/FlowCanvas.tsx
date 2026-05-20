@@ -1,10 +1,11 @@
-import { useCallback, useMemo, useState } from 'react';
+import { useCallback, useMemo, useState, useEffect } from 'react';
 import ReactFlow, {
   Background,
   Controls,
   MiniMap,
   addEdge,
   type Connection,
+  type Edge,
   type Node,
   type OnConnect,
   type OnEdgesChange,
@@ -16,13 +17,14 @@ import ReactFlow, {
   useReactFlow,
 } from 'reactflow';
 import 'reactflow/dist/style.css';
-import { Box, Group, Button, ActionIcon, Tooltip, Divider, ThemeIcon, Badge, Text } from '@mantine/core';
+import { Box, Group, Button, ActionIcon, Tooltip, Divider, ThemeIcon, Badge, Text, Menu } from '@mantine/core';
 import {
   IconArrowLeft,
   IconDeviceFloppy,
   IconPlayerPlay,
   IconLayoutGrid,
   IconRoute,
+  IconHierarchy,
 } from '@tabler/icons-react';
 import { useTranslation } from 'react-i18next';
 import { workflowNodeTypes } from '../WorkflowNodes';
@@ -63,6 +65,166 @@ export function FlowCanvas({ workflowId, workflowData, onBack }: FlowCanvasProps
 
   const [showExecution, setShowExecution] = useState(false);
   const [showMinimap, setShowMinimap] = useState(false);
+
+  // ── Active execution node tracking & glow effect ─────────────────────────
+  const activeNodeId = useMemo(() => {
+    if (executionStatus !== 'running') return null;
+    for (let i = executionMessages.length - 1; i >= 0; i--) {
+      if (executionMessages[i].nodeId) return executionMessages[i].nodeId;
+    }
+    return null;
+  }, [executionMessages, executionStatus]);
+
+  useEffect(() => {
+    // 移除旧高亮
+    document.querySelectorAll('.flock-active-node').forEach(el => {
+      el.classList.remove('flock-active-node');
+    });
+    // 添加新高亮
+    if (activeNodeId) {
+      const nodeEl = document.querySelector(`.react-flow__node[data-id="${activeNodeId}"]`);
+      if (nodeEl) {
+        nodeEl.classList.add('flock-active-node');
+      }
+    }
+  }, [activeNodeId]);
+
+  // ── Edge Click Node Insertion ─────────────────────────────────────────────
+  const [menuEdge, setMenuEdge] = useState<Edge | null>(null);
+  const [menuPortalPosition, setMenuPortalPosition] = useState<{ x: number; y: number } | null>(null);
+
+  const onEdgeClick = useCallback((event: React.MouseEvent, edge: Edge) => {
+    event.preventDefault();
+    setMenuEdge(edge);
+    setMenuPortalPosition({ x: event.clientX, y: event.clientY });
+  }, []);
+
+  const handleInsertNode = useCallback((type: NodeType) => {
+    if (!menuEdge) return;
+    const sourceNode = nodes.find(n => n.id === menuEdge.source);
+    const targetNode = nodes.find(n => n.id === menuEdge.target);
+    if (!sourceNode || !targetNode) return;
+
+    // 计算位置：中点
+    const position = {
+      x: (sourceNode.position.x + targetNode.position.x) / 2,
+      y: (sourceNode.position.y + targetNode.position.y) / 2,
+    };
+
+    const sameTypeCount = nodes.filter((n) => n.type === type).length;
+    const newNodeId = `${type}-${Date.now()}`;
+    const newNode: Node = {
+      id: newNodeId,
+      type,
+      position,
+      data: {
+        label: `${nodeConfig[type].display} ${sameTypeCount + 1}`,
+        ...nodeConfig[type].initialData,
+      },
+    };
+
+    const newEdge1 = {
+      id: `e-${menuEdge.source}-${newNodeId}`,
+      source: menuEdge.source,
+      target: newNodeId,
+      markerEnd: { type: MarkerType.ArrowClosed, width: 16, height: 16 },
+      style: { strokeWidth: 1.8, stroke: 'var(--flock-accent)' },
+      type: 'smoothstep',
+    };
+    
+    const newEdge2 = {
+      id: `e-${newNodeId}-${menuEdge.target}`,
+      source: newNodeId,
+      target: menuEdge.target,
+      markerEnd: { type: MarkerType.ArrowClosed, width: 16, height: 16 },
+      style: { strokeWidth: 1.8, stroke: 'var(--flock-accent)' },
+      type: 'smoothstep',
+    };
+
+    setNodes((nds) => [...nds, newNode]);
+    setEdges((eds) => [...eds.filter(e => e.id !== menuEdge.id), newEdge1, newEdge2]);
+
+    setMenuEdge(null);
+    setMenuPortalPosition(null);
+  }, [menuEdge, nodes, setNodes, setEdges]);
+
+  // ── Topological Auto Layout ───────────────────────────────────────────────
+  const layoutAllNodes = useCallback(() => {
+    if (nodes.length === 0) return;
+
+    const adj: Record<string, string[]> = {};
+    const inDegree: Record<string, number> = {};
+
+    nodes.forEach(n => {
+      adj[n.id] = [];
+      inDegree[n.id] = 0;
+    });
+
+    edges.forEach(e => {
+      if (adj[e.source] && adj[e.target] !== undefined) {
+        adj[e.source].push(e.target);
+        inDegree[e.target] = (inDegree[e.target] || 0) + 1;
+      }
+    });
+
+    const rank: Record<string, number> = {};
+    nodes.forEach(n => {
+      rank[n.id] = 0;
+    });
+
+    const queue: string[] = [];
+    nodes.forEach(n => {
+      if (inDegree[n.id] === 0) {
+        queue.push(n.id);
+      }
+    });
+
+    if (queue.length === 0 && nodes.length > 0) {
+      queue.push(nodes[0].id);
+    }
+
+    const visited = new Set<string>();
+    while (queue.length > 0) {
+      const curr = queue.shift()!;
+      if (visited.has(curr)) continue;
+      visited.add(curr);
+
+      const currRank = rank[curr];
+      adj[curr].forEach(next => {
+        rank[next] = Math.max(rank[next], currRank + 1);
+        queue.push(next);
+      });
+    }
+
+    const rankGroups: Record<number, string[]> = {};
+    nodes.forEach(n => {
+      const r = rank[n.id] || 0;
+      if (!rankGroups[r]) {
+        rankGroups[r] = [];
+      }
+      rankGroups[r].push(n.id);
+    });
+
+    const HORIZONTAL_GAP = 280;
+    const VERTICAL_GAP = 140;
+
+    const nextNodes = nodes.map(n => {
+      const r = rank[n.id] || 0;
+      const group = rankGroups[r];
+      const index = group.indexOf(n.id);
+      const count = group.length;
+
+      const x = r * HORIZONTAL_GAP + 50;
+      const y = (index - (count - 1) / 2) * VERTICAL_GAP + 200;
+
+      return {
+        ...n,
+        position: { x, y }
+      };
+    });
+
+    setNodes(nextNodes);
+  }, [nodes, edges, setNodes]);
 
   // ── ReactFlow event handlers ──────────────────────────────────────────────
 
@@ -134,7 +296,6 @@ export function FlowCanvas({ workflowId, workflowData, onBack }: FlowCanvasProps
       const type = e.dataTransfer.getData('application/workflow-node') as NodeType;
       if (!type || !nodeConfig[type]) return;
 
-      // screenToFlowPosition correctly transforms screen → canvas coordinates
       const position = screenToFlowPosition({ x: e.clientX, y: e.clientY });
       const sameTypeCount = nodes.filter((n) => n.type === type).length;
 
@@ -228,6 +389,16 @@ export function FlowCanvas({ workflowId, workflowData, onBack }: FlowCanvasProps
         </Group>
 
         <Group gap="xs">
+          <Tooltip label={t('workflow.autoLayout')} withArrow openDelay={300}>
+            <ActionIcon
+              variant="subtle"
+              color="gray"
+              size="sm"
+              onClick={layoutAllNodes}
+            >
+              <IconHierarchy size={15} />
+            </ActionIcon>
+          </Tooltip>
           <Tooltip label={t('workflow.minimap')} withArrow openDelay={300}>
             <ActionIcon
               variant={showMinimap ? 'filled' : 'subtle'}
@@ -282,6 +453,7 @@ export function FlowCanvas({ workflowId, workflowData, onBack }: FlowCanvasProps
             nodeTypes={workflowNodeTypes}
             onNodeClick={onNodeClick}
             onPaneClick={onPaneClick}
+            onEdgeClick={onEdgeClick}
             onDragOver={onDragOver}
             onDrop={onDrop}
             deleteKeyCode={['Backspace', 'Delete']}
@@ -332,6 +504,36 @@ export function FlowCanvas({ workflowId, workflowData, onBack }: FlowCanvasProps
           />
         )}
       </Box>
+
+      {/* ── Edge click insertion floating Portal Menu ─────────────────── */}
+      {menuPortalPosition && (
+        <div
+          style={{
+            position: 'fixed',
+            left: menuPortalPosition.x,
+            top: menuPortalPosition.y,
+            zIndex: 10000,
+          }}
+        >
+          <Menu opened={!!menuEdge} onClose={() => { setMenuEdge(null); setMenuPortalPosition(null); }} offset={0} withArrow>
+            <Menu.Dropdown>
+              <Menu.Label>{t('workflow.insertNode')}</Menu.Label>
+              {Object.entries(nodeConfig).map(([type, cfg]) => {
+                if (type === 'start' || type === 'end') return null;
+                return (
+                  <Menu.Item
+                    key={type}
+                    leftSection={<cfg.icon size={14} style={{ color: cfg.colorHex }} />}
+                    onClick={() => handleInsertNode(type as NodeType)}
+                  >
+                    {t(cfg.displayKey, { defaultValue: cfg.display })}
+                  </Menu.Item>
+                );
+              })}
+            </Menu.Dropdown>
+          </Menu>
+        </div>
+      )}
 
       {/* ── Execution panel ──────────────────────────────────────────────── */}
       {showExecution && (

@@ -2,7 +2,7 @@ use std::sync::Arc;
 use std::sync::Mutex;
 use std::collections::HashMap;
 use tokio::task::JoinHandle;
-use tauri::{AppHandle, State, Emitter, Manager};
+use tauri::{AppHandle, State, Emitter};
 use serde_json::Value as JsonValue;
 use tokio_stream::StreamExt;
 
