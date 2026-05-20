@@ -17,7 +17,7 @@ import ReactFlow, {
   useReactFlow,
 } from 'reactflow';
 import 'reactflow/dist/style.css';
-import { Box, Group, Button, ActionIcon, Tooltip, Divider, ThemeIcon, Badge, Text, Menu } from '@mantine/core';
+import { Box, Group, Button, ActionIcon, Tooltip, Divider, ThemeIcon, Badge, Text, Menu, Stack } from '@mantine/core';
 import {
   IconArrowLeft,
   IconDeviceFloppy,
@@ -463,6 +463,7 @@ export function FlowCanvas({ workflowId, workflowData, onBack }: FlowCanvasProps
               type: 'smoothstep',
               markerEnd: { type: MarkerType.ArrowClosed, width: 16, height: 16 },
               style: { strokeWidth: 1.8 },
+              interactionWidth: 20,
             }}
             fitView
             fitViewOptions={{ padding: 0.25 }}
@@ -507,32 +508,87 @@ export function FlowCanvas({ workflowId, workflowData, onBack }: FlowCanvasProps
 
       {/* ── Edge click insertion floating Portal Menu ─────────────────── */}
       {menuPortalPosition && (
-        <div
-          style={{
-            position: 'fixed',
-            left: menuPortalPosition.x,
-            top: menuPortalPosition.y,
-            zIndex: 10000,
-          }}
-        >
-          <Menu opened={!!menuEdge} onClose={() => { setMenuEdge(null); setMenuPortalPosition(null); }} offset={0} withArrow>
-            <Menu.Dropdown>
-              <Menu.Label>{t('workflow.insertNode')}</Menu.Label>
+        <>
+          <div
+            style={{
+              position: 'fixed',
+              top: 0,
+              left: 0,
+              right: 0,
+              bottom: 0,
+              zIndex: 9999,
+              background: 'transparent',
+            }}
+            onClick={() => {
+              setMenuEdge(null);
+              setMenuPortalPosition(null);
+            }}
+          />
+          <Box
+            style={{
+              position: 'fixed',
+              left: menuPortalPosition.x,
+              top: menuPortalPosition.y,
+              zIndex: 10000,
+              background: 'var(--flock-bg-surface, #1e1e24)',
+              border: '1px solid var(--flock-border-base, #2d2d38)',
+              borderRadius: 10,
+              boxShadow: '0 10px 30px rgba(0, 0, 0, 0.25)',
+              padding: 6,
+              minWidth: 168,
+              backdropFilter: 'blur(8px)',
+              animation: 'scaleIn 0.15s cubic-bezier(0.34, 1.56, 0.64, 1)',
+            }}
+          >
+            <Text
+              size="10px"
+              c="dimmed"
+              fw={600}
+              px={10}
+              py={5}
+              style={{
+                borderBottom: '1px solid var(--flock-border-dim, #282833)',
+                marginBottom: 4,
+                letterSpacing: '0.05em',
+              }}
+            >
+              {t('workflow.insertNode', 'INSERT NODE')}
+            </Text>
+            <Stack gap={2}>
               {Object.entries(nodeConfig).map(([type, cfg]) => {
                 if (type === 'start' || type === 'end') return null;
                 return (
-                  <Menu.Item
+                  <Box
                     key={type}
-                    leftSection={<cfg.icon size={14} style={{ color: cfg.colorHex }} />}
                     onClick={() => handleInsertNode(type as NodeType)}
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: 8,
+                      padding: '6px 10px',
+                      borderRadius: 6,
+                      cursor: 'pointer',
+                      fontSize: 12,
+                      color: 'var(--flock-text-primary, #e2e8f0)',
+                      transition: 'all 0.15s ease',
+                    }}
+                    onMouseEnter={(e) => {
+                      e.currentTarget.style.background = 'var(--flock-bg-hover, #2d2d38)';
+                      e.currentTarget.style.paddingLeft = '12px';
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.background = 'transparent';
+                      e.currentTarget.style.paddingLeft = '10px';
+                    }}
                   >
-                    {t(cfg.displayKey, { defaultValue: cfg.display })}
-                  </Menu.Item>
+                    <cfg.icon size={13} style={{ color: cfg.colorHex }} />
+                    <span>{t(cfg.displayKey, { defaultValue: cfg.display })}</span>
+                  </Box>
                 );
               })}
-            </Menu.Dropdown>
-          </Menu>
-        </div>
+            </Stack>
+          </Box>
+        </>
       )}
 
       {/* ── Execution panel ──────────────────────────────────────────────── */}

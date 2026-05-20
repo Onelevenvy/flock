@@ -32,18 +32,21 @@ impl WorkflowExecutionState {
 
 struct TauriWorkflowSink {
     app: AppHandle,
+    workflow_id: String,
 }
 
 impl WorkflowSink for TauriWorkflowSink {
     fn emit_node_start(&self, node_id: &str) {
         let _ = self.app.emit("workflow-event", serde_json::json!({
             "type": "node_start",
+            "workflow_id": &self.workflow_id,
             "node_id": node_id,
         }));
     }
     fn emit_node_done(&self, node_id: &str, output: &JsonValue) {
         let _ = self.app.emit("workflow-event", serde_json::json!({
             "type": "node_done",
+            "workflow_id": &self.workflow_id,
             "node_id": node_id,
             "output": output,
         }));
@@ -51,6 +54,7 @@ impl WorkflowSink for TauriWorkflowSink {
     fn emit_text_delta(&self, node_id: &str, text: &str) {
         let _ = self.app.emit("workflow-event", serde_json::json!({
             "type": "text_delta",
+            "workflow_id": &self.workflow_id,
             "node_id": node_id,
             "text": text,
         }));
@@ -58,6 +62,7 @@ impl WorkflowSink for TauriWorkflowSink {
     fn emit_thinking(&self, node_id: &str, text: &str) {
         let _ = self.app.emit("workflow-event", serde_json::json!({
             "type": "thinking",
+            "workflow_id": &self.workflow_id,
             "node_id": node_id,
             "text": text,
         }));
@@ -65,6 +70,7 @@ impl WorkflowSink for TauriWorkflowSink {
     fn emit_error(&self, msg: &str) {
         let _ = self.app.emit("workflow-event", serde_json::json!({
             "type": "error",
+            "workflow_id": &self.workflow_id,
             "message": msg,
         }));
     }
@@ -179,7 +185,10 @@ pub async fn run_workflow(
     };
 
     // 5. 实例化 Sink & Context
-    let sink = Arc::new(TauriWorkflowSink { app: app.clone() });
+    let sink = Arc::new(TauriWorkflowSink {
+        app: app.clone(),
+        workflow_id: workflow_id.clone(),
+    });
     let tools = Arc::new(all_tools().registry);
     let ctx = Arc::new(WorkflowNodeContext {
         provider,

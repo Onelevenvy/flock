@@ -9,19 +9,19 @@ import {
   Stack,
   TextInput,
   Button,
-  Divider,
 } from '@mantine/core';
 import {
   IconChevronDown,
   IconChevronRight,
   IconX,
   IconTerminal2,
-  IconPlayerPlay,
   IconPlayerStop,
   IconCheck,
   IconSend,
 } from '@tabler/icons-react';
 import { useTranslation } from 'react-i18next';
+import { ChatPanel } from '../../../components/chat/ChatPanel';
+import { ChatMessage } from '../../../types/protocol';
 
 export interface ExecutionMessage {
   type: 'text_delta' | 'info' | 'error' | 'done';
@@ -52,7 +52,6 @@ export function ExecutionPanel({
   const [inputVal, setInputVal] = useState('');
   const [lastQuery, setLastQuery] = useState('');
 
-  const chatScrollRef = useRef<HTMLDivElement>(null);
   const logScrollRef = useRef<HTMLDivElement>(null);
 
   // 记录最后一次运行时的 query
@@ -63,51 +62,72 @@ export function ExecutionPanel({
     setInputVal('');
   };
 
-  // 自动滚动
-  useEffect(() => {
-    if (!collapsed) {
-      chatScrollRef.current?.scrollIntoView({ behavior: 'smooth' });
-    }
-  }, [messages, collapsed]);
-
+  // 自动滚动日志
   useEffect(() => {
     if (!collapsed) {
       logScrollRef.current?.scrollIntoView({ behavior: 'smooth' });
     }
   }, [messages, collapsed]);
 
-  // 1. 过滤 & 聚合出 Chat 气泡
-  const chatBubbles = useMemo(() => {
-    const bubbles: { role: 'user' | 'assistant'; content: string; nodeId?: string }[] = [];
+  // 1. 转换并聚合出 ChatPanel 可识别的 ChatMessage 数组
+  const chatMessages = useMemo<ChatMessage[]>(() => {
+    const result: ChatMessage[] = [];
 
     // 压入用户问题
     if (lastQuery) {
-      bubbles.push({ role: 'user', content: lastQuery });
+      result.push({
+        id: 'user-query',
+        role: 'user',
+        chunks: [{ kind: 'text', text: lastQuery }],
+        streaming: false,
+        timestamp: messages.length > 0 ? messages[0].timestamp - 1 : Date.now(),
+      });
     }
 
-    // 按节点流式聚合
-    let currentText = '';
-    let lastNodeId = '';
+    // 按节点流式聚合所有的 text_delta
+    let currentAssistantMsg: ChatMessage | null = null;
 
-    messages.forEach((msg) => {
+    for (const msg of messages) {
       if (msg.type === 'text_delta') {
-        if (msg.nodeId && msg.nodeId !== lastNodeId) {
-          if (currentText) {
-            bubbles.push({ role: 'assistant', content: currentText, nodeId: lastNodeId });
-            currentText = '';
-          }
-          lastNodeId = msg.nodeId;
-        }
-        currentText += msg.content;
-      }
-    });
+        const nodeId = msg.nodeId || 'assistant';
+        const displayNodeName = `**[${nodeId}]**\n`;
 
-    if (currentText) {
-      bubbles.push({ role: 'assistant', content: currentText, nodeId: lastNodeId });
+        // 如果还没有当前正在构建的 assistant 消息，或者虽然有但 nodeId 发生了变化，我们开启一条新的 assistant 消息
+        if (!currentAssistantMsg || currentAssistantMsg.id !== `assistant-${nodeId}`) {
+          if (currentAssistantMsg) {
+            result.push(currentAssistantMsg);
+          }
+          currentAssistantMsg = {
+            id: `assistant-${nodeId}`,
+            role: 'assistant',
+            chunks: [
+              {
+                kind: 'text',
+                text: displayNodeName + msg.content,
+              },
+            ],
+            streaming: status === 'running',
+            timestamp: msg.timestamp,
+          };
+        } else {
+          // 追加内容
+          const lastChunk = currentAssistantMsg.chunks[currentAssistantMsg.chunks.length - 1];
+          if (lastChunk && lastChunk.kind === 'text') {
+            lastChunk.text += msg.content;
+          }
+        }
+      }
     }
 
-    return bubbles;
-  }, [messages, lastQuery]);
+    if (currentAssistantMsg) {
+      if (status !== 'running') {
+        currentAssistantMsg.streaming = false;
+      }
+      result.push(currentAssistantMsg);
+    }
+
+    return result;
+  }, [messages, lastQuery, status]);
 
   // 2. 过滤出纯运行时日志
   const runLogs = useMemo(() => {
@@ -199,112 +219,24 @@ export function ExecutionPanel({
               minHeight: 0,
             }}
           >
-            <ScrollArea style={{ flex: 1 }} p="md">
-              <Stack gap="md" pr="sm">
-                {chatBubbles.length === 0 ? (
-                  <Box
-                    py={48}
-                    style={{
-                      display: 'flex',
-                      flexDirection: 'column',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      opacity: 0.6,
-                    }}
-                  >
-                    <Text size="xs" c="dimmed" ta="center">
-                      🤖 {t('workflow.execution.noOutput', 'No active execution. Enter initial query below to run.')}
-                    </Text>
-                  </Box>
-                ) : (
-                  chatBubbles.map((bubble, i) => {
-                    const isUser = bubble.role === 'user';
-                    return (
-                      <Group
-                        key={i}
-                        align="flex-start"
-                        justify={isUser ? 'flex-end' : 'flex-start'}
-                        gap="sm"
-                        className="message-enter"
-                      >
-                        {!isUser && (
-                          <Box
-                            style={{
-                              width: 26,
-                              height: 26,
-                              borderRadius: '50%',
-                              background: 'var(--flock-accent-soft)',
-                              display: 'flex',
-                              alignItems: 'center',
-                              justifyContent: 'center',
-                              fontSize: 12,
-                              border: '1px solid var(--flock-border-dim)',
-                            }}
-                          >
-                            🤖
-                          </Box>
-                        )}
-                        <Box style={{ maxWidth: '82%' }}>
-                          {!isUser && bubble.nodeId && (
-                            <Text size="10px" c="dimmed" fw={600} mb={2}>
-                              [{bubble.nodeId}]
-                            </Text>
-                          )}
-                          <Box
-                            p="xs"
-                            style={{
-                              borderRadius: isUser ? '12px 2px 12px 12px' : '2px 12px 12px 12px',
-                              background: isUser
-                                ? 'var(--flock-accent, #155aef)'
-                                : 'var(--flock-bg-surface)',
-                              border: isUser
-                                ? 'none'
-                                : '1px solid var(--flock-border-subtle)',
-                              boxShadow: '0 1px 4px rgba(0,0,0,0.03)',
-                            }}
-                          >
-                            <Text
-                              size="xs"
-                              style={{
-                                color: isUser ? '#ffffff' : 'var(--flock-text-primary)',
-                                whiteSpace: 'pre-wrap',
-                                wordBreak: 'break-word',
-                                lineHeight: 1.5,
-                              }}
-                            >
-                              {bubble.content}
-                              {!isUser && status === 'running' && i === chatBubbles.length - 1 && (
-                                <Text component="span" fw={900} className="approval-btn" style={{ animation: 'blink 1s infinite' }}>
-                                  |
-                                </Text>
-                              )}
-                            </Text>
-                          </Box>
-                        </Box>
-                        {isUser && (
-                          <Box
-                            style={{
-                              width: 26,
-                              height: 26,
-                              borderRadius: '50%',
-                              background: 'var(--flock-bg-hover)',
-                              display: 'flex',
-                              alignItems: 'center',
-                              justifyContent: 'center',
-                              fontSize: 12,
-                              border: '1px solid var(--flock-border-dim)',
-                            }}
-                          >
-                            💻
-                          </Box>
-                        )}
-                      </Group>
-                    );
-                  })
-                )}
-                <div ref={chatScrollRef} />
-              </Stack>
-            </ScrollArea>
+            {chatMessages.length === 0 ? (
+              <Box
+                style={{
+                  flex: 1,
+                  display: 'flex',
+                  flexDirection: 'column',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  opacity: 0.6,
+                }}
+              >
+                <Text size="xs" c="dimmed" ta="center">
+                  🤖 {t('workflow.execution.noOutput', 'No active execution. Enter initial query below to run.')}
+                </Text>
+              </Box>
+            ) : (
+              <ChatPanel messages={chatMessages} />
+            )}
 
             {/* Chat Input Area */}
             <Box p="xs" style={{ borderTop: '1px solid var(--flock-border-subtle)', background: 'var(--flock-bg-surface)' }}>
