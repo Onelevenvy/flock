@@ -1,25 +1,17 @@
 import { useState } from 'react';
-import { useWorkflowStore } from '../../store/workflowStore';
-import { WorkflowListPage } from './WorkflowListPage';
-import { WorkflowEditor } from './WorkflowEditor';
+import { WorkflowListPage } from './components/WorkflowListPage';
+import { WorkflowEditor } from './components/WorkflowEditor';
 
+/**
+ * WorkflowPage — top-level route entry
+ * Switches between the workflow list and the canvas editor.
+ */
 export function WorkflowPage() {
-  const { activeWorkflowId, setActiveWorkflowId } = useWorkflowStore();
-  const [editingId, setEditingId] = useState<string | null>(activeWorkflowId);
-
-  const handleOpenEditor = (id: string) => {
-    setEditingId(id);
-    setActiveWorkflowId(id);
-  };
-
-  const handleBack = () => {
-    setEditingId(null);
-    setActiveWorkflowId(null);
-  };
+  const [editingId, setEditingId] = useState<string | null>(null);
 
   if (editingId) {
-    return <WorkflowEditor workflowId={editingId} onBack={handleBack} />;
+    return <WorkflowEditor workflowId={editingId} onBack={() => setEditingId(null)} />;
   }
 
-  return <WorkflowListPage onOpenEditor={handleOpenEditor} />;
+  return <WorkflowListPage onOpenEditor={setEditingId} />;
 }

@@ -17,7 +17,7 @@ import {
 } from '@mantine/core';
 import { IconX, IconPlus, IconTrash } from '@tabler/icons-react';
 import { useTranslation } from 'react-i18next';
-import { nodeConfig, type NodeType } from './nodeConfig';
+import { nodeConfig, type NodeType } from '../nodeConfig';
 import { v4 as uuidv4 } from 'uuid';
 
 interface PropertiesPanelProps {
