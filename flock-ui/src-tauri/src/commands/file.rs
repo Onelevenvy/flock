@@ -93,4 +93,147 @@ pub fn open_external_url(url: String) -> Result<(), String> {
     Ok(())
 }
 
+/// 在工作空间中创建文件
+#[tauri::command]
+pub fn create_workspace_file(
+    workspace_id: String,
+    relative_path: String,
+    content: String,
+) -> Result<(), String> {
+    let base = flock_core::config::db_path::workspace_root().join(&workspace_id);
+    let target = base.join(&relative_path);
+
+    // 防逃逸校验
+    if relative_path.contains("..") {
+        return Err("非法路径访问".to_string());
+    }
+    let canonical_base = std::fs::canonicalize(&base).unwrap_or(base.clone());
+    if let Some(parent) = target.parent() {
+        if parent.exists() {
+            let canonical_parent = std::fs::canonicalize(parent).unwrap_or(parent.to_path_buf());
+            if !canonical_parent.starts_with(&canonical_base) {
+                return Err("非法路径访问".to_string());
+            }
+        }
+        std::fs::create_dir_all(parent).map_err(|e| e.to_string())?;
+    }
+
+    std::fs::write(&target, content).map_err(|e| e.to_string())?;
+    Ok(())
+}
+
+/// 在工作空间中创建文件夹
+#[tauri::command]
+pub fn create_workspace_directory(
+    workspace_id: String,
+    relative_path: String,
+) -> Result<(), String> {
+    let base = flock_core::config::db_path::workspace_root().join(&workspace_id);
+    let target = base.join(&relative_path);
+
+    // 防逃逸校验
+    if relative_path.contains("..") {
+        return Err("非法路径访问".to_string());
+    }
+    let canonical_base = std::fs::canonicalize(&base).unwrap_or(base.clone());
+    if let Some(parent) = target.parent() {
+        if parent.exists() {
+            let canonical_parent = std::fs::canonicalize(parent).unwrap_or(parent.to_path_buf());
+            if !canonical_parent.starts_with(&canonical_base) {
+                return Err("非法路径访问".to_string());
+            }
+        }
+    }
+
+    std::fs::create_dir_all(&target).map_err(|e| e.to_string())?;
+    Ok(())
+}
+
+/// 在工作空间中上传/写入二进制文件
+#[tauri::command]
+pub fn upload_workspace_file(
+    workspace_id: String,
+    relative_path: String,
+    content: Vec<u8>,
+) -> Result<(), String> {
+    let base = flock_core::config::db_path::workspace_root().join(&workspace_id);
+    let target = base.join(&relative_path);
+
+    // 防逃逸校验
+    if relative_path.contains("..") {
+        return Err("非法路径访问".to_string());
+    }
+    let canonical_base = std::fs::canonicalize(&base).unwrap_or(base.clone());
+    if let Some(parent) = target.parent() {
+        if parent.exists() {
+            let canonical_parent = std::fs::canonicalize(parent).unwrap_or(parent.to_path_buf());
+            if !canonical_parent.starts_with(&canonical_base) {
+                return Err("非法路径访问".to_string());
+            }
+        }
+        std::fs::create_dir_all(parent).map_err(|e| e.to_string())?;
+    }
+
+    std::fs::write(&target, content).map_err(|e| e.to_string())?;
+    Ok(())
+}
+
+/// 删除工作空间的文件或文件夹
+#[tauri::command]
+pub fn delete_workspace_file_or_dir(
+    workspace_id: String,
+    relative_path: String,
+) -> Result<(), String> {
+    let base = flock_core::config::db_path::workspace_root().join(&workspace_id);
+    let target = base.join(&relative_path);
+
+    // 防逃逸校验
+    if relative_path.contains("..") {
+        return Err("非法路径访问".to_string());
+    }
+    let canonical_base = std::fs::canonicalize(&base).unwrap_or(base.clone());
+    if target.exists() {
+        let canonical_target = std::fs::canonicalize(&target).unwrap_or(target.clone());
+        if !canonical_target.starts_with(&canonical_base) {
+            return Err("非法路径访问".to_string());
+        }
+
+        if target.is_dir() {
+            std::fs::remove_dir_all(&target).map_err(|e| e.to_string())?;
+        } else {
+            std::fs::remove_file(&target).map_err(|e| e.to_string())?;
+        }
+    }
+    Ok(())
+}
+
+/// 下载/导出文件到本地其他目录
+#[tauri::command]
+pub fn download_workspace_file(
+    workspace_id: String,
+    relative_path: String,
+    local_dest_path: String,
+) -> Result<(), String> {
+    let base = flock_core::config::db_path::workspace_root().join(&workspace_id);
+    let target = base.join(&relative_path);
+
+    if !target.exists() {
+        return Err("源文件不存在".to_string());
+    }
+
+    // 防逃逸校验（源文件必须在工作空间内）
+    if relative_path.contains("..") {
+        return Err("非法路径访问".to_string());
+    }
+    let canonical_base = std::fs::canonicalize(&base).unwrap_or(base.clone());
+    let canonical_target = std::fs::canonicalize(&target).unwrap_or(target.clone());
+    if !canonical_target.starts_with(&canonical_base) {
+        return Err("非法路径访问".to_string());
+    }
+
+    std::fs::copy(&target, &local_dest_path).map_err(|e| e.to_string())?;
+    Ok(())
+}
+
+
 

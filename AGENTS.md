@@ -162,3 +162,15 @@ npm run lint
 - Error handling: `anyhow` for applications, `thiserror` for libraries
 - Async: Tokio runtime throughout
 - Frontend: ESLint with TypeScript rules, React hooks plugin
+
+## Global Guidelines & Core Principles
+
+When modifying the codebase or interacting with the user, please strictly adhere to the following rules:
+
+1. **Git Commit Format**: Upon completing a task, always output a single-line English `git commit` message beginning with standard prefixes (`feat:`, `fix:`, `chore:`, etc.). Provide the message text clearly, but **DO NOT** execute git commit commands or auto-submit.
+2. **State & Logic Abstraction**: Always separate state management and command logic from UI components. Place custom Hooks in `src/hooks` and Zustand stores in `src/store` rather than defining them inside component files.
+3. **Strict i18n Internationalization**: All newly introduced UI components must leverage `i18next` for user-facing texts (e.g. tooltips, titles, toast notifications, confirm boxes). Do not hardcode Chinese or English strings inside JSX.
+4. **Component Granularity**: Strive for modularity. Always split large layout or page files into focused, localized sub-components (placed in a nested `/components` folder). Avoid keeping all view code inside single massive `index.tsx` files.
+5. **UI Specification Compliance**: Ensure any new styling aligns with the design tokens defined in `docs/resources/ui_specification.md` (e.g. cold gray colors, `--flock-accent` solid blue branding, standard monospace typographies, and hover-card transitions) in both dark and light modes.
+
+

@@ -90,6 +90,11 @@ pub fn run() {
             commands::get_workspace_file_absolute_path,
             commands::open_workspace_file_in_system,
             commands::open_external_url,
+            commands::create_workspace_file,
+            commands::create_workspace_directory,
+            commands::upload_workspace_file,
+            commands::delete_workspace_file_or_dir,
+            commands::download_workspace_file,
             // 数据库配置
             commands::get_db_path,
             commands::list_providers,

@@ -1,31 +1,20 @@
 import { useState, useEffect } from 'react';
-import {
-  Box,
-  Text,
-  Group,
-  ActionIcon,
-  Tooltip,
-  ScrollArea,
-  Badge,
-  CopyButton,
-} from '@mantine/core';
-import {
-  IconX,
-  IconCopy,
-  IconCheck,
-} from '@tabler/icons-react';
+import { Box, Text, ScrollArea } from '@mantine/core';
 import { useTranslation } from 'react-i18next';
+import { notifications } from '@mantine/notifications';
+import { save } from '@tauri-apps/plugin-dialog';
 import { useUiStore } from '../../../../store/uiStore';
 import { useWorkspaceStore } from '../../../../store/workspaceStore';
 import { invoke } from '@tauri-apps/api/core';
 
 import { ImageView } from './ImageView';
 import { PdfView } from './PdfView';
-import { HtmlView } from './HtmlView';
 import { OfficeView } from './OfficeView';
 import { CodeView } from './CodeView';
 import { MarkdownView } from './MarkdownView';
 import { FallbackView } from './FallbackView';
+import { PreviewHeader } from './components/PreviewHeader';
+import { SandboxRunner } from './components/SandboxRunner';
 
 const LANG_MAP: Record<string, string> = {
   ts: 'typescript', tsx: 'tsx', js: 'javascript', jsx: 'jsx',
@@ -51,6 +40,21 @@ export function PreviewPanel({ embedded = false }: PreviewPanelProps) {
   const { activeWorkspaceId } = useWorkspaceStore();
   const [absPath, setAbsPath] = useState<string>('');
 
+  const ext = previewFile?.extension?.toLowerCase() || '';
+  const lang = getLanguage(ext);
+  const fileName = previewFile?.path.split(/[/\\]/).pop() || '';
+
+  // 哪些文件可以进行 Code / Preview 双重切换
+  const toggleable = ['html', 'htm', 'md', 'mdx', 'svg'].includes(ext);
+  const [viewMode, setViewMode] = useState<'code' | 'preview'>(toggleable ? 'preview' : 'code');
+
+  useEffect(() => {
+    if (previewFile) {
+      const toggleable = ['html', 'htm', 'md', 'mdx', 'svg'].includes(ext);
+      setViewMode(toggleable ? 'preview' : 'code');
+    }
+  }, [previewFile, ext]);
+
   useEffect(() => {
     if (!previewFile || !activeWorkspaceId) {
       setAbsPath('');
@@ -70,10 +74,6 @@ export function PreviewPanel({ embedded = false }: PreviewPanelProps) {
 
   if (!isPreviewOpen || !previewFile) return null;
 
-  const ext = previewFile.extension?.toLowerCase() || '';
-  const lang = getLanguage(ext);
-  const fileName = previewFile.path.split(/[/\\]/).pop() || '';
-
   // Rendering Dispatcher flags
   const isMarkdown = ext === 'md' || ext === 'mdx';
   const previewableExts = ['txt', 'json', 'toml', 'yaml', 'yml', 'ts', 'tsx', 'js', 'jsx', 'py', 'rs', 'css', 'scss', 'log', 'diff', 'patch'];
@@ -87,11 +87,64 @@ export function PreviewPanel({ embedded = false }: PreviewPanelProps) {
   const OFFICE_EXTS = ['docx', 'doc', 'xlsx', 'xls', 'pptx', 'ppt'];
   const isOffice = OFFICE_EXTS.includes(ext);
 
+  // 下载操作
+  const handleDownload = async () => {
+    if (!activeWorkspaceId || !previewFile) return;
+    try {
+      const destination = await save({
+        defaultPath: fileName,
+        filters: ext ? [{ name: ext.toUpperCase(), extensions: [ext] }] : undefined,
+      });
+
+      if (!destination) return;
+
+      await invoke('download_workspace_file', {
+        workspaceId: activeWorkspaceId,
+        relativePath: previewFile.path,
+        localDestPath: destination,
+      });
+
+      notifications.show({
+        title: t('chat.workspace.downloadSuccess'),
+        message: t('chat.workspace.downloadSuccessDesc', { dest: destination }),
+        color: 'teal',
+      });
+    } catch (err: unknown) {
+      notifications.show({
+        title: t('chat.workspace.downloadFailed'),
+        message: String(err),
+        color: 'red',
+      });
+    }
+  };
+
+  // 刷新操作
+  const handleRefresh = async () => {
+    if (!activeWorkspaceId || !previewFile) return;
+    try {
+      const content = await invoke<string>('read_workspace_file', {
+        workspaceId: activeWorkspaceId,
+        relativePath: previewFile.path,
+      });
+      setPreviewFile({ path: previewFile.path, content, extension: previewFile.extension });
+      notifications.show({
+        title: t('chat.workspace.refreshSuccess'),
+        message: t('chat.workspace.refreshSuccessDesc'),
+        color: 'teal',
+        autoClose: 1000,
+      });
+    } catch (err: unknown) {
+      notifications.show({
+        title: t('chat.workspace.refreshFailed'),
+        message: String(err),
+        color: 'red',
+      });
+    }
+  };
+
   return (
     <Box
       style={{
-        // embedded 模式：完全撑满父容器（父容器负责尺寸）
-        // 非 embedded 模式：作为独立面板，左边有分隔线
         flex: embedded ? 1 : undefined,
         width: embedded ? undefined : 580,
         height: '100%',
@@ -103,64 +156,19 @@ export function PreviewPanel({ embedded = false }: PreviewPanelProps) {
         minWidth: 0,
       }}
     >
-      {/* 头部 Toolbar */}
-      <Group
-        justify="space-between"
-        px="md"
-        py={10}
-        style={{
-          borderBottom: '1px solid var(--flock-border-dim)',
-          background: 'var(--flock-bg-base)',
-          flexShrink: 0,
-        }}
-      >
-        <Group gap="xs">
-          <Badge
-            size="xs"
-            variant="dot"
-            color={isCode || isMarkdown ? 'blue' : 'teal'}
-            style={{ textTransform: 'lowercase' }}
-          >
-            {previewFile.extension || 'txt'}
-          </Badge>
-          <Text
-            size="sm"
-            fw={500}
-            style={{ fontFamily: 'var(--mantine-font-family-monospace)', color: 'var(--flock-text-primary)' }}
-          >
-            {fileName}
-          </Text>
-        </Group>
-
-        <Group gap={4}>
-          {(isCode || isMarkdown) && (
-            <CopyButton value={previewFile.content} timeout={2000}>
-              {({ copied, copy }) => (
-                <Tooltip label={copied ? t('chat.copied') : t('workspace.copyContent')} withArrow>
-                  <ActionIcon
-                    size="sm"
-                    variant="subtle"
-                    color={copied ? 'green' : 'gray'}
-                    onClick={copy}
-                  >
-                    {copied ? <IconCheck size={14} /> : <IconCopy size={14} />}
-                  </ActionIcon>
-                </Tooltip>
-              )}
-            </CopyButton>
-          )}
-          <Tooltip label={t('workspace.closePreview')} withArrow>
-            <ActionIcon
-              size="sm"
-              variant="subtle"
-              color="gray"
-              onClick={() => setPreviewFile(null)}
-            >
-              <IconX size={14} />
-            </ActionIcon>
-          </Tooltip>
-        </Group>
-      </Group>
+      <PreviewHeader
+        fileName={fileName}
+        viewMode={viewMode}
+        toggleable={toggleable}
+        content={previewFile.content}
+        isCode={isCode}
+        isMarkdown={isMarkdown}
+        isHtml={isHtml}
+        onViewModeChange={(val) => setViewMode(val)}
+        onRefresh={handleRefresh}
+        onDownload={handleDownload}
+        onClose={() => setPreviewFile(null)}
+      />
 
       {/* 文件路径 */}
       <Box
@@ -178,23 +186,30 @@ export function PreviewPanel({ embedded = false }: PreviewPanelProps) {
       </Box>
 
       {/* 内容区 */}
-      <ScrollArea style={{ flex: 1 }}>
-        {/* 1. Markdown 渲染 */}
-        {isMarkdown && <MarkdownView content={previewFile.content} />}
+      <ScrollArea style={{ flex: 1, height: '100%' }}>
+        {/* 1. HTML 预览：如果处于 preview 模式，使用 iframe 进行网页运行效果仿真 */}
+        {isHtml && viewMode === 'preview' && (
+          <SandboxRunner content={previewFile.content} />
+        )}
 
-        {/* 2. 代码/文本 语法高亮 */}
-        {isCode && <CodeView content={previewFile.content} lang={lang} />}
+        {/* 2. Markdown 渲染：预览模式 */}
+        {isMarkdown && viewMode === 'preview' && <MarkdownView content={previewFile.content} />}
 
-        {/* 3. 图像预览 */}
+        {/* 3. 强制显示源码的模式：适用于双视图的 'code' 模式 */}
+        {(viewMode === 'code' && (isHtml || isMarkdown)) && (
+          <CodeView content={previewFile.content} lang={isHtml ? 'html' : 'markdown'} />
+        )}
+
+        {/* 4. 普通代码文件 */}
+        {isCode && !isHtml && !isMarkdown && <CodeView content={previewFile.content} lang={lang} />}
+
+        {/* 5. 图像预览 */}
         {isImage && absPath && <ImageView absPath={absPath} fileName={fileName} />}
 
-        {/* 4. PDF 预览 */}
+        {/* 6. PDF 预览 */}
         {isPdf && absPath && <PdfView absPath={absPath} fileName={fileName} />}
 
-        {/* 5. HTML 预览 */}
-        {isHtml && <HtmlView content={previewFile.content} fileName={fileName} />}
-
-        {/* 6. Office 预览卡片 (Word, Excel, PPT) */}
+        {/* 7. Office 预览 */}
         {isOffice && (
           <OfficeView
             fileName={fileName}
@@ -204,7 +219,7 @@ export function PreviewPanel({ embedded = false }: PreviewPanelProps) {
           />
         )}
 
-        {/* 7. 未知或不支持格式的 Fallback */}
+        {/* 8. 未知或不支持格式的 Fallback */}
         {!isMarkdown && !isCode && !isImage && !isPdf && !isHtml && !isOffice && (
           <FallbackView
             fileName={fileName}
