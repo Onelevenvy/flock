@@ -6,6 +6,9 @@ pub mod mcp;
 pub mod builtin;
 pub mod math;
 pub mod openweather;
+pub mod baidu;
+pub mod google;
+pub mod serper;
 
 /// Snapshot of all registered tools and their provider metadata.
 pub struct ToolSet {
@@ -35,6 +38,18 @@ pub fn all_tools() -> ToolSet {
     // --- openweather ---
     infos.push(openweather::provider_info());
     reg.register(openweather::OpenWeatherTool::new());
+
+    // --- baidu ---
+    infos.push(baidu::provider_info());
+    reg.register(baidu::BaiduTool::new());
+
+    // --- google ---
+    infos.push(google::provider_info());
+    reg.register(google::GoogleTool::new());
+
+    // --- serper ---
+    infos.push(serper::provider_info());
+    reg.register(serper::SerperTool::new());
 
     ToolSet { registry: reg, provider_infos: infos }
 }

@@ -67,6 +67,9 @@ lru = "0.18"
 # Date/time
 chrono = { version = "0.4", features = ["serde"] }
 
+# Hashing
+md-5 = "0.10"
+
 # TOML config parsing
 toml = "1.0"
 

@@ -1310,6 +1310,7 @@ dependencies = [
  "langgraph-derive",
  "langgraph-prebuilt",
  "lru",
+ "md-5",
  "meval",
  "reqwest 0.12.28",
  "serde",
