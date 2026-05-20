@@ -149,7 +149,19 @@ export function ToolApprovalInline({ approval }: ToolApprovalInlineProps) {
         <Badge size="xs" color={config.color} variant="dot">
           {riskText}
         </Badge>
-        <Text size="xs" c="dimmed" style={{ marginLeft: 'auto', opacity: 0.5 }}>
+        <Text
+          size="xs"
+          c="dimmed"
+          style={{
+            marginLeft: 'auto',
+            opacity: 0.5,
+            overflow: 'hidden',
+            textOverflow: 'ellipsis',
+            whiteSpace: 'nowrap',
+            maxWidth: '40%',
+          }}
+          title={tool.description}
+        >
           {tool.description}
         </Text>
       </Box>
