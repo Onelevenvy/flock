@@ -1,15 +1,21 @@
 import { Select, TextInput, ActionIcon, Button, Group, Divider, Stack } from '@mantine/core';
 import { IconTrash, IconPlus } from '@tabler/icons-react';
 import { useTranslation } from 'react-i18next';
-import { VariableTextInput, VariableTextarea } from './VariableInput';
-import { type ModelFieldsProps } from './LLMFields';
+import { VariableTextInput, VariableTextarea } from '../VariableInput';
+
+export interface ParameterExtractorFieldsProps {
+  node: any;
+  onDataChange: (nodeId: string, key: string, value: unknown) => void;
+  modelOptions: any[];
+  modelsLoading: boolean;
+}
 
 export function ParameterExtractorFields({
   node,
   onDataChange,
   modelOptions,
   modelsLoading,
-}: ModelFieldsProps) {
+}: ParameterExtractorFieldsProps) {
   const { t } = useTranslation();
   const parameters = (node.data.parameters as { name: string; type: string; description: string; required: boolean }[]) ?? [];
 

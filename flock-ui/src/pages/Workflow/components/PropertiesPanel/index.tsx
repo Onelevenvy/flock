@@ -18,11 +18,15 @@ import { nodeConfig, type NodeType } from '../../nodeConfig';
 import { useAvailableModels } from '../../../../hooks/useAvailableModels';
 import { useAvailableTools } from '../../../../hooks/useAvailableTools';
 
+// 引入公共组件
 import { VariableTextInput, VariableTextarea } from './VariableInput';
-import { LLMFields, AgentFields } from './LLMFields';
-import { ClassifierFields } from './ClassifierFields';
-import { IfElseFields } from './IfElseFields';
-import { ParameterExtractorFields } from './ParameterExtractorFields';
+
+// 引入各节点专属文件夹中的配置组件
+import { LLMFields } from './LLM';
+import { AgentFields } from './Agent';
+import { ClassifierFields } from './Classifier';
+import { IfElseFields } from './IfElse';
+import { ParameterExtractorFields } from './ParameterExtractor';
 
 export interface PropertiesPanelProps {
   node: Node;

@@ -2,9 +2,13 @@ import { Box, Group, Badge, ActionIcon, TextInput, Button, Stack } from '@mantin
 import { IconTrash, IconPlus } from '@tabler/icons-react';
 import { useTranslation } from 'react-i18next';
 import { v4 as uuidv4 } from 'uuid';
-import { type FieldsProps } from './LLMFields';
 
-export function IfElseFields({ node, onDataChange }: FieldsProps) {
+export interface IfElseFieldsProps {
+  node: any;
+  onDataChange: (nodeId: string, key: string, value: unknown) => void;
+}
+
+export function IfElseFields({ node, onDataChange }: IfElseFieldsProps) {
   const { t } = useTranslation();
   const cases = (node.data.cases as { case_id: string; logical_operator: string; conditions: unknown[] }[]) ?? [];
 

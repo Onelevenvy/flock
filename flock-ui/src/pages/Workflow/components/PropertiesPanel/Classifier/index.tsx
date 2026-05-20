@@ -1,11 +1,17 @@
-import { Group, Box, Text, Stack, TextInput, ActionIcon, Badge, Button, Select } from '@mantine/core';
+import { Group, Stack, TextInput, ActionIcon, Badge, Button, Select, Divider } from '@mantine/core';
 import { IconTrash, IconPlus } from '@tabler/icons-react';
 import { useTranslation } from 'react-i18next';
 import { v4 as uuidv4 } from 'uuid';
-import { VariableTextInput } from './VariableInput';
-import { type ModelFieldsProps } from './LLMFields';
+import { VariableTextInput } from '../VariableInput';
 
-export function ClassifierFields({ node, onDataChange, modelOptions, modelsLoading }: ModelFieldsProps) {
+export interface ClassifierFieldsProps {
+  node: any;
+  onDataChange: (nodeId: string, key: string, value: unknown) => void;
+  modelOptions: any[];
+  modelsLoading: boolean;
+}
+
+export function ClassifierFields({ node, onDataChange, modelOptions, modelsLoading }: ClassifierFieldsProps) {
   const { t } = useTranslation();
   const categories = (node.data.categories as { category_id: string; category_name: string }[]) ?? [];
 
@@ -30,7 +36,7 @@ export function ClassifierFields({ node, onDataChange, modelOptions, modelsLoadi
         clearable
         size="xs"
       />
-      <DividerWithLabel label={t('workflow.properties.classifier.categories')} />
+      <Divider label={t('workflow.properties.classifier.categories')} labelPosition="center" />
       <Stack gap={4}>
         {categories.map((cat, i) => (
           <Group key={cat.category_id} gap={4}>
@@ -83,10 +89,4 @@ export function ClassifierFields({ node, onDataChange, modelOptions, modelsLoadi
       </Stack>
     </>
   );
-}
-
-// 辅助组件，因为 Divider 常用
-import { Divider } from '@mantine/core';
-function DividerWithLabel({ label }: { label: string }) {
-  return <Divider label={label} labelPosition="center" />;
 }

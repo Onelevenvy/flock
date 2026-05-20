@@ -105,8 +105,9 @@ export function useWorkflowExecution() {
                   const outputObj = payload.output as Record<string, unknown>;
                   const responseText = outputObj.response || outputObj.answer;
                   if (typeof responseText === 'string' && responseText.trim()) {
-                    // 检查是否已经存在该节点的 text_delta 消息
-                    const hasDeltas = store.executionMessages.some(
+                    // 使用 getState() 获取最新的 state，彻底解决 React 闭包捕获 stale closure 导致的重复补偿 Bug
+                    const currentMessages = useWorkflowStore.getState().executionMessages;
+                    const hasDeltas = currentMessages.some(
                       (m) => m.nodeId === payload.node_id && m.type === 'text_delta'
                     );
                     if (!hasDeltas) {
