@@ -1,0 +1,243 @@
+import { type Node } from 'reactflow';
+import {
+  Box,
+  Text,
+  Group,
+  ActionIcon,
+  ScrollArea,
+  TextInput,
+  Select,
+  Textarea,
+  Stack,
+  Divider,
+  ThemeIcon,
+} from '@mantine/core';
+import { IconX } from '@tabler/icons-react';
+import { useTranslation } from 'react-i18next';
+import { nodeConfig, type NodeType } from '../../nodeConfig';
+import { useAvailableModels } from '../../../../hooks/useAvailableModels';
+import { useAvailableTools } from '../../../../hooks/useAvailableTools';
+
+import { VariableTextInput, VariableTextarea } from './VariableInput';
+import { LLMFields, AgentFields } from './LLMFields';
+import { ClassifierFields } from './ClassifierFields';
+import { IfElseFields } from './IfElseFields';
+import { ParameterExtractorFields } from './ParameterExtractorFields';
+
+export interface PropertiesPanelProps {
+  node: Node;
+  onClose: () => void;
+  onDataChange: (nodeId: string, key: string, value: unknown) => void;
+}
+
+export function PropertiesPanel({ node, onClose, onDataChange }: PropertiesPanelProps) {
+  const { t } = useTranslation();
+  const type = node.type as NodeType;
+  const cfg = nodeConfig[type];
+
+  const { groupedOptions: modelOptions, loading: modelsLoading } = useAvailableModels();
+  const { groupedOptions: toolOptions, loading: toolsLoading } = useAvailableTools();
+
+  if (!cfg) return null;
+  const Icon = cfg.icon;
+
+  return (
+    <Box
+      style={{
+        width: 320,
+        borderLeft: '1px solid var(--flock-border-subtle)',
+        background: 'var(--flock-bg-surface)',
+        display: 'flex',
+        flexDirection: 'column',
+        flexShrink: 0,
+      }}
+    >
+      {/* Header */}
+      <Group
+        px="md"
+        py="sm"
+        justify="space-between"
+        style={{ borderBottom: '1px solid var(--flock-border-subtle)', flexShrink: 0 }}
+      >
+        <Group gap="xs">
+          <ThemeIcon size={28} radius="md" style={{ background: cfg.colorHex }}>
+            <Icon size={14} stroke={2} />
+          </ThemeIcon>
+          <Box>
+            <Text size="sm" fw={600} style={{ color: 'var(--flock-text-bright)' }}>
+              {t(cfg.displayKey, { defaultValue: cfg.display })}
+            </Text>
+            <Text size="xs" c="dimmed">{node.id}</Text>
+          </Box>
+        </Group>
+        <ActionIcon variant="subtle" onClick={onClose}>
+          <IconX size={16} />
+        </ActionIcon>
+      </Group>
+
+      {/* Scrollable form */}
+      <ScrollArea style={{ flex: 1 }} px="md" py="sm">
+        <Stack gap="sm">
+          {/* Label */}
+          <TextInput
+            label={t('workflow.properties.label')}
+            value={String(node.data.label ?? '')}
+            onChange={(e) => onDataChange(node.id, 'label', e.target.value)}
+            size="xs"
+          />
+
+          <Divider label={t('workflow.properties.config')} labelPosition="center" />
+
+          {/* Type-specific fields */}
+          <NodeSpecificFields
+            node={node}
+            onDataChange={onDataChange}
+            modelOptions={modelOptions}
+            modelsLoading={modelsLoading}
+            toolOptions={toolOptions}
+            toolsLoading={toolsLoading}
+          />
+        </Stack>
+      </ScrollArea>
+    </Box>
+  );
+}
+
+interface NodeSpecificFieldsProps {
+  node: Node;
+  onDataChange: (nodeId: string, key: string, value: unknown) => void;
+  modelOptions: any[];
+  modelsLoading: boolean;
+  toolOptions: any[];
+  toolsLoading: boolean;
+}
+
+function NodeSpecificFields({
+  node,
+  onDataChange,
+  modelOptions,
+  modelsLoading,
+  toolOptions,
+  toolsLoading,
+}: NodeSpecificFieldsProps) {
+  const { t } = useTranslation();
+  const type = node.type as NodeType;
+
+  switch (type) {
+    case 'start':
+    case 'end':
+      return (
+        <Text size="xs" c="dimmed" ta="center" py="sm">
+          {t('workflow.properties.noConfig')}
+        </Text>
+      );
+
+    case 'llm':
+      return (
+        <LLMFields
+          node={node}
+          onDataChange={onDataChange}
+          modelOptions={modelOptions}
+          modelsLoading={modelsLoading}
+        />
+      );
+
+    case 'agent':
+      return (
+        <AgentFields
+          node={node}
+          onDataChange={onDataChange}
+          modelOptions={modelOptions}
+          modelsLoading={modelsLoading}
+          toolOptions={toolOptions}
+          toolsLoading={toolsLoading}
+        />
+      );
+
+    case 'classifier':
+      return (
+        <ClassifierFields
+          node={node}
+          onDataChange={onDataChange}
+          modelOptions={modelOptions}
+          modelsLoading={modelsLoading}
+        />
+      );
+
+    case 'ifelse':
+      return <IfElseFields node={node} onDataChange={onDataChange} />;
+
+    case 'answer':
+      return (
+        <VariableTextarea
+          label={t('workflow.properties.answer.template')}
+          placeholder="${llm.response}"
+          value={String(node.data.answer ?? '')}
+          currentNodeId={node.id}
+          onChange={(val) => onDataChange(node.id, 'answer', val)}
+          minRows={4}
+          size="xs"
+        />
+      );
+
+    case 'code':
+      return (
+        <>
+          <Select
+            label={t('workflow.properties.code.language')}
+            data={['python', 'javascript']}
+            value={String(node.data.language ?? 'python')}
+            onChange={(v) => onDataChange(node.id, 'language', v)}
+            size="xs"
+          />
+          <Textarea
+            label={t('workflow.properties.code.code')}
+            placeholder="# Your code here"
+            value={String(node.data.code ?? '')}
+            onChange={(e) => onDataChange(node.id, 'code', e.target.value)}
+            minRows={6}
+            size="xs"
+            styles={{ input: { fontFamily: 'monospace', fontSize: 12 } }}
+          />
+        </>
+      );
+
+    case 'parameterExtractor':
+      return (
+        <ParameterExtractorFields
+          node={node}
+          onDataChange={onDataChange}
+          modelOptions={modelOptions}
+          modelsLoading={modelsLoading}
+        />
+      );
+
+    case 'human':
+      return (
+        <VariableTextarea
+          label={t('workflow.properties.human.title')}
+          placeholder={t('workflow.properties.human.titlePlaceholder')}
+          value={String(node.data.title ?? '')}
+          currentNodeId={node.id}
+          onChange={(val) => onDataChange(node.id, 'title', val)}
+          minRows={2}
+          size="xs"
+        />
+      );
+
+    case 'plugin':
+      return (
+        <VariableTextInput
+          label={t('workflow.properties.plugin.args')}
+          placeholder='{"key": "value"}'
+          value={String(node.data.args ?? '')}
+          currentNodeId={node.id}
+          onChange={(val) => onDataChange(node.id, 'args', val)}
+          size="xs"
+        />
+      );
+
+    default:
+      return null;
+  }
+}
