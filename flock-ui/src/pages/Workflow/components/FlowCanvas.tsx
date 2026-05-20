@@ -32,6 +32,7 @@ import { useUpdateWorkflow, type WorkflowRecord } from '../../../hooks/useWorkfl
 import { NodePalette } from './NodePalette';
 import { PropertiesPanel } from './PropertiesPanel';
 import { ExecutionPanel } from './ExecutionPanel';
+import { useWorkflowExecution } from '../../../hooks/useWorkflowExecution';
 
 interface FlowCanvasProps {
   workflowId: string;
@@ -57,6 +58,8 @@ export function FlowCanvas({ workflowId, workflowData, onBack }: FlowCanvasProps
     executionStatus,
     executionMessages,
   } = useWorkflowStore();
+
+  const { startWorkflow, resumeWorkflow, stopWorkflow } = useWorkflowExecution();
 
   const [showExecution, setShowExecution] = useState(false);
   const [showMinimap, setShowMinimap] = useState(false);
@@ -336,6 +339,9 @@ export function FlowCanvas({ workflowId, workflowData, onBack }: FlowCanvasProps
           status={executionStatus}
           messages={executionMessages}
           onClose={() => setShowExecution(false)}
+          startWorkflow={startWorkflow}
+          stopWorkflow={stopWorkflow}
+          resumeWorkflow={resumeWorkflow}
         />
       )}
     </Box>
