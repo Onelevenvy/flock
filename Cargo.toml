@@ -27,7 +27,7 @@ flock-tools     = { path = "crates/flock-tools" }
 flock-skills    = { path = "crates/flock-skills" }
 flock-agent     = { path = "crates/flock-agent" }
 
-# LangGraph (local path to Rust reimplementation)
+# LangGraph (github path to Rust reimplementation)
 langgraph                    = { git = "https://github.com/Onelevenvy/langgraph-rust" }
 langgraph-derive             = { git = "https://github.com/Onelevenvy/langgraph-rust" }
 langgraph-checkpoint         = { git = "https://github.com/Onelevenvy/langgraph-rust" }

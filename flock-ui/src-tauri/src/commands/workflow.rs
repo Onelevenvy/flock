@@ -231,11 +231,7 @@ pub async fn run_workflow(
             let _ = app_clone.emit("workflow-event", serde_json::json!({
                 "type": "workflow_progress",
                 "workflow_id": workflow_id_clone,
-                "output": {
-                    "mode": format!("{:?}", part.mode),
-                    "ns": part.ns,
-                    "data": part.data,
-                },
+                "output": part,
             }));
         }
 
