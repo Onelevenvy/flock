@@ -2,7 +2,6 @@ import {
   IconPlayerPlay,
   IconPlayerStop,
   IconRobot,
-  IconBolt,
   IconGitBranch,
   IconMessageCircle,
   IconCode,
@@ -10,6 +9,7 @@ import {
   IconCrosshair,
   IconPuzzle,
   IconBrain,
+  IconTags,
   type IconProps,
 } from '@tabler/icons-react';
 import type { ForwardRefExoticComponent, RefAttributes } from 'react';
@@ -37,7 +37,7 @@ export const nodeConfig: Record<string, NodeConfigItem> = {
     displayKey: 'workflow.nodes.start.label',
     icon: IconPlayerPlay,
     color: 'teal',
-    colorHex: '#0d9488',
+    colorHex: '#0f766e',
     allowedConnections: { sources: ['right'], targets: [] },
   },
   end: {
@@ -45,15 +45,15 @@ export const nodeConfig: Record<string, NodeConfigItem> = {
     displayKey: 'workflow.nodes.end.label',
     icon: IconPlayerStop,
     color: 'red',
-    colorHex: '#ef4444',
+    colorHex: '#be123c',
     allowedConnections: { sources: [], targets: ['left'] },
   },
   llm: {
     display: 'LLM',
     displayKey: 'workflow.nodes.llm.label',
-    icon: IconRobot,
+    icon: IconBrain,
     color: 'blue',
-    colorHex: '#3b82f6',
+    colorHex: '#2563eb',
     allowedConnections: { sources: ['right'], targets: ['left'] },
     initialData: {
       model: '',
@@ -65,9 +65,9 @@ export const nodeConfig: Record<string, NodeConfigItem> = {
   agent: {
     display: 'Agent',
     displayKey: 'workflow.nodes.agent.label',
-    icon: IconBolt,
+    icon: IconRobot,
     color: 'yellow',
-    colorHex: '#f59e0b',
+    colorHex: '#d97706',
     allowedConnections: { sources: ['right'], targets: ['left'] },
     initialData: {
       model: '',
@@ -80,9 +80,9 @@ export const nodeConfig: Record<string, NodeConfigItem> = {
   classifier: {
     display: 'Classifier',
     displayKey: 'workflow.nodes.classifier.label',
-    icon: IconBrain,
+    icon: IconTags,
     color: 'pink',
-    colorHex: '#ec4899',
+    colorHex: '#db2777',
     allowedConnections: { sources: [], targets: ['left'] },
     initialData: {
       model: '',
@@ -98,7 +98,7 @@ export const nodeConfig: Record<string, NodeConfigItem> = {
     displayKey: 'workflow.nodes.ifelse.label',
     icon: IconGitBranch,
     color: 'violet',
-    colorHex: '#8b5cf6',
+    colorHex: '#7c3aed',
     allowedConnections: { sources: [], targets: ['left'] },
     initialData: {
       cases: [
@@ -120,7 +120,7 @@ export const nodeConfig: Record<string, NodeConfigItem> = {
     displayKey: 'workflow.nodes.answer.label',
     icon: IconMessageCircle,
     color: 'orange',
-    colorHex: '#f97316',
+    colorHex: '#ea580c',
     allowedConnections: { sources: ['right'], targets: ['left'] },
     initialData: {
       answer: '',
@@ -131,7 +131,7 @@ export const nodeConfig: Record<string, NodeConfigItem> = {
     displayKey: 'workflow.nodes.code.label',
     icon: IconCode,
     color: 'grape',
-    colorHex: '#a855f7',
+    colorHex: '#9333ea',
     allowedConnections: { sources: ['right'], targets: ['left'] },
     initialData: {
       code: '',
@@ -143,7 +143,7 @@ export const nodeConfig: Record<string, NodeConfigItem> = {
     displayKey: 'workflow.nodes.human.label',
     icon: IconUser,
     color: 'cyan',
-    colorHex: '#06b6d4',
+    colorHex: '#0891b2',
     allowedConnections: { sources: ['right'], targets: ['left'] },
     initialData: {
       interaction_type: 'tool_review',
@@ -156,7 +156,7 @@ export const nodeConfig: Record<string, NodeConfigItem> = {
     displayKey: 'workflow.nodes.parameterExtractor.label',
     icon: IconCrosshair,
     color: 'lime',
-    colorHex: '#84cc16',
+    colorHex: '#65a30d',
     allowedConnections: { sources: ['right'], targets: ['left'] },
     initialData: {
       model: '',
@@ -170,7 +170,7 @@ export const nodeConfig: Record<string, NodeConfigItem> = {
     displayKey: 'workflow.nodes.plugin.label',
     icon: IconPuzzle,
     color: 'gray',
-    colorHex: '#6b7280',
+    colorHex: '#4b5563',
     allowedConnections: { sources: ['right'], targets: ['left'] },
     initialData: {
       tool: null,

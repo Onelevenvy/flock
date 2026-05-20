@@ -49,34 +49,54 @@ function BaseWorkflowNode({ type, data, selected }: NodeProps<BaseNodeData> & { 
   return (
     <Box
       style={{
-        minWidth: 160,
-        borderRadius: 10,
-        border: selected ? `2px solid ${cfg.colorHex}` : '1.5px solid var(--flock-border-subtle)',
+        minWidth: 170,
+        borderRadius: 12,
+        border: selected 
+          ? `1.5px solid var(--flock-accent)` 
+          : `1px solid ${cfg.colorHex}50`, // 专属颜色的淡化边框
         background: 'var(--flock-bg-surface)',
-        boxShadow: selected ? `0 0 0 3px ${cfg.colorHex}28` : '0 2px 10px rgba(0,0,0,0.08)',
+        boxShadow: selected 
+          ? `0 0 0 3px var(--flock-accent)20` 
+          : '0 4px 12px rgba(0,0,0,0.03)',
         overflow: 'hidden',
         cursor: 'pointer',
+        transition: 'all 0.15s ease',
       }}
     >
       {/* Header */}
       <Box
         style={{
-          background: cfg.colorHex,
-          padding: '5px 10px',
+          padding: '8px 12px',
           display: 'flex',
           alignItems: 'center',
-          gap: 6,
+          gap: 8,
+          borderBottom: '1px solid var(--flock-border-subtle)',
+          background: 'var(--flock-bg-surface)',
         }}
       >
-        <Icon size={13} stroke={2} style={{ color: 'rgba(255,255,255,0.9)', flexShrink: 0 }} />
-        <Text size="xs" fw={600} style={{ color: '#fff', flex: 1, fontSize: 11, lineHeight: 1.2 }} lineClamp={1}>
+        {/* 圆角正方形包裹的 Icon 徽标 */}
+        <Box
+          style={{
+            width: 22,
+            height: 22,
+            borderRadius: 6,
+            background: `${cfg.colorHex}16`, // 透明柔和背景
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            flexShrink: 0,
+          }}
+        >
+          <Icon size={13} stroke={2.5} style={{ color: cfg.colorHex }} />
+        </Box>
+        <Text size="xs" fw={700} style={{ color: 'var(--flock-text-bright)', flex: 1, fontSize: 11, lineHeight: 1.2 }} lineClamp={1}>
           {data.label || t(cfg.displayKey, { defaultValue: cfg.display })}
         </Text>
       </Box>
 
       {/* Body */}
       {summary && (
-        <Box style={{ padding: '5px 10px' }}>
+        <Box style={{ padding: '8px 12px', background: 'var(--flock-bg-surface)' }}>
           <Text size="xs" c="dimmed" lineClamp={2} style={{ fontSize: 10 }}>
             {summary}
           </Text>
@@ -90,10 +110,10 @@ function BaseWorkflowNode({ type, data, selected }: NodeProps<BaseNodeData> & { 
           position={Position.Left}
           id="left"
           style={{
-            background: cfg.colorHex,
-            border: '2px solid var(--flock-bg-surface)',
-            width: 10,
-            height: 10,
+            background: 'var(--flock-bg-surface)',
+            border: `2px solid ${cfg.colorHex}`,
+            width: 8,
+            height: 8,
           }}
         />
       )}
@@ -103,10 +123,10 @@ function BaseWorkflowNode({ type, data, selected }: NodeProps<BaseNodeData> & { 
           position={Position.Right}
           id="right"
           style={{
-            background: cfg.colorHex,
-            border: '2px solid var(--flock-bg-surface)',
-            width: 10,
-            height: 10,
+            background: 'var(--flock-bg-surface)',
+            border: `2px solid ${cfg.colorHex}`,
+            width: 8,
+            height: 8,
           }}
         />
       )}
@@ -114,7 +134,7 @@ function BaseWorkflowNode({ type, data, selected }: NodeProps<BaseNodeData> & { 
   );
 }
 
-// ── Start / End — pill shape ──────────────────────────────────────────────
+// ── Start / End ────────────────────────────────────────────────────────────
 
 export const StartNode = memo(({ data, selected }: NodeProps<BaseNodeData>) => {
   const cfg = nodeConfig['start'];
@@ -123,28 +143,45 @@ export const StartNode = memo(({ data, selected }: NodeProps<BaseNodeData>) => {
   return (
     <Box
       style={{
-        padding: '7px 18px',
-        borderRadius: 24,
-        background: cfg.colorHex,
-        border: selected ? '2.5px solid rgba(255,255,255,0.7)' : '2px solid transparent',
-        boxShadow: selected ? `0 0 0 3px ${cfg.colorHex}55` : '0 3px 12px rgba(0,0,0,0.15)',
+        padding: '8px 12px',
+        borderRadius: 12,
+        background: 'var(--flock-bg-surface)',
+        border: selected 
+          ? `1.5px solid var(--flock-accent)` 
+          : `1px solid ${cfg.colorHex}70`,
+        boxShadow: selected 
+          ? `0 0 0 3px var(--flock-accent)20` 
+          : '0 4px 10px rgba(0,0,0,0.03)',
         display: 'flex',
         alignItems: 'center',
-        gap: 6,
+        gap: 8,
         cursor: 'pointer',
-        minWidth: 90,
-        justifyContent: 'center',
+        minWidth: 170,
+        transition: 'all 0.15s ease',
       }}
     >
-      <Icon size={14} stroke={2.5} style={{ color: '#fff' }} />
-      <Text size="xs" fw={700} style={{ color: '#fff', fontSize: 11 }}>
+      <Box
+        style={{
+          width: 22,
+          height: 22,
+          borderRadius: 6,
+          background: `${cfg.colorHex}16`,
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          flexShrink: 0,
+        }}
+      >
+        <Icon size={12} stroke={2.5} style={{ color: cfg.colorHex }} />
+      </Box>
+      <Text size="xs" fw={700} style={{ color: 'var(--flock-text-bright)', fontSize: 11, flex: 1 }}>
         {data.label || t('workflow.nodes.start.label', 'Start')}
       </Text>
       <Handle
         type="source"
         position={Position.Right}
         id="right"
-        style={{ background: '#fff', border: `2px solid ${cfg.colorHex}`, width: 10, height: 10 }}
+        style={{ background: 'var(--flock-bg-surface)', border: `2px solid ${cfg.colorHex}`, width: 8, height: 8 }}
       />
     </Box>
   );
@@ -157,28 +194,45 @@ export const EndNode = memo(({ data, selected }: NodeProps<BaseNodeData>) => {
   return (
     <Box
       style={{
-        padding: '7px 18px',
-        borderRadius: 24,
-        background: cfg.colorHex,
-        border: selected ? '2.5px solid rgba(255,255,255,0.7)' : '2px solid transparent',
-        boxShadow: selected ? `0 0 0 3px ${cfg.colorHex}55` : '0 3px 12px rgba(0,0,0,0.15)',
+        padding: '8px 12px',
+        borderRadius: 12,
+        background: 'var(--flock-bg-surface)',
+        border: selected 
+          ? `1.5px solid var(--flock-accent)` 
+          : `1px solid ${cfg.colorHex}70`,
+        boxShadow: selected 
+          ? `0 0 0 3px var(--flock-accent)20` 
+          : '0 4px 10px rgba(0,0,0,0.03)',
         display: 'flex',
         alignItems: 'center',
-        gap: 6,
+        gap: 8,
         cursor: 'pointer',
-        minWidth: 90,
-        justifyContent: 'center',
+        minWidth: 170,
+        transition: 'all 0.15s ease',
       }}
     >
-      <Icon size={14} stroke={2.5} style={{ color: '#fff' }} />
-      <Text size="xs" fw={700} style={{ color: '#fff', fontSize: 11 }}>
+      <Box
+        style={{
+          width: 22,
+          height: 22,
+          borderRadius: 6,
+          background: `${cfg.colorHex}16`,
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          flexShrink: 0,
+        }}
+      >
+        <Icon size={12} stroke={2.5} style={{ color: cfg.colorHex }} />
+      </Box>
+      <Text size="xs" fw={700} style={{ color: 'var(--flock-text-bright)', fontSize: 11, flex: 1 }}>
         {data.label || t('workflow.nodes.end.label', 'End')}
       </Text>
       <Handle
         type="target"
         position={Position.Left}
         id="left"
-        style={{ background: '#fff', border: `2px solid ${cfg.colorHex}`, width: 10, height: 10 }}
+        style={{ background: 'var(--flock-bg-surface)', border: `2px solid ${cfg.colorHex}`, width: 8, height: 8 }}
       />
     </Box>
   );
@@ -205,33 +259,51 @@ export const ClassifierNode = memo(({ data, selected }: NodeProps<BaseNodeData>)
   return (
     <Box
       style={{
-        minWidth: 160,
-        borderRadius: 10,
-        border: selected ? `2px solid ${cfg.colorHex}` : '1.5px solid var(--flock-border-subtle)',
+        minWidth: 170,
+        borderRadius: 12,
+        border: selected 
+          ? `1.5px solid var(--flock-accent)` 
+          : `1px solid ${cfg.colorHex}50`,
         background: 'var(--flock-bg-surface)',
-        boxShadow: selected ? `0 0 0 3px ${cfg.colorHex}28` : '0 2px 10px rgba(0,0,0,0.08)',
+        boxShadow: selected 
+          ? `0 0 0 3px var(--flock-accent)20` 
+          : '0 4px 12px rgba(0,0,0,0.03)',
         overflow: 'visible',
         cursor: 'pointer',
+        transition: 'all 0.15s ease',
       }}
     >
       <Box
         style={{
-          background: cfg.colorHex,
-          padding: '5px 10px',
+          padding: '8px 12px',
           display: 'flex',
           alignItems: 'center',
-          gap: 6,
-          borderRadius: '8px 8px 0 0',
+          gap: 8,
+          borderBottom: '1px solid var(--flock-border-subtle)',
+          background: 'var(--flock-bg-surface)',
         }}
       >
-        <Icon size={13} stroke={2} style={{ color: 'rgba(255,255,255,0.9)' }} />
-        <Text size="xs" fw={600} style={{ color: '#fff', fontSize: 11 }} lineClamp={1}>
+        <Box
+          style={{
+            width: 22,
+            height: 22,
+            borderRadius: 6,
+            background: `${cfg.colorHex}16`,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            flexShrink: 0,
+          }}
+        >
+          <Icon size={13} stroke={2.5} style={{ color: cfg.colorHex }} />
+        </Box>
+        <Text size="xs" fw={700} style={{ color: 'var(--flock-text-bright)', flex: 1, fontSize: 11, lineHeight: 1.2 }} lineClamp={1}>
           {data.label || t(cfg.displayKey, { defaultValue: cfg.display })}
         </Text>
       </Box>
-      <Box style={{ padding: '6px 10px 5px' }}>
+      <Box style={{ padding: '8px 12px', background: 'var(--flock-bg-surface)' }}>
         {categories.map((cat) => (
-          <Box key={cat.category_id} style={{ position: 'relative', marginBottom: 3, paddingRight: 10 }}>
+          <Box key={cat.category_id} style={{ position: 'relative', marginBottom: 5, paddingRight: 10 }}>
             <Badge size="xs" color={cat.category_id === 'others_category' ? 'gray' : 'pink'} variant="light" style={{ fontSize: 9 }}>
               {cat.category_id === 'others_category' ? t('workflow.nodes.classifier.others', 'Others') : (cat.category_name || cat.category_id)}
             </Badge>
@@ -239,12 +311,30 @@ export const ClassifierNode = memo(({ data, selected }: NodeProps<BaseNodeData>)
               type="source"
               position={Position.Right}
               id={cat.category_id}
-              style={{ background: cfg.colorHex, border: '2px solid var(--flock-bg-surface)', width: 9, height: 9, right: -5, top: '50%', transform: 'translateY(-50%)' }}
+              style={{
+                background: 'var(--flock-bg-surface)',
+                border: `2px solid ${cfg.colorHex}`,
+                width: 8,
+                height: 8,
+                right: -6,
+                top: '50%',
+                transform: 'translateY(-50%)',
+              }}
             />
           </Box>
         ))}
       </Box>
-      <Handle type="target" position={Position.Left} id="left" style={{ background: cfg.colorHex, border: '2px solid var(--flock-bg-surface)', width: 10, height: 10 }} />
+      <Handle
+        type="target"
+        position={Position.Left}
+        id="left"
+        style={{
+          background: 'var(--flock-bg-surface)',
+          border: `2px solid ${cfg.colorHex}`,
+          width: 8,
+          height: 8,
+        }}
+      />
     </Box>
   );
 });
@@ -257,33 +347,51 @@ export const IfElseNode = memo(({ data, selected }: NodeProps<BaseNodeData>) => 
   return (
     <Box
       style={{
-        minWidth: 160,
-        borderRadius: 10,
-        border: selected ? `2px solid ${cfg.colorHex}` : '1.5px solid var(--flock-border-subtle)',
+        minWidth: 170,
+        borderRadius: 12,
+        border: selected 
+          ? `1.5px solid var(--flock-accent)` 
+          : `1px solid ${cfg.colorHex}50`,
         background: 'var(--flock-bg-surface)',
-        boxShadow: selected ? `0 0 0 3px ${cfg.colorHex}28` : '0 2px 10px rgba(0,0,0,0.08)',
+        boxShadow: selected 
+          ? `0 0 0 3px var(--flock-accent)20` 
+          : '0 4px 12px rgba(0,0,0,0.03)',
         overflow: 'visible',
         cursor: 'pointer',
+        transition: 'all 0.15s ease',
       }}
     >
       <Box
         style={{
-          background: cfg.colorHex,
-          padding: '5px 10px',
+          padding: '8px 12px',
           display: 'flex',
           alignItems: 'center',
-          gap: 6,
-          borderRadius: '8px 8px 0 0',
+          gap: 8,
+          borderBottom: '1px solid var(--flock-border-subtle)',
+          background: 'var(--flock-bg-surface)',
         }}
       >
-        <Icon size={13} stroke={2} style={{ color: 'rgba(255,255,255,0.9)' }} />
-        <Text size="xs" fw={600} style={{ color: '#fff', fontSize: 11 }} lineClamp={1}>
+        <Box
+          style={{
+            width: 22,
+            height: 22,
+            borderRadius: 6,
+            background: `${cfg.colorHex}16`,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            flexShrink: 0,
+          }}
+        >
+          <Icon size={13} stroke={2.5} style={{ color: cfg.colorHex }} />
+        </Box>
+        <Text size="xs" fw={700} style={{ color: 'var(--flock-text-bright)', flex: 1, fontSize: 11, lineHeight: 1.2 }} lineClamp={1}>
           {data.label || cfg.display}
         </Text>
       </Box>
-      <Box style={{ padding: '6px 10px 5px' }}>
+      <Box style={{ padding: '8px 12px', background: 'var(--flock-bg-surface)' }}>
         {cases.map((c, idx) => (
-          <Box key={c.case_id} style={{ position: 'relative', marginBottom: 3, paddingRight: 10 }}>
+          <Box key={c.case_id} style={{ position: 'relative', marginBottom: 5, paddingRight: 10 }}>
             <Badge size="xs" color={c.case_id === 'false_else' ? 'gray' : 'violet'} variant="light" style={{ fontSize: 9 }}>
               {c.case_id === 'false_else' ? 'ELSE' : `IF ${idx + 1}`}
             </Badge>
@@ -291,12 +399,30 @@ export const IfElseNode = memo(({ data, selected }: NodeProps<BaseNodeData>) => 
               type="source"
               position={Position.Right}
               id={c.case_id}
-              style={{ background: cfg.colorHex, border: '2px solid var(--flock-bg-surface)', width: 9, height: 9, right: -5, top: '50%', transform: 'translateY(-50%)' }}
+              style={{
+                background: 'var(--flock-bg-surface)',
+                border: `2px solid ${cfg.colorHex}`,
+                width: 8,
+                height: 8,
+                right: -6,
+                top: '50%',
+                transform: 'translateY(-50%)',
+              }}
             />
           </Box>
         ))}
       </Box>
-      <Handle type="target" position={Position.Left} id="left" style={{ background: cfg.colorHex, border: '2px solid var(--flock-bg-surface)', width: 10, height: 10 }} />
+      <Handle
+        type="target"
+        position={Position.Left}
+        id="left"
+        style={{
+          background: 'var(--flock-bg-surface)',
+          border: `2px solid ${cfg.colorHex}`,
+          width: 8,
+          height: 8,
+        }}
+      />
     </Box>
   );
 });

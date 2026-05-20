@@ -42,26 +42,14 @@ export function WorkflowCard({ workflow, onOpen }: WorkflowCardProps) {
         onClick={onOpen}
         style={{
           padding: '14px 16px',
-          borderRadius: 12,
-          border: '1px solid var(--flock-border-dim)',
-          background: 'var(--flock-bg-raised)',
+          borderRadius: 14,
+          border: '1px solid var(--flock-border-subtle)',
+          background: 'var(--flock-bg-surface)',
           cursor: 'pointer',
           position: 'relative',
           overflow: 'hidden',
         }}
       >
-        {/* Accent top strip */}
-        <Box
-          style={{
-            position: 'absolute',
-            top: 0,
-            left: 0,
-            right: 0,
-            height: 2,
-            background: 'var(--flock-accent)',
-            borderRadius: '12px 12px 0 0',
-          }}
-        />
 
         {/* Card header */}
         <Group justify="space-between" mb={10} mt={4}>

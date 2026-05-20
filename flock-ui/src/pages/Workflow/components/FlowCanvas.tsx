@@ -1,7 +1,6 @@
 import { useCallback, useMemo, useState, useEffect } from 'react';
 import ReactFlow, {
   Background,
-  Controls,
   MiniMap,
   addEdge,
   type Connection,
@@ -17,7 +16,7 @@ import ReactFlow, {
   useReactFlow,
 } from 'reactflow';
 import 'reactflow/dist/style.css';
-import { Box, Group, Button, ActionIcon, Tooltip, Divider, ThemeIcon, Badge, Text, Stack } from '@mantine/core';
+import { Box, Group, Button, ActionIcon, Tooltip, Divider, ThemeIcon, Badge, Text, Stack, Transition } from '@mantine/core';
 import {
   IconArrowLeft,
   IconDeviceFloppy,
@@ -25,6 +24,10 @@ import {
   IconLayoutGrid,
   IconRoute,
   IconHierarchy,
+  IconPlus,
+  IconPointer,
+  IconHandGrab,
+  IconMaximize,
 } from '@tabler/icons-react';
 import { useTranslation } from 'react-i18next';
 import { workflowNodeTypes } from '../WorkflowNodes';
@@ -44,7 +47,7 @@ interface FlowCanvasProps {
 
 export function FlowCanvas({ workflowId, workflowData, onBack }: FlowCanvasProps) {
   const { t } = useTranslation();
-  const { screenToFlowPosition } = useReactFlow();
+  const { screenToFlowPosition, fitView } = useReactFlow();
   const updateMutation = useUpdateWorkflow();
 
   const {
@@ -65,6 +68,8 @@ export function FlowCanvas({ workflowId, workflowData, onBack }: FlowCanvasProps
 
   const [showExecution, setShowExecution] = useState(false);
   const [showMinimap, setShowMinimap] = useState(false);
+  const [showNodePalette, setShowNodePalette] = useState(false);
+  const [isPanMode, setIsPanMode] = useState(false);
 
   // ── Active execution node tracking & glow effect ─────────────────────────
   const activeNodeId = useMemo(() => {
@@ -277,13 +282,49 @@ export function FlowCanvas({ workflowId, workflowData, onBack }: FlowCanvasProps
   );
 
   const onNodeClick = useCallback(
-    (_: React.MouseEvent, node: Node) => setSelectedNodeId(node.id),
+    (_: React.MouseEvent, node: Node) => {
+      setSelectedNodeId(node.id);
+      setShowNodePalette(false);
+    },
     [setSelectedNodeId]
   );
 
-  const onPaneClick = useCallback(() => setSelectedNodeId(null), [setSelectedNodeId]);
+  const onPaneClick = useCallback(() => {
+    setSelectedNodeId(null);
+    setShowNodePalette(false);
+  }, [setSelectedNodeId]);
 
-  // ── Drag-and-drop ─────────────────────────────────────────────────────────
+  // ── Add Node via Click / Drop ─────────────────────────────────────────────
+
+  const handleAddNode = useCallback(
+    (type: NodeType) => {
+      if (!nodeConfig[type]) return;
+
+      let position = { x: 250, y: 200 };
+      try {
+        position = screenToFlowPosition({
+          x: window.innerWidth / 2,
+          y: window.innerHeight / 2,
+        });
+      } catch (err) {
+        console.error("Failed to project node position", err);
+      }
+
+      const sameTypeCount = nodes.filter((n) => n.type === type).length;
+      const newNode: Node = {
+        id: `${type}-${Date.now()}`,
+        type,
+        position,
+        data: {
+          label: `${nodeConfig[type].display} ${sameTypeCount + 1}`,
+          ...nodeConfig[type].initialData,
+        },
+      };
+      setNodes((nds) => [...nds, newNode]);
+      setShowNodePalette(false);
+    },
+    [nodes, setNodes, screenToFlowPosition]
+  );
 
   const onDragOver = useCallback((e: React.DragEvent) => {
     e.preventDefault();
@@ -309,6 +350,7 @@ export function FlowCanvas({ workflowId, workflowData, onBack }: FlowCanvasProps
         },
       };
       setNodes((nds) => [...nds, newNode]);
+      setShowNodePalette(false);
     },
     [nodes, setNodes, screenToFlowPosition]
   );
@@ -389,26 +431,6 @@ export function FlowCanvas({ workflowId, workflowData, onBack }: FlowCanvasProps
         </Group>
 
         <Group gap="xs">
-          <Tooltip label={t('workflow.autoLayout')} withArrow openDelay={300}>
-            <ActionIcon
-              variant="subtle"
-              color="gray"
-              size="sm"
-              onClick={layoutAllNodes}
-            >
-              <IconHierarchy size={15} />
-            </ActionIcon>
-          </Tooltip>
-          <Tooltip label={t('workflow.minimap')} withArrow openDelay={300}>
-            <ActionIcon
-              variant={showMinimap ? 'filled' : 'subtle'}
-              color={showMinimap ? 'blue' : 'gray'}
-              size="sm"
-              onClick={() => setShowMinimap((v) => !v)}
-            >
-              <IconLayoutGrid size={15} />
-            </ActionIcon>
-          </Tooltip>
           <Tooltip label={t('workflow.debug')} withArrow openDelay={300}>
             <ActionIcon
               variant={showExecution ? 'filled' : 'subtle'}
@@ -440,9 +462,128 @@ export function FlowCanvas({ workflowId, workflowData, onBack }: FlowCanvasProps
 
       {/* ── Canvas area ─────────────────────────────────────────────────── */}
       <Box style={{ flex: 1, display: 'flex', overflow: 'hidden' }}>
-        <NodePalette />
-
         <Box style={{ flex: 1, position: 'relative' }}>
+          {/* ── Left Floating Toolbar ── */}
+          <Box
+            style={{
+              position: 'absolute',
+              left: 16,
+              top: '50%',
+              transform: 'translateY(-50%)',
+              zIndex: 100,
+              background: 'var(--flock-bg-surface)',
+              border: '1px solid var(--flock-border-subtle)',
+              borderRadius: 8,
+              boxShadow: '0 4px 16px rgba(0,0,0,0.08)',
+              padding: '6px',
+              display: 'flex',
+              flexDirection: 'column',
+              gap: 8,
+              alignItems: 'center',
+            }}
+          >
+            {/* 1. Add Node (+) */}
+            <Tooltip label={t('workflow.addNode', 'Add Node')} position="right" withArrow>
+              <ActionIcon
+                variant={showNodePalette ? 'filled' : 'subtle'}
+                color={showNodePalette ? 'blue' : 'gray'}
+                radius="md"
+                size="md"
+                onClick={() => setShowNodePalette((v) => !v)}
+              >
+                <IconPlus size={16} />
+              </ActionIcon>
+            </Tooltip>
+
+            <Divider style={{ width: '80%' }} />
+
+            {/* 2. Selection Mode (Mouse Pointer) */}
+            <Tooltip label={t('workflow.selectMode', 'Select Mode')} position="right" withArrow>
+              <ActionIcon
+                variant={!isPanMode ? 'light' : 'subtle'}
+                color={!isPanMode ? 'blue' : 'gray'}
+                radius="md"
+                size="md"
+                onClick={() => setIsPanMode(false)}
+              >
+                <IconPointer size={16} />
+              </ActionIcon>
+            </Tooltip>
+
+            {/* 3. Pan Mode (Hand Grab) */}
+            <Tooltip label={t('workflow.panMode', 'Pan Mode')} position="right" withArrow>
+              <ActionIcon
+                variant={isPanMode ? 'light' : 'subtle'}
+                color={isPanMode ? 'blue' : 'gray'}
+                radius="md"
+                size="md"
+                onClick={() => setIsPanMode(true)}
+              >
+                <IconHandGrab size={16} />
+              </ActionIcon>
+            </Tooltip>
+
+            <Divider style={{ width: '80%' }} />
+
+            {/* 4. Auto Layout */}
+            <Tooltip label={t('workflow.autoLayout', 'Auto Layout')} position="right" withArrow>
+              <ActionIcon
+                variant="subtle"
+                color="gray"
+                radius="md"
+                size="md"
+                onClick={layoutAllNodes}
+              >
+                <IconHierarchy size={16} />
+              </ActionIcon>
+            </Tooltip>
+
+            {/* 5. Fit View */}
+            <Tooltip label={t('workflow.fitView', 'Fit View')} position="right" withArrow>
+              <ActionIcon
+                variant="subtle"
+                color="gray"
+                radius="md"
+                size="md"
+                onClick={() => fitView({ padding: 0.25 })}
+              >
+                <IconMaximize size={16} />
+              </ActionIcon>
+            </Tooltip>
+
+            {/* 6. Minimap Toggle */}
+            <Tooltip label={t('workflow.minimap', 'Minimap')} position="right" withArrow>
+              <ActionIcon
+                variant={showMinimap ? 'filled' : 'subtle'}
+                color={showMinimap ? 'blue' : 'gray'}
+                radius="md"
+                size="md"
+                onClick={() => setShowMinimap((v) => !v)}
+              >
+                <IconLayoutGrid size={16} />
+              </ActionIcon>
+            </Tooltip>
+          </Box>
+
+          {/* ── Node Palette Popover ── */}
+          <Transition mounted={showNodePalette} transition="slide-right" duration={200} timingFunction="ease">
+            {(styles) => (
+              <Box
+                style={{
+                  position: 'absolute',
+                  left: 68,
+                  top: '50%',
+                  transform: 'translateY(-50%)',
+                  zIndex: 99,
+                }}
+              >
+                <Box style={styles}>
+                  <NodePalette onAddNode={handleAddNode} />
+                </Box>
+              </Box>
+            )}
+          </Transition>
+
           <ReactFlow
             nodes={nodes}
             edges={edges}
@@ -459,6 +600,7 @@ export function FlowCanvas({ workflowId, workflowData, onBack }: FlowCanvasProps
             deleteKeyCode={['Backspace', 'Delete']}
             selectionKeyCode="Shift"
             multiSelectionKeyCode="Shift"
+            panOnDrag={isPanMode}
             defaultEdgeOptions={{
               type: 'smoothstep',
               markerEnd: { type: MarkerType.ArrowClosed, width: 16, height: 16 },
@@ -475,14 +617,6 @@ export function FlowCanvas({ workflowId, workflowData, onBack }: FlowCanvasProps
               gap={22}
               size={1.2}
               color="var(--flock-border-dim)"
-            />
-            <Controls
-              style={{
-                background: 'var(--flock-bg-raised)',
-                border: '1px solid var(--flock-border-dim)',
-                borderRadius: 8,
-                boxShadow: '0 2px 8px rgba(0,0,0,0.06)',
-              }}
             />
             {showMinimap && (
               <MiniMap
