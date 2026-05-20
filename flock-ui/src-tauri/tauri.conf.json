@@ -31,7 +31,7 @@
     "active": true,
     "targets": "all",
     "resources": {
-      "../../flock_install/skills/": "skills"
+      "../../flock-data/skills/": "skills"
     },
     "icon": [
       "icons/32x32.png",

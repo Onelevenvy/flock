@@ -27,9 +27,9 @@ pub fn user_commands_dir() -> Option<PathBuf> {
 /// Uses the same `install_root()` logic as the database path resolution:
 /// - Respects `FLOCK_WORKSPACE_ROOT` env var
 /// - Auto-detects exe directory (with target/ special case for dev)
-/// - Falls back to `skills` inside the `flock_install` directory
+/// - Falls back to `skills` inside the `flock-data` directory
 pub fn workspace_skills_dir() -> PathBuf {
-    // 1. 优先检查默认安装目录（比如开发环境下的 <exe_dir>/flock_install/skills，或通过环境变量指定的路径）
+    // 1. 优先检查默认安装目录（比如开发环境下的 <exe_dir>/flock-data/skills，或通过环境变量指定的路径）
     let default_path = flock_core::config::db_path::install_root().join("skills");
     if default_path.is_dir() {
         return default_path;
@@ -39,14 +39,14 @@ pub fn workspace_skills_dir() -> PathBuf {
     if let Ok(exe_path) = std::env::current_exe() {
         if let Some(exe_dir) = exe_path.parent() {
             // A. Windows/Linux: 带有 _up_ 的相对打包路径（使用简单字符串配置资源时的旧布局）
-            // 例如：<exe_dir>/_up_/_up_/flock_install/skills
-            let win_linux_up = exe_dir.join("_up_").join("_up_").join("flock_install").join("skills");
+            // 例如：<exe_dir>/_up_/_up_/flock-data/skills
+            let win_linux_up = exe_dir.join("_up_").join("_up_").join("flock-data").join("skills");
             if win_linux_up.is_dir() {
                 return win_linux_up;
             }
 
-            // B. Windows/Linux: <exe_dir>/resources/_up_/_up_/flock_install/skills
-            let win_linux_resource_up = exe_dir.join("resources").join("_up_").join("_up_").join("flock_install").join("skills");
+            // B. Windows/Linux: <exe_dir>/resources/_up_/_up_/flock-data/skills
+            let win_linux_resource_up = exe_dir.join("resources").join("_up_").join("_up_").join("flock-data").join("skills");
             if win_linux_resource_up.is_dir() {
                 return win_linux_resource_up;
             }
@@ -57,8 +57,8 @@ pub fn workspace_skills_dir() -> PathBuf {
                 return win_linux_resource;
             }
 
-            // D. macOS: <exe_dir>/../Resources/_up_/_up_/flock_install/skills
-            let macos_resource_up = exe_dir.join("..").join("Resources").join("_up_").join("_up_").join("flock_install").join("skills");
+            // D. macOS: <exe_dir>/../Resources/_up_/_up_/flock-data/skills
+            let macos_resource_up = exe_dir.join("..").join("Resources").join("_up_").join("_up_").join("flock-data").join("skills");
             if macos_resource_up.is_dir() {
                 return macos_resource_up;
             }

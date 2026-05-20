@@ -1,12 +1,12 @@
 use std::path::PathBuf;
 
 /// Default install root name.
-const DEFAULT_INSTALL_ROOT: &str = "flock_install";
+const DEFAULT_INSTALL_ROOT: &str = "flock-data";
 /// Default workspaces directory name.
 const DEFAULT_WORKSPACE_DIR: &str = "workspace";
 
 /// Get the app installation/data root directory.
-/// Priority: parent of `FLOCK_WORKSPACE_ROOT` if set, otherwise `<exe_dir>/flock_install`.
+/// Priority: parent of `FLOCK_WORKSPACE_ROOT` if set, otherwise `<exe_dir>/flock-data`.
 pub fn install_root() -> PathBuf {
     // 1. 优先使用环境变量（最高优先级）
     if let Ok(root_env) = std::env::var("FLOCK_WORKSPACE_ROOT") {
