@@ -30,6 +30,36 @@ import type { ToolProvider, Tool } from './types';
 import { getProviderDescription, getProviderName, formatLabel, parseInputSchema } from './helpers';
 import { ToolsIcon } from '../../components/Icons';
 
+function renderTextWithLinks(text: string) {
+  if (!text) return null;
+  const urlRegex = /(https?:\/\/[^\s"'()<>]+)/g;
+  const parts = text.split(urlRegex);
+  return parts.map((part, index) => {
+    if (part.match(/^https?:\/\//)) {
+      return (
+        <Text
+          key={index}
+          component="span"
+          size="xs"
+          style={{
+            color: 'var(--flock-accent, #228be6)',
+            textDecoration: 'underline',
+            cursor: 'pointer',
+            wordBreak: 'break-all',
+          }}
+          onClick={(e) => {
+            e.stopPropagation();
+            invoke('open_external_url', { url: part }).catch(console.error);
+          }}
+        >
+          {part}
+        </Text>
+      );
+    }
+    return <span key={index}>{part}</span>;
+  });
+}
+
 function ProviderDetailPanel({
   provider,
   tools,
@@ -198,7 +228,7 @@ function ProviderDetailPanel({
             )}
           </Box>
         </Group>
-        <Text size="xs" c="dimmed">{getProviderDescription(provider)}</Text>
+        <Text size="xs" c="dimmed">{renderTextWithLinks(getProviderDescription(provider))}</Text>
       </Box>
 
       <Divider />
@@ -224,7 +254,11 @@ function ProviderDetailPanel({
               >
                 <Group gap={6} mb={6}>
                   <Text size="xs" fw={500} c="var(--flock-text-secondary)">{formatLabel(key)}</Text>
-                  {field.description && <Text size="xs" c="dimmed">— {field.description}</Text>}
+                  {field.description && (
+                    <Text size="xs" c="dimmed">
+                      — {renderTextWithLinks(field.description)}
+                    </Text>
+                  )}
                 </Group>
                 <PasswordInput
                   size="xs"
@@ -263,7 +297,7 @@ function ProviderDetailPanel({
                   </Accordion.Control>
                   <Accordion.Panel>
                     <Stack gap="sm">
-                      <Text size="xs" c="dimmed">{tool.description}</Text>
+                      <Text size="xs" c="dimmed">{renderTextWithLinks(tool.description)}</Text>
                       {Object.keys(params).length > 0 && (
                         <Box>
                           <Text size="xs" fw={500} mb={4}>
@@ -276,7 +310,7 @@ function ProviderDetailPanel({
                                   <Text size="xs" fw={500}>{formatLabel(paramName)}</Text>
                                   <Badge size="xs" variant="filled" color="blue">{param.type || 'any'}</Badge>
                                 </Group>
-                                <Text size="xs" c="dimmed" style={{ wordBreak: 'break-word' }}>{param.description}</Text>
+                                <Text size="xs" c="dimmed" style={{ wordBreak: 'break-word' }}>{renderTextWithLinks(param.description)}</Text>
                               </Box>
                             ))}
                           </Stack>
