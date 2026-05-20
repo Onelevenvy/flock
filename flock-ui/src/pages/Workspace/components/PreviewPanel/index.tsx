@@ -1,22 +1,5 @@
 import { useState, useEffect } from 'react';
-import {
-  Box,
-  Text,
-  Group,
-  ActionIcon,
-  Tooltip,
-  ScrollArea,
-  Badge,
-  CopyButton,
-  SegmentedControl,
-} from '@mantine/core';
-import {
-  IconX,
-  IconCopy,
-  IconCheck,
-  IconDownload,
-  IconRefresh,
-} from '@tabler/icons-react';
+import { Box, Text, ScrollArea } from '@mantine/core';
 import { useTranslation } from 'react-i18next';
 import { notifications } from '@mantine/notifications';
 import { save } from '@tauri-apps/plugin-dialog';
@@ -30,6 +13,8 @@ import { OfficeView } from './OfficeView';
 import { CodeView } from './CodeView';
 import { MarkdownView } from './MarkdownView';
 import { FallbackView } from './FallbackView';
+import { PreviewHeader } from './components/PreviewHeader';
+import { SandboxRunner } from './components/SandboxRunner';
 
 const LANG_MAP: Record<string, string> = {
   ts: 'typescript', tsx: 'tsx', js: 'javascript', jsx: 'jsx',
@@ -120,13 +105,13 @@ export function PreviewPanel({ embedded = false }: PreviewPanelProps) {
       });
 
       notifications.show({
-        title: '下载成功',
-        message: `已导出至本地：${destination}`,
+        title: t('chat.workspace.downloadSuccess'),
+        message: t('chat.workspace.downloadSuccessDesc', { dest: destination }),
         color: 'teal',
       });
     } catch (err: unknown) {
       notifications.show({
-        title: '下载失败',
+        title: t('chat.workspace.downloadFailed'),
         message: String(err),
         color: 'red',
       });
@@ -143,14 +128,14 @@ export function PreviewPanel({ embedded = false }: PreviewPanelProps) {
       });
       setPreviewFile({ path: previewFile.path, content, extension: previewFile.extension });
       notifications.show({
-        title: '刷新成功',
-        message: '已加载最新内容',
+        title: t('chat.workspace.refreshSuccess'),
+        message: t('chat.workspace.refreshSuccessDesc'),
         color: 'teal',
         autoClose: 1000,
       });
     } catch (err: unknown) {
       notifications.show({
-        title: '刷新失败',
+        title: t('chat.workspace.refreshFailed'),
         message: String(err),
         color: 'red',
       });
@@ -171,114 +156,19 @@ export function PreviewPanel({ embedded = false }: PreviewPanelProps) {
         minWidth: 0,
       }}
     >
-      {/* 头部 Toolbar - Flock Computer */}
-      <Group
-        justify="space-between"
-        px="md"
-        py={10}
-        style={{
-          borderBottom: '1px solid var(--flock-border-dim)',
-          background: 'var(--flock-bg-base)',
-          flexShrink: 0,
-        }}
-      >
-        <Group gap="md">
-          {/* Flock Computer 标签与名字 */}
-          <Group gap="xs">
-            <Badge
-              size="xs"
-              variant="dot"
-              color="indigo"
-              style={{ textTransform: 'uppercase', paddingLeft: 6, paddingRight: 6 }}
-            >
-              Flock Computer
-            </Badge>
-            <Text
-              size="sm"
-              fw={600}
-              style={{ fontFamily: 'var(--mantine-font-family-monospace)', color: 'var(--flock-text-primary)' }}
-            >
-              {fileName}
-            </Text>
-          </Group>
-
-          {/* 切换 Tab (仅支持切换的文件) */}
-          {toggleable && (
-            <SegmentedControl
-              size="xs"
-              value={viewMode}
-              onChange={(val) => setViewMode(val as 'code' | 'preview')}
-              data={[
-                { label: '预览', value: 'preview' },
-                { label: '代码', value: 'code' },
-              ]}
-              styles={{
-                root: {
-                  background: 'var(--flock-bg-hover)',
-                  border: '1px solid var(--flock-border-dim)',
-                  padding: 2,
-                },
-                control: {
-                  transition: 'color 0.15s ease',
-                }
-              }}
-            />
-          )}
-        </Group>
-
-        {/* 顶部操作区：刷新和下载 */}
-        <Group gap={6}>
-          {viewMode === 'code' && (isCode || isMarkdown || isHtml) && (
-            <CopyButton value={previewFile.content} timeout={2000}>
-              {({ copied, copy }) => (
-                <Tooltip label={copied ? t('chat.copied') : t('workspace.copyContent')} withArrow>
-                  <ActionIcon
-                    size="sm"
-                    variant="subtle"
-                    color={copied ? 'green' : 'gray'}
-                    onClick={copy}
-                  >
-                    {copied ? <IconCheck size={14} /> : <IconCopy size={14} />}
-                  </ActionIcon>
-                </Tooltip>
-              )}
-            </CopyButton>
-          )}
-
-          <Tooltip label="刷新内容" withArrow>
-            <ActionIcon
-              size="sm"
-              variant="subtle"
-              color="gray"
-              onClick={handleRefresh}
-            >
-              <IconRefresh size={14} />
-            </ActionIcon>
-          </Tooltip>
-
-          <Tooltip label="下载此文件" withArrow>
-            <ActionIcon
-              size="sm"
-              variant="subtle"
-              color="gray"
-              onClick={handleDownload}
-            >
-              <IconDownload size={14} />
-            </ActionIcon>
-          </Tooltip>
-
-          <Tooltip label={t('workspace.closePreview')} withArrow>
-            <ActionIcon
-              size="sm"
-              variant="subtle"
-              color="gray"
-              onClick={() => setPreviewFile(null)}
-            >
-              <IconX size={14} />
-            </ActionIcon>
-          </Tooltip>
-        </Group>
-      </Group>
+      <PreviewHeader
+        fileName={fileName}
+        viewMode={viewMode}
+        toggleable={toggleable}
+        content={previewFile.content}
+        isCode={isCode}
+        isMarkdown={isMarkdown}
+        isHtml={isHtml}
+        onViewModeChange={(val) => setViewMode(val)}
+        onRefresh={handleRefresh}
+        onDownload={handleDownload}
+        onClose={() => setPreviewFile(null)}
+      />
 
       {/* 文件路径 */}
       <Box
@@ -299,17 +189,7 @@ export function PreviewPanel({ embedded = false }: PreviewPanelProps) {
       <ScrollArea style={{ flex: 1, height: '100%' }}>
         {/* 1. HTML 预览：如果处于 preview 模式，使用 iframe 进行网页运行效果仿真 */}
         {isHtml && viewMode === 'preview' && (
-          <iframe
-            srcDoc={previewFile.content}
-            title="HTML Sandbox Runner"
-            sandbox="allow-scripts"
-            style={{
-              width: '100%',
-              height: 'calc(100vh - 120px)',
-              border: 'none',
-              background: '#ffffff',
-            }}
-          />
+          <SandboxRunner content={previewFile.content} />
         )}
 
         {/* 2. Markdown 渲染：预览模式 */}

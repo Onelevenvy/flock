@@ -1,4 +1,4 @@
-import { useEffect, useState, useCallback, useRef } from 'react';
+import { useState, useCallback, useRef } from 'react';
 import {
   Box,
   Text,
@@ -32,10 +32,10 @@ import {
 } from '@tabler/icons-react';
 import { invoke } from '@tauri-apps/api/core';
 import { useTranslation } from 'react-i18next';
-import { notifications } from '@mantine/notifications';
 import { useUiStore, FileEntry } from '../../../store/uiStore';
 import { useWorkspaceStore } from '../../../store/workspaceStore';
 import { useWorkspacesQuery } from '../../../hooks/useWorkspaces';
+import { useWorkspaceFiles } from '../../../hooks/useWorkspaceFiles';
 
 
 // ---- 文件图标 ----
@@ -97,13 +97,15 @@ function FileTreeItem({
   entry,
   depth,
   workspaceId,
+  onDelete,
 }: {
   entry: FileEntry;
   depth: number;
   workspaceId: string;
+  onDelete?: (relativePath: string, name: string, isDir: boolean) => Promise<void>;
 }) {
   const { t } = useTranslation();
-  const { expandedDirs, toggleExpandDir, setPreviewFile, triggerFileTreeRefresh } = useUiStore();
+  const { expandedDirs, toggleExpandDir, setPreviewFile } = useUiStore();
   const [children, setChildren] = useState<FileEntry[]>(entry.children || []);
   const [loading, setLoading] = useState(false);
   const isExpanded = expandedDirs.has(entry.path);
@@ -209,38 +211,21 @@ function FileTreeItem({
 
         <Group gap={4} style={{ flexShrink: 0, opacity: 0 }} className="file-actions">
           {!entry.is_dir && (
-            <Tooltip label={t('workspace.preview')} withArrow position="left">
+            <Tooltip label={t('chat.workspace.preview')} withArrow position="left">
               <ActionIcon size={16} variant="transparent" color="gray" onClick={(e) => { e.stopPropagation(); handlePreview(); }}>
                 <IconEye size={12} />
               </ActionIcon>
             </Tooltip>
           )}
-          <Tooltip label={t('workspace.delete', '删除')} withArrow position="left">
+          <Tooltip label={t('chat.workspace.delete', '删除')} withArrow position="left">
             <ActionIcon
               size={16}
               variant="transparent"
               color="red"
               onClick={async (e) => {
                 e.stopPropagation();
-                if (window.confirm(`确定要删除${entry.is_dir ? '文件夹' : '文件'} "${entry.name}" 吗？此操作无法撤销。`)) {
-                  try {
-                    await invoke('delete_workspace_file_or_dir', {
-                      workspaceId,
-                      relativePath: entry.path,
-                    });
-                    notifications.show({
-                      title: '删除成功',
-                      message: `${entry.name} 已成功删除。`,
-                      color: 'teal',
-                    });
-                    triggerFileTreeRefresh();
-                  } catch (err: unknown) {
-                    notifications.show({
-                      title: '删除失败',
-                      message: String(err),
-                      color: 'red',
-                    });
-                  }
+                if (onDelete) {
+                  await onDelete(entry.path, entry.name, entry.is_dir);
                 }
               }}
             >
@@ -259,7 +244,13 @@ function FileTreeItem({
       {entry.is_dir && isExpanded && (
         <>
           {children.map((child) => (
-            <FileTreeItem key={child.path} entry={child} depth={depth + 1} workspaceId={workspaceId} />
+            <FileTreeItem
+              key={child.path}
+              entry={child}
+              depth={depth + 1}
+              workspaceId={workspaceId}
+              onDelete={onDelete}
+            />
           ))}
           {children.length === 0 && !loading && (
             <Text
@@ -267,7 +258,7 @@ function FileTreeItem({
               c="dimmed"
               style={{ paddingLeft: paddingLeft + 14, paddingBottom: 4, opacity: 0.5, fontSize: 11 }}
             >
-              {t('workspace.emptyDir')}
+              {t('chat.workspace.emptyDir')}
             </Text>
           )}
         </>
@@ -279,11 +270,19 @@ function FileTreeItem({
 // ---- 文件树面板 ----
 export function FileTreePanel() {
   const { t } = useTranslation();
-  const { isFileTreeOpen, fileTreeRefreshKey, setFileTreeOpen } = useUiStore();
+  const { isFileTreeOpen } = useUiStore();
   const { activeWorkspaceId } = useWorkspaceStore();
   const { data: workspaces = [] } = useWorkspacesQuery();
-  const [files, setFiles] = useState<FileEntry[]>([]);
-  const [loading, setLoading] = useState(false);
+
+  const {
+    files,
+    loading,
+    loadFiles,
+    createFile,
+    createDirectory,
+    uploadFile,
+    deleteFileOrDir,
+  } = useWorkspaceFiles(activeWorkspaceId);
 
   // 新建文件和文件夹状态
   const [isCreating, setIsCreating] = useState<'file' | 'dir' | null>(null);
@@ -293,38 +292,6 @@ export function FileTreePanel() {
   // 搜索相关状态
   const [showSearchInput, setShowSearchInput] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
-
-  const loadFiles = useCallback(async () => {
-    if (!activeWorkspaceId) {
-      setFileTreeOpen(false);
-      return;
-    }
-    setLoading(true);
-    try {
-      const items = await invoke<FileEntry[]>('list_workspace_files', {
-        workspaceId: activeWorkspaceId,
-        relativePath: '',
-        recursive: true, // 改为 true 使得本地搜索可以搜索到深层文件
-      });
-      setFiles(items);
-      if (items.length > 0) {
-        setFileTreeOpen(true);
-      } else {
-        setFileTreeOpen(false);
-      }
-    } catch {
-      setFiles([]);
-      setFileTreeOpen(false);
-    } finally {
-      setLoading(false);
-    }
-  }, [activeWorkspaceId, setFileTreeOpen]);
-
-  useEffect(() => {
-    if (activeWorkspaceId) {
-      loadFiles();
-    }
-  }, [activeWorkspaceId, fileTreeRefreshKey, loadFiles]);
 
   const activeWs = workspaces.find((w) => w.id === activeWorkspaceId);
 
@@ -338,35 +305,13 @@ export function FileTreePanel() {
         setIsCreating(null);
         return;
       }
-      try {
-        if (isCreating === 'file') {
-          await invoke('create_workspace_file', {
-            workspaceId: activeWorkspaceId,
-            relativePath: createInput.trim(),
-            content: '',
-          });
-        } else {
-          await invoke('create_workspace_directory', {
-            workspaceId: activeWorkspaceId,
-            relativePath: createInput.trim(),
-          });
-        }
-        notifications.show({
-          title: '创建成功',
-          message: `已创建${isCreating === 'file' ? '文件' : '文件夹'} "${createInput.trim()}"`,
-          color: 'teal',
-        });
-        loadFiles();
-      } catch (err: unknown) {
-        notifications.show({
-          title: '创建失败',
-          message: String(err),
-          color: 'red',
-        });
-      } finally {
-        setIsCreating(null);
-        setCreateInput('');
+      if (isCreating === 'file') {
+        await createFile(createInput.trim());
+      } else {
+        await createDirectory(createInput.trim());
       }
+      setIsCreating(null);
+      setCreateInput('');
     }
   };
 
@@ -379,37 +324,8 @@ export function FileTreePanel() {
 
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
-    if (!file || !activeWorkspaceId) return;
-
-    const reader = new FileReader();
-    reader.onload = async (event) => {
-      const arrayBuffer = event.target?.result as ArrayBuffer;
-      if (!arrayBuffer) return;
-
-      const uint8Array = new Uint8Array(arrayBuffer);
-      const contentArray = Array.from(uint8Array);
-
-      try {
-        await invoke('upload_workspace_file', {
-          workspaceId: activeWorkspaceId,
-          relativePath: file.name,
-          content: contentArray,
-        });
-        notifications.show({
-          title: '上传成功',
-          message: `已成功上传文件 "${file.name}"`,
-          color: 'teal',
-        });
-        loadFiles();
-      } catch (err: unknown) {
-        notifications.show({
-          title: '上传失败',
-          message: String(err),
-          color: 'red',
-        });
-      }
-    };
-    reader.readAsArrayBuffer(file);
+    if (!file) return;
+    await uploadFile(file);
     e.target.value = '';
   };
 
@@ -474,7 +390,7 @@ export function FileTreePanel() {
       >
         <Box style={{ flex: 1, minWidth: 0 }}>
           <Text size="xs" fw={700} style={{ color: 'var(--flock-text-secondary)', letterSpacing: '0.05em', textTransform: 'uppercase' }}>
-            项目文件
+            {t('sidebar.workspace')}
           </Text>
           {activeWs && (
             <Text size="xs" c="dimmed" style={{ opacity: 0.5, fontSize: 10, marginTop: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
@@ -484,7 +400,7 @@ export function FileTreePanel() {
         </Box>
 
         <Group gap={4} style={{ flexShrink: 0 }}>
-          <Tooltip label="搜索文件" withArrow>
+          <Tooltip label={t('chat.workspace.searchFiles')} withArrow>
             <ActionIcon
               size="sm"
               variant={showSearchInput ? "light" : "subtle"}
@@ -498,7 +414,7 @@ export function FileTreePanel() {
             </ActionIcon>
           </Tooltip>
 
-          <Tooltip label="新建文件" withArrow>
+          <Tooltip label={t('chat.workspace.newFile')} withArrow>
             <ActionIcon
               size="sm"
               variant="subtle"
@@ -513,7 +429,7 @@ export function FileTreePanel() {
             </ActionIcon>
           </Tooltip>
 
-          <Tooltip label="新建文件夹" withArrow>
+          <Tooltip label={t('chat.workspace.newFolder')} withArrow>
             <ActionIcon
               size="sm"
               variant="subtle"
@@ -528,7 +444,7 @@ export function FileTreePanel() {
             </ActionIcon>
           </Tooltip>
 
-          <Tooltip label="上传文件" withArrow>
+          <Tooltip label={t('chat.workspace.uploadFile')} withArrow>
             <ActionIcon
               size="sm"
               variant="subtle"
@@ -539,7 +455,7 @@ export function FileTreePanel() {
             </ActionIcon>
           </Tooltip>
 
-          <Tooltip label={t('workspace.refresh')} withArrow>
+          <Tooltip label={t('chat.workspace.refresh')} withArrow>
             <ActionIcon
               size="sm"
               variant="subtle"
@@ -560,7 +476,7 @@ export function FileTreePanel() {
             autoFocus
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            placeholder="在工作空间中过滤..."
+            placeholder={t('chat.workspace.searchFiles')}
             style={{
               width: '100%',
               padding: '5px 8px',
@@ -579,7 +495,7 @@ export function FileTreePanel() {
       <ScrollArea style={{ flex: 1 }} py={4}>
         {!activeWorkspaceId ? (
           <Box py={24} style={{ textAlign: 'center' }}>
-            <Text size="xs" c="dimmed">{t('workspace.selectWorkspace')}</Text>
+            <Text size="xs" c="dimmed">{t('chat.workspace.selectWorkspace')}</Text>
           </Box>
         ) : loading && files.length === 0 ? (
           <Box py={24} style={{ display: 'flex', justifyContent: 'center' }}>
@@ -613,13 +529,12 @@ export function FileTreePanel() {
                   onChange={(e) => setCreateInput(e.target.value)}
                   onKeyDown={handleCreateKeyDown}
                   onBlur={() => {
-                    // 使用延时防 click 冲突，或者直接在失去焦点时重置
                     setTimeout(() => {
                       setIsCreating(null);
                       setCreateInput('');
                     }, 200);
                   }}
-                  placeholder={isCreating === 'dir' ? "新建文件夹名称..." : "新建文件名称..."}
+                  placeholder={isCreating === 'dir' ? `${t('chat.workspace.newFolder')}...` : `${t('chat.workspace.newFile')}...`}
                   style={{
                     flex: 1,
                     background: 'transparent',
@@ -635,7 +550,7 @@ export function FileTreePanel() {
 
             {displayFiles.length === 0 ? (
               <Box py={24} style={{ textAlign: 'center' }}>
-                <Text size="xs" c="dimmed">{searchQuery ? "未搜索到匹配项" : t('workspace.workspaceEmpty')}</Text>
+                <Text size="xs" c="dimmed">{searchQuery ? t('chat.workspace.noResults', '未搜索到匹配项') : t('chat.workspace.workspaceEmpty')}</Text>
               </Box>
             ) : (
               displayFiles.map((entry) => (
@@ -644,6 +559,7 @@ export function FileTreePanel() {
                   entry={entry}
                   workspaceId={activeWorkspaceId}
                   depth={0}
+                  onDelete={deleteFileOrDir}
                 />
               ))
             )}
