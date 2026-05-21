@@ -72,16 +72,65 @@ export const useWorkflowStore = create<WorkflowStore>()(
       setActiveWorkflowId: (id) => set({ activeWorkflowId: id }),
 
       setNodes: (nodes) =>
-        set((s) => ({
-          nodes: typeof nodes === 'function' ? nodes(s.nodes) : nodes,
-          isDirty: true,
-        })),
+        set((s) => {
+          const nextNodes = typeof nodes === 'function' ? nodes(s.nodes) : nodes;
+          let hasChanged = false;
+          if (nextNodes.length !== s.nodes.length) {
+            hasChanged = true;
+          } else {
+            for (let i = 0; i < nextNodes.length; i++) {
+              const n1 = nextNodes[i];
+              const n2 = s.nodes.find((n) => n.id === n1.id);
+              if (!n2) {
+                hasChanged = true;
+                break;
+              }
+              if (n1.position.x !== n2.position.x || n1.position.y !== n2.position.y) {
+                hasChanged = true;
+                break;
+              }
+              if (JSON.stringify(n1.data) !== JSON.stringify(n2.data)) {
+                hasChanged = true;
+                break;
+              }
+            }
+          }
+          return {
+            nodes: nextNodes,
+            isDirty: s.isDirty || hasChanged,
+          };
+        }),
 
       setEdges: (edges) =>
-        set((s) => ({
-          edges: typeof edges === 'function' ? edges(s.edges) : edges,
-          isDirty: true,
-        })),
+        set((s) => {
+          const nextEdges = typeof edges === 'function' ? edges(s.edges) : edges;
+          let hasChanged = false;
+          if (nextEdges.length !== s.edges.length) {
+            hasChanged = true;
+          } else {
+            for (let i = 0; i < nextEdges.length; i++) {
+              const e1 = nextEdges[i];
+              const e2 = s.edges.find((e) => e.id === e1.id);
+              if (!e2) {
+                hasChanged = true;
+                break;
+              }
+              if (
+                e1.source !== e2.source ||
+                e1.target !== e2.target ||
+                e1.sourceHandle !== e2.sourceHandle ||
+                e1.targetHandle !== e2.targetHandle
+              ) {
+                hasChanged = true;
+                break;
+              }
+            }
+          }
+          return {
+            edges: nextEdges,
+            isDirty: s.isDirty || hasChanged,
+          };
+        }),
 
       setDirty: (dirty) => set({ isDirty: dirty }),
 

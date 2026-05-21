@@ -53,7 +53,7 @@ function BaseWorkflowNode({ type, data, selected }: NodeProps<BaseNodeData> & { 
         borderRadius: 12,
         border: selected 
           ? `2px solid var(--flock-accent)` 
-          : `1px solid rgba(21, 90, 239, 0.25)`, // 统一使用主题色蓝色的淡化边框
+          : `1px solid var(--flock-accent)`, // 统一使用主题色蓝色外圈
         background: 'var(--flock-bg-surface)',
         boxShadow: selected 
           ? `0 0 0 3px rgba(21, 90, 239, 0.25)` 
@@ -148,7 +148,7 @@ export const StartNode = memo(({ data, selected }: NodeProps<BaseNodeData>) => {
         background: 'var(--flock-bg-surface)',
         border: selected 
           ? `2px solid var(--flock-accent)` 
-          : `1px solid rgba(21, 90, 239, 0.25)`,
+          : `1px solid var(--flock-accent)`,
         boxShadow: selected 
           ? `0 0 0 3px rgba(21, 90, 239, 0.25)` 
           : '0 4px 10px rgba(0,0,0,0.03)',
@@ -199,7 +199,7 @@ export const EndNode = memo(({ data, selected }: NodeProps<BaseNodeData>) => {
         background: 'var(--flock-bg-surface)',
         border: selected 
           ? `2px solid var(--flock-accent)` 
-          : `1px solid rgba(21, 90, 239, 0.25)`,
+          : `1px solid var(--flock-accent)`,
         boxShadow: selected 
           ? `0 0 0 3px rgba(21, 90, 239, 0.25)` 
           : '0 4px 10px rgba(0,0,0,0.03)',
@@ -265,7 +265,7 @@ export const ClassifierNode = memo(({ data, selected }: NodeProps<BaseNodeData>)
         borderRadius: 12,
         border: selected 
           ? `2px solid var(--flock-accent)` 
-          : `1px solid rgba(21, 90, 239, 0.25)`,
+          : `1px solid var(--flock-accent)`,
         background: 'var(--flock-bg-surface)',
         boxShadow: selected 
           ? `0 0 0 3px rgba(21, 90, 239, 0.25)` 
@@ -376,7 +376,7 @@ export const IfElseNode = memo(({ data, selected }: NodeProps<BaseNodeData>) => 
         borderRadius: 12,
         border: selected 
           ? `2px solid var(--flock-accent)` 
-          : `1px solid rgba(21, 90, 239, 0.25)`,
+          : `1px solid var(--flock-accent)`,
         background: 'var(--flock-bg-surface)',
         boxShadow: selected 
           ? `0 0 0 3px rgba(21, 90, 239, 0.25)` 

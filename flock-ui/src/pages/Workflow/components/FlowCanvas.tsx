@@ -16,7 +16,7 @@ import ReactFlow, {
   useReactFlow,
 } from 'reactflow';
 import 'reactflow/dist/style.css';
-import { Box, Group, Button, ActionIcon, Tooltip, Divider, ThemeIcon, Badge, Text, Stack, Transition } from '@mantine/core';
+import { Box, Group, Button, ActionIcon, Tooltip, Divider, ThemeIcon, Badge, Text, Transition } from '@mantine/core';
 import {
   IconArrowLeft,
   IconDeviceFloppy,
@@ -35,6 +35,7 @@ import { nodeConfig, type NodeType } from '../nodeConfig';
 import { useWorkflowStore } from '../../../store/workflowStore';
 import { useUpdateWorkflow, type WorkflowRecord } from '../../../hooks/useWorkflow';
 import { NodePalette } from './NodePalette';
+import { CustomStepEdge } from './CustomStepEdge';
 import { PropertiesPanel } from './PropertiesPanel';
 import { ExecutionPanel } from './ExecutionPanel';
 import { useWorkflowExecution } from '../../../hooks/useWorkflowExecution';
@@ -96,62 +97,89 @@ export function FlowCanvas({ workflowId, workflowData, onBack }: FlowCanvasProps
 
   // ── Edge Click Node Insertion ─────────────────────────────────────────────
   const [menuEdge, setMenuEdge] = useState<Edge | null>(null);
+  const [insertMode, setInsertMode] = useState<'center' | 'source' | null>(null);
   const [menuPortalPosition, setMenuPortalPosition] = useState<{ x: number; y: number } | null>(null);
 
-  const onEdgeClick = useCallback((event: React.MouseEvent, edge: Edge) => {
-    event.preventDefault();
-    setMenuEdge(edge);
-    setMenuPortalPosition({ x: event.clientX, y: event.clientY });
-  }, []);
-
   const handleInsertNode = useCallback((type: NodeType) => {
-    if (!menuEdge) return;
+    if (!menuEdge || !insertMode) return;
     const sourceNode = nodes.find(n => n.id === menuEdge.source);
     const targetNode = nodes.find(n => n.id === menuEdge.target);
     if (!sourceNode || !targetNode) return;
 
-    // 计算位置：中点
-    const position = {
-      x: (sourceNode.position.x + targetNode.position.x) / 2,
-      y: (sourceNode.position.y + targetNode.position.y) / 2,
-    };
-
     const sameTypeCount = nodes.filter((n) => n.type === type).length;
     const newNodeId = `${type}-${Date.now()}`;
-    const newNode: Node = {
-      id: newNodeId,
-      type,
-      position,
-      data: {
-        label: `${nodeConfig[type].display} ${sameTypeCount + 1}`,
-        ...nodeConfig[type].initialData,
-      },
-    };
 
-    const newEdge1 = {
-      id: `e-${menuEdge.source}-${newNodeId}`,
-      source: menuEdge.source,
-      target: newNodeId,
-      markerEnd: { type: MarkerType.ArrowClosed, width: 16, height: 16 },
-      style: { strokeWidth: 1.8, stroke: 'var(--flock-accent)' },
-      type: 'smoothstep',
-    };
-    
-    const newEdge2 = {
-      id: `e-${newNodeId}-${menuEdge.target}`,
-      source: newNodeId,
-      target: menuEdge.target,
-      markerEnd: { type: MarkerType.ArrowClosed, width: 16, height: 16 },
-      style: { strokeWidth: 1.8, stroke: 'var(--flock-accent)' },
-      type: 'smoothstep',
-    };
+    if (insertMode === 'center') {
+      // 计算位置：中点
+      const position = {
+        x: (sourceNode.position.x + targetNode.position.x) / 2,
+        y: (sourceNode.position.y + targetNode.position.y) / 2,
+      };
 
-    setNodes((nds) => [...nds, newNode]);
-    setEdges((eds) => [...eds.filter(e => e.id !== menuEdge.id), newEdge1, newEdge2]);
+      const newNode: Node = {
+        id: newNodeId,
+        type,
+        position,
+        data: {
+          label: `${nodeConfig[type].display} ${sameTypeCount + 1}`,
+          ...nodeConfig[type].initialData,
+        },
+      };
+
+      const newEdge1 = {
+        id: `e-${menuEdge.source}-${newNodeId}`,
+        source: menuEdge.source,
+        target: newNodeId,
+        markerEnd: { type: MarkerType.ArrowClosed, width: 16, height: 16 },
+        style: { strokeWidth: 1.8, stroke: 'rgba(21, 90, 239, 0.25)' },
+        type: 'customStep',
+      };
+      
+      const newEdge2 = {
+        id: `e-${newNodeId}-${menuEdge.target}`,
+        source: newNodeId,
+        target: menuEdge.target,
+        markerEnd: { type: MarkerType.ArrowClosed, width: 16, height: 16 },
+        style: { strokeWidth: 1.8, stroke: 'rgba(21, 90, 239, 0.25)' },
+        type: 'customStep',
+      };
+
+      setNodes((nds) => [...nds, newNode]);
+      setEdges((eds) => [...eds.filter(e => e.id !== menuEdge.id), newEdge1, newEdge2]);
+    } else {
+      // 端点分叉模式：新建新节点，源节点连到新节点，保留原连线不变
+      const position = {
+        x: sourceNode.position.x + 280,
+        y: sourceNode.position.y + 120, // 稍微向下偏以作分叉
+      };
+
+      const newNode: Node = {
+        id: newNodeId,
+        type,
+        position,
+        data: {
+          label: `${nodeConfig[type].display} ${sameTypeCount + 1}`,
+          ...nodeConfig[type].initialData,
+        },
+      };
+
+      const newEdge = {
+        id: `e-${menuEdge.source}-${newNodeId}`,
+        source: menuEdge.source,
+        target: newNodeId,
+        markerEnd: { type: MarkerType.ArrowClosed, width: 16, height: 16 },
+        style: { strokeWidth: 1.8, stroke: 'rgba(21, 90, 239, 0.25)' },
+        type: 'customStep',
+      };
+
+      setNodes((nds) => [...nds, newNode]);
+      setEdges((eds) => [...eds, newEdge]);
+    }
 
     setMenuEdge(null);
+    setInsertMode(null);
     setMenuPortalPosition(null);
-  }, [menuEdge, nodes, setNodes, setEdges]);
+  }, [menuEdge, insertMode, nodes, setNodes, setEdges]);
 
   // ── Topological Auto Layout ───────────────────────────────────────────────
   const layoutAllNodes = useCallback(() => {
@@ -250,8 +278,8 @@ export function FlowCanvas({ workflowId, workflowData, onBack }: FlowCanvasProps
           {
             ...connection,
             markerEnd: { type: MarkerType.ArrowClosed, width: 16, height: 16 },
-            style: { strokeWidth: 1.8, stroke: 'var(--flock-accent)' },
-            type: 'smoothstep',
+            style: { strokeWidth: 1.8, stroke: 'rgba(21, 90, 239, 0.25)' },
+            type: 'customStep',
           },
           eds
         )
@@ -376,6 +404,23 @@ export function FlowCanvas({ workflowId, workflowData, onBack }: FlowCanvasProps
     () => nodes.find((n) => n.id === selectedNodeId) ?? null,
     [nodes, selectedNodeId]
   );
+
+  const edgeTypes = useMemo(() => ({ customStep: CustomStepEdge }), []);
+
+  const edgesWithCallbacks = useMemo(() => {
+    return edges.map(edge => ({
+      ...edge,
+      type: 'customStep',
+      data: {
+        ...edge.data,
+        onInsertClick: (mode: 'center' | 'source', x: number, y: number) => {
+          setMenuEdge(edge);
+          setInsertMode(mode);
+          setMenuPortalPosition({ x, y });
+        }
+      }
+    }));
+  }, [edges]);
 
   return (
     <Box
@@ -586,15 +631,15 @@ export function FlowCanvas({ workflowId, workflowData, onBack }: FlowCanvasProps
 
           <ReactFlow
             nodes={nodes}
-            edges={edges}
+            edges={edgesWithCallbacks}
             onNodesChange={onNodesChange}
             onEdgesChange={onEdgesChange}
             onConnect={onConnect}
             isValidConnection={isValidConnection}
             nodeTypes={workflowNodeTypes}
+            edgeTypes={edgeTypes}
             onNodeClick={onNodeClick}
             onPaneClick={onPaneClick}
-            onEdgeClick={onEdgeClick}
             onDragOver={onDragOver}
             onDrop={onDrop}
             deleteKeyCode={['Backspace', 'Delete']}
@@ -602,9 +647,9 @@ export function FlowCanvas({ workflowId, workflowData, onBack }: FlowCanvasProps
             multiSelectionKeyCode="Shift"
             panOnDrag={isPanMode}
             defaultEdgeOptions={{
-              type: 'smoothstep',
+              type: 'customStep',
               markerEnd: { type: MarkerType.ArrowClosed, width: 16, height: 16 },
-              style: { strokeWidth: 1.8 },
+              style: { strokeWidth: 1.8, stroke: 'rgba(21, 90, 239, 0.25)' },
               interactionWidth: 20,
             }}
             fitView
@@ -671,6 +716,7 @@ export function FlowCanvas({ workflowId, workflowData, onBack }: FlowCanvasProps
             }}
             onClick={() => {
               setMenuEdge(null);
+              setInsertMode(null);
               setMenuPortalPosition(null);
             }}
           />
@@ -680,63 +726,10 @@ export function FlowCanvas({ workflowId, workflowData, onBack }: FlowCanvasProps
               left: menuPortalPosition.x,
               top: menuPortalPosition.y,
               zIndex: 10000,
-              background: 'var(--flock-bg-surface, #1e1e24)',
-              border: '1px solid var(--flock-border-base, #2d2d38)',
-              borderRadius: 10,
-              boxShadow: '0 10px 30px rgba(0, 0, 0, 0.25)',
-              padding: 6,
-              minWidth: 168,
-              backdropFilter: 'blur(8px)',
               animation: 'scaleIn 0.15s cubic-bezier(0.34, 1.56, 0.64, 1)',
             }}
           >
-            <Text
-              size="10px"
-              c="dimmed"
-              fw={600}
-              px={10}
-              py={5}
-              style={{
-                borderBottom: '1px solid var(--flock-border-dim, #282833)',
-                marginBottom: 4,
-                letterSpacing: '0.05em',
-              }}
-            >
-              {t('workflow.insertNode', 'INSERT NODE')}
-            </Text>
-            <Stack gap={2}>
-              {Object.entries(nodeConfig).map(([type, cfg]) => {
-                if (type === 'start' || type === 'end') return null;
-                return (
-                  <Box
-                    key={type}
-                    onClick={() => handleInsertNode(type as NodeType)}
-                    style={{
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: 8,
-                      padding: '6px 10px',
-                      borderRadius: 6,
-                      cursor: 'pointer',
-                      fontSize: 12,
-                      color: 'var(--flock-text-primary, #e2e8f0)',
-                      transition: 'all 0.15s ease',
-                    }}
-                    onMouseEnter={(e) => {
-                      e.currentTarget.style.background = 'var(--flock-bg-hover, #2d2d38)';
-                      e.currentTarget.style.paddingLeft = '12px';
-                    }}
-                    onMouseLeave={(e) => {
-                      e.currentTarget.style.background = 'transparent';
-                      e.currentTarget.style.paddingLeft = '10px';
-                    }}
-                  >
-                    <cfg.icon size={13} style={{ color: cfg.colorHex }} />
-                    <span>{t(cfg.displayKey, { defaultValue: cfg.display })}</span>
-                  </Box>
-                );
-              })}
-            </Stack>
+            <NodePalette onAddNode={handleInsertNode} />
           </Box>
         </>
       )}
