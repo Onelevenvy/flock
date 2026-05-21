@@ -78,6 +78,7 @@ pub fn run() {
             commands::get_active_sandbox_vnc_url,
             commands::destroy_sandbox,
             commands::cleanup_all_sandboxes,
+            commands::fetch_vnc_page_content,
             // 工作空间
             commands::get_workspace_root,
             commands::list_workspaces,

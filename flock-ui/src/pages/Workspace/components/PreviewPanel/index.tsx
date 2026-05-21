@@ -60,6 +60,9 @@ export function PreviewPanel({ embedded = false }: PreviewPanelProps) {
   const ext = previewFile?.extension?.toLowerCase() || '';
   const lang = getLanguage(ext);
   const fileName = previewFile?.path.split(/[/\\]/).pop() || '';
+  const [vncSrcdoc, setVncSrcdoc] = useState<string | null>(null);
+  const [vncSrcdocLoading, setVncSrcdocLoading] = useState(false);
+  const [vncSrcdocError, setVncSrcdocError] = useState<string | null>(null);
 
   useEffect(() => {
     const isSandboxPreview = previewFile?.path === '.flock/sandbox/screenshot.png' || ext === 'vnc';
@@ -157,36 +160,57 @@ export function PreviewPanel({ embedded = false }: PreviewPanelProps) {
     return url;
   })();
 
+  // 通过 Tauri 后端代理拉取 VNC HTML 内容，绕过 Daytona 警告拦截
   useEffect(() => {
     if (activeTab === 'vnc' && formattedVncUrl && isVnc) {
       setVncPreheatStatus('loading');
+      setVncSrcdoc(null);
+      setVncSrcdocError(null);
       let isCurrent = true;
 
-      const preheat = async () => {
+      const fetchVncContent = async () => {
         try {
-          await fetch(formattedVncUrl, {
-            method: 'GET',
-            headers: {
-              'X-Daytona-Skip-Preview-Warning': 'true',
-              'X-Daytona-Disable-CORS': 'true',
-            },
+          const result = await invoke<{
+            html: string;
+            base_url: string;
+            final_url: string;
+            status: number;
+            ok: boolean;
+          }>('fetch_vnc_page_content', {
+            pageUrl: formattedVncUrl,
+            apiKey: null,
           });
-        } catch (err) {
-          console.warn('Preheat VNC URL CORS/Network issue, but cookie might still be set:', err);
-        } finally {
+
           if (isCurrent) {
+            if (result.ok && result.html) {
+              setVncSrcdoc(result.html);
+              setVncSrcdocError(null);
+            } else {
+              // 后端返回非 2xx 或内容为空，回退到直接 src 模式
+              setVncSrcdoc(null);
+              setVncSrcdocError(`HTTP ${result.status}`);
+            }
+            setVncPreheatStatus('success');
+          }
+        } catch (err) {
+          console.warn('fetch_vnc_page_content failed, falling back to direct iframe src:', err);
+          if (isCurrent) {
+            setVncSrcdoc(null);
+            setVncSrcdocError(String(err));
             setVncPreheatStatus('success');
           }
         }
       };
 
-      preheat();
+      fetchVncContent();
 
       return () => {
         isCurrent = false;
       };
     } else {
       setVncPreheatStatus('idle');
+      setVncSrcdoc(null);
+      setVncSrcdocError(null);
     }
   }, [formattedVncUrl, activeTab, isVnc]);
 
@@ -447,7 +471,11 @@ export function PreviewPanel({ embedded = false }: PreviewPanelProps) {
                   </Box>
                 ) : (
                   <iframe
-                    src={formattedVncUrl}
+                    key={vncSrcdoc ? 'srcdoc' : 'src'}
+                    {...(vncSrcdoc
+                      ? { srcDoc: vncSrcdoc }
+                      : { src: formattedVncUrl }
+                    )}
                     style={{
                       width: '100%',
                       height: 'calc(100vh - 320px)',
@@ -457,7 +485,7 @@ export function PreviewPanel({ embedded = false }: PreviewPanelProps) {
                       boxShadow: '0 8px 24px rgba(0,0,0,0.2)'
                     }}
                     allow="fullscreen; clipboard-read; clipboard-write"
-                    sandbox="allow-scripts allow-same-origin allow-popups allow-forms"
+                    sandbox="allow-scripts allow-same-origin allow-popups allow-forms allow-storage-access-by-user-activation"
                   />
                 )}
                 
