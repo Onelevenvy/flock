@@ -2,7 +2,7 @@
 //!
 //! When the token watermark exceeds the configured threshold, this module
 //! calls the LLM to produce a structured summary of the conversation,
-//! then replaces the full history with a context_compression boundary marker and the
+//! then replaces the full history with a mod boundary marker and the
 //! summary.  A circuit breaker prevents runaway retries.
 
 use flock_core::config::compression::CompressionConfig;
@@ -20,7 +20,7 @@ use super::state::CompactState;
 /// Maximum number of prompt-too-long retries.
 const MAX_PTL_RETRIES: u32 = 2;
 
-/// Content prefix for the context_compression boundary marker message.
+/// Content prefix for the mod boundary marker message.
 pub const BOUNDARY_PREFIX: &str = "[Conversation compacted]";
 
 // ── Public types ────────────────────────────────────────────────────────────
@@ -28,7 +28,7 @@ pub const BOUNDARY_PREFIX: &str = "[Conversation compacted]";
 /// Result of a successful autocompact operation.
 #[derive(Debug, Clone)]
 pub struct CompactResult {
-    /// Post-context_compression messages that replace the original conversation.
+    /// Post-mod messages that replace the original conversation.
     /// Contains a boundary marker and a summary message.
     pub messages: Vec<Message>,
     /// How many original messages were summarized.
@@ -96,7 +96,7 @@ pub async fn autocompact(
     let pre_compact_tokens = state.last_input_tokens;
     let messages_summarized = messages.len();
 
-    // Build messages for the context_compression LLM call: conversation + summary prompt
+    // Build messages for the mod LLM call: conversation + summary prompt
     let mut conv_messages: Vec<langgraph_prebuilt::Message> = messages.iter()
         .filter_map(|m| serde_json::from_value(serde_json::to_value(m).ok()?).ok())
         .collect();
@@ -137,7 +137,7 @@ pub async fn autocompact(
         return Err(CompactError::EmptyResponse);
     }
 
-    // Format and build post-context_compression messages
+    // Format and build post-mod messages
     let formatted = format_compact_summary(&summary_text);
     let summary_content = build_summary_content(&formatted, true);
 
@@ -203,7 +203,7 @@ fn truncate_for_retry(messages: &[langgraph_prebuilt::Message]) -> Option<Vec<la
     Some(result)
 }
 
-/// Check if a message is a context_compression boundary marker.
+/// Check if a message is a mod boundary marker.
 pub fn is_compact_boundary(message: &Message) -> bool {
     message.content.iter().any(|block| {
         if let ContentBlock::Text { text } = block {

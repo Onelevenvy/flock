@@ -93,5 +93,14 @@
     "refreshTooltip": "Refresh Content",
     "downloadTooltip": "Download this file",
     "delete": "Delete"
+  },
+  "takeover": {
+    "title": "Your Action Required",
+    "badge": "Human Takeover",
+    "hint": "Please complete the action in the remote desktop on the right, then click \"Continue\":",
+    "btnContinue": "I'm done, continue execution",
+    "btnOpenVnc": "Open Remote Desktop",
+    "btnCancel": "Cancel",
+    "cancelledReason": "User cancelled the human takeover"
   }
 }

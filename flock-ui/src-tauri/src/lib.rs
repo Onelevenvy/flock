@@ -69,11 +69,16 @@ pub fn run() {
             commands::send_message,
             commands::approve_tool,
             commands::deny_tool,
+            commands::resume_tool,
             commands::set_mode,
             commands::set_config,
             commands::ping_agent,
             commands::get_flock_path,
             commands::get_workdir,
+            commands::get_active_sandbox_vnc_url,
+            commands::destroy_sandbox,
+            commands::cleanup_all_sandboxes,
+            commands::fetch_vnc_page_content,
             // 工作空间
             commands::get_workspace_root,
             commands::list_workspaces,
@@ -88,6 +93,7 @@ pub fn run() {
             // 文件
             commands::list_workspace_files,
             commands::read_workspace_file,
+            commands::read_workspace_file_as_base64,
             commands::get_workspace_file_absolute_path,
             commands::open_workspace_file_in_system,
             commands::open_external_url,
@@ -113,6 +119,8 @@ pub fn run() {
             // 系统配置
             commands::get_app_config,
             commands::set_app_config,
+            commands::test_sandbox_connection,
+            commands::create_playwright_snapshot,
             // 工具提供商
             commands::list_tool_providers,
             commands::list_tools,

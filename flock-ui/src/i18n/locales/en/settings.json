@@ -4,12 +4,14 @@
     "model": "Models",
     "basic": "XIAOF Agent",
     "system": "System",
+    "sandbox": "Cloud Sandbox",
     "tool": "Tools"
   },
   "descriptions": {
     "model": "LLM Providers & Model Management",
     "basic": "General Agent XIAOF Configuration Options",
-    "system": "Environment & Performance Configuration"
+    "system": "Environment & Performance Configuration",
+    "sandbox": "Daytona Cloud Code & Browser Security Sandbox Configurations"
   },
   "developing": "Developing...",
   "version": "Flock CLI v0.1.0",
@@ -77,5 +79,37 @@
     "settingsTitle": "{{name}} Settings",
     "testModel": "Test Model",
     "testModelPlaceholder": "Model name for connectivity test (e.g., glm-4-flash)"
+  },
+  "sandbox": {
+    "title": "Cloud Sandbox Settings",
+    "enable": "Enable Daytona Sandbox",
+    "enableTooltip": "When enabled, code execution and browser tools will run inside secure Daytona cloud sandboxes, shielding your host system from any malicious code.",
+    "apiUrl": "API Endpoint URL",
+    "apiUrlPlaceholder": "Enter Daytona Service URL (e.g., https://app.daytona.io)",
+    "apiUrlTooltip": "Enter the base service URL of Daytona (e.g., https://app.daytona.io). Please DO NOT append /api at the end, the system formats the requests automatically.",
+    "apiKey": "API Token",
+    "apiKeyPlaceholder": "Enter API token starting with dtn_",
+    "testBtn": "Test Connection",
+    "testOk": "Connection OK",
+    "testOkMsg": "Successfully connected to Daytona Cloud Sandbox!",
+    "testFailed": "Connection Failed",
+    "testFailedMsg": "Failed to connect to Daytona: {{error}}",
+    "testMissingFields": "Please fill in API URL and API Key before proceeding.",
+    "saveSuccess": "Sandbox Configuration Saved",
+    "saveSuccessMsg": "Cloud sandbox settings have been updated",
+    "saveFailed": "Save Failed",
+    "saveFailedMsg": "Failed to update sandbox configuration in database",
+    "snapshotName": "Snapshot Name",
+    "snapshotActive": "Active",
+    "snapshotTooltip": "Specify an existing Daytona Snapshot name (pre-installed with Playwright etc.). Future sandboxes will use this snapshot directly, no repeated installs needed. Leave empty to use Daytona's default image.",
+    "snapshotHint": "When using the Browser tool for the first time, the default Daytona image needs to install ~300MB of Playwright dependencies. Click the button below to create a pre-built snapshot once — future sandboxes will start in seconds.",
+    "snapshotCreateBtn": "Initialize Playwright Snapshot (~3-5 min)",
+    "snapshotCreating": "Creating snapshot, please wait...",
+    "snapshotDone": "Snapshot Created",
+    "snapshotDoneMsg": "Snapshot '{{name}}' is ready. Future sandboxes will use it automatically — Browser tool is now instant!",
+    "snapshotFailed": "Snapshot Creation Failed",
+    "cleanupBtn": "Cleanup All Sandboxes",
+    "cleanupDone": "Cleanup Complete",
+    "cleanupFailed": "Cleanup Failed"
   }
 }

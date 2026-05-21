@@ -1,19 +1,19 @@
-use std::sync::{Arc, Mutex};
+use flock_core::config::hooks::HookEngine;
+use flock_core::config::settings::Config;
+use flock_core::types::message::TokenUsage;
+use flock_tools::registry::ToolRegistry;
 use langgraph_checkpoint::checkpoint::base::BaseCheckpointSaver;
 use langgraph_checkpoint_sqlite::SqliteSaver;
 use langgraph_prebuilt::BaseChatModel;
 use langgraph_providers::openai::{OpenAIModel, OpenAIModelConfig};
-use flock_core::config::settings::Config;
-use flock_core::types::message::TokenUsage;
-use flock_tools::registry::ToolRegistry;
-use flock_core::config::hooks::HookEngine;
+use std::sync::{Arc, Mutex};
 
+use super::AgentEngine;
 use crate::approval::ToolApproval;
 use crate::context_compression::state::CompactState;
+use crate::session::Session;
 use crate::sinks::OutputSink;
 use crate::tools::plan::state::PlanState;
-use crate::session::Session;
-use super::AgentEngine;
 
 impl AgentEngine {
     pub async fn new(config: Config, tools: ToolRegistry, output: Arc<dyn OutputSink>) -> Self {

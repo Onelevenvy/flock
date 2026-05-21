@@ -76,7 +76,7 @@ export default function ProviderSettings({ provider, onClose, onSaved }: Props) 
             loading: false,
             autoClose: 3000,
           });
-        } catch (e: any) {
+        } catch (e) {
           notifications.update({
             id: 'activating-provider',
             title: t('settings.provider.activateFailed'),

@@ -3,28 +3,17 @@ import {
   Box,
   Text,
   Group,
-  Badge,
-  Collapse,
-  Button,
   Stack,
-  ActionIcon,
-  Tooltip,
-  Switch,
   Loader,
   Card,
   ThemeIcon,
+  Tooltip,
 } from '@mantine/core';
 import {
-  IconChevronDown,
-  IconChevronUp,
-  IconSettings,
-  IconCheck,
-  IconX,
-  IconPlug,
   IconCube,
   IconSparkles,
   IconHelpCircle,
-  IconTrash,
+  IconCheck,
 } from '@tabler/icons-react';
 import { invoke } from '@tauri-apps/api/core';
 import { notifications } from '@mantine/notifications';
@@ -33,49 +22,10 @@ import ProviderSettings from './ProviderSettings';
 import CustomModelSettings from './CustomModelSettings';
 import { reconnectCurrentAgent } from '../../../lib/agentConnection';
 import { useWorkspacesQuery } from '../../../hooks/useWorkspaces';
-import { ModelProviderIconLong, ModelIcon, ProviderIcon } from '../../Common/Icons';
 import { ModelSelect } from '../../Common/ModelSelect';
 
-interface ModelProvider {
-  id: string;
-  provider_name: string;
-  provider_type: string;
-  base_url: string | null;
-  api_key: string | null;
-  test_model: string | null;
-  icon: string | null;
-  description: string | null;
-  is_available: boolean;
-  created_at: string;
-  updated_at: string;
-}
-
-interface ModelItem {
-  id: string;
-  provider_id: string;
-  model_name: string;
-  categories: string[];
-  capabilities: string[];
-  is_online: boolean;
-  meta: any;
-  created_at: string;
-  updated_at: string;
-}
-
-
-
-interface DefaultConfig {
-  provider: string;
-  model: string | null;
-  max_tokens?: number;
-  max_turns?: number | null;
-  system_prompt?: string | null;
-}
-
-interface SummaryModelConfig {
-  provider: string;
-  model: string | null;
-}
+import { ModelProvider, ModelItem, DefaultConfig, SummaryModelConfig } from './types';
+import { ProviderCard } from './components/ProviderCard';
 
 export default function ModelProviderPage() {
   const { t } = useTranslation();
@@ -103,7 +53,6 @@ export default function ModelProviderPage() {
       if (def) setDefaultCfg(def);
       if (summary) setSummaryCfg(summary);
 
-      // 初始化已连接状态（如果 is_available 为 true 且有在线模型，认为可能已连接）
       const connected = new Set<string>();
       const models: Record<string, ModelItem[]> = {};
       for (const p of list) {
@@ -134,7 +83,6 @@ export default function ModelProviderPage() {
     setTestingProvider(providerId);
     setTestResult(null);
     try {
-      // 使用 activate_provider 代替单纯的测试，确保测试通过后开启模型
       const msg = await invoke<string>('activate_provider', { providerId });
       setTestResult({ id: providerId, ok: true, msg });
       setConnectedProviders(prev => {
@@ -142,9 +90,8 @@ export default function ModelProviderPage() {
         next.add(providerId);
         return next;
       });
-      // 重新加载数据以反映模型状态变化
       loadData();
-    } catch (e: any) {
+    } catch (e) {
       setTestResult({ id: providerId, ok: false, msg: String(e) });
       setConnectedProviders(prev => {
         const next = new Set(prev);
@@ -157,7 +104,6 @@ export default function ModelProviderPage() {
   };
 
   const handleToggleOnline = async (modelId: string, currentOnline: boolean) => {
-    // Find the model and update it
     for (const [pid, models] of Object.entries(modelsMap)) {
       const model = models.find((m) => m.id === modelId);
       if (model) {
@@ -221,7 +167,6 @@ export default function ModelProviderPage() {
       await invoke('set_app_config', { key: 'default', value: newDefault });
       setDefaultCfg(newDefault);
 
-      // Linkage: sync active_model as well
       await invoke('set_active_model', { providerId, modelName });
       await reconnectCurrentAgent(workspaces);
 
@@ -281,7 +226,6 @@ export default function ModelProviderPage() {
     }
   };
 
-  // Compile online models for options list
   const onlineModels = Object.entries(modelsMap).flatMap(([pid, models]) => {
     const providerName = providers.find((p) => p.id === pid)?.provider_name || pid;
     return models
@@ -289,8 +233,7 @@ export default function ModelProviderPage() {
       .map((m) => ({
         value: `${pid}:${m.model_name}`,
         label: m.model_name,
-        // pid 即 provider.id，对应图标文件名
-        providerName: pid,
+        providerName,
       }));
   });
 
@@ -317,7 +260,6 @@ export default function ModelProviderPage() {
 
   return (
     <Stack gap="xl" p={12}>
-      {/* 全局默认系统模型设置 Card */}
       <Card
         style={{
           background: 'var(--flock-bg-raised)',
@@ -377,7 +319,6 @@ export default function ModelProviderPage() {
         </Group>
       </Card>
 
-      {/* 对话主题总结模型设置 Card */}
       <Card
         style={{
           background: 'var(--flock-bg-raised)',
@@ -438,277 +379,26 @@ export default function ModelProviderPage() {
         </Group>
       </Card>
 
-      {providers.map((provider) => {
-        const models = modelsMap[provider.id] || [];
-        const isExpanded = expanded[provider.id] || false;
-        const isCustomProvider = provider.id === 'openai_compatible' || provider.id === 'anthropic_compatible';
-        const isConfigured = !!provider.api_key || (isCustomProvider && models.length > 0);
-        const onlineCount = models.filter((m) => m.is_online).length;
+      {providers.map((provider) => (
+        <ProviderCard
+          key={provider.id}
+          provider={provider}
+          models={modelsMap[provider.id] || []}
+          isExpanded={expanded[provider.id] || false}
+          toggleExpand={toggleExpand}
+          connectedProviders={connectedProviders}
+          testingProvider={testingProvider}
+          testResult={testResult}
+          handleTestConnection={handleTestConnection}
+          setEditingProvider={setEditingProvider}
+          setAddingCustomModel={setAddingCustomModel}
+          setExpanded={setExpanded}
+          handleDeleteModel={handleDeleteModel}
+          handleToggleOnline={handleToggleOnline}
+          t={t}
+        />
+      ))}
 
-        return (
-          <Box
-            key={provider.id}
-            style={{
-              background: 'var(--flock-bg-raised)',
-              borderRadius: 16,
-              border: '1px solid var(--flock-border-subtle)',
-              overflow: 'hidden',
-              transition: 'border-color 0.2s ease',
-            }}
-            onMouseEnter={(e) => {
-              e.currentTarget.style.borderColor = 'var(--flock-border-base)';
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.borderColor = 'var(--flock-border-subtle)';
-            }}
-          >
-            {/* Provider Header */}
-            <Box style={{ padding: '24px 24px 16px' }}>
-              <Group justify="space-between" align="flex-start">
-                <Group gap="lg">
-                  <Box
-                    style={{
-                      background: 'var(--flock-bg-surface)',
-                      height: 56,
-                      width: 56,
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      borderRadius: 14,
-                      border: '1px solid var(--flock-border-subtle)',
-                      boxShadow: '0 4px 12px rgba(0,0,0,0.03)',
-                      flexShrink: 0,
-                    }}
-                  >
-                    <ProviderIcon name={provider.id} size={32} />
-                  </Box>
-                  <Box>
-                    <Group gap="xs" align="center">
-                      <Group gap={6} align="center">
-                        <Text fw={700} size="lg" style={{ letterSpacing: '0.3px' }}>
-                          {provider.provider_name}
-                        </Text>
-                        {connectedProviders.has(provider.id) && (
-                          <Tooltip label={t('settings.model.connectionOk')}>
-                            <Box
-                              style={{
-                                width: 8,
-                                height: 8,
-                                borderRadius: '50%',
-                                background: 'var(--mantine-color-teal-6)',
-                                boxShadow: '0 0 8px var(--mantine-color-teal-6)',
-                                marginTop: 2
-                              }}
-                            />
-                          </Tooltip>
-                        )}
-                      </Group>
-                      <Badge
-                        size="sm"
-                        variant="light"
-                        color={isConfigured ? 'teal' : 'orange'}
-                        leftSection={isConfigured ? <IconCheck size={12} /> : <IconX size={12} />}
-                        style={{ textTransform: 'none' }}
-                      >
-                        {isConfigured ? t('settings.model.configured') : t('settings.model.notConfigured')}
-                      </Badge>
-                    </Group>
-                  </Box>
-                </Group>
-
-                <Group gap="sm">
-                  {!!provider.api_key && (
-                    <Tooltip label={testingProvider === provider.id ? t('settings.model.connecting') : t('settings.model.testConnection')}>
-                      <ActionIcon
-                        variant="light"
-                        color={testResult?.id === provider.id ? (testResult.ok ? 'teal' : 'red') : 'blue'}
-                        size="lg"
-                        radius="md"
-                        onClick={() => handleTestConnection(provider.id)}
-                        loading={testingProvider === provider.id}
-                        disabled={testingProvider !== null}
-                      >
-                        <IconPlug size={20} />
-                      </ActionIcon>
-                    </Tooltip>
-                  )}
-                  {provider.id !== 'openai_compatible' && provider.id !== 'anthropic_compatible' && (
-                    <Tooltip label={t('settings.model.configureParams')}>
-                      <ActionIcon
-                        variant="subtle"
-                        color="gray"
-                        size="lg"
-                        radius="md"
-                        onClick={() => setEditingProvider(provider)}
-                      >
-                        <IconSettings size={20} />
-                      </ActionIcon>
-                    </Tooltip>
-                  )}
-                </Group>
-              </Group>
-
-              {/* Test result */}
-              {testResult?.id === provider.id && (
-                <Box
-                  mt="md"
-                  p="md"
-                  style={{
-                    background: testResult.ok
-                      ? 'rgba(20, 184, 166, 0.08)'
-                      : 'rgba(239, 68, 68, 0.08)',
-                    borderRadius: 12,
-                    border: `1px solid ${testResult.ok ? 'rgba(20, 184, 166, 0.2)' : 'rgba(239, 68, 68, 0.2)'}`,
-                    animation: 'fadeIn 0.3s ease-out'
-                  }}
-                >
-                  <Group gap="xs">
-                    {testResult.ok ? <IconCheck size={16} color="var(--mantine-color-teal-6)" /> : <IconX size={16} color="var(--mantine-color-red-6)" />}
-                    <Text size="sm" fw={500} c={testResult.ok ? 'teal.4' : 'red.4'}>
-                      {testResult.msg}
-                    </Text>
-                  </Group>
-                </Box>
-              )}
-
-              {/* Model count + expand toggle */}
-              <Group justify="space-between" mt="xl">
-                <Group gap="xs">
-                  <Badge variant="light" color="gray" size="md" radius="sm">
-                    {t('settings.model.modelsCount', { count: models.length })}
-                  </Badge>
-                  {onlineCount > 0 && (
-                    <Badge variant="dot" color="green" size="md" radius="sm">
-                      {t('settings.model.enabledCount', { count: onlineCount })}
-                    </Badge>
-                  )}
-                  {(provider.id === 'openai_compatible' || provider.id === 'anthropic_compatible') && (
-                    <Button variant="light" size="xs" color="blue" onClick={() => { setAddingCustomModel(provider); setExpanded((prev) => ({ ...prev, [provider.id]: true })); }}>
-                      {t('settings.model.addCustomModel', 'Add Custom Model')}
-                    </Button>
-                  )}
-                </Group>
-                <Button
-                  variant="subtle"
-                  color="blue"
-                  size="sm"
-                  leftSection={isExpanded ? <IconChevronUp size={16} /> : <IconChevronDown size={16} />}
-                  onClick={() => toggleExpand(provider.id)}
-                  style={{ borderRadius: 8 }}
-                >
-                  {isExpanded ? t('settings.model.hideModels') : t('settings.model.showModels')}
-                </Button>
-              </Group>
-            </Box>
-
-            {/* Models List */}
-            <Collapse in={isExpanded}>
-              <Box
-                style={{
-                  padding: '0 24px 24px',
-                  borderTop: '1px solid var(--flock-border-subtle)',
-                  background: 'var(--flock-bg-surface)'
-                }}
-              >
-                <Stack gap={10} pt="md">
-                  {models.map((model) => (
-                    <Group
-                      key={model.id}
-                      justify="space-between"
-                      style={{
-                        padding: '12px 16px',
-                        background: model.is_online
-                          ? 'var(--flock-bg-hover)'
-                          : 'var(--flock-bg-base)',
-                        borderRadius: 12,
-                        border: '1px solid transparent',
-                        transition: 'all 0.2s ease',
-                      }}
-                    >
-                      <Group gap="md">
-                        <Box
-                          style={{
-                            background: 'var(--flock-bg-raised)',
-                            width: 36,
-                            height: 36,
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'center',
-                            borderRadius: 8,
-                            border: '1px solid var(--flock-border-subtle)',
-                            opacity: model.is_online ? 1 : 0.6,
-                            boxShadow: '0 2px 6px rgba(0,0,0,0.02)',
-                          }}
-                        >
-                          <ModelIcon name={model.model_name} provider={provider.id} size={20} />
-                        </Box>
-                        <Box>
-                          <Text size="sm" fw={600} style={{ color: model.is_online ? 'var(--flock-text-primary)' : 'var(--flock-text-dim)' }}>
-                            {model.model_name}
-                          </Text>
-                          <Group gap={6} mt={4}>
-                            {model.categories
-                              .filter((c) => c !== 'chat')
-                              .map((cat) => (
-                                <Badge key={cat} size="xs" variant="outline" color="blue" radius="xs">
-                                  {cat}
-                                </Badge>
-                              ))}
-                            {model.capabilities.includes('vision') && (
-                              <Badge size="xs" variant="outline" color="cyan" radius="xs">
-                                vision
-                              </Badge>
-                            )}
-                          </Group>
-                        </Box>
-                      </Group>
-                      <Group gap="lg">
-                        <Tooltip
-                          label={!provider.is_available ? t('settings.model.activateProviderTooltip') : (model.is_online ? t('settings.model.disableModelTooltip') : t('settings.model.enableModelTooltip'))}
-                          position="left"
-                          withArrow
-                          disabled={testingProvider === provider.id}
-                        >
-                          <Group gap="sm">
-                            {(provider.id === 'openai_compatible' || provider.id === 'anthropic_compatible') && (
-                              <Tooltip label={t('common.delete', 'Delete')}>
-                                <ActionIcon
-                                  variant="subtle"
-                                  color="red"
-                                  size="sm"
-                                  onClick={() => handleDeleteModel(model.id, provider.id)}
-                                >
-                                  <IconTrash size={16} />
-                                </ActionIcon>
-                              </Tooltip>
-                            )}
-                            <Switch
-                              size="md"
-                              checked={model.is_online}
-                              disabled={!provider.is_available}
-                              onChange={() => handleToggleOnline(model.id, model.is_online)}
-                              color="blue"
-                              thumbIcon={
-                                model.is_online ? (
-                                  <IconCheck size={12} color="var(--flock-accent)" stroke={3} />
-                                ) : (
-                                  <IconX size={12} color="var(--flock-text-dim)" stroke={3} strokeWidth={3} />
-                                )
-                              }
-                            />
-                          </Group>
-                        </Tooltip>
-                      </Group>
-                    </Group>
-                  ))}
-                </Stack>
-              </Box>
-            </Collapse>
-          </Box>
-        );
-      })}
-
-      {/* Provider Settings Sub-Modal */}
       {editingProvider && (
         <ProviderSettings
           provider={editingProvider}

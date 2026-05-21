@@ -107,6 +107,40 @@ function ChunkRenderer({ chunk, isStreaming }: { chunk: MessageChunk; isStreamin
   if (chunk.kind === 'tool_request') {
     return <ToolCard chunk={chunk} />;
   }
+  if (chunk.kind === 'info') {
+    const isSuccess = chunk.message.includes('已就绪') || chunk.message.includes('成功');
+    const isError = chunk.message.includes('失败') || chunk.message.includes('出错') || chunk.message.includes('健康状态') || chunk.message.includes('失效');
+    
+    return (
+      <Paper
+        p="xs"
+        radius="sm"
+        style={{
+          background: 'var(--flock-bg-surface)',
+          borderLeft: isSuccess || (!isError && !isStreaming)
+            ? '3px solid #0ca678'
+            : isError
+            ? '3px solid #f03e3e'
+            : '3px solid var(--flock-accent)',
+          padding: '6px 12px',
+          marginBottom: 6,
+          display: 'flex',
+          alignItems: 'center',
+          gap: 8,
+          border: '1px solid var(--flock-border-dim)',
+          borderLeftWidth: 3,
+        }}
+      >
+        {!isSuccess && !isError && isStreaming && <Loader size={12} type="dots" color="var(--flock-accent)" />}
+        {(!isSuccess && !isError && !isStreaming) && <Text size="xs" fw={800} style={{ color: '#0ca678', display: 'inline-flex', alignItems: 'center' }}>✓</Text>}
+        {isSuccess && <Text size="xs" fw={800} style={{ color: '#0ca678', display: 'inline-flex', alignItems: 'center' }}>✓</Text>}
+        {isError && <Text size="xs" fw={800} style={{ color: '#f03e3e', display: 'inline-flex', alignItems: 'center' }}>✗</Text>}
+        <Text size="xs" fw={500} style={{ color: 'var(--flock-text-secondary)', flex: 1 }}>
+          {chunk.message}
+        </Text>
+      </Paper>
+    );
+  }
   return null;
 }
 

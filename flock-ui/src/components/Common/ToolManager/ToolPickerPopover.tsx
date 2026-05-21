@@ -21,6 +21,9 @@ import { useTranslation } from 'react-i18next';
 import { useAvailableTools } from '../../../hooks/useAvailableTools';
 import { ToolsIcon } from '../Icons';
 import { IconSearch, IconX, IconPlus } from '@tabler/icons-react';
+import { getProviderName } from '../../../pages/Skills/helpers';
+
+
 import { useDisclosure } from '@mantine/hooks';
 import type { PopoverProps } from '@mantine/core';
 
@@ -59,7 +62,7 @@ export function ToolPickerPopover({
       .map((prov) => {
         const provTools = tools.filter((t) => t.provider_id === prov.id);
         const matched = provTools.filter((tool) =>
-          !q || tool.name.toLowerCase().includes(q) || prov.provider_name.toLowerCase().includes(q)
+          !q || tool.name.toLowerCase().includes(q) || getProviderName(prov).toLowerCase().includes(q)
         );
         return { ...prov, tools: matched, totalCount: provTools.length };
       })
@@ -109,7 +112,7 @@ export function ToolPickerPopover({
             padding: 14,
             boxShadow: '0 8px 24px rgba(0,0,0,0.12)',
             zIndex: 9999,
-            maxHeight: 'min(560px, 80vh)',
+            maxHeight: 'min(460px, 70vh)',
             display: 'flex',
             flexDirection: 'column',
             overflow: 'hidden',
@@ -208,7 +211,7 @@ export function ToolPickerPopover({
                             <Group gap="xs">
                               <ToolsIcon name={provider.id} size={16} />
                               <Text fw={600} size="xs" style={{ color: 'var(--flock-text-bright)' }}>
-                                {provider.provider_name}
+                                {getProviderName(provider)}
                               </Text>
                             </Group>
                             <Box style={{ minWidth: 72, display: 'flex', justifyContent: 'flex-end', alignItems: 'center' }}>

@@ -235,5 +235,42 @@ pub fn download_workspace_file(
     Ok(())
 }
 
+/// 以 Base64 格式读取工作区中的二进制文件（通常用于绕过资产安全策略与 CSP 读取图片）
+#[tauri::command]
+pub fn read_workspace_file_as_base64(
+    workspace_id: String,
+    relative_path: String,
+) -> Result<String, String> {
+    use base64::{Engine as _, engine::general_purpose};
+    
+    let base = flock_core::config::db_path::workspace_root().join(&workspace_id);
+    let target = base.join(&relative_path);
+
+    // 防逃逸校验
+    if relative_path.contains("..") {
+        return Err("非法路径访问".to_string());
+    }
+    
+    let base_exists = base.exists();
+    let canonical_base = if base_exists {
+        std::fs::canonicalize(&base).unwrap_or(base.clone())
+    } else {
+        base.clone()
+    };
+    
+    if target.exists() {
+        let canonical_target = std::fs::canonicalize(&target).unwrap_or(target.clone());
+        if base_exists && !canonical_target.starts_with(&canonical_base) {
+            return Err("非法路径访问".to_string());
+        }
+
+        let bytes = std::fs::read(&target).map_err(|e| e.to_string())?;
+        let base64_str = general_purpose::STANDARD.encode(bytes);
+        Ok(base64_str)
+    } else {
+        Err("文件不存在".to_string())
+    }
+}
+
 
 

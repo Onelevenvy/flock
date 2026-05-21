@@ -102,6 +102,7 @@ impl super::DbManager {
         for def in tools {
             if seen.insert(&def.provider_id) {
                 let info = info_map.get(def.provider_id.as_str());
+                let provider_name = info.map(|p| p.provider_name.as_str()).unwrap_or(def.provider_name.as_str());
                 let desc = info.map(|p| p.description.as_str()).unwrap_or("");
                 let schema_json = info
                     .and_then(|p| p.credentials_schema.as_ref())
@@ -117,7 +118,7 @@ impl super::DbManager {
                         updated_at = datetime('now')"
                 )
                     .bind(&def.provider_id)
-                    .bind(&def.provider_name)
+                    .bind(provider_name)
                     .bind(desc)
                     .bind(&schema_json)
                     .bind(is_available as i64)

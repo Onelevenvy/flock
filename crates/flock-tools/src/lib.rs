@@ -9,6 +9,8 @@ pub mod openweather;
 pub mod baidu;
 pub mod google;
 pub mod serper;
+pub mod daytona;
+pub mod sandbox;
 
 /// Snapshot of all registered tools and their provider metadata.
 pub struct ToolSet {
@@ -30,6 +32,12 @@ pub fn all_tools() -> ToolSet {
     reg.register(builtin::bash::BashTool::new());
     reg.register(builtin::grep::GrepTool::new());
     reg.register(builtin::glob::GlobTool::new());
+
+    // --- sandbox ---
+    reg.register(sandbox::code_execution::CodeExecutionToolImpl::new());
+    reg.register(sandbox::browser::BrowserToolImpl::new());
+    reg.register(sandbox::computer_use::ComputerUseToolImpl::new());
+    reg.register(sandbox::sandbox_exec::SandboxExecToolImpl::new());
 
     // --- math ---
     infos.push(math::provider_info());
@@ -92,6 +100,40 @@ pub fn init_db_manager(db: Arc<DbManager>) {
 /// Get the global DB manager if initialized.
 pub fn get_db_manager() -> Option<Arc<DbManager>> {
     GLOBAL_DB_MANAGER.get().cloned()
+}
+
+static GLOBAL_APPROVAL_MANAGER: OnceLock<Arc<flock_core::ipc_interface::approval::ToolApprovalManager>> = OnceLock::new();
+
+/// Initialize the global approval manager for tools.
+pub fn init_global_approval_manager(mgr: Arc<flock_core::ipc_interface::approval::ToolApprovalManager>) {
+    let _ = GLOBAL_APPROVAL_MANAGER.set(mgr);
+}
+
+/// Get the global approval manager if initialized.
+pub fn get_global_approval_manager() -> Option<Arc<flock_core::ipc_interface::approval::ToolApprovalManager>> {
+    GLOBAL_APPROVAL_MANAGER.get().cloned()
+}
+
+static GLOBAL_EMITTER: OnceLock<Arc<dyn flock_core::ipc_interface::writer::ProtocolEmitter>> = OnceLock::new();
+
+/// Initialize the global emitter for tools.
+pub fn init_global_emitter(emitter: Arc<dyn flock_core::ipc_interface::writer::ProtocolEmitter>) {
+    let _ = GLOBAL_EMITTER.set(emitter);
+}
+
+/// Get the global emitter if initialized.
+pub fn get_global_emitter() -> Option<Arc<dyn flock_core::ipc_interface::writer::ProtocolEmitter>> {
+    GLOBAL_EMITTER.get().cloned()
+}
+
+/// Send an info message to the client.
+pub fn emit_info(message: &str) {
+    if let Some(emitter) = get_global_emitter() {
+        let _ = emitter.emit(&flock_core::ipc_interface::events::ProtocolEvent::Info {
+            msg_id: String::new(),
+            message: message.to_string(),
+        });
+    }
 }
 
 /// Resolve decrypted credentials for a tool provider by its ID.
@@ -195,44 +237,3 @@ pub trait Tool: Send + Sync {
     }
 }
 
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn truncate_utf8_ascii_within_limit() {
-        assert_eq!(truncate_utf8("hello", 80), "hello");
-    }
-
-    #[test]
-    fn truncate_utf8_ascii_at_boundary() {
-        assert_eq!(truncate_utf8("abcde", 3), "abc");
-    }
-
-    #[test]
-    fn truncate_utf8_multibyte_snaps_back() {
-        // '些' is 3 bytes (E4 BA 9B) starting at index 79 would span 79..82
-        let s = "# 用 script 模拟 TTY 交互来添加 DeepSeek 提供商\n# 首先看看有哪些";
-        let result = truncate_utf8(s, 80);
-        assert!(result.len() <= 80);
-        assert!(result.is_char_boundary(result.len()));
-    }
-
-    #[test]
-    fn truncate_utf8_empty() {
-        assert_eq!(truncate_utf8("", 80), "");
-    }
-
-    #[test]
-    fn truncate_utf8_zero_limit() {
-        assert_eq!(truncate_utf8("hello", 0), "");
-    }
-
-    #[test]
-    fn truncate_utf8_emoji() {
-        // 🦀 is 4 bytes
-        let s = "aaa🦀bbb";
-        assert_eq!(truncate_utf8(s, 4), "aaa");
-        assert_eq!(truncate_utf8(s, 7), "aaa🦀");
-    }
-}

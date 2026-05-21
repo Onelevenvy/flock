@@ -40,3 +40,4 @@ tokio.workspace = true
 anyhow.workspace = true
 chrono.workspace = true
 workspace-hack.workspace = true
+base64.workspace = true

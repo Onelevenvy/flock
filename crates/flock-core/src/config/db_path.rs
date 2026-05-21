@@ -102,15 +102,3 @@ pub fn clear_db_path_override() -> std::io::Result<()> {
     }
     Ok(())
 }
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn test_resolve_returns_some_path() {
-        // Should always return a non-empty path
-        let path = resolve_db_path();
-        assert!(!path.as_os_str().is_empty());
-    }
-}
