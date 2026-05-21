@@ -26,11 +26,12 @@ export function NavigationList() {
     { label: t('sidebar.home'), icon: IconHome, view: 'home' as const },
     { label: t('sidebar.assistant'), icon: IconRobot, view: 'assistant' as const },
     { label: t('sidebar.skills'), icon: IconBolt, view: 'skills' as const },
+   
   ];
 
   const SECONDARY_MENUS = [
     { label: t('sidebar.schedule'), icon: IconCalendarTime, view: 'schedule' as const },
-    { label: t('sidebar.workflow'), icon: IconRoute, view: 'workflow' as const },
+    { label: t('sidebar.workflow') + "(WIP)", icon: IconRoute, view: 'workflow' as const },
     { label: t('sidebar.collaboration'), icon: IconBoxMultiple, view: 'collaboration' as const },
     { label: t('sidebar.extension'), icon: IconLego , view: 'extension' as const },
   ];

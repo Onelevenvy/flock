@@ -7,6 +7,7 @@ mod skills;
 mod workspace;
 mod settings;
 mod cron;
+mod workflow;
 
 pub use agent::*;
 pub use assistant::*;
@@ -17,3 +18,4 @@ pub use skills::*;
 pub use workspace::*;
 pub use settings::*;
 pub use cron::*;
+pub use workflow::*;

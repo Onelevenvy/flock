@@ -23,6 +23,10 @@ flock-tools.workspace = true
 flock-skills.workspace = true
 langgraph-prebuilt.workspace = true
 langgraph-providers.workspace = true
+langgraph.workspace = true
+langgraph-checkpoint.workspace = true
+langgraph-checkpoint-sqlite.workspace = true
+tokio-stream.workspace = true
 
 serde_json.workspace = true
 serde.workspace = true

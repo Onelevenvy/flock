@@ -61,6 +61,7 @@ pub fn run() {
             Ok(())
         })
         .manage(agent_state)
+        .manage(Arc::new(commands::WorkflowExecutionState::new()))
         .invoke_handler(tauri::generate_handler![
             // Agent 控制
             commands::start_agent,
@@ -140,6 +141,14 @@ pub fn run() {
             commands::delete_cron_job,
             commands::set_cron_job_enabled,
             commands::run_cron_job_now,
+            // 工作流
+            commands::list_workflows,
+            commands::get_workflow,
+            commands::create_workflow,
+            commands::update_workflow,
+            commands::delete_workflow,
+            commands::run_workflow,
+            commands::stop_workflow,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

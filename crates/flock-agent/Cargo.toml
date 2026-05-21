@@ -31,6 +31,7 @@ dirs.workspace        = true
 crossterm.workspace   = true
 is-terminal.workspace = true
 log.workspace         = true
+regex.workspace       = true
 
 # LangGraph graph runtime
 langgraph.workspace                   = true
