@@ -112,7 +112,7 @@ export function ToolPickerPopover({
             padding: 14,
             boxShadow: '0 8px 24px rgba(0,0,0,0.12)',
             zIndex: 9999,
-            maxHeight: 'min(560px, 80vh)',
+            maxHeight: 'min(460px, 70vh)',
             display: 'flex',
             flexDirection: 'column',
             overflow: 'hidden',
