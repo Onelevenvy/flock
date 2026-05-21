@@ -33,7 +33,7 @@ import { invoke } from '@tauri-apps/api/core';
 import { notifications } from '@mantine/notifications';
 import { useTranslation } from 'react-i18next';
 import type { McpServerInfo, Tool } from './types';
-import { ToolsIcon } from '../../components/Icons';
+import { ToolsIcon } from '../../components/Common/Icons';
 
 function McpServerDetailPanel({
   server,

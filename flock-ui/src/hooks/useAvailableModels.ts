@@ -23,7 +23,7 @@ export interface Model {
 
 export interface GroupedModelOption {
   group: string;
-  items: { value: string; label: string }[];
+  items: { value: string; label: string; providerName: string }[];
 }
 
 export function useAvailableModels() {
@@ -65,16 +65,20 @@ export function useAvailableModels() {
 
   // 构建按服务商分组的下拉框数据
   const groupedOptions: GroupedModelOption[] = [];
-  const groupedMap: Record<string, { value: string; label: string }[]> = {};
+  const groupedMap: Record<string, { value: string; label: string; providerName: string }[]> = {};
 
   models.forEach((m) => {
-    const providerName = providers.find((p) => p.id === m.provider_id)?.provider_name || m.provider_id;
+    const provider = providers.find((p) => p.id === m.provider_id);
+    const providerName = provider?.provider_name || m.provider_id;
+    // 用 provider.id 匹配图标文件（如 openai.svg, deepseek.svg, openai_compatible.svg）
+    const providerIconKey = provider?.id || m.provider_id;
     if (!groupedMap[providerName]) {
       groupedMap[providerName] = [];
     }
     groupedMap[providerName].push({
-      value: m.model_name, // 节点存储可以直接存 model_name，或者 provider_id:model_name
+      value: m.model_name,
       label: m.model_name,
+      providerName: providerIconKey,
     });
   });
 

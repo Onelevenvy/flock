@@ -1,6 +1,7 @@
-import { MultiSelect, Divider } from '@mantine/core';
+import { Divider } from '@mantine/core';
 import { useTranslation } from 'react-i18next';
 import { LLMFields } from '../LLM';
+import ToolManager from '../../../../../components/Common/ToolManager';
 
 export interface AgentFieldsProps {
   node: any;
@@ -21,6 +22,7 @@ export function AgentFields({
 }: AgentFieldsProps) {
   const { t } = useTranslation();
   const tools = (node.data.tools as string[]) ?? [];
+  const disabledTools = (node.data.disabled_tools as string[]) ?? [];
 
   return (
     <>
@@ -31,16 +33,13 @@ export function AgentFields({
         modelsLoading={modelsLoading}
       />
       <Divider label={t('workflow.properties.agent.tools')} labelPosition="center" />
-      <MultiSelect
-        label={t('workflow.properties.agent.toolsSelect')}
-        placeholder={t('workflow.properties.agent.toolsPlaceholder')}
-        data={toolOptions}
-        disabled={toolsLoading}
+      <ToolManager
         value={tools}
         onChange={(v) => onDataChange(node.id, 'tools', v)}
-        searchable
-        clearable
-        size="xs"
+        disabledValue={disabledTools}
+        onDisabledChange={(v) => onDataChange(node.id, 'disabled_tools', v)}
+        disabled={toolsLoading}
+        selectorPosition="bottom-end"
       />
     </>
   );

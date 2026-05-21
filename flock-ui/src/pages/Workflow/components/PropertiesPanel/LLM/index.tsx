@@ -1,6 +1,7 @@
-import { Select, NumberInput } from '@mantine/core';
+import { NumberInput } from '@mantine/core';
 import { useTranslation } from 'react-i18next';
 import { VariableTextarea } from '../VariableInput';
+import { ModelSelect } from '../../../../../components/Common/ModelSelect';
 
 export interface ModelFieldsProps {
   node: any;
@@ -14,7 +15,7 @@ export function LLMFields({ node, onDataChange, modelOptions, modelsLoading }: M
   const { t } = useTranslation();
   return (
     <>
-      <Select
+      <ModelSelect
         label={t('workflow.properties.llm.model')}
         placeholder={t('workflow.properties.llm.modelPlaceholder')}
         data={modelOptions}

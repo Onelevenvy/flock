@@ -49,9 +49,17 @@
     },
     "agent": {
       "tools": "工具列表",
-      "toolsSelect": "绑定工具",
+      "toolsSelect": "工具列表",
       "toolsPlaceholder": "选择要绑定的工具...",
-      "addTool": "添加工具"
+      "addTool": "添加工具",
+      "toolsEnabled": "启用",
+      "noTools": "暂无工具，点击 + 添加",
+      "toolDetail": "查看工具详情",
+      "toolRemove": "移除工具",
+      "toolParameters": "参数",
+      "noDescription": "暂无描述",
+      "addTools": "添加工具",
+      "moreTools": "查看其他工具"
     },
     "classifier": {
       "input": "分类输入",

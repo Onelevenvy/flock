@@ -1,4 +1,5 @@
-import { Group, Stack, TextInput, ActionIcon, Badge, Button, Select, Divider } from '@mantine/core';
+import { Group, Stack, TextInput, ActionIcon, Badge, Button, Divider } from '@mantine/core';
+import { ModelSelect } from '../../../../../components/Common/ModelSelect';
 import { IconTrash, IconPlus } from '@tabler/icons-react';
 import { useTranslation } from 'react-i18next';
 import { v4 as uuidv4 } from 'uuid';
@@ -25,7 +26,7 @@ export function ClassifierFields({ node, onDataChange, modelOptions, modelsLoadi
         onChange={(val) => onDataChange(node.id, 'input', val)}
         size="xs"
       />
-      <Select
+      <ModelSelect
         label={t('workflow.properties.llm.model')}
         placeholder={t('workflow.properties.llm.modelPlaceholder')}
         data={modelOptions}

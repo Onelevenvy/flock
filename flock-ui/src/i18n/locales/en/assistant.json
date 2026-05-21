@@ -41,6 +41,15 @@
     "skillsLabel": "Skills",
     "skillsBadge": "Select from skills list",
     "skillsPlaceholder": "Select skills to bind...",
-    "unauthorized": " (Unauthorized)"
+    "unauthorized": " (Unauthorized)",
+    "selectTools": "Add Tools",
+    "searchTools": "Search tools...",
+    "noMatchingTools": "No matching tools found",
+    "noAvailableTools": "No available tools",
+    "addAllTools": "Add All",
+    "removeAllTools": "Deselect All",
+    "addedCount": "{{count}} selected",
+    "addedTag": "Added",
+    "confirm": "Confirm"
   }
 }

@@ -1,9 +1,10 @@
 import { useState, useEffect } from 'react';
-import { Select, Group, Text, Tooltip, Loader } from '@mantine/core';
+import { Group, Text, Tooltip, Loader } from '@mantine/core';
 import { IconCube, IconCheck } from '@tabler/icons-react';
 import { invoke } from '@tauri-apps/api/core';
 import { useWorkspacesQuery } from '../../hooks/useWorkspaces';
 import { reconnectCurrentAgent } from '../../lib/agentConnection';
+import { ModelSelect } from '../Common/ModelSelect';
 
 interface ModelProvider {
   id: string;
@@ -30,7 +31,13 @@ interface ActiveModel {
   model_name: string;
 }
 
-export function ModelSelector() {
+/**
+ * ActiveModelPicker
+ * 输入栏（Home / InputBar）中用于切换当前激活模型的小型选择器。
+ * 内部自行加载 providers / models 数据，切换后联动 reconnect agent。
+ * 纯 UI 展示用 ModelSelect（通用组件）。
+ */
+export function ActiveModelPicker() {
   const [providers, setProviders] = useState<ModelProvider[]>([]);
   const [models, setModels] = useState<Model[]>([]);
   const [activeModel, setActiveModelState] = useState<ActiveModel | null>(null);
@@ -103,13 +110,17 @@ export function ModelSelector() {
   };
 
   // Build select data grouped by provider
-  const groupedModels: Record<string, { value: string; label: string }[]> = {};
+  const groupedModels: Record<string, { value: string; label: string; providerName: string }[]> = {};
   models.forEach((m) => {
-    const groupName = providers.find((p) => p.id === m.provider_id)?.provider_name || m.provider_id;
+    const provider = providers.find((p) => p.id === m.provider_id);
+    const groupName = provider?.provider_name || m.provider_id;
+    // 用 provider.id 匹配图标文件（如 openai.svg, deepseek.svg）
+    const providerIconKey = provider?.id || m.provider_id;
     if (!groupedModels[groupName]) groupedModels[groupName] = [];
     groupedModels[groupName].push({
       value: `${m.provider_id}:${m.model_name}`,
       label: m.model_name,
+      providerName: providerIconKey,
     });
   });
 
@@ -117,8 +128,6 @@ export function ModelSelector() {
     group,
     items,
   }));
-
-  const placeholderLabel = "选择模型";
 
   if (selectData.length === 0) {
     return (
@@ -132,14 +141,14 @@ export function ModelSelector() {
   }
 
   return (
-    <Select
+    <ModelSelect
       data={selectData}
       value={currentModelId}
       onChange={handleChange}
       onDropdownOpen={loadData}
       size="xs"
       w={180}
-      placeholder={placeholderLabel}
+      placeholder="选择模型"
       searchable
       rightSection={
         loading ? (
@@ -169,3 +178,5 @@ export function ModelSelector() {
     />
   );
 }
+
+

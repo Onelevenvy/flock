@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import { Modal, Group, ThemeIcon, Text, ScrollArea, Stack, TextInput, Textarea, Select, Divider, MultiSelect, Badge, Button, Tabs, Box } from '@mantine/core';
+import { Modal, Group, ThemeIcon, Text, ScrollArea, Stack, TextInput, Textarea, Select, Divider, MultiSelect, Button, Tabs, Box } from '@mantine/core';
 import { IconEdit, IconPlus, IconCheck } from '@tabler/icons-react';
 import { invoke } from '@tauri-apps/api/core';
 import { notifications } from '@mantine/notifications';
@@ -7,6 +7,7 @@ import { useTranslation } from 'react-i18next';
 import { type Assistant, type UpsertAssistant } from '../../types/assistant';
 import { IconPicker } from './IconPicker';
 import { MarkdownRenderer } from '../../components/chat/MarkdownRenderer';
+import ToolManager from '../../components/Common/ToolManager';
 
 
 interface ModelProvider { id: string; provider_name: string; }
@@ -37,7 +38,6 @@ export function AssistantFormModal({
   const [activeTab, setActiveTab] = useState<string | null>('edit');
 
   const [modelSelectData, setModelSelectData] = useState<{ group: string; items: { value: string; label: string }[] }[]>([]);
-  const [toolSelectData, setToolSelectData] = useState<{ value: string; label: string }[]>([]);
   const [skillSelectData, setSkillSelectData] = useState<{ value: string; label: string }[]>([]);
   const [loadingOptions, setLoadingOptions] = useState(false);
 
@@ -70,9 +70,8 @@ export function AssistantFormModal({
   const loadOptions = useCallback(async () => {
     setLoadingOptions(true);
     try {
-      const [providers, toolProviders, skills] = await Promise.all([
+      const [providers, skills] = await Promise.all([
         invoke<ModelProvider[]>('list_providers'),
-        invoke<ToolProvider[]>('list_tool_providers'),
         invoke<SkillInfo[]>('list_skills'),
       ]);
 
@@ -90,10 +89,6 @@ export function AssistantFormModal({
         } catch { /* ignore */ }
       }
       setModelSelectData(Object.entries(grouped).map(([group, items]) => ({ group, items })));
-      setToolSelectData(toolProviders.map(p => ({
-        value: p.id,
-        label: `${p.provider_name}${p.is_available ? '' : t('assistant.form.unauthorized')}`,
-      })));
       setSkillSelectData(skills.map(s => ({
         value: s.name,
         label: s.display_name || s.name,
@@ -310,27 +305,11 @@ export function AssistantFormModal({
           <Divider color="var(--flock-border-subtle)" />
 
           {/* 绑定工具 */}
-          <MultiSelect
-            label={
-              <Group gap={6}>
-                <Text size="sm" fw={500}>{t('assistant.form.toolsLabel')}</Text>
-              </Group>
-            }
-            placeholder={t('assistant.form.toolsPlaceholder')}
-            data={toolSelectData}
+          <ToolManager
+            label={t('assistant.form.toolsLabel')}
             value={selectedTools}
             onChange={setSelectedTools}
-            searchable
-            styles={{
-              input: {
-                background: 'var(--flock-bg-surface)',
-                border: '1px solid var(--flock-border-dim)',
-              },
-              dropdown: {
-                background: 'var(--flock-bg-raised)',
-                border: '1px solid var(--flock-border-dim)',
-              },
-            }}
+            selectorPosition="bottom-start"
           />
 
           {/* 绑定技能 */}

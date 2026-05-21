@@ -49,9 +49,17 @@
     },
     "agent": {
       "tools": "Tools",
-      "toolsSelect": "Bind Tools",
+      "toolsSelect": "Tool List",
       "toolsPlaceholder": "Select tools to bind...",
-      "addTool": "Add Tool"
+      "addTool": "Add Tool",
+      "toolsEnabled": "enabled",
+      "noTools": "No tools yet, click + to add",
+      "toolDetail": "View tool details",
+      "toolRemove": "Remove tool",
+      "toolParameters": "Parameters",
+      "noDescription": "No description",
+      "addTools": "Add Tools",
+      "moreTools": "More tools"
     },
     "classifier": {
       "input": "Classifier Input",

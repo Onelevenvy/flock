@@ -11,7 +11,7 @@ import {
 import { invoke } from '@tauri-apps/api/core';
 import { notifications } from '@mantine/notifications';
 import { useTranslation } from 'react-i18next';
-import { ProviderIcon } from '../../Icons';
+import { ProviderIcon } from '../../Common/Icons';
 
 interface ModelProvider {
   id: string;
@@ -116,7 +116,7 @@ export default function CustomModelSettings({ provider, onClose, onSaved }: Prop
           data-1p-ignore="true"
           data-lpignore="true"
           styles={{
-            input: { 
+            input: {
               background: 'var(--flock-bg-surface)',
               color: 'var(--flock-text-primary)',
             },
@@ -133,7 +133,7 @@ export default function CustomModelSettings({ provider, onClose, onSaved }: Prop
           data-1p-ignore="true"
           data-lpignore="true"
           styles={{
-            input: { 
+            input: {
               background: 'var(--flock-bg-surface)',
               color: 'var(--flock-text-primary)',
             },
@@ -150,7 +150,7 @@ export default function CustomModelSettings({ provider, onClose, onSaved }: Prop
           data-1p-ignore="true"
           data-lpignore="true"
           styles={{
-            input: { 
+            input: {
               background: 'var(--flock-bg-surface)',
               color: 'var(--flock-text-primary)',
             },

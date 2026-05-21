@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import {
   Stack,
   Text,
@@ -11,16 +11,18 @@ import {
   Loader,
   Badge,
   SegmentedControl,
-  MultiSelect,
 } from '@mantine/core';
 import { invoke } from '@tauri-apps/api/core';
 import { notifications } from '@mantine/notifications';
 import { IconCheck, IconSettings, IconShieldCheck, IconCpu } from '@tabler/icons-react';
 import { useTranslation } from 'react-i18next';
+import ToolManager from '../Common/ToolManager';
 
 interface ToolsConfig {
   auto_approve: boolean;
   allow_list: string[];
+  /** 白名单中暂时关闭的工具（界面显示但不参与自动审批） */
+  disabled_allow_list?: string[];
   skills?: {
     deny: string[];
     allow: string[];
@@ -42,21 +44,18 @@ interface CompactConfig {
   toon: boolean;
 }
 
-interface Tool {
-  id: string;
-  name: string;
-  description: string;
-  category: string;
-  provider_id?: string;
-}
-
 export default function XiaofSettings() {
   const { t } = useTranslation();
   const [toolsConfig, setToolsConfig] = useState<ToolsConfig | null>(null);
   const [compactConfig, setCompactConfig] = useState<CompactConfig | null>(null);
-  const [allTools, setAllTools] = useState<Tool[]>([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+
+  // 自动保存 debounce 引用（工具配置和压缩配置各自独立）
+  const toolsSaveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const compactSaveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  // 用于跟踪是否是初次加载（避免初次加载就触发保存）
+  const isInitialLoad = useRef(true);
 
   useEffect(() => {
     loadSettings();
@@ -65,18 +64,14 @@ export default function XiaofSettings() {
   const loadSettings = async () => {
     setLoading(true);
     try {
-      const [tools, compact, toolsList] = await Promise.all([
+      const [tools, compact] = await Promise.all([
         invoke<ToolsConfig | null>('get_app_config', { key: 'tools' }),
         invoke<CompactConfig | null>('get_app_config', { key: 'compact' }),
-        invoke<Tool[]>('list_tools'),
       ]);
 
-      if (tools) setToolsConfig(tools);
+      if (tools) setToolsConfig({ disabled_allow_list: [], ...tools });
       if (compact) setCompactConfig(compact);
-      if (toolsList) {
-        const builtinTools = toolsList.filter((t) => t.provider_id === 'builtin');
-        setAllTools(builtinTools);
-      }
+      // 工具列表由 ToolList 内部的 useAvailableTools 自己加载
     } catch (e) {
       console.error('加载 XIAOF 配置失败:', e);
       notifications.show({
@@ -86,9 +81,64 @@ export default function XiaofSettings() {
       });
     } finally {
       setLoading(false);
+      // 标记初始化完成，之后的 state 变更可以触发自动保存
+      setTimeout(() => { isInitialLoad.current = false; }, 100);
     }
   };
 
+  // ─── 自动保存：toolsConfig 变更 ────────────────────────────────
+  useEffect(() => {
+    if (isInitialLoad.current || !toolsConfig) return;
+
+    if (toolsSaveTimerRef.current) clearTimeout(toolsSaveTimerRef.current);
+    toolsSaveTimerRef.current = setTimeout(async () => {
+      try {
+        await invoke('set_app_config', { key: 'tools', value: toolsConfig });
+        // notifications.show({
+        //   id: 'xiaof-autosave-tools',
+        //   title: t('common.success'),
+        //   message: t('settings.xiaof.autoSaveSuccess', { defaultValue: '工具配置已自动保存' }),
+        //   color: 'teal',
+        //   icon: <IconCheck size={16} />,
+        //   autoClose: 2000,
+        // });
+      } catch (e) {
+        console.error('自动保存工具配置失败:', e);
+      }
+    }, 600);
+
+    return () => {
+      if (toolsSaveTimerRef.current) clearTimeout(toolsSaveTimerRef.current);
+    };
+  }, [toolsConfig]);
+
+  // ─── 自动保存：compactConfig 变更 ─────────────────────────────
+  useEffect(() => {
+    if (isInitialLoad.current || !compactConfig) return;
+
+    if (compactSaveTimerRef.current) clearTimeout(compactSaveTimerRef.current);
+    compactSaveTimerRef.current = setTimeout(async () => {
+      try {
+        await invoke('set_app_config', { key: 'compact', value: compactConfig });
+        notifications.show({
+          id: 'xiaof-autosave-compact',
+          title: t('common.success'),
+          message: t('settings.xiaof.autoSaveCompactSuccess', { defaultValue: '压缩配置已自动保存' }),
+          color: 'teal',
+          icon: <IconCheck size={16} />,
+          autoClose: 2000,
+        });
+      } catch (e) {
+        console.error('自动保存压缩配置失败:', e);
+      }
+    }, 600);
+
+    return () => {
+      if (compactSaveTimerRef.current) clearTimeout(compactSaveTimerRef.current);
+    };
+  }, [compactConfig]);
+
+  // 手动保存（保留按钮，作为可靠保障）
   const handleSave = async () => {
     if (!toolsConfig || !compactConfig) return;
     setSaving(true);
@@ -168,35 +218,22 @@ export default function XiaofSettings() {
             <>
               <Divider color="var(--flock-border-subtle)" />
 
-              <Stack gap="xs">
-                <Text size="sm" fw={600}>
-                  {t('settings.xiaof.allowListLabel')}
-                </Text>
-
-                <MultiSelect
-                  placeholder={t('settings.xiaof.allowListPlaceholder')}
-                  data={allTools.map((tool) => ({
-                    value: tool.name,
-                    label: tool.name,
-                  }))}
-                  value={toolsConfig?.allow_list || []}
-                  onChange={(values) =>
-                    setToolsConfig(
-                      toolsConfig ? { ...toolsConfig, allow_list: values } : null
-                    )
-                  }
-                  searchable
-                  clearable
-                  nothingFoundMessage={t('settings.xiaof.allowListNothingFound')}
-                  styles={{
-                    input: { background: 'var(--flock-bg-surface)' },
-                    dropdown: {
-                      background: 'var(--flock-bg-surface)',
-                      border: '1px solid var(--flock-border-base)',
-                    },
-                  }}
-                />
-              </Stack>
+              <ToolManager
+                value={toolsConfig?.allow_list || []}
+                onChange={(values) =>
+                  setToolsConfig((prev) =>
+                    prev ? { ...prev, allow_list: values } : null
+                  )
+                }
+                disabledValue={toolsConfig?.disabled_allow_list || []}
+                onDisabledChange={(values) =>
+                  setToolsConfig((prev) =>
+                    prev ? { ...prev, disabled_allow_list: values } : null
+                  )
+                }
+                label={t('settings.xiaof.allowListLabel')}
+                selectorPosition="bottom-end"
+              />
             </>
           )}
         </Stack>
@@ -305,7 +342,7 @@ export default function XiaofSettings() {
         </Stack>
       </Card>
 
-      {/* 底部保存条 */}
+      {/* 底部操作栏 */}
       <Group justify="flex-end" gap="md">
         <Button variant="subtle" color="gray" onClick={loadSettings} disabled={saving}>
           {t('common.reset')}

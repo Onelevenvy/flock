@@ -21,7 +21,7 @@ import { useAgentStore } from '../../store/agentStore';
 import { useWorkspaceStore } from '../../store/workspaceStore';
 import { useWorkspacesQuery } from '../../hooks/useWorkspaces';
 import { v4 as uuidv4 } from 'uuid';
-import { ModelSelector } from '../Settings/ModelSelector';
+import { ActiveModelPicker } from '../Settings/ActiveModelPicker';
 
 const MODE_OPTIONS = [
   { value: 'default', labelKey: 'chat.mode.default', labelDefault: '审批模式', icon: IconShieldCheck, color: 'blue' },
@@ -102,14 +102,14 @@ export function InputBar() {
   const placeholder = !activeWorkspaceId
     ? t('chat.chooseWorkspace')
     : status === 'disconnected'
-    ? t('chat.agentDisconnected')
-    : status === 'connecting'
-    ? t('chat.agentConnecting')
-    : status === 'error'
-    ? t('chat.agentConnectFailed')
-    : isStreaming
-    ? t('chat.agentThinking')
-    : t('chat.inputPlaceholder');
+      ? t('chat.agentDisconnected')
+      : status === 'connecting'
+        ? t('chat.agentConnecting')
+        : status === 'error'
+          ? t('chat.agentConnectFailed')
+          : isStreaming
+            ? t('chat.agentThinking')
+            : t('chat.inputPlaceholder');
 
   const handleSend = async () => {
     if (!canSend) return;
@@ -119,10 +119,10 @@ export function InputBar() {
     setValue('');
     addUserMessage(userUiId, content);
     try {
-      await invoke('send_message', { 
-        sessionId: activeConversationId || null, 
-        msgId: streamMsgId, 
-        content 
+      await invoke('send_message', {
+        sessionId: activeConversationId || null,
+        msgId: streamMsgId,
+        content
       });
     } catch (e: any) {
       console.error('send_message error:', e);
@@ -239,7 +239,7 @@ export function InputBar() {
         {/* 底部工具栏 */}
         <Group justify="space-between" mt={6}>
           <Group gap={8}>
-            <ModelSelector />
+            <ActiveModelPicker />
             {value.length > 0 && (
               <Text size="xs" style={{ color: 'var(--flock-text-dim)', fontSize: 11 }}>
                 {value.length} {t('chat.characterCount')}
