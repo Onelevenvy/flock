@@ -1,12 +1,12 @@
 import { useState, useEffect } from 'react';
-import { Box, Text, ScrollArea } from '@mantine/core';
+import { Box, Text, ScrollArea, Loader } from '@mantine/core';
 import { useTranslation } from 'react-i18next';
 import { notifications } from '@mantine/notifications';
 import { save } from '@tauri-apps/plugin-dialog';
 import { useUiStore } from '../../../../store/uiStore';
 import { useWorkspaceStore } from '../../../../store/workspaceStore';
 import { useAgentStore } from '../../../../store/agentStore';
-import { invoke, convertFileSrc } from '@tauri-apps/api/core';
+import { invoke } from '@tauri-apps/api/core';
 
 import { ImageView } from './ImageView';
 import { PdfView } from './PdfView';
@@ -43,6 +43,7 @@ export function PreviewPanel({ embedded = false }: PreviewPanelProps) {
   const [screenshotAbsPath, setScreenshotAbsPath] = useState<string>('');
   const [activeTab, setActiveTab] = useState<'screenshot' | 'vnc'>('screenshot');
   const [refreshTrigger, setRefreshTrigger] = useState<number>(0);
+  const [vncPreheatStatus, setVncPreheatStatus] = useState<'idle' | 'loading' | 'success'>('idle');
 
   // 感知工具是否正在运行，决定轮询频率
   const messages = useAgentStore((s) => s.messages);
@@ -123,25 +124,11 @@ export function PreviewPanel({ embedded = false }: PreviewPanelProps) {
       });
   }, [previewFile, activeWorkspaceId]);
 
-  if (!isPreviewOpen || !previewFile) return null;
-
-  // Rendering Dispatcher flags
-  const isMarkdown = ext === 'md' || ext === 'mdx';
-  const previewableExts = ['txt', 'json', 'toml', 'yaml', 'yml', 'ts', 'tsx', 'js', 'jsx', 'py', 'rs', 'css', 'scss', 'log', 'diff', 'patch'];
-  const isCode = previewableExts.includes(ext);
-  
-  const IMAGE_EXTS = ['png', 'jpg', 'jpeg', 'gif', 'webp', 'svg', 'bmp'];
-  const isImage = IMAGE_EXTS.includes(ext);
-  const isPdf = ext === 'pdf';
-  const isHtml = ext === 'html' || ext === 'htm';
-  const isVnc = ext === 'vnc' || previewFile.path.startsWith('http://') || previewFile.path.startsWith('https://');
-  
-  const OFFICE_EXTS = ['docx', 'doc', 'xlsx', 'xls', 'pptx', 'ppt'];
-  const isOffice = OFFICE_EXTS.includes(ext);
+  const isVnc = ext === 'vnc' || (previewFile?.path?.startsWith('http://') || false) || (previewFile?.path?.startsWith('https://') || false);
 
   const formattedVncUrl = (() => {
     const url = previewFile?.path || '';
-    if ((url.startsWith('http://') || url.startsWith('https://')) && !url.includes('vnc.html')) {
+    if (url.startsWith('http://') || url.startsWith('https://')) {
       try {
         const u = new URL(url);
         if (u.pathname === '/' || u.pathname === '') {
@@ -153,6 +140,12 @@ export function PreviewPanel({ embedded = false }: PreviewPanelProps) {
         if (!u.searchParams.has('resize')) {
           u.searchParams.set('resize', 'scale');
         }
+        if (!u.searchParams.has('skip-preview-warning')) {
+          u.searchParams.set('skip-preview-warning', 'true');
+        }
+        if (!u.searchParams.has('skip_preview_warning')) {
+          u.searchParams.set('skip_preview_warning', 'true');
+        }
         return u.toString();
       } catch (e) {
         return url;
@@ -160,6 +153,55 @@ export function PreviewPanel({ embedded = false }: PreviewPanelProps) {
     }
     return url;
   })();
+
+  useEffect(() => {
+    if (activeTab === 'vnc' && formattedVncUrl && isVnc) {
+      setVncPreheatStatus('loading');
+      let isCurrent = true;
+
+      const preheat = async () => {
+        try {
+          await fetch(formattedVncUrl, {
+            method: 'GET',
+            headers: {
+              'X-Daytona-Skip-Preview-Warning': 'true',
+              'X-Daytona-Disable-CORS': 'true',
+            },
+          });
+        } catch (err) {
+          console.warn('Preheat VNC URL CORS/Network issue, but cookie might still be set:', err);
+        } finally {
+          if (isCurrent) {
+            setVncPreheatStatus('success');
+          }
+        }
+      };
+
+      preheat();
+
+      return () => {
+        isCurrent = false;
+      };
+    } else {
+      setVncPreheatStatus('idle');
+    }
+  }, [formattedVncUrl, activeTab, isVnc]);
+
+  if (!isPreviewOpen || !previewFile) return null;
+
+  // Rendering Dispatcher flags
+  const isMarkdown = ext === 'md' || ext === 'mdx';
+  const previewableExts = ['txt', 'json', 'toml', 'yaml', 'yml', 'ts', 'tsx', 'js', 'jsx', 'py', 'rs', 'css', 'scss', 'log', 'diff', 'patch'];
+  const isCode = previewableExts.includes(ext);
+  
+  const IMAGE_EXTS = ['png', 'jpg', 'jpeg', 'gif', 'webp', 'svg', 'bmp'];
+  const isImage = IMAGE_EXTS.includes(ext);
+  const isPdf = ext === 'pdf';
+  const isHtml = ext === 'html' || ext === 'htm';
+  
+  const OFFICE_EXTS = ['docx', 'doc', 'xlsx', 'xls', 'pptx', 'ppt'];
+  const isOffice = OFFICE_EXTS.includes(ext);
+
 
   // 下载操作
   const handleDownload = async () => {
@@ -381,19 +423,40 @@ export function PreviewPanel({ embedded = false }: PreviewPanelProps) {
             {/* 🌐 网页控制台 (noVNC) */}
             {activeTab === 'vnc' && (
               <Box style={{ display: 'flex', flexDirection: 'column', gap: '12px', width: '100%' }}>
-                <iframe
-                  src={formattedVncUrl}
-                  style={{
-                    width: '100%',
-                    height: 'calc(100vh - 320px)',
-                    border: '1px solid var(--flock-border-dim)',
-                    background: 'var(--flock-bg-deep)',
-                    borderRadius: 12,
-                    boxShadow: '0 8px 24px rgba(0,0,0,0.2)'
-                  }}
-                  allow="fullscreen; clipboard-read; clipboard-write"
-                  sandbox="allow-scripts allow-same-origin allow-popups allow-forms"
-                />
+                {vncPreheatStatus === 'loading' ? (
+                  <Box
+                    style={{
+                      width: '100%',
+                      height: 'calc(100vh - 320px)',
+                      border: '1px solid var(--flock-border-dim)',
+                      background: 'var(--flock-bg-deep)',
+                      borderRadius: 12,
+                      display: 'flex',
+                      flexDirection: 'column',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      gap: '16px',
+                      boxShadow: '0 8px 24px rgba(0,0,0,0.2)'
+                    }}
+                  >
+                    <Loader size="md" color="var(--flock-accent)" type="bars" />
+                    <Text size="sm" c="dimmed">正在安全连接远程控制台，请稍候...</Text>
+                  </Box>
+                ) : (
+                  <iframe
+                    src={formattedVncUrl}
+                    style={{
+                      width: '100%',
+                      height: 'calc(100vh - 320px)',
+                      border: '1px solid var(--flock-border-dim)',
+                      background: 'var(--flock-bg-deep)',
+                      borderRadius: 12,
+                      boxShadow: '0 8px 24px rgba(0,0,0,0.2)'
+                    }}
+                    allow="fullscreen; clipboard-read; clipboard-write"
+                    sandbox="allow-scripts allow-same-origin allow-popups allow-forms"
+                  />
+                )}
                 
                 <Box style={{
                   padding: '12px',

@@ -667,9 +667,35 @@ pub async fn get_sandbox_vnc_url(
             if !query.contains("resize=") {
                 extra.push_str("&resize=scale");
             }
+            if !query.contains("skip-preview-warning=") {
+                extra.push_str("&skip-preview-warning=true");
+            }
+            if !query.contains("skip_preview_warning=") {
+                extra.push_str("&skip_preview_warning=true");
+            }
             url_str = format!("{}/vnc.html{}{}", host, query, extra);
         } else {
-            url_str = format!("{}/vnc.html?autoconnect=true&resize=scale", url_str.trim_end_matches('/'));
+            url_str = format!("{}/vnc.html?autoconnect=true&resize=scale&skip-preview-warning=true&skip_preview_warning=true", url_str.trim_end_matches('/'));
+        }
+    } else {
+        if let Some(pos) = url_str.find('?') {
+            let (host, query) = url_str.split_at(pos);
+            let mut extra = String::new();
+            if !query.contains("autoconnect=") {
+                extra.push_str("&autoconnect=true");
+            }
+            if !query.contains("resize=") {
+                extra.push_str("&resize=scale");
+            }
+            if !query.contains("skip-preview-warning=") {
+                extra.push_str("&skip-preview-warning=true");
+            }
+            if !query.contains("skip_preview_warning=") {
+                extra.push_str("&skip_preview_warning=true");
+            }
+            url_str = format!("{}{}{}", host, query, extra);
+        } else {
+            url_str = format!("{}?autoconnect=true&resize=scale&skip-preview-warning=true&skip_preview_warning=true", url_str);
         }
     }
 

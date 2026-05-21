@@ -188,49 +188,60 @@ export const useAgentStore = create<AgentStore>((set) => ({
         break;
 
       case 'tool_running':
-        set((s) => ({
-          messages: s.messages.map((m) => ({
-            ...m,
-            chunks: m.chunks.map((c) =>
-              c.kind === 'tool_request' && c.call_id === event.call_id
-                ? { ...c, status: 'running' as const }
-                : c
-            ),
-          })),
-        }));
+        set((s) => {
+          let updated = false;
+          const newMessages = s.messages.map((m) => {
+            if (m.id !== event.msg_id) return m;
+            const updatedChunks = m.chunks.map((c) => {
+              if (c.kind === 'tool_request' && c.call_id === event.call_id) {
+                updated = true;
+                return { ...c, status: 'running' as const };
+              }
+              return c;
+            });
+            if (!updated) {
+              const toolChunk: ToolRequestChunk = {
+                kind: 'tool_request',
+                call_id: event.call_id,
+                tool: {
+                  name: event.tool_name,
+                  category: 'exec' as any,
+                  args: {},
+                  description: '',
+                },
+                status: 'running',
+              };
+              return { ...m, chunks: [...m.chunks, toolChunk] };
+            }
+            return { ...m, chunks: updatedChunks };
+          });
+          return { messages: newMessages };
+        });
         
         // 当工具开始运行时，如果是浏览器或电脑操作，自动打开预览区
         setTimeout(() => {
-          const currentMessages = useAgentStore.getState().messages;
-          let matchedToolName = '';
-          let matchedToolInput: any = null;
-          for (const m of currentMessages) {
-            for (const c of m.chunks) {
-              if (c.kind === 'tool_request' && c.call_id === event.call_id) {
-                matchedToolName = c.tool?.name || '';
-                matchedToolInput = c.tool?.args;
-                break;
-              }
-            }
-            if (matchedToolName) break;
-          }
-
-          const lowerTool = matchedToolName.toLowerCase();
+          const lowerTool = event.tool_name.toLowerCase();
           if (
             lowerTool.includes('browser') ||
             lowerTool.includes('computer_use') ||
             lowerTool.includes('computeruse')
           ) {
-            // 如果目前已经是 VNC 状态，绝对不要删除截图或重置预览！让 noVNC 桌面保持实时流式！
-            const currentPreview = useUiStore.getState().previewFile;
-            if (currentPreview && (currentPreview.extension === 'vnc' || currentPreview.path.startsWith('http'))) {
-              return;
-            }
-
             // 判断是否是 computer_use 且 action 为 exec
             let isExec = false;
             if (lowerTool.includes('computer_use') || lowerTool.includes('computeruse')) {
               try {
+                // 因为是自动批准（免确认）的，我们需要尽量从 messages 中找一次 arguments
+                const currentMessages = useAgentStore.getState().messages;
+                let matchedToolInput: any = null;
+                for (const m of currentMessages) {
+                  for (const c of m.chunks) {
+                    if (c.kind === 'tool_request' && c.call_id === event.call_id) {
+                      matchedToolInput = c.tool?.args;
+                      break;
+                    }
+                  }
+                  if (matchedToolInput) break;
+                }
                 const inputObj = typeof matchedToolInput === 'string' ? JSON.parse(matchedToolInput) : matchedToolInput;
                 if (inputObj && (inputObj.action === 'exec' || inputObj.action === 'EXEC')) {
                   isExec = true;
@@ -240,20 +251,26 @@ export const useAgentStore = create<AgentStore>((set) => ({
 
             if (isExec) {
               // 命令行命令，将其直接输出为 log
-              useUiStore.getState().setPreviewFile({
-                path: '.flock/sandbox/code_result.log',
-                content: '正在执行沙盒命令...',
-                extension: 'log',
-              });
+              const currentPreview = useUiStore.getState().previewFile;
+              if (!currentPreview || currentPreview.path !== '.flock/sandbox/code_result.log') {
+                useUiStore.getState().setPreviewFile({
+                  path: '.flock/sandbox/code_result.log',
+                  content: '正在执行沙盒命令...',
+                  extension: 'log',
+                });
+              }
             } else {
               invoke<string | null>('get_active_sandbox_vnc_url')
                 .then((vncUrl) => {
                   if (vncUrl) {
-                    useUiStore.getState().setPreviewFile({
-                      path: vncUrl,
-                      content: '',
-                      extension: 'vnc',
-                    });
+                    const currentPreview = useUiStore.getState().previewFile;
+                    if (!currentPreview || currentPreview.path !== vncUrl) {
+                      useUiStore.getState().setPreviewFile({
+                        path: vncUrl,
+                        content: '',
+                        extension: 'vnc',
+                      });
+                    }
                   } else {
                     const currentPreview = useUiStore.getState().previewFile;
                     if (!currentPreview || currentPreview.path !== '.flock/sandbox/screenshot.png') {
@@ -281,68 +298,112 @@ export const useAgentStore = create<AgentStore>((set) => ({
         break;
 
       case 'tool_result':
-        set((s) => ({
-          messages: s.messages.map((m) => ({
-            ...m,
-            chunks: m.chunks.map((c) =>
-              c.kind === 'tool_request' && c.call_id === event.call_id
-                ? {
-                    ...c,
-                    status: 'done' as const,
-                    result: event.output,
-                    result_status: event.status,
-                  }
-                : c
-            ),
-          })),
-        }));
+        set((s) => {
+          let updated = false;
+          const newMessages = s.messages.map((m) => {
+            if (m.id !== event.msg_id) return m;
+            const updatedChunks = m.chunks.map((c) => {
+              if (c.kind === 'tool_request' && c.call_id === event.call_id) {
+                updated = true;
+                return {
+                  ...c,
+                  status: 'done' as const,
+                  result: event.output,
+                  result_status: event.status,
+                };
+              }
+              return c;
+            });
+            if (!updated) {
+              const toolChunk: ToolRequestChunk = {
+                kind: 'tool_request',
+                call_id: event.call_id,
+                tool: {
+                  name: event.tool_name,
+                  category: 'exec' as any,
+                  args: {},
+                  description: '',
+                },
+                status: 'done',
+                result: event.output,
+                result_status: event.status,
+              };
+              return { ...m, chunks: [...m.chunks, toolChunk] };
+            }
+            return { ...m, chunks: updatedChunks };
+          });
+          return { messages: newMessages };
+        });
+        
         if (event.status === 'success') {
           useUiStore.getState().triggerFileTreeRefresh();
           
-          // 查找完成的工具名称并自动拉起预览
+          // 自动拉起预览
           setTimeout(() => {
-            const currentMessages = useAgentStore.getState().messages;
-            let matchedToolName = '';
-            for (const m of currentMessages) {
-              for (const c of m.chunks) {
-                if (c.kind === 'tool_request' && c.call_id === event.call_id) {
-                  matchedToolName = c.tool?.name || '';
-                  break;
-                }
-              }
-              if (matchedToolName) break;
-            }
-
-            const lowerTool = matchedToolName.toLowerCase();
+            const lowerTool = event.tool_name.toLowerCase();
             if (lowerTool.includes('browser') || lowerTool.includes('computer_use') || lowerTool.includes('computeruse')) {
               const outputStr = event.output || '';
               const vncRegex = /(https:\/\/6080-[^\s)]+)/;
               const match = outputStr.match(vncRegex);
               if (match && match[1]) {
-                useUiStore.getState().setPreviewFile({
-                  path: match[1],
-                  content: '',
-                  extension: 'vnc',
-                });
+                const targetUrl = match[1];
+                const currentPreview = useUiStore.getState().previewFile;
+                if (!currentPreview || currentPreview.path !== targetUrl) {
+                  useUiStore.getState().setPreviewFile({
+                    path: targetUrl,
+                    content: '',
+                    extension: 'vnc',
+                  });
+                }
               } else {
                 // 如果输出中没有匹配到 VNC URL，也主动调用 API 拿 VNC URL 并设置 VNC 视图！
                 invoke<string | null>('get_active_sandbox_vnc_url')
                   .then((vncUrl) => {
                     if (vncUrl) {
-                      useUiStore.getState().setPreviewFile({
-                        path: vncUrl,
-                        content: '',
-                        extension: 'vnc',
-                      });
+                      const currentPreview = useUiStore.getState().previewFile;
+                      if (!currentPreview || currentPreview.path !== vncUrl) {
+                        useUiStore.getState().setPreviewFile({
+                          path: vncUrl,
+                          content: '',
+                          extension: 'vnc',
+                        });
+                      }
                     } else {
                       if (lowerTool.includes('computer_use') || lowerTool.includes('computeruse')) {
                         // 如果是 computer_use 且没有 VNC 链接（即 exec 动作），则展示日志输出，不报“文件不存在”错误
+                        const currentPreview = useUiStore.getState().previewFile;
+                        if (!currentPreview || currentPreview.path !== '.flock/sandbox/code_result.log') {
+                          useUiStore.getState().setPreviewFile({
+                            path: '.flock/sandbox/code_result.log',
+                            content: event.output || '',
+                            extension: 'log',
+                          });
+                        }
+                      } else {
+                        const currentPreview = useUiStore.getState().previewFile;
+                        if (!currentPreview || currentPreview.path !== '.flock/sandbox/screenshot.png') {
+                          useUiStore.getState().setPreviewFile({
+                            path: '.flock/sandbox/screenshot.png',
+                            content: '',
+                            extension: 'png',
+                          });
+                        }
+                      }
+                    }
+                  })
+                  .catch(() => {
+                    if (lowerTool.includes('computer_use') || lowerTool.includes('computeruse')) {
+                      const currentPreview = useUiStore.getState().previewFile;
+                      if (!currentPreview || currentPreview.path !== '.flock/sandbox/code_result.log') {
                         useUiStore.getState().setPreviewFile({
                           path: '.flock/sandbox/code_result.log',
                           content: event.output || '',
                           extension: 'log',
                         });
-                      } else {
+                      }
+                    } else {
+                      const currentPreview = useUiStore.getState().previewFile;
+                      if (!currentPreview || currentPreview.path !== '.flock/sandbox/screenshot.png') {
                         useUiStore.getState().setPreviewFile({
                           path: '.flock/sandbox/screenshot.png',
                           content: '',
@@ -350,29 +411,17 @@ export const useAgentStore = create<AgentStore>((set) => ({
                         });
                       }
                     }
-                  })
-                  .catch(() => {
-                    if (lowerTool.includes('computer_use') || lowerTool.includes('computeruse')) {
-                      useUiStore.getState().setPreviewFile({
-                        path: '.flock/sandbox/code_result.log',
-                        content: event.output || '',
-                        extension: 'log',
-                      });
-                    } else {
-                      useUiStore.getState().setPreviewFile({
-                        path: '.flock/sandbox/screenshot.png',
-                        content: '',
-                        extension: 'png',
-                      });
-                    }
                   });
               }
             } else if (lowerTool.includes('code_execution')) {
-              useUiStore.getState().setPreviewFile({
-                path: '.flock/sandbox/code_result.log',
-                content: event.output || '',
-                extension: 'log',
-              });
+              const currentPreview = useUiStore.getState().previewFile;
+              if (!currentPreview || currentPreview.path !== '.flock/sandbox/code_result.log') {
+                useUiStore.getState().setPreviewFile({
+                  path: '.flock/sandbox/code_result.log',
+                  content: event.output || '',
+                  extension: 'log',
+                });
+              }
             }
           }, 300);
         }
