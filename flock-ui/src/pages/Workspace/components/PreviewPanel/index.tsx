@@ -127,8 +127,11 @@ export function PreviewPanel({ embedded = false }: PreviewPanelProps) {
   const isVnc = ext === 'vnc' || (previewFile?.path?.startsWith('http://') || false) || (previewFile?.path?.startsWith('https://') || false);
 
   const formattedVncUrl = (() => {
-    const url = previewFile?.path || '';
-    if (url.startsWith('http://') || url.startsWith('https://')) {
+    let url = previewFile?.path || '';
+    if (url.startsWith('http://')) {
+      url = url.replace('http://', 'https://');
+    }
+    if (url.startsWith('https://')) {
       try {
         const u = new URL(url);
         if (u.pathname === '/' || u.pathname === '') {

@@ -132,6 +132,8 @@ pub async fn get_or_create_active_sandbox(db: &DbManager) -> anyhow::Result<Stri
         crate::emit_info(&format!("正在检查 Daytona 沙盒 {} 的健康状态...", id));
         if check_sandbox_alive(&cfg, id).await {
             crate::emit_info(&format!("Daytona 沙盒 {} 已就绪 (复用中)", id));
+            // 复用时也尝试将其设为 public，忽略可能的报错，确保老沙盒也被激活为 public，免除网关警告页
+            let _ = set_sandbox_public(&cfg, id, true).await;
             return Ok(id.clone());
         }
         crate::emit_info(&format!("Daytona 沙盒 {} 已失效，准备重新创建...", id));
@@ -144,16 +146,16 @@ pub async fn get_or_create_active_sandbox(db: &DbManager) -> anyhow::Result<Stri
     let base = get_api_base(cfg.api_url.as_ref().unwrap());
     let api_key = cfg.api_key.as_ref().unwrap();
 
-    // 构造创建请求 body，如果配置了 snapshot 则使用它
+    // 构造创建请求 body，如果配置了 snapshot 则使用它，同时加上 "public": true
     let create_body = if let Some(ref snap_name) = cfg.snapshot {
         if !snap_name.trim().is_empty() {
             crate::emit_info(&format!("使用自定义 Snapshot: {}...", snap_name));
-            serde_json::json!({ "snapshot": snap_name.trim() })
+            serde_json::json!({ "snapshot": snap_name.trim(), "public": true })
         } else {
-            serde_json::json!({})
+            serde_json::json!({ "public": true })
         }
     } else {
-        serde_json::json!({})
+        serde_json::json!({ "public": true })
     };
 
     let create_url = format!("{}/api/sandbox", base);
@@ -248,6 +250,8 @@ pub async fn get_or_create_active_sandbox(db: &DbManager) -> anyhow::Result<Stri
     }
 
     crate::emit_info("Daytona 沙盒已就绪。");
+    // 显式将新创建的沙盒设为 public，双重保险
+    let _ = set_sandbox_public(&cfg, &sandbox_id, true).await;
     *lock = Some(sandbox_id.clone());
     Ok(sandbox_id)
 }
@@ -280,6 +284,35 @@ async fn check_sandbox_alive(cfg: &SandboxConfig, id: &str) -> bool {
         }
     }
     false
+}
+
+/// 设置沙盒的公开/私有状态 (POST /api/sandbox/{id}/public/{is_public})
+pub async fn set_sandbox_public(
+    cfg: &SandboxConfig,
+    sandbox_id: &str,
+    is_public: bool,
+) -> anyhow::Result<()> {
+    let client = reqwest::Client::new();
+    let base = get_api_base(cfg.api_url.as_ref().unwrap());
+    let api_key = cfg.api_key.as_ref().unwrap();
+
+    let url = format!("{}/api/sandbox/{}/public/{}", base, sandbox_id, is_public);
+    crate::emit_info(&format!("正在设置 Daytona 沙盒 {} 的 public 属性为 {}...", sandbox_id, is_public));
+    
+    let res = client.post(&url)
+        .header("Authorization", format!("Bearer {}", api_key))
+        .send()
+        .await?;
+
+    let status = res.status();
+    if status.is_success() {
+        crate::emit_info(&format!("Daytona 沙盒 {} 的 public 属性设置成功。", sandbox_id));
+        Ok(())
+    } else {
+        let err_body = res.text().await.unwrap_or_default();
+        crate::emit_info(&format!("设置沙盒 public 属性失败 (HTTP {}): {}", status, err_body));
+        anyhow::bail!("设置沙盒 public 属性失败: {}", err_body)
+    }
 }
 
 /// 在沙盒中执行指令，带有端点兼容重试机制
@@ -655,6 +688,10 @@ pub async fn get_sandbox_vnc_url(
                 text
             }
         });
+
+    if url_str.starts_with("http://") {
+        url_str = url_str.replacen("http://", "https://", 1);
+    }
 
     // 格式化为 vnc.html 路径并带有自连参数
     if !url_str.contains("vnc.html") {
