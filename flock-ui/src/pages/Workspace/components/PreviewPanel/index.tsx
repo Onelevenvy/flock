@@ -81,6 +81,13 @@ export function PreviewPanel({ embedded = false }: PreviewPanelProps) {
     if (previewFile) {
       const toggleable = ['html', 'htm', 'md', 'mdx', 'svg'].includes(ext);
       setViewMode(toggleable ? 'preview' : 'code');
+
+      const isVncUrl = ext === 'vnc' || previewFile.path.startsWith('http://') || previewFile.path.startsWith('https://');
+      if (isVncUrl) {
+        setActiveTab('vnc');
+      } else {
+        setActiveTab('screenshot');
+      }
     }
   }, [previewFile, ext]);
 

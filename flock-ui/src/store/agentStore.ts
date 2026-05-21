@@ -320,16 +320,8 @@ export const useAgentStore = create<AgentStore>((set) => ({
               : m
           ),
         }));
-        // 一轮对话结束（正常结束或被中断），关闭当前浏览器/电脑预览画面
+        // 一轮对话结束（正常结束或被中断），仅刷新文件树，保留预览区以供用户手动操作和查看
         setTimeout(() => {
-          const currentPreview = useUiStore.getState().previewFile;
-          if (
-            currentPreview &&
-            (currentPreview.path === '.flock/sandbox/screenshot.png' ||
-              currentPreview.extension === 'vnc')
-          ) {
-            useUiStore.getState().setPreviewFile(null);
-          }
           useUiStore.getState().triggerFileTreeRefresh();
         }, 500);
         break;
