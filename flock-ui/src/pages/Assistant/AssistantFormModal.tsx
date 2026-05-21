@@ -7,7 +7,7 @@ import { useTranslation } from 'react-i18next';
 import { type Assistant, type UpsertAssistant } from '../../types/assistant';
 import { IconPicker } from './IconPicker';
 import { MarkdownRenderer } from '../../components/chat/MarkdownRenderer';
-import ToolSelector from '../../components/Common/ToolSelector';
+import ToolManager from '../../components/Common/ToolManager';
 
 
 interface ModelProvider { id: string; provider_name: string; }
@@ -311,11 +311,11 @@ export function AssistantFormModal({
           <Divider color="var(--flock-border-subtle)" />
 
           {/* 绑定工具 */}
-          <ToolSelector
+          <ToolManager
             label={t('assistant.form.toolsLabel')}
-            placeholder={t('assistant.form.toolsPlaceholder')}
             value={selectedTools}
             onChange={setSelectedTools}
+            selectorPosition="bottom-start"
           />
 
           {/* 绑定技能 */}
