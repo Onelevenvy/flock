@@ -44,7 +44,7 @@ impl SystemPromptCache {
         self.joined = None;
     }
 
-    /// Invalidate all cached sections (e.g., on /context_compression).
+    /// Invalidate all cached sections (e.g., on /mod).
     pub fn invalidate_all(&mut self) {
         self.sections.clear();
         self.joined = None;

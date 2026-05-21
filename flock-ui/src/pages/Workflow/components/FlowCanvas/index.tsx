@@ -21,24 +21,22 @@ import {
   IconArrowLeft,
   IconDeviceFloppy,
   IconPlayerPlay,
-  IconLayoutGrid,
   IconRoute,
-  IconHierarchy,
-  IconPlus,
-  IconPointer,
-  IconHandGrab,
-  IconMaximize,
 } from '@tabler/icons-react';
 import { useTranslation } from 'react-i18next';
-import { workflowNodeTypes } from '../WorkflowNodes';
-import { nodeConfig, type NodeType } from '../nodeConfig';
-import { useWorkflowStore } from '../../../store/workflowStore';
-import { useUpdateWorkflow, type WorkflowRecord } from '../../../hooks/useWorkflow';
-import { NodePalette } from './NodePalette';
-import { CustomStepEdge } from './CustomStepEdge';
-import { PropertiesPanel } from './PropertiesPanel';
-import { ExecutionPanel } from './ExecutionPanel';
-import { useWorkflowExecution } from '../../../hooks/useWorkflowExecution';
+import { workflowNodeTypes } from '../../nodes/nodeTypesMap';
+import { nodeConfig, type NodeType } from '../../nodeConfig';
+import { useWorkflowStore } from '../../../../store/workflowStore';
+import { useUpdateWorkflow, type WorkflowRecord } from '../../../../hooks/useWorkflow';
+import { NodePalette } from '../NodePalette';
+import { CustomStepEdge } from '../CustomStepEdge';
+import { PropertiesPanel } from '../PropertiesPanel';
+import { ExecutionPanel } from '../ExecutionPanel';
+import { useWorkflowExecution } from '../../../../hooks/useWorkflowExecution';
+
+import { useFlowLayout } from './hooks/useFlowLayout';
+import { LeftToolbar } from './components/LeftToolbar';
+import { EdgeInsertMenu } from './components/EdgeInsertMenu';
 
 interface FlowCanvasProps {
   workflowId: string;
@@ -72,6 +70,9 @@ export function FlowCanvas({ workflowId, workflowData, onBack }: FlowCanvasProps
   const [showNodePalette, setShowNodePalette] = useState(false);
   const [isPanMode, setIsPanMode] = useState(false);
 
+  // ── Topological Auto Layout Hook ─────────────────────────────────────────
+  const { layoutAllNodes } = useFlowLayout(nodes, edges, setNodes, setEdges);
+
   // ── Active execution node tracking & glow effect ─────────────────────────
   const activeNodeId = useMemo(() => {
     if (executionStatus !== 'running') return null;
@@ -94,89 +95,6 @@ export function FlowCanvas({ workflowId, workflowData, onBack }: FlowCanvasProps
       }
     }
   }, [activeNodeId]);
-
-  // ── Topological Auto Layout ───────────────────────────────────────────────
-  const layoutAllNodes = useCallback((customNodes?: Node[], customEdges?: Edge[]) => {
-    const targetNodes = customNodes || nodes;
-    const targetEdges = customEdges || edges;
-    if (targetNodes.length === 0) return;
-
-    const adj: Record<string, string[]> = {};
-    const inDegree: Record<string, number> = {};
-
-    targetNodes.forEach(n => {
-      adj[n.id] = [];
-      inDegree[n.id] = 0;
-    });
-
-    targetEdges.forEach(e => {
-      if (adj[e.source] && adj[e.target] !== undefined) {
-        adj[e.source].push(e.target);
-        inDegree[e.target] = (inDegree[e.target] || 0) + 1;
-      }
-    });
-
-    const rank: Record<string, number> = {};
-    targetNodes.forEach(n => {
-      rank[n.id] = 0;
-    });
-
-    const queue: string[] = [];
-    targetNodes.forEach(n => {
-      if (inDegree[n.id] === 0) {
-        queue.push(n.id);
-      }
-    });
-
-    if (queue.length === 0 && targetNodes.length > 0) {
-      queue.push(targetNodes[0].id);
-    }
-
-    const visited = new Set<string>();
-    while (queue.length > 0) {
-      const curr = queue.shift()!;
-      if (visited.has(curr)) continue;
-      visited.add(curr);
-
-      const currRank = rank[curr];
-      adj[curr].forEach(next => {
-        rank[next] = Math.max(rank[next], currRank + 1);
-        queue.push(next);
-      });
-    }
-
-    const rankGroups: Record<number, string[]> = {};
-    targetNodes.forEach(n => {
-      const r = rank[n.id] || 0;
-      if (!rankGroups[r]) {
-        rankGroups[r] = [];
-      }
-      rankGroups[r].push(n.id);
-    });
-
-    const HORIZONTAL_GAP = 280;
-    const VERTICAL_GAP = 140;
-
-    const nextNodes = targetNodes.map(n => {
-      const r = rank[n.id] || 0;
-      const group = rankGroups[r];
-      const index = group.indexOf(n.id);
-      const count = group.length;
-
-      const x = r * HORIZONTAL_GAP + 50;
-      const y = (index - (count - 1) / 2) * VERTICAL_GAP + 200;
-
-      return {
-        ...n,
-        position: { x, y }
-      };
-    });
-
-    setNodes(nextNodes);
-    if (customEdges) {
-      setEdges(customEdges);
-    }
-  }, [nodes, edges, setNodes, setEdges]);
 
   // ── Edge Click Node Insertion ─────────────────────────────────────────────
   const [menuEdge, setMenuEdge] = useState<Edge | null>(null);
@@ -284,7 +202,7 @@ export function FlowCanvas({ workflowId, workflowData, onBack }: FlowCanvasProps
     setActiveSourceHandle(null);
     setInsertMode(null);
     setMenuPortalPosition(null);
-  }, [menuEdge, activeSourceHandle, insertMode, nodes, edges, setNodes, setEdges, layoutAllNodes]);
+  }, [menuEdge, activeSourceHandle, insertMode, nodes, edges, layoutAllNodes]);
 
 
   // ── ReactFlow event handlers ──────────────────────────────────────────────
@@ -551,106 +469,17 @@ export function FlowCanvas({ workflowId, workflowData, onBack }: FlowCanvasProps
       <Box style={{ flex: 1, display: 'flex', overflow: 'hidden' }}>
         <Box style={{ flex: 1, position: 'relative' }}>
           {/* ── Left Floating Toolbar ── */}
-          <Box
-            style={{
-              position: 'absolute',
-              left: 16,
-              top: '50%',
-              transform: 'translateY(-50%)',
-              zIndex: 100,
-              background: 'var(--flock-bg-surface)',
-              border: '1px solid var(--flock-border-subtle)',
-              borderRadius: 8,
-              boxShadow: '0 4px 16px rgba(0,0,0,0.08)',
-              padding: '6px',
-              display: 'flex',
-              flexDirection: 'column',
-              gap: 8,
-              alignItems: 'center',
-            }}
-          >
-            {/* 1. Add Node (+) */}
-            <Tooltip label={t('workflow.addNode', 'Add Node')} position="right" withArrow>
-              <ActionIcon
-                variant={showNodePalette ? 'filled' : 'subtle'}
-                color={showNodePalette ? 'blue' : 'gray'}
-                radius="md"
-                size="md"
-                onClick={() => setShowNodePalette((v) => !v)}
-              >
-                <IconPlus size={16} />
-              </ActionIcon>
-            </Tooltip>
-
-            <Divider style={{ width: '80%' }} />
-
-            {/* 2. Selection Mode (Mouse Pointer) */}
-            <Tooltip label={t('workflow.selectMode', 'Select Mode')} position="right" withArrow>
-              <ActionIcon
-                variant={!isPanMode ? 'light' : 'subtle'}
-                color={!isPanMode ? 'blue' : 'gray'}
-                radius="md"
-                size="md"
-                onClick={() => setIsPanMode(false)}
-              >
-                <IconPointer size={16} />
-              </ActionIcon>
-            </Tooltip>
-
-            {/* 3. Pan Mode (Hand Grab) */}
-            <Tooltip label={t('workflow.panMode', 'Pan Mode')} position="right" withArrow>
-              <ActionIcon
-                variant={isPanMode ? 'light' : 'subtle'}
-                color={isPanMode ? 'blue' : 'gray'}
-                radius="md"
-                size="md"
-                onClick={() => setIsPanMode(true)}
-              >
-                <IconHandGrab size={16} />
-              </ActionIcon>
-            </Tooltip>
-
-            <Divider style={{ width: '80%' }} />
-
-            {/* 4. Auto Layout */}
-            <Tooltip label={t('workflow.autoLayout', 'Auto Layout')} position="right" withArrow>
-              <ActionIcon
-                variant="subtle"
-                color="gray"
-                radius="md"
-                size="md"
-                onClick={() => layoutAllNodes()}
-              >
-                <IconHierarchy size={16} />
-              </ActionIcon>
-            </Tooltip>
-
-            {/* 5. Fit View */}
-            <Tooltip label={t('workflow.fitView', 'Fit View')} position="right" withArrow>
-              <ActionIcon
-                variant="subtle"
-                color="gray"
-                radius="md"
-                size="md"
-                onClick={() => fitView({ padding: 0.25 })}
-              >
-                <IconMaximize size={16} />
-              </ActionIcon>
-            </Tooltip>
-
-            {/* 6. Minimap Toggle */}
-            <Tooltip label={t('workflow.minimap', 'Minimap')} position="right" withArrow>
-              <ActionIcon
-                variant={showMinimap ? 'filled' : 'subtle'}
-                color={showMinimap ? 'blue' : 'gray'}
-                radius="md"
-                size="md"
-                onClick={() => setShowMinimap((v) => !v)}
-              >
-                <IconLayoutGrid size={16} />
-              </ActionIcon>
-            </Tooltip>
-          </Box>
+          <LeftToolbar
+            showNodePalette={showNodePalette}
+            setShowNodePalette={setShowNodePalette}
+            isPanMode={isPanMode}
+            setIsPanMode={setIsPanMode}
+            layoutAllNodes={layoutAllNodes}
+            fitView={fitView}
+            showMinimap={showMinimap}
+            setShowMinimap={setShowMinimap}
+            t={t}
+          />
 
           {/* ── Node Palette Popover ── */}
           <Transition mounted={showNodePalette} transition="slide-right" duration={200} timingFunction="ease">
@@ -744,38 +573,16 @@ export function FlowCanvas({ workflowId, workflowData, onBack }: FlowCanvasProps
       </Box>
 
       {/* ── Edge click insertion floating Portal Menu ─────────────────── */}
-      {menuPortalPosition && (
-        <>
-          <div
-            style={{
-              position: 'fixed',
-              top: 0,
-              left: 0,
-              right: 0,
-              bottom: 0,
-              zIndex: 9999,
-              background: 'transparent',
-            }}
-            onClick={() => {
-              setMenuEdge(null);
-              setActiveSourceHandle(null);
-              setInsertMode(null);
-              setMenuPortalPosition(null);
-            }}
-          />
-          <Box
-            style={{
-              position: 'fixed',
-              left: menuPortalPosition.x,
-              top: menuPortalPosition.y,
-              zIndex: 10000,
-              animation: 'scaleIn 0.15s cubic-bezier(0.34, 1.56, 0.64, 1)',
-            }}
-          >
-            <NodePalette onAddNode={handleInsertNode} />
-          </Box>
-        </>
-      )}
+      <EdgeInsertMenu
+        menuPortalPosition={menuPortalPosition}
+        onClose={() => {
+          setMenuEdge(null);
+          setActiveSourceHandle(null);
+          setInsertMode(null);
+          setMenuPortalPosition(null);
+        }}
+        onAddNode={handleInsertNode}
+      />
 
     </Box>
   );

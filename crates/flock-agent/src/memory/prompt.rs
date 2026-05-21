@@ -218,7 +218,7 @@ Verify file/function names from memory still exist before recommending them.";
 // Public API
 // ===========================================================================
 
-/// Build a minimal memory prompt with just the path, context_compression rules,
+/// Build a minimal memory prompt with just the path, mod rules,
 /// and MEMORY.md index content. Omits the full type taxonomy and examples
 /// to save ~2,500 tokens on the first turn.
 pub fn build_memory_prompt_minimal(memory_dir: &Path) -> String {

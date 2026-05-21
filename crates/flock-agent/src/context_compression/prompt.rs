@@ -1,18 +1,18 @@
 //! Compact prompt templates for LLM-based conversation summarization.
 //!
 //! Provides the 9-section summary prompt, response parsing, and
-//! post-context_compression message construction.
+//! post-mod message construction.
 
-/// System prompt used for the context_compression LLM call.
+/// System prompt used for the mod LLM call.
 pub const COMPACT_SYSTEM_PROMPT: &str =
     "You are a helpful AI assistant tasked with summarizing conversations.";
 
-/// Maximum output tokens for the context_compression LLM call.
+/// Maximum output tokens for the mod LLM call.
 pub const COMPACT_MAX_OUTPUT_TOKENS: u32 = 20_000;
 
 // ── Prompt construction ─────────────────────────────────────────────────────
 
-/// Build the 9-section context_compression prompt that asks the LLM to summarize.
+/// Build the 9-section mod prompt that asks the LLM to summarize.
 pub fn build_compact_prompt() -> String {
     format!("{PREAMBLE}\n\n{BODY}\n\n{FORMAT_INSTRUCTIONS}\n\n{REMINDER}")
 }
@@ -84,9 +84,9 @@ pub fn format_compact_summary(raw: &str) -> String {
     }
 }
 
-// ── Post-context_compression message content ────────────────────────────────────────────
+// ── Post-mod message content ────────────────────────────────────────────
 
-/// Build the user message content for the post-context_compression summary.
+/// Build the user message content for the post-mod summary.
 ///
 /// For autocompact (`is_auto = true`), appends an instruction telling the
 /// model to continue seamlessly without acknowledging the compaction.

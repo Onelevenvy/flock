@@ -1,7 +1,7 @@
 mod mcp;
-mod skills;
+mod skills_func;
 mod tools;
 
 pub use mcp::*;
-pub use skills::*;
+pub use skills_func::*;
 pub use tools::*;

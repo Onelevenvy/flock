@@ -6,13 +6,13 @@ use serde::{Deserialize, Serialize};
 pub enum CompressionTrigger {
     /// Triggered automatically when token usage exceeded the watermark.
     Auto,
-    /// Triggered manually by the user (e.g. `/context_compression` command).
+    /// Triggered manually by the user (e.g. `/mod` command).
     Manual,
 }
 
-/// Metadata stored in the context_compression boundary marker message.
+/// Metadata stored in the mod boundary marker message.
 ///
-/// After an autocompact or manual context_compression, a system-role message is
+/// After an autocompact or manual mod, a system-role message is
 /// inserted whose content carries this metadata serialized as JSON.
 /// It records *what happened* so that downstream code (and the model
 /// itself) can reason about the compaction.

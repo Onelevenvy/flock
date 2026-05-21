@@ -2,7 +2,7 @@
 //!
 //! When `last_input_tokens` is within `emergency_buffer` of the full
 //! `context_window`, the engine should block the next API call and ask
-//! the user to context_compression or start a new conversation.
+//! the user to mod or start a new conversation.
 //!
 //! Unlike autocompact, the emergency check always applies — even when
 //! the compaction system is disabled via `CompactConfig.enabled`.
@@ -11,7 +11,7 @@ use flock_core::config::compression::CompressionConfig;
 
 /// User-facing message shown when the emergency limit is hit.
 pub const EMERGENCY_USER_MESSAGE: &str =
-    "Context window nearly full. Please use /context_compression or start a new conversation.";
+    "Context window nearly full. Please use /mod or start a new conversation.";
 
 /// Check whether the last observed input token count has reached the
 /// emergency blocking limit.
