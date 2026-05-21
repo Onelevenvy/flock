@@ -262,3 +262,128 @@ pub async fn execute_command_in_sandbox(
 
     Err(last_error.unwrap_or_else(|| anyhow::anyhow!("无法连接沙盒 Toolbox API 终结点")))
 }
+
+/// 启动沙盒中的 Computer Use（VNC桌面）
+pub async fn start_computer_use_in_sandbox(
+    db: &DbManager,
+    sandbox_id: &str,
+) -> anyhow::Result<()> {
+    let cfg = get_sandbox_config(db).await
+        .ok_or_else(|| anyhow::anyhow!("云端 Daytona 沙箱未配置或未启用"))?;
+
+    let api_url = cfg.api_url.as_ref().unwrap().trim_end_matches('/');
+    let api_key = cfg.api_key.as_ref().unwrap();
+
+    let urls = if api_url.contains("app.daytona.io") {
+        vec![
+            format!("https://proxy.app.daytona.io/toolbox/{}/toolbox/computeruse/start", sandbox_id),
+            format!("https://proxy.app.daytona.io/toolbox/{}/computeruse/start", sandbox_id),
+        ]
+    } else {
+        let base = api_url.trim_end_matches("/api").trim_end_matches("/");
+        vec![
+            format!("{}/toolbox/{}/toolbox/computeruse/start", base, sandbox_id),
+            format!("{}/toolbox/{}/computeruse/start", base, sandbox_id),
+        ]
+    };
+
+    let client = reqwest::Client::new();
+    let mut last_error = None;
+
+    for url in urls {
+        crate::emit_info(&format!("正在请求 Daytona 桌面启动端点: {}...", url));
+        let res = client.post(&url)
+            .header("Authorization", format!("Bearer {}", api_key))
+            .json(&serde_json::json!({}))
+            .send()
+            .await;
+
+        match res {
+            Ok(resp) => {
+                let status = resp.status();
+                if status.is_success() {
+                    crate::emit_info("Daytona 桌面拉起请求已发送。");
+                    return Ok(());
+                } else if status == reqwest::StatusCode::NOT_FOUND {
+                    last_error = Some(anyhow::anyhow!("ComputerUse start API 返回 404: {}", url));
+                    continue;
+                } else {
+                    let err_body = resp.text().await.unwrap_or_default();
+                    return Err(anyhow::anyhow!("ComputerUse start API 响应失败 ({}): {}", url, err_body));
+                }
+            }
+            Err(e) => {
+                last_error = Some(anyhow::anyhow!("请求连接 Daytona 桌面端点失败: {}", e));
+            }
+        }
+    }
+
+    Err(last_error.unwrap_or_else(|| anyhow::anyhow!("无法连接沙盒 ComputerUse 启动接口")))
+}
+
+/// 检查沙盒中的 Computer Use（VNC桌面）状态
+pub async fn check_computer_use_status(
+    db: &DbManager,
+    sandbox_id: &str,
+) -> anyhow::Result<bool> {
+    let cfg = get_sandbox_config(db).await
+        .ok_or_else(|| anyhow::anyhow!("云端 Daytona 沙箱未配置或未启用"))?;
+
+    let api_url = cfg.api_url.as_ref().unwrap().trim_end_matches('/');
+    let api_key = cfg.api_key.as_ref().unwrap();
+
+    let urls = if api_url.contains("app.daytona.io") {
+        vec![
+            format!("https://proxy.app.daytona.io/toolbox/{}/toolbox/computeruse/status", sandbox_id),
+            format!("https://proxy.app.daytona.io/toolbox/{}/computeruse/status", sandbox_id),
+        ]
+    } else {
+        let base = api_url.trim_end_matches("/api").trim_end_matches("/");
+        vec![
+            format!("{}/toolbox/{}/toolbox/computeruse/status", base, sandbox_id),
+            format!("{}/toolbox/{}/computeruse/status", base, sandbox_id),
+        ]
+    };
+
+    let client = reqwest::Client::new();
+    let mut last_error = None;
+
+    for url in urls {
+        let res = client.get(&url)
+            .header("Authorization", format!("Bearer {}", api_key))
+            .send()
+            .await;
+
+        match res {
+            Ok(resp) => {
+                let status = resp.status();
+                if status.is_success() {
+                    let text = resp.text().await.unwrap_or_default();
+                    if let Ok(val) = serde_json::from_str::<serde_json::Value>(&text) {
+                        // 兼容 data 嵌套或扁平的结构
+                        let status_val = val.get("status")
+                            .or_else(|| val.get("state"))
+                            .or_else(|| val.get("data").and_then(|d| d.get("status")))
+                            .or_else(|| val.get("data").and_then(|d| d.get("state")));
+                        if let Some(status_str) = status_val.and_then(|s| s.as_str()) {
+                            return Ok(status_str == "started" || status_str == "running" || status_str == "ready");
+                        }
+                    }
+                    return Ok(true);
+                } else if status == reqwest::StatusCode::NOT_FOUND {
+                    last_error = Some(anyhow::anyhow!("ComputerUse status API 返回 404: {}", url));
+                    continue;
+                } else {
+                    let err_body = resp.text().await.unwrap_or_default();
+                    return Err(anyhow::anyhow!("ComputerUse status API 响应失败 ({}): {}", url, err_body));
+                }
+            }
+            Err(e) => {
+                last_error = Some(anyhow::anyhow!("请求连接 Daytona 桌面状态端点失败: {}", e));
+            }
+        }
+    }
+
+    Err(last_error.unwrap_or_else(|| anyhow::anyhow!("无法获取沙盒 ComputerUse 状态")))
+}
+
