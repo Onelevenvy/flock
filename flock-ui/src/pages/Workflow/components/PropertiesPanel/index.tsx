@@ -64,7 +64,7 @@ export function PropertiesPanel({ node, onClose, onDataChange }: PropertiesPanel
         style={{ borderBottom: '1px solid var(--flock-border-subtle)', flexShrink: 0 }}
       >
         <Group gap="xs">
-          <ThemeIcon size={28} radius="md" style={{ background: cfg.colorHex }}>
+          <ThemeIcon size={28} radius="md" style={{ background: 'var(--flock-accent-soft)', color: cfg.colorHex }}>
             <Icon size={14} stroke={2} />
           </ThemeIcon>
           <Box>

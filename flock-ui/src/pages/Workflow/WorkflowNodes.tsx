@@ -1,6 +1,6 @@
 import { memo } from 'react';
 import { Handle, Position, type NodeProps } from 'reactflow';
-import { Box, Text, Badge } from '@mantine/core';
+import { Box, Text } from '@mantine/core';
 import { useTranslation } from 'react-i18next';
 import { nodeConfig, type NodeType } from './nodeConfig';
 
@@ -44,19 +44,19 @@ function BaseWorkflowNode({ type, data, selected }: NodeProps<BaseNodeData> & { 
   const cfg = nodeConfig[type];
   if (!cfg) return null;
   const Icon = cfg.icon;
-  const summary = getNodeSummary(type, data, t);
+  const summary = getNodeSummary(type, data, t as any);
 
   return (
     <Box
       style={{
-        minWidth: 170,
+        width: 220,
         borderRadius: 12,
         border: selected 
-          ? `1.5px solid var(--flock-accent)` 
-          : `1px solid ${cfg.colorHex}50`, // 专属颜色的淡化边框
+          ? `2px solid var(--flock-accent)` 
+          : `1px solid rgba(21, 90, 239, 0.25)`, // 统一使用主题色蓝色的淡化边框
         background: 'var(--flock-bg-surface)',
         boxShadow: selected 
-          ? `0 0 0 3px var(--flock-accent)20` 
+          ? `0 0 0 3px rgba(21, 90, 239, 0.25)` 
           : '0 4px 12px rgba(0,0,0,0.03)',
         overflow: 'hidden',
         cursor: 'pointer',
@@ -80,7 +80,7 @@ function BaseWorkflowNode({ type, data, selected }: NodeProps<BaseNodeData> & { 
             width: 22,
             height: 22,
             borderRadius: 6,
-            background: `${cfg.colorHex}16`, // 透明柔和背景
+            background: 'var(--flock-accent-soft)', // 统一用主题色蓝色柔和背景
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
@@ -111,7 +111,7 @@ function BaseWorkflowNode({ type, data, selected }: NodeProps<BaseNodeData> & { 
           id="left"
           style={{
             background: 'var(--flock-bg-surface)',
-            border: `2px solid ${cfg.colorHex}`,
+            border: `2px solid var(--flock-accent)`, // 统一成主题色蓝色
             width: 8,
             height: 8,
           }}
@@ -124,7 +124,7 @@ function BaseWorkflowNode({ type, data, selected }: NodeProps<BaseNodeData> & { 
           id="right"
           style={{
             background: 'var(--flock-bg-surface)',
-            border: `2px solid ${cfg.colorHex}`,
+            border: `2px solid var(--flock-accent)`, // 统一成主题色蓝色
             width: 8,
             height: 8,
           }}
@@ -147,16 +147,16 @@ export const StartNode = memo(({ data, selected }: NodeProps<BaseNodeData>) => {
         borderRadius: 12,
         background: 'var(--flock-bg-surface)',
         border: selected 
-          ? `1.5px solid var(--flock-accent)` 
-          : `1px solid ${cfg.colorHex}70`,
+          ? `2px solid var(--flock-accent)` 
+          : `1px solid rgba(21, 90, 239, 0.25)`,
         boxShadow: selected 
-          ? `0 0 0 3px var(--flock-accent)20` 
+          ? `0 0 0 3px rgba(21, 90, 239, 0.25)` 
           : '0 4px 10px rgba(0,0,0,0.03)',
         display: 'flex',
         alignItems: 'center',
         gap: 8,
         cursor: 'pointer',
-        minWidth: 170,
+        width: 220,
         transition: 'all 0.15s ease',
       }}
     >
@@ -165,7 +165,7 @@ export const StartNode = memo(({ data, selected }: NodeProps<BaseNodeData>) => {
           width: 22,
           height: 22,
           borderRadius: 6,
-          background: `${cfg.colorHex}16`,
+          background: 'var(--flock-accent-soft)',
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
@@ -181,7 +181,7 @@ export const StartNode = memo(({ data, selected }: NodeProps<BaseNodeData>) => {
         type="source"
         position={Position.Right}
         id="right"
-        style={{ background: 'var(--flock-bg-surface)', border: `2px solid ${cfg.colorHex}`, width: 8, height: 8 }}
+        style={{ background: 'var(--flock-bg-surface)', border: `2px solid var(--flock-accent)`, width: 8, height: 8 }}
       />
     </Box>
   );
@@ -198,16 +198,16 @@ export const EndNode = memo(({ data, selected }: NodeProps<BaseNodeData>) => {
         borderRadius: 12,
         background: 'var(--flock-bg-surface)',
         border: selected 
-          ? `1.5px solid var(--flock-accent)` 
-          : `1px solid ${cfg.colorHex}70`,
+          ? `2px solid var(--flock-accent)` 
+          : `1px solid rgba(21, 90, 239, 0.25)`,
         boxShadow: selected 
-          ? `0 0 0 3px var(--flock-accent)20` 
+          ? `0 0 0 3px rgba(21, 90, 239, 0.25)` 
           : '0 4px 10px rgba(0,0,0,0.03)',
         display: 'flex',
         alignItems: 'center',
         gap: 8,
         cursor: 'pointer',
-        minWidth: 170,
+        width: 220,
         transition: 'all 0.15s ease',
       }}
     >
@@ -216,7 +216,7 @@ export const EndNode = memo(({ data, selected }: NodeProps<BaseNodeData>) => {
           width: 22,
           height: 22,
           borderRadius: 6,
-          background: `${cfg.colorHex}16`,
+          background: 'var(--flock-accent-soft)',
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
@@ -232,7 +232,7 @@ export const EndNode = memo(({ data, selected }: NodeProps<BaseNodeData>) => {
         type="target"
         position={Position.Left}
         id="left"
-        style={{ background: 'var(--flock-bg-surface)', border: `2px solid ${cfg.colorHex}`, width: 8, height: 8 }}
+        style={{ background: 'var(--flock-bg-surface)', border: `2px solid var(--flock-accent)`, width: 8, height: 8 }}
       />
     </Box>
   );
@@ -256,17 +256,19 @@ export const ClassifierNode = memo(({ data, selected }: NodeProps<BaseNodeData>)
   const { t } = useTranslation();
   const categories = (data.categories as { category_id: string; category_name: string }[]) ?? [];
 
+  let classIdx = 0;
+
   return (
     <Box
       style={{
-        minWidth: 170,
+        width: 220,
         borderRadius: 12,
         border: selected 
-          ? `1.5px solid var(--flock-accent)` 
-          : `1px solid ${cfg.colorHex}50`,
+          ? `2px solid var(--flock-accent)` 
+          : `1px solid rgba(21, 90, 239, 0.25)`,
         background: 'var(--flock-bg-surface)',
         boxShadow: selected 
-          ? `0 0 0 3px var(--flock-accent)20` 
+          ? `0 0 0 3px rgba(21, 90, 239, 0.25)` 
           : '0 4px 12px rgba(0,0,0,0.03)',
         overflow: 'visible',
         cursor: 'pointer',
@@ -288,7 +290,7 @@ export const ClassifierNode = memo(({ data, selected }: NodeProps<BaseNodeData>)
             width: 22,
             height: 22,
             borderRadius: 6,
-            background: `${cfg.colorHex}16`,
+            background: 'var(--flock-accent-soft)',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
@@ -302,27 +304,50 @@ export const ClassifierNode = memo(({ data, selected }: NodeProps<BaseNodeData>)
         </Text>
       </Box>
       <Box style={{ padding: '8px 12px', background: 'var(--flock-bg-surface)' }}>
-        {categories.map((cat) => (
-          <Box key={cat.category_id} style={{ position: 'relative', marginBottom: 5, paddingRight: 10 }}>
-            <Badge size="xs" color={cat.category_id === 'others_category' ? 'gray' : 'pink'} variant="light" style={{ fontSize: 9 }}>
-              {cat.category_id === 'others_category' ? t('workflow.nodes.classifier.others', 'Others') : (cat.category_name || cat.category_id)}
-            </Badge>
-            <Handle
-              type="source"
-              position={Position.Right}
-              id={cat.category_id}
-              style={{
-                background: 'var(--flock-bg-surface)',
-                border: `2px solid ${cfg.colorHex}`,
-                width: 8,
-                height: 8,
-                right: -6,
-                top: '50%',
-                transform: 'translateY(-50%)',
-              }}
-            />
-          </Box>
-        ))}
+        {categories.map((cat) => {
+          const isOthers = cat.category_id === 'others_category';
+          const displayIndex = isOthers ? 0 : ++classIdx;
+          return (
+            <Box key={cat.category_id} style={{ position: 'relative', marginBottom: 6 }}>
+              <Box
+                style={{
+                  padding: '6px 10px',
+                  borderRadius: 8,
+                  background: 'var(--flock-bg-raised, rgba(0, 0, 0, 0.02))',
+                  border: '1px solid var(--flock-border-subtle)',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  gap: 2,
+                  marginRight: 6,
+                  overflow: 'hidden',
+                }}
+              >
+                <Text size="xs" fw={700} style={{ fontSize: 10, color: 'var(--flock-text-bright)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                  {isOthers ? 'OTHERS' : `CLASS ${displayIndex}`}
+                </Text>
+                {!isOthers && cat.category_name && (
+                  <Text size="xs" c="dimmed" style={{ fontSize: 10, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                    {cat.category_name}
+                  </Text>
+                )}
+              </Box>
+              <Handle
+                type="source"
+                position={Position.Right}
+                id={cat.category_id}
+                style={{
+                  background: 'var(--flock-bg-surface)',
+                  border: `2px solid var(--flock-accent)`,
+                  width: 8,
+                  height: 8,
+                  right: -16,
+                  top: '50%',
+                  transform: 'translateY(-50%)',
+                }}
+              />
+            </Box>
+          );
+        })}
       </Box>
       <Handle
         type="target"
@@ -330,7 +355,7 @@ export const ClassifierNode = memo(({ data, selected }: NodeProps<BaseNodeData>)
         id="left"
         style={{
           background: 'var(--flock-bg-surface)',
-          border: `2px solid ${cfg.colorHex}`,
+          border: `2px solid var(--flock-accent)`,
           width: 8,
           height: 8,
         }}
@@ -347,14 +372,14 @@ export const IfElseNode = memo(({ data, selected }: NodeProps<BaseNodeData>) => 
   return (
     <Box
       style={{
-        minWidth: 170,
+        width: 220,
         borderRadius: 12,
         border: selected 
-          ? `1.5px solid var(--flock-accent)` 
-          : `1px solid ${cfg.colorHex}50`,
+          ? `2px solid var(--flock-accent)` 
+          : `1px solid rgba(21, 90, 239, 0.25)`,
         background: 'var(--flock-bg-surface)',
         boxShadow: selected 
-          ? `0 0 0 3px var(--flock-accent)20` 
+          ? `0 0 0 3px rgba(21, 90, 239, 0.25)` 
           : '0 4px 12px rgba(0,0,0,0.03)',
         overflow: 'visible',
         cursor: 'pointer',
@@ -376,7 +401,7 @@ export const IfElseNode = memo(({ data, selected }: NodeProps<BaseNodeData>) => 
             width: 22,
             height: 22,
             borderRadius: 6,
-            background: `${cfg.colorHex}16`,
+            background: 'var(--flock-accent-soft)',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
@@ -390,27 +415,41 @@ export const IfElseNode = memo(({ data, selected }: NodeProps<BaseNodeData>) => 
         </Text>
       </Box>
       <Box style={{ padding: '8px 12px', background: 'var(--flock-bg-surface)' }}>
-        {cases.map((c, idx) => (
-          <Box key={c.case_id} style={{ position: 'relative', marginBottom: 5, paddingRight: 10 }}>
-            <Badge size="xs" color={c.case_id === 'false_else' ? 'gray' : 'violet'} variant="light" style={{ fontSize: 9 }}>
-              {c.case_id === 'false_else' ? 'ELSE' : `IF ${idx + 1}`}
-            </Badge>
-            <Handle
-              type="source"
-              position={Position.Right}
-              id={c.case_id}
-              style={{
-                background: 'var(--flock-bg-surface)',
-                border: `2px solid ${cfg.colorHex}`,
-                width: 8,
-                height: 8,
-                right: -6,
-                top: '50%',
-                transform: 'translateY(-50%)',
-              }}
-            />
-          </Box>
-        ))}
+        {cases.map((c, idx) => {
+          const isElse = c.case_id === 'false_else';
+          return (
+            <Box key={c.case_id} style={{ position: 'relative', marginBottom: 6 }}>
+              <Box
+                style={{
+                  padding: '6px 10px',
+                  borderRadius: 8,
+                  background: 'var(--flock-bg-raised, rgba(0, 0, 0, 0.02))',
+                  border: '1px solid var(--flock-border-subtle)',
+                  marginRight: 6,
+                  overflow: 'hidden',
+                }}
+              >
+                <Text size="xs" fw={700} style={{ fontSize: 10, color: 'var(--flock-text-bright)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                  {isElse ? 'ELSE' : `IF ${idx + 1}`}
+                </Text>
+              </Box>
+              <Handle
+                type="source"
+                position={Position.Right}
+                id={c.case_id}
+                style={{
+                  background: 'var(--flock-bg-surface)',
+                  border: `2px solid var(--flock-accent)`,
+                  width: 8,
+                  height: 8,
+                  right: -16,
+                  top: '50%',
+                  transform: 'translateY(-50%)',
+                }}
+              />
+            </Box>
+          );
+        })}
       </Box>
       <Handle
         type="target"
@@ -418,7 +457,7 @@ export const IfElseNode = memo(({ data, selected }: NodeProps<BaseNodeData>) => 
         id="left"
         style={{
           background: 'var(--flock-bg-surface)',
-          border: `2px solid ${cfg.colorHex}`,
+          border: `2px solid var(--flock-accent)`,
           width: 8,
           height: 8,
         }}
