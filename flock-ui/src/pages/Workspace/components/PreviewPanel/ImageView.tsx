@@ -21,7 +21,11 @@ export function ImageView({ absPath, workspaceId, relativePath, fileName, refres
       return;
     }
 
-    setLoading(true);
+    // 只有当 base64 数据尚未加载出来（第一次加载）时，才显示 loading 骨架屏，避免流式轮询时页面闪烁
+    if (!base64) {
+      setLoading(true);
+    }
+    
     invoke<string>('read_workspace_file_as_base64', {
       workspaceId,
       relativePath,

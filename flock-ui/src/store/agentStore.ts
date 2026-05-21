@@ -91,6 +91,8 @@ export const useAgentStore = create<AgentStore>((set) => ({
         })
       }));
       set({ messages: formattedHistory, pendingApprovals: [] });
+      // 切换或载入对话历史时，自动清空并关闭当前的屏幕截图预览！
+      useUiStore.getState().setPreviewFile(null);
     } catch (e) {
       console.error('Failed to load history:', e);
       set({ messages: [], pendingApprovals: [] });
@@ -209,10 +211,17 @@ export const useAgentStore = create<AgentStore>((set) => ({
             lowerTool.includes('computer_use') ||
             lowerTool.includes('computeruse')
           ) {
-            useUiStore.getState().setPreviewFile({
-              path: '.flock/sandbox/screenshot.png',
-              content: '',
-              extension: 'png',
+            const activeWorkspaceId = useWorkspaceStore.getState().activeWorkspaceId || '';
+            // 在拉起预览前，先异步删除上一回的残留老截图文件，保证绝对不会闪现老画面！
+            invoke('delete_workspace_file_or_dir', {
+              workspaceId: activeWorkspaceId,
+              relativePath: '.flock/sandbox/screenshot.png'
+            }).catch(() => {}).finally(() => {
+              useUiStore.getState().setPreviewFile({
+                path: '.flock/sandbox/screenshot.png',
+                content: '',
+                extension: 'png',
+              });
             });
           }
         }, 100);
@@ -303,8 +312,18 @@ export const useAgentStore = create<AgentStore>((set) => ({
               : m
           ),
         }));
-        // 一轮对话完成，通知文件树刷新
-        setTimeout(() => useUiStore.getState().triggerFileTreeRefresh(), 500);
+        // 一轮对话结束（正常结束或被中断），关闭当前浏览器/电脑预览画面
+        setTimeout(() => {
+          const currentPreview = useUiStore.getState().previewFile;
+          if (
+            currentPreview &&
+            (currentPreview.path === '.flock/sandbox/screenshot.png' ||
+              currentPreview.extension === 'vnc')
+          ) {
+            useUiStore.getState().setPreviewFile(null);
+          }
+          useUiStore.getState().triggerFileTreeRefresh();
+        }, 500);
         break;
 
       case 'info':
@@ -344,6 +363,17 @@ export const useAgentStore = create<AgentStore>((set) => ({
           status: 'error',
           errorMessage: event.error.message,
         });
+        // 报错时也自动去掉浏览器画面
+        setTimeout(() => {
+          const currentPreview = useUiStore.getState().previewFile;
+          if (
+            currentPreview &&
+            (currentPreview.path === '.flock/sandbox/screenshot.png' ||
+              currentPreview.extension === 'vnc')
+          ) {
+            useUiStore.getState().setPreviewFile(null);
+          }
+        }, 100);
         break;
 
       case 'config_changed':
@@ -368,5 +398,8 @@ export const useAgentStore = create<AgentStore>((set) => ({
       pendingApprovals: s.pendingApprovals.filter((p) => p.call_id !== call_id),
     })),
 
-  clearMessages: () => set({ messages: [], pendingApprovals: [] }),
+  clearMessages: () => {
+    useUiStore.getState().setPreviewFile(null);
+    set({ messages: [], pendingApprovals: [] });
+  },
 }));

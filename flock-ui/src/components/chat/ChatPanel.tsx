@@ -117,7 +117,7 @@ function ChunkRenderer({ chunk, isStreaming }: { chunk: MessageChunk; isStreamin
         radius="sm"
         style={{
           background: 'var(--flock-bg-surface)',
-          borderLeft: isSuccess
+          borderLeft: isSuccess || (!isError && !isStreaming)
             ? '3px solid #0ca678'
             : isError
             ? '3px solid #f03e3e'
@@ -131,7 +131,8 @@ function ChunkRenderer({ chunk, isStreaming }: { chunk: MessageChunk; isStreamin
           borderLeftWidth: 3,
         }}
       >
-        {!isSuccess && !isError && <Loader size={12} type="dots" color="var(--flock-accent)" />}
+        {!isSuccess && !isError && isStreaming && <Loader size={12} type="dots" color="var(--flock-accent)" />}
+        {(!isSuccess && !isError && !isStreaming) && <Text size="xs" fw={800} style={{ color: '#0ca678', display: 'inline-flex', alignItems: 'center' }}>✓</Text>}
         {isSuccess && <Text size="xs" fw={800} style={{ color: '#0ca678', display: 'inline-flex', alignItems: 'center' }}>✓</Text>}
         {isError && <Text size="xs" fw={800} style={{ color: '#f03e3e', display: 'inline-flex', alignItems: 'center' }}>✗</Text>}
         <Text size="xs" fw={500} style={{ color: 'var(--flock-text-secondary)', flex: 1 }}>

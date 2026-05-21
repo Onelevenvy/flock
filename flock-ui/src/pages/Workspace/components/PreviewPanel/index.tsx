@@ -151,6 +151,20 @@ export function PreviewPanel({ embedded = false }: PreviewPanelProps) {
   // 刷新操作
   const handleRefresh = async () => {
     if (!activeWorkspaceId || !previewFile) return;
+
+    // 如果是二进制图片，直接通过增加 refreshTrigger 来通知组件刷新 Base64，无需读取 UTF-8 文本！
+    const IMAGE_EXTS = ['png', 'jpg', 'jpeg', 'gif', 'webp', 'svg', 'bmp'];
+    if (IMAGE_EXTS.includes(ext) || ext === 'vnc') {
+      setRefreshTrigger((prev) => prev + 1);
+      notifications.show({
+        title: t('chat.workspace.refreshSuccess'),
+        message: t('chat.workspace.refreshSuccessDesc'),
+        color: 'teal',
+        autoClose: 1000,
+      });
+      return;
+    }
+
     try {
       const content = await invoke<string>('read_workspace_file', {
         workspaceId: activeWorkspaceId,
