@@ -25,6 +25,8 @@ export interface ToolSelectorProps {
   placeholder?: string;
   disabled?: boolean;
   position?: PopoverProps['position'];
+  /** 只显示触发按鈕，不显示 Badge 区域（供 ToolList 内嵌使用） */
+  triggerOnly?: boolean;
 }
 
 export default function ToolSelector({
@@ -34,6 +36,7 @@ export default function ToolSelector({
   placeholder,
   disabled = false,
   position = 'bottom-start',
+  triggerOnly = false,
 }: ToolSelectorProps) {
   const { t } = useTranslation();
   const [opened, { open, close }] = useDisclosure(false);
@@ -144,12 +147,13 @@ export default function ToolSelector({
       <Popover
         opened={opened}
         onClose={handleCancel}
-        width={300}
+        width={320}
         position={position} // 默认为 bottom-start，支持外部传入自定义 position，防止左侧偏出屏幕
         withArrow
         shadow="md"
         closeOnClickOutside={true}
         withinPortal={true} // 完美避免任何 overflow: hidden 裁剪与定位失效
+        middlewares={{ flip: true, shift: true, inline: false }} // 自动翻转+位移，防止超出视口
         styles={{
           dropdown: {
             background: 'var(--flock-bg-raised)',
@@ -157,66 +161,75 @@ export default function ToolSelector({
             borderRadius: 12,
             padding: 14,
             boxShadow: '0 8px 24px rgba(0, 0, 0, 0.12)',
-            zIndex: 1000,
+            zIndex: 9999,
+            maxHeight: 'min(560px, 80vh)',
+            display: 'flex',
+            flexDirection: 'column',
+            overflow: 'hidden',
           },
         }}
       >
         <Popover.Target>
-          {/* 触发容器：已选工具 Badges 的展示区域 */}
-          <Box
-            onClick={!disabled ? (opened ? close : open) : undefined}
-            style={{
-              minHeight: 46,
-              background: 'var(--flock-bg-surface)',
-              border: opened ? '1px solid var(--flock-accent)' : '1px solid var(--flock-border-dim)',
-              borderRadius: 8,
-              padding: '8px 12px',
-              cursor: disabled ? 'not-allowed' : 'pointer',
-              transition: 'border-color 0.2s ease',
-            }}
-          >
-            {selectedToolObjects.length === 0 ? (
-              <Text size="xs" c="dimmed" py={4}>
-                {placeholder || t('assistant.form.toolsPlaceholder')}
-              </Text>
-            ) : (
-              <Group gap={6}>
-                {selectedToolObjects.map((tool) => (
-                  <Badge
-                    key={tool.id}
-                    variant="light"
-                    color="blue"
-                    size="sm"
-                    styles={{
-                      root: {
-                        background: 'var(--flock-bg-hover)',
-                        border: '1px solid var(--flock-border-dim)',
-                        color: 'var(--flock-text-bright)',
-                        textTransform: 'none',
-                        fontFamily: 'var(--mantine-font-family-monospace)',
-                        paddingRight: !disabled ? 4 : undefined,
-                      },
-                    }}
-                    rightSection={
-                      !disabled && (
-                        <IconX
-                          size={12}
-                          style={{ cursor: 'pointer' }}
-                          onClick={(e) => handleRemoveTool(tool.name, e)}
-                        />
-                      )
-                    }
-                  >
-                    {tool.name}
-                  </Badge>
-                ))}
-              </Group>
-            )}
-          </Box>
+          {/* triggerOnly 模式下用隐藏 span 占位，实际触发由外部 Button 控制 */}
+          {triggerOnly ? (
+            <span style={{ position: 'absolute', width: 0, height: 0, overflow: 'hidden' }} />
+          ) : (
+            /* 触发容器：已选工具 Badges 的展示区域 */
+            <Box
+              onClick={!disabled ? (opened ? close : open) : undefined}
+              style={{
+                minHeight: 46,
+                background: 'var(--flock-bg-surface)',
+                border: opened ? '1px solid var(--flock-accent)' : '1px solid var(--flock-border-dim)',
+                borderRadius: 8,
+                padding: '8px 12px',
+                cursor: disabled ? 'not-allowed' : 'pointer',
+                transition: 'border-color 0.2s ease',
+              }}
+            >
+              {selectedToolObjects.length === 0 ? (
+                <Text size="xs" c="dimmed" py={4}>
+                  {placeholder || t('assistant.form.toolsPlaceholder')}
+                </Text>
+              ) : (
+                <Group gap={6}>
+                  {selectedToolObjects.map((tool) => (
+                    <Badge
+                      key={tool.id}
+                      variant="light"
+                      color="blue"
+                      size="sm"
+                      styles={{
+                        root: {
+                          background: 'var(--flock-bg-hover)',
+                          border: '1px solid var(--flock-border-dim)',
+                          color: 'var(--flock-text-bright)',
+                          textTransform: 'none',
+                          fontFamily: 'var(--mantine-font-family-monospace)',
+                          paddingRight: !disabled ? 4 : undefined,
+                        },
+                      }}
+                      rightSection={
+                        !disabled && (
+                          <IconX
+                            size={12}
+                            style={{ cursor: 'pointer' }}
+                            onClick={(e) => handleRemoveTool(tool.name, e)}
+                          />
+                        )
+                      }
+                    >
+                      {tool.name}
+                    </Badge>
+                  ))}
+                </Group>
+              )}
+            </Box>
+          )}
         </Popover.Target>
 
-        <Popover.Dropdown onClick={(e) => e.stopPropagation()}>
-          <Stack gap="sm">
+        <Popover.Dropdown onClick={(e) => e.stopPropagation()} style={{ display: 'flex', flexDirection: 'column', flex: 1, minHeight: 0, overflow: 'hidden' }}>
+          <Stack gap="sm" style={{ flex: 1, minHeight: 0, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
             {/* 顶栏标题及搜索框 */}
             <Group justify="space-between" align="center">
               <Text fw={700} size="sm" style={{ color: 'var(--flock-text-bright)' }}>
@@ -253,8 +266,8 @@ export default function ToolSelector({
               }}
             />
 
-            {/* 滚动工具列表 */}
-            <ScrollArea h={420} offsetScrollbars styles={{ viewport: { maxHeight: 420 } }}>
+            {/* 滚动工具列表：高度自适应视口，避免超出屏幕 */}
+            <ScrollArea style={{ flex: 1, minHeight: 0 }} offsetScrollbars>
               {loading ? (
                 <Text size="xs" c="dimmed" ta="center" py="xl">
                   {t('common.loading', { defaultValue: 'Loading...' })}
@@ -427,7 +440,24 @@ export default function ToolSelector({
       </Popover>
 
       {/* 选择/编辑按钮 */}
-      {!disabled && (
+      {!disabled && triggerOnly && (
+        <Button
+          size="xs"
+          variant="subtle"
+          leftSection={<IconPlus size={14} />}
+          onClick={open}
+          styles={{
+            root: {
+              padding: '0 8px',
+              height: 28,
+              fontSize: 12,
+            },
+          }}
+        >
+          {t('assistant.form.selectTools')}
+        </Button>
+      )}
+      {!disabled && !triggerOnly && (
         <Group>
           <Button
             size="xs"

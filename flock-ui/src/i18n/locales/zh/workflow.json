@@ -49,7 +49,7 @@
     },
     "agent": {
       "tools": "工具列表",
-      "toolsSelect": "绑定工具",
+      "toolsSelect": "工具列表",
       "toolsPlaceholder": "选择要绑定的工具...",
       "addTool": "添加工具"
     },

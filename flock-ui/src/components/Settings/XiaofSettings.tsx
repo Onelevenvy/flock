@@ -16,7 +16,7 @@ import { invoke } from '@tauri-apps/api/core';
 import { notifications } from '@mantine/notifications';
 import { IconCheck, IconSettings, IconShieldCheck, IconCpu } from '@tabler/icons-react';
 import { useTranslation } from 'react-i18next';
-import ToolSelector from '../Common/ToolSelector';
+import ToolList from '../Common/ToolList';
 
 interface ToolsConfig {
   auto_approve: boolean;
@@ -169,18 +169,15 @@ export default function XiaofSettings() {
               <Divider color="var(--flock-border-subtle)" />
 
               <Stack gap="xs">
-                <Text size="sm" fw={600}>
-                  {t('settings.xiaof.allowListLabel')}
-                </Text>
-
-                <ToolSelector
-                  placeholder={t('settings.xiaof.allowListPlaceholder')}
+                <ToolList
                   value={toolsConfig?.allow_list || []}
                   onChange={(values) =>
                     setToolsConfig(
                       toolsConfig ? { ...toolsConfig, allow_list: values } : null
                     )
                   }
+                  label={t('settings.xiaof.allowListLabel')}
+                  selectorPosition="bottom-end"
                 />
               </Stack>
             </>

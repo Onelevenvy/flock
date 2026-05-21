@@ -49,7 +49,7 @@
     },
     "agent": {
       "tools": "Tools",
-      "toolsSelect": "Bind Tools",
+      "toolsSelect": "Tool lists",
       "toolsPlaceholder": "Select tools to bind...",
       "addTool": "Add Tool"
     },

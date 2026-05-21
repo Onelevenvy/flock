@@ -1,7 +1,7 @@
 import { Divider } from '@mantine/core';
 import { useTranslation } from 'react-i18next';
 import { LLMFields } from '../LLM';
-import ToolSelector from '../../../../../components/Common/ToolSelector';
+import ToolList from '../../../../../components/Common/ToolList';
 
 export interface AgentFieldsProps {
   node: any;
@@ -32,12 +32,11 @@ export function AgentFields({
         modelsLoading={modelsLoading}
       />
       <Divider label={t('workflow.properties.agent.tools')} labelPosition="center" />
-      <ToolSelector
-        label={t('workflow.properties.agent.toolsSelect')}
-        placeholder={t('workflow.properties.agent.toolsPlaceholder')}
-        disabled={toolsLoading}
+      <ToolList
         value={tools}
         onChange={(v) => onDataChange(node.id, 'tools', v)}
+        disabled={toolsLoading}
+        selectorPosition="bottom-end"
       />
     </>
   );
