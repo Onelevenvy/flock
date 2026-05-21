@@ -28,7 +28,7 @@ import { notifications } from '@mantine/notifications';
 import { useTranslation } from 'react-i18next';
 import type { ToolProvider, Tool } from './types';
 import { getProviderDescription, getProviderName, formatLabel, parseInputSchema } from './helpers';
-import { ToolsIcon } from '../../components/Icons';
+import { ToolsIcon } from '../../components/Common/Icons';
 
 function renderTextWithLinks(text: string) {
   if (!text) return null;

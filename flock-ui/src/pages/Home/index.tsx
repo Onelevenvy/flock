@@ -21,7 +21,7 @@ import { useAgentStore } from '../../store/agentStore';
 import { useWorkspaceStore } from '../../store/workspaceStore';
 import { useWorkspacesQuery, useCreateConversationMutation } from '../../hooks/useWorkspaces';
 import { type Assistant } from '../../types/assistant';
-import { ModelSelector } from '../../components/Settings/ModelSelector';
+import { ActiveModelPicker } from '../../components/Settings/ActiveModelPicker';
 import { AssistantPicker, XIAOF_AGENT } from './AssistantPicker';
 import { WorkspacePicker } from './WorkspacePicker';
 import { useAssistantsQuery } from '../../hooks/useAssistants';
@@ -88,8 +88,8 @@ export function HomeView() {
   const placeholder = !activeWorkspaceId
     ? t('home.selectWorkspaceFirst')
     : isStreaming
-    ? t('home.thinking')
-    : t('home.sendMessage', { name: selectedAssistant.name });
+      ? t('home.thinking')
+      : t('home.sendMessage', { name: selectedAssistant.name });
 
   const handleSelectWorkspace = useCallback(async (wsId: string, wsPath: string, _wsName: string) => {
     if (wsId !== activeWorkspaceId) {
@@ -141,9 +141,9 @@ export function HomeView() {
   const handleSend = async () => {
     if (!canSend || !activeWs) return;
     const content = value.trim();
-    
+
     let convId = activeConversationId;
-    
+
     // 如果当前没有激活的对话，先创建一个
     if (!convId) {
       try {
@@ -152,7 +152,7 @@ export function HomeView() {
         convId = conv.id;
         setActiveConversation(convId);
         clearMessages();
-        
+
         // 🚀 Save the chosen assistant to the conversation map!
         setConversationAssistant(convId, selectedAssistant.id);
 
@@ -178,10 +178,10 @@ export function HomeView() {
     setValue('');
     addUserMessage(userUiId, content);
     try {
-      await invoke('send_message', { 
-        sessionId: convId || null, 
-        msgId: streamMsgId, 
-        content 
+      await invoke('send_message', {
+        sessionId: convId || null,
+        msgId: streamMsgId,
+        content
       });
     } catch (e: any) {
       console.error('send_message error:', e);
@@ -190,10 +190,10 @@ export function HomeView() {
   };
 
   const handleStop = async () => {
-    try { 
-      await invoke('stop_agent', { sessionId: activeConversationId || null }); 
-    } catch (e: any) { 
-      console.error(e); 
+    try {
+      await invoke('stop_agent', { sessionId: activeConversationId || null });
+    } catch (e: any) {
+      console.error(e);
       setError(e.message || String(e));
     }
   };
@@ -289,7 +289,7 @@ export function HomeView() {
           {/* 左侧：工作区 + 模型 */}
           <Group gap={8} wrap="nowrap">
             <WorkspacePicker onSelect={handleSelectWorkspace} />
-            <ModelSelector />
+            <ActiveModelPicker />
           </Group>
 
           {/* 右侧：模式 + 发送 */}

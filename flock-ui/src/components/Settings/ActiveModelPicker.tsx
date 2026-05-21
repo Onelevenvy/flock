@@ -31,7 +31,13 @@ interface ActiveModel {
   model_name: string;
 }
 
-export function ModelSelector() {
+/**
+ * ActiveModelPicker
+ * 输入栏（Home / InputBar）中用于切换当前激活模型的小型选择器。
+ * 内部自行加载 providers / models 数据，切换后联动 reconnect agent。
+ * 纯 UI 展示用 ModelSelect（通用组件）。
+ */
+export function ActiveModelPicker() {
   const [providers, setProviders] = useState<ModelProvider[]>([]);
   const [models, setModels] = useState<Model[]>([]);
   const [activeModel, setActiveModelState] = useState<ActiveModel | null>(null);
@@ -108,12 +114,13 @@ export function ModelSelector() {
   models.forEach((m) => {
     const provider = providers.find((p) => p.id === m.provider_id);
     const groupName = provider?.provider_name || m.provider_id;
-    const providerType = provider?.provider_type || m.provider_id;
+    // 用 provider.id 匹配图标文件（如 openai.svg, deepseek.svg）
+    const providerIconKey = provider?.id || m.provider_id;
     if (!groupedModels[groupName]) groupedModels[groupName] = [];
     groupedModels[groupName].push({
       value: `${m.provider_id}:${m.model_name}`,
       label: m.model_name,
-      providerName: providerType,
+      providerName: providerIconKey,
     });
   });
 
@@ -171,3 +178,5 @@ export function ModelSelector() {
     />
   );
 }
+
+

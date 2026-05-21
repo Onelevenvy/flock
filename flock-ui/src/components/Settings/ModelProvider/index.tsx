@@ -12,7 +12,6 @@ import {
   Switch,
   Loader,
   Card,
-  Select,
   ThemeIcon,
 } from '@mantine/core';
 import {
@@ -34,7 +33,8 @@ import ProviderSettings from './ProviderSettings';
 import CustomModelSettings from './CustomModelSettings';
 import { reconnectCurrentAgent } from '../../../lib/agentConnection';
 import { useWorkspacesQuery } from '../../../hooks/useWorkspaces';
-import { ModelProviderIconLong, ModelIcon, ProviderIcon } from '../../Icons';
+import { ModelProviderIconLong, ModelIcon, ProviderIcon } from '../../Common/Icons';
+import { ModelSelect } from '../../Common/ModelSelect';
 
 interface ModelProvider {
   id: string;
@@ -288,12 +288,14 @@ export default function ModelProviderPage() {
       .filter((m) => m.is_online)
       .map((m) => ({
         value: `${pid}:${m.model_name}`,
-        label: `${m.model_name} (${providerName})`,
+        label: m.model_name,
+        // pid 即 provider.id，对应图标文件名
+        providerName: pid,
       }));
   });
 
   const summaryModels = [
-    { value: 'follow', label: t('settings.model.followDefault') },
+    { value: 'follow', label: t('settings.model.followDefault'), providerName: '' },
     ...onlineModels,
   ];
 
@@ -347,7 +349,7 @@ export default function ModelProviderPage() {
             </Box>
           </Group>
 
-          <Select
+          <ModelSelect
             placeholder={onlineModels.length === 0 ? t('settings.model.noModelsEnabledPlaceholder') : t('settings.model.defaultModelPlaceholder')}
             data={onlineModels}
             value={selectedDefaultValue}
@@ -355,6 +357,7 @@ export default function ModelProviderPage() {
             disabled={onlineModels.length === 0}
             size="xs"
             w={260}
+            searchable
             styles={{
               input: {
                 background: 'var(--flock-bg-surface)',
@@ -407,7 +410,7 @@ export default function ModelProviderPage() {
             </Box>
           </Group>
 
-          <Select
+          <ModelSelect
             placeholder={t('settings.model.followDefaultPlaceholder')}
             data={summaryModels}
             value={selectedSummaryValue}
@@ -415,6 +418,7 @@ export default function ModelProviderPage() {
             disabled={onlineModels.length === 0}
             size="xs"
             w={260}
+            searchable
             styles={{
               input: {
                 background: 'var(--flock-bg-surface)',
@@ -462,7 +466,7 @@ export default function ModelProviderPage() {
             <Box style={{ padding: '24px 24px 16px' }}>
               <Group justify="space-between" align="flex-start">
                 <Group gap="lg">
-                  <Box 
+                  <Box
                     style={{
                       background: 'var(--flock-bg-surface)',
                       height: 56,
@@ -486,15 +490,15 @@ export default function ModelProviderPage() {
                         </Text>
                         {connectedProviders.has(provider.id) && (
                           <Tooltip label={t('settings.model.connectionOk')}>
-                            <Box 
-                              style={{ 
-                                width: 8, 
-                                height: 8, 
-                                borderRadius: '50%', 
+                            <Box
+                              style={{
+                                width: 8,
+                                height: 8,
+                                borderRadius: '50%',
                                 background: 'var(--mantine-color-teal-6)',
                                 boxShadow: '0 0 8px var(--mantine-color-teal-6)',
                                 marginTop: 2
-                              }} 
+                              }}
                             />
                           </Tooltip>
                         )}
@@ -511,7 +515,7 @@ export default function ModelProviderPage() {
                     </Group>
                   </Box>
                 </Group>
- 
+
                 <Group gap="sm">
                   {!!provider.api_key && (
                     <Tooltip label={testingProvider === provider.id ? t('settings.model.connecting') : t('settings.model.testConnection')}>
@@ -622,7 +626,7 @@ export default function ModelProviderPage() {
                       }}
                     >
                       <Group gap="md">
-                        <Box 
+                        <Box
                           style={{
                             background: 'var(--flock-bg-raised)',
                             width: 36,
@@ -659,7 +663,7 @@ export default function ModelProviderPage() {
                         </Box>
                       </Group>
                       <Group gap="lg">
-                        <Tooltip 
+                        <Tooltip
                           label={!provider.is_available ? t('settings.model.activateProviderTooltip') : (model.is_online ? t('settings.model.disableModelTooltip') : t('settings.model.enableModelTooltip'))}
                           position="left"
                           withArrow

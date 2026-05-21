@@ -1,9 +1,8 @@
-import { forwardRef } from 'react';
 import { Select, Group, Text, Tooltip, type SelectProps, type ComboboxItem } from '@mantine/core';
-import { ModelIcon } from '../Icons/DynamicIcon';
+import { ModelIcon } from './Icons/DynamicIcon';
 
 export interface ModelSelectItem extends ComboboxItem {
-  /** provider_type，用于 fallback 图标查找 */
+  /** provider.id，用于图标文件查找（如 openai, deepseek） */
   providerName?: string;
 }
 
@@ -17,25 +16,36 @@ export interface ModelSelectProps
   data: ModelSelectGroup[] | ModelSelectItem[];
 }
 
-/** 选项行渲染 */
+/** 下拉选项行渲染：icon + 省略文字 + Tooltip */
 function ModelOptionItem({ option }: { option: ComboboxItem & { providerName?: string } }) {
   return (
-    <Group gap={6} wrap="nowrap" style={{ minWidth: 0, width: '100%' }}>
+    <Group
+      gap={6}
+      wrap="nowrap"
+      style={{
+        minWidth: 0,
+        width: '100%',
+        overflow: 'hidden',
+      }}
+    >
       <ModelIcon
         name={option.value}
         provider={option.providerName ?? ''}
         size={14}
         style={{ flexShrink: 0 }}
       />
-      <Tooltip label={option.label} withArrow openDelay={500} position="right">
+      <Tooltip label={option.label} withArrow openDelay={400} position="right">
+        {/* span 作为 Tooltip 的单一子元素，必须能接收 ref */}
         <Text
+          component="span"
           size="xs"
           style={{
+            display: 'block',
             overflow: 'hidden',
             textOverflow: 'ellipsis',
             whiteSpace: 'nowrap',
-            flex: 1,
             minWidth: 0,
+            flex: 1,
           }}
         >
           {option.label}
@@ -45,41 +55,6 @@ function ModelOptionItem({ option }: { option: ComboboxItem & { providerName?: s
   );
 }
 
-/** 已选中时 input 区域内的展示（icon + ellipsis text） */
-const ModelValueRenderer = forwardRef<
-  HTMLDivElement,
-  { label: string; providerName?: string; value: string }
->(({ label, providerName, value }, ref) => (
-  <Group
-    ref={ref}
-    gap={5}
-    wrap="nowrap"
-    style={{ minWidth: 0, width: '100%', overflow: 'hidden' }}
-  >
-    <ModelIcon
-      name={value}
-      provider={providerName ?? ''}
-      size={12}
-      style={{ flexShrink: 0 }}
-    />
-    <Tooltip label={label} withArrow openDelay={600} position="bottom">
-      <Text
-        size="xs"
-        style={{
-          overflow: 'hidden',
-          textOverflow: 'ellipsis',
-          whiteSpace: 'nowrap',
-          flex: 1,
-          minWidth: 0,
-        }}
-      >
-        {label}
-      </Text>
-    </Tooltip>
-  </Group>
-));
-ModelValueRenderer.displayName = 'ModelValueRenderer';
-
 /**
  * 通用模型选择器
  * - 下拉选项带 provider 图标
@@ -87,7 +62,7 @@ ModelValueRenderer.displayName = 'ModelValueRenderer';
  * - 支持 Mantine Select 的所有 props
  */
 export function ModelSelect({ data, value, styles, ...rest }: ModelSelectProps) {
-  // 平铺所有 item，方便查找当前选中项的 providerName
+  // 平铺所有 item，找到当前选中项的 providerName 用于左侧图标
   const allItems: ModelSelectItem[] = (data as any[]).flatMap((d: any) =>
     d.items ? d.items : [d]
   );
@@ -100,7 +75,6 @@ export function ModelSelect({ data, value, styles, ...rest }: ModelSelectProps) 
       renderOption={({ option }) => (
         <ModelOptionItem option={option as any} />
       )}
-      // 自定义 input 内的内容展示
       leftSection={
         selectedItem ? (
           <ModelIcon
@@ -118,6 +92,11 @@ export function ModelSelect({ data, value, styles, ...rest }: ModelSelectProps) 
           textOverflow: 'ellipsis',
           whiteSpace: 'nowrap',
           ...(styles as any)?.input,
+        },
+        option: {
+          // 确保 option 容器不会撑开
+          overflow: 'hidden',
+          ...(styles as any)?.option,
         },
         ...styles,
       }}

@@ -12,7 +12,7 @@ import { invoke } from '@tauri-apps/api/core';
 import { notifications } from '@mantine/notifications';
 import { IconCheck, IconX } from '@tabler/icons-react';
 import { useTranslation } from 'react-i18next';
-import { ProviderIcon } from '../../Icons';
+import { ProviderIcon } from '../../Common/Icons';
 
 interface ModelProvider {
   id: string;
@@ -140,7 +140,7 @@ export default function ProviderSettings({ provider, onClose, onSaved }: Props) 
           value={apiKey}
           onChange={(e) => setApiKey(e.currentTarget.value)}
           styles={{
-            input: { 
+            input: {
               background: 'var(--flock-bg-surface)',
               color: 'var(--flock-text-primary)',
             },
@@ -156,7 +156,7 @@ export default function ProviderSettings({ provider, onClose, onSaved }: Props) 
           value={baseUrl}
           onChange={(e) => setBaseUrl(e.currentTarget.value)}
           styles={{
-            input: { 
+            input: {
               background: 'var(--flock-bg-surface)',
               color: 'var(--flock-text-primary)',
             },
@@ -169,7 +169,7 @@ export default function ProviderSettings({ provider, onClose, onSaved }: Props) 
           value={testModel}
           onChange={(e) => setTestModel(e.currentTarget.value)}
           styles={{
-            input: { 
+            input: {
               background: 'var(--flock-bg-surface)',
               color: 'var(--flock-text-primary)',
             },
