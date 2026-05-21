@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
-import { Box, Text, ScrollArea, Loader } from '@mantine/core';
+import { Box, Text, ScrollArea, Loader, ActionIcon } from '@mantine/core';
+import { IconRefresh, IconExternalLink } from '@tabler/icons-react';
 import { useTranslation } from 'react-i18next';
 import { notifications } from '@mantine/notifications';
 import { save } from '@tauri-apps/plugin-dialog';
@@ -60,9 +61,6 @@ export function PreviewPanel({ embedded = false }: PreviewPanelProps) {
   const ext = previewFile?.extension?.toLowerCase() || '';
   const lang = getLanguage(ext);
   const fileName = previewFile?.path.split(/[/\\]/).pop() || '';
-  const [vncSrcdoc, setVncSrcdoc] = useState<string | null>(null);
-  const [vncSrcdocLoading, setVncSrcdocLoading] = useState(false);
-  const [vncSrcdocError, setVncSrcdocError] = useState<string | null>(null);
 
   useEffect(() => {
     const isSandboxPreview = previewFile?.path === '.flock/sandbox/screenshot.png' || ext === 'vnc';
@@ -160,57 +158,12 @@ export function PreviewPanel({ embedded = false }: PreviewPanelProps) {
     return url;
   })();
 
-  // 通过 Tauri 后端代理拉取 VNC HTML 内容，绕过 Daytona 警告拦截
+  // 当 VNC tab 激活时，直接设置状态为就绪（不需要预热）
   useEffect(() => {
     if (activeTab === 'vnc' && formattedVncUrl && isVnc) {
-      setVncPreheatStatus('loading');
-      setVncSrcdoc(null);
-      setVncSrcdocError(null);
-      let isCurrent = true;
-
-      const fetchVncContent = async () => {
-        try {
-          const result = await invoke<{
-            html: string;
-            base_url: string;
-            final_url: string;
-            status: number;
-            ok: boolean;
-          }>('fetch_vnc_page_content', {
-            pageUrl: formattedVncUrl,
-            apiKey: null,
-          });
-
-          if (isCurrent) {
-            if (result.ok && result.html) {
-              setVncSrcdoc(result.html);
-              setVncSrcdocError(null);
-            } else {
-              // 后端返回非 2xx 或内容为空，回退到直接 src 模式
-              setVncSrcdoc(null);
-              setVncSrcdocError(`HTTP ${result.status}`);
-            }
-            setVncPreheatStatus('success');
-          }
-        } catch (err) {
-          console.warn('fetch_vnc_page_content failed, falling back to direct iframe src:', err);
-          if (isCurrent) {
-            setVncSrcdoc(null);
-            setVncSrcdocError(String(err));
-            setVncPreheatStatus('success');
-          }
-        }
-      };
-
-      fetchVncContent();
-
-      return () => {
-        isCurrent = false;
-      };
+      setVncPreheatStatus('success');
     } else {
       setVncPreheatStatus('idle');
-      setVncSrcdoc(null);
-      setVncSrcdocError(null);
     }
   }, [formattedVncUrl, activeTab, isVnc]);
 
@@ -449,61 +402,66 @@ export function PreviewPanel({ embedded = false }: PreviewPanelProps) {
 
             {/* 🌐 网页控制台 (noVNC) */}
             {activeTab === 'vnc' && (
-              <Box style={{ display: 'flex', flexDirection: 'column', gap: '12px', width: '100%' }}>
-                {vncPreheatStatus === 'loading' ? (
-                  <Box
-                    style={{
-                      width: '100%',
-                      height: 'calc(100vh - 320px)',
-                      border: '1px solid var(--flock-border-dim)',
-                      background: 'var(--flock-bg-deep)',
-                      borderRadius: 12,
-                      display: 'flex',
-                      flexDirection: 'column',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      gap: '16px',
-                      boxShadow: '0 8px 24px rgba(0,0,0,0.2)'
+              <Box style={{ display: 'flex', flexDirection: 'column', gap: '8px', width: '100%' }}>
+                {/* 工具栏：链接 + 刷新 */}
+                <Box style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <Text
+                    size="xs"
+                    c="dimmed"
+                    style={{ flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}
+                  >
+                    {formattedVncUrl}
+                  </Text>
+                  <ActionIcon
+                    size="sm"
+                    variant="subtle"
+                    color="gray"
+                    title="在浏览器中打开"
+                    onClick={() => window.open(formattedVncUrl, '_blank')}
+                  >
+                    <IconExternalLink size={13} />
+                  </ActionIcon>
+                  <ActionIcon
+                    size="sm"
+                    variant="subtle"
+                    color="blue"
+                    title="重载远程控制台（VNC 服务启动后点此刷新）"
+                    onClick={() => {
+                      const iframe = document.getElementById('flock-vnc-iframe') as HTMLIFrameElement | null;
+                      if (iframe) {
+                        iframe.src = formattedVncUrl;
+                      }
                     }}
                   >
-                    <Loader size="md" color="var(--flock-accent)" type="bars" />
-                    <Text size="sm" c="dimmed">正在安全连接远程控制台，请稍候...</Text>
-                  </Box>
-                ) : (
-                  <iframe
-                    key={vncSrcdoc ? 'srcdoc' : 'src'}
-                    {...(vncSrcdoc
-                      ? { srcDoc: vncSrcdoc }
-                      : { src: formattedVncUrl }
-                    )}
-                    style={{
-                      width: '100%',
-                      height: 'calc(100vh - 320px)',
-                      border: '1px solid var(--flock-border-dim)',
-                      background: 'var(--flock-bg-deep)',
-                      borderRadius: 12,
-                      boxShadow: '0 8px 24px rgba(0,0,0,0.2)'
-                    }}
-                    allow="fullscreen; clipboard-read; clipboard-write"
-                    sandbox="allow-scripts allow-same-origin allow-popups allow-forms allow-storage-access-by-user-activation"
-                  />
-                )}
-                
+                    <IconRefresh size={13} />
+                  </ActionIcon>
+                </Box>
+
+                <iframe
+                  id="flock-vnc-iframe"
+                  key={formattedVncUrl}
+                  src={formattedVncUrl}
+                  style={{
+                    width: '100%',
+                    height: 'calc(100vh - 320px)',
+                    border: '1px solid var(--flock-border-dim)',
+                    background: 'var(--flock-bg-deep)',
+                    borderRadius: 12,
+                    boxShadow: '0 8px 24px rgba(0,0,0,0.2)'
+                  }}
+                  allow="fullscreen; clipboard-read; clipboard-write; autoplay"
+                />
+
                 <Box style={{
-                  padding: '12px',
+                  padding: '8px 12px',
                   borderRadius: '8px',
-                  border: '1px solid #eab308',
-                  background: 'rgba(234, 179, 8, 0.05)',
-                  fontSize: '12px',
+                  border: '1px solid rgba(59,130,246,0.3)',
+                  background: 'rgba(59,130,246,0.05)',
+                  fontSize: '11px',
                   color: 'var(--flock-text-dimmed)',
                   lineHeight: '1.6'
                 }}>
-                  🛡️ **极重要：解除 Edge/Chrome 安全拦截（白屏）的操作指南**：<br />
-                  由于云端证书未能覆盖多级代理域名，浏览器会显示“您的连接不是专用连接”并启用 HSTS 拦截（没有“继续前往”按钮）。**请按照以下步骤 100% 成功解除拦截**：<br />
-                  1. 点击上方蓝色的 **[Remote VNC Link]({formattedVncUrl})**，会在浏览器新标签页中打开这个报错页面。<br />
-                  2. **在此报错网页的任意空白处用鼠标点一下**，确保页面获得焦点。<br />
-                  3. **在键盘上直接依次敲入这 12 个字母**：<code style={{ background: 'rgba(0,0,0,0.3)', padding: '2px 6px', borderRadius: '4px', fontWeight: 'bold', color: '#f59e0b' }}>thisisunsafe</code>（全部小写，**注意：不需要按回车，页面也没有任何输入框，直接用键盘盲打输入即可**）。<br />
-                  4. 输完最后一个字母的瞬间，浏览器会自动绕过安全警告进入 VNC 桌面。此时，**返回当前软件界面点击刷新**，右侧就会立即正常呈现远程桌面！
+                  💡 首次打开会看到 Daytona 预览警告，点击 <strong>I Understand, Continue</strong> 即可进入。若点击后仍空白，说明 VNC 服务正在后台启动（约 5-10 秒），点击上方 <strong>刷新按钮 🔄</strong> 重载即可。
                 </Box>
               </Box>
             )}

@@ -224,6 +224,15 @@ sys.exit(0)
         }
     }
 
+    // 后台异步启动 VNC 服务（不阻塞主流程），使 noVNC 标签可正常连接
+    {
+        let db_bg = db.clone();
+        let sb_bg = sandbox_id.clone();
+        tokio::spawn(async move {
+            let _ = ensure_vnc_running_in_sandbox(&db_bg, &sb_bg).await;
+        });
+    }
+
     Ok(format!(
         "已成功打开并渲染网页 [{}](url)\n标题: {}\n操作类型: {}\n网页截图已拉回至工作区并显示在右侧预览区。",
         url, page_title, act
