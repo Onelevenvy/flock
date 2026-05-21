@@ -246,18 +246,15 @@ export const useAgentStore = create<AgentStore>((set) => ({
                 extension: 'log',
               });
             } else {
-              const activeWorkspaceId = useWorkspaceStore.getState().activeWorkspaceId || '';
-              // 在拉起预览前，先异步删除上一回的残留老截图文件，保证绝对不会闪现老画面！
-              invoke('delete_workspace_file_or_dir', {
-                workspaceId: activeWorkspaceId,
-                relativePath: '.flock/sandbox/screenshot.png'
-              }).catch(() => {}).finally(() => {
+              // 保留上一次的 screenshot 图像进行无缝替换，仅在尚未处于 screenshot 模式时进行初始化设置
+              const currentPreview = useUiStore.getState().previewFile;
+              if (!currentPreview || currentPreview.path !== '.flock/sandbox/screenshot.png') {
                 useUiStore.getState().setPreviewFile({
                   path: '.flock/sandbox/screenshot.png',
                   content: '',
                   extension: 'png',
                 });
-              });
+              }
             }
           }
         }, 100);

@@ -35,7 +35,6 @@ export function ImageView({ absPath, workspaceId, relativePath, fileName, refres
     if (!base64) {
       setLoading(true);
     }
-    
     invoke<string>('read_workspace_file_as_base64', {
       workspaceId,
       relativePath,
@@ -46,14 +45,17 @@ export function ImageView({ absPath, workspaceId, relativePath, fileName, refres
       })
       .catch((err) => {
         console.error('Failed to read image as base64:', err);
-        setError(String(err));
+        // 如果已经有历史 base64 数据，在控制台报错即可，不要阻碍画面呈现或强制切换回 loading 屏
+        if (!base64) {
+          setError(String(err));
+        }
       })
       .finally(() => {
         setLoading(false);
       });
-  }, [workspaceId, relativePath, refreshKey]);
+  }, [workspaceId, relativePath, refreshKey, base64]);
 
-  if (isToolRunning && (loading || error || !base64)) {
+  if (isToolRunning && !base64 && (loading || error)) {
     return (
       <Box
         style={{

@@ -86,16 +86,37 @@ from playwright.sync_api import sync_playwright
 
 try:
     with sync_playwright() as p:
-        browser = p.chromium.launch(headless=True, args=["--no-sandbox", "--disable-setuid-sandbox"])
-        page = browser.new_page()
+        browser = None
+        is_cdp = False
         
-        # 使用 domcontentloaded 以防网络卡顿在某些广告/埋点资源上
+        # 优先尝试连接 CDP 调试端口以保持会话状态
         try:
-            page.goto("{url}", wait_until="domcontentloaded", timeout=15000)
+            browser = p.chromium.connect_over_cdp("http://127.0.0.1:9222")
+            is_cdp = True
+            context = browser.contexts[0]
+            page = context.pages[0] if context.pages else context.new_page()
         except Exception as e:
-            print(f"GOTO_WARNING: {{e}}", file=sys.stderr)
-        
+            print(f"CDP_CONNECT_WARNING: {{e}}", file=sys.stderr)
+            browser = p.chromium.launch(headless=True, args=["--no-sandbox", "--disable-setuid-sandbox"])
+            page = browser.new_page()
+
         action = "{act}"
+        url = "{url}"
+        
+        should_goto = False
+        if action == "goto" or not is_cdp:
+            should_goto = True
+        else:
+            current_url = page.url
+            if current_url == "about:blank" or not current_url:
+                should_goto = True
+
+        if should_goto:
+            try:
+                page.goto(url, wait_until="domcontentloaded", timeout=15000)
+            except Exception as e:
+                print(f"GOTO_WARNING: {{e}}", file=sys.stderr)
+        
         if action == "click" and "{sel_val}":
             try:
                 page.click("{sel_val}", timeout=5000)
@@ -123,7 +144,8 @@ try:
         except Exception as e:
             pass
             
-        browser.close()
+        if not is_cdp:
+            browser.close()
 except Exception as e:
     print(f"FATAL_ERROR: {{e}}", file=sys.stderr)
     sys.exit(1)
@@ -140,6 +162,17 @@ sys.exit(0)
     let run_cmd = format!(
         "export PLAYWRIGHT_BROWSERS_PATH=/opt/playwright-browsers && \
          mkdir -p /tmp && echo '{}' | base64 -d > /tmp/run_browser.py && \
+         if ! python3 -c 'import socket; s = socket.socket(); s.connect((\"127.0.0.1\", 9222))' >/dev/null 2>&1; then \
+             echo 'Starting headless chromium with remote debugging...' && \
+             if command -v chromium >/dev/null 2>&1; then \
+                 setsid nohup chromium --no-sandbox --remote-debugging-port=9222 --headless=new --disable-gpu --disable-software-rasterizer >/tmp/headless_chrome.log 2>&1 & \
+             elif command -v chromium-browser >/dev/null 2>&1; then \
+                 setsid nohup chromium-browser --no-sandbox --remote-debugging-port=9222 --headless=new --disable-gpu --disable-software-rasterizer >/tmp/headless_chrome.log 2>&1 & \
+             elif command -v google-chrome >/dev/null 2>&1; then \
+                 setsid nohup google-chrome --no-sandbox --remote-debugging-port=9222 --headless=new --disable-gpu >/tmp/headless_chrome.log 2>&1 & \
+             fi && \
+             sleep 2; \
+         fi; \
          if ! python3 -c 'import playwright' >/dev/null 2>&1; then \
              echo 'Installing playwright...' && \
              python3 -m pip install --break-system-packages playwright && \
