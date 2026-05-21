@@ -124,10 +124,11 @@ with sync_playwright() as p:
 
     let b64_script = general_purpose::STANDARD.encode(py_script.as_bytes());
     let run_cmd = format!(
-        "mkdir -p /tmp && echo '{}' | base64 -d > /tmp/run_browser.py && \
+        "export PLAYWRIGHT_BROWSERS_PATH=/opt/playwright-browsers && \
+         mkdir -p /tmp && echo '{}' | base64 -d > /tmp/run_browser.py && \
          if ! python3 -c 'import playwright' >/dev/null 2>&1; then \
              echo 'Installing playwright...' && \
-             python3 -m pip install playwright && \
+             python3 -m pip install --break-system-packages playwright && \
              python3 -m playwright install chromium && \
              python3 -m playwright install-deps chromium; \
          fi && \
