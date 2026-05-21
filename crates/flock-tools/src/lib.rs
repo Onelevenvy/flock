@@ -10,6 +10,7 @@ pub mod baidu;
 pub mod google;
 pub mod serper;
 pub mod daytona;
+pub mod sandbox;
 
 /// Snapshot of all registered tools and their provider metadata.
 pub struct ToolSet {
@@ -31,10 +32,12 @@ pub fn all_tools() -> ToolSet {
     reg.register(builtin::bash::BashTool::new());
     reg.register(builtin::grep::GrepTool::new());
     reg.register(builtin::glob::GlobTool::new());
-    reg.register(builtin::code_execution::CodeExecutionToolImpl::new());
-    reg.register(builtin::browser::BrowserToolImpl::new());
-    reg.register(builtin::computer_use::ComputerUseToolImpl::new());
-    reg.register(builtin::sandbox_exec::SandboxExecToolImpl::new());
+
+    // --- sandbox ---
+    reg.register(sandbox::code_execution::CodeExecutionToolImpl::new());
+    reg.register(sandbox::browser::BrowserToolImpl::new());
+    reg.register(sandbox::computer_use::ComputerUseToolImpl::new());
+    reg.register(sandbox::sandbox_exec::SandboxExecToolImpl::new());
 
     // --- math ---
     infos.push(math::provider_info());
