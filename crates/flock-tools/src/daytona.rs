@@ -52,6 +52,67 @@ pub async fn get_sandbox_config(db: &DbManager) -> Option<SandboxConfig> {
     }
 }
 
+/// 从用户配置的 api_url 中提取 Daytona REST API base URL。
+///
+/// Daytona 官方云端 (app.daytona.io) 的 API 路径以 `/sandbox`, `/snapshots` 开头，
+/// 不含 `/api` 前缀。但用户配置的 api_url 通常是 `https://app.daytona.io/api`，
+/// 因此我们需要去掉末尾的 `/api`。
+///
+/// 对于自建 Daytona 实例，保持 api_url 不变。
+pub fn get_api_base(api_url: &str) -> String {
+    let trimmed = api_url.trim_end_matches('/');
+    if trimmed.ends_with("/api") {
+        trimmed[..trimmed.len() - 4].to_string()
+    } else {
+        trimmed.to_string()
+    }
+}
+
+/// 销毁当前活跃的沙盒（DELETE /sandbox/{id}），并清除缓存。
+/// 由 Agent 停止事件或手动触发调用。
+pub async fn destroy_active_sandbox(db: &DbManager) -> anyhow::Result<()> {
+    let cfg = match get_sandbox_config(db).await {
+        Some(c) => c,
+        None => return Ok(()), // 未配置，无需操作
+    };
+
+    let mutex = get_sandbox_id_mutex();
+    let mut lock = mutex.lock().await;
+
+    let sandbox_id = match lock.as_ref() {
+        Some(id) => id.clone(),
+        None => return Ok(()), // 没有活跃沙盒
+    };
+
+    let client = reqwest::Client::new();
+    let base = get_api_base(cfg.api_url.as_ref().unwrap());
+    let api_key = cfg.api_key.as_ref().unwrap();
+
+    crate::emit_info(&format!("正在销毁 Daytona 沙盒 {}...", sandbox_id));
+    let del_url = format!("{}/sandbox/{}", base, sandbox_id);
+    match client.delete(&del_url)
+        .header("Authorization", format!("Bearer {}", api_key))
+        .send()
+        .await
+    {
+        Ok(resp) => {
+            if resp.status().is_success() {
+                crate::emit_info(&format!("Daytona 沙盒 {} 已销毁。", sandbox_id));
+            } else {
+                let status = resp.status();
+                let body = resp.text().await.unwrap_or_default();
+                crate::emit_info(&format!("销毁沙盒返回非成功状态 (HTTP {}): {}", status, body));
+            }
+        }
+        Err(e) => {
+            crate::emit_info(&format!("销毁沙盒请求失败: {}", e));
+        }
+    }
+
+    *lock = None;
+    Ok(())
+}
+
 /// 获取或创建活跃的沙盒 ID
 pub async fn get_or_create_active_sandbox(db: &DbManager) -> anyhow::Result<String> {
     let cfg = get_sandbox_config(db).await
@@ -74,7 +135,7 @@ pub async fn get_or_create_active_sandbox(db: &DbManager) -> anyhow::Result<Stri
     crate::emit_info("正在向云端申请创建新 Daytona 沙盒...");
     
     let client = reqwest::Client::new();
-    let api_url = cfg.api_url.as_ref().unwrap().trim_end_matches('/');
+    let base = get_api_base(cfg.api_url.as_ref().unwrap());
     let api_key = cfg.api_key.as_ref().unwrap();
 
     // 构造创建请求 body，如果配置了 snapshot 则使用它
@@ -89,7 +150,7 @@ pub async fn get_or_create_active_sandbox(db: &DbManager) -> anyhow::Result<Stri
         serde_json::json!({})
     };
 
-    let create_url = format!("{}/sandbox", api_url);
+    let create_url = format!("{}/sandbox", base);
     let res = client.post(&create_url)
         .header("Authorization", format!("Bearer {}", api_key))
         .json(&create_body)
@@ -127,7 +188,7 @@ pub async fn get_or_create_active_sandbox(db: &DbManager) -> anyhow::Result<Stri
     
     for i in 1..=90 {
         tokio::time::sleep(tokio::time::Duration::from_secs(1)).await;
-        let get_url = format!("{}/sandbox/{}", api_url, sandbox_id);
+        let get_url = format!("{}/sandbox/{}", base, sandbox_id);
         let check_res = client.get(&get_url)
             .header("Authorization", format!("Bearer {}", api_key))
             .send()
@@ -188,9 +249,9 @@ pub async fn get_or_create_active_sandbox(db: &DbManager) -> anyhow::Result<Stri
 /// 检查沙盒是否还存活
 async fn check_sandbox_alive(cfg: &SandboxConfig, id: &str) -> bool {
     let client = reqwest::Client::new();
-    let api_url = cfg.api_url.as_ref().unwrap().trim_end_matches('/');
+    let base = get_api_base(cfg.api_url.as_ref().unwrap());
     let api_key = cfg.api_key.as_ref().unwrap();
-    let get_url = format!("{}/sandbox/{}", api_url, id);
+    let get_url = format!("{}/sandbox/{}", base, id);
 
     let res = client.get(&get_url)
         .header("Authorization", format!("Bearer {}", api_key))
@@ -428,12 +489,12 @@ pub async fn create_playwright_snapshot(
         .ok_or_else(|| anyhow::anyhow!("云端 Daytona 沙箱未配置或未启用"))?;
 
     let client = reqwest::Client::new();
-    let api_url = cfg.api_url.as_ref().unwrap().trim_end_matches('/');
+    let base_url = get_api_base(cfg.api_url.as_ref().unwrap());
     let api_key = cfg.api_key.as_ref().unwrap();
 
     // 1. 创建一个临时沙盒（使用默认镜像，不使用 snapshot 避免循环）
     crate::emit_info("[Snapshot] 正在创建临时沙盒以安装 Playwright...");
-    let create_url = format!("{}/sandbox", api_url);
+    let create_url = format!("{}/sandbox", base_url);
     let res = client.post(&create_url)
         .header("Authorization", format!("Bearer {}", api_key))
         .json(&serde_json::json!({}))
@@ -454,7 +515,7 @@ pub async fn create_playwright_snapshot(
     crate::emit_info(&format!("[Snapshot] 等待临时沙盒 {} 就绪...", sandbox_id));
     for _ in 1..=60 {
         tokio::time::sleep(tokio::time::Duration::from_secs(1)).await;
-        let get_url = format!("{}/sandbox/{}", api_url, sandbox_id);
+        let get_url = format!("{}/sandbox/{}", base_url, sandbox_id);
         if let Ok(resp) = client.get(&get_url)
             .header("Authorization", format!("Bearer {}", api_key))
             .send().await
@@ -506,7 +567,7 @@ pub async fn create_playwright_snapshot(
 
     if !install_ok {
         // 清理临时沙盒
-        let del_url = format!("{}/sandbox/{}", api_url, sandbox_id);
+        let del_url = format!("{}/sandbox/{}", base_url, sandbox_id);
         let _ = client.delete(&del_url)
             .header("Authorization", format!("Bearer {}", api_key))
             .send().await;
@@ -515,7 +576,7 @@ pub async fn create_playwright_snapshot(
 
     // 3. 调用 Snapshot API 固化沙盒
     crate::emit_info(&format!("[Snapshot] 正在固化 Snapshot: {}...", snapshot_name));
-    let snap_url = format!("{}/sandbox/{}/snapshot", api_url, sandbox_id);
+    let snap_url = format!("{}/sandbox/{}/snapshot", base_url, sandbox_id);
     let snap_res = client.post(&snap_url)
         .header("Authorization", format!("Bearer {}", api_key))
         .json(&serde_json::json!({ "name": snapshot_name }))
@@ -526,7 +587,7 @@ pub async fn create_playwright_snapshot(
     let snap_body = snap_res.text().await.unwrap_or_default();
     if !snap_status.is_success() {
         // 清理临时沙盒
-        let del_url = format!("{}/sandbox/{}", api_url, sandbox_id);
+        let del_url = format!("{}/sandbox/{}", base_url, sandbox_id);
         let _ = client.delete(&del_url)
             .header("Authorization", format!("Bearer {}", api_key))
             .send().await;
@@ -536,7 +597,7 @@ pub async fn create_playwright_snapshot(
     crate::emit_info(&format!("[Snapshot] Snapshot '{}' 创建成功！正在清理临时沙盒...", snapshot_name));
 
     // 4. 删除临时沙盒
-    let del_url = format!("{}/sandbox/{}", api_url, sandbox_id);
+    let del_url = format!("{}/sandbox/{}", base_url, sandbox_id);
     let _ = client.delete(&del_url)
         .header("Authorization", format!("Bearer {}", api_key))
         .send().await;

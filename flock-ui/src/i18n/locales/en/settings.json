@@ -106,6 +106,9 @@
     "snapshotCreating": "Creating snapshot, please wait...",
     "snapshotDone": "Snapshot Created",
     "snapshotDoneMsg": "Snapshot '{{name}}' is ready. Future sandboxes will use it automatically — Browser tool is now instant!",
-    "snapshotFailed": "Snapshot Creation Failed"
+    "snapshotFailed": "Snapshot Creation Failed",
+    "cleanupBtn": "Cleanup All Sandboxes",
+    "cleanupDone": "Cleanup Complete",
+    "cleanupFailed": "Cleanup Failed"
   }
 }

@@ -106,6 +106,9 @@
     "snapshotCreating": "正在创建快照，请勿关闭...",
     "snapshotDone": "Snapshot 创建成功",
     "snapshotDoneMsg": "快照 '{{name}}' 已创建并保存。今后启动的沙盒将自动使用此快照，浏览器工具可立即使用！",
-    "snapshotFailed": "Snapshot 创建失败"
+    "snapshotFailed": "Snapshot 创建失败",
+    "cleanupBtn": "清理所有历史沙盒",
+    "cleanupDone": "清理完成",
+    "cleanupFailed": "清理失败"
   }
 }

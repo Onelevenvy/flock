@@ -24,6 +24,7 @@ import {
   IconHelpCircle,
   IconCamera,
   IconInfoCircle,
+  IconTrash,
 } from '@tabler/icons-react';
 import { invoke } from '@tauri-apps/api/core';
 import { notifications } from '@mantine/notifications';
@@ -45,6 +46,7 @@ export default function SandboxSettings() {
   const [saving, setSaving] = useState(false);
   const [testing, setTesting] = useState(false);
   const [creatingSnapshot, setCreatingSnapshot] = useState(false);
+  const [cleaningUp, setCleaningUp] = useState(false);
 
   useEffect(() => {
     loadSandboxConfig();
@@ -326,7 +328,40 @@ export default function SandboxSettings() {
 
           <Divider color="var(--flock-border-subtle)" mt="md" />
 
-          <Group justify="flex-end" gap="md">
+          <Group justify="space-between" gap="md">
+            <Button
+              variant="outline"
+              color="red"
+              leftSection={<IconTrash size={15} />}
+              onClick={async () => {
+                if (!enabled) return;
+                setCleaningUp(true);
+                try {
+                  const msg = await invoke<string>('cleanup_all_sandboxes');
+                  notifications.show({
+                    title: t('settings.sandbox.cleanupDone'),
+                    message: msg,
+                    color: 'teal',
+                    icon: <IconCheck size={18} />,
+                  });
+                } catch (e) {
+                  notifications.show({
+                    title: t('settings.sandbox.cleanupFailed'),
+                    message: String(e),
+                    color: 'red',
+                    icon: <IconAlertCircle size={18} />,
+                  });
+                } finally {
+                  setCleaningUp(false);
+                }
+              }}
+              loading={cleaningUp}
+              disabled={!enabled}
+            >
+              {t('settings.sandbox.cleanupBtn')}
+            </Button>
+
+            <Group gap="md">
             <Button
               variant="outline"
               color="gray"
@@ -350,6 +385,7 @@ export default function SandboxSettings() {
             >
               {t('common.save') || '保存'}
             </Button>
+            </Group>
           </Group>
         </Stack>
       </Card>
