@@ -116,7 +116,9 @@ pub async fn get_or_create_active_sandbox(db: &DbManager) -> anyhow::Result<Stri
                     if let Ok(resp_text) = resp.text().await {
                         last_resp_body = resp_text.clone();
                         if let Ok(info_val) = serde_json::from_str::<serde_json::Value>(&resp_text) {
-                            let status_val = info_val.get("status")
+                            let status_val = info_val.get("state")
+                                .or_else(|| info_val.get("status"))
+                                .or_else(|| info_val.get("data").and_then(|d| d.get("state")))
                                 .or_else(|| info_val.get("data").and_then(|d| d.get("status")));
                             if let Some(status_str) = status_val.and_then(|s| s.as_str()) {
                                 last_status = status_str.to_string();
@@ -175,7 +177,9 @@ async fn check_sandbox_alive(cfg: &SandboxConfig, id: &str) -> bool {
         if resp.status().is_success() {
             if let Ok(resp_text) = resp.text().await {
                 if let Ok(info_val) = serde_json::from_str::<serde_json::Value>(&resp_text) {
-                    let status_val = info_val.get("status")
+                    let status_val = info_val.get("state")
+                        .or_else(|| info_val.get("status"))
+                        .or_else(|| info_val.get("data").and_then(|d| d.get("state")))
                         .or_else(|| info_val.get("data").and_then(|d| d.get("status")));
                     if let Some(status_str) = status_val.and_then(|s| s.as_str()) {
                         return status_str == "started" || status_str == "running";
