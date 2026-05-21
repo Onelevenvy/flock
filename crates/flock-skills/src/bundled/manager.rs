@@ -326,16 +326,4 @@ fn clear_bundled_skills_inner() {
         .clear();
 }
 
-/// Clear the bundled skill registry.
-///
-/// Exposed for test isolation. Production code should use `init_bundled_skills()`
-/// which calls this internally.
-#[cfg(test)]
-pub fn clear_bundled_skills() {
-    clear_bundled_skills_inner();
-}
-
-// ---------------------------------------------------------------------------
-// Tests
-// ---------------------------------------------------------------------------
 
