@@ -75,6 +75,7 @@ pub fn run() {
             commands::ping_agent,
             commands::get_flock_path,
             commands::get_workdir,
+            commands::get_active_sandbox_vnc_url,
             commands::destroy_sandbox,
             commands::cleanup_all_sandboxes,
             // 工作空间

@@ -45,15 +45,15 @@ export function ImageView({ absPath, workspaceId, relativePath, fileName, refres
       })
       .catch((err) => {
         console.error('Failed to read image as base64:', err);
-        // 如果已经有历史 base64 数据，在控制台报错即可，不要阻碍画面呈现或强制切换回 loading 屏
-        if (!base64) {
+        // 只有在既无历史图片数据、也无后台工具运行时，才抛出可见加载错误，避免工具运行期间的临时文件缺失导致红字或卡死
+        if (!base64 && !isToolRunning) {
           setError(String(err));
         }
       })
       .finally(() => {
         setLoading(false);
       });
-  }, [workspaceId, relativePath, refreshKey, base64]);
+  }, [workspaceId, relativePath, refreshKey, isToolRunning]);
 
   if (isToolRunning && !base64 && (loading || error)) {
     return (

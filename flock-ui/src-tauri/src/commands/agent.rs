@@ -241,3 +241,15 @@ pub async fn cleanup_all_sandboxes(
 
     Ok(format!("清理完成：已销毁 {} 个沙盒，失败 {} 个。", deleted, failed))
 }
+
+/// 获取当前活动沙盒的 VNC 代理链接
+#[tauri::command]
+pub async fn get_active_sandbox_vnc_url(
+    _state: State<'_, SharedAgentState>,
+) -> Result<Option<String>, String> {
+    if let Some(sandbox_id) = flock_tools::daytona::get_active_sandbox_id().await {
+        Ok(Some(format!("https://6080-{}.proxy.app.daytona.io", sandbox_id)))
+    } else {
+        Ok(None)
+    }
+}

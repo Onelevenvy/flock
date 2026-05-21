@@ -246,15 +246,35 @@ export const useAgentStore = create<AgentStore>((set) => ({
                 extension: 'log',
               });
             } else {
-              // 保留上一次的 screenshot 图像进行无缝替换，仅在尚未处于 screenshot 模式时进行初始化设置
-              const currentPreview = useUiStore.getState().previewFile;
-              if (!currentPreview || currentPreview.path !== '.flock/sandbox/screenshot.png') {
-                useUiStore.getState().setPreviewFile({
-                  path: '.flock/sandbox/screenshot.png',
-                  content: '',
-                  extension: 'png',
+              invoke<string | null>('get_active_sandbox_vnc_url')
+                .then((vncUrl) => {
+                  if (vncUrl) {
+                    useUiStore.getState().setPreviewFile({
+                      path: vncUrl,
+                      content: '',
+                      extension: 'vnc',
+                    });
+                  } else {
+                    const currentPreview = useUiStore.getState().previewFile;
+                    if (!currentPreview || currentPreview.path !== '.flock/sandbox/screenshot.png') {
+                      useUiStore.getState().setPreviewFile({
+                        path: '.flock/sandbox/screenshot.png',
+                        content: '',
+                        extension: 'png',
+                      });
+                    }
+                  }
+                })
+                .catch(() => {
+                  const currentPreview = useUiStore.getState().previewFile;
+                  if (!currentPreview || currentPreview.path !== '.flock/sandbox/screenshot.png') {
+                    useUiStore.getState().setPreviewFile({
+                      path: '.flock/sandbox/screenshot.png',
+                      content: '',
+                      extension: 'png',
+                    });
+                  }
                 });
-              }
             }
           }
         }, 100);
@@ -305,20 +325,47 @@ export const useAgentStore = create<AgentStore>((set) => ({
                   extension: 'vnc',
                 });
               } else {
-                if (lowerTool.includes('computer_use') || lowerTool.includes('computeruse')) {
-                  // 如果是 computer_use 且没有 VNC 链接（即 exec 动作），则展示日志输出，不报“文件不存在”错误
-                  useUiStore.getState().setPreviewFile({
-                    path: '.flock/sandbox/code_result.log',
-                    content: event.output || '',
-                    extension: 'log',
+                // 如果输出中没有匹配到 VNC URL，也主动调用 API 拿 VNC URL 并设置 VNC 视图！
+                invoke<string | null>('get_active_sandbox_vnc_url')
+                  .then((vncUrl) => {
+                    if (vncUrl) {
+                      useUiStore.getState().setPreviewFile({
+                        path: vncUrl,
+                        content: '',
+                        extension: 'vnc',
+                      });
+                    } else {
+                      if (lowerTool.includes('computer_use') || lowerTool.includes('computeruse')) {
+                        // 如果是 computer_use 且没有 VNC 链接（即 exec 动作），则展示日志输出，不报“文件不存在”错误
+                        useUiStore.getState().setPreviewFile({
+                          path: '.flock/sandbox/code_result.log',
+                          content: event.output || '',
+                          extension: 'log',
+                        });
+                      } else {
+                        useUiStore.getState().setPreviewFile({
+                          path: '.flock/sandbox/screenshot.png',
+                          content: '',
+                          extension: 'png',
+                        });
+                      }
+                    }
+                  })
+                  .catch(() => {
+                    if (lowerTool.includes('computer_use') || lowerTool.includes('computeruse')) {
+                      useUiStore.getState().setPreviewFile({
+                        path: '.flock/sandbox/code_result.log',
+                        content: event.output || '',
+                        extension: 'log',
+                      });
+                    } else {
+                      useUiStore.getState().setPreviewFile({
+                        path: '.flock/sandbox/screenshot.png',
+                        content: '',
+                        extension: 'png',
+                      });
+                    }
                   });
-                } else {
-                  useUiStore.getState().setPreviewFile({
-                    path: '.flock/sandbox/screenshot.png',
-                    content: '',
-                    extension: 'png',
-                  });
-                }
               }
             } else if (lowerTool.includes('code_execution')) {
               useUiStore.getState().setPreviewFile({
@@ -397,17 +444,7 @@ export const useAgentStore = create<AgentStore>((set) => ({
           status: 'error',
           errorMessage: event.error.message,
         });
-        // 报错时也自动去掉浏览器画面
-        setTimeout(() => {
-          const currentPreview = useUiStore.getState().previewFile;
-          if (
-            currentPreview &&
-            (currentPreview.path === '.flock/sandbox/screenshot.png' ||
-              currentPreview.extension === 'vnc')
-          ) {
-            useUiStore.getState().setPreviewFile(null);
-          }
-        }, 100);
+        // 报错时也不自动去掉浏览器画面，保留最后一刻的状态
         break;
 
       case 'config_changed':
