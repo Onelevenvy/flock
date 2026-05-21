@@ -619,7 +619,7 @@ export function FlowCanvas({ workflowId, workflowData, onBack }: FlowCanvasProps
                 color="gray"
                 radius="md"
                 size="md"
-                onClick={layoutAllNodes as any}
+                onClick={() => layoutAllNodes()}
               >
                 <IconHierarchy size={16} />
               </ActionIcon>
