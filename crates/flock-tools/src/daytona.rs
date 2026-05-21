@@ -490,14 +490,12 @@ pub async fn create_playwright_snapshot(
     
     let payload = serde_json::json!({
         "name": snapshot_name,
-        "imageName": "daytonaio/sandbox:latest",
-        "entrypoint": ["sleep", "infinity"],
         "cpu": 2,
         "gpu": 0,
         "memory": 4,
         "disk": 10,
         "buildInfo": {
-            "dockerfileContent": "FROM daytonaio/sandbox:latest\nRUN apt-get update && apt-get install -y python3-pip && python3 -m pip install playwright && python3 -m playwright install chromium && python3 -m playwright install-deps chromium"
+            "dockerfileContent": "FROM daytonaio/sandbox:latest\nUSER root\nENV DEBIAN_FRONTEND=noninteractive\nRUN apt-get update && apt-get install -y python3-pip && python3 -m pip install --break-system-packages playwright && python3 -m playwright install chromium && python3 -m playwright install-deps chromium\nUSER daytona"
         }
     });
 
