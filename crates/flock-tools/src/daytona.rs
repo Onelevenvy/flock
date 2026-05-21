@@ -72,13 +72,27 @@ pub async fn get_or_create_active_sandbox(db: &DbManager) -> anyhow::Result<Stri
         .send()
         .await?;
 
-    if !res.status().is_success() {
-        let err_body = res.text().await.unwrap_or_default();
-        anyhow::bail!("创建沙箱失败。HTTP 状态码: {}, 错误信息: {}", err_body, err_body);
-    }
+    let status = res.status();
+    let res_text = res.text().await.unwrap_or_default();
+    
+    let val: serde_json::Value = match serde_json::from_str(&res_text) {
+        Ok(v) => v,
+        Err(e) => anyhow::bail!(
+            "解析沙盒创建响应为 JSON 失败: {}. HTTP 状态码: {}, 原始响应体: {}", 
+            e, status, res_text
+        ),
+    };
+    
+    // 灵活支持 id/sandboxId 扁平或 data 嵌套结构
+    let sandbox_id_val = val.get("id")
+        .or_else(|| val.get("sandboxId"))
+        .or_else(|| val.get("data").and_then(|d| d.get("id")))
+        .or_else(|| val.get("data").and_then(|d| d.get("sandboxId")));
 
-    let sandbox_info: DaytonaSandboxResponse = res.json().await?;
-    let sandbox_id = sandbox_info.id.clone();
+    let sandbox_id = match sandbox_id_val.and_then(|v| v.as_str()) {
+        Some(s) => s.to_string(),
+        None => anyhow::bail!("无法在响应中解析出沙盒ID。原始响应体: {}", val),
+    };
 
     // 轮询等待沙盒变为 "started" 状态
     crate::emit_info(&format!("Daytona 沙盒创建成功 (ID: {})。启动中，正在等待网络与系统就绪...", sandbox_id));
@@ -94,10 +108,16 @@ pub async fn get_or_create_active_sandbox(db: &DbManager) -> anyhow::Result<Stri
 
         if let Ok(resp) = check_res {
             if resp.status().is_success() {
-                if let Ok(info) = resp.json::<DaytonaSandboxResponse>().await {
-                    if info.status == "started" || info.status == "running" {
-                        started = true;
-                        break;
+                if let Ok(resp_text) = resp.text().await {
+                    if let Ok(info_val) = serde_json::from_str::<serde_json::Value>(&resp_text) {
+                        let status_val = info_val.get("status")
+                            .or_else(|| info_val.get("data").and_then(|d| d.get("status")));
+                        if let Some(status_str) = status_val.and_then(|s| s.as_str()) {
+                            if status_str == "started" || status_str == "running" {
+                                started = true;
+                                break;
+                            }
+                        }
                     }
                 }
             }
@@ -130,8 +150,14 @@ async fn check_sandbox_alive(cfg: &SandboxConfig, id: &str) -> bool {
 
     if let Ok(resp) = res {
         if resp.status().is_success() {
-            if let Ok(info) = resp.json::<DaytonaSandboxResponse>().await {
-                return info.status == "started" || info.status == "running";
+            if let Ok(resp_text) = resp.text().await {
+                if let Ok(info_val) = serde_json::from_str::<serde_json::Value>(&resp_text) {
+                    let status_val = info_val.get("status")
+                        .or_else(|| info_val.get("data").and_then(|d| d.get("status")));
+                    if let Some(status_str) = status_val.and_then(|s| s.as_str()) {
+                        return status_str == "started" || status_str == "running";
+                    }
+                }
             }
         }
     }
@@ -152,17 +178,17 @@ pub async fn execute_command_in_sandbox(
     
     // 生成 Toolbox 执行请求 of URL list
     let urls = if api_url.contains("app.daytona.io") {
-        vec![
+        vec!(
             format!("https://proxy.app.daytona.io/toolbox/{}/toolbox/process/execute", sandbox_id),
             format!("https://proxy.app.daytona.io/toolbox/{}/process/execute", sandbox_id),
-        ]
+        )
     } else {
         // 自建模式
         let base = api_url.trim_end_matches("/api").trim_end_matches("/");
-        vec![
+        vec!(
             format!("{}/toolbox/{}/toolbox/process/execute", base, sandbox_id),
             format!("{}/toolbox/{}/process/execute", base, sandbox_id),
-        ]
+        )
     };
 
     let client = reqwest::Client::new();
@@ -182,13 +208,17 @@ pub async fn execute_command_in_sandbox(
 
         match res {
             Ok(resp) => {
-                if resp.status().is_success() {
-                    if let Ok(exec_res) = resp.json::<ExecuteResponse>().await {
+                let status = resp.status();
+                if status.is_success() {
+                    let resp_text = resp.text().await.unwrap_or_default();
+                    if let Ok(exec_res) = serde_json::from_str::<ExecuteResponse>(&resp_text) {
                         let result = exec_res.result.unwrap_or_default();
                         let exit_code = exec_res.exit_code.unwrap_or(0);
                         return Ok((result, exit_code));
+                    } else {
+                        return Err(anyhow::anyhow!("解析执行响应失败。原始响应体: {}", resp_text));
                     }
-                } else if resp.status() == reqwest::StatusCode::NOT_FOUND {
+                } else if status == reqwest::StatusCode::NOT_FOUND {
                     // 如果 404，我们尝试下一个候选 endpoint
                     last_error = Some(anyhow::anyhow!("Toolbox API 返回 404: {}", url));
                     continue;

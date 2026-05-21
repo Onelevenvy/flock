@@ -280,6 +280,13 @@ export const useAgentStore = create<AgentStore>((set) => ({
         break;
 
       case 'info':
+        if (
+          event.message.startsWith('[node]') ||
+          event.message.startsWith('[engine]') ||
+          event.message.startsWith('[route]')
+        ) {
+          break;
+        }
         set((s) => {
           const messages = [...s.messages];
           if (messages.length === 0) return {};
