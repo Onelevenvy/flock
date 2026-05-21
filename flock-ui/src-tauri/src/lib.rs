@@ -69,6 +69,7 @@ pub fn run() {
             commands::send_message,
             commands::approve_tool,
             commands::deny_tool,
+            commands::resume_tool,
             commands::set_mode,
             commands::set_config,
             commands::ping_agent,

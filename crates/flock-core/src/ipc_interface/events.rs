@@ -73,6 +73,18 @@ pub enum ProtocolEvent {
         thread_id: String,
         title: String,
     },
+    /// 通知前端需要人工接管（如遇到登录验证、验证码等）
+    HumanTakeover {
+        /// 对应的工具调用 ID（与 interrupt 关联，resume 时使用）
+        call_id: String,
+        /// 当前关联的消息 ID
+        msg_id: String,
+        /// 提示用户需要做什么操作的描述文本
+        message: String,
+        /// 当前可交互的远程桌面/浏览器代理 URL（可选，供前端展示 VNC 面板）
+        #[serde(skip_serializing_if = "Option::is_none")]
+        remote_url: Option<String>,
+    },
     Pong,
 }
 

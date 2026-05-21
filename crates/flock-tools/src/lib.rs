@@ -34,6 +34,7 @@ pub fn all_tools() -> ToolSet {
     reg.register(builtin::code_execution::CodeExecutionToolImpl::new());
     reg.register(builtin::browser::BrowserToolImpl::new());
     reg.register(builtin::computer_use::ComputerUseToolImpl::new());
+    reg.register(builtin::sandbox_exec::SandboxExecToolImpl::new());
 
     // --- math ---
     infos.push(math::provider_info());

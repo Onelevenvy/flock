@@ -5,6 +5,7 @@ import { Header } from '../../components/Layout/Header';
 import { ChatPanel } from '../../components/chat/ChatPanel';
 import { InputBar } from '../../components/chat/InputBar';
 import { ToolApprovalInline } from '../../components/chat/ToolApproval/ToolApprovalInline';
+import { HumanTakeoverBanner } from '../../components/chat/ToolApproval/HumanTakeoverBanner';
 import { FileTreePanel } from './components/FileTreePanel';
 import { PreviewPanel } from './components/PreviewPanel';
 
@@ -12,6 +13,7 @@ export function WorkspaceView() {
   const { isPreviewOpen } = useUiStore();
   const messages = useAgentStore((s) => s.messages);
   const pendingApprovals = useAgentStore((s) => s.pendingApprovals);
+  const humanTakeover = useAgentStore((s) => s.humanTakeover);
 
   // 取队首待审批（每次只处理一个）
   const firstPending = pendingApprovals[0] ?? null;
@@ -59,6 +61,7 @@ export function WorkspaceView() {
             <Box style={{ display: 'flex', flexDirection: 'column', flex: 1, overflow: 'hidden' }}>
               <ChatPanel messages={messages} />
               <ToolApprovalInline approval={firstPending} />
+              {humanTakeover && <HumanTakeoverBanner takeover={humanTakeover} />}
               <InputBar />
             </Box>
           </Box>

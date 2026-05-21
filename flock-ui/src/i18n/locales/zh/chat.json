@@ -92,5 +92,14 @@
     "refreshTooltip": "刷新内容",
     "downloadTooltip": "下载此文件",
     "delete": "删除"
+  },
+  "takeover": {
+    "title": "需要您的操作",
+    "badge": "人工接管",
+    "hint": "请在右侧远程桌面中完成操作，完成后点击“继续执行”：",
+    "btnContinue": "我已完成操作，继续执行",
+    "btnOpenVnc": "打开远程桌面",
+    "btnCancel": "取消",
+    "cancelledReason": "用户取消了人工接管操作"
   }
 }

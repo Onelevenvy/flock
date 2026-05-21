@@ -12,20 +12,34 @@ use base64::{Engine as _, engine::general_purpose};
 /// A cloud-based GUI Computer Use tool for interacting with the sandbox desktop environment.
 ///
 /// Usage:
-/// - Use this tool when you need to automate GUI desktop tasks (clicks, text input, custom drag-and-drops) or perform deep GUI agent work.
-/// - Controls mouse movements, mouse clicks, scrolls, keyboard typing, key presses, and captures screenshots.
+/// - Use this tool for GUI desktop automation (clicks, keyboard input, drag-and-drop) or direct shell command execution in the sandbox.
+/// - **IMPORTANT**: For file system operations (mkdir, rm, ls, etc.), always prefer the `exec` action or the `CodeExecution` tool.
+///   Example: `action="exec", command="mkdir /home/daytona/my_folder"` to create a directory.
+/// - For GUI interactions, controls mouse/keyboard via xdotool and captures screenshots with scrot.
 /// - Writes the screenshot to `.flock/sandbox/screenshot.png`.
-/// - Supported actions: "click", "move", "drag", "scroll", "type", "press", "screenshot", "status".
 ///
-/// @param action The operation to perform: "click", "move", "drag", "scroll", "type", "press", "screenshot", "status".
+/// Supported actions:
+/// - `exec`      — Execute a shell command directly in the sandbox (RECOMMENDED for file/system operations).
+/// - `click`     — Click mouse at (x, y). button: "left"|"right"|"middle".
+/// - `move`      — Move mouse to (x, y).
+/// - `drag`      — Drag from current position to (x, y).
+/// - `scroll`    — Scroll mouse. button: "up"|"down".
+/// - `type`      — Type text into focused input.
+/// - `press`     — Press a key or hotkey (e.g. "Return", "ctrl+c").
+/// - `screenshot`— Capture current desktop state.
+/// - `status`    — Check desktop readiness.
+///
+/// @param action The operation to perform (see above).
+/// @param command Shell command to execute (required for `exec` action).
 /// @param x Optional X coordinate for mouse actions.
 /// @param y Optional Y coordinate for mouse actions.
-/// @param button Optional mouse button: "left" (default), "right", "middle".
+/// @param button Optional mouse button or scroll direction.
 /// @param text Optional text to type.
 /// @param key Optional key or hotkey to press (e.g. "Return", "ctrl+c").
 #[tool("ComputerUse")]
 pub async fn computer_use(
     action: String,
+    command: Option<String>,
     x: Option<i32>,
     y: Option<i32>,
     button: Option<String>,
@@ -39,7 +53,23 @@ pub async fn computer_use(
     let sandbox_id = get_or_create_active_sandbox(&db).await
         .map_err(|e| format!("沙盒环境启动失败: {}", e))?;
 
-    // 2. 确保 VNC 桌面环境已就绪
+    // 2. 根据 action 决定是否需要启动 VNC 桌面
+    let act = action.to_lowercase();
+
+    // --- exec action: 直接在沙盒内执行 shell 命令，无需启动 VNC 桌面 ---
+    if act == "exec" {
+        let cmd = command.ok_or_else(|| "`exec` action 需要提供 `command` 参数。例如：command=\"mkdir /home/daytona/aaaaa\"".to_string())?;
+        crate::emit_info(&format!("正在沙盒中执行命令: {}...", cmd));
+        let (output, exit_code) = execute_command_in_sandbox(&db, &sandbox_id, &cmd).await
+            .map_err(|e| format!("沙盒命令执行失败: {}", e))?;
+        if exit_code == 0 {
+            return Ok(format!("命令执行成功。\n\n[输出]\n{}", output));
+        } else {
+            return Err(format!("命令执行失败 (退出码: {})。\n\n[错误输出]\n{}", exit_code, output));
+        }
+    }
+
+    // 3. 非 exec 操作需要确保 VNC 桌面环境已就绪
     let mut desktop_ready = false;
     if let Ok(ready) = check_computer_use_status(&db, &sandbox_id).await {
         if ready {
@@ -64,15 +94,12 @@ pub async fn computer_use(
                 }
             }
         }
-        
+
         if !desktop_ready {
             crate::emit_info("警告: 远程桌面未报告就绪状态，继续尝试执行任务。");
         }
     }
 
-    // 3. 根据 action 进行处理。我们使用 Linux 经典的 xdotool 进行高度稳定控制，避免接口协议变化导致报错
-    let act = action.to_lowercase();
-    
     // 确保 xdotool 和 scrot 已安装
     let setup_cmd = "sh -c 'if ! command -v xdotool >/dev/null || ! command -v scrot >/dev/null; then sudo apt-get update && sudo apt-get install -y xdotool scrot; fi'";
     let _ = execute_command_in_sandbox(&db, &sandbox_id, setup_cmd).await;

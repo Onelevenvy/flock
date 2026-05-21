@@ -5,6 +5,7 @@ import { notifications } from '@mantine/notifications';
 import { save } from '@tauri-apps/plugin-dialog';
 import { useUiStore } from '../../../../store/uiStore';
 import { useWorkspaceStore } from '../../../../store/workspaceStore';
+import { useAgentStore } from '../../../../store/agentStore';
 import { invoke, convertFileSrc } from '@tauri-apps/api/core';
 
 import { ImageView } from './ImageView';
@@ -43,6 +44,18 @@ export function PreviewPanel({ embedded = false }: PreviewPanelProps) {
   const [activeTab, setActiveTab] = useState<'screenshot' | 'vnc'>('screenshot');
   const [refreshTrigger, setRefreshTrigger] = useState<number>(0);
 
+  // 感知工具是否正在运行，决定轮询频率
+  const messages = useAgentStore((s) => s.messages);
+  const isSandboxToolRunning = messages.some(m =>
+    m.chunks.some(c =>
+      c.kind === 'tool_request' &&
+      (c.status === 'running' || c.status === 'pending') &&
+      (c.tool?.name?.toLowerCase().includes('browser') ||
+       c.tool?.name?.toLowerCase().includes('computer') ||
+       c.tool?.name?.toLowerCase().includes('sandbox'))
+    )
+  );
+
   const ext = previewFile?.extension?.toLowerCase() || '';
   const lang = getLanguage(ext);
   const fileName = previewFile?.path.split(/[/\\]/).pop() || '';
@@ -51,12 +64,14 @@ export function PreviewPanel({ embedded = false }: PreviewPanelProps) {
     const isSandboxPreview = previewFile?.path === '.flock/sandbox/screenshot.png' || ext === 'vnc';
     if (!isSandboxPreview || !isPreviewOpen) return;
 
+    // 工具运行中 → 500ms；否则 → 1500ms
+    const interval = isSandboxToolRunning ? 500 : 1500;
     const timer = setInterval(() => {
       setRefreshTrigger((prev) => prev + 1);
-    }, 1500);
+    }, interval);
 
     return () => clearInterval(timer);
-  }, [previewFile?.path, ext, isPreviewOpen]);
+  }, [previewFile?.path, ext, isPreviewOpen, isSandboxToolRunning]);
 
   // 哪些文件可以进行 Code / Preview 双重切换
   const toggleable = ['html', 'htm', 'md', 'mdx', 'svg'].includes(ext);

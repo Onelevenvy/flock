@@ -6,6 +6,7 @@ import {
   AgentStatus,
   Capabilities,
   ChatMessage,
+  HumanTakeoverInfo,
   PendingApproval,
   ProtocolEvent,
   ToolRequestChunk,
@@ -24,6 +25,9 @@ interface AgentStore {
   // 待审批工具调用（队列，按顺序弹出）
   pendingApprovals: PendingApproval[];
 
+  // 人工接管状态（类似 Coze Space 的 human-in-the-loop）
+  humanTakeover: HumanTakeoverInfo | null;
+
   // === Actions ===
 
   setStatus: (status: AgentStatus) => void;
@@ -39,6 +43,9 @@ interface AgentStore {
   /** 用户批准/拒绝后，从队列移除 */
   removePendingApproval: (call_id: string) => void;
 
+  /** 清除人工接管状态（用户完成接管或取消） */
+  clearHumanTakeover: () => void;
+
   clearMessages: () => void;
   loadHistory: (workspaceId: string, convId: string) => Promise<void>;
 }
@@ -52,6 +59,7 @@ export const useAgentStore = create<AgentStore>((set) => ({
   errorMessage: null,
   messages: [],
   pendingApprovals: [],
+  humanTakeover: null,
 
   setStatus: (status) => set({ status }),
   setWorkdir: (dir) => set({ workdir: dir }),
@@ -388,6 +396,24 @@ export const useAgentStore = create<AgentStore>((set) => ({
         break;
       }
 
+      case 'human_takeover':
+        // 前端收到人工接管通知：显示横幅，自动切换到 VNC tab（如果有远程 URL）
+        set({ humanTakeover: {
+          call_id: event.call_id,
+          msg_id: event.msg_id,
+          message: event.message,
+          remote_url: event.remote_url,
+        }});
+        // 如果有远程 URL，自动切换预览面板到 VNC 控制模式
+        if (event.remote_url) {
+          useUiStore.getState().setPreviewFile({
+            path: event.remote_url,
+            content: '',
+            extension: 'vnc',
+          });
+        }
+        break;
+
       default:
         break;
     }
@@ -397,6 +423,8 @@ export const useAgentStore = create<AgentStore>((set) => ({
     set((s) => ({
       pendingApprovals: s.pendingApprovals.filter((p) => p.call_id !== call_id),
     })),
+
+  clearHumanTakeover: () => set({ humanTakeover: null }),
 
   clearMessages: () => {
     useUiStore.getState().setPreviewFile(null);
