@@ -334,6 +334,7 @@ pub async fn start_agent(
     );
 
     let protocol_emitter = Arc::new(TauriProtocolEmitter::new(app.clone()));
+    flock_tools::init_global_emitter(protocol_emitter.clone());
     let output: Arc<dyn OutputSink> = protocol_emitter.clone();
 
     let mut bootstrap = AgentBuilder::new(config.clone(), workdir.to_string_lossy(), output.clone());

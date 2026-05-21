@@ -75,7 +75,12 @@ export interface ToolRequestChunk {
   result_status?: ToolStatus;
 }
 
-export type MessageChunk = TextChunk | ThinkingChunk | ToolRequestChunk;
+export interface InfoChunk {
+  kind: 'info';
+  message: string;
+}
+
+export type MessageChunk = TextChunk | ThinkingChunk | ToolRequestChunk | InfoChunk;
 
 export interface ChatMessage {
   id: string;           // msg_id（user 消息自生成，assistant 来自 stream_start）

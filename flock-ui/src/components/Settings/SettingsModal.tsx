@@ -15,10 +15,12 @@ import {
   IconBox,
   IconAdjustmentsHorizontal,
   IconDeviceDesktop,
+  IconShieldLock,
 } from '@tabler/icons-react';
 import ModelProviderPage from './ModelProvider';
 import XiaofSettings from './XiaofSettings';
 import SystemSettings from './SystemSettings';
+import SandboxSettings from './SandboxSettings';
 import { useTranslation } from 'react-i18next';
 
 interface Props {
@@ -40,6 +42,7 @@ export default function SettingsModal({ opened, onClose }: Props) {
   const navItems: NavItem[] = [
     { key: 'model', label: t('settings.tabs.model'), icon: IconBox, description: t('settings.descriptions.model') },
     { key: 'basic', label: t('settings.tabs.basic'), icon: IconAdjustmentsHorizontal, description: t('settings.descriptions.basic') },
+    { key: 'sandbox', label: t('settings.tabs.sandbox'), icon: IconShieldLock, description: t('settings.descriptions.sandbox') },
     { key: 'system', label: t('settings.tabs.system'), icon: IconDeviceDesktop, description: t('settings.descriptions.system') },
   ];
 
@@ -173,6 +176,7 @@ export default function SettingsModal({ opened, onClose }: Props) {
             <Box style={{ maxWidth: 900 }}>
               {activeTab === 'basic' && <XiaofSettings />}
               {activeTab === 'system' && <SystemSettings />}
+              {activeTab === 'sandbox' && <SandboxSettings />}
               {activeTab === 'model' && <ModelProviderPage />}
               {activeTab === 'tool' && <PlaceholderPage title={t('settings.tabs.tool')} />}
             </Box>

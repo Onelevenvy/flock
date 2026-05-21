@@ -83,6 +83,7 @@ export function PreviewPanel({ embedded = false }: PreviewPanelProps) {
   const isImage = IMAGE_EXTS.includes(ext);
   const isPdf = ext === 'pdf';
   const isHtml = ext === 'html' || ext === 'htm';
+  const isVnc = ext === 'vnc' || previewFile.path.startsWith('http://') || previewFile.path.startsWith('https://');
   
   const OFFICE_EXTS = ['docx', 'doc', 'xlsx', 'xls', 'pptx', 'ppt'];
   const isOffice = OFFICE_EXTS.includes(ext);
@@ -220,13 +221,32 @@ export function PreviewPanel({ embedded = false }: PreviewPanelProps) {
         )}
 
         {/* 8. 未知或不支持格式的 Fallback */}
-        {!isMarkdown && !isCode && !isImage && !isPdf && !isHtml && !isOffice && (
+        {!isMarkdown && !isCode && !isImage && !isPdf && !isHtml && !isOffice && !isVnc && (
           <FallbackView
             fileName={fileName}
             ext={ext}
             filePath={previewFile.path}
             activeWorkspaceId={activeWorkspaceId || ''}
           />
+        )}
+
+        {/* 9. VNC noVNC 远程桌面嵌入 */}
+        {isVnc && (
+          <Box style={{ width: '100%', height: '100%', padding: '16px', background: 'var(--flock-bg-deepest)' }}>
+            <iframe
+              src={previewFile.path}
+              style={{
+                width: '100%',
+                height: 'calc(100vh - 140px)',
+                border: '1px solid var(--flock-border-dim)',
+                background: 'var(--flock-bg-deep)',
+                borderRadius: 12,
+                boxShadow: '0 8px 24px rgba(0,0,0,0.2)'
+              }}
+              allow="fullscreen; clipboard-read; clipboard-write"
+              sandbox="allow-scripts allow-same-origin allow-popups allow-forms"
+            />
+          </Box>
         )}
       </ScrollArea>
     </Box>

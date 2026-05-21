@@ -4,12 +4,14 @@
     "model": "Models",
     "basic": "XIAOF Agent",
     "system": "System",
+    "sandbox": "Cloud Sandbox",
     "tool": "Tools"
   },
   "descriptions": {
     "model": "LLM Providers & Model Management",
     "basic": "General Agent XIAOF Configuration Options",
-    "system": "Environment & Performance Configuration"
+    "system": "Environment & Performance Configuration",
+    "sandbox": "Daytona Cloud Code & Browser Security Sandbox Configurations"
   },
   "developing": "Developing...",
   "version": "Flock CLI v0.1.0",
@@ -77,5 +79,23 @@
     "settingsTitle": "{{name}} Settings",
     "testModel": "Test Model",
     "testModelPlaceholder": "Model name for connectivity test (e.g., glm-4-flash)"
+  },
+  "sandbox": {
+    "title": "Cloud Sandbox Settings",
+    "enable": "Enable Daytona Sandbox",
+    "enableTooltip": "When enabled, code execution and browser tools will run inside secure Daytona cloud sandboxes, shielding your host system from any malicious code.",
+    "apiUrl": "API Endpoint URL",
+    "apiUrlPlaceholder": "Enter Daytona API Endpoint (e.g., https://app.daytona.io/api)",
+    "apiKey": "API Token",
+    "apiKeyPlaceholder": "Enter API token starting with dtn_",
+    "testBtn": "Test Connection",
+    "testOk": "Connection OK",
+    "testOkMsg": "Successfully connected to Daytona Cloud Sandbox!",
+    "testFailed": "Connection Failed",
+    "testFailedMsg": "Failed to connect to Daytona: {{error}}",
+    "saveSuccess": "Sandbox Configuration Saved",
+    "saveSuccessMsg": "Cloud sandbox settings have been updated",
+    "saveFailed": "Save Failed",
+    "saveFailedMsg": "Failed to update sandbox configuration in database"
   }
 }

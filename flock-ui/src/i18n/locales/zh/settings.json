@@ -4,12 +4,14 @@
     "model": "模型设置",
     "basic": "XIAOF设置",
     "system": "系统设置",
+    "sandbox": "云端沙箱",
     "tool": "工具设置"
   },
   "descriptions": {
     "model": "LLM 供应商与模型管理",
     "basic": "通用智能体 XIAOF 配置选项",
-    "system": "环境与性能配置"
+    "system": "环境与性能配置",
+    "sandbox": "Daytona 云端代码与浏览器安全沙箱配置"
   },
   "developing": "功能开发中...",
   "version": "Flock CLI v0.1.0",
@@ -77,5 +79,23 @@
     "settingsTitle": "{{name}} 设置",
     "testModel": "测试模型",
     "testModelPlaceholder": "用于连通性测试的模型名称 (如 glm-4-flash)"
+  },
+  "sandbox": {
+    "title": "云端沙箱配置",
+    "enable": "启用 Daytona 沙盒",
+    "enableTooltip": "开启后，代码执行与浏览器工具将完全在安全的云端沙箱（Daytona）中运行，避免本地宿主机受到安全威胁。",
+    "apiUrl": "API 终结点地址",
+    "apiUrlPlaceholder": "请输入 Daytona API 终结点 (如 https://app.daytona.io/api)",
+    "apiKey": "API 密钥 (Token)",
+    "apiKeyPlaceholder": "请输入以 dtn_ 开头的 API 密钥",
+    "testBtn": "测试连接",
+    "testOk": "连接成功",
+    "testOkMsg": "成功连接到 Daytona 云端沙盒！",
+    "testFailed": "连接失败",
+    "testFailedMsg": "无法连接到 Daytona: {{error}}",
+    "saveSuccess": "沙盒配置已保存",
+    "saveSuccessMsg": "云端沙盒设置更新成功",
+    "saveFailed": "保存配置失败",
+    "saveFailedMsg": "无法更新数据库中的沙盒配置"
   }
 }

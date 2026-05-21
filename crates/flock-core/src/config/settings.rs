@@ -162,6 +162,15 @@ impl Default for SessionConfig {
     }
 }
 
+#[derive(Debug, Clone, Deserialize, Serialize, Default)]
+pub struct SandboxConfig {
+    #[serde(default)]
+    pub enabled: bool,
+    pub api_url: Option<String>,
+    pub api_key: Option<String>,
+}
+
+
 // --- Default value functions ---
 
 fn default_provider() -> String {
@@ -206,6 +215,7 @@ pub struct Config {
     pub bedrock: Option<BedrockConfig>,
     pub vertex: Option<VertexConfig>,
     pub mcp: McpConfig,
+    pub sandbox: SandboxConfig,
     pub debug: DebugConfig,
     pub db_path: PathBuf,
     pub db_manager: Option<Arc<DbManager>>,
@@ -234,6 +244,7 @@ impl Clone for Config {
             bedrock: self.bedrock.clone(),
             vertex: self.vertex.clone(),
             mcp: self.mcp.clone(),
+            sandbox: self.sandbox.clone(),
             debug: self.debug.clone(),
             db_path: self.db_path.clone(),
             db_manager: self.db_manager.clone(),
@@ -324,6 +335,7 @@ impl Config {
         let debug: DebugConfig = db.get_config("debug").await.unwrap_or_default();
         let bedrock: Option<BedrockConfig> = db.get_config("bedrock").await;
         let vertex: Option<VertexConfig> = db.get_config("vertex").await;
+        let sandbox: SandboxConfig = db.get_config("sandbox").await.unwrap_or_default();
 
         // Check active_model (set by UI) to override default provider/model
         let active_model: Option<serde_json::Value> = db.get_config("active_model").await;
@@ -444,6 +456,7 @@ impl Config {
             bedrock,
             vertex,
             mcp,
+            sandbox,
             debug,
             db_path,
             db_manager: Some(db),
@@ -651,6 +664,7 @@ async fn seed_default_config(db: &DbManager) -> anyhow::Result<()> {
     db.set_config("plan", &PlanConfig::default()).await?;
     db.set_config("file_cache", &FileCacheConfig::default()).await?;
     db.set_config("hooks", &HooksConfig::default()).await?;
+    db.set_config("sandbox", &SandboxConfig::default()).await?;
     db.set_config("debug", &DebugConfig::default()).await?;
     Ok(())
 }

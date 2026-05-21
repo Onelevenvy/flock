@@ -5,6 +5,8 @@ pub mod grep;
 pub mod read;
 pub mod tool_search;
 pub mod write;
+pub mod code_execution;
+pub mod browser;
 
 use flock_core::types::tool::ProviderInfo;
 

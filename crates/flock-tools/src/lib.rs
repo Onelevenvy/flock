@@ -9,6 +9,7 @@ pub mod openweather;
 pub mod baidu;
 pub mod google;
 pub mod serper;
+pub mod daytona;
 
 /// Snapshot of all registered tools and their provider metadata.
 pub struct ToolSet {
@@ -30,6 +31,8 @@ pub fn all_tools() -> ToolSet {
     reg.register(builtin::bash::BashTool::new());
     reg.register(builtin::grep::GrepTool::new());
     reg.register(builtin::glob::GlobTool::new());
+    reg.register(builtin::code_execution::CodeExecutionToolImpl::new());
+    reg.register(builtin::browser::BrowserToolImpl::new());
 
     // --- math ---
     infos.push(math::provider_info());
@@ -92,6 +95,28 @@ pub fn init_db_manager(db: Arc<DbManager>) {
 /// Get the global DB manager if initialized.
 pub fn get_db_manager() -> Option<Arc<DbManager>> {
     GLOBAL_DB_MANAGER.get().cloned()
+}
+
+static GLOBAL_EMITTER: OnceLock<Arc<dyn flock_core::ipc_interface::writer::ProtocolEmitter>> = OnceLock::new();
+
+/// Initialize the global emitter for tools.
+pub fn init_global_emitter(emitter: Arc<dyn flock_core::ipc_interface::writer::ProtocolEmitter>) {
+    let _ = GLOBAL_EMITTER.set(emitter);
+}
+
+/// Get the global emitter if initialized.
+pub fn get_global_emitter() -> Option<Arc<dyn flock_core::ipc_interface::writer::ProtocolEmitter>> {
+    GLOBAL_EMITTER.get().cloned()
+}
+
+/// Send an info message to the client.
+pub fn emit_info(message: &str) {
+    if let Some(emitter) = get_global_emitter() {
+        let _ = emitter.emit(&flock_core::ipc_interface::events::ProtocolEvent::Info {
+            msg_id: String::new(),
+            message: message.to_string(),
+        });
+    }
 }
 
 /// Resolve decrypted credentials for a tool provider by its ID.

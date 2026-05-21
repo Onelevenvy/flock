@@ -45,7 +45,7 @@ interface AgentStore {
 
 import { invoke } from '@tauri-apps/api/core';
 
-export const useAgentStore = create<AgentStore>((set, _get) => ({
+export const useAgentStore = create<AgentStore>((set) => ({
   status: 'disconnected',
   capabilities: null,
   workdir: '',
@@ -208,6 +208,47 @@ export const useAgentStore = create<AgentStore>((set, _get) => ({
         }));
         if (event.status === 'success') {
           useUiStore.getState().triggerFileTreeRefresh();
+          
+          // 查找完成的工具名称并自动拉起预览
+          setTimeout(() => {
+            const currentMessages = useAgentStore.getState().messages;
+            let matchedToolName = '';
+            for (const m of currentMessages) {
+              for (const c of m.chunks) {
+                if (c.kind === 'tool_request' && c.call_id === event.call_id) {
+                  matchedToolName = c.tool?.name || '';
+                  break;
+                }
+              }
+              if (matchedToolName) break;
+            }
+
+            const lowerTool = matchedToolName.toLowerCase();
+            if (lowerTool.includes('browser')) {
+              const outputStr = event.output || '';
+              const vncRegex = /(https:\/\/6080-[^\s)]+)/;
+              const match = outputStr.match(vncRegex);
+              if (match && match[1]) {
+                useUiStore.getState().setPreviewFile({
+                  path: match[1],
+                  content: '',
+                  extension: 'vnc',
+                });
+              } else {
+                useUiStore.getState().setPreviewFile({
+                  path: '.flock/sandbox/screenshot.png',
+                  content: '',
+                  extension: 'png',
+                });
+              }
+            } else if (lowerTool.includes('code_execution')) {
+              useUiStore.getState().setPreviewFile({
+                path: '.flock/sandbox/code_result.log',
+                content: event.output || '',
+                extension: 'log',
+              });
+            }
+          }, 300);
         }
         break;
 
@@ -236,6 +277,31 @@ export const useAgentStore = create<AgentStore>((set, _get) => ({
         }));
         // 一轮对话完成，通知文件树刷新
         setTimeout(() => useUiStore.getState().triggerFileTreeRefresh(), 500);
+        break;
+
+      case 'info':
+        set((s) => {
+          const messages = [...s.messages];
+          if (messages.length === 0) return {};
+          
+          let targetIndex = messages.findIndex((m) => m.id === event.msg_id);
+          if (targetIndex === -1) {
+            for (let i = messages.length - 1; i >= 0; i--) {
+              if (messages[i].role === 'assistant') {
+                targetIndex = i;
+                break;
+              }
+            }
+          }
+          
+          if (targetIndex !== -1) {
+            const m = messages[targetIndex];
+            const chunks = [...m.chunks];
+            chunks.push({ kind: 'info', message: event.message });
+            messages[targetIndex] = { ...m, chunks };
+          }
+          return { messages };
+        });
         break;
 
       case 'error':
