@@ -272,6 +272,10 @@ sys.exit(0)
 pub struct BrowserToolImpl;
 impl BrowserToolImpl {
     pub fn new() -> Box<dyn Tool> {
-        Box::new(LangGraphToolAdapter::new(Browser, ToolCategory::Exec))
+        Box::new(
+            LangGraphToolAdapter::new(Browser, ToolCategory::Exec)
+                .with_provider_id("sandbox")
+                .with_provider_name("Sandbox"),
+        )
     }
 }

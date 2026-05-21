@@ -34,6 +34,7 @@ pub fn all_tools() -> ToolSet {
     reg.register(builtin::glob::GlobTool::new());
 
     // --- sandbox ---
+    infos.push(sandbox::provider_info());
     reg.register(sandbox::code_execution::CodeExecutionToolImpl::new());
     reg.register(sandbox::browser::BrowserToolImpl::new());
     reg.register(sandbox::computer_use::ComputerUseToolImpl::new());

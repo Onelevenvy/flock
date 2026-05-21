@@ -14,6 +14,7 @@ import {
   Button,
   Divider,
   ScrollArea,
+  Alert,
 } from '@mantine/core';
 import {
   IconTool,
@@ -22,6 +23,7 @@ import {
   IconEyeOff,
   IconChevronRight,
   IconCheck,
+  IconInfoCircle,
 } from '@tabler/icons-react';
 import { invoke } from '@tauri-apps/api/core';
 import { notifications } from '@mantine/notifications';
@@ -84,7 +86,10 @@ function ProviderDetailPanel({
     }
   })();
 
-  const hasCredentials = Object.keys(credSchema).length > 0;
+  // Sandbox provider has a special sentinel schema — auth lives in Settings page.
+  const isSandboxProvider = credSchema['__type'] === 'sandbox_settings';
+
+  const hasCredentials = !isSandboxProvider && Object.keys(credSchema).length > 0;
 
   useEffect(() => {
     const existing: Record<string, string> = {};
@@ -232,6 +237,19 @@ function ProviderDetailPanel({
       </Box>
 
       <Divider />
+
+      {isSandboxProvider && (
+        <Box px="md" pt="md" pb="sm">
+          <Alert
+            icon={<IconInfoCircle size={16} />}
+            color="blue"
+            variant="light"
+            radius="md"
+          >
+            {t('skills.tools.sandboxConfigHint')}
+          </Alert>
+        </Box>
+      )}
 
       {hasCredentials && (
         <Box px="md" pt="md">

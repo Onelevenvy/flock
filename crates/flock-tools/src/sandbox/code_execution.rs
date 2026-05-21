@@ -56,6 +56,10 @@ pub async fn code_execution(code: String) -> Result<String, String> {
 pub struct CodeExecutionToolImpl;
 impl CodeExecutionToolImpl {
     pub fn new() -> Box<dyn Tool> {
-        Box::new(LangGraphToolAdapter::new(CodeExecution, ToolCategory::Exec))
+        Box::new(
+            LangGraphToolAdapter::new(CodeExecution, ToolCategory::Exec)
+                .with_provider_id("sandbox")
+                .with_provider_name("Sandbox"),
+        )
     }
 }
