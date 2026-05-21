@@ -191,7 +191,7 @@ pub async fn cleanup_all_sandboxes(
     let api_key = cfg.api_key.as_ref().unwrap();
 
     let client = reqwest::Client::new();
-    let list_url = format!("{}/sandbox", base);
+    let list_url = format!("{}/api/sandbox", base);
     let resp = client.get(&list_url)
         .header("Authorization", format!("Bearer {}", api_key))
         .send()
@@ -225,7 +225,7 @@ pub async fn cleanup_all_sandboxes(
         // 只销毁 started / running / stopped 状态（跳过已删除的）
         if state_str == "deleted" || state_str == "archived" { continue; }
 
-        let del_url = format!("{}/sandbox/{}", base, id);
+        let del_url = format!("{}/api/sandbox/{}", base, id);
         match client.delete(&del_url)
             .header("Authorization", format!("Bearer {}", api_key))
             .send()

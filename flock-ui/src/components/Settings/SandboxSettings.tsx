@@ -40,7 +40,7 @@ interface SandboxConfig {
 export default function SandboxSettings() {
   const { t } = useTranslation();
   const [enabled, setEnabled] = useState(false);
-  const [apiUrl, setApiUrl] = useState('https://app.daytona.io/api');
+  const [apiUrl, setApiUrl] = useState('https://app.daytona.io');
   const [apiKey, setApiKey] = useState('');
   const [snapshot, setSnapshot] = useState('');
   const [saving, setSaving] = useState(false);
@@ -241,6 +241,15 @@ export default function SandboxSettings() {
               <Group gap={6} style={{ marginBottom: 4 }}>
                 <IconServer size={14} color="var(--flock-text-dim)" />
                 <Text size="sm" fw={500}>{t('settings.sandbox.apiUrl')}</Text>
+                <Tooltip
+                  label={t('settings.sandbox.apiUrlTooltip')}
+                  multiline
+                  w={280}
+                  withArrow
+                  position="top"
+                >
+                  <IconHelpCircle size={13} color="var(--flock-text-dim)" style={{ cursor: 'help' }} />
+                </Tooltip>
               </Group>
             }
             placeholder={t('settings.sandbox.apiUrlPlaceholder')}

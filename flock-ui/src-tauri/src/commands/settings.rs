@@ -29,7 +29,8 @@ pub async fn test_sandbox_connection(
     api_key: String,
 ) -> Result<String, String> {
     let client = reqwest::Client::new();
-    let url = format!("{}/sandbox", api_url.trim_end_matches('/'));
+    let base = flock_tools::daytona::get_api_base(&api_url);
+    let url = format!("{}/api/sandbox", base);
     
     let res = client.get(&url)
         .header("Authorization", format!("Bearer {}", api_key))
