@@ -41,10 +41,22 @@ export function PreviewPanel({ embedded = false }: PreviewPanelProps) {
   const [absPath, setAbsPath] = useState<string>('');
   const [screenshotAbsPath, setScreenshotAbsPath] = useState<string>('');
   const [activeTab, setActiveTab] = useState<'screenshot' | 'vnc'>('screenshot');
+  const [refreshTrigger, setRefreshTrigger] = useState<number>(0);
 
   const ext = previewFile?.extension?.toLowerCase() || '';
   const lang = getLanguage(ext);
   const fileName = previewFile?.path.split(/[/\\]/).pop() || '';
+
+  useEffect(() => {
+    const isSandboxPreview = previewFile?.path === '.flock/sandbox/screenshot.png' || ext === 'vnc';
+    if (!isSandboxPreview || !isPreviewOpen) return;
+
+    const timer = setInterval(() => {
+      setRefreshTrigger((prev) => prev + 1);
+    }, 1500);
+
+    return () => clearInterval(timer);
+  }, [previewFile?.path, ext, isPreviewOpen]);
 
   // 哪些文件可以进行 Code / Preview 双重切换
   const toggleable = ['html', 'htm', 'md', 'mdx', 'svg'].includes(ext);
@@ -175,7 +187,7 @@ export function PreviewPanel({ embedded = false }: PreviewPanelProps) {
       }}
     >
       <PreviewHeader
-        fileName={fileName}
+        fileName={fileName === 'screenshot.png' || ext === 'vnc' ? 'FLOCK COMPUTER' : fileName}
         viewMode={viewMode}
         toggleable={toggleable}
         content={previewFile.content}
@@ -199,7 +211,7 @@ export function PreviewPanel({ embedded = false }: PreviewPanelProps) {
         }}
       >
         <Text size="xs" c="dimmed" style={{ fontFamily: 'var(--mantine-font-family-monospace)', opacity: 0.55 }}>
-          {previewFile.path}
+          {previewFile.path === '.flock/sandbox/screenshot.png' || ext === 'vnc' ? 'FLOCK COMPUTER' : previewFile.path}
         </Text>
       </Box>
 
@@ -213,16 +225,24 @@ export function PreviewPanel({ embedded = false }: PreviewPanelProps) {
         {/* 2. Markdown 渲染：预览模式 */}
         {isMarkdown && viewMode === 'preview' && <MarkdownView content={previewFile.content} />}
 
-        {/* 3. 强制显示源码的模式：适用于双视图的 'code' 模式 */}
+        {/* 3. 强制显示源码的模式：适用于双视图 of 'code' 模式 */}
         {(viewMode === 'code' && (isHtml || isMarkdown)) && (
           <CodeView content={previewFile.content} lang={isHtml ? 'html' : 'markdown'} />
         )}
 
-        {/* 4. 普通代码文件 */}
+        {/* 4. 普通代码 file */}
         {isCode && !isHtml && !isMarkdown && <CodeView content={previewFile.content} lang={lang} />}
 
         {/* 5. 图像预览 */}
-        {isImage && absPath && <ImageView absPath={absPath} fileName={fileName} />}
+        {isImage && absPath && (
+          <ImageView
+            absPath={absPath}
+            workspaceId={activeWorkspaceId || ''}
+            relativePath={previewFile.path}
+            fileName={fileName === 'screenshot.png' ? 'FLOCK COMPUTER' : fileName}
+            refreshKey={previewFile.path === '.flock/sandbox/screenshot.png' ? refreshTrigger : undefined}
+          />
+        )}
 
         {/* 6. PDF 预览 */}
         {isPdf && absPath && <PdfView absPath={absPath} fileName={fileName} />}
@@ -286,24 +306,14 @@ export function PreviewPanel({ embedded = false }: PreviewPanelProps) {
 
             {/* 📸 实时截图 (图像传屏) */}
             {activeTab === 'screenshot' && (
-              <Box style={{ display: 'flex', flexDirection: 'column', gap: '12px', alignItems: 'center', justifyContent: 'center', width: '100%' }}>
-                {screenshotAbsPath ? (
-                  <img
-                    src={`${convertFileSrc(screenshotAbsPath)}?t=${Date.now()}`}
-                    alt="Desktop Screenshot"
-                    style={{
-                      maxWidth: '100%',
-                      maxHeight: 'calc(100vh - 240px)',
-                      objectFit: 'contain',
-                      borderRadius: '8px',
-                      boxShadow: '0 8px 30px rgba(0,0,0,0.3)',
-                      background: 'var(--flock-bg-base)',
-                      border: '1px solid var(--flock-border-subtle)',
-                    }}
-                  />
-                ) : (
-                  <Text size="sm" c="dimmed">暂无屏幕截图，请稍候...</Text>
-                )}
+              <Box style={{ display: 'flex', flexDirection: 'column', gap: '12px', alignItems: 'center', justifyContent: 'center', width: '100%', minHeight: '400px' }}>
+                <ImageView
+                  absPath={screenshotAbsPath}
+                  workspaceId={activeWorkspaceId || ''}
+                  relativePath=".flock/sandbox/screenshot.png"
+                  fileName="FLOCK COMPUTER"
+                  refreshKey={refreshTrigger}
+                />
                 <Text size="xs" c="dimmed" style={{ textAlign: 'center', maxWidth: '80%', lineHeight: '1.6' }}>
                   💡 **提示**：图像传屏模式免受 HTTPS 证书及 HSTS 拦截影响，为您 100% 稳定高保真展现当前沙盒桌面状态。您可以让 Agent 执行操作以流式刷新画面。
                 </Text>

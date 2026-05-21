@@ -88,6 +88,7 @@ pub fn run() {
             // 文件
             commands::list_workspace_files,
             commands::read_workspace_file,
+            commands::read_workspace_file_as_base64,
             commands::get_workspace_file_absolute_path,
             commands::open_workspace_file_in_system,
             commands::open_external_url,

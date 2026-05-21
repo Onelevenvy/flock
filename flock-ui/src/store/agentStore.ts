@@ -188,6 +188,34 @@ export const useAgentStore = create<AgentStore>((set) => ({
             ),
           })),
         }));
+        
+        // 当工具开始运行时，如果是浏览器或电脑操作，自动打开预览区
+        setTimeout(() => {
+          const currentMessages = useAgentStore.getState().messages;
+          let matchedToolName = '';
+          for (const m of currentMessages) {
+            for (const c of m.chunks) {
+              if (c.kind === 'tool_request' && c.call_id === event.call_id) {
+                matchedToolName = c.tool?.name || '';
+                break;
+              }
+            }
+            if (matchedToolName) break;
+          }
+
+          const lowerTool = matchedToolName.toLowerCase();
+          if (
+            lowerTool.includes('browser') ||
+            lowerTool.includes('computer_use') ||
+            lowerTool.includes('computeruse')
+          ) {
+            useUiStore.getState().setPreviewFile({
+              path: '.flock/sandbox/screenshot.png',
+              content: '',
+              extension: 'png',
+            });
+          }
+        }, 100);
         break;
 
       case 'tool_result':

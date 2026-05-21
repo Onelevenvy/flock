@@ -1,12 +1,64 @@
-import { Box } from '@mantine/core';
-import { convertFileSrc } from '@tauri-apps/api/core';
+import { useState, useEffect } from 'react';
+import { Box, Loader, Text } from '@mantine/core';
+import { invoke, convertFileSrc } from '@tauri-apps/api/core';
 
 interface ImageViewProps {
-  absPath: string;
+  absPath?: string;
+  workspaceId?: string;
+  relativePath?: string;
   fileName: string;
+  refreshKey?: number;
 }
 
-export function ImageView({ absPath, fileName }: ImageViewProps) {
+export function ImageView({ absPath, workspaceId, relativePath, fileName, refreshKey }: ImageViewProps) {
+  const [base64, setBase64] = useState<string>('');
+  const [loading, setLoading] = useState<boolean>(true);
+  const [error, setError] = useState<string>('');
+
+  useEffect(() => {
+    if (!workspaceId || !relativePath) {
+      setLoading(false);
+      return;
+    }
+
+    setLoading(true);
+    invoke<string>('read_workspace_file_as_base64', {
+      workspaceId,
+      relativePath,
+    })
+      .then((data) => {
+        setBase64(data);
+        setError('');
+      })
+      .catch((err) => {
+        console.error('Failed to read image as base64:', err);
+        setError(String(err));
+      })
+      .finally(() => {
+        setLoading(false);
+      });
+  }, [workspaceId, relativePath, refreshKey]);
+
+  if (loading && workspaceId && relativePath) {
+    return (
+      <Box style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '400px' }}>
+        <Loader size="sm" />
+      </Box>
+    );
+  }
+
+  if (error && workspaceId && relativePath) {
+    return (
+      <Box style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', minHeight: '400px', gap: '8px' }}>
+        <Text size="sm" c="red">加载图片失败</Text>
+        <Text size="xs" c="dimmed">{error}</Text>
+      </Box>
+    );
+  }
+
+  // 正常渲染。如果是 Base64 形式，直接渲染；否则 fallback 到 convertFileSrc
+  const src = base64 ? `data:image/png;base64,${base64}` : (absPath ? convertFileSrc(absPath) : '');
+
   return (
     <Box
       style={{
@@ -21,19 +73,23 @@ export function ImageView({ absPath, fileName }: ImageViewProps) {
         minHeight: '400px',
       }}
     >
-      <img
-        src={convertFileSrc(absPath)}
-        alt={fileName}
-        style={{
-          maxWidth: '100%',
-          maxHeight: '450px',
-          objectFit: 'contain',
-          borderRadius: '8px',
-          boxShadow: '0 8px 30px rgba(0,0,0,0.2)',
-          background: 'var(--flock-bg-base)',
-          border: '1px solid var(--flock-border-subtle)',
-        }}
-      />
+      {src ? (
+        <img
+          src={src}
+          alt={fileName}
+          style={{
+            maxWidth: '100%',
+            maxHeight: '450px',
+            objectFit: 'contain',
+            borderRadius: '8px',
+            boxShadow: '0 8px 30px rgba(0,0,0,0.2)',
+            background: 'var(--flock-bg-base)',
+            border: '1px solid var(--flock-border-subtle)',
+          }}
+        />
+      ) : (
+        <Text size="sm" c="dimmed">暂无可用图片路径</Text>
+      )}
     </Box>
   );
 }
