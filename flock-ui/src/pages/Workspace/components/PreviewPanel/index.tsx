@@ -5,7 +5,7 @@ import { notifications } from '@mantine/notifications';
 import { save } from '@tauri-apps/plugin-dialog';
 import { useUiStore } from '../../../../store/uiStore';
 import { useWorkspaceStore } from '../../../../store/workspaceStore';
-import { invoke } from '@tauri-apps/api/core';
+import { invoke, convertFileSrc } from '@tauri-apps/api/core';
 
 import { ImageView } from './ImageView';
 import { PdfView } from './PdfView';
@@ -39,6 +39,8 @@ export function PreviewPanel({ embedded = false }: PreviewPanelProps) {
   const { isPreviewOpen, previewFile, setPreviewFile } = useUiStore();
   const { activeWorkspaceId } = useWorkspaceStore();
   const [absPath, setAbsPath] = useState<string>('');
+  const [screenshotAbsPath, setScreenshotAbsPath] = useState<string>('');
+  const [activeTab, setActiveTab] = useState<'screenshot' | 'vnc'>('screenshot');
 
   const ext = previewFile?.extension?.toLowerCase() || '';
   const lang = getLanguage(ext);
@@ -54,6 +56,21 @@ export function PreviewPanel({ embedded = false }: PreviewPanelProps) {
       setViewMode(toggleable ? 'preview' : 'code');
     }
   }, [previewFile, ext]);
+
+  useEffect(() => {
+    if (activeWorkspaceId) {
+      invoke<string>('get_workspace_file_absolute_path', {
+        workspaceId: activeWorkspaceId,
+        relativePath: '.flock/sandbox/screenshot.png',
+      })
+        .then((path) => {
+          setScreenshotAbsPath(path);
+        })
+        .catch((e) => {
+          console.log('Failed to get screenshot path:', e);
+        });
+    }
+  }, [activeWorkspaceId, previewFile]);
 
   useEffect(() => {
     if (!previewFile || !activeWorkspaceId) {
@@ -230,22 +247,102 @@ export function PreviewPanel({ embedded = false }: PreviewPanelProps) {
           />
         )}
 
-        {/* 9. VNC noVNC 远程桌面嵌入 */}
+        {/* 9. VNC noVNC 远程桌面与图片传屏双通道 */}
         {isVnc && (
-          <Box style={{ width: '100%', height: '100%', padding: '16px', background: 'var(--flock-bg-deepest)' }}>
-            <iframe
-              src={previewFile.path}
-              style={{
-                width: '100%',
-                height: 'calc(100vh - 140px)',
-                border: '1px solid var(--flock-border-dim)',
-                background: 'var(--flock-bg-deep)',
-                borderRadius: 12,
-                boxShadow: '0 8px 24px rgba(0,0,0,0.2)'
-              }}
-              allow="fullscreen; clipboard-read; clipboard-write"
-              sandbox="allow-scripts allow-same-origin allow-popups allow-forms"
-            />
+          <Box style={{ width: '100%', height: '100%', padding: '16px', background: 'var(--flock-bg-deepest)', display: 'flex', flexDirection: 'column', gap: '12px' }}>
+            {/* Tabs 头部 */}
+            <Box style={{ display: 'flex', borderBottom: '1px solid var(--flock-border-dim)', paddingBottom: '8px', gap: '16px' }}>
+              <Box
+                onClick={() => setActiveTab('screenshot')}
+                style={{
+                  padding: '6px 12px',
+                  borderRadius: '6px',
+                  cursor: 'pointer',
+                  fontSize: '13px',
+                  fontWeight: 600,
+                  transition: 'all 0.2s ease',
+                  background: activeTab === 'screenshot' ? 'var(--flock-accent)' : 'transparent',
+                  color: activeTab === 'screenshot' ? '#fff' : 'var(--flock-text-dimmed)',
+                }}
+              >
+                📸 实时大图 (图像传屏)
+              </Box>
+              <Box
+                onClick={() => setActiveTab('vnc')}
+                style={{
+                  padding: '6px 12px',
+                  borderRadius: '6px',
+                  cursor: 'pointer',
+                  fontSize: '13px',
+                  fontWeight: 600,
+                  transition: 'all 0.2s ease',
+                  background: activeTab === 'vnc' ? 'var(--flock-accent)' : 'transparent',
+                  color: activeTab === 'vnc' ? '#fff' : 'var(--flock-text-dimmed)',
+                }}
+              >
+                🌐 网页控制台 (noVNC)
+              </Box>
+            </Box>
+
+            {/* 📸 实时截图 (图像传屏) */}
+            {activeTab === 'screenshot' && (
+              <Box style={{ display: 'flex', flexDirection: 'column', gap: '12px', alignItems: 'center', justifyContent: 'center', width: '100%' }}>
+                {screenshotAbsPath ? (
+                  <img
+                    src={`${convertFileSrc(screenshotAbsPath)}?t=${Date.now()}`}
+                    alt="Desktop Screenshot"
+                    style={{
+                      maxWidth: '100%',
+                      maxHeight: 'calc(100vh - 240px)',
+                      objectFit: 'contain',
+                      borderRadius: '8px',
+                      boxShadow: '0 8px 30px rgba(0,0,0,0.3)',
+                      background: 'var(--flock-bg-base)',
+                      border: '1px solid var(--flock-border-subtle)',
+                    }}
+                  />
+                ) : (
+                  <Text size="sm" c="dimmed">暂无屏幕截图，请稍候...</Text>
+                )}
+                <Text size="xs" c="dimmed" style={{ textAlign: 'center', maxWidth: '80%', lineHeight: '1.6' }}>
+                  💡 **提示**：图像传屏模式免受 HTTPS 证书及 HSTS 拦截影响，为您 100% 稳定高保真展现当前沙盒桌面状态。您可以让 Agent 执行操作以流式刷新画面。
+                </Text>
+              </Box>
+            )}
+
+            {/* 🌐 网页控制台 (noVNC) */}
+            {activeTab === 'vnc' && (
+              <Box style={{ display: 'flex', flexDirection: 'column', gap: '12px', width: '100%' }}>
+                <iframe
+                  src={previewFile.path}
+                  style={{
+                    width: '100%',
+                    height: 'calc(100vh - 320px)',
+                    border: '1px solid var(--flock-border-dim)',
+                    background: 'var(--flock-bg-deep)',
+                    borderRadius: 12,
+                    boxShadow: '0 8px 24px rgba(0,0,0,0.2)'
+                  }}
+                  allow="fullscreen; clipboard-read; clipboard-write"
+                  sandbox="allow-scripts allow-same-origin allow-popups allow-forms"
+                />
+                
+                <Box style={{
+                  padding: '12px',
+                  borderRadius: '8px',
+                  border: '1px solid #eab308',
+                  background: 'rgba(234, 179, 8, 0.05)',
+                  fontSize: '12px',
+                  color: 'var(--flock-text-dimmed)',
+                  lineHeight: '1.6'
+                }}>
+                  🛡️ **HSTS/证书安全拦截白屏解决方案**：<br />
+                  由于云端反向代理缺少您局域网域名的有效 SSL 证书，Edge/Chrome 会触发安全拦截且不提供“继续前往”选项。请尝试以下任一方法解开：<br />
+                  1. **盲打暗号（100%成功）**：在新标签页中打开上方的 **[Remote VNC Link]({previewFile.path})**，点击页面任意空白处，然后在键盘上盲打输入英文：`thisisunsafe`（无需回车，直接输入）。浏览器会自动忽略警告并进入，此时返回本界面刷新即可！<br />
+                  2. **信任本地域名**：在新标签页打开上述链接，点击页面上的“高级” → “继续前往”，以授权浏览器信任此代理域名。
+                </Box>
+              </Box>
+            )}
           </Box>
         )}
       </ScrollArea>

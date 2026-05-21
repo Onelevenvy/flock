@@ -224,7 +224,7 @@ export const useAgentStore = create<AgentStore>((set) => ({
             }
 
             const lowerTool = matchedToolName.toLowerCase();
-            if (lowerTool.includes('browser')) {
+            if (lowerTool.includes('browser') || lowerTool.includes('computer_use') || lowerTool.includes('computeruse')) {
               const outputStr = event.output || '';
               const vncRegex = /(https:\/\/6080-[^\s)]+)/;
               const match = outputStr.match(vncRegex);
