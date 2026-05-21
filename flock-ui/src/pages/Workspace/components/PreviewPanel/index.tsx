@@ -139,6 +139,28 @@ export function PreviewPanel({ embedded = false }: PreviewPanelProps) {
   const OFFICE_EXTS = ['docx', 'doc', 'xlsx', 'xls', 'pptx', 'ppt'];
   const isOffice = OFFICE_EXTS.includes(ext);
 
+  const formattedVncUrl = (() => {
+    const url = previewFile?.path || '';
+    if ((url.startsWith('http://') || url.startsWith('https://')) && !url.includes('vnc.html')) {
+      try {
+        const u = new URL(url);
+        if (u.pathname === '/' || u.pathname === '') {
+          u.pathname = '/vnc.html';
+        }
+        if (!u.searchParams.has('autoconnect')) {
+          u.searchParams.set('autoconnect', 'true');
+        }
+        if (!u.searchParams.has('resize')) {
+          u.searchParams.set('resize', 'scale');
+        }
+        return u.toString();
+      } catch (e) {
+        return url;
+      }
+    }
+    return url;
+  })();
+
   // 下载操作
   const handleDownload = async () => {
     if (!activeWorkspaceId || !previewFile) return;
@@ -360,7 +382,7 @@ export function PreviewPanel({ embedded = false }: PreviewPanelProps) {
             {activeTab === 'vnc' && (
               <Box style={{ display: 'flex', flexDirection: 'column', gap: '12px', width: '100%' }}>
                 <iframe
-                  src={previewFile.path}
+                  src={formattedVncUrl}
                   style={{
                     width: '100%',
                     height: 'calc(100vh - 320px)',
@@ -384,7 +406,7 @@ export function PreviewPanel({ embedded = false }: PreviewPanelProps) {
                 }}>
                   🛡️ **极重要：解除 Edge/Chrome 安全拦截（白屏）的操作指南**：<br />
                   由于云端证书未能覆盖多级代理域名，浏览器会显示“您的连接不是专用连接”并启用 HSTS 拦截（没有“继续前往”按钮）。**请按照以下步骤 100% 成功解除拦截**：<br />
-                  1. 点击上方蓝色的 **[Remote VNC Link]({previewFile.path})**，会在浏览器新标签页中打开这个报错页面。<br />
+                  1. 点击上方蓝色的 **[Remote VNC Link]({formattedVncUrl})**，会在浏览器新标签页中打开这个报错页面。<br />
                   2. **在此报错网页的任意空白处用鼠标点一下**，确保页面获得焦点。<br />
                   3. **在键盘上直接依次敲入这 12 个字母**：<code style={{ background: 'rgba(0,0,0,0.3)', padding: '2px 6px', borderRadius: '4px', fontWeight: 'bold', color: '#f59e0b' }}>thisisunsafe</code>（全部小写，**注意：不需要按回车，页面也没有任何输入框，直接用键盘盲打输入即可**）。<br />
                   4. 输完最后一个字母的瞬间，浏览器会自动绕过安全警告进入 VNC 桌面。此时，**返回当前软件界面点击刷新**，右侧就会立即正常呈现远程桌面！

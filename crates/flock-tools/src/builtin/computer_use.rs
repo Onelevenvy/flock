@@ -211,7 +211,7 @@ pub async fn computer_use(
         }
     }
 
-    let proxy_url = format!("https://6080-{}.proxy.app.daytona.io", sandbox_id);
+    let proxy_url = format!("https://6080-{}.proxy.app.daytona.io/vnc.html?autoconnect=true&resize=scale", sandbox_id);
     let final_res = format!(
         "{}\n\n当前桌面远程连接如下：\n\n[Remote VNC Link]({})\n\n💡 **重要安全提示**：由于云端代理没有内置您的局域网泛域名证书，若右侧预览窗口显示“空白”或“您的连接不是专用连接”报错，**请务必点击上方 [Remote VNC Link]({}) 链接**，在新开的标签页中点击 **“高级”** -> **“继续前往/忽略警告”** 授权信任，然后返回本界面刷新即可完美进行控制！",
         result_msg, proxy_url, proxy_url

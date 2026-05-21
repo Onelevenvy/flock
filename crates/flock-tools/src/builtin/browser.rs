@@ -36,7 +36,7 @@ pub async fn browser(
     
     // 如果是 interactive 人工接管模式，我们直接返回远程桌面的 noVNC 代理链接，让前端渲染
     if act == "interactive" {
-        let proxy_url = format!("https://6080-{}.proxy.app.daytona.io", sandbox_id);
+        let proxy_url = format!("https://6080-{}.proxy.app.daytona.io/vnc.html?autoconnect=true&resize=scale", sandbox_id);
         
         crate::emit_info("正在向云端申请启动 Daytona 桌面服务 (noVNC)...");
         if let Err(e) = start_computer_use_in_sandbox(&db, &sandbox_id).await {

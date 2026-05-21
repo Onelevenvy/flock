@@ -248,7 +248,7 @@ pub async fn get_active_sandbox_vnc_url(
     _state: State<'_, SharedAgentState>,
 ) -> Result<Option<String>, String> {
     if let Some(sandbox_id) = flock_tools::daytona::get_active_sandbox_id().await {
-        Ok(Some(format!("https://6080-{}.proxy.app.daytona.io", sandbox_id)))
+        Ok(Some(format!("https://6080-{}.proxy.app.daytona.io/vnc.html?autoconnect=true&resize=scale", sandbox_id)))
     } else {
         Ok(None)
     }
