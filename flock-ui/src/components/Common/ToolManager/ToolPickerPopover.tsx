@@ -90,7 +90,7 @@ export function ToolPickerPopover({
 
   return (
     <>
-      {/* Popover 本体（Target 是隐藏占位，实际触发由外部按钮调用 open） */}
+      {/* Popover 本体 */}
       <Popover
         opened={opened}
         onClose={handleCancel}
@@ -116,9 +116,24 @@ export function ToolPickerPopover({
           },
         }}
       >
-        {/* 隐藏占位 Target */}
+        {/* 将触发按钮直接作为 Target，确保定位精确。禁用时通过 display: none 隐藏，保持 ref 稳定 */}
         <Popover.Target>
-          <span style={{ position: 'absolute', width: 0, height: 0, overflow: 'hidden' }} />
+          <Button
+            size="xs"
+            variant="subtle"
+            leftSection={<IconPlus size={14} />}
+            onClick={open}
+            styles={{
+              root: {
+                padding: '0 8px',
+                height: 28,
+                fontSize: 12,
+                display: disabled ? 'none' : 'inline-flex',
+              },
+            }}
+          >
+            {t('workflow.properties.agent.addTools')}
+          </Button>
         </Popover.Target>
 
         <Popover.Dropdown
@@ -158,8 +173,8 @@ export function ToolPickerPopover({
               }}
             />
 
-            {/* 工具列表 */}
-            <ScrollArea style={{ flex: 1, minHeight: 0 }} offsetScrollbars>
+            {/* 工具列表：使用更稳健的原生 overflow-y auto，防止 flexbox 溢出挤压底栏 */}
+            <Box style={{ flex: 1, minHeight: 0, overflowY: 'auto', paddingRight: 4 }}>
               {loading ? (
                 <Text size="xs" c="dimmed" ta="center" py="xl">{t('common.loading')}</Text>
               ) : filteredProviders.length === 0 ? (
@@ -253,7 +268,7 @@ export function ToolPickerPopover({
                   })}
                 </Accordion>
               )}
-            </ScrollArea>
+            </Box>
 
             {/* 底栏 */}
             <Group
@@ -273,19 +288,6 @@ export function ToolPickerPopover({
           </Stack>
         </Popover.Dropdown>
       </Popover>
-
-      {/* 触发按钮 */}
-      {!disabled && (
-        <Button
-          size="xs"
-          variant="subtle"
-          leftSection={<IconPlus size={14} />}
-          onClick={open}
-          styles={{ root: { padding: '0 8px', height: 28, fontSize: 12 } }}
-        >
-          {t('workflow.properties.agent.addTools')}
-        </Button>
-      )}
     </>
   );
 }

@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import { Modal, Group, ThemeIcon, Text, ScrollArea, Stack, TextInput, Textarea, Select, Divider, MultiSelect, Badge, Button, Tabs, Box } from '@mantine/core';
+import { Modal, Group, ThemeIcon, Text, ScrollArea, Stack, TextInput, Textarea, Select, Divider, MultiSelect, Button, Tabs, Box } from '@mantine/core';
 import { IconEdit, IconPlus, IconCheck } from '@tabler/icons-react';
 import { invoke } from '@tauri-apps/api/core';
 import { notifications } from '@mantine/notifications';
@@ -38,7 +38,6 @@ export function AssistantFormModal({
   const [activeTab, setActiveTab] = useState<string | null>('edit');
 
   const [modelSelectData, setModelSelectData] = useState<{ group: string; items: { value: string; label: string }[] }[]>([]);
-  const [toolSelectData, setToolSelectData] = useState<{ value: string; label: string }[]>([]);
   const [skillSelectData, setSkillSelectData] = useState<{ value: string; label: string }[]>([]);
   const [loadingOptions, setLoadingOptions] = useState(false);
 
@@ -71,9 +70,8 @@ export function AssistantFormModal({
   const loadOptions = useCallback(async () => {
     setLoadingOptions(true);
     try {
-      const [providers, toolProviders, skills] = await Promise.all([
+      const [providers, skills] = await Promise.all([
         invoke<ModelProvider[]>('list_providers'),
-        invoke<ToolProvider[]>('list_tool_providers'),
         invoke<SkillInfo[]>('list_skills'),
       ]);
 
@@ -91,10 +89,6 @@ export function AssistantFormModal({
         } catch { /* ignore */ }
       }
       setModelSelectData(Object.entries(grouped).map(([group, items]) => ({ group, items })));
-      setToolSelectData(toolProviders.map(p => ({
-        value: p.id,
-        label: `${p.provider_name}${p.is_available ? '' : t('assistant.form.unauthorized')}`,
-      })));
       setSkillSelectData(skills.map(s => ({
         value: s.name,
         label: s.display_name || s.name,
