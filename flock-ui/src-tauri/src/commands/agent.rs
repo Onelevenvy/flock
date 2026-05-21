@@ -246,9 +246,16 @@ pub async fn cleanup_all_sandboxes(
 #[tauri::command]
 pub async fn get_active_sandbox_vnc_url(
     _state: State<'_, SharedAgentState>,
+    db: State<'_, crate::SharedDbManager>,
 ) -> Result<Option<String>, String> {
     if let Some(sandbox_id) = flock_tools::daytona::get_active_sandbox_id().await {
-        Ok(Some(format!("https://6080-{}.proxy.app.daytona.io/vnc.html?autoconnect=true&resize=scale", sandbox_id)))
+        match flock_tools::daytona::get_sandbox_vnc_url(&*db, &sandbox_id).await {
+            Ok(url) => Ok(Some(url)),
+            Err(e) => {
+                println!("获取动态 VNC URL 失败: {}。使用静态备用 URL...", e);
+                Ok(Some(format!("https://6080-{}.proxy.app.daytona.io/vnc.html?autoconnect=true&resize=scale", sandbox_id)))
+            }
+        }
     } else {
         Ok(None)
     }

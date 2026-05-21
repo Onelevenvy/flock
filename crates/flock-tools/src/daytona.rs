@@ -615,3 +615,63 @@ pub async fn create_playwright_snapshot(
     crate::emit_info(&format!("[Snapshot] 快照 '{}' 已构建并就绪！", snapshot_name));
     Ok(snapshot_name.to_string())
 }
+
+/// 获取沙盒 6080 端口的 Signed Preview URL，并自动转化为 noVNC 控制台 URL。
+pub async fn get_sandbox_vnc_url(
+    db: &DbManager,
+    sandbox_id: &str,
+) -> anyhow::Result<String> {
+    let cfg = get_sandbox_config(db).await
+        .ok_or_else(|| anyhow::anyhow!("云端 Daytona 沙箱未配置或未启用"))?;
+
+    let client = reqwest::Client::new();
+    let base = get_api_base(cfg.api_url.as_ref().unwrap());
+    let api_key = cfg.api_key.as_ref().unwrap();
+
+    let url = format!("{}/api/sandbox/{}/ports/6080/signed-preview-url", base, sandbox_id);
+    let resp = client.get(&url)
+        .header("Authorization", format!("Bearer {}", api_key))
+        .send()
+        .await?;
+
+    let status = resp.status();
+    let text = resp.text().await.unwrap_or_default();
+    if !status.is_success() {
+        anyhow::bail!("获取签名预览URL失败 (HTTP {}): {}", status, text);
+    }
+
+    let val: serde_json::Value = serde_json::from_str(&text)
+        .map_err(|e| anyhow::anyhow!("解析签名URL响应失败: {}. 原始响应: {}", e, text))?;
+
+    let mut url_str = val.get("url")
+        .or_else(|| val.get("signedUrl"))
+        .or_else(|| val.get("signed_url"))
+        .and_then(|v| v.as_str())
+        .map(|s| s.to_string())
+        .unwrap_or_else(|| {
+            if val.is_string() {
+                val.as_str().unwrap().to_string()
+            } else {
+                text
+            }
+        });
+
+    // 格式化为 vnc.html 路径并带有自连参数
+    if !url_str.contains("vnc.html") {
+        if let Some(pos) = url_str.find('?') {
+            let (host, query) = url_str.split_at(pos);
+            let mut extra = String::new();
+            if !query.contains("autoconnect=") {
+                extra.push_str("&autoconnect=true");
+            }
+            if !query.contains("resize=") {
+                extra.push_str("&resize=scale");
+            }
+            url_str = format!("{}/vnc.html{}{}", host, query, extra);
+        } else {
+            url_str = format!("{}/vnc.html?autoconnect=true&resize=scale", url_str.trim_end_matches('/'));
+        }
+    }
+
+    Ok(url_str)
+}

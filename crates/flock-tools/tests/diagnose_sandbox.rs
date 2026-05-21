@@ -106,5 +106,24 @@ async fn test_diagnose_sandbox() {
         let (out, _) = execute_command_in_sandbox(&db, id, "ss -tuln || netstat -tuln").await
             .unwrap_or(("Failed to execute ss -tuln".to_string(), -1));
         println!("{}", out.trim());
+
+        // 6. test signed-preview-url endpoint
+        println!("\n--- [6] Signed Preview URL Check ---");
+        let test_url = format!("{}/api/sandbox/{}/ports/6080/signed-preview-url", base, id);
+        let test_resp = client.get(&test_url)
+            .header("Authorization", format!("Bearer {}", api_key))
+            .send()
+            .await;
+        match test_resp {
+            Ok(r) => {
+                let status = r.status();
+                let body = r.text().await.unwrap_or_default();
+                println!("Port 6080 Signed Preview API Response Status: {}", status);
+                println!("Response Body: {}", body);
+            }
+            Err(e) => {
+                println!("Request to Signed Preview API failed: {}", e);
+            }
+        }
     }
 }
