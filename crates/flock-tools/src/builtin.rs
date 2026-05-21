@@ -7,6 +7,7 @@ pub mod tool_search;
 pub mod write;
 pub mod code_execution;
 pub mod browser;
+pub mod computer_use;
 
 use flock_core::types::tool::ProviderInfo;
 

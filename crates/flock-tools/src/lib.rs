@@ -33,6 +33,7 @@ pub fn all_tools() -> ToolSet {
     reg.register(builtin::glob::GlobTool::new());
     reg.register(builtin::code_execution::CodeExecutionToolImpl::new());
     reg.register(builtin::browser::BrowserToolImpl::new());
+    reg.register(builtin::computer_use::ComputerUseToolImpl::new());
 
     // --- math ---
     infos.push(math::provider_info());
