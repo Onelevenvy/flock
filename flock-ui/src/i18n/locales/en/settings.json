@@ -93,9 +93,19 @@
     "testOkMsg": "Successfully connected to Daytona Cloud Sandbox!",
     "testFailed": "Connection Failed",
     "testFailedMsg": "Failed to connect to Daytona: {{error}}",
+    "testMissingFields": "Please fill in API URL and API Key before proceeding.",
     "saveSuccess": "Sandbox Configuration Saved",
     "saveSuccessMsg": "Cloud sandbox settings have been updated",
     "saveFailed": "Save Failed",
-    "saveFailedMsg": "Failed to update sandbox configuration in database"
+    "saveFailedMsg": "Failed to update sandbox configuration in database",
+    "snapshotName": "Snapshot Name",
+    "snapshotActive": "Active",
+    "snapshotTooltip": "Specify an existing Daytona Snapshot name (pre-installed with Playwright etc.). Future sandboxes will use this snapshot directly, no repeated installs needed. Leave empty to use Daytona's default image.",
+    "snapshotHint": "When using the Browser tool for the first time, the default Daytona image needs to install ~300MB of Playwright dependencies. Click the button below to create a pre-built snapshot once — future sandboxes will start in seconds.",
+    "snapshotCreateBtn": "Initialize Playwright Snapshot (~3-5 min)",
+    "snapshotCreating": "Creating snapshot, please wait...",
+    "snapshotDone": "Snapshot Created",
+    "snapshotDoneMsg": "Snapshot '{{name}}' is ready. Future sandboxes will use it automatically — Browser tool is now instant!",
+    "snapshotFailed": "Snapshot Creation Failed"
   }
 }

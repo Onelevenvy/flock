@@ -11,6 +11,8 @@ import {
   PasswordInput,
   Tooltip,
   Divider,
+  Badge,
+  Alert,
 } from '@mantine/core';
 import {
   IconServer,
@@ -20,6 +22,8 @@ import {
   IconPlayerPlay,
   IconShieldLock,
   IconHelpCircle,
+  IconCamera,
+  IconInfoCircle,
 } from '@tabler/icons-react';
 import { invoke } from '@tauri-apps/api/core';
 import { notifications } from '@mantine/notifications';
@@ -29,6 +33,7 @@ interface SandboxConfig {
   enabled: boolean;
   api_url: string | null;
   api_key: string | null;
+  snapshot: string | null;
 }
 
 export default function SandboxSettings() {
@@ -36,8 +41,10 @@ export default function SandboxSettings() {
   const [enabled, setEnabled] = useState(false);
   const [apiUrl, setApiUrl] = useState('https://app.daytona.io/api');
   const [apiKey, setApiKey] = useState('');
+  const [snapshot, setSnapshot] = useState('');
   const [saving, setSaving] = useState(false);
   const [testing, setTesting] = useState(false);
+  const [creatingSnapshot, setCreatingSnapshot] = useState(false);
 
   useEffect(() => {
     loadSandboxConfig();
@@ -50,6 +57,7 @@ export default function SandboxSettings() {
         setEnabled(config.enabled);
         if (config.api_url) setApiUrl(config.api_url);
         if (config.api_key) setApiKey(config.api_key);
+        if (config.snapshot) setSnapshot(config.snapshot);
       }
     } catch (e) {
       console.error('Failed to load sandbox config:', e);
@@ -65,6 +73,7 @@ export default function SandboxSettings() {
           enabled,
           api_url: apiUrl.trim(),
           api_key: apiKey.trim(),
+          snapshot: snapshot.trim() || null,
         },
       });
       notifications.show({
@@ -90,7 +99,7 @@ export default function SandboxSettings() {
     if (!apiUrl.trim() || !apiKey.trim()) {
       notifications.show({
         title: t('common.failed'),
-        message: '请先填写 API 地址与 API 密钥后再进行连接测试。',
+        message: t('settings.sandbox.testMissingFields'),
         color: 'yellow',
       });
       return;
@@ -118,6 +127,67 @@ export default function SandboxSettings() {
       });
     } finally {
       setTesting(false);
+    }
+  };
+
+  const defaultSnapshotName = 'flock-playwright';
+
+  const handleCreateSnapshot = async () => {
+    if (!apiUrl.trim() || !apiKey.trim()) {
+      notifications.show({
+        title: t('common.failed'),
+        message: t('settings.sandbox.testMissingFields'),
+        color: 'yellow',
+      });
+      return;
+    }
+
+    const snapName = snapshot.trim() || defaultSnapshotName;
+    setCreatingSnapshot(true);
+
+    // 先保存配置（确保 Rust 侧能读到 API 信息）
+    try {
+      await invoke('set_app_config', {
+        key: 'sandbox',
+        value: {
+          enabled,
+          api_url: apiUrl.trim(),
+          api_key: apiKey.trim(),
+          snapshot: snapshot.trim() || null,
+        },
+      });
+    } catch (_) { /* ignore */ }
+
+    try {
+      await invoke<string>('create_playwright_snapshot', { snapshotName: snapName });
+      // 自动填入 snapshot 名称
+      setSnapshot(snapName);
+      await invoke('set_app_config', {
+        key: 'sandbox',
+        value: {
+          enabled,
+          api_url: apiUrl.trim(),
+          api_key: apiKey.trim(),
+          snapshot: snapName,
+        },
+      });
+      notifications.show({
+        title: t('settings.sandbox.snapshotDone'),
+        message: t('settings.sandbox.snapshotDoneMsg', { name: snapName }),
+        color: 'teal',
+        icon: <IconCheck size={18} />,
+        autoClose: 8000,
+      });
+    } catch (e) {
+      notifications.show({
+        title: t('settings.sandbox.snapshotFailed'),
+        message: String(e),
+        color: 'red',
+        icon: <IconAlertCircle size={18} />,
+        autoClose: 10000,
+      });
+    } finally {
+      setCreatingSnapshot(false);
     }
   };
 
@@ -195,6 +265,64 @@ export default function SandboxSettings() {
               input: { background: 'var(--flock-bg-surface)' },
             }}
           />
+
+          {/* Snapshot 设置区 */}
+          <Stack gap="xs">
+            <TextInput
+              label={
+                <Group gap={6} style={{ marginBottom: 4 }}>
+                  <IconCamera size={14} color="var(--flock-text-dim)" />
+                  <Text size="sm" fw={500}>{t('settings.sandbox.snapshotName')}</Text>
+                  <Tooltip
+                    label={t('settings.sandbox.snapshotTooltip')}
+                    multiline
+                    w={300}
+                    withArrow
+                    position="top"
+                  >
+                    <IconHelpCircle size={13} color="var(--flock-text-dim)" style={{ cursor: 'help' }} />
+                  </Tooltip>
+                  {snapshot.trim() && (
+                    <Badge size="xs" color="teal" variant="dot">
+                      {t('settings.sandbox.snapshotActive')}
+                    </Badge>
+                  )}
+                </Group>
+              }
+              placeholder={defaultSnapshotName}
+              value={snapshot}
+              onChange={(e) => setSnapshot(e.currentTarget.value)}
+              disabled={!enabled}
+              styles={{
+                input: { background: 'var(--flock-bg-surface)' },
+              }}
+            />
+
+            <Alert
+              icon={<IconInfoCircle size={16} />}
+              color="blue"
+              variant="light"
+              radius="md"
+              style={{ fontSize: 12 }}
+            >
+              {t('settings.sandbox.snapshotHint')}
+            </Alert>
+
+            <Button
+              variant="outline"
+              color="violet"
+              size="sm"
+              leftSection={<IconCamera size={15} />}
+              onClick={handleCreateSnapshot}
+              loading={creatingSnapshot}
+              disabled={!enabled || !apiUrl.trim() || !apiKey.trim()}
+              style={{ alignSelf: 'flex-start' }}
+            >
+              {creatingSnapshot
+                ? t('settings.sandbox.snapshotCreating')
+                : t('settings.sandbox.snapshotCreateBtn')}
+            </Button>
+          </Stack>
 
           <Divider color="var(--flock-border-subtle)" mt="md" />
 

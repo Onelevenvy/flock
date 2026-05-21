@@ -168,6 +168,10 @@ pub struct SandboxConfig {
     pub enabled: bool,
     pub api_url: Option<String>,
     pub api_key: Option<String>,
+    /// 可选：指定创建沙盒时使用的 Daytona Snapshot 名称。
+    /// 如果指定，沙盒将基于该 Snapshot 启动（例如预装了 Playwright 的镜像），
+    /// 不指定则使用 Daytona 默认镜像。
+    pub snapshot: Option<String>,
 }
 
 

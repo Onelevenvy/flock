@@ -77,10 +77,22 @@ pub async fn get_or_create_active_sandbox(db: &DbManager) -> anyhow::Result<Stri
     let api_url = cfg.api_url.as_ref().unwrap().trim_end_matches('/');
     let api_key = cfg.api_key.as_ref().unwrap();
 
+    // 构造创建请求 body，如果配置了 snapshot 则使用它
+    let create_body = if let Some(ref snap_name) = cfg.snapshot {
+        if !snap_name.trim().is_empty() {
+            crate::emit_info(&format!("使用自定义 Snapshot: {}...", snap_name));
+            serde_json::json!({ "snapshot": snap_name.trim() })
+        } else {
+            serde_json::json!({})
+        }
+    } else {
+        serde_json::json!({})
+    };
+
     let create_url = format!("{}/sandbox", api_url);
     let res = client.post(&create_url)
         .header("Authorization", format!("Bearer {}", api_key))
-        .json(&serde_json::json!({}))
+        .json(&create_body)
         .send()
         .await?;
 
@@ -399,3 +411,136 @@ pub async fn check_computer_use_status(
     Err(last_error.unwrap_or_else(|| anyhow::anyhow!("无法获取沙盒 ComputerUse 状态")))
 }
 
+/// 创建一个预装 Playwright 的 Daytona Snapshot
+///
+/// 流程：
+/// 1. 创建一个临时沙盒（使用默认镜像）
+/// 2. 在沙盒中安装 Playwright 及 Chromium
+/// 3. 调用 Daytona Snapshot API 固化该沙盒
+/// 4. 删除临时沙盒
+///
+/// 返回创建的 Snapshot 名称。
+pub async fn create_playwright_snapshot(
+    db: &DbManager,
+    snapshot_name: &str,
+) -> anyhow::Result<String> {
+    let cfg = get_sandbox_config(db).await
+        .ok_or_else(|| anyhow::anyhow!("云端 Daytona 沙箱未配置或未启用"))?;
+
+    let client = reqwest::Client::new();
+    let api_url = cfg.api_url.as_ref().unwrap().trim_end_matches('/');
+    let api_key = cfg.api_key.as_ref().unwrap();
+
+    // 1. 创建一个临时沙盒（使用默认镜像，不使用 snapshot 避免循环）
+    crate::emit_info("[Snapshot] 正在创建临时沙盒以安装 Playwright...");
+    let create_url = format!("{}/sandbox", api_url);
+    let res = client.post(&create_url)
+        .header("Authorization", format!("Bearer {}", api_key))
+        .json(&serde_json::json!({}))
+        .send()
+        .await?;
+
+    let res_text = res.text().await.unwrap_or_default();
+    let val: serde_json::Value = serde_json::from_str(&res_text)
+        .map_err(|e| anyhow::anyhow!("解析沙盒创建响应失败: {}. 原始: {}", e, res_text))?;
+
+    let sandbox_id = val.get("id")
+        .or_else(|| val.get("sandboxId"))
+        .and_then(|v| v.as_str())
+        .ok_or_else(|| anyhow::anyhow!("无法解析临时沙盒 ID。原始: {}", val))?
+        .to_string();
+
+    // 等待沙盒启动
+    crate::emit_info(&format!("[Snapshot] 等待临时沙盒 {} 就绪...", sandbox_id));
+    for _ in 1..=60 {
+        tokio::time::sleep(tokio::time::Duration::from_secs(1)).await;
+        let get_url = format!("{}/sandbox/{}", api_url, sandbox_id);
+        if let Ok(resp) = client.get(&get_url)
+            .header("Authorization", format!("Bearer {}", api_key))
+            .send().await
+        {
+            if let Ok(text) = resp.text().await {
+                if let Ok(info) = serde_json::from_str::<serde_json::Value>(&text) {
+                    let st = info.get("state").or_else(|| info.get("status"))
+                        .and_then(|s| s.as_str()).unwrap_or("");
+                    if st == "started" || st == "running" {
+                        break;
+                    }
+                }
+            }
+        }
+    }
+
+    // 2. 在临时沙盒中安装 Playwright
+    crate::emit_info("[Snapshot] 正在安装 Playwright + Chromium（需要约 2-3 分钟）...");
+    let install_cmd = "python3 -m pip install playwright && python3 -m playwright install chromium && python3 -m playwright install-deps chromium && echo 'PLAYWRIGHT_DONE'";
+
+    let exec_payload = serde_json::json!({
+        "command": install_cmd,
+        "cwd": "/home/daytona",
+        "timeout": 300
+    });
+
+    let exec_urls = [
+        format!("https://proxy.app.daytona.io/toolbox/{}/toolbox/process/execute", sandbox_id),
+        format!("https://proxy.app.daytona.io/toolbox/{}/process/execute", sandbox_id),
+    ];
+
+    let mut install_ok = false;
+    for exec_url in &exec_urls {
+        if let Ok(exec_resp) = client.post(exec_url)
+            .header("Authorization", format!("Bearer {}", api_key))
+            .json(&exec_payload)
+            .send().await
+        {
+            if exec_resp.status().is_success() {
+                let out = exec_resp.text().await.unwrap_or_default();
+                if out.contains("PLAYWRIGHT_DONE") {
+                    install_ok = true;
+                    crate::emit_info("[Snapshot] Playwright 安装完成！");
+                    break;
+                }
+            }
+        }
+    }
+
+    if !install_ok {
+        // 清理临时沙盒
+        let del_url = format!("{}/sandbox/{}", api_url, sandbox_id);
+        let _ = client.delete(&del_url)
+            .header("Authorization", format!("Bearer {}", api_key))
+            .send().await;
+        anyhow::bail!("[Snapshot] Playwright 安装失败，已清理临时沙盒。");
+    }
+
+    // 3. 调用 Snapshot API 固化沙盒
+    crate::emit_info(&format!("[Snapshot] 正在固化 Snapshot: {}...", snapshot_name));
+    let snap_url = format!("{}/sandbox/{}/snapshot", api_url, sandbox_id);
+    let snap_res = client.post(&snap_url)
+        .header("Authorization", format!("Bearer {}", api_key))
+        .json(&serde_json::json!({ "name": snapshot_name }))
+        .send()
+        .await?;
+
+    let snap_status = snap_res.status();
+    let snap_body = snap_res.text().await.unwrap_or_default();
+    if !snap_status.is_success() {
+        // 清理临时沙盒
+        let del_url = format!("{}/sandbox/{}", api_url, sandbox_id);
+        let _ = client.delete(&del_url)
+            .header("Authorization", format!("Bearer {}", api_key))
+            .send().await;
+        anyhow::bail!("[Snapshot] 固化 Snapshot 失败 (HTTP {}): {}", snap_status, snap_body);
+    }
+
+    crate::emit_info(&format!("[Snapshot] Snapshot '{}' 创建成功！正在清理临时沙盒...", snapshot_name));
+
+    // 4. 删除临时沙盒
+    let del_url = format!("{}/sandbox/{}", api_url, sandbox_id);
+    let _ = client.delete(&del_url)
+        .header("Authorization", format!("Bearer {}", api_key))
+        .send().await;
+
+    crate::emit_info(&format!("[Snapshot] 完成！今后创建的沙盒将自动使用 '{}' 快照，无需再次安装 Playwright。", snapshot_name));
+    Ok(snapshot_name.to_string())
+}

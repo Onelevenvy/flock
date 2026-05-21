@@ -90,16 +90,7 @@ pub async fn browser(
         r#"
 import sys
 import base64
-
-try:
-    from playwright.sync_api import sync_playwright
-except ImportError:
-    import subprocess
-    print("Installing playwright...", file=sys.stderr)
-    subprocess.run([sys.executable, "-m", "pip", "install", "playwright"])
-    subprocess.run([sys.executable, "-m", "playwright", "install", "chromium"])
-    subprocess.run([sys.executable, "-m", "playwright", "install-deps", "chromium"])
-    from playwright.sync_api import sync_playwright
+from playwright.sync_api import sync_playwright
 
 with sync_playwright() as p:
     browser = p.chromium.launch(headless=True, args=["--no-sandbox", "--disable-setuid-sandbox"])
@@ -133,9 +124,17 @@ with sync_playwright() as p:
 
     let b64_script = general_purpose::STANDARD.encode(py_script.as_bytes());
     let run_cmd = format!(
-        "mkdir -p /tmp && echo '{}' | base64 -d > /tmp/run_browser.py && python3 /tmp/run_browser.py",
+        "mkdir -p /tmp && echo '{}' | base64 -d > /tmp/run_browser.py && \
+         if ! python3 -c 'import playwright' >/dev/null 2>&1; then \
+             echo 'Installing playwright...' && \
+             python3 -m pip install playwright && \
+             python3 -m playwright install chromium && \
+             python3 -m playwright install-deps chromium; \
+         fi && \
+         python3 /tmp/run_browser.py",
         b64_script
     );
+
 
     crate::emit_info(&format!("正在沙盒中执行网页操作并渲染: {}...", url));
     let (stdout_stderr, exit_code) = execute_command_in_sandbox(&db, &sandbox_id, &run_cmd).await

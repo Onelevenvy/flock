@@ -45,3 +45,18 @@ pub async fn test_sandbox_connection(
         Err(format!("验证失败，HTTP 状态码: {}。错误详情: {}", status, err_body))
     }
 }
+
+/// 创建一个预装 Playwright 的 Daytona Snapshot
+/// 需要约 3-5 分钟，完成后返回 Snapshot 名称。
+#[tauri::command]
+pub async fn create_playwright_snapshot(
+    db: State<'_, SharedDbManager>,
+    snapshot_name: String,
+) -> Result<String, String> {
+    flock_tools::daytona::create_playwright_snapshot(
+        &*db,
+        &snapshot_name,
+    )
+    .await
+    .map_err(|e| e.to_string())
+}

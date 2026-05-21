@@ -116,6 +116,7 @@ pub fn run() {
             commands::get_app_config,
             commands::set_app_config,
             commands::test_sandbox_connection,
+            commands::create_playwright_snapshot,
             // 工具提供商
             commands::list_tool_providers,
             commands::list_tools,
