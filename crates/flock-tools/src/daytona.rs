@@ -98,7 +98,10 @@ pub async fn get_or_create_active_sandbox(db: &DbManager) -> anyhow::Result<Stri
     crate::emit_info(&format!("Daytona 沙盒创建成功 (ID: {})。启动中，正在等待网络与系统就绪...", sandbox_id));
     
     let mut started = false;
-    for i in 1..=30 {
+    let mut last_status = "未知".to_string();
+    let mut last_resp_body = String::new();
+    
+    for i in 1..=90 {
         tokio::time::sleep(tokio::time::Duration::from_secs(1)).await;
         let get_url = format!("{}/sandbox/{}", api_url, sandbox_id);
         let check_res = client.get(&get_url)
@@ -106,29 +109,49 @@ pub async fn get_or_create_active_sandbox(db: &DbManager) -> anyhow::Result<Stri
             .send()
             .await;
 
-        if let Ok(resp) = check_res {
-            if resp.status().is_success() {
-                if let Ok(resp_text) = resp.text().await {
-                    if let Ok(info_val) = serde_json::from_str::<serde_json::Value>(&resp_text) {
-                        let status_val = info_val.get("status")
-                            .or_else(|| info_val.get("data").and_then(|d| d.get("status")));
-                        if let Some(status_str) = status_val.and_then(|s| s.as_str()) {
-                            if status_str == "started" || status_str == "running" {
-                                started = true;
-                                break;
+        match check_res {
+            Ok(resp) => {
+                let status_code = resp.status();
+                if status_code.is_success() {
+                    if let Ok(resp_text) = resp.text().await {
+                        last_resp_body = resp_text.clone();
+                        if let Ok(info_val) = serde_json::from_str::<serde_json::Value>(&resp_text) {
+                            let status_val = info_val.get("status")
+                                .or_else(|| info_val.get("data").and_then(|d| d.get("status")));
+                            if let Some(status_str) = status_val.and_then(|s| s.as_str()) {
+                                last_status = status_str.to_string();
+                                if status_str == "started" || status_str == "running" {
+                                    started = true;
+                                    break;
+                                }
+                            } else {
+                                last_status = "字段缺失".to_string();
                             }
+                        } else {
+                            last_status = "非JSON".to_string();
                         }
+                    } else {
+                        last_status = "读取响应体失败".to_string();
                     }
+                } else {
+                    last_status = format!("HTTP {}", status_code);
                 }
             }
+            Err(e) => {
+                last_status = format!("网络请求失败: {}", e);
+            }
         }
-        if i % 5 == 0 {
-            crate::emit_info(&format!("正在等待沙盒启动 (已等待 {} 秒)...", i));
+        
+        if i % 3 == 0 || (last_status != "creating" && last_status != "pending" && last_status != "未知") {
+            crate::emit_info(&format!("正在等待沙盒启动 (当前状态: {}, 已等待 {} 秒)...", last_status, i));
         }
     }
 
     if !started {
-        anyhow::bail!("等待沙盒启动超时。请稍后重试。");
+        anyhow::bail!(
+            "等待沙盒启动超时。最后状态: {}。最后响应体: {}", 
+            last_status, last_resp_body
+        );
     }
 
     crate::emit_info("Daytona 沙盒已就绪。");
