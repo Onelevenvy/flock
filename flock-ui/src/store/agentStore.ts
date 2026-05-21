@@ -203,10 +203,12 @@ export const useAgentStore = create<AgentStore>((set) => ({
         setTimeout(() => {
           const currentMessages = useAgentStore.getState().messages;
           let matchedToolName = '';
+          let matchedToolInput: any = null;
           for (const m of currentMessages) {
             for (const c of m.chunks) {
               if (c.kind === 'tool_request' && c.call_id === event.call_id) {
                 matchedToolName = c.tool?.name || '';
+                matchedToolInput = c.tool?.args;
                 break;
               }
             }
@@ -219,18 +221,44 @@ export const useAgentStore = create<AgentStore>((set) => ({
             lowerTool.includes('computer_use') ||
             lowerTool.includes('computeruse')
           ) {
-            const activeWorkspaceId = useWorkspaceStore.getState().activeWorkspaceId || '';
-            // 在拉起预览前，先异步删除上一回的残留老截图文件，保证绝对不会闪现老画面！
-            invoke('delete_workspace_file_or_dir', {
-              workspaceId: activeWorkspaceId,
-              relativePath: '.flock/sandbox/screenshot.png'
-            }).catch(() => {}).finally(() => {
+            // 如果目前已经是 VNC 状态，绝对不要删除截图或重置预览！让 noVNC 桌面保持实时流式！
+            const currentPreview = useUiStore.getState().previewFile;
+            if (currentPreview && (currentPreview.extension === 'vnc' || currentPreview.path.startsWith('http'))) {
+              return;
+            }
+
+            // 判断是否是 computer_use 且 action 为 exec
+            let isExec = false;
+            if (lowerTool.includes('computer_use') || lowerTool.includes('computeruse')) {
+              try {
+                const inputObj = typeof matchedToolInput === 'string' ? JSON.parse(matchedToolInput) : matchedToolInput;
+                if (inputObj && (inputObj.action === 'exec' || inputObj.action === 'EXEC')) {
+                  isExec = true;
+                }
+              } catch (e) {}
+            }
+
+            if (isExec) {
+              // 命令行命令，将其直接输出为 log
               useUiStore.getState().setPreviewFile({
-                path: '.flock/sandbox/screenshot.png',
-                content: '',
-                extension: 'png',
+                path: '.flock/sandbox/code_result.log',
+                content: '正在执行沙盒命令...',
+                extension: 'log',
               });
-            });
+            } else {
+              const activeWorkspaceId = useWorkspaceStore.getState().activeWorkspaceId || '';
+              // 在拉起预览前，先异步删除上一回的残留老截图文件，保证绝对不会闪现老画面！
+              invoke('delete_workspace_file_or_dir', {
+                workspaceId: activeWorkspaceId,
+                relativePath: '.flock/sandbox/screenshot.png'
+              }).catch(() => {}).finally(() => {
+                useUiStore.getState().setPreviewFile({
+                  path: '.flock/sandbox/screenshot.png',
+                  content: '',
+                  extension: 'png',
+                });
+              });
+            }
           }
         }, 100);
         break;
@@ -280,11 +308,20 @@ export const useAgentStore = create<AgentStore>((set) => ({
                   extension: 'vnc',
                 });
               } else {
-                useUiStore.getState().setPreviewFile({
-                  path: '.flock/sandbox/screenshot.png',
-                  content: '',
-                  extension: 'png',
-                });
+                if (lowerTool.includes('computer_use') || lowerTool.includes('computeruse')) {
+                  // 如果是 computer_use 且没有 VNC 链接（即 exec 动作），则展示日志输出，不报“文件不存在”错误
+                  useUiStore.getState().setPreviewFile({
+                    path: '.flock/sandbox/code_result.log',
+                    content: event.output || '',
+                    extension: 'log',
+                  });
+                } else {
+                  useUiStore.getState().setPreviewFile({
+                    path: '.flock/sandbox/screenshot.png',
+                    content: '',
+                    extension: 'png',
+                  });
+                }
               }
             } else if (lowerTool.includes('code_execution')) {
               useUiStore.getState().setPreviewFile({

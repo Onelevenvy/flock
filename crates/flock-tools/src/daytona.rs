@@ -475,8 +475,8 @@ pub async fn check_computer_use_status(
 
 /// 确保沙盒中 VNC 桌面相关进程正在后台运行，具有自愈拉起和 setsid/nohup 防进程清理机制。
 pub async fn ensure_vnc_running_in_sandbox(db: &DbManager, sandbox_id: &str) -> anyhow::Result<()> {
-    // 检查 websockify 是否已经在运行
-    let check_cmd = "ps aux | grep -v grep | grep -q websockify";
+    // 检查 websockify 是否已经在运行且在 6080 监听
+    let check_cmd = "python3 -c \"import socket; s = socket.socket(); s.connect(('127.0.0.1', 6080))\"";
     let (_, exit_code) = execute_command_in_sandbox(db, sandbox_id, check_cmd).await.unwrap_or(("-1".to_string(), -1));
     if exit_code == 0 {
         crate::emit_info("检测到 VNC 桌面服务已经在运行。");
