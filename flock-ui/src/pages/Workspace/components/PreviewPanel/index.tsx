@@ -382,10 +382,12 @@ export function PreviewPanel({ embedded = false }: PreviewPanelProps) {
                   color: 'var(--flock-text-dimmed)',
                   lineHeight: '1.6'
                 }}>
-                  🛡️ **HSTS/证书安全拦截白屏解决方案**：<br />
-                  由于云端反向代理缺少您局域网域名的有效 SSL 证书，Edge/Chrome 会触发安全拦截且不提供“继续前往”选项。请尝试以下任一方法解开：<br />
-                  1. **盲打暗号（100%成功）**：在新标签页中打开上方的 **[Remote VNC Link]({previewFile.path})**，点击页面任意空白处，然后在键盘上盲打输入英文：`thisisunsafe`（无需回车，直接输入）。浏览器会自动忽略警告并进入，此时返回本界面刷新即可！<br />
-                  2. **信任本地域名**：在新标签页打开上述链接，点击页面上的“高级” → “继续前往”，以授权浏览器信任此代理域名。
+                  🛡️ **极重要：解除 Edge/Chrome 安全拦截（白屏）的操作指南**：<br />
+                  由于云端证书未能覆盖多级代理域名，浏览器会显示“您的连接不是专用连接”并启用 HSTS 拦截（没有“继续前往”按钮）。**请按照以下步骤 100% 成功解除拦截**：<br />
+                  1. 点击上方蓝色的 **[Remote VNC Link]({previewFile.path})**，会在浏览器新标签页中打开这个报错页面。<br />
+                  2. **在此报错网页的任意空白处用鼠标点一下**，确保页面获得焦点。<br />
+                  3. **在键盘上直接依次敲入这 12 个字母**：<code style={{ background: 'rgba(0,0,0,0.3)', padding: '2px 6px', borderRadius: '4px', fontWeight: 'bold', color: '#f59e0b' }}>thisisunsafe</code>（全部小写，**注意：不需要按回车，页面也没有任何输入框，直接用键盘盲打输入即可**）。<br />
+                  4. 输完最后一个字母的瞬间，浏览器会自动绕过安全警告进入 VNC 桌面。此时，**返回当前软件界面点击刷新**，右侧就会立即正常呈现远程桌面！
                 </Box>
               </Box>
             )}

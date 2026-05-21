@@ -2,7 +2,7 @@ use crate::adapter::LangGraphToolAdapter;
 use crate::Tool;
 use crate::daytona::{
     get_or_create_active_sandbox, execute_command_in_sandbox,
-    start_computer_use_in_sandbox, check_computer_use_status
+    start_computer_use_in_sandbox, check_computer_use_status, ensure_vnc_running_in_sandbox
 };
 use flock_core::ipc_interface::events::ToolCategory;
 use langgraph_derive::tool;
@@ -82,6 +82,9 @@ pub async fn computer_use(
         if let Err(e) = start_computer_use_in_sandbox(&db, &sandbox_id).await {
             crate::emit_info(&format!("启动 Daytona 桌面服务请求失败: {}。尝试备用手动方案...", e));
         }
+
+        // 调用统一的自愈拉起函数，确保 Xvfb, fluxbox, x11vnc, websockify 在 0.0.0.0 运行且 setsid 保活
+        let _ = ensure_vnc_running_in_sandbox(&db, &sandbox_id).await;
 
         crate::emit_info("正在等待远程桌面服务就绪...");
         for i in 1..=15 {

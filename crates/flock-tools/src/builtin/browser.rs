@@ -1,6 +1,6 @@
 use crate::adapter::LangGraphToolAdapter;
 use crate::Tool;
-use crate::daytona::{get_or_create_active_sandbox, execute_command_in_sandbox, start_computer_use_in_sandbox, check_computer_use_status};
+use crate::daytona::{get_or_create_active_sandbox, execute_command_in_sandbox, start_computer_use_in_sandbox, check_computer_use_status, ensure_vnc_running_in_sandbox};
 use flock_core::ipc_interface::events::ToolCategory;
 use langgraph_derive::tool;
 use std::path::Path;
@@ -43,31 +43,22 @@ pub async fn browser(
             crate::emit_info(&format!("启动 Daytona 桌面服务请求失败: {}。尝试备用手动方案...", e));
         }
 
-        crate::emit_info("正在等待远程桌面服务启动就绪...");
-        let mut desktop_ready = false;
-        for i in 1..=20 {
-            tokio::time::sleep(tokio::time::Duration::from_secs(1)).await;
-            if let Ok(ready) = check_computer_use_status(&db, &sandbox_id).await {
-                if ready {
-                    desktop_ready = true;
-                    crate::emit_info("远程桌面服务已就绪！");
-                    break;
-                }
-            }
-            if i % 3 == 0 {
-                crate::emit_info(&format!("正在等待远程桌面启动 (已等待 {} 秒)...", i));
-            }
-        }
-
-        if !desktop_ready {
-            crate::emit_info("警告: 远程桌面未在预期时间内报告就绪状态，已强制连接。");
-        }
+        // 调用统一的自愈拉起函数，确保 Xvfb, fluxbox, x11vnc, websockify 在 0.0.0.0 运行且 setsid 保活
+        let _ = ensure_vnc_running_in_sandbox(&db, &sandbox_id).await;
 
         // 主动在 VNC 桌面的 DISPLAY :0 中启动浏览器访问指定的 URL
         crate::emit_info(&format!("正在远程桌面中打开网页: {}...", url));
         let launch_browser_cmd = format!(
-            "sh -c 'export DISPLAY=:0 && chromium-browser --no-sandbox --disable-gpu --disable-software-rasterizer {} &'",
-            url
+            "sh -c '\
+             export DISPLAY=:0 && \
+             if command -v chromium >/dev/null 2>&1; then \
+                 setsid nohup chromium --no-sandbox --disable-gpu --disable-software-rasterizer \"{url}\" >/tmp/chromium.log 2>&1 & \
+             elif command -v chromium-browser >/dev/null 2>&1; then \
+                 setsid nohup chromium-browser --no-sandbox --disable-gpu --disable-software-rasterizer \"{url}\" >/tmp/chromium.log 2>&1 & \
+             elif command -v google-chrome >/dev/null 2>&1; then \
+                 setsid nohup google-chrome --no-sandbox --disable-gpu \"{url}\" >/tmp/chromium.log 2>&1 & \
+             fi'",
+            url = url.replace("'", "'\\''")
         );
         
         let db_clone = db.clone();

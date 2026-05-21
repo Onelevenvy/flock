@@ -444,6 +444,7 @@ pub async fn check_computer_use_status(
                 let status = resp.status();
                 if status.is_success() {
                     let text = resp.text().await.unwrap_or_default();
+                    crate::emit_info(&format!("[VNC Status] 接口返回: {}", text));
                     if let Ok(val) = serde_json::from_str::<serde_json::Value>(&text) {
                         // 兼容 data 嵌套或扁平的结构
                         let status_val = val.get("status")
@@ -472,6 +473,39 @@ pub async fn check_computer_use_status(
     Err(last_error.unwrap_or_else(|| anyhow::anyhow!("无法获取沙盒 ComputerUse 状态")))
 }
 
+/// 确保沙盒中 VNC 桌面相关进程正在后台运行，具有自愈拉起和 setsid/nohup 防进程清理机制。
+pub async fn ensure_vnc_running_in_sandbox(db: &DbManager, sandbox_id: &str) -> anyhow::Result<()> {
+    // 检查 websockify 是否已经在运行
+    let check_cmd = "ps aux | grep -v grep | grep -q websockify";
+    let (_, exit_code) = execute_command_in_sandbox(db, sandbox_id, check_cmd).await.unwrap_or(("-1".to_string(), -1));
+    if exit_code == 0 {
+        crate::emit_info("检测到 VNC 桌面服务已经在运行。");
+        return Ok(());
+    }
+
+    crate::emit_info("检测到 VNC 服务未运行，手动拉起 Xvfb, VNC, noVNC...");
+    let launch_cmd = "sh -c '\
+        export DISPLAY=:0 && \
+        rm -f /tmp/.X0-lock && \
+        setsid nohup Xvfb :0 -screen 0 1280x1024x24 >/tmp/xvfb.log 2>&1 & \
+        sleep 1 && \
+        setsid nohup fluxbox >/tmp/fluxbox.log 2>&1 & \
+        sleep 1 && \
+        setsid nohup x11vnc -display :0 -forever -shared -nopw -rfbport 5900 >/tmp/x11vnc.log 2>&1 & \
+        sleep 1 && \
+        setsid nohup websockify --web /usr/share/novnc 0.0.0.0:6080 localhost:5900 >/tmp/websockify.log 2>&1 & \
+        sleep 1'";
+    
+    let (out, code) = execute_command_in_sandbox(db, sandbox_id, launch_cmd).await?;
+    if code != 0 {
+        crate::emit_info(&format!("手动拉起桌面服务进程失败 (退出码 {}): {}", code, out));
+    } else {
+        crate::emit_info("手动拉起桌面服务进程指令已发送。");
+    }
+    
+    Ok(())
+}
+
 /// 创建一个预装 Playwright 的 Daytona Snapshot
 pub async fn create_playwright_snapshot(
     db: &DbManager,
@@ -495,7 +529,7 @@ pub async fn create_playwright_snapshot(
         "memory": 2,
         "disk": 3,
         "buildInfo": {
-            "dockerfileContent": "FROM daytonaio/sandbox:latest\nUSER root\nENV DEBIAN_FRONTEND=noninteractive\nENV PLAYWRIGHT_BROWSERS_PATH=/opt/playwright-browsers\nRUN mkdir -p /opt/playwright-browsers && chmod 777 /opt/playwright-browsers\nRUN apt-get update && apt-get install -y python3-pip && python3 -m pip install --break-system-packages playwright && PLAYWRIGHT_BROWSERS_PATH=/opt/playwright-browsers python3 -m playwright install-deps chromium && PLAYWRIGHT_BROWSERS_PATH=/opt/playwright-browsers python3 -m playwright install chromium\nUSER daytona"
+            "dockerfileContent": "FROM daytonaio/sandbox:latest\nUSER root\nENV DEBIAN_FRONTEND=noninteractive\nENV PLAYWRIGHT_BROWSERS_PATH=/opt/playwright-browsers\nRUN mkdir -p /opt/playwright-browsers && chmod 777 /opt/playwright-browsers\nRUN apt-get update && apt-get install -y python3-pip xvfb x11vnc novnc websockify fluxbox chromium && python3 -m pip install --break-system-packages playwright && PLAYWRIGHT_BROWSERS_PATH=/opt/playwright-browsers python3 -m playwright install-deps chromium && PLAYWRIGHT_BROWSERS_PATH=/opt/playwright-browsers python3 -m playwright install chromium\nUSER daytona"
         }
     });
 
