@@ -77,19 +77,21 @@ function ProviderDetailPanel({
   const [credValues, setCredValues] = useState<Record<string, string>>({});
   const [saving, setSaving] = useState(false);
 
-  const credSchema: Record<string, { type?: string; description?: string }> = (() => {
+  // Parse as raw first to safely detect the sentinel field.
+  const rawSchema: Record<string, unknown> = (() => {
     if (!provider.credentials_schema) return {};
-    try {
-      return JSON.parse(provider.credentials_schema);
-    } catch {
-      return {};
-    }
+    try { return JSON.parse(provider.credentials_schema) as Record<string, unknown>; }
+    catch { return {}; }
   })();
 
   // Sandbox provider has a special sentinel schema — auth lives in Settings page.
-  const isSandboxProvider = credSchema['__type'] === 'sandbox_settings';
+  const isSandboxProvider = rawSchema['__type'] === 'sandbox_settings';
 
-  const hasCredentials = !isSandboxProvider && Object.keys(credSchema).length > 0;
+  const credSchema: Record<string, { type?: string; description?: string }> = isSandboxProvider
+    ? {}
+    : (rawSchema as Record<string, { type?: string; description?: string }>);
+
+  const hasCredentials = !isSandboxProvider && Object.keys(rawSchema).length > 0;
 
   useEffect(() => {
     const existing: Record<string, string> = {};
