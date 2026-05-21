@@ -1,21 +1,20 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import {
   Stack,
   Text,
   Group,
   Badge,
   Button,
-  Modal,
+  Popover,
   TextInput,
   ScrollArea,
   Accordion,
-  Checkbox,
   Box,
-  SimpleGrid,
+  PopoverProps,
 } from '@mantine/core';
 import { useTranslation } from 'react-i18next';
 import { useAvailableTools } from '../../hooks/useAvailableTools';
-import { ProviderIcon } from './Icons/DynamicIcon';
+import { ToolsIcon } from './Icons';
 import { IconSearch, IconX, IconPlus } from '@tabler/icons-react';
 import { useDisclosure } from '@mantine/hooks';
 
@@ -25,6 +24,7 @@ export interface ToolSelectorProps {
   label?: string;
   placeholder?: string;
   disabled?: boolean;
+  position?: PopoverProps['position'];
 }
 
 export default function ToolSelector({
@@ -33,13 +33,25 @@ export default function ToolSelector({
   label,
   placeholder,
   disabled = false,
+  position = 'bottom-start',
 }: ToolSelectorProps) {
-  const { t } = useTranslation('assistant');
+  const { t } = useTranslation();
   const [opened, { open, close }] = useDisclosure(false);
   const [searchText, setSearchText] = useState('');
+  const [hoveredProviderId, setHoveredProviderId] = useState<string | null>(null);
   const { providers, tools, loading } = useAvailableTools();
 
-  // 1. 过滤及搜索
+  // 1. 局部临时状态，用来隔离直接更改 onChange。点 Confirm 才会生效，点 Cancel/空白则会回滚撤销。
+  const [tempValue, setTempValue] = useState<string[]>(value);
+
+  // 每次打开 Popover 时，同步最新的 value 到局部 tempValue 状态中
+  useEffect(() => {
+    if (opened) {
+      setTempValue(value);
+    }
+  }, [opened, value]);
+
+  // 2. 过滤及搜索
   const filteredProviders = useMemo(() => {
     const query = searchText.toLowerCase().trim();
     return providers
@@ -61,45 +73,56 @@ export default function ToolSelector({
       .filter((prov) => prov.tools.length > 0);
   }, [providers, tools, searchText]);
 
-  // 2. 某个服务商下已选择的工具数量
+  // 3. 某个服务商下已选择的工具数量（基于 tempValue 计算）
   const getSelectedCount = (providerId: string) => {
     const provTools = tools.filter((t) => t.provider_id === providerId);
-    return provTools.filter((tool) => value.includes(tool.name)).length;
+    return provTools.filter((tool) => tempValue.includes(tool.name)).length;
   };
 
-  // 3. 处理添加/删除单个工具
+  // 4. 处理添加/删除单个工具（仅修改局部临时状态）
   const handleToggleTool = (toolName: string) => {
     if (disabled) return;
-    if (value.includes(toolName)) {
-      onChange(value.filter((n) => n !== toolName));
+    if (tempValue.includes(toolName)) {
+      setTempValue(tempValue.filter((n) => n !== toolName));
     } else {
-      onChange([...value, toolName]);
+      setTempValue([...tempValue, toolName]);
     }
   };
 
-  // 4. 处理全选/反选服务商下所有工具
+  // 5. 处理全选/反选服务商下所有工具（仅修改局部临时状态）
   const handleBatchToggle = (providerTools: typeof tools, e: React.MouseEvent) => {
     e.stopPropagation();
     if (disabled) return;
 
     const toolNames = providerTools.map((t) => t.name);
-    const selectedInProv = toolNames.filter((name) => value.includes(name));
+    const selectedInProv = toolNames.filter((name) => tempValue.includes(name));
     const allSelected = selectedInProv.length === toolNames.length;
 
     if (allSelected) {
       // 取消选择该服务商下所有已选工具
-      onChange(value.filter((name) => !toolNames.includes(name)));
+      setTempValue(tempValue.filter((name) => !toolNames.includes(name)));
     } else {
       // 选择该服务商下所有未选工具
-      const toAdd = toolNames.filter((name) => !value.includes(name));
-      onChange([...value, ...toAdd]);
+      const toAdd = toolNames.filter((name) => !tempValue.includes(name));
+      setTempValue([...tempValue, ...toAdd]);
     }
   };
 
+  // 主界面 Pills 上的 x 移除事件直接生效
   const handleRemoveTool = (toolName: string, e: React.MouseEvent) => {
     e.stopPropagation();
     if (disabled) return;
     onChange(value.filter((n) => n !== toolName));
+  };
+
+  const handleConfirm = () => {
+    onChange(tempValue);
+    close();
+  };
+
+  const handleCancel = () => {
+    setTempValue(value); // 显式将临时状态回滚为真实的外部 value，避免影响后续操作
+    close();
   };
 
   // 根据 value 映射出完整的 Tool 对象，用于主界面 Pills 渲染
@@ -117,57 +140,291 @@ export default function ToolSelector({
         </Text>
       )}
 
-      {/* 触发容器：已选工具 Badges 的展示区域 */}
-      <Box
-        onClick={!disabled ? open : undefined}
-        style={{
-          minHeight: 46,
-          background: 'var(--flock-bg-surface)',
-          border: '1px solid var(--flock-border-dim)',
-          borderRadius: 8,
-          padding: '8px 12px',
-          cursor: disabled ? 'not-allowed' : 'pointer',
-          transition: 'border-color 0.2s ease',
+      {/* Popover 悬浮面板：加入 withinPortal 确保定位在安全区域内 */}
+      <Popover
+        opened={opened}
+        onClose={handleCancel}
+        width={300}
+        position={position} // 默认为 bottom-start，支持外部传入自定义 position，防止左侧偏出屏幕
+        withArrow
+        shadow="md"
+        closeOnClickOutside={true}
+        withinPortal={true} // 完美避免任何 overflow: hidden 裁剪与定位失效
+        styles={{
+          dropdown: {
+            background: 'var(--flock-bg-raised)',
+            border: '1px solid var(--flock-border-dim)',
+            borderRadius: 12,
+            padding: 14,
+            boxShadow: '0 8px 24px rgba(0, 0, 0, 0.12)',
+            zIndex: 1000,
+          },
         }}
       >
-        {selectedToolObjects.length === 0 ? (
-          <Text size="xs" c="dimmed" py={4}>
-            {placeholder || t('form.toolsPlaceholder')}
-          </Text>
-        ) : (
-          <Group gap={6}>
-            {selectedToolObjects.map((tool) => (
-              <Badge
-                key={tool.id}
-                variant="light"
-                color="blue"
-                size="sm"
-                styles={{
-                  root: {
-                    background: 'var(--flock-bg-hover)',
-                    border: '1px solid var(--flock-border-dim)',
-                    color: 'var(--flock-text-bright)',
-                    textTransform: 'none',
-                    fontFamily: 'var(--mantine-font-family-monospace)',
-                    paddingRight: !disabled ? 4 : undefined,
-                  },
-                }}
-                rightSection={
-                  !disabled && (
-                    <IconX
-                      size={12}
-                      style={{ cursor: 'pointer' }}
-                      onClick={(e) => handleRemoveTool(tool.name, e)}
-                    />
-                  )
-                }
+        <Popover.Target>
+          {/* 触发容器：已选工具 Badges 的展示区域 */}
+          <Box
+            onClick={!disabled ? (opened ? close : open) : undefined}
+            style={{
+              minHeight: 46,
+              background: 'var(--flock-bg-surface)',
+              border: opened ? '1px solid var(--flock-accent)' : '1px solid var(--flock-border-dim)',
+              borderRadius: 8,
+              padding: '8px 12px',
+              cursor: disabled ? 'not-allowed' : 'pointer',
+              transition: 'border-color 0.2s ease',
+            }}
+          >
+            {selectedToolObjects.length === 0 ? (
+              <Text size="xs" c="dimmed" py={4}>
+                {placeholder || t('assistant.form.toolsPlaceholder')}
+              </Text>
+            ) : (
+              <Group gap={6}>
+                {selectedToolObjects.map((tool) => (
+                  <Badge
+                    key={tool.id}
+                    variant="light"
+                    color="blue"
+                    size="sm"
+                    styles={{
+                      root: {
+                        background: 'var(--flock-bg-hover)',
+                        border: '1px solid var(--flock-border-dim)',
+                        color: 'var(--flock-text-bright)',
+                        textTransform: 'none',
+                        fontFamily: 'var(--mantine-font-family-monospace)',
+                        paddingRight: !disabled ? 4 : undefined,
+                      },
+                    }}
+                    rightSection={
+                      !disabled && (
+                        <IconX
+                          size={12}
+                          style={{ cursor: 'pointer' }}
+                          onClick={(e) => handleRemoveTool(tool.name, e)}
+                        />
+                      )
+                    }
+                  >
+                    {tool.name}
+                  </Badge>
+                ))}
+              </Group>
+            )}
+          </Box>
+        </Popover.Target>
+
+        <Popover.Dropdown onClick={(e) => e.stopPropagation()}>
+          <Stack gap="sm">
+            {/* 顶栏标题及搜索框 */}
+            <Group justify="space-between" align="center">
+              <Text fw={700} size="sm" style={{ color: 'var(--flock-text-bright)' }}>
+                {t('assistant.form.selectTools')}
+              </Text>
+              <IconX
+                size={16}
+                style={{ cursor: 'pointer', color: 'var(--flock-text-dim)' }}
+                onClick={handleCancel}
+              />
+            </Group>
+
+            <TextInput
+              placeholder={t('assistant.form.searchTools')}
+              leftSection={<IconSearch size={14} style={{ color: 'var(--flock-text-dim)' }} />}
+              value={searchText}
+              onChange={(e) => setSearchText(e.currentTarget.value)}
+              rightSection={
+                searchText ? (
+                  <IconX
+                    size={14}
+                    style={{ cursor: 'pointer', color: 'var(--flock-text-dim)' }}
+                    onClick={() => setSearchText('')}
+                  />
+                ) : null
+              }
+              styles={{
+                input: {
+                  background: 'var(--flock-bg-surface)',
+                  border: '1px solid var(--flock-border-dim)',
+                  height: 32,
+                  fontSize: 12,
+                },
+              }}
+            />
+
+            {/* 滚动工具列表 */}
+            <ScrollArea h={420} offsetScrollbars styles={{ viewport: { maxHeight: 420 } }}>
+              {loading ? (
+                <Text size="xs" c="dimmed" ta="center" py="xl">
+                  {t('common.loading', { defaultValue: 'Loading...' })}
+                </Text>
+              ) : filteredProviders.length === 0 ? (
+                <Text size="xs" c="dimmed" ta="center" py="xl">
+                  {searchText ? t('assistant.form.noMatchingTools') : t('assistant.form.noAvailableTools')}
+                </Text>
+              ) : (
+                <Accordion
+                  multiple
+                  defaultValue={[]}
+                  styles={{
+                    item: {
+                      border: 'none',
+                      background: 'var(--flock-bg-surface)',
+                      marginBottom: 8,
+                      borderRadius: 8,
+                      overflow: 'hidden',
+                    },
+                    control: {
+                      padding: '8px 12px',
+                    },
+                    content: {
+                      padding: '0 12px 8px 12px',
+                    },
+                  }}
+                >
+                  {filteredProviders.map((provider) => {
+                    const selectedCount = getSelectedCount(provider.id);
+                    const totalCount = provider.tools.length;
+                    const allSelected = selectedCount === totalCount;
+
+                    return (
+                      <Accordion.Item
+                        key={provider.id}
+                        value={provider.id}
+                        onMouseEnter={() => setHoveredProviderId(provider.id)}
+                        onMouseLeave={() => setHoveredProviderId(null)}
+                      >
+                        <Accordion.Control>
+                          <Group justify="space-between" style={{ width: '100%' }}>
+                            <Group gap="xs">
+                              {/* 修正为 ToolsIcon 完美在界面加载 provider 图标 */}
+                              <ToolsIcon name={provider.id} size={16} />
+                              <Text fw={600} size="xs" style={{ color: 'var(--flock-text-bright)' }}>
+                                {provider.provider_name}
+                              </Text>
+                            </Group>
+                            {/* 悬停显示全选/取消全选，平时显示精简的 n/m 状态 */}
+                            <Box style={{ minWidth: 72, display: 'flex', justifyContent: 'flex-end', alignItems: 'center' }}>
+                              {hoveredProviderId === provider.id && totalCount > 0 ? (
+                                <Button
+                                  size="xs"
+                                  variant="subtle"
+                                  onClick={(e) => handleBatchToggle(provider.tools, e)}
+                                  styles={{
+                                    root: {
+                                      height: 22,
+                                      padding: '0 6px',
+                                      fontSize: 10,
+                                      color: 'var(--flock-accent)',
+                                    },
+                                  }}
+                                >
+                                  {allSelected ? t('assistant.form.removeAllTools') : t('assistant.form.addAllTools')}
+                                </Button>
+                              ) : (
+                                <Text
+                                  size="11px"
+                                  style={{
+                                    color: 'var(--flock-text-dim)',
+                                    fontFamily: 'var(--mantine-font-family-monospace)',
+                                  }}
+                                >
+                                  {selectedCount} / {totalCount}
+                                </Text>
+                              )}
+                            </Box>
+                          </Group>
+                        </Accordion.Control>
+                        <Accordion.Panel>
+                          <Stack gap={4}>
+                            {provider.tools.map((tool) => {
+                              const isSelected = tempValue.includes(tool.name);
+                              return (
+                                <Box
+                                  key={tool.id}
+                                  onClick={() => handleToggleTool(tool.name)}
+                                  style={{
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    padding: '6px 8px',
+                                    borderRadius: 6,
+                                    background: isSelected
+                                      ? 'var(--flock-bg-hover)'
+                                      : 'transparent',
+                                    cursor: 'pointer',
+                                    transition: 'all 0.15s ease',
+                                  }}
+                                  onMouseEnter={(e) => {
+                                    if (!isSelected) {
+                                      e.currentTarget.style.background = 'var(--flock-bg-hover)';
+                                    }
+                                  }}
+                                  onMouseLeave={(e) => {
+                                    if (!isSelected) {
+                                      e.currentTarget.style.background = 'transparent';
+                                    }
+                                  }}
+                                >
+                                  <Group justify="space-between" align="center" style={{ width: '100%' }}>
+                                    <Text
+                                      size="xs"
+                                      fw={isSelected ? 600 : 400}
+                                      style={{
+                                        fontFamily: 'var(--mantine-font-family-monospace)',
+                                        color: 'var(--flock-text-bright)',
+                                        lineHeight: 1.3,
+                                      }}
+                                    >
+                                      {tool.name}
+                                    </Text>
+                                    {isSelected && (
+                                      <Text
+                                        size="10px"
+                                        style={{
+                                          color: 'var(--flock-text-dim)',
+                                          fontWeight: 500,
+                                        }}
+                                      >
+                                        {t('assistant.form.addedTag')}
+                                      </Text>
+                                    )}
+                                  </Group>
+                                </Box>
+                              );
+                            })}
+                          </Stack>
+                        </Accordion.Panel>
+                      </Accordion.Item>
+                    );
+                  })}
+                </Accordion>
+              )}
+            </ScrollArea>
+
+            {/* 确认/取消底栏 */}
+            <Group justify="flex-end" pt="xs" gap="xs" style={{ borderTop: '1px solid var(--flock-border-subtle)' }}>
+              <Button
+                variant="subtle"
+                size="xs"
+                onClick={handleCancel}
+                style={{ height: 28, fontSize: 11 }}
               >
-                {tool.name}
-              </Badge>
-            ))}
-          </Group>
-        )}
-      </Box>
+                {t('common.cancel')}
+              </Button>
+              <Button
+                variant="filled"
+                color="blue"
+                size="xs"
+                onClick={handleConfirm}
+                style={{ background: 'var(--flock-accent)', height: 28, fontSize: 11 }}
+              >
+                {t('assistant.form.confirm')}
+              </Button>
+            </Group>
+          </Stack>
+        </Popover.Dropdown>
+      </Popover>
 
       {/* 选择/编辑按钮 */}
       {!disabled && (
@@ -185,192 +442,10 @@ export default function ToolSelector({
               },
             }}
           >
-            {t('form.selectTools')}
+            {t('assistant.form.selectTools')}
           </Button>
         </Group>
       )}
-
-      {/* 统一工具选择 Modal */}
-      <Modal
-        opened={opened}
-        onClose={close}
-        title={t('form.selectTools')}
-        size="lg"
-        styles={{
-          content: {
-            background: 'var(--flock-bg-raised)',
-            border: '1px solid var(--flock-border-dim)',
-            borderRadius: 16,
-          },
-          header: {
-            background: 'var(--flock-bg-raised)',
-            borderBottom: '1px solid var(--flock-border-subtle)',
-          },
-        }}
-      >
-        <Stack gap="md" py="xs">
-          {/* 搜索框 */}
-          <TextInput
-            placeholder={t('form.searchTools')}
-            leftSection={<IconSearch size={16} />}
-            value={searchText}
-            onChange={(e) => setSearchText(e.currentTarget.value)}
-            rightSection={
-              searchText ? (
-                <IconX
-                  size={16}
-                  style={{ cursor: 'pointer', color: 'var(--flock-text-dim)' }}
-                  onClick={() => setSearchText('')}
-                />
-              ) : null
-            }
-            styles={{
-              input: {
-                background: 'var(--flock-bg-surface)',
-                border: '1px solid var(--flock-border-dim)',
-              },
-            }}
-          />
-
-          {/* 滚动工具列表 */}
-          <ScrollArea mah="50vh" offsetScrollbars>
-            {loading ? (
-              <Text size="sm" c="dimmed" ta="center" py="xl">
-                加载中...
-              </Text>
-            ) : filteredProviders.length === 0 ? (
-              <Text size="sm" c="dimmed" ta="center" py="xl">
-                {searchText ? t('form.noMatchingTools') : t('form.noAvailableTools')}
-              </Text>
-            ) : (
-              <Accordion
-                multiple
-                defaultValue={providers.map((p) => p.id)}
-                styles={{
-                  item: {
-                    border: 'none',
-                    background: 'var(--flock-bg-surface)',
-                    marginBottom: 10,
-                    borderRadius: 8,
-                    overflow: 'hidden',
-                  },
-                  control: {
-                    padding: '10px 16px',
-                  },
-                }}
-              >
-                {filteredProviders.map((provider) => {
-                  const selectedCount = getSelectedCount(provider.id);
-                  const totalCount = provider.tools.length;
-                  const allSelected = selectedCount === totalCount;
-
-                  return (
-                    <Accordion.Item key={provider.id} value={provider.id}>
-                      <Accordion.Control>
-                        <Group justify="space-between" style={{ width: '100%' }}>
-                          <Group gap="xs">
-                            <ProviderIcon name={provider.icon || provider.provider_name} size={18} />
-                            <Text fw={600} size="sm">
-                              {provider.provider_name}
-                            </Text>
-                            {selectedCount > 0 && (
-                              <Badge size="xs" variant="light" color="blue">
-                                {t('form.addedCount', { count: selectedCount })}
-                              </Badge>
-                            )}
-                          </Group>
-                          {totalCount > 0 && (
-                            <Button
-                              size="xs"
-                              variant="subtle"
-                              onClick={(e) => handleBatchToggle(provider.tools, e)}
-                              styles={{
-                                root: {
-                                  height: 24,
-                                  padding: '0 6px',
-                                  fontSize: 11,
-                                },
-                              }}
-                            >
-                              {allSelected ? t('form.removeAllTools') : t('form.addAllTools')}
-                            </Button>
-                          )}
-                        </Group>
-                      </Accordion.Control>
-                      <Accordion.Panel>
-                        <Box p="xs" pt={0}>
-                          <SimpleGrid cols={{ base: 1, sm: 2 }} spacing="xs" verticalSpacing="xs">
-                            {provider.tools.map((tool) => {
-                              const isSelected = value.includes(tool.name);
-                              return (
-                                <Box
-                                  key={tool.id}
-                                  onClick={() => handleToggleTool(tool.name)}
-                                  style={{
-                                    display: 'flex',
-                                    alignItems: 'flex-start',
-                                    gap: 10,
-                                    padding: '8px 12px',
-                                    borderRadius: 6,
-                                    border: isSelected
-                                      ? '1.5px solid var(--flock-accent)'
-                                      : '1px solid var(--flock-border-dim)',
-                                    background: isSelected
-                                      ? 'var(--flock-bg-hover)'
-                                      : 'var(--flock-bg-surface)',
-                                    cursor: 'pointer',
-                                    transition: 'all 0.2s ease',
-                                    boxShadow: isSelected
-                                      ? '0 2px 8px rgba(21, 90, 239, 0.08)'
-                                      : undefined,
-                                  }}
-                                >
-                                  <Checkbox
-                                    checked={isSelected}
-                                    onChange={() => {}} // 阻止默认点击，统一由外层 Box 触发
-                                    onClick={(e) => e.stopPropagation()}
-                                    styles={{
-                                      input: { cursor: 'pointer' },
-                                    }}
-                                  />
-                                  <Stack gap={2} style={{ flex: 1 }}>
-                                    <Text
-                                      size="sm"
-                                      fw={600}
-                                      style={{
-                                        fontFamily: 'var(--mantine-font-family-monospace)',
-                                        color: isSelected ? 'var(--flock-accent)' : 'inherit',
-                                      }}
-                                    >
-                                      {tool.name}
-                                    </Text>
-                                    {tool.description && (
-                                      <Text size="xs" c="dimmed" lineClamp={2}>
-                                        {tool.description}
-                                      </Text>
-                                    )}
-                                  </Stack>
-                                </Box>
-                              );
-                            })}
-                          </SimpleGrid>
-                        </Box>
-                      </Accordion.Panel>
-                    </Accordion.Item>
-                  );
-                })}
-              </Accordion>
-            )}
-          </ScrollArea>
-
-          {/* 确认底栏 */}
-          <Group justify="flex-end" pt="sm">
-            <Button variant="filled" color="blue" onClick={close} style={{ background: 'var(--flock-accent)' }}>
-              {t('form.confirm')}
-            </Button>
-          </Group>
-        </Stack>
-      </Modal>
     </Stack>
   );
 }
