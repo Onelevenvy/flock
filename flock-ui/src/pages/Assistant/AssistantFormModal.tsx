@@ -7,6 +7,7 @@ import { useTranslation } from 'react-i18next';
 import { type Assistant, type UpsertAssistant } from '../../types/assistant';
 import { IconPicker } from './IconPicker';
 import { MarkdownRenderer } from '../../components/chat/MarkdownRenderer';
+import ToolSelector from '../../components/Common/ToolSelector';
 
 
 interface ModelProvider { id: string; provider_name: string; }
@@ -310,27 +311,11 @@ export function AssistantFormModal({
           <Divider color="var(--flock-border-subtle)" />
 
           {/* 绑定工具 */}
-          <MultiSelect
-            label={
-              <Group gap={6}>
-                <Text size="sm" fw={500}>{t('assistant.form.toolsLabel')}</Text>
-              </Group>
-            }
+          <ToolSelector
+            label={t('assistant.form.toolsLabel')}
             placeholder={t('assistant.form.toolsPlaceholder')}
-            data={toolSelectData}
             value={selectedTools}
             onChange={setSelectedTools}
-            searchable
-            styles={{
-              input: {
-                background: 'var(--flock-bg-surface)',
-                border: '1px solid var(--flock-border-dim)',
-              },
-              dropdown: {
-                background: 'var(--flock-bg-raised)',
-                border: '1px solid var(--flock-border-dim)',
-              },
-            }}
           />
 
           {/* 绑定技能 */}

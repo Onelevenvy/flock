@@ -1,6 +1,7 @@
-import { MultiSelect, Divider } from '@mantine/core';
+import { Divider } from '@mantine/core';
 import { useTranslation } from 'react-i18next';
 import { LLMFields } from '../LLM';
+import ToolSelector from '../../../../../components/Common/ToolSelector';
 
 export interface AgentFieldsProps {
   node: any;
@@ -31,16 +32,12 @@ export function AgentFields({
         modelsLoading={modelsLoading}
       />
       <Divider label={t('workflow.properties.agent.tools')} labelPosition="center" />
-      <MultiSelect
+      <ToolSelector
         label={t('workflow.properties.agent.toolsSelect')}
         placeholder={t('workflow.properties.agent.toolsPlaceholder')}
-        data={toolOptions}
         disabled={toolsLoading}
         value={tools}
         onChange={(v) => onDataChange(node.id, 'tools', v)}
-        searchable
-        clearable
-        size="xs"
       />
     </>
   );

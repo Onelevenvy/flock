@@ -41,6 +41,15 @@
     "skillsLabel": "技能",
     "skillsBadge": "从技能列表选择",
     "skillsPlaceholder": "选择要绑定的技能...",
-    "unauthorized": " (未授权)"
+    "unauthorized": " (未授权)",
+    "selectTools": "选择工具",
+    "searchTools": "搜索工具...",
+    "noMatchingTools": "未找到匹配的工具",
+    "noAvailableTools": "无可用工具",
+    "addAllTools": "添加全部",
+    "removeAllTools": "取消全部",
+    "addedCount": "已选择 {{count}} 项",
+    "addedTag": "已添加",
+    "confirm": "确定"
   }
 }

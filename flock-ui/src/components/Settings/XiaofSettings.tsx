@@ -11,12 +11,12 @@ import {
   Loader,
   Badge,
   SegmentedControl,
-  MultiSelect,
 } from '@mantine/core';
 import { invoke } from '@tauri-apps/api/core';
 import { notifications } from '@mantine/notifications';
 import { IconCheck, IconSettings, IconShieldCheck, IconCpu } from '@tabler/icons-react';
 import { useTranslation } from 'react-i18next';
+import ToolSelector from '../Common/ToolSelector';
 
 interface ToolsConfig {
   auto_approve: boolean;
@@ -173,28 +173,14 @@ export default function XiaofSettings() {
                   {t('settings.xiaof.allowListLabel')}
                 </Text>
 
-                <MultiSelect
+                <ToolSelector
                   placeholder={t('settings.xiaof.allowListPlaceholder')}
-                  data={allTools.map((tool) => ({
-                    value: tool.name,
-                    label: tool.name,
-                  }))}
                   value={toolsConfig?.allow_list || []}
                   onChange={(values) =>
                     setToolsConfig(
                       toolsConfig ? { ...toolsConfig, allow_list: values } : null
                     )
                   }
-                  searchable
-                  clearable
-                  nothingFoundMessage={t('settings.xiaof.allowListNothingFound')}
-                  styles={{
-                    input: { background: 'var(--flock-bg-surface)' },
-                    dropdown: {
-                      background: 'var(--flock-bg-surface)',
-                      border: '1px solid var(--flock-border-base)',
-                    },
-                  }}
                 />
               </Stack>
             </>

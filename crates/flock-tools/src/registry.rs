@@ -92,7 +92,8 @@ impl ToolRegistry {
 
         self.tools.retain(|t| {
             let pid = t.provider_id();
-            INTERNAL_PROVIDERS.contains(&pid) || allowed_set.contains(pid)
+            let name = t.name();
+            INTERNAL_PROVIDERS.contains(&pid) || allowed_set.contains(name)
         });
     }
 }

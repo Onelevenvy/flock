@@ -272,7 +272,7 @@ impl AgentBuilder {
         // Some([]) = no external tools; None = all tools.
         if let Some(ref ov) = self.assistant_overrides {
             if let Some(ref allowed_providers) = ov.allowed_tool_providers {
-                log::info!("Assistant: restricting tools to providers: {:?}", allowed_providers);
+                log::info!("Assistant: restricting tools to names: {:?}", allowed_providers);
                 registry.retain_by_providers(allowed_providers);
             }
         }
