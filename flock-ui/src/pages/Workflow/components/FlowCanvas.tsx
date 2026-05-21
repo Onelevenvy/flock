@@ -95,21 +95,107 @@ export function FlowCanvas({ workflowId, workflowData, onBack }: FlowCanvasProps
     }
   }, [activeNodeId]);
 
+  // ── Topological Auto Layout ───────────────────────────────────────────────
+  const layoutAllNodes = useCallback((customNodes?: Node[], customEdges?: Edge[]) => {
+    const targetNodes = customNodes || nodes;
+    const targetEdges = customEdges || edges;
+    if (targetNodes.length === 0) return;
+
+    const adj: Record<string, string[]> = {};
+    const inDegree: Record<string, number> = {};
+
+    targetNodes.forEach(n => {
+      adj[n.id] = [];
+      inDegree[n.id] = 0;
+    });
+
+    targetEdges.forEach(e => {
+      if (adj[e.source] && adj[e.target] !== undefined) {
+        adj[e.source].push(e.target);
+        inDegree[e.target] = (inDegree[e.target] || 0) + 1;
+      }
+    });
+
+    const rank: Record<string, number> = {};
+    targetNodes.forEach(n => {
+      rank[n.id] = 0;
+    });
+
+    const queue: string[] = [];
+    targetNodes.forEach(n => {
+      if (inDegree[n.id] === 0) {
+        queue.push(n.id);
+      }
+    });
+
+    if (queue.length === 0 && targetNodes.length > 0) {
+      queue.push(targetNodes[0].id);
+    }
+
+    const visited = new Set<string>();
+    while (queue.length > 0) {
+      const curr = queue.shift()!;
+      if (visited.has(curr)) continue;
+      visited.add(curr);
+
+      const currRank = rank[curr];
+      adj[curr].forEach(next => {
+        rank[next] = Math.max(rank[next], currRank + 1);
+        queue.push(next);
+      });
+    }
+
+    const rankGroups: Record<number, string[]> = {};
+    targetNodes.forEach(n => {
+      const r = rank[n.id] || 0;
+      if (!rankGroups[r]) {
+        rankGroups[r] = [];
+      }
+      rankGroups[r].push(n.id);
+    });
+
+    const HORIZONTAL_GAP = 280;
+    const VERTICAL_GAP = 140;
+
+    const nextNodes = targetNodes.map(n => {
+      const r = rank[n.id] || 0;
+      const group = rankGroups[r];
+      const index = group.indexOf(n.id);
+      const count = group.length;
+
+      const x = r * HORIZONTAL_GAP + 50;
+      const y = (index - (count - 1) / 2) * VERTICAL_GAP + 200;
+
+      return {
+        ...n,
+        position: { x, y }
+      };
+    });
+
+    setNodes(nextNodes);
+    if (customEdges) {
+      setEdges(customEdges);
+    }
+  }, [nodes, edges, setNodes, setEdges]);
+
   // ── Edge Click Node Insertion ─────────────────────────────────────────────
   const [menuEdge, setMenuEdge] = useState<Edge | null>(null);
+  const [activeSourceHandle, setActiveSourceHandle] = useState<{ nodeId: string; handleId: string } | null>(null);
   const [insertMode, setInsertMode] = useState<'center' | 'source' | null>(null);
   const [menuPortalPosition, setMenuPortalPosition] = useState<{ x: number; y: number } | null>(null);
 
   const handleInsertNode = useCallback((type: NodeType) => {
-    if (!menuEdge || !insertMode) return;
-    const sourceNode = nodes.find(n => n.id === menuEdge.source);
-    const targetNode = nodes.find(n => n.id === menuEdge.target);
-    if (!sourceNode || !targetNode) return;
+    if (!insertMode) return;
 
     const sameTypeCount = nodes.filter((n) => n.type === type).length;
     const newNodeId = `${type}-${Date.now()}`;
 
     if (insertMode === 'center') {
+      if (!menuEdge) return;
+      const sourceNode = nodes.find(n => n.id === menuEdge.source);
+      const targetNode = nodes.find(n => n.id === menuEdge.target);
+      if (!sourceNode || !targetNode) return;
+
       // 计算位置：中点
       const position = {
         x: (sourceNode.position.x + targetNode.position.x) / 2,
@@ -129,7 +215,9 @@ export function FlowCanvas({ workflowId, workflowData, onBack }: FlowCanvasProps
       const newEdge1 = {
         id: `e-${menuEdge.source}-${newNodeId}`,
         source: menuEdge.source,
+        sourceHandle: menuEdge.sourceHandle,
         target: newNodeId,
+        targetHandle: 'left',
         markerEnd: { type: MarkerType.ArrowClosed, width: 16, height: 16 },
         style: { strokeWidth: 1.8, stroke: 'rgba(21, 90, 239, 0.25)' },
         type: 'customStep',
@@ -138,16 +226,28 @@ export function FlowCanvas({ workflowId, workflowData, onBack }: FlowCanvasProps
       const newEdge2 = {
         id: `e-${newNodeId}-${menuEdge.target}`,
         source: newNodeId,
+        sourceHandle: 'right',
         target: menuEdge.target,
+        targetHandle: menuEdge.targetHandle,
         markerEnd: { type: MarkerType.ArrowClosed, width: 16, height: 16 },
         style: { strokeWidth: 1.8, stroke: 'rgba(21, 90, 239, 0.25)' },
         type: 'customStep',
       };
 
-      setNodes((nds) => [...nds, newNode]);
-      setEdges((eds) => [...eds.filter(e => e.id !== menuEdge.id), newEdge1, newEdge2]);
+      const nextNodes = [...nodes, newNode];
+      const nextEdges = [...edges.filter(e => e.id !== menuEdge.id), newEdge1, newEdge2];
+
+      layoutAllNodes(nextNodes, nextEdges);
     } else {
-      // 端点分叉模式：新建新节点，源节点连到新节点，保留原连线不变
+      // 端点分叉模式
+      const sourceNodeId = activeSourceHandle ? activeSourceHandle.nodeId : menuEdge?.source;
+      const sourceHandleId = activeSourceHandle ? activeSourceHandle.handleId : menuEdge?.sourceHandle || 'right';
+
+      if (!sourceNodeId) return;
+      const sourceNode = nodes.find(n => n.id === sourceNodeId);
+      if (!sourceNode) return;
+
+      // 新建新节点，源节点连到新节点，保留原连线不变
       const position = {
         x: sourceNode.position.x + 280,
         y: sourceNode.position.y + 120, // 稍微向下偏以作分叉
@@ -164,100 +264,28 @@ export function FlowCanvas({ workflowId, workflowData, onBack }: FlowCanvasProps
       };
 
       const newEdge = {
-        id: `e-${menuEdge.source}-${newNodeId}`,
-        source: menuEdge.source,
+        id: `e-${sourceNodeId}-${newNodeId}`,
+        source: sourceNodeId,
+        sourceHandle: sourceHandleId,
         target: newNodeId,
+        targetHandle: 'left',
         markerEnd: { type: MarkerType.ArrowClosed, width: 16, height: 16 },
         style: { strokeWidth: 1.8, stroke: 'rgba(21, 90, 239, 0.25)' },
         type: 'customStep',
       };
 
-      setNodes((nds) => [...nds, newNode]);
-      setEdges((eds) => [...eds, newEdge]);
+      const nextNodes = [...nodes, newNode];
+      const nextEdges = [...edges, newEdge];
+
+      layoutAllNodes(nextNodes, nextEdges);
     }
 
     setMenuEdge(null);
+    setActiveSourceHandle(null);
     setInsertMode(null);
     setMenuPortalPosition(null);
-  }, [menuEdge, insertMode, nodes, setNodes, setEdges]);
+  }, [menuEdge, activeSourceHandle, insertMode, nodes, edges, setNodes, setEdges, layoutAllNodes]);
 
-  // ── Topological Auto Layout ───────────────────────────────────────────────
-  const layoutAllNodes = useCallback(() => {
-    if (nodes.length === 0) return;
-
-    const adj: Record<string, string[]> = {};
-    const inDegree: Record<string, number> = {};
-
-    nodes.forEach(n => {
-      adj[n.id] = [];
-      inDegree[n.id] = 0;
-    });
-
-    edges.forEach(e => {
-      if (adj[e.source] && adj[e.target] !== undefined) {
-        adj[e.source].push(e.target);
-        inDegree[e.target] = (inDegree[e.target] || 0) + 1;
-      }
-    });
-
-    const rank: Record<string, number> = {};
-    nodes.forEach(n => {
-      rank[n.id] = 0;
-    });
-
-    const queue: string[] = [];
-    nodes.forEach(n => {
-      if (inDegree[n.id] === 0) {
-        queue.push(n.id);
-      }
-    });
-
-    if (queue.length === 0 && nodes.length > 0) {
-      queue.push(nodes[0].id);
-    }
-
-    const visited = new Set<string>();
-    while (queue.length > 0) {
-      const curr = queue.shift()!;
-      if (visited.has(curr)) continue;
-      visited.add(curr);
-
-      const currRank = rank[curr];
-      adj[curr].forEach(next => {
-        rank[next] = Math.max(rank[next], currRank + 1);
-        queue.push(next);
-      });
-    }
-
-    const rankGroups: Record<number, string[]> = {};
-    nodes.forEach(n => {
-      const r = rank[n.id] || 0;
-      if (!rankGroups[r]) {
-        rankGroups[r] = [];
-      }
-      rankGroups[r].push(n.id);
-    });
-
-    const HORIZONTAL_GAP = 280;
-    const VERTICAL_GAP = 140;
-
-    const nextNodes = nodes.map(n => {
-      const r = rank[n.id] || 0;
-      const group = rankGroups[r];
-      const index = group.indexOf(n.id);
-      const count = group.length;
-
-      const x = r * HORIZONTAL_GAP + 50;
-      const y = (index - (count - 1) / 2) * VERTICAL_GAP + 200;
-
-      return {
-        ...n,
-        position: { x, y }
-      };
-    });
-
-    setNodes(nextNodes);
-  }, [nodes, edges, setNodes]);
 
   // ── ReactFlow event handlers ──────────────────────────────────────────────
 
@@ -404,6 +432,20 @@ export function FlowCanvas({ workflowId, workflowData, onBack }: FlowCanvasProps
     () => nodes.find((n) => n.id === selectedNodeId) ?? null,
     [nodes, selectedNodeId]
   );
+
+  const nodesWithCallbacks = useMemo(() => {
+    return nodes.map(node => ({
+      ...node,
+      data: {
+        ...node.data,
+        onHandlePlusClick: (nodeId: string, handleId: string, clientX: number, clientY: number) => {
+          setActiveSourceHandle({ nodeId, handleId });
+          setInsertMode('source');
+          setMenuPortalPosition({ x: clientX, y: clientY });
+        }
+      }
+    }));
+  }, [nodes]);
 
   const edgeTypes = useMemo(() => ({ customStep: CustomStepEdge }), []);
 
@@ -577,7 +619,7 @@ export function FlowCanvas({ workflowId, workflowData, onBack }: FlowCanvasProps
                 color="gray"
                 radius="md"
                 size="md"
-                onClick={layoutAllNodes}
+                onClick={layoutAllNodes as any}
               >
                 <IconHierarchy size={16} />
               </ActionIcon>
@@ -630,7 +672,7 @@ export function FlowCanvas({ workflowId, workflowData, onBack }: FlowCanvasProps
           </Transition>
 
           <ReactFlow
-            nodes={nodes}
+            nodes={nodesWithCallbacks}
             edges={edgesWithCallbacks}
             onNodesChange={onNodesChange}
             onEdgesChange={onEdgesChange}
@@ -716,6 +758,7 @@ export function FlowCanvas({ workflowId, workflowData, onBack }: FlowCanvasProps
             }}
             onClick={() => {
               setMenuEdge(null);
+              setActiveSourceHandle(null);
               setInsertMode(null);
               setMenuPortalPosition(null);
             }}

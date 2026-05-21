@@ -1,11 +1,13 @@
 import { memo } from 'react';
 import { Handle, Position, type NodeProps } from 'reactflow';
-import { Box, Text } from '@mantine/core';
+import { Box, Text, ActionIcon } from '@mantine/core';
+import { IconPlus } from '@tabler/icons-react';
 import { useTranslation } from 'react-i18next';
 import { nodeConfig, type NodeType } from './nodeConfig';
 
 interface BaseNodeData {
   label: string;
+  onHandlePlusClick?: (nodeId: string, handleId: string, clientX: number, clientY: number) => void;
   [key: string]: unknown;
 }
 
@@ -37,9 +39,30 @@ function getNodeSummary(
   }
 }
 
+const handleStyle = `
+  .flock-handle-container {
+    position: absolute;
+  }
+  .flock-handle-plus {
+    opacity: 0;
+    pointer-events: none;
+    position: absolute;
+    left: 10px;
+    top: 50%;
+    transform: translateY(-50%);
+    z-index: 1000;
+    transition: opacity 0.15s ease;
+  }
+  .flock-handle-container:hover .flock-handle-plus,
+  .flock-handle-plus:hover {
+    opacity: 1;
+    pointer-events: all;
+  }
+`;
+
 // ── Generic base node ─────────────────────────────────────────────────────
 
-function BaseWorkflowNode({ type, data, selected }: NodeProps<BaseNodeData> & { type: NodeType }) {
+function BaseWorkflowNode({ id, type, data, selected }: NodeProps<BaseNodeData> & { type: NodeType }) {
   const { t } = useTranslation();
   const cfg = nodeConfig[type];
   if (!cfg) return null;
@@ -57,46 +80,47 @@ function BaseWorkflowNode({ type, data, selected }: NodeProps<BaseNodeData> & { 
         background: 'var(--flock-bg-surface)',
         boxShadow: selected 
           ? `0 0 0 3px rgba(21, 90, 239, 0.25)` 
-          : '0 4px 12px rgba(0,0,0,0.03)',
-        overflow: 'hidden',
+          : '0 4px 10px rgba(0,0,0,0.03)',
+        display: 'flex',
+        flexDirection: 'column',
+        position: 'relative',
         cursor: 'pointer',
         transition: 'all 0.15s ease',
       }}
     >
-      {/* Header */}
+      <style dangerouslySetInnerHTML={{ __html: handleStyle }} />
+      {/* Node Header */}
       <Box
         style={{
           padding: '8px 12px',
           display: 'flex',
           alignItems: 'center',
           gap: 8,
-          borderBottom: '1px solid var(--flock-border-subtle)',
-          background: 'var(--flock-bg-surface)',
+          borderBottom: summary ? '1px solid var(--flock-border-subtle)' : 'none',
         }}
       >
-        {/* 圆角正方形包裹的 Icon 徽标 */}
         <Box
           style={{
             width: 22,
             height: 22,
             borderRadius: 6,
-            background: 'var(--flock-accent-soft)', // 统一用主题色蓝色柔和背景
+            background: 'var(--flock-accent-soft)',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
             flexShrink: 0,
           }}
         >
-          <Icon size={13} stroke={2.5} style={{ color: cfg.colorHex }} />
+          <Icon size={12} stroke={2.5} style={{ color: cfg.colorHex }} />
         </Box>
         <Text size="xs" fw={700} style={{ color: 'var(--flock-text-bright)', flex: 1, fontSize: 11, lineHeight: 1.2 }} lineClamp={1}>
           {data.label || t(cfg.displayKey, { defaultValue: cfg.display })}
         </Text>
       </Box>
 
-      {/* Body */}
+      {/* Node Content/Summary */}
       {summary && (
-        <Box style={{ padding: '8px 12px', background: 'var(--flock-bg-surface)' }}>
+        <Box style={{ padding: '8px 12px', minHeight: 38, display: 'flex', alignItems: 'center' }}>
           <Text size="xs" c="dimmed" lineClamp={2} style={{ fontSize: 10 }}>
             {summary}
           </Text>
@@ -118,17 +142,54 @@ function BaseWorkflowNode({ type, data, selected }: NodeProps<BaseNodeData> & { 
         />
       )}
       {cfg.allowedConnections.sources.includes('right') && (
-        <Handle
-          type="source"
-          position={Position.Right}
-          id="right"
+        <div 
+          className="flock-handle-container"
           style={{
-            background: 'var(--flock-bg-surface)',
-            border: `2px solid var(--flock-accent)`, // 统一成主题色蓝色
-            width: 8,
-            height: 8,
+            position: 'absolute',
+            top: '50%',
+            right: -28,
+            transform: 'translateY(-50%)',
+            width: 32,
+            height: 20,
+            zIndex: 10,
           }}
-        />
+        >
+          <Handle
+            type="source"
+            position={Position.Right}
+            id="right"
+            style={{
+              background: 'var(--flock-bg-surface)',
+              border: `2px solid var(--flock-accent)`,
+              width: 8,
+              height: 8,
+              top: '50%',
+              left: 0,
+              transform: 'translateY(-50%)',
+            }}
+          />
+          <div className="flock-handle-plus">
+            <ActionIcon
+              size="16px"
+              radius="xl"
+              variant="filled"
+              style={{
+                boxShadow: '0 2px 6px rgba(0,0,0,0.15)',
+                cursor: 'pointer',
+                background: 'var(--flock-accent, #155aef)',
+              }}
+              onClick={(e) => {
+                e.stopPropagation();
+                e.preventDefault();
+                if (data.onHandlePlusClick) {
+                  data.onHandlePlusClick(id, 'right', e.clientX, e.clientY);
+                }
+              }}
+            >
+              <IconPlus size={10} stroke={3} />
+            </ActionIcon>
+          </div>
+        </div>
       )}
     </Box>
   );
@@ -136,7 +197,7 @@ function BaseWorkflowNode({ type, data, selected }: NodeProps<BaseNodeData> & { 
 
 // ── Start / End ────────────────────────────────────────────────────────────
 
-export const StartNode = memo(({ data, selected }: NodeProps<BaseNodeData>) => {
+export const StartNode = memo(({ id, data, selected }: NodeProps<BaseNodeData>) => {
   const cfg = nodeConfig['start'];
   const Icon = cfg.icon;
   const { t } = useTranslation();
@@ -157,9 +218,11 @@ export const StartNode = memo(({ data, selected }: NodeProps<BaseNodeData>) => {
         gap: 8,
         cursor: 'pointer',
         width: 220,
+        position: 'relative',
         transition: 'all 0.15s ease',
       }}
     >
+      <style dangerouslySetInnerHTML={{ __html: handleStyle }} />
       <Box
         style={{
           width: 22,
@@ -177,12 +240,54 @@ export const StartNode = memo(({ data, selected }: NodeProps<BaseNodeData>) => {
       <Text size="xs" fw={700} style={{ color: 'var(--flock-text-bright)', fontSize: 11, flex: 1 }}>
         {data.label || t('workflow.nodes.start.label', 'Start')}
       </Text>
-      <Handle
-        type="source"
-        position={Position.Right}
-        id="right"
-        style={{ background: 'var(--flock-bg-surface)', border: `2px solid var(--flock-accent)`, width: 8, height: 8 }}
-      />
+      <div 
+        className="flock-handle-container"
+        style={{
+          position: 'absolute',
+          top: '50%',
+          right: -28,
+          transform: 'translateY(-50%)',
+          width: 32,
+          height: 20,
+          zIndex: 10,
+        }}
+      >
+        <Handle
+          type="source"
+          position={Position.Right}
+          id="right"
+          style={{
+            background: 'var(--flock-bg-surface)',
+            border: `2px solid var(--flock-accent)`,
+            width: 8,
+            height: 8,
+            top: '50%',
+            left: 0,
+            transform: 'translateY(-50%)',
+          }}
+        />
+        <div className="flock-handle-plus">
+          <ActionIcon
+            size="16px"
+            radius="xl"
+            variant="filled"
+            style={{
+              boxShadow: '0 2px 6px rgba(0,0,0,0.15)',
+              cursor: 'pointer',
+              background: 'var(--flock-accent, #155aef)',
+            }}
+            onClick={(e) => {
+              e.stopPropagation();
+              e.preventDefault();
+              if (data.onHandlePlusClick) {
+                data.onHandlePlusClick(id, 'right', e.clientX, e.clientY);
+              }
+            }}
+          >
+            <IconPlus size={10} stroke={3} />
+          </ActionIcon>
+        </div>
+      </div>
     </Box>
   );
 });
@@ -250,7 +355,7 @@ export const PluginNode = memo((props: NodeProps<BaseNodeData>) => <BaseWorkflow
 
 // ── Multi-handle nodes (Classifier / IfElse) ────────────────────────────────
 
-export const ClassifierNode = memo(({ data, selected }: NodeProps<BaseNodeData>) => {
+export const ClassifierNode = memo(({ id, data, selected }: NodeProps<BaseNodeData>) => {
   const cfg = nodeConfig['classifier'];
   const Icon = cfg.icon;
   const { t } = useTranslation();
@@ -272,9 +377,11 @@ export const ClassifierNode = memo(({ data, selected }: NodeProps<BaseNodeData>)
           : '0 4px 12px rgba(0,0,0,0.03)',
         overflow: 'visible',
         cursor: 'pointer',
+        position: 'relative',
         transition: 'all 0.15s ease',
       }}
     >
+      <style dangerouslySetInnerHTML={{ __html: handleStyle }} />
       <Box
         style={{
           padding: '8px 12px',
@@ -331,20 +438,54 @@ export const ClassifierNode = memo(({ data, selected }: NodeProps<BaseNodeData>)
                   </Text>
                 )}
               </Box>
-              <Handle
-                type="source"
-                position={Position.Right}
-                id={cat.category_id}
+              <div 
+                className="flock-handle-container"
                 style={{
-                  background: 'var(--flock-bg-surface)',
-                  border: `2px solid var(--flock-accent)`,
-                  width: 8,
-                  height: 8,
-                  right: -16,
+                  position: 'absolute',
                   top: '50%',
+                  right: -40,
                   transform: 'translateY(-50%)',
+                  width: 32,
+                  height: 20,
+                  zIndex: 10,
                 }}
-              />
+              >
+                <Handle
+                  type="source"
+                  position={Position.Right}
+                  id={cat.category_id}
+                  style={{
+                    background: 'var(--flock-bg-surface)',
+                    border: `2px solid var(--flock-accent)`,
+                    width: 8,
+                    height: 8,
+                    top: '50%',
+                    left: 0,
+                    transform: 'translateY(-50%)',
+                  }}
+                />
+                <div className="flock-handle-plus">
+                  <ActionIcon
+                    size="16px"
+                    radius="xl"
+                    variant="filled"
+                    style={{
+                      boxShadow: '0 2px 6px rgba(0,0,0,0.15)',
+                      cursor: 'pointer',
+                      background: 'var(--flock-accent, #155aef)',
+                    }}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      e.preventDefault();
+                      if (data.onHandlePlusClick) {
+                        data.onHandlePlusClick(id, cat.category_id, e.clientX, e.clientY);
+                      }
+                    }}
+                  >
+                    <IconPlus size={10} stroke={3} />
+                  </ActionIcon>
+                </div>
+              </div>
             </Box>
           );
         })}
@@ -364,7 +505,7 @@ export const ClassifierNode = memo(({ data, selected }: NodeProps<BaseNodeData>)
   );
 });
 
-export const IfElseNode = memo(({ data, selected }: NodeProps<BaseNodeData>) => {
+export const IfElseNode = memo(({ id, data, selected }: NodeProps<BaseNodeData>) => {
   const cfg = nodeConfig['ifelse'];
   const Icon = cfg.icon;
   const cases = (data.cases as { case_id: string }[]) ?? [];
@@ -383,9 +524,11 @@ export const IfElseNode = memo(({ data, selected }: NodeProps<BaseNodeData>) => 
           : '0 4px 12px rgba(0,0,0,0.03)',
         overflow: 'visible',
         cursor: 'pointer',
+        position: 'relative',
         transition: 'all 0.15s ease',
       }}
     >
+      <style dangerouslySetInnerHTML={{ __html: handleStyle }} />
       <Box
         style={{
           padding: '8px 12px',
@@ -433,20 +576,54 @@ export const IfElseNode = memo(({ data, selected }: NodeProps<BaseNodeData>) => 
                   {isElse ? 'ELSE' : `IF ${idx + 1}`}
                 </Text>
               </Box>
-              <Handle
-                type="source"
-                position={Position.Right}
-                id={c.case_id}
+              <div 
+                className="flock-handle-container"
                 style={{
-                  background: 'var(--flock-bg-surface)',
-                  border: `2px solid var(--flock-accent)`,
-                  width: 8,
-                  height: 8,
-                  right: -16,
+                  position: 'absolute',
                   top: '50%',
+                  right: -40,
                   transform: 'translateY(-50%)',
+                  width: 32,
+                  height: 20,
+                  zIndex: 10,
                 }}
-              />
+              >
+                <Handle
+                  type="source"
+                  position={Position.Right}
+                  id={c.case_id}
+                  style={{
+                    background: 'var(--flock-bg-surface)',
+                    border: `2px solid var(--flock-accent)`,
+                    width: 8,
+                    height: 8,
+                    top: '50%',
+                    left: 0,
+                    transform: 'translateY(-50%)',
+                  }}
+                />
+                <div className="flock-handle-plus">
+                  <ActionIcon
+                    size="16px"
+                    radius="xl"
+                    variant="filled"
+                    style={{
+                      boxShadow: '0 2px 6px rgba(0,0,0,0.15)',
+                      cursor: 'pointer',
+                      background: 'var(--flock-accent, #155aef)',
+                    }}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      e.preventDefault();
+                      if (data.onHandlePlusClick) {
+                        data.onHandlePlusClick(id, c.case_id, e.clientX, e.clientY);
+                      }
+                    }}
+                  >
+                    <IconPlus size={10} stroke={3} />
+                  </ActionIcon>
+                </div>
+              </div>
             </Box>
           );
         })}

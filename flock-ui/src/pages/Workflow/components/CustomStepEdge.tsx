@@ -34,13 +34,6 @@ export function CustomStepEdge({
     }
   };
 
-  const handleSourceClick = (e: React.MouseEvent) => {
-    e.stopPropagation();
-    e.preventDefault();
-    if (data?.onInsertClick) {
-      data.onInsertClick('source', e.clientX, e.clientY);
-    }
-  };
 
   const activeStroke = 'var(--flock-accent, #155aef)';
   const baseStroke = style.stroke || 'rgba(21, 90, 239, 0.25)';
@@ -73,32 +66,6 @@ export function CustomStepEdge({
       
       {isHovered && (
         <EdgeLabelRenderer>
-          {/* Branching button (Source Node endpoint) */}
-          <div
-            style={{
-              position: 'absolute',
-              transform: `translate(-50%, -50%) translate(${sourceX }px, ${sourceY}px)`,
-              pointerEvents: 'all',
-              zIndex: 1000,
-            }}
-            className="nodrag nopan"
-            onMouseEnter={() => setIsHovered(true)}
-            onMouseLeave={() => setIsHovered(false)}
-          >
-            <ActionIcon
-              size="18px"
-              radius="xl"
-              variant="filled"
-              style={{
-                boxShadow: '0 2px 6px rgba(0,0,0,0.15)',
-                cursor: 'pointer',
-                background: 'var(--flock-accent, #155aef)',
-              }}
-              onClick={handleSourceClick}
-            >
-              <IconPlus size={11} stroke={3} />
-            </ActionIcon>
-          </div>
 
           {/* Insertion button (Center of edge) */}
           <div
