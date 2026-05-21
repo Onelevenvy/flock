@@ -649,7 +649,8 @@ pub async fn create_playwright_snapshot(
     Ok(snapshot_name.to_string())
 }
 
-/// 获取沙盒 6080 端口的 Signed Preview URL，并自动转化为 noVNC 控制台 URL。
+/// 获取沙盒 6080 端口的 Preview URL，并自动转化为 noVNC 控制台 URL。
+/// 当沙盒为 public 时，此 URL 可直接免鉴权访问，规避 Signed Preview URL 的安全警告页面。
 pub async fn get_sandbox_vnc_url(
     db: &DbManager,
     sandbox_id: &str,
@@ -661,7 +662,7 @@ pub async fn get_sandbox_vnc_url(
     let base = get_api_base(cfg.api_url.as_ref().unwrap());
     let api_key = cfg.api_key.as_ref().unwrap();
 
-    let url = format!("{}/api/sandbox/{}/ports/6080/signed-preview-url", base, sandbox_id);
+    let url = format!("{}/api/sandbox/{}/ports/6080/preview-url", base, sandbox_id);
     let resp = client.get(&url)
         .header("Authorization", format!("Bearer {}", api_key))
         .send()
@@ -670,11 +671,11 @@ pub async fn get_sandbox_vnc_url(
     let status = resp.status();
     let text = resp.text().await.unwrap_or_default();
     if !status.is_success() {
-        anyhow::bail!("获取签名预览URL失败 (HTTP {}): {}", status, text);
+        anyhow::bail!("获取预览URL失败 (HTTP {}): {}", status, text);
     }
 
     let val: serde_json::Value = serde_json::from_str(&text)
-        .map_err(|e| anyhow::anyhow!("解析签名URL响应失败: {}. 原始响应: {}", e, text))?;
+        .map_err(|e| anyhow::anyhow!("解析预览URL响应失败: {}. 原始响应: {}", e, text))?;
 
     let mut url_str = val.get("url")
         .or_else(|| val.get("signedUrl"))
