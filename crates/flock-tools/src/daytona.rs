@@ -452,7 +452,8 @@ pub async fn check_computer_use_status(
                             .or_else(|| val.get("data").and_then(|d| d.get("status")))
                             .or_else(|| val.get("data").and_then(|d| d.get("state")));
                         if let Some(status_str) = status_val.and_then(|s| s.as_str()) {
-                            return Ok(status_str == "started" || status_str == "running" || status_str == "ready");
+                            let s_lower = status_str.to_lowercase();
+                            return Ok(s_lower == "started" || s_lower == "running" || s_lower == "ready" || s_lower == "active");
                         }
                     }
                     return Ok(true);
