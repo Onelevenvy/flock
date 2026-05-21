@@ -5,6 +5,9 @@ import { useTranslation } from 'react-i18next';
 import type { Tool, ToolProvider } from '../../../hooks/useAvailableTools';
 import { ToolsIcon } from '../Icons';
 import { ToolDetailPopover } from './ToolDetailPopover';
+import { getProviderName } from '../../../pages/Skills/helpers';
+
+
 
 export interface ToolCardProps {
   tool: Tool;
@@ -56,7 +59,7 @@ export function ToolCard({ tool, provider, enabled, onToggle, onRemove, disabled
             size="9px" fw={600} tt="uppercase"
             style={{ color: 'var(--flock-text-dim)', letterSpacing: '0.06em', lineHeight: 1, marginBottom: 1 }}
           >
-            {provider.provider_name}
+            {getProviderName(provider)}
           </Text>
         )}
         <Text
