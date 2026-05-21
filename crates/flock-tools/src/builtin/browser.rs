@@ -12,6 +12,7 @@ use base64::{Engine as _, engine::general_purpose};
 /// - Use this tool when you need to fetch web pages, interact with pages (click, fill), or visual screenshot verification.
 /// - Returns page screenshot or text content, and writes the screenshot to `.flock/sandbox/screenshot.png`.
 /// - Supported actions: "goto" (open URL and screenshot), "click" (click element), "fill" (type text), "interactive" (get VNC remote control proxy URL).
+/// - CRITICAL: If the user requests manual control, manual input, manual login, or wants to interact with the webpage himself, you MUST set action to "interactive". This will launch the remote VNC desktop in the preview area, allowing the user to take control.
 ///
 /// @param url The target website URL.
 /// @param action The browser action: "goto" (default), "click", "fill", "interactive".
@@ -92,29 +93,51 @@ import sys
 import base64
 from playwright.sync_api import sync_playwright
 
-with sync_playwright() as p:
-    browser = p.chromium.launch(headless=True, args=["--no-sandbox", "--disable-setuid-sandbox"])
-    page = browser.new_page()
-    
-    # goto
-    page.goto("{url}")
-    
-    action = "{act}"
-    if action == "click" and "{sel_val}":
-        page.click("{sel_val}")
-        page.wait_for_timeout(1000)
-    elif action == "fill" and "{sel_val}":
-        page.fill("{sel_val}", "{text_val}")
-        page.wait_for_timeout(1000)
+try:
+    with sync_playwright() as p:
+        browser = p.chromium.launch(headless=True, args=["--no-sandbox", "--disable-setuid-sandbox"])
+        page = browser.new_page()
         
-    screenshot_bytes = page.screenshot()
-    print("SCREENSHOT_B64_START")
-    print(base64.b64encode(screenshot_bytes).decode('utf-8'))
-    print("SCREENSHOT_B64_END")
-    
-    title = page.title()
-    print(f"TITLE: {{title}}")
-    browser.close()
+        # 使用 domcontentloaded 以防网络卡顿在某些广告/埋点资源上
+        try:
+            page.goto("{url}", wait_until="domcontentloaded", timeout=15000)
+        except Exception as e:
+            print(f"GOTO_WARNING: {{e}}", file=sys.stderr)
+        
+        action = "{act}"
+        if action == "click" and "{sel_val}":
+            try:
+                page.click("{sel_val}", timeout=5000)
+                page.wait_for_timeout(1000)
+            except Exception as e:
+                print(f"CLICK_WARNING: {{e}}", file=sys.stderr)
+        elif action == "fill" and "{sel_val}":
+            try:
+                page.fill("{sel_val}", "{text_val}", timeout=5000)
+                page.wait_for_timeout(1000)
+            except Exception as e:
+                print(f"FILL_WARNING: {{e}}", file=sys.stderr)
+            
+        try:
+            screenshot_bytes = page.screenshot(timeout=5000)
+            print("SCREENSHOT_B64_START")
+            print(base64.b64encode(screenshot_bytes).decode('utf-8'))
+            print("SCREENSHOT_B64_END")
+        except Exception as e:
+            print(f"SCREENSHOT_ERROR: {{e}}", file=sys.stderr)
+        
+        try:
+            title = page.title()
+            print(f"TITLE: {{title}}")
+        except Exception as e:
+            pass
+            
+        browser.close()
+except Exception as e:
+    print(f"FATAL_ERROR: {{e}}", file=sys.stderr)
+    sys.exit(1)
+
+sys.exit(0)
 "#,
         url = url,
         act = act,
@@ -131,7 +154,7 @@ with sync_playwright() as p:
              python3 -m pip install --break-system-packages playwright && \
              python3 -m playwright install chromium && \
              python3 -m playwright install-deps chromium; \
-         fi && \
+         fi; \
          python3 /tmp/run_browser.py",
         b64_script
     );
