@@ -333,8 +333,14 @@ pub async fn start_agent(
         config.base_url
     );
 
+    let approval_manager = {
+        let s = state.lock().await;
+        s.approval_manager.clone()
+    };
+
     let protocol_emitter = Arc::new(TauriProtocolEmitter::new(app.clone()));
     flock_tools::init_global_emitter(protocol_emitter.clone());
+    flock_tools::init_global_approval_manager(approval_manager);
     let output: Arc<dyn OutputSink> = protocol_emitter.clone();
 
     let mut bootstrap = AgentBuilder::new(config.clone(), workdir.to_string_lossy(), output.clone());

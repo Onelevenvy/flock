@@ -63,7 +63,7 @@ pub async fn run_tools(
             let futures: Vec<_> = approved
                 .iter()
                 .map(|call| {
-                    execute_single(registry, call, hooks_shared, compaction_level, toon_enabled)
+                    execute_single(registry, call, hooks_shared, compaction_level, toon_enabled, "")
                 })
                 .collect();
             let batch_results = futures::future::join_all(futures).await;
@@ -90,6 +90,7 @@ pub async fn run_tools(
                                 hooks_shared,
                                 compaction_level,
                                 toon_enabled,
+                                "",
                             )
                             .await;
                         }
@@ -150,6 +151,7 @@ async fn execute_single(
     hooks: Option<&HookEngine>,
     compaction_level: flock_core::context_compression::CompressionLevel,
     toon_enabled: bool,
+    msg_id: &str,
 ) -> (ContentBlock, Option<ContextModifier>) {
     let ContentBlock::ToolUse { id, name, input } = call else {
         unreachable!("execute_single called with non-ToolUse block")
@@ -172,7 +174,12 @@ async fn execute_single(
     let (result, modifier) = match registry.get(name) {
         Some(tool) => {
             let max_size = tool.max_result_size();
-            let r = tool.execute(input.clone()).await;
+            let mut input_val = input.clone();
+            if let Some(obj) = input_val.as_object_mut() {
+                obj.insert("call_id".to_string(), serde_json::Value::String(id.clone()));
+                obj.insert("msg_id".to_string(), serde_json::Value::String(msg_id.to_string()));
+            }
+            let r = tool.execute(input_val).await;
             let modifier = if r.is_error {
                 None
             } else {
@@ -309,7 +316,7 @@ pub async fn execute_tool_calls_with_approval(
             let futures: Vec<_> = approved_calls
                 .iter()
                 .map(|call| {
-                    execute_single(registry, call, hooks_shared, compaction_level, toon_enabled)
+                    execute_single(registry, call, hooks_shared, compaction_level, toon_enabled, msg_id)
                 })
                 .collect();
 
@@ -390,7 +397,7 @@ pub async fn execute_tool_calls_with_approval(
                 let modifier;
                 {
                     let hooks_shared: Option<&HookEngine> = hooks.as_deref();
-                    (result, modifier) = execute_single(registry, call, hooks_shared, compaction_level, toon_enabled).await;
+                    (result, modifier) = execute_single(registry, call, hooks_shared, compaction_level, toon_enabled, msg_id).await;
                 }
 
                 if let ContentBlock::ToolResult { content, is_error, .. } = &result {

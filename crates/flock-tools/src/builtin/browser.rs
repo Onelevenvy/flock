@@ -24,6 +24,8 @@ pub async fn browser(
     action: Option<String>,
     selector: Option<String>,
     text: Option<String>,
+    call_id: Option<String>,
+    msg_id: Option<String>,
 ) -> Result<String, String> {
     let db = crate::get_db_manager()
         .ok_or_else(|| "数据库管理器未初始化，无法读取沙箱配置。".to_string())?;
@@ -77,6 +79,34 @@ pub async fn browser(
             "人机协同远程桌面已拉起！您可以在右侧工作区预览区直接控制远程浏览器，或使用以下链接访问：\n\n[Remote VNC Link]({})\n\n💡 **重要安全提示**：由于云端代理没有内置您的局域网泛域名证书，若右侧预览窗口显示“空白”或“您的连接不是专用连接”报错，**请务必点击上方 [Remote VNC Link]({}) 链接**，在新开的标签页中点击 **“高级”** -> **“继续前往/忽略警告”** 授权信任，然后返回本界面刷新即可完美进行控制！",
             proxy_url, proxy_url
         );
+
+        // 如果有 call_id 并且能拿到全局 approval_manager，我们向前端发送需要人工接管事件，并进行异步挂起
+        if let (Some(cid), Some(mid), Some(app_mgr)) = (call_id, msg_id, crate::get_global_approval_manager()) {
+            crate::emit_info(&format!("正在通知前端拉起人工接管横幅 (Call ID: {})...", cid));
+            crate::daytona::emit_human_takeover(
+                &cid,
+                &mid,
+                "人机协同远程桌面已拉起！由于当前操作需要人工介入（如输入密码、手动验证码、安全登录等），大模型自动执行已暂停。您可以在右侧预览面板中直接操作页面。完成后请点击横幅上的【我已完成操作】按钮以恢复大模型的自动运行。",
+                Some(proxy_url.clone()),
+            );
+
+            // 用 oneshot 信道等待前端发来的 resolve/approve 结果
+            let rx = app_mgr.request_approval(&cid, &ToolCategory::Exec);
+            match rx.await {
+                Ok(flock_core::ipc_interface::approval::ToolApprovalResult::Approved) => {
+                    crate::emit_info("收到前端已完成操作指令，正在恢复 Agent 自动执行。");
+                    return Ok("人工接管操作已顺利完成，用户已确认！Agent 已经成功从暂停点恢复，并继续自动执行后续流程。".to_string());
+                }
+                Ok(flock_core::ipc_interface::approval::ToolApprovalResult::Denied { reason }) => {
+                    crate::emit_info(&format!("人工接管被用户取消: {}", reason));
+                    return Err(format!("人工接管被取消，原因为: {}", reason));
+                }
+                Err(e) => {
+                    crate::emit_info(&format!("人工接管等待通道意外中断: {}", e));
+                }
+            }
+        }
+
         return Ok(res_msg);
     }
 

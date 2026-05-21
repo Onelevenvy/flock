@@ -99,6 +99,18 @@ pub fn get_db_manager() -> Option<Arc<DbManager>> {
     GLOBAL_DB_MANAGER.get().cloned()
 }
 
+static GLOBAL_APPROVAL_MANAGER: OnceLock<Arc<flock_core::ipc_interface::approval::ToolApprovalManager>> = OnceLock::new();
+
+/// Initialize the global approval manager for tools.
+pub fn init_global_approval_manager(mgr: Arc<flock_core::ipc_interface::approval::ToolApprovalManager>) {
+    let _ = GLOBAL_APPROVAL_MANAGER.set(mgr);
+}
+
+/// Get the global approval manager if initialized.
+pub fn get_global_approval_manager() -> Option<Arc<flock_core::ipc_interface::approval::ToolApprovalManager>> {
+    GLOBAL_APPROVAL_MANAGER.get().cloned()
+}
+
 static GLOBAL_EMITTER: OnceLock<Arc<dyn flock_core::ipc_interface::writer::ProtocolEmitter>> = OnceLock::new();
 
 /// Initialize the global emitter for tools.
