@@ -200,6 +200,7 @@ impl DbManager {
                     name        = excluded.name,
                     icon        = excluded.icon,
                     description = excluded.description,
+                    tools       = excluded.tools,
                     sort_order  = excluded.sort_order,
                     updated_at  = excluded.updated_at",
             )
@@ -325,7 +326,14 @@ pub fn builtin_assistants() -> Vec<UpsertAssistant> {
             ),
             model: String::new(),
             system_prompt: "You are an assistant capable of interacting with a computer sandbox. You can execute code, open websites, and control the screen to help the user complete desktop tasks.".to_string(),
-            tools: vec!["sandbox".to_string()],
+            tools: vec![
+                "sandbox".to_string(),
+                "Browser".to_string(),
+                "CodeExecution".to_string(),
+                "ComputerUse".to_string(),
+                "RequestHumanAssistance".to_string(),
+                "SandboxExec".to_string(),
+            ],
             disabled_tools: vec![],
             skills: vec![],
             is_builtin: true,
