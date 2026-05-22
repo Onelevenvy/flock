@@ -27,7 +27,6 @@ export function HomeView() {
   const setWorkdir = useAgentStore(s => s.setWorkdir);
   const setStatus = useAgentStore(s => s.setStatus);
   const clearMessages = useAgentStore(s => s.clearMessages);
-  const messages = useAgentStore(s => s.messages);
   const capabilities = useAgentStore(s => s.capabilities);
   const setCapabilities = useAgentStore(s => s.setCapabilities);
   const setError = useAgentStore(s => s.setError);
@@ -133,17 +132,14 @@ export function HomeView() {
     const content = value.trim();
 
     let convId = activeConversationId;
-    const isNewOrEmpty = !convId || messages.length === 0;
 
-    // 如果当前是没有消息的新对话，先进行创建（如果需要）并初始化 Agent
-    if (isNewOrEmpty) {
+    // 如果当前没有激活的对话，先创建一个
+    if (!convId) {
       try {
         setStatus('connecting');
-        if (!convId) {
-          const conv = await createConversation({ workspaceId: activeWorkspaceId!, title: '' });
-          convId = conv.id;
-          setActiveConversation(convId);
-        }
+        const conv = await createConversation({ workspaceId: activeWorkspaceId!, title: '' });
+        convId = conv.id;
+        setActiveConversation(convId);
         clearMessages();
 
         // 🚀 Save the chosen assistant to the conversation map!

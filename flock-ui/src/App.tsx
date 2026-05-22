@@ -45,8 +45,6 @@ function AppInner() {
   const status = useAgentStore((s) => s.status);
   const setStatus = useAgentStore((s) => s.setStatus);
   const setWorkdir = useAgentStore((s) => s.setWorkdir);
-  const messages = useAgentStore((s) => s.messages);
-  const loadHistory = useAgentStore((s) => s.loadHistory);
   const { data: workspaces = [] } = useWorkspacesQuery();
   const {
     data: conversations = [],
@@ -60,28 +58,6 @@ function AppInner() {
       setActiveConversation(null);
     }
   }, [activeConversationId, conversations, conversationsFetched, conversationsFetching, setActiveConversation]);
-
-  // 当 activeConversationId 存在且有效，但前端的 messages 为空时，自动加载历史以恢复界面状态
-  useEffect(() => {
-    if (
-      activeWorkspaceId &&
-      activeConversationId &&
-      conversationsFetched &&
-      !conversationsFetching &&
-      conversations.some((conv) => conv.id === activeConversationId) &&
-      messages.length === 0
-    ) {
-      loadHistory(activeWorkspaceId, activeConversationId);
-    }
-  }, [
-    activeWorkspaceId,
-    activeConversationId,
-    conversationsFetched,
-    conversationsFetching,
-    conversations,
-    messages.length,
-    loadHistory,
-  ]);
 
   // 全局自动连接：只要有活跃的工作空间且处于 disconnected 状态，立刻初始化 Agent
   useEffect(() => {
