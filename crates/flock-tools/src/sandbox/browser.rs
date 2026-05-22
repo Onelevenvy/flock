@@ -206,20 +206,22 @@ sys.exit(0)
             if let Some(end_idx) = stdout_stderr.find(end_marker) {
                 let b64_data = &stdout_stderr[start_idx + start_marker.len()..end_idx].trim();
                 if let Ok(img_bytes) = general_purpose::STANDARD.decode(b64_data) {
-                    let ss_path = Path::new(".flock/sandbox/screenshots").join(format!("{}.png", name_id));
+                    let base_dir = crate::get_workspace_dir().unwrap_or_else(|| std::env::current_dir().unwrap_or_default());
+                    let ss_dir = base_dir.join(".flock/sandbox/screenshots");
+                    let ss_path = ss_dir.join(format!("{}.png", name_id));
                     if let Some(parent) = ss_path.parent() {
                         let _ = std::fs::create_dir_all(parent);
                     }
                     let _ = std::fs::write(&ss_path, &img_bytes);
                     screenshot_saved = true;
                     // 同时保留一份覆盖的 screenshot.png 兼容以前的设计
-                    let _ = std::fs::write(".flock/sandbox/screenshot.png", &img_bytes);
+                    let _ = std::fs::write(base_dir.join(".flock/sandbox/screenshot.png"), &img_bytes);
                 }
             }
         }
 
-        let current_dir = std::env::current_dir().unwrap_or_default();
-        let abs_screenshot_path = current_dir.join(".flock/sandbox/screenshots").join(format!("{}.png", name_id));
+        let base_dir = crate::get_workspace_dir().unwrap_or_else(|| std::env::current_dir().unwrap_or_default());
+        let abs_screenshot_path = base_dir.join(".flock/sandbox/screenshots").join(format!("{}.png", name_id));
         let abs_path_str = abs_screenshot_path.to_string_lossy().to_string();
 
         let image_md = if screenshot_saved {
@@ -410,12 +412,14 @@ sys.exit(0)
         if let Some(end_idx) = stdout_stderr.find(end_marker) {
             let b64_data = &stdout_stderr[start_idx + start_marker.len()..end_idx].trim();
             if let Ok(img_bytes) = general_purpose::STANDARD.decode(b64_data) {
-                let ss_path = Path::new(".flock/sandbox/screenshots").join(format!("{}.png", name_id));
+                let base_dir = crate::get_workspace_dir().unwrap_or_else(|| std::env::current_dir().unwrap_or_default());
+                let ss_dir = base_dir.join(".flock/sandbox/screenshots");
+                let ss_path = ss_dir.join(format!("{}.png", name_id));
                 if let Some(parent) = ss_path.parent() {
                     let _ = std::fs::create_dir_all(parent);
                 }
                 let _ = std::fs::write(&ss_path, &img_bytes);
-                let _ = std::fs::write(".flock/sandbox/screenshot.png", &img_bytes);
+                let _ = std::fs::write(base_dir.join(".flock/sandbox/screenshot.png"), &img_bytes);
                 screenshot_saved = true;
                 crate::emit_info("网页截图已成功保存至工作区，已生成步骤快照。");
             }
@@ -430,8 +434,8 @@ sys.exit(0)
         }
     }
 
-    let current_dir = std::env::current_dir().unwrap_or_default();
-    let abs_screenshot_path = current_dir.join(".flock/sandbox/screenshots").join(format!("{}.png", name_id));
+    let base_dir = crate::get_workspace_dir().unwrap_or_else(|| std::env::current_dir().unwrap_or_default());
+    let abs_screenshot_path = base_dir.join(".flock/sandbox/screenshots").join(format!("{}.png", name_id));
     let abs_path_str = abs_screenshot_path.to_string_lossy().to_string();
 
     let image_md = if screenshot_saved {

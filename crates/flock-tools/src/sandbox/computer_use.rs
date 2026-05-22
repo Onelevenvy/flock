@@ -217,12 +217,14 @@ pub async fn computer_use(
     let mut screenshot_saved = false;
     if exit_code == 0 && !b64_data.is_empty() {
         if let Ok(img_bytes) = general_purpose::STANDARD.decode(b64_data.trim()) {
-            let ss_path = Path::new(".flock/sandbox/screenshots").join(format!("{}.png", name_id));
+            let base_dir = crate::get_workspace_dir().unwrap_or_else(|| std::env::current_dir().unwrap_or_default());
+            let ss_dir = base_dir.join(".flock/sandbox/screenshots");
+            let ss_path = ss_dir.join(format!("{}.png", name_id));
             if let Some(parent) = ss_path.parent() {
                 let _ = std::fs::create_dir_all(parent);
             }
             let _ = std::fs::write(&ss_path, &img_bytes);
-            let _ = std::fs::write(".flock/sandbox/screenshot.png", &img_bytes);
+            let _ = std::fs::write(base_dir.join(".flock/sandbox/screenshot.png"), &img_bytes);
             screenshot_saved = true;
             crate::emit_info("远程桌面最新状态已成功截取并拉回工作区预览！");
         }
@@ -236,8 +238,8 @@ pub async fn computer_use(
         }
     };
 
-    let current_dir = std::env::current_dir().unwrap_or_default();
-    let abs_screenshot_path = current_dir.join(".flock/sandbox/screenshots").join(format!("{}.png", name_id));
+    let base_dir = crate::get_workspace_dir().unwrap_or_else(|| std::env::current_dir().unwrap_or_default());
+    let abs_screenshot_path = base_dir.join(".flock/sandbox/screenshots").join(format!("{}.png", name_id));
     let abs_path_str = abs_screenshot_path.to_string_lossy().to_string();
 
     let image_md = if screenshot_saved {

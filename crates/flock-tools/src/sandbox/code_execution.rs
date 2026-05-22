@@ -35,7 +35,9 @@ pub async fn code_execution(code: String) -> Result<String, String> {
         .map_err(|e| format!("代码执行失败: {}", e))?;
 
     // 3. 将结果写到本地日志文件 `.flock/sandbox/code_result.log` 供前端预览
-    let log_path = Path::new(".flock/sandbox/code_result.log");
+    let log_path = crate::get_workspace_dir()
+        .unwrap_or_else(|| std::env::current_dir().unwrap_or_default())
+        .join(".flock/sandbox/code_result.log");
     if let Some(parent) = log_path.parent() {
         let _ = std::fs::create_dir_all(parent);
     }
@@ -44,7 +46,7 @@ pub async fn code_execution(code: String) -> Result<String, String> {
         "--- Daytona Sandbox Code Execution ---\nExit Code: {}\n\n--- Output ---\n{}",
         exit_code, stdout_stderr
     );
-    let _ = std::fs::write(log_path, &log_content);
+    let _ = std::fs::write(&log_path, &log_content);
 
     if exit_code == 0 {
         Ok(format!("代码执行成功。\n\n[输出结果]\n{}", stdout_stderr))

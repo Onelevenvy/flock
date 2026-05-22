@@ -163,6 +163,7 @@ impl AgentBuilder {
             flock_tools::init_file_cache(Arc::clone(cache));
         }
 
+        flock_tools::init_workspace_dir(cwd_path.to_path_buf());
         let tool_set = flock_tools::all_tools();
         let mut registry = tool_set.registry;
         let provider_infos = tool_set.provider_infos;
