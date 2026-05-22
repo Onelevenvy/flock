@@ -46,6 +46,35 @@ use base64::{Engine as _, engine::general_purpose};
 /// @param action The browser action: "goto" (default), "click", "fill", "interactive".
 /// @param selector Optional CSS selector to click or fill (required for click/fill).
 /// @param text Optional text content to type into an input field (required for fill).
+fn clean_b64_from_output(s: &str) -> String {
+    let start_marker = "SCREENSHOT_B64_START";
+    let end_marker = "SCREENSHOT_B64_END";
+    
+    let mut result = String::new();
+    let mut current_pos = 0;
+    
+    while let Some(start_idx) = s[current_pos..].find(start_marker) {
+        let absolute_start = current_pos + start_idx;
+        result.push_str(&s[current_pos..absolute_start]);
+        result.push_str(start_marker);
+        result.push_str("\n[截图二进制Base64数据已自动折叠]\n");
+        
+        let rest = &s[absolute_start + start_marker.len()..];
+        if let Some(end_idx) = rest.find(end_marker) {
+            result.push_str(end_marker);
+            current_pos = absolute_start + start_marker.len() + end_idx + end_marker.len();
+        } else {
+            current_pos = s.len();
+            break;
+        }
+    }
+    
+    if current_pos < s.len() {
+        result.push_str(&s[current_pos..]);
+    }
+    result
+}
+
 #[tool("Browser")]
 pub async fn browser(
     url: String,
@@ -430,7 +459,8 @@ sys.exit(0)
         .map_err(|e| format!("浏览器工具执行出错: {}", e))?;
 
     if exit_code != 0 {
-        return Err(format!("沙箱浏览器执行失败: {}", stdout_stderr));
+        let cleaned_output = clean_b64_from_output(&stdout_stderr);
+        return Err(format!("沙箱浏览器执行失败: {}", cleaned_output));
     }
 
     // 3. 从 stdout 解析 Base64 图片数据并保存至本地 `.flock/sandbox/screenshots/{name_id}.png`
@@ -490,3 +520,27 @@ impl BrowserToolImpl {
         )
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_clean_b64_from_output() {
+        let input = "Some warning SCREENSHOT_B64_START abcde SCREENSHOT_B64_END some trailing stuff";
+        let output = clean_b64_from_output(input);
+        assert!(output.contains("SCREENSHOT_B64_START"));
+        assert!(output.contains("SCREENSHOT_B64_END"));
+        assert!(output.contains("[截图二进制Base64数据已自动折叠]"));
+        assert!(!output.contains("abcde"));
+        assert!(output.contains("some trailing stuff"));
+        assert!(output.contains("Some warning"));
+        
+        let input_no_end = "Some warning SCREENSHOT_B64_START abcde";
+        let output_no_end = clean_b64_from_output(input_no_end);
+        assert!(output_no_end.contains("SCREENSHOT_B64_START"));
+        assert!(output_no_end.contains("[截图二进制Base64数据已自动折叠]"));
+        assert!(!output_no_end.contains("abcde"));
+    }
+}
+
