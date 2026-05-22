@@ -291,18 +291,22 @@ export default function SandboxSettings() {
             </Stack>
           </Tabs.Panel>
 
-          <Tabs.Panel value="instances">
-            <SandboxListSection />
-          </Tabs.Panel>
+          {isAvailable && (
+            <Tabs.Panel value="instances">
+              <SandboxListSection />
+            </Tabs.Panel>
+          )}
 
-          <Tabs.Panel value="snapshots">
-            <SnapshotListSection
-              currentDefaultSnapshot={snapshot}
-              onSetDefaultSnapshot={handleSetDefaultSnapshot}
-              onCreateSnapshot={handleCreateSnapshot}
-              creatingSnapshot={creatingSnapshot}
-            />
-          </Tabs.Panel>
+          {isAvailable && (
+            <Tabs.Panel value="snapshots">
+              <SnapshotListSection
+                currentDefaultSnapshot={snapshot}
+                onSetDefaultSnapshot={handleSetDefaultSnapshot}
+                onCreateSnapshot={handleCreateSnapshot}
+                creatingSnapshot={creatingSnapshot}
+              />
+            </Tabs.Panel>
+          )}
         </Tabs>
       </Card>
     </Stack>

@@ -106,8 +106,10 @@ pub async fn list_daytona_sandboxes(
     use flock_tools::daytona::{get_sandbox_config, get_api_base};
 
     let db_ref: &DbManager = &*db;
-    let cfg = get_sandbox_config(db_ref).await
-        .ok_or_else(|| flock_core::tr("沙盒未配置或未启用", "Sandbox not configured or enabled"))?;
+    let cfg = match get_sandbox_config(db_ref).await {
+        Some(c) => c,
+        None => return Ok(serde_json::json!([])),
+    };
 
     let base = get_api_base(cfg.api_url.as_ref().unwrap());
     let api_key = cfg.api_key.as_ref().unwrap();
@@ -185,8 +187,10 @@ pub async fn list_daytona_snapshots(
     use flock_tools::daytona::{get_sandbox_config, get_api_base};
 
     let db_ref: &DbManager = &*db;
-    let cfg = get_sandbox_config(db_ref).await
-        .ok_or_else(|| flock_core::tr("沙盒未配置或未启用", "Sandbox not configured or enabled"))?;
+    let cfg = match get_sandbox_config(db_ref).await {
+        Some(c) => c,
+        None => return Ok(serde_json::json!([])),
+    };
 
     let base = get_api_base(cfg.api_url.as_ref().unwrap());
     let api_key = cfg.api_key.as_ref().unwrap();

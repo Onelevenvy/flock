@@ -2,14 +2,15 @@ use serde::{Deserialize, Serialize};
 use sqlx::Row;
 
 use super::DbManager;
+use crate::types::tool::I18nString;
 
 /// A single assistant definition stored in the database.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct AssistantRecord {
     pub id: String,
-    pub name: String,
+    pub name: I18nString,
     pub icon: String,
-    pub description: String,
+    pub description: I18nString,
     /// Format: "provider_id:model_name" or empty to use global model.
     pub model: String,
     pub system_prompt: String,
@@ -29,9 +30,9 @@ pub struct AssistantRecord {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct UpsertAssistant {
     pub id: Option<String>,
-    pub name: String,
+    pub name: I18nString,
     pub icon: String,
-    pub description: String,
+    pub description: I18nString,
     pub model: String,
     pub system_prompt: String,
     pub tools: Vec<String>,
@@ -83,6 +84,8 @@ impl DbManager {
         let id = input.id.clone().unwrap_or_else(|| {
             format!("asst_{}", uuid_like())
         });
+        let name_json = serde_json::to_string(&input.name)?;
+        let description_json = serde_json::to_string(&input.description)?;
         let tools_json = serde_json::to_string(&input.tools)?;
         let disabled_tools_json = serde_json::to_string(&input.disabled_tools)?;
         let skills_json = serde_json::to_string(&input.skills)?;
@@ -94,9 +97,9 @@ impl DbManager {
              VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, ?12, ?12)",
         )
         .bind(&id)
-        .bind(&input.name)
+        .bind(&name_json)
         .bind(&input.icon)
-        .bind(&input.description)
+        .bind(&description_json)
         .bind(&input.model)
         .bind(&input.system_prompt)
         .bind(&tools_json)
@@ -128,6 +131,8 @@ impl DbManager {
     /// Update an existing assistant. Returns error if not found.
     pub async fn update_assistant(&self, id: &str, input: &UpsertAssistant) -> anyhow::Result<AssistantRecord> {
         let now = chrono::Utc::now().to_rfc3339();
+        let name_json = serde_json::to_string(&input.name)?;
+        let description_json = serde_json::to_string(&input.description)?;
         let tools_json = serde_json::to_string(&input.tools)?;
         let disabled_tools_json = serde_json::to_string(&input.disabled_tools)?;
         let skills_json = serde_json::to_string(&input.skills)?;
@@ -139,9 +144,9 @@ impl DbManager {
                 sort_order = ?9, updated_at = ?10
              WHERE id = ?11",
         )
-        .bind(&input.name)
+        .bind(&name_json)
         .bind(&input.icon)
-        .bind(&input.description)
+        .bind(&description_json)
         .bind(&input.model)
         .bind(&input.system_prompt)
         .bind(&tools_json)
@@ -176,7 +181,10 @@ impl DbManager {
     /// system_prompt / model / tools / skills are preserved via a selective update.
     pub async fn seed_builtin_assistants(&self, builtins: &[UpsertAssistant]) -> anyhow::Result<()> {
         for (order, asst) in builtins.iter().enumerate() {
-            let id = asst.id.as_deref().unwrap_or(&asst.name);
+            let default_id = asst.name.en.clone();
+            let id = asst.id.as_deref().unwrap_or(&default_id);
+            let name_json = serde_json::to_string(&asst.name)?;
+            let description_json = serde_json::to_string(&asst.description)?;
             let tools_json = serde_json::to_string(&asst.tools)?;
             let disabled_tools_json = serde_json::to_string(&asst.disabled_tools)?;
             let skills_json = serde_json::to_string(&asst.skills)?;
@@ -192,13 +200,14 @@ impl DbManager {
                     name        = excluded.name,
                     icon        = excluded.icon,
                     description = excluded.description,
+                    tools       = excluded.tools,
                     sort_order  = excluded.sort_order,
                     updated_at  = excluded.updated_at",
             )
             .bind(id)
-            .bind(&asst.name)
+            .bind(&name_json)
             .bind(&asst.icon)
-            .bind(&asst.description)
+            .bind(&description_json)
             .bind(&asst.model)
             .bind(&asst.system_prompt)
             .bind(&tools_json)
@@ -214,6 +223,14 @@ impl DbManager {
 }
 
 fn parse_row(row: &sqlx::sqlite::SqliteRow) -> anyhow::Result<AssistantRecord> {
+    let name_str: String = row.get("name");
+    let name: I18nString = serde_json::from_str(&name_str)
+        .unwrap_or_else(|_| I18nString::single(name_str));
+
+    let description_str: String = row.get("description");
+    let description: I18nString = serde_json::from_str(&description_str)
+        .unwrap_or_else(|_| I18nString::single(description_str));
+
     let tools_json: String = row.get("tools");
     let disabled_tools_json: String = row.get("disabled_tools");
     let skills_json: String = row.get("skills");
@@ -224,9 +241,9 @@ fn parse_row(row: &sqlx::sqlite::SqliteRow) -> anyhow::Result<AssistantRecord> {
 
     Ok(AssistantRecord {
         id: row.get("id"),
-        name: row.get("name"),
+        name,
         icon: row.get("icon"),
-        description: row.get("description"),
+        description,
         model: row.get("model"),
         system_prompt: row.get("system_prompt"),
         tools,
@@ -253,12 +270,22 @@ pub fn builtin_assistants() -> Vec<UpsertAssistant> {
     vec![
         UpsertAssistant {
             id: Some("builtin-coder".to_string()),
-            name: r#"{"zh": "代码助手", "en": "Code Assistant"}"#.to_string(),
+            name: I18nString::new("代码助手", "Code Assistant"),
             icon: "\u{1f4bb}".to_string(), // 💻
-            description: r#"{"zh": "专注于代码编写、调试和重构，支持多种编程语言。", "en": "Specializes in code writing, debugging, and refactoring across multiple programming languages."}"#.to_string(),
+            description: I18nString::new(
+                "专注于代码编写、调试和重构，支持多种编程语言。",
+                "Specializes in code writing, debugging, and refactoring across multiple programming languages."
+            ),
             model: String::new(),
             system_prompt: "You are a professional code assistant. Help users write high-quality code, debug issues, and perform code refactoring. Always provide clear code comments and explanations.".to_string(),
-            tools: vec!["builtin".to_string()],
+            tools: vec![
+                "Read".to_string(),
+                "Write".to_string(),
+                "Edit".to_string(),
+                "Bash".to_string(),
+                "Grep".to_string(),
+                "Glob".to_string(),
+            ],
             disabled_tools: vec![],
             skills: vec![],
             is_builtin: true,
@@ -266,12 +293,23 @@ pub fn builtin_assistants() -> Vec<UpsertAssistant> {
         },
         UpsertAssistant {
             id: Some("builtin-writer".to_string()),
-            name: r#"{"zh": "写作助手", "en": "Writing Assistant"}"#.to_string(),
+            name: I18nString::new("写作助手", "Writing Assistant"),
             icon: "\u{270d}\u{fe0f}".to_string(), // ✍️
-            description: r#"{"zh": "帮助撰写文章、邮件、报告，提升写作质量。", "en": "Helps write articles, emails, and reports to improve writing quality."}"#.to_string(),
+            description: I18nString::new(
+                "帮助撰写文章、邮件、报告，提升写作质量。",
+                "Helps write articles, emails, and reports to improve writing quality."
+            ),
             model: String::new(),
             system_prompt: "You are a professional writing assistant. Help users draft various types of documents, including articles, emails, and reports. Pay attention to the accuracy and fluency of language expression.".to_string(),
-            tools: vec![],
+            tools: vec![
+                "Read".to_string(),
+                "Write".to_string(),
+                "Edit".to_string(),
+                "Grep".to_string(),
+                "Glob".to_string(),
+                "Google Translate".to_string(),
+                "Baidu Translate".to_string(),
+            ],
             disabled_tools: vec![],
             skills: vec![],
             is_builtin: true,
@@ -279,16 +317,49 @@ pub fn builtin_assistants() -> Vec<UpsertAssistant> {
         },
         UpsertAssistant {
             id: Some("builtin-analyst".to_string()),
-            name: r#"{"zh": "数据分析师", "en": "Data Analyst"}"#.to_string(),
+            name: I18nString::new("数据分析师", "Data Analyst"),
             icon: "\u{1f4ca}".to_string(), // 📊
-            description: r#"{"zh": "协助数据分析、可视化建议和统计解读。", "en": "Assists with data analysis, visualization suggestions, and statistical interpretation."}"#.to_string(),
+            description: I18nString::new(
+                "协助数据分析、可视化建议和统计解读。",
+                "Assists with data analysis, visualization suggestions, and statistical interpretation."
+            ),
             model: String::new(),
             system_prompt: "You are a professional data analyst assistant. Help users analyze data, provide visualization suggestions, interpret statistical results, and offer insightful, data-driven recommendations.".to_string(),
-            tools: vec![],
+            tools: vec![
+                "Read".to_string(),
+                "Write".to_string(),
+                "Edit".to_string(),
+                "Bash".to_string(),
+                "Grep".to_string(),
+                "Glob".to_string(),
+                "Math Calculator".to_string(),
+            ],
             disabled_tools: vec![],
             skills: vec![],
             is_builtin: true,
             sort_order: 2,
+        },
+        UpsertAssistant {
+            id: Some("builtin-computer-use".to_string()),
+            name: I18nString::new("电脑操作助手", "Computer Use Assistant"),
+            icon: "\u{1f5a5}".to_string(), // 🖥️
+            description: I18nString::new(
+                "具备沙盒环境下的电脑操作能力，支持安全的代码执行、网页浏览器、屏幕操控等。",
+                "Equipped with computer-use capabilities in a sandbox, supporting safe code execution, web browser, screen control, etc."
+            ),
+            model: String::new(),
+            system_prompt: "You are an assistant capable of interacting with a computer sandbox. You can execute code, open websites, and control the screen to help the user complete desktop tasks.".to_string(),
+            tools: vec![
+                "Browser".to_string(),
+                "CodeExecution".to_string(),
+                "ComputerUse".to_string(),
+                "RequestHumanAssistance".to_string(),
+                "SandboxExec".to_string(),
+            ],
+            disabled_tools: vec![],
+            skills: vec![],
+            is_builtin: true,
+            sort_order: 3,
         },
     ]
 }
