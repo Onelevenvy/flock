@@ -18,7 +18,7 @@ use base64::{Engine as _, engine::general_purpose};
 /// - **MANUAL CONTROL & TERMINAL GUIDE**:
 ///   If the user asks to "open console", "open terminal", "manual control", "human control", or "interact directly", 
 ///   NEVER use non-existent actions like "interactive". 
-///   Instead, use `action="exec"` with `command="export DISPLAY=:0 && setsid sh -c 'if command -v lxterminal >/dev/null 2>&1; then lxterminal; elif command -v xterm >/dev/null 2>&1; then xterm; else sudo apt-get update && sudo apt-get install -y xterm && xterm; fi' &"` 
+///   Instead, use `action="exec"`.
 ///   to launch an interactive shell terminal in the VNC desktop environment so the user can interact.
 /// - For GUI interactions, controls mouse/keyboard via xdotool and captures screenshots with scrot.
 /// - Writes the screenshot to `.flock/sandbox/screenshot.png`.

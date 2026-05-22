@@ -57,7 +57,7 @@ pub async fn browser(
             }
         };
         
-        crate::emit_info("正在向云端申请启动 Daytona 桌面服务 (noVNC)...");
+        crate::emit_info("正在向云端申请启动桌面服务...");
         if let Err(e) = start_computer_use_in_sandbox(&db, &sandbox_id).await {
             crate::emit_info(&format!("启动 Daytona 桌面服务请求失败: {}。尝试备用手动方案...", e));
         }
