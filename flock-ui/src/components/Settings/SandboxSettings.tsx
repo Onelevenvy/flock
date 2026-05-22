@@ -5,30 +5,24 @@ import {
   Card,
   Group,
   ThemeIcon,
-  Button,
-  Switch,
-  TextInput,
-  PasswordInput,
-  Tooltip,
-  Divider,
   Badge,
   Alert,
+  Divider,
 } from '@mantine/core';
 import {
-  IconServer,
-  IconKey,
+  IconShieldLock,
   IconCheck,
   IconAlertCircle,
-  IconPlayerPlay,
-  IconShieldLock,
-  IconHelpCircle,
-  IconCamera,
   IconInfoCircle,
-  IconTrash,
+  IconPlugConnected,
+  IconPlugConnectedX,
 } from '@tabler/icons-react';
 import { invoke } from '@tauri-apps/api/core';
 import { notifications } from '@mantine/notifications';
 import { useTranslation } from 'react-i18next';
+import { SandboxCredentials } from './components/SandboxCredentials';
+import { SandboxSnapshotSection } from './components/SandboxSnapshotSection';
+import { SandboxActions } from './components/SandboxActions';
 
 interface SandboxConfig {
   enabled: boolean;
@@ -37,64 +31,58 @@ interface SandboxConfig {
   snapshot: string | null;
 }
 
+interface ToolProvider {
+  id: string;
+  is_available: boolean;
+}
+
 export default function SandboxSettings() {
   const { t } = useTranslation();
-  const [enabled, setEnabled] = useState(false);
   const [apiUrl, setApiUrl] = useState('https://app.daytona.io');
   const [apiKey, setApiKey] = useState('');
   const [snapshot, setSnapshot] = useState('');
-  const [saving, setSaving] = useState(false);
   const [testing, setTesting] = useState(false);
+  const [disabling, setDisabling] = useState(false);
   const [creatingSnapshot, setCreatingSnapshot] = useState(false);
-  const [cleaningUp, setCleaningUp] = useState(false);
+  const [isAvailable, setIsAvailable] = useState(false);
+
+  const defaultSnapshotName = 'flock-playwright';
 
   useEffect(() => {
-    loadSandboxConfig();
+    loadAll();
   }, []);
 
-  const loadSandboxConfig = async () => {
+  /** Load sandbox config from app_config + sandbox provider availability from DB */
+  const loadAll = async () => {
     try {
-      const config = await invoke<SandboxConfig | null>('get_app_config', { key: 'sandbox' });
+      const [config, providers] = await Promise.all([
+        invoke<SandboxConfig | null>('get_app_config', { key: 'sandbox' }),
+        invoke<ToolProvider[]>('list_tool_providers'),
+      ]);
       if (config) {
-        setEnabled(config.enabled);
         if (config.api_url) setApiUrl(config.api_url);
         if (config.api_key) setApiKey(config.api_key);
         if (config.snapshot) setSnapshot(config.snapshot);
       }
+      const sandboxProvider = providers.find((p) => p.id === 'sandbox');
+      setIsAvailable(sandboxProvider?.is_available ?? false);
     } catch (e) {
       console.error('Failed to load sandbox config:', e);
     }
   };
 
-  const handleSaveSettings = async () => {
-    setSaving(true);
-    try {
-      await invoke('set_app_config', {
-        key: 'sandbox',
-        value: {
-          enabled,
-          api_url: apiUrl.trim(),
-          api_key: apiKey.trim(),
-          snapshot: snapshot.trim() || null,
-        },
-      });
-      notifications.show({
-        title: t('settings.sandbox.saveSuccess'),
-        message: t('settings.sandbox.saveSuccessMsg'),
-        color: 'teal',
-        icon: <IconCheck size={18} />,
-      });
-    } catch (e) {
-      console.error('Failed to save sandbox config:', e);
-      notifications.show({
-        title: t('settings.sandbox.saveFailed'),
-        message: t('settings.sandbox.saveFailedMsg'),
-        color: 'red',
-        icon: <IconAlertCircle size={18} />,
-      });
-    } finally {
-      setSaving(false);
-    }
+  /** Save config helper (does NOT toggle availability) */
+  const saveConfig = async (overrides?: Partial<SandboxConfig>) => {
+    await invoke('set_app_config', {
+      key: 'sandbox',
+      value: {
+        enabled: isAvailable,
+        api_url: apiUrl.trim(),
+        api_key: apiKey.trim(),
+        snapshot: snapshot.trim() || null,
+        ...overrides,
+      },
+    });
   };
 
   const handleTestConnection = async () => {
@@ -109,18 +97,21 @@ export default function SandboxSettings() {
 
     setTesting(true);
     try {
+      await saveConfig({ enabled: true });
       await invoke<string>('test_sandbox_connection', {
         apiUrl: apiUrl.trim(),
         apiKey: apiKey.trim(),
       });
+      setIsAvailable(true);
       notifications.show({
-        title: t('settings.sandbox.testOk'),
+        title: t('settings.sandbox.testOkAutoEnabled'),
         message: t('settings.sandbox.testOkMsg'),
         color: 'teal',
         icon: <IconCheck size={18} />,
       });
     } catch (e) {
-      console.error('Daytona connection test failed:', e);
+      setIsAvailable(false);
+      await saveConfig({ enabled: false }).catch(() => {});
       notifications.show({
         title: t('settings.sandbox.testFailed'),
         message: t('settings.sandbox.testFailedMsg', { error: String(e) }),
@@ -132,7 +123,28 @@ export default function SandboxSettings() {
     }
   };
 
-  const defaultSnapshotName = 'flock-playwright';
+  const handleDisable = async () => {
+    setDisabling(true);
+    try {
+      await saveConfig({ enabled: false });
+      setIsAvailable(false);
+      notifications.show({
+        title: t('settings.sandbox.disableSuccess'),
+        message: t('settings.sandbox.disableSuccessMsg'),
+        color: 'orange',
+        icon: <IconPlugConnectedX size={18} />,
+      });
+    } catch (e) {
+      notifications.show({
+        title: t('settings.sandbox.saveFailed'),
+        message: String(e),
+        color: 'red',
+        icon: <IconAlertCircle size={18} />,
+      });
+    } finally {
+      setDisabling(false);
+    }
+  };
 
   const handleCreateSnapshot = async () => {
     if (!apiUrl.trim() || !apiKey.trim()) {
@@ -147,32 +159,14 @@ export default function SandboxSettings() {
     const snapName = snapshot.trim() || defaultSnapshotName;
     setCreatingSnapshot(true);
 
-    // 先保存配置（确保 Rust 侧能读到 API 信息）
     try {
-      await invoke('set_app_config', {
-        key: 'sandbox',
-        value: {
-          enabled,
-          api_url: apiUrl.trim(),
-          api_key: apiKey.trim(),
-          snapshot: snapshot.trim() || null,
-        },
-      });
+      await saveConfig();
     } catch (_) { /* ignore */ }
 
     try {
       await invoke<string>('create_playwright_snapshot', { snapshotName: snapName });
-      // 自动填入 snapshot 名称
       setSnapshot(snapName);
-      await invoke('set_app_config', {
-        key: 'sandbox',
-        value: {
-          enabled,
-          api_url: apiUrl.trim(),
-          api_key: apiKey.trim(),
-          snapshot: snapName,
-        },
-      });
+      await saveConfig({ snapshot: snapName });
       notifications.show({
         title: t('settings.sandbox.snapshotDone'),
         message: t('settings.sandbox.snapshotDoneMsg', { name: snapName }),
@@ -203,6 +197,7 @@ export default function SandboxSettings() {
         }}
         padding="xl"
       >
+        {/* Header */}
         <Group justify="space-between" mb="md">
           <Group gap="xs">
             <ThemeIcon variant="light" color="blue" radius="md">
@@ -212,190 +207,61 @@ export default function SandboxSettings() {
               {t('settings.sandbox.title')}
             </Text>
           </Group>
-          <Group gap={6} wrap="nowrap">
-            <Text size="sm" fw={500}>{t('settings.sandbox.enable')}</Text>
-            <Tooltip
-              label={t('settings.sandbox.enableTooltip')}
-              multiline
-              w={280}
-              withArrow
-              position="top"
-            >
-              <IconHelpCircle size={14} color="var(--flock-text-dim)" style={{ cursor: 'help' }} />
-            </Tooltip>
-            <Switch
-              checked={enabled}
-              onChange={(e) => setEnabled(e.currentTarget.checked)}
-              styles={{
-                track: { cursor: 'pointer' },
-              }}
-            />
-          </Group>
+
+          {isAvailable ? (
+            <Badge color="teal" variant="light" leftSection={<IconPlugConnected size={12} />}>
+              {t('settings.sandbox.statusActive')}
+            </Badge>
+          ) : (
+            <Badge color="gray" variant="light" leftSection={<IconPlugConnectedX size={12} />}>
+              {t('settings.sandbox.statusInactive')}
+            </Badge>
+          )}
         </Group>
 
         <Divider color="var(--flock-border-subtle)" mb="lg" />
 
+        {!isAvailable && (
+          <Alert
+            icon={<IconInfoCircle size={16} />}
+            color="blue"
+            variant="light"
+            radius="md"
+            mb="lg"
+          >
+            {t('settings.sandbox.retestHint')}
+          </Alert>
+        )}
+
         <Stack gap="lg">
-          <TextInput
-            label={
-              <Group gap={6} style={{ marginBottom: 4 }}>
-                <IconServer size={14} color="var(--flock-text-dim)" />
-                <Text size="sm" fw={500}>{t('settings.sandbox.apiUrl')}</Text>
-                <Tooltip
-                  label={t('settings.sandbox.apiUrlTooltip')}
-                  multiline
-                  w={280}
-                  withArrow
-                  position="top"
-                >
-                  <IconHelpCircle size={13} color="var(--flock-text-dim)" style={{ cursor: 'help' }} />
-                </Tooltip>
-              </Group>
-            }
-            placeholder={t('settings.sandbox.apiUrlPlaceholder')}
-            value={apiUrl}
-            onChange={(e) => setApiUrl(e.currentTarget.value)}
-            disabled={!enabled}
-            styles={{
-              input: { background: 'var(--flock-bg-surface)' },
-            }}
+          <SandboxCredentials
+            apiUrl={apiUrl}
+            apiKey={apiKey}
+            onApiUrlChange={setApiUrl}
+            onApiKeyChange={setApiKey}
           />
 
-          <PasswordInput
-            label={
-              <Group gap={6} style={{ marginBottom: 4 }}>
-                <IconKey size={14} color="var(--flock-text-dim)" />
-                <Text size="sm" fw={500}>{t('settings.sandbox.apiKey')}</Text>
-              </Group>
-            }
-            placeholder={t('settings.sandbox.apiKeyPlaceholder')}
-            value={apiKey}
-            onChange={(e) => setApiKey(e.currentTarget.value)}
-            disabled={!enabled}
-            styles={{
-              input: { background: 'var(--flock-bg-surface)' },
-            }}
-          />
-
-          {/* Snapshot 设置区 */}
-          <Stack gap="xs">
-            <TextInput
-              label={
-                <Group gap={6} style={{ marginBottom: 4 }}>
-                  <IconCamera size={14} color="var(--flock-text-dim)" />
-                  <Text size="sm" fw={500}>{t('settings.sandbox.snapshotName')}</Text>
-                  <Tooltip
-                    label={t('settings.sandbox.snapshotTooltip')}
-                    multiline
-                    w={300}
-                    withArrow
-                    position="top"
-                  >
-                    <IconHelpCircle size={13} color="var(--flock-text-dim)" style={{ cursor: 'help' }} />
-                  </Tooltip>
-                  {snapshot.trim() && (
-                    <Badge size="xs" color="teal" variant="dot">
-                      {t('settings.sandbox.snapshotActive')}
-                    </Badge>
-                  )}
-                </Group>
-              }
-              placeholder={defaultSnapshotName}
-              value={snapshot}
-              onChange={(e) => setSnapshot(e.currentTarget.value)}
-              disabled={!enabled}
-              styles={{
-                input: { background: 'var(--flock-bg-surface)' },
-              }}
+          {isAvailable && (
+            <SandboxSnapshotSection
+              snapshot={snapshot}
+              onSnapshotChange={setSnapshot}
+              onCreateSnapshot={handleCreateSnapshot}
+              creatingSnapshot={creatingSnapshot}
+              defaultSnapshotName={defaultSnapshotName}
             />
-
-            <Alert
-              icon={<IconInfoCircle size={16} />}
-              color="blue"
-              variant="light"
-              radius="md"
-              style={{ fontSize: 12 }}
-            >
-              {t('settings.sandbox.snapshotHint')}
-            </Alert>
-
-            <Button
-              variant="outline"
-              color="violet"
-              size="sm"
-              leftSection={<IconCamera size={15} />}
-              onClick={handleCreateSnapshot}
-              loading={creatingSnapshot}
-              disabled={!enabled || !apiUrl.trim() || !apiKey.trim()}
-              style={{ alignSelf: 'flex-start' }}
-            >
-              {creatingSnapshot
-                ? t('settings.sandbox.snapshotCreating')
-                : t('settings.sandbox.snapshotCreateBtn')}
-            </Button>
-          </Stack>
+          )}
 
           <Divider color="var(--flock-border-subtle)" mt="md" />
 
-          <Group justify="space-between" gap="md">
-            <Button
-              variant="outline"
-              color="red"
-              leftSection={<IconTrash size={15} />}
-              onClick={async () => {
-                if (!enabled) return;
-                setCleaningUp(true);
-                try {
-                  const msg = await invoke<string>('cleanup_all_sandboxes');
-                  notifications.show({
-                    title: t('settings.sandbox.cleanupDone'),
-                    message: msg,
-                    color: 'teal',
-                    icon: <IconCheck size={18} />,
-                  });
-                } catch (e) {
-                  notifications.show({
-                    title: t('settings.sandbox.cleanupFailed'),
-                    message: String(e),
-                    color: 'red',
-                    icon: <IconAlertCircle size={18} />,
-                  });
-                } finally {
-                  setCleaningUp(false);
-                }
-              }}
-              loading={cleaningUp}
-              disabled={!enabled}
-            >
-              {t('settings.sandbox.cleanupBtn')}
-            </Button>
-
-            <Group gap="md">
-            <Button
-              variant="outline"
-              color="gray"
-              onClick={handleTestConnection}
-              loading={testing}
-              disabled={!enabled}
-            >
-              {t('settings.sandbox.testBtn')}
-            </Button>
-            <Button
-              variant="filled"
-              color="blue"
-              leftSection={<IconPlayerPlay size={16} />}
-              onClick={handleSaveSettings}
-              loading={saving}
-              styles={{
-                root: {
-                  boxShadow: '0 4px 12px rgba(21, 90, 239, 0.25)',
-                },
-              }}
-            >
-              {t('common.save') || '保存'}
-            </Button>
-            </Group>
-          </Group>
+          <SandboxActions
+            isAvailable={isAvailable}
+            apiUrl={apiUrl}
+            apiKey={apiKey}
+            testing={testing}
+            disabling={disabling}
+            onTestConnection={handleTestConnection}
+            onDisable={handleDisable}
+          />
         </Stack>
       </Card>
     </Stack>

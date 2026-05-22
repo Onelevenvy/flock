@@ -26,6 +26,8 @@ import { ModelSelect } from '../../Common/ModelSelect';
 
 import { ModelProvider, ModelItem, DefaultConfig, SummaryModelConfig } from './types';
 import { ProviderCard } from './components/ProviderCard';
+import { DefaultModelCard } from './components/DefaultModelCard';
+import { SummaryModelCard } from './components/SummaryModelCard';
 
 export default function ModelProviderPage() {
   const { t } = useTranslation();
@@ -260,124 +262,20 @@ export default function ModelProviderPage() {
 
   return (
     <Stack gap="xl" p={12}>
-      <Card
-        style={{
-          background: 'var(--flock-bg-raised)',
-          border: '1px solid var(--flock-border-dim)',
-          borderRadius: 16,
-        }}
-        padding="md"
-      >
-        <Group justify="space-between" align="center">
-          <Group gap="sm" style={{ flex: 1 }}>
-            <ThemeIcon variant="light" color="blue" size="md" radius="md">
-              <IconCube size={18} />
-            </ThemeIcon>
-            <Box style={{ flex: 1 }}>
-              <Group gap={6} wrap="nowrap">
-                <Text fw={700} size="sm">
-                  {t('settings.model.defaultModelTitle')}
-                </Text>
-                <Tooltip
-                  label={t('settings.model.defaultModelTooltip')}
-                  multiline
-                  w={260}
-                  withArrow
-                  position="top"
-                >
-                  <IconHelpCircle size={14} color="var(--flock-text-dim)" style={{ cursor: 'help', display: 'inline-block', verticalAlign: 'middle' }} />
-                </Tooltip>
-              </Group>
-            </Box>
-          </Group>
+      <DefaultModelCard
+        t={t}
+        onlineModels={onlineModels}
+        value={selectedDefaultValue}
+        onChange={handleDefaultModelChange}
+      />
 
-          <ModelSelect
-            placeholder={onlineModels.length === 0 ? t('settings.model.noModelsEnabledPlaceholder') : t('settings.model.defaultModelPlaceholder')}
-            data={onlineModels}
-            value={selectedDefaultValue}
-            onChange={handleDefaultModelChange}
-            disabled={onlineModels.length === 0}
-            size="xs"
-            w={260}
-            searchable
-            styles={{
-              input: {
-                background: 'var(--flock-bg-surface)',
-                border: '1px solid var(--flock-border-dim)',
-                color: 'var(--flock-text-primary)',
-                height: 32,
-              },
-              dropdown: {
-                background: 'var(--flock-bg-raised)',
-                border: '1px solid var(--flock-border-dim)',
-              },
-              option: {
-                color: 'var(--flock-text-primary)',
-              },
-            }}
-          />
-        </Group>
-      </Card>
-
-      <Card
-        style={{
-          background: 'var(--flock-bg-raised)',
-          border: '1px solid var(--flock-border-dim)',
-          borderRadius: 16,
-          marginTop: -12,
-        }}
-        padding="md"
-      >
-        <Group justify="space-between" align="center">
-          <Group gap="sm" style={{ flex: 1 }}>
-            <ThemeIcon variant="light" color="teal" size="md" radius="md">
-              <IconSparkles size={18} />
-            </ThemeIcon>
-            <Box style={{ flex: 1 }}>
-              <Group gap={6} wrap="nowrap">
-                <Text fw={700} size="sm">
-                  {t('settings.model.summaryModelTitle')}
-                </Text>
-                <Tooltip
-                  label={t('settings.model.summaryModelTooltip')}
-                  multiline
-                  w={260}
-                  withArrow
-                  position="top"
-                >
-                  <IconHelpCircle size={14} color="var(--flock-text-dim)" style={{ cursor: 'help', display: 'inline-block', verticalAlign: 'middle' }} />
-                </Tooltip>
-              </Group>
-            </Box>
-          </Group>
-
-          <ModelSelect
-            placeholder={t('settings.model.followDefaultPlaceholder')}
-            data={summaryModels}
-            value={selectedSummaryValue}
-            onChange={handleSummaryModelChange}
-            disabled={onlineModels.length === 0}
-            size="xs"
-            w={260}
-            searchable
-            styles={{
-              input: {
-                background: 'var(--flock-bg-surface)',
-                border: '1px solid var(--flock-border-dim)',
-                color: 'var(--flock-text-primary)',
-                height: 32,
-              },
-              dropdown: {
-                background: 'var(--flock-bg-raised)',
-                border: '1px solid var(--flock-border-dim)',
-              },
-              option: {
-                color: 'var(--flock-text-primary)',
-              },
-            }}
-          />
-        </Group>
-      </Card>
+      <SummaryModelCard
+        t={t}
+        summaryModels={summaryModels}
+        value={selectedSummaryValue}
+        onChange={handleSummaryModelChange}
+        disabled={onlineModels.length === 0}
+      />
 
       {providers.map((provider) => (
         <ProviderCard

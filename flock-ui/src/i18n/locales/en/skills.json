@@ -19,7 +19,8 @@
     "params": "Parameters",
     "noProviders": "No tool providers available",
     "needAuthBadge": "Auth Req.",
-    "toolsCount": "{{count}} tools"
+    "toolsCount": "{{count}} tools",
+    "sandboxConfigHint": "This tool requires a Daytona sandbox connection. Please go to Settings → Sandbox, fill in the API URL and API Key, and pass the connectivity test to enable it."
   },
   "mcp": {
     "connectSuccess": "Connection successful",

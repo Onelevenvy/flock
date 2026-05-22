@@ -110,6 +110,13 @@
     "snapshotFailed": "Snapshot Creation Failed",
     "cleanupBtn": "Cleanup All Sandboxes",
     "cleanupDone": "Cleanup Complete",
-    "cleanupFailed": "Cleanup Failed"
+    "cleanupFailed": "Cleanup Failed",
+    "statusActive": "Active",
+    "statusInactive": "Inactive",
+    "disableBtn": "Disable Sandbox",
+    "disableSuccess": "Sandbox Disabled",
+    "disableSuccessMsg": "Daytona sandbox tools have been disabled. Run the connectivity test again to re-enable.",
+    "retestHint": "Sandbox is disabled. Run the connection test again to re-enable.",
+    "testOkAutoEnabled": "Connection successful — sandbox auto-enabled"
   }
 }

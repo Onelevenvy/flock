@@ -110,6 +110,13 @@
     "snapshotFailed": "Snapshot 创建失败",
     "cleanupBtn": "清理所有历史沙盒",
     "cleanupDone": "清理完成",
-    "cleanupFailed": "清理失败"
+    "cleanupFailed": "清理失败",
+    "statusActive": "已开启",
+    "statusInactive": "未启用",
+    "disableBtn": "停用沙盒",
+    "disableSuccess": "沙盒已停用",
+    "disableSuccessMsg": "已成功停用 Daytona 沙盒工具。如需重新启用，请再次测试连通性。",
+    "retestHint": "沙盒已停用。如需重新启用，请重新测试连接。",
+    "testOkAutoEnabled": "连接成功并已自动开启沙盒"
   }
 }

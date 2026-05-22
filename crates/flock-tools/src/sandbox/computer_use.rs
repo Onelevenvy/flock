@@ -229,6 +229,10 @@ pub async fn computer_use(
 pub struct ComputerUseToolImpl;
 impl ComputerUseToolImpl {
     pub fn new() -> Box<dyn Tool> {
-        Box::new(LangGraphToolAdapter::new(ComputerUse, ToolCategory::Exec))
+        Box::new(
+            LangGraphToolAdapter::new(ComputerUse, ToolCategory::Exec)
+                .with_provider_id("sandbox")
+                .with_provider_name("Sandbox"),
+        )
     }
 }

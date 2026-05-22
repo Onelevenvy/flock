@@ -4,7 +4,7 @@ import { useTranslation } from 'react-i18next';
 import { invoke } from '@tauri-apps/api/core';
 import { useUiStore } from '../../../store/uiStore';
 import { useGithubStars } from '../../../hooks/useGithubStars';
-import { ThemeToggle } from '../../Settings/ThemeToggle';
+import { ThemeToggle } from '../../Common/ThemeToggle';
 
 export function BottomBar() {
   const { t } = useTranslation();

@@ -2,15 +2,8 @@ import { useCallback, useMemo, useState, useEffect } from 'react';
 import ReactFlow, {
   Background,
   MiniMap,
-  addEdge,
-  type Connection,
   type Edge,
   type Node,
-  type OnConnect,
-  type OnEdgesChange,
-  type OnNodesChange,
-  applyEdgeChanges,
-  applyNodeChanges,
   MarkerType,
   BackgroundVariant,
   useReactFlow,
@@ -25,7 +18,6 @@ import {
 } from '@tabler/icons-react';
 import { useTranslation } from 'react-i18next';
 import { workflowNodeTypes } from '../../nodes/nodeTypesMap';
-import { nodeConfig, type NodeType } from '../../nodeConfig';
 import { useWorkflowStore } from '../../../../store/workflowStore';
 import { useUpdateWorkflow, type WorkflowRecord } from '../../../../hooks/useWorkflow';
 import { NodePalette } from '../NodePalette';
@@ -35,6 +27,9 @@ import { ExecutionPanel } from '../ExecutionPanel';
 import { useWorkflowExecution } from '../../../../hooks/useWorkflowExecution';
 
 import { useFlowLayout } from './hooks/useFlowLayout';
+import { useNodeInsertion } from './hooks/useNodeInsertion';
+import { useFlowHandlers } from './hooks/useFlowHandlers';
+import { useDropHandler } from './hooks/useDropHandler';
 import { LeftToolbar } from './components/LeftToolbar';
 import { EdgeInsertMenu } from './components/EdgeInsertMenu';
 
@@ -46,7 +41,7 @@ interface FlowCanvasProps {
 
 export function FlowCanvas({ workflowId, workflowData, onBack }: FlowCanvasProps) {
   const { t } = useTranslation();
-  const { screenToFlowPosition, fitView } = useReactFlow();
+  const { fitView } = useReactFlow();
   const updateMutation = useUpdateWorkflow();
 
   const {
@@ -70,10 +65,10 @@ export function FlowCanvas({ workflowId, workflowData, onBack }: FlowCanvasProps
   const [showNodePalette, setShowNodePalette] = useState(false);
   const [isPanMode, setIsPanMode] = useState(false);
 
-  // ── Topological Auto Layout Hook ─────────────────────────────────────────
+  // ── Topological Auto Layout Hook ───────────────────────────────────────
   const { layoutAllNodes } = useFlowLayout(nodes, edges, setNodes, setEdges);
 
-  // ── Active execution node tracking & glow effect ─────────────────────────
+  // ── Active execution node tracking & glow effect ────────────────────────
   const activeNodeId = useMemo(() => {
     if (executionStatus !== 'running') return null;
     for (let i = executionMessages.length - 1; i >= 0; i--) {
@@ -83,11 +78,9 @@ export function FlowCanvas({ workflowId, workflowData, onBack }: FlowCanvasProps
   }, [executionMessages, executionStatus]);
 
   useEffect(() => {
-    // 移除旧高亮
     document.querySelectorAll('.flock-active-node').forEach(el => {
       el.classList.remove('flock-active-node');
     });
-    // 添加新高亮
     if (activeNodeId) {
       const nodeEl = document.querySelector(`.react-flow__node[data-id="${activeNodeId}"]`);
       if (nodeEl) {
@@ -96,241 +89,28 @@ export function FlowCanvas({ workflowId, workflowData, onBack }: FlowCanvasProps
     }
   }, [activeNodeId]);
 
-  // ── Edge Click Node Insertion ─────────────────────────────────────────────
-  const [menuEdge, setMenuEdge] = useState<Edge | null>(null);
-  const [activeSourceHandle, setActiveSourceHandle] = useState<{ nodeId: string; handleId: string } | null>(null);
-  const [insertMode, setInsertMode] = useState<'center' | 'source' | null>(null);
-  const [menuPortalPosition, setMenuPortalPosition] = useState<{ x: number; y: number } | null>(null);
+  // ── Node Insertion (edge-click) ─────────────────────────────────────────
+  const {
+    menuEdge,
+    setMenuEdge,
+    activeSourceHandle,
+    setActiveSourceHandle,
+    insertMode,
+    setInsertMode,
+    menuPortalPosition,
+    setMenuPortalPosition,
+    handleInsertNode,
+    closeMenu,
+  } = useNodeInsertion(nodes, edges, layoutAllNodes);
 
-  const handleInsertNode = useCallback((type: NodeType) => {
-    if (!insertMode) return;
+  // ── Standard ReactFlow handlers ─────────────────────────────────────────
+  const { onNodesChange, onEdgesChange, onConnect, isValidConnection, onNodeClick, onPaneClick } =
+    useFlowHandlers(nodes, setNodes, edges, setEdges, setSelectedNodeId, setShowNodePalette);
 
-    const sameTypeCount = nodes.filter((n) => n.type === type).length;
-    const newNodeId = `${type}-${Date.now()}`;
+  // ── Add node via click/drop ─────────────────────────────────────────────
+  const { handleAddNode, onDragOver, onDrop } = useDropHandler(nodes, setNodes, setShowNodePalette);
 
-    if (insertMode === 'center') {
-      if (!menuEdge) return;
-      const sourceNode = nodes.find(n => n.id === menuEdge.source);
-      const targetNode = nodes.find(n => n.id === menuEdge.target);
-      if (!sourceNode || !targetNode) return;
-
-      // 计算位置：中点
-      const position = {
-        x: (sourceNode.position.x + targetNode.position.x) / 2,
-        y: (sourceNode.position.y + targetNode.position.y) / 2,
-      };
-
-      const newNode: Node = {
-        id: newNodeId,
-        type,
-        position,
-        data: {
-          label: `${nodeConfig[type].display} ${sameTypeCount + 1}`,
-          ...nodeConfig[type].initialData,
-        },
-      };
-
-      const newEdge1 = {
-        id: `e-${menuEdge.source}-${newNodeId}`,
-        source: menuEdge.source,
-        sourceHandle: menuEdge.sourceHandle,
-        target: newNodeId,
-        targetHandle: 'left',
-        markerEnd: { type: MarkerType.ArrowClosed, width: 16, height: 16 },
-        style: { strokeWidth: 1.8, stroke: 'rgba(21, 90, 239, 0.25)' },
-        type: 'customStep',
-      };
-      
-      const newEdge2 = {
-        id: `e-${newNodeId}-${menuEdge.target}`,
-        source: newNodeId,
-        sourceHandle: 'right',
-        target: menuEdge.target,
-        targetHandle: menuEdge.targetHandle,
-        markerEnd: { type: MarkerType.ArrowClosed, width: 16, height: 16 },
-        style: { strokeWidth: 1.8, stroke: 'rgba(21, 90, 239, 0.25)' },
-        type: 'customStep',
-      };
-
-      const nextNodes = [...nodes, newNode];
-      const nextEdges = [...edges.filter(e => e.id !== menuEdge.id), newEdge1, newEdge2];
-
-      layoutAllNodes(nextNodes, nextEdges);
-    } else {
-      // 端点分叉模式
-      const sourceNodeId = activeSourceHandle ? activeSourceHandle.nodeId : menuEdge?.source;
-      const sourceHandleId = activeSourceHandle ? activeSourceHandle.handleId : menuEdge?.sourceHandle || 'right';
-
-      if (!sourceNodeId) return;
-      const sourceNode = nodes.find(n => n.id === sourceNodeId);
-      if (!sourceNode) return;
-
-      // 新建新节点，源节点连到新节点，保留原连线不变
-      const position = {
-        x: sourceNode.position.x + 280,
-        y: sourceNode.position.y + 120, // 稍微向下偏以作分叉
-      };
-
-      const newNode: Node = {
-        id: newNodeId,
-        type,
-        position,
-        data: {
-          label: `${nodeConfig[type].display} ${sameTypeCount + 1}`,
-          ...nodeConfig[type].initialData,
-        },
-      };
-
-      const newEdge = {
-        id: `e-${sourceNodeId}-${newNodeId}`,
-        source: sourceNodeId,
-        sourceHandle: sourceHandleId,
-        target: newNodeId,
-        targetHandle: 'left',
-        markerEnd: { type: MarkerType.ArrowClosed, width: 16, height: 16 },
-        style: { strokeWidth: 1.8, stroke: 'rgba(21, 90, 239, 0.25)' },
-        type: 'customStep',
-      };
-
-      const nextNodes = [...nodes, newNode];
-      const nextEdges = [...edges, newEdge];
-
-      layoutAllNodes(nextNodes, nextEdges);
-    }
-
-    setMenuEdge(null);
-    setActiveSourceHandle(null);
-    setInsertMode(null);
-    setMenuPortalPosition(null);
-  }, [menuEdge, activeSourceHandle, insertMode, nodes, edges, layoutAllNodes]);
-
-
-  // ── ReactFlow event handlers ──────────────────────────────────────────────
-
-  const onNodesChange: OnNodesChange = useCallback(
-    (changes) => setNodes((nds) => applyNodeChanges(changes, nds)),
-    [setNodes]
-  );
-
-  const onEdgesChange: OnEdgesChange = useCallback(
-    (changes) => setEdges((eds) => applyEdgeChanges(changes, eds)),
-    [setEdges]
-  );
-
-  const onConnect: OnConnect = useCallback(
-    (connection: Connection) => {
-      setEdges((eds) =>
-        addEdge(
-          {
-            ...connection,
-            markerEnd: { type: MarkerType.ArrowClosed, width: 16, height: 16 },
-            style: { strokeWidth: 1.8, stroke: 'rgba(21, 90, 239, 0.25)' },
-            type: 'customStep',
-          },
-          eds
-        )
-      );
-    },
-    [setEdges]
-  );
-
-  const isValidConnection = useCallback(
-    (connection: Connection) => {
-      if (connection.source === connection.target) return false;
-      const src = nodes.find((n) => n.id === connection.source);
-      const tgt = nodes.find((n) => n.id === connection.target);
-      if (!src || !tgt) return false;
-
-      const srcCfg = nodeConfig[src.type as NodeType];
-      const tgtCfg = nodeConfig[tgt.type as NodeType];
-      if (!srcCfg || !tgtCfg) return true;
-
-      if (src.type === 'classifier' || src.type === 'ifelse') {
-        return tgtCfg.allowedConnections.targets.length > 0;
-      }
-      const srcOk = !connection.sourceHandle || srcCfg.allowedConnections.sources.includes(connection.sourceHandle);
-      const tgtOk = !connection.targetHandle || tgtCfg.allowedConnections.targets.includes(connection.targetHandle);
-      return srcOk && tgtOk;
-    },
-    [nodes]
-  );
-
-  const onNodeClick = useCallback(
-    (_: React.MouseEvent, node: Node) => {
-      setSelectedNodeId(node.id);
-      setShowNodePalette(false);
-    },
-    [setSelectedNodeId]
-  );
-
-  const onPaneClick = useCallback(() => {
-    setSelectedNodeId(null);
-    setShowNodePalette(false);
-  }, [setSelectedNodeId]);
-
-  // ── Add Node via Click / Drop ─────────────────────────────────────────────
-
-  const handleAddNode = useCallback(
-    (type: NodeType) => {
-      if (!nodeConfig[type]) return;
-
-      let position = { x: 250, y: 200 };
-      try {
-        position = screenToFlowPosition({
-          x: window.innerWidth / 2,
-          y: window.innerHeight / 2,
-        });
-      } catch (err) {
-        console.error("Failed to project node position", err);
-      }
-
-      const sameTypeCount = nodes.filter((n) => n.type === type).length;
-      const newNode: Node = {
-        id: `${type}-${Date.now()}`,
-        type,
-        position,
-        data: {
-          label: `${nodeConfig[type].display} ${sameTypeCount + 1}`,
-          ...nodeConfig[type].initialData,
-        },
-      };
-      setNodes((nds) => [...nds, newNode]);
-      setShowNodePalette(false);
-    },
-    [nodes, setNodes, screenToFlowPosition]
-  );
-
-  const onDragOver = useCallback((e: React.DragEvent) => {
-    e.preventDefault();
-    e.dataTransfer.dropEffect = 'move';
-  }, []);
-
-  const onDrop = useCallback(
-    (e: React.DragEvent) => {
-      e.preventDefault();
-      const type = e.dataTransfer.getData('application/workflow-node') as NodeType;
-      if (!type || !nodeConfig[type]) return;
-
-      const position = screenToFlowPosition({ x: e.clientX, y: e.clientY });
-      const sameTypeCount = nodes.filter((n) => n.type === type).length;
-
-      const newNode: Node = {
-        id: `${type}-${Date.now()}`,
-        type,
-        position,
-        data: {
-          label: `${nodeConfig[type].display} ${sameTypeCount + 1}`,
-          ...nodeConfig[type].initialData,
-        },
-      };
-      setNodes((nds) => [...nds, newNode]);
-      setShowNodePalette(false);
-    },
-    [nodes, setNodes, screenToFlowPosition]
-  );
-
-  // ── Save ──────────────────────────────────────────────────────────────────
-
+  // ── Save ────────────────────────────────────────────────────────────────
   const handleSave = useCallback(async () => {
     await updateMutation.mutateAsync({
       id: workflowId,
@@ -344,8 +124,7 @@ export function FlowCanvas({ workflowId, workflowData, onBack }: FlowCanvasProps
     setDirty(false);
   }, [workflowId, workflowData, nodes, edges, updateMutation, setDirty]);
 
-  // ── Selected node ─────────────────────────────────────────────────────────
-
+  // ── Selected node ───────────────────────────────────────────────────────
   const selectedNode = useMemo(
     () => nodes.find((n) => n.id === selectedNodeId) ?? null,
     [nodes, selectedNodeId]
@@ -363,7 +142,7 @@ export function FlowCanvas({ workflowId, workflowData, onBack }: FlowCanvasProps
         }
       }
     }));
-  }, [nodes]);
+  }, [nodes, setActiveSourceHandle, setInsertMode, setMenuPortalPosition]);
 
   const edgeTypes = useMemo(() => ({ customStep: CustomStepEdge }), []);
 
@@ -380,7 +159,7 @@ export function FlowCanvas({ workflowId, workflowData, onBack }: FlowCanvasProps
         }
       }
     }));
-  }, [edges]);
+  }, [edges, setMenuEdge, setInsertMode, setMenuPortalPosition]);
 
   return (
     <Box
@@ -408,12 +187,7 @@ export function FlowCanvas({ workflowId, workflowData, onBack }: FlowCanvasProps
         }}
       >
         <Group gap="sm">
-          <ActionIcon
-            variant="subtle"
-            color="gray"
-            onClick={onBack}
-            size="sm"
-          >
+          <ActionIcon variant="subtle" color="gray" onClick={onBack} size="sm">
             <IconArrowLeft size={16} />
           </ActionIcon>
           <ThemeIcon
@@ -478,7 +252,7 @@ export function FlowCanvas({ workflowId, workflowData, onBack }: FlowCanvasProps
             fitView={fitView}
             showMinimap={showMinimap}
             setShowMinimap={setShowMinimap}
-            t={t}
+            t={t as any}
           />
 
           {/* ── Node Palette Popover ── */}
@@ -575,15 +349,9 @@ export function FlowCanvas({ workflowId, workflowData, onBack }: FlowCanvasProps
       {/* ── Edge click insertion floating Portal Menu ─────────────────── */}
       <EdgeInsertMenu
         menuPortalPosition={menuPortalPosition}
-        onClose={() => {
-          setMenuEdge(null);
-          setActiveSourceHandle(null);
-          setInsertMode(null);
-          setMenuPortalPosition(null);
-        }}
+        onClose={closeMenu}
         onAddNode={handleInsertNode}
       />
-
     </Box>
   );
 }

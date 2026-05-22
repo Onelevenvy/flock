@@ -63,6 +63,10 @@ pub async fn sandbox_exec(
 pub struct SandboxExecToolImpl;
 impl SandboxExecToolImpl {
     pub fn new() -> Box<dyn Tool> {
-        Box::new(LangGraphToolAdapter::new(SandboxExec, ToolCategory::Exec))
+        Box::new(
+            LangGraphToolAdapter::new(SandboxExec, ToolCategory::Exec)
+                .with_provider_id("sandbox")
+                .with_provider_name("Sandbox"),
+        )
     }
 }

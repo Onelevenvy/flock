@@ -2,21 +2,16 @@ import { useState, useEffect, useRef } from 'react';
 import {
   Stack,
   Text,
-  Switch,
-  NumberInput,
   Button,
   Group,
-  Card,
-  Divider,
   Loader,
-  Badge,
-  SegmentedControl,
 } from '@mantine/core';
 import { invoke } from '@tauri-apps/api/core';
 import { notifications } from '@mantine/notifications';
-import { IconCheck, IconSettings, IconShieldCheck, IconCpu } from '@tabler/icons-react';
+import { IconCheck, IconSettings } from '@tabler/icons-react';
 import { useTranslation } from 'react-i18next';
-import ToolManager from '../Common/ToolManager';
+import { ToolApprovalCard } from './XiaofSettings/ToolApprovalCard';
+import { ContextCompactionCard } from './XiaofSettings/ContextCompactionCard';
 
 interface ToolsConfig {
   auto_approve: boolean;
@@ -71,7 +66,6 @@ export default function XiaofSettings() {
 
       if (tools) setToolsConfig({ disabled_allow_list: [], ...tools });
       if (compact) setCompactConfig(compact);
-      // 工具列表由 ToolList 内部的 useAvailableTools 自己加载
     } catch (e) {
       console.error('加载 XIAOF 配置失败:', e);
       notifications.show({
@@ -94,14 +88,6 @@ export default function XiaofSettings() {
     toolsSaveTimerRef.current = setTimeout(async () => {
       try {
         await invoke('set_app_config', { key: 'tools', value: toolsConfig });
-        // notifications.show({
-        //   id: 'xiaof-autosave-tools',
-        //   title: t('common.success'),
-        //   message: t('settings.xiaof.autoSaveSuccess', { defaultValue: '工具配置已自动保存' }),
-        //   color: 'teal',
-        //   icon: <IconCheck size={16} />,
-        //   autoClose: 2000,
-        // });
       } catch (e) {
         console.error('自动保存工具配置失败:', e);
       }
@@ -179,168 +165,17 @@ export default function XiaofSettings() {
 
   return (
     <Stack gap="xl">
-      {/* 自动审批配置 */}
-      <Card
-        style={{
-          background: 'var(--flock-bg-raised)',
-          border: '1px solid var(--flock-border-dim)',
-          borderRadius: 16,
-        }}
-        padding="xl"
-      >
-        <Group justify="space-between" mb="md">
-          <Group gap="xs">
-            <IconShieldCheck size={22} color="var(--flock-accent)" />
-            <Text fw={700} size="md">
-              {t('settings.xiaof.toolApproval')}
-            </Text>
-          </Group>
-          <Badge color="blue" variant="light">
-            {t('settings.xiaof.securityPolicy')}
-          </Badge>
-        </Group>
+      <ToolApprovalCard
+        t={t}
+        toolsConfig={toolsConfig}
+        setToolsConfig={setToolsConfig}
+      />
 
-        <Stack gap="lg">
-          <Switch
-            label={t('settings.xiaof.autoApproveLabel')}
-            checked={toolsConfig?.auto_approve || false}
-            onChange={(e) =>
-              setToolsConfig(
-                toolsConfig ? { ...toolsConfig, auto_approve: e.currentTarget.checked } : null
-              )
-            }
-            styles={{
-              label: { cursor: 'pointer' },
-            }}
-          />
-
-          {!toolsConfig?.auto_approve && (
-            <>
-              <Divider color="var(--flock-border-subtle)" />
-
-              <ToolManager
-                value={toolsConfig?.allow_list || []}
-                onChange={(values) =>
-                  setToolsConfig((prev) =>
-                    prev ? { ...prev, allow_list: values } : null
-                  )
-                }
-                disabledValue={toolsConfig?.disabled_allow_list || []}
-                onDisabledChange={(values) =>
-                  setToolsConfig((prev) =>
-                    prev ? { ...prev, disabled_allow_list: values } : null
-                  )
-                }
-                label={t('settings.xiaof.allowListLabel')}
-                selectorPosition="bottom-end"
-              />
-            </>
-          )}
-        </Stack>
-      </Card>
-
-      {/* 上下文压缩与优化 */}
-      <Card
-        style={{
-          background: 'var(--flock-bg-raised)',
-          border: '1px solid var(--flock-border-dim)',
-          borderRadius: 16,
-        }}
-        padding="xl"
-      >
-        <Group justify="space-between" mb="md">
-          <Group gap="xs">
-            <IconCpu size={22} color="var(--flock-accent)" />
-            <Text fw={700} size="md">
-              {t('settings.xiaof.contextCompaction')}
-            </Text>
-          </Group>
-          <Badge color="blue" variant="light">
-            {t('settings.xiaof.performanceOptimization')}
-          </Badge>
-        </Group>
-
-        <Stack gap="lg">
-          <Switch
-            label={t('settings.xiaof.autoCompactLabel')}
-            checked={compactConfig?.enabled || false}
-            onChange={(e) =>
-              setCompactConfig(
-                compactConfig ? { ...compactConfig, enabled: e.currentTarget.checked } : null
-              )
-            }
-            styles={{
-              label: { cursor: 'pointer' },
-            }}
-          />
-
-          {compactConfig?.enabled && (
-            <>
-              <Divider color="var(--flock-border-subtle)" />
-
-              <Group grow>
-                <NumberInput
-                  label={t('settings.xiaof.contextWindowLabel')}
-                  min={1000}
-                  max={1000000}
-                  step={10000}
-                  value={compactConfig?.context_window || 200000}
-                  onChange={(val) =>
-                    setCompactConfig(
-                      compactConfig
-                        ? { ...compactConfig, context_window: typeof val === 'number' ? val : Number(val) }
-                        : null
-                    )
-                  }
-                  styles={{
-                    input: { background: 'var(--flock-bg-surface)' },
-                  }}
-                />
-
-                <Stack gap={4}>
-                  <Text size="sm" fw={500}>
-                    {t('settings.xiaof.compactionModeLabel')}
-                  </Text>
-                  <SegmentedControl
-                    data={[
-                      { label: t('settings.xiaof.compactionModeSafe'), value: 'safe' },
-                      { label: t('settings.xiaof.compactionModeFull'), value: 'full' },
-                    ]}
-                    value={compactConfig?.compaction === 'full' ? 'full' : 'safe'}
-                    onChange={(val) =>
-                      setCompactConfig(
-                        compactConfig ? { ...compactConfig, compaction: val } : null
-                      )
-                    }
-                    styles={{
-                      root: { background: 'var(--flock-bg-surface)' },
-                    }}
-                  />
-                </Stack>
-              </Group>
-
-              {compactConfig?.compaction === 'full' && (
-                <>
-                  <Divider color="var(--flock-border-subtle)" />
-
-                  <Switch
-                    label={t('settings.xiaof.toonLabel')}
-                    checked={compactConfig?.toon || false}
-                    onChange={(e) =>
-                      setCompactConfig(
-                        compactConfig ? { ...compactConfig, toon: e.currentTarget.checked } : null
-                      )
-                    }
-                    styles={{
-                      label: { cursor: 'pointer' },
-                    }}
-                  />
-                </>
-              )}
-            </>
-          )}
-        </Stack>
-      </Card>
+      <ContextCompactionCard
+        t={t}
+        compactConfig={compactConfig}
+        setCompactConfig={setCompactConfig}
+      />
 
       {/* 底部操作栏 */}
       <Group justify="flex-end" gap="md">

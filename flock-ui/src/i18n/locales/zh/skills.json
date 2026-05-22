@@ -19,7 +19,8 @@
     "params": "参数",
     "noProviders": "暂无工具提供商",
     "needAuthBadge": "需授权",
-    "toolsCount": "{{count}} 个工具"
+    "toolsCount": "{{count}} 个工具",
+    "sandboxConfigHint": "该工具需要配置 Daytona 沙盒连接。请前往 设置 → 沙盒 页面填写 API URL 和 API Key，并通过连通性测试后即可启用。"
   },
   "mcp": {
     "connectSuccess": "连接成功",
