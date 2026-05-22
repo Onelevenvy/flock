@@ -3,19 +3,20 @@ import { invoke } from '@tauri-apps/api/core';
 import { useTranslation } from 'react-i18next';
 import type { Assistant, UpsertAssistant } from '../types/assistant';
 
-function parseMultiLang(fieldVal: string | undefined | null, lang: string): string {
+export interface I18nString {
+  zh: string;
+  en: string;
+}
+
+type RawAssistant = Omit<Assistant, 'name' | 'description'> & {
+  name: I18nString;
+  description: I18nString;
+};
+
+function parseMultiLang(fieldVal: I18nString | undefined | null, lang: string): string {
   if (!fieldVal) return '';
-  const trimmed = fieldVal.trim();
-  if (trimmed.startsWith('{') && trimmed.endsWith('}')) {
-    try {
-      const parsed = JSON.parse(trimmed);
-      const currentLang = (lang || 'zh').split('-')[0];
-      return parsed[currentLang] || parsed['en'] || parsed['zh'] || fieldVal;
-    } catch {
-      return fieldVal;
-    }
-  }
-  return fieldVal;
+  const currentLang = ((lang || 'zh').split('-')[0]) as 'zh' | 'en';
+  return fieldVal[currentLang] || fieldVal['en'] || fieldVal['zh'] || '';
 }
 
 
@@ -27,7 +28,7 @@ export function useAssistantsQuery() {
   return useQuery<Assistant[]>({
     queryKey: ['assistants', currentLang],
     queryFn: async () => {
-      const data = await invoke<Assistant[]>('list_assistants');
+      const data = await invoke<RawAssistant[]>('list_assistants');
       return data.map(a => ({
         ...a,
         name: parseMultiLang(a.name, currentLang),
@@ -45,11 +46,13 @@ export function useCreateAssistantMutation() {
   return useMutation({
     mutationFn: async (input: Omit<UpsertAssistant, 'is_builtin' | 'sort_order'>) => {
       // 从 React Query 缓存中直接获取现有的助手，以计算 sort_order，无需重新调用后端
-      const currentAssistants = queryClient.getQueryData<Assistant[]>(['assistants']) || [];
+      const currentAssistants = queryClient.getQueryData<Assistant[]>(['assistants', queryClient.getDefaultOptions().queries?.staleTime ? undefined : undefined]) || [];
       const userAssistants = currentAssistants.filter(a => !a.is_builtin);
       
-      const payload: UpsertAssistant = {
+      const payload = {
         ...input,
+        name: { zh: input.name, en: input.name },
+        description: { zh: input.description, en: input.description },
         is_builtin: false,
         sort_order: userAssistants.length,
       };
@@ -67,8 +70,14 @@ export function useCreateAssistantMutation() {
 export function useUpdateAssistantMutation() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: ({ id, input }: { id: string; input: UpsertAssistant }) =>
-      invoke<Assistant>('update_assistant', { id, input }),
+    mutationFn: ({ id, input }: { id: string; input: UpsertAssistant }) => {
+      const payload = {
+        ...input,
+        name: { zh: input.name, en: input.name },
+        description: { zh: input.description, en: input.description },
+      };
+      return invoke<Assistant>('update_assistant', { id, input: payload });
+    },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['assistants'] });
     },

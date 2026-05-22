@@ -123,7 +123,7 @@ pub async fn start_agent(
         match db_manager.get_assistant(asst_id).await {
             Ok(Some(asst)) => {
                 log::info!(
-                    "Applying assistant overrides: name={}, tools={:?}, skills={:?}",
+                    "Applying assistant overrides: name={:?}, tools={:?}, skills={:?}",
                     asst.name, asst.tools, asst.skills
                 );
                 let enabled_tools: Vec<String> = asst
