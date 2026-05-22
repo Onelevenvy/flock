@@ -117,6 +117,22 @@
     "disableSuccess": "Sandbox Disabled",
     "disableSuccessMsg": "Daytona sandbox tools have been disabled. Run the connectivity test again to re-enable.",
     "retestHint": "Sandbox is disabled. Run the connection test again to re-enable.",
-    "testOkAutoEnabled": "Connection successful — sandbox auto-enabled"
+    "testOkAutoEnabled": "Connection successful — sandbox auto-enabled",
+    "tabConfig": "Configuration",
+    "tabInstances": "Active Sandboxes",
+    "tabSnapshots": "Snapshot Templates",
+    "activeInstances": "Active Sandbox Instances",
+    "noActiveInstances": "No active sandbox instances found",
+    "status": "Status",
+    "noSnapshots": "No snapshot templates found",
+    "snapshotNameLabel": "Name",
+    "default": "Default",
+    "setAsDefault": "Set as Default",
+    "isDefault": "Already Default Template",
+    "deleteSuccessMsg": "Sandbox instance destroyed successfully",
+    "deleteSnapshotSuccess": "Snapshot template deleted successfully",
+    "saveDefaultSuccess": "Default snapshot template updated successfully",
+    "createSnapshotTitle": "Create New Snapshot Template",
+    "snapshots": "Cloud Snapshot Templates"
   }
 }

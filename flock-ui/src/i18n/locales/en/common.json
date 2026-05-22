@@ -16,5 +16,9 @@
   "preview": "Preview",
   "close": "Close",
   "settings": "Settings",
-  "save":"Save" 
+  "save": "Save",
+  "refresh": "Refresh",
+  "copied": "Copied to clipboard",
+  "actions": "Actions",
+  "copy": "Copy"
 }

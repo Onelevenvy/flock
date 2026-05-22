@@ -70,7 +70,9 @@ export function SnapshotListSection({
       } else if (data && Array.isArray(data.data)) {
         list = data.data;
       }
-      setSnapshots(list);
+      // Filter out system-managed templates
+      const userSnapshots = list.filter((snap: any) => !snap.system && !snap.isSystem);
+      setSnapshots(userSnapshots);
     } catch (e) {
       console.error('获取快照列表失败:', e);
       notifications.show({
@@ -155,7 +157,7 @@ export function SnapshotListSection({
           <Group gap="xs">
             <IconCamera size={20} color="var(--flock-accent)" />
             <Text fw={700} size="md">
-              {t('settings.sandbox.snapshotName', { defaultValue: '创建新快照模板' })}
+              {t('settings.sandbox.createSnapshotTitle', { defaultValue: '创建新快照模板' })}
             </Text>
           </Group>
         </Group>

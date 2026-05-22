@@ -36,6 +36,7 @@ export function SandboxListSection() {
   const [sandboxes, setSandboxes] = useState<SandboxItem[]>([]);
   const [loading, setLoading] = useState(false);
   const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [cleaningUp, setCleaningUp] = useState(false);
 
   const fetchSandboxes = async () => {
     setLoading(true);
@@ -60,6 +61,29 @@ export function SandboxListSection() {
       });
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleCleanup = async () => {
+    setCleaningUp(true);
+    try {
+      const msg = await invoke<string>('cleanup_all_sandboxes');
+      notifications.show({
+        title: t('settings.sandbox.cleanupDone'),
+        message: msg,
+        color: 'teal',
+        icon: <IconCheck size={18} />,
+      });
+      fetchSandboxes();
+    } catch (e) {
+      notifications.show({
+        title: t('settings.sandbox.cleanupFailed'),
+        message: String(e),
+        color: 'red',
+        icon: <IconAlertCircle size={18} />,
+      });
+    } finally {
+      setCleaningUp(false);
     }
   };
 
@@ -129,16 +153,28 @@ export function SandboxListSection() {
             {t('settings.sandbox.activeInstances', { defaultValue: '运行中的沙盒实例' })}
           </Text>
         </Group>
-        <Button
-          variant="subtle"
-          color="gray"
-          leftSection={loading ? <Loader size="xs" color="gray" /> : <IconRefresh size={15} />}
-          onClick={fetchSandboxes}
-          disabled={loading}
-          size="xs"
-        >
-          {t('common.refresh', { defaultValue: '刷新' })}
-        </Button>
+        <Group gap="xs">
+          <Button
+            variant="outline"
+            color="red"
+            size="xs"
+            leftSection={<IconTrash size={14} />}
+            onClick={handleCleanup}
+            loading={cleaningUp}
+          >
+            {t('settings.sandbox.cleanupBtn', { defaultValue: '清理所有历史沙盒' })}
+          </Button>
+          <Button
+            variant="subtle"
+            color="gray"
+            leftSection={loading ? <Loader size="xs" color="gray" /> : <IconRefresh size={15} />}
+            onClick={fetchSandboxes}
+            disabled={loading}
+            size="xs"
+          >
+            {t('common.refresh', { defaultValue: '刷新' })}
+          </Button>
+        </Group>
       </Group>
 
       {loading && sandboxes.length === 0 ? (

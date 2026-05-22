@@ -16,5 +16,9 @@
   "preview": "预览",
   "close": "关闭",
   "settings": "设置",
-  "save":"保存"
+  "save":"保存",
+  "refresh": "刷新",
+  "copied": "已复制到剪贴板",
+  "actions": "操作",
+  "copy": "复制"
 }
