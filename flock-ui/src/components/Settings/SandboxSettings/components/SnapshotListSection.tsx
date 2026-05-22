@@ -71,7 +71,7 @@ export function SnapshotListSection({
         list = data.data;
       }
       // Filter out system-managed templates
-      const userSnapshots = list.filter((snap: any) => !snap.system && !snap.isSystem);
+      const userSnapshots = list.filter((snap: any) => !snap.general && !snap.system && !snap.isSystem);
       setSnapshots(userSnapshots);
     } catch (e) {
       console.error('获取快照列表失败:', e);
