@@ -15,6 +15,8 @@ pub struct AssistantRecord {
     pub system_prompt: String,
     /// JSON array of tool provider IDs, e.g. ["builtin-bash", "serpapi"]
     pub tools: Vec<String>,
+    /// JSON array of disabled tool provider IDs
+    pub disabled_tools: Vec<String>,
     /// JSON array of skill names
     pub skills: Vec<String>,
     pub is_builtin: bool,
@@ -33,6 +35,7 @@ pub struct UpsertAssistant {
     pub model: String,
     pub system_prompt: String,
     pub tools: Vec<String>,
+    pub disabled_tools: Vec<String>,
     pub skills: Vec<String>,
     pub is_builtin: bool,
     pub sort_order: i64,
@@ -43,7 +46,7 @@ impl DbManager {
     pub async fn list_assistants(&self) -> anyhow::Result<Vec<AssistantRecord>> {
         let rows = sqlx::query(
             "SELECT id, name, icon, description, model, system_prompt,
-                    tools, skills, is_builtin, sort_order, created_at, updated_at
+                    tools, disabled_tools, skills, is_builtin, sort_order, created_at, updated_at
              FROM assistant
              ORDER BY is_builtin DESC, sort_order ASC, created_at ASC",
         )
@@ -61,7 +64,7 @@ impl DbManager {
     pub async fn get_assistant(&self, id: &str) -> anyhow::Result<Option<AssistantRecord>> {
         let row = sqlx::query(
             "SELECT id, name, icon, description, model, system_prompt,
-                    tools, skills, is_builtin, sort_order, created_at, updated_at
+                    tools, disabled_tools, skills, is_builtin, sort_order, created_at, updated_at
              FROM assistant WHERE id = ?1",
         )
         .bind(id)
@@ -81,13 +84,14 @@ impl DbManager {
             format!("asst_{}", uuid_like())
         });
         let tools_json = serde_json::to_string(&input.tools)?;
+        let disabled_tools_json = serde_json::to_string(&input.disabled_tools)?;
         let skills_json = serde_json::to_string(&input.skills)?;
 
         sqlx::query(
             "INSERT INTO assistant
-             (id, name, icon, description, model, system_prompt, tools, skills,
+             (id, name, icon, description, model, system_prompt, tools, disabled_tools, skills,
               is_builtin, sort_order, created_at, updated_at)
-             VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, ?11)",
+             VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, ?12, ?12)",
         )
         .bind(&id)
         .bind(&input.name)
@@ -96,6 +100,7 @@ impl DbManager {
         .bind(&input.model)
         .bind(&input.system_prompt)
         .bind(&tools_json)
+        .bind(&disabled_tools_json)
         .bind(&skills_json)
         .bind(input.is_builtin as i64)
         .bind(input.sort_order)
@@ -111,6 +116,7 @@ impl DbManager {
             model: input.model.clone(),
             system_prompt: input.system_prompt.clone(),
             tools: input.tools.clone(),
+            disabled_tools: input.disabled_tools.clone(),
             skills: input.skills.clone(),
             is_builtin: input.is_builtin,
             sort_order: input.sort_order,
@@ -123,14 +129,15 @@ impl DbManager {
     pub async fn update_assistant(&self, id: &str, input: &UpsertAssistant) -> anyhow::Result<AssistantRecord> {
         let now = chrono::Utc::now().to_rfc3339();
         let tools_json = serde_json::to_string(&input.tools)?;
+        let disabled_tools_json = serde_json::to_string(&input.disabled_tools)?;
         let skills_json = serde_json::to_string(&input.skills)?;
 
         let rows_affected = sqlx::query(
             "UPDATE assistant SET
                 name = ?1, icon = ?2, description = ?3, model = ?4,
-                system_prompt = ?5, tools = ?6, skills = ?7,
-                sort_order = ?8, updated_at = ?9
-             WHERE id = ?10",
+                system_prompt = ?5, tools = ?6, disabled_tools = ?7, skills = ?8,
+                sort_order = ?9, updated_at = ?10
+             WHERE id = ?11",
         )
         .bind(&input.name)
         .bind(&input.icon)
@@ -138,6 +145,7 @@ impl DbManager {
         .bind(&input.model)
         .bind(&input.system_prompt)
         .bind(&tools_json)
+        .bind(&disabled_tools_json)
         .bind(&skills_json)
         .bind(input.sort_order)
         .bind(&now)
@@ -170,15 +178,16 @@ impl DbManager {
         for (order, asst) in builtins.iter().enumerate() {
             let id = asst.id.as_deref().unwrap_or(&asst.name);
             let tools_json = serde_json::to_string(&asst.tools)?;
+            let disabled_tools_json = serde_json::to_string(&asst.disabled_tools)?;
             let skills_json = serde_json::to_string(&asst.skills)?;
             let now = chrono::Utc::now().to_rfc3339();
 
             // Insert if not exists; on conflict update only name/icon/description/sort_order
             sqlx::query(
                 "INSERT INTO assistant
-                 (id, name, icon, description, model, system_prompt, tools, skills,
+                 (id, name, icon, description, model, system_prompt, tools, disabled_tools, skills,
                   is_builtin, sort_order, created_at, updated_at)
-                 VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, 1, ?9, ?10, ?10)
+                 VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, 1, ?10, ?11, ?11)
                  ON CONFLICT(id) DO UPDATE SET
                     name        = excluded.name,
                     icon        = excluded.icon,
@@ -193,6 +202,7 @@ impl DbManager {
             .bind(&asst.model)
             .bind(&asst.system_prompt)
             .bind(&tools_json)
+            .bind(&disabled_tools_json)
             .bind(&skills_json)
             .bind(order as i64)
             .bind(&now)
@@ -205,8 +215,10 @@ impl DbManager {
 
 fn parse_row(row: &sqlx::sqlite::SqliteRow) -> anyhow::Result<AssistantRecord> {
     let tools_json: String = row.get("tools");
+    let disabled_tools_json: String = row.get("disabled_tools");
     let skills_json: String = row.get("skills");
     let tools: Vec<String> = serde_json::from_str(&tools_json).unwrap_or_default();
+    let disabled_tools: Vec<String> = serde_json::from_str(&disabled_tools_json).unwrap_or_default();
     let skills: Vec<String> = serde_json::from_str(&skills_json).unwrap_or_default();
     let is_builtin: i64 = row.get("is_builtin");
 
@@ -218,6 +230,7 @@ fn parse_row(row: &sqlx::sqlite::SqliteRow) -> anyhow::Result<AssistantRecord> {
         model: row.get("model"),
         system_prompt: row.get("system_prompt"),
         tools,
+        disabled_tools,
         skills,
         is_builtin: is_builtin != 0,
         sort_order: row.get("sort_order"),
@@ -246,6 +259,7 @@ pub fn builtin_assistants() -> Vec<UpsertAssistant> {
             model: String::new(),
             system_prompt: "You are a professional code assistant. Help users write high-quality code, debug issues, and perform code refactoring. Always provide clear code comments and explanations.".to_string(),
             tools: vec!["builtin".to_string()],
+            disabled_tools: vec![],
             skills: vec![],
             is_builtin: true,
             sort_order: 0,
@@ -258,6 +272,7 @@ pub fn builtin_assistants() -> Vec<UpsertAssistant> {
             model: String::new(),
             system_prompt: "You are a professional writing assistant. Help users draft various types of documents, including articles, emails, and reports. Pay attention to the accuracy and fluency of language expression.".to_string(),
             tools: vec![],
+            disabled_tools: vec![],
             skills: vec![],
             is_builtin: true,
             sort_order: 1,
@@ -270,6 +285,7 @@ pub fn builtin_assistants() -> Vec<UpsertAssistant> {
             model: String::new(),
             system_prompt: "You are a professional data analyst assistant. Help users analyze data, provide visualization suggestions, interpret statistical results, and offer insightful, data-driven recommendations.".to_string(),
             tools: vec![],
+            disabled_tools: vec![],
             skills: vec![],
             is_builtin: true,
             sort_order: 2,

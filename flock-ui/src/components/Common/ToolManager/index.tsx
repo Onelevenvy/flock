@@ -144,7 +144,7 @@ export default function ToolManager({
               tool={tool}
               provider={getProvider(tool.provider_id)}
               enabled={isEnabled(tool.name)}
-              onToggle={() => handleToggle(tool.name)}
+              onToggle={onDisabledChange ? () => handleToggle(tool.name) : undefined}
               onRemove={() => handleRemove(tool.name)}
               disabled={disabled}
             />
