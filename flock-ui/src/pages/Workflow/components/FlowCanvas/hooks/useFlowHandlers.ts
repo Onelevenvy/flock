@@ -11,8 +11,8 @@ import {
   type OnNodesChange,
   MarkerType,
 } from 'reactflow';
-import { nodeConfig, type NodeType } from '../../nodeConfig';
-import { useWorkflowStore } from '../../../../store/workflowStore';
+import { nodeConfig, type NodeType } from '../../../nodeConfig';
+
 
 /**
  * Standard ReactFlow event handlers: nodes/edges change, connect, validation,

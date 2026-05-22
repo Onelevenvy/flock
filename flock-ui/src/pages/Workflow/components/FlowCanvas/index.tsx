@@ -252,7 +252,7 @@ export function FlowCanvas({ workflowId, workflowData, onBack }: FlowCanvasProps
             fitView={fitView}
             showMinimap={showMinimap}
             setShowMinimap={setShowMinimap}
-            t={t}
+            t={t as any}
           />
 
           {/* ── Node Palette Popover ── */}
