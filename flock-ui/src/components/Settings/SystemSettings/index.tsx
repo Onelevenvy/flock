@@ -1,13 +1,13 @@
 import { useState, useEffect } from 'react';
 import { Stack } from '@mantine/core';
 import { IconCheck } from '@tabler/icons-react';
-import { useUiStore } from '../../store/uiStore';
+import { useUiStore } from '../../../store/uiStore';
 import { invoke } from '@tauri-apps/api/core';
 import { notifications } from '@mantine/notifications';
 import { useTranslation } from 'react-i18next';
-import { UiSettingsCard } from './SystemSettings/UiSettingsCard';
-import { SessionLimitsCard } from './SystemSettings/SessionLimitsCard';
-import { SystemInfoCard } from './SystemSettings/SystemInfoCard';
+import { UiSettingsCard } from './components/UiSettingsCard';
+import { SessionLimitsCard } from './components/SessionLimitsCard';
+import { SystemInfoCard } from './components/SystemInfoCard';
 
 export default function SystemSettings() {
   const { t } = useTranslation();
