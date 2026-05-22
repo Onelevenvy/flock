@@ -117,6 +117,22 @@
     "disableSuccess": "沙盒已停用",
     "disableSuccessMsg": "已成功停用 Daytona 沙盒工具。如需重新启用，请再次测试连通性。",
     "retestHint": "沙盒已停用。如需重新启用，请重新测试连接。",
-    "testOkAutoEnabled": "连接成功并已自动开启沙盒"
+    "testOkAutoEnabled": "连接成功并已自动开启沙盒",
+    "tabConfig": "参数配置",
+    "tabInstances": "沙盒管理",
+    "tabSnapshots": "快照模板",
+    "activeInstances": "运行中的沙盒实例",
+    "noActiveInstances": "暂无活跃中的沙盒实例",
+    "status": "状态",
+    "noSnapshots": "暂无快照模板",
+    "snapshotNameLabel": "名称",
+    "default": "默认",
+    "setAsDefault": "设为默认模板",
+    "isDefault": "当前已是默认模板",
+    "deleteSuccessMsg": "沙盒已销毁",
+    "deleteSnapshotSuccess": "快照模板已删除",
+    "saveDefaultSuccess": "默认快照模板已更新",
+    "createSnapshotTitle": "创建新快照模板",
+    "snapshots": "云端快照模板"
   }
 }

@@ -10,8 +10,8 @@ import { invoke } from '@tauri-apps/api/core';
 import { notifications } from '@mantine/notifications';
 import { IconCheck, IconSettings } from '@tabler/icons-react';
 import { useTranslation } from 'react-i18next';
-import { ToolApprovalCard } from './XiaofSettings/ToolApprovalCard';
-import { ContextCompactionCard } from './XiaofSettings/ContextCompactionCard';
+import { ToolApprovalCard } from './components/ToolApprovalCard';
+import { ContextCompactionCard } from './components/ContextCompactionCard';
 
 interface ToolsConfig {
   auto_approve: boolean;

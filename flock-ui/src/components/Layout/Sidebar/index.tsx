@@ -1,6 +1,6 @@
 import { Box, Divider } from '@mantine/core';
 import { useUiStore } from '../../../store/uiStore';
-import SettingsModal from '../../Settings/SettingsModal';
+import SettingsModal from '../../Settings';
 import { FlockLogo } from './FlockLogo';
 import { NavigationList } from './NavigationList';
 import { WorkspaceSection } from './WorkspaceSection';

@@ -84,3 +84,132 @@ pub async fn create_playwright_snapshot(
     .await
     .map_err(|e| e.to_string())
 }
+
+/// 列出所有 Daytona 沙盒
+#[tauri::command]
+pub async fn list_daytona_sandboxes(
+    db: State<'_, SharedDbManager>,
+) -> Result<serde_json::Value, String> {
+    use flock_core::db::DbManager;
+    use flock_tools::daytona::{get_sandbox_config, get_api_base};
+
+    let db_ref: &DbManager = &*db;
+    let cfg = get_sandbox_config(db_ref).await
+        .ok_or_else(|| "沙盒未配置或未启用".to_string())?;
+
+    let base = get_api_base(cfg.api_url.as_ref().unwrap());
+    let api_key = cfg.api_key.as_ref().unwrap();
+
+    let client = reqwest::Client::new();
+    let url = format!("{}/api/sandbox", base);
+    let resp = client.get(&url)
+        .header("Authorization", format!("Bearer {}", api_key))
+        .send()
+        .await
+        .map_err(|e| format!("请求沙盒列表失败: {}", e))?;
+
+    let text = resp.text().await.unwrap_or_default();
+    let val: serde_json::Value = serde_json::from_str(&text)
+        .map_err(|e| format!("解析沙盒列表失败: {}", e))?;
+
+    Ok(val)
+}
+
+/// 删除指定 Daytona 沙盒
+#[tauri::command]
+pub async fn delete_daytona_sandbox(
+    db: State<'_, SharedDbManager>,
+    id: String,
+) -> Result<(), String> {
+    use flock_core::db::DbManager;
+    use flock_tools::daytona::{get_sandbox_config, get_api_base};
+
+    let db_ref: &DbManager = &*db;
+    let cfg = get_sandbox_config(db_ref).await
+        .ok_or_else(|| "沙盒未配置或未启用".to_string())?;
+
+    let base = get_api_base(cfg.api_url.as_ref().unwrap());
+    let api_key = cfg.api_key.as_ref().unwrap();
+
+    let client = reqwest::Client::new();
+    let url = format!("{}/api/sandbox/{}", base, id);
+    let resp = client.delete(&url)
+        .header("Authorization", format!("Bearer {}", api_key))
+        .send()
+        .await
+        .map_err(|e| format!("发送删除沙盒请求失败: {}", e))?;
+
+    if resp.status().is_success() {
+        // 如果删除的是当前活跃的沙盒，清理本地缓存
+        if let Some(active_id) = flock_tools::daytona::get_active_sandbox_id().await {
+            if active_id == id {
+                let _ = flock_tools::daytona::destroy_active_sandbox(db_ref).await;
+            }
+        }
+        Ok(())
+    } else {
+        Err(format!("删除沙盒失败，HTTP 状态码: {}", resp.status()))
+    }
+}
+
+/// 列出所有 Daytona 快照
+#[tauri::command]
+pub async fn list_daytona_snapshots(
+    db: State<'_, SharedDbManager>,
+) -> Result<serde_json::Value, String> {
+    use flock_core::db::DbManager;
+    use flock_tools::daytona::{get_sandbox_config, get_api_base};
+
+    let db_ref: &DbManager = &*db;
+    let cfg = get_sandbox_config(db_ref).await
+        .ok_or_else(|| "沙盒未配置或未启用".to_string())?;
+
+    let base = get_api_base(cfg.api_url.as_ref().unwrap());
+    let api_key = cfg.api_key.as_ref().unwrap();
+
+    let client = reqwest::Client::new();
+    let url = format!("{}/api/snapshots", base);
+    let resp = client.get(&url)
+        .header("Authorization", format!("Bearer {}", api_key))
+        .send()
+        .await
+        .map_err(|e| format!("请求快照列表失败: {}", e))?;
+
+    let text = resp.text().await.unwrap_or_default();
+    let val: serde_json::Value = serde_json::from_str(&text)
+        .map_err(|e| format!("解析快照列表失败: {}", e))?;
+
+    Ok(val)
+}
+
+/// 删除指定 Daytona 快照
+#[tauri::command]
+pub async fn delete_daytona_snapshot(
+    db: State<'_, SharedDbManager>,
+    id: String,
+) -> Result<(), String> {
+    use flock_core::db::DbManager;
+    use flock_tools::daytona::{get_sandbox_config, get_api_base};
+
+    let db_ref: &DbManager = &*db;
+    let cfg = get_sandbox_config(db_ref).await
+        .ok_or_else(|| "沙盒未配置或未启用".to_string())?;
+
+    let base = get_api_base(cfg.api_url.as_ref().unwrap());
+    let api_key = cfg.api_key.as_ref().unwrap();
+
+    let client = reqwest::Client::new();
+    let url = format!("{}/api/snapshots/{}", base, id);
+    let resp = client.delete(&url)
+        .header("Authorization", format!("Bearer {}", api_key))
+        .send()
+        .await
+        .map_err(|e| format!("发送删除快照请求失败: {}", e))?;
+
+    if resp.status().is_success() {
+        Ok(())
+    } else {
+        Err(format!("删除快照失败，HTTP 状态码: {}", resp.status()))
+    }
+}
+

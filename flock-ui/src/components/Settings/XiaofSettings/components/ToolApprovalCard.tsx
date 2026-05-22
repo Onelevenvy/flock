@@ -1,6 +1,6 @@
 import { Card, Group, ThemeIcon, Text, Badge, Stack, Switch, Divider } from '@mantine/core';
 import { IconShieldCheck } from '@tabler/icons-react';
-import ToolManager from '../../Common/ToolManager';
+import ToolManager from '../../../Common/ToolManager';
 
 interface ToolsConfig {
   auto_approve: boolean;
