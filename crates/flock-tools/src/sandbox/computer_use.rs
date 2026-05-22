@@ -11,49 +11,40 @@ use base64::{Engine as _, engine::general_purpose};
 
 /// A cloud-based GUI Computer Use tool for interacting with the sandbox desktop environment.
 ///
-/// ## 核心能力与动作规范
-/// - 本工具用于控制沙盒内的操作系统桌面 GUI 键鼠、执行 Shell 脚本以及截屏。
-/// - **命令优先**：对于纯文件系统和环境管理（如 mkdir, rm, ls 等），请始终优先使用 `action="exec"`（或者直接调用 `CodeExecution` 工具），比 GUI 模拟要快速、准确得多。
-/// - **支持动作 (action)**：
-///   * `exec`      — 直接在沙盒中异步运行 Shell 命令（推荐）。
-///   * `click`     — 点击屏幕坐标 (x, y)。`button`可选："left"|"right"|"middle"。
-///   * `move`      — 移动鼠标至坐标 (x, y)。
-///   * `drag`      — 按住左键从当前位置拖拽到 (x, y)。
-///   * `scroll`    — 鼠标滚轮滚动。`button`可选："up"|"down"。
-///   * `type`      — 键盘录入文本至当前聚焦的输入框（提供 `text` 参数）。
-///   * `press`     — 触发键盘单键或快捷键（如 "Return"、"ctrl+c"等，提供 `key` 参数）。
-///   * `screenshot`— 获取当前操作系统的 GUI 屏幕截图。
-///   * `status`    — 获取当前桌面服务的就绪状态。
+/// ## Core Features and Action Specification
+/// - This tool is used to control the sandbox desktop GUI via simulated mouse/keyboard actions, execute shell scripts, and capture screenshots.
+/// - **CLI/Command First**: For pure file-system or system administration operations (e.g., mkdir, rm, ls), always prefer using `action="exec"` (or the `CodeExecution` tool). It is significantly faster and more reliable than GUI simulation.
+/// - Supported actions:
+///   * `exec`      — Execute a shell command directly and asynchronously in the sandbox (Recommended for file/system operations).
+///   * `click`     — Click the mouse at (x, y). `button` options: "left"|"right"|"middle".
+///   * `move`      — Move the mouse cursor to (x, y).
+///   * `drag`      — Hold left click and drag from the current position to (x, y).
+///   * `scroll`    — Scroll the mouse wheel. `button` options: "up"|"down".
+///   * `type`      — Type text into the currently focused input field (requires `text`).
+///   * `press`     — Press a single key or key combination (e.g., "Return", "ctrl+c", requires `key`).
+///   * `screenshot`— Capture the current OS desktop screen.
+///   * `status`    — Query the readiness status of the desktop service.
 ///
-/// ## 1. 视觉自检与反馈闭环（Visual Feedback Loop - 对齐 Manus 等顶级架构）
-/// - **强制规范**：在使用 `click`, `type`, `press` 等动作修改桌面状态后，系统会自动捕获新屏幕状态截图并将其追加。您必须随时利用这些返回的截图核实状态。
-/// - **自检纠错**：如果您发现点击页面某坐标或按钮 3 次后，屏幕或窗口依然无变化、或应用无响应，**严禁盲目继续用相同坐标重试**。这通常是因为：
-///   * 屏幕分辨率偏差、窗口发生了位移、或目标被遮挡。
-///   * 您应该先使用 `exec` 执行 `xdotool search --onlyvisible --class [AppName]` 探测窗口具体坐标，或者截取大图进行精确定位修正。
-///   * 也可以改用 `Browser` 工具（如果是网页操作）直接对 DOM 元素进行操纵，减少坐标偏差。
+/// ## 1. Visual Feedback Loop (Aligned with Manus / Top-tier AI Agents)
+/// - **MANDATORY RULE**: After performing state-changing actions like `click`, `type`, or `press`, you must inspect the returned screen screenshot to verify the visual state.
+/// - **Self-Correction & Fallback**: If you click the same coordinate 3 consecutive times but the screen or active window shows no change/response, **DO NOT blindly repeat the click**. You must immediately:
+///   * Check if the window was shifted, closed, or obscured. Use `exec` with `xdotool search --onlyvisible --class [AppName]` to locate windows, or capture a full screenshot to recalibrate coordinates.
+///   * If it is a web-based app, switch to the `Browser` tool to perform precise DOM manipulation instead.
 ///
-/// ## 2. 人机协作前置提示词与临界主动让贤（Proactive Collaboration - 主动触发接管）
-/// - **风控与强人机壁垒状态**：如果您在操纵桌面应用时，屏幕上弹出了：
-///   * 安全风控滑块验证、极验、人脸扫码。
-///   * 邮箱/手机验证码、动态短信验证。
-///   * 要求用户手动扫微信/支付宝/APP二维码登录。
-///   * 要求用户使用实物 U 盾或保密卡等大模型完全无法触及的硬件验证设备。
-/// - **主动让贤规范**：一旦在最新截图中看到这类需要物理人手/设备介入的验证要素，**严禁**继续进行后台尝试，这会直接招致账号风控封禁。您必须立即执行以下人机协同交接：
-///   1. 立即停止任何自动键鼠动作。
-///   2. 使用**温和诚恳、极具亲和力且情绪价值拉满的语气**对用户说：
-///      “*我已经帮您拉起了协同远程桌面。检测到该应用当前需要进行安全人身验证/滑块扫码，我已自动暂停，请您在右侧预览区进行控制操作，完成后告知我以恢复。*”
-///   3. 提示用户后，用户会通过右侧的 noVNC 直接接管，操作完成后点击“我已完成操作”，Agent 将无缝从暂停点继续运转。
+/// ## 2. Proactive Collaboration & Risk Mitigation (Proactively Triggering Takeover)
+/// - **Anti-Bot & Human Barrier Threshold**: If you see verifications on the desktop screen that require physical human interaction/devices:
+///   * Slider captchas, puzzles, or facial verifications.
+///   * SMS/Email passcodes requiring dynamic code lookup.
+///   * Login QR codes requiring mobile app scanning (e.g., WeChat, Alipay).
+///   * Bank/financial key fobs, physical security keys, or hardware authenticators.
+/// - **Takeover Action Standard**: Once you detect these verification elements, **DO NOT** attempt to brute-force them via coordinate clicking. This will cause account suspension. You must immediately:
+///   1. Stop all automated mouse/keyboard actions.
+///   2. Tell the user using a warm, polite, and highly supportive tone:
+///      "*I have launched the collaborative remote desktop for you. Since this application currently requires security verification/manual intervention, I have paused the automation. Please complete the verification in the VNC preview panel on the right, and let me know once you are done to resume.*"
+///   3. Wait patiently for the user to complete the manual intervention via VNC.
 ///
-/// ## 3. 用户手动接管指示
-/// - 当用户发出“让我来操作”、“打开控制台”、“手动输入”、“我来控制”、“换我来吧”等指令时，请明确回复用户“*已经为您在右侧面板准备好了桌面 VNC，请直接进行操作控制*”，并温和等待用户的操作指令。
-///
-/// @param action The operation to perform (see above).
-/// @param command Shell command to execute (required for `exec` action).
-/// @param x Optional X coordinate for mouse actions.
-/// @param y Optional Y coordinate for mouse actions.
-/// @param button Optional mouse button or scroll direction.
-/// @param text Optional text to type.
-/// @param key Optional key or hotkey to press (e.g. "Return", "ctrl+c").
+/// ## 3. Manual Intervention Guide
+/// - When the user explicitly requests manual control (e.g., "let me log in", "I want to do this myself", "open console", "manual input", "I'll take over"), reply warmly that the VNC desktop has been prepared on the right panel and wait for their manual actions to complete.
 ///
 /// @param action The operation to perform (see above).
 /// @param command Shell command to execute (required for `exec` action).

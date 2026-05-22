@@ -12,35 +12,35 @@ use base64::{Engine as _, engine::general_purpose};
 
 /// A cloud-based web browser tool for rendering web pages, taking screenshots, and performing interactions.
 ///
-/// ## 核心能力与动作规范
-/// - 本工具用于网页渲染、元素交互及屏幕状态捕捉。
-/// - 支持动作 (action)：
-///   * `goto`: 打开 URL，并在后台进行网页渲染。
-///   * `click`: 点击指定 CSS 选择器元素 (必须提供 `selector` 参数)。
-///   * `fill`: 向指定 CSS 选择器输入框中键入文本 (必须提供 `selector` 和 `text` 参数)。
-///   * `interactive`: 人机协同接管模式 (极其重要)。
+/// ## Core Features and Action Specification
+/// - This tool is used for rendering web pages, element interactions, and capturing screen states.
+/// - Supported actions:
+///   * `goto`: Open the target URL and render the page.
+///   * `click`: Click on a specific element identified by a CSS selector (requires `selector`).
+///   * `fill`: Type text into an input field identified by a CSS selector (requires `selector` and `text`).
+///   * `interactive`: Human takeover mode (CRITICAL).
 ///
-/// ## 1. 视觉自检与反馈闭环（Visual Feedback Loop - 对齐 Manus 等顶级架构）
-/// - **强制规范**：在执行任何页面修改操作（特别是 `click` 或 `fill` 提交表单）后，您必须立即调取新截图或在下一次动作中认真核实页面视觉变化。
-/// - **自检纠错**：如果您发现连续点击或提交 3 次之后，页面内容或 URL 没有任何变化，**严禁盲目继续重试**。您必须立即：
-///   * 更换定位策略（例如使用更宽泛、更高阶的 CSS selector，或检查该元素是否在 iframe 内）。
-///   * 注入自定义 JS 脚本，触发原生事件。
-///   * 或改用更底层的 `ComputerUse` 工具通过物理坐标模拟真实的硬件键鼠事件予以辅助。
+/// ## 1. Visual Feedback Loop (Aligned with Manus / Top-tier AI Agents)
+/// - **MANDATORY RULE**: After performing any state-modifying action (especially `click` or `fill`), you must verify the page's visual changes in the next screenshot/state.
+/// - **Self-Correction & Fallback**: If you click or submit on a page 3 consecutive times but the page content or URL does not change, **DO NOT blindly repeat the action**. You must immediately do one of the following:
+///   * Switch to a different element selector strategy (e.g., use a more generic/advanced CSS selector, or check if the target is inside an iframe).
+///   * Inject a custom JS script to trigger native events directly.
+///   * Use the lower-level `ComputerUse` tool to simulate physical mouse clicks via coordinate-based inputs.
 ///
-/// ## 2. 人机协作前置提示词与临界主动让贤（Proactive Collaboration - 主动触发接管）
-/// - **风控感知临界态**：如果在自动化操作网页中，页面出现以下任何一种需要强安全校验或防机器人的临界风控要素：
-///   * 复杂的滑块拼图（Slider Captcha）、图形验证码（Geetest, hCaptcha 等）。
-///   * 双因子 MFA 动态令牌输入（Google Authenticator等）。
-///   * 短信/邮箱一次性临时验证码接收。
-///   * 需要用户进行扫码登录或输入保密金融支付密码。
-/// - **主动让贤规范**：一旦感知到上述状态，您**绝对不能**在后台用代码盲撞，否则会导致账号被锁或风控升级。您必须立即执行以下人机协同交接：
-///   1. 立即调用本工具并设置 `action="interactive"`。此举会自动为用户在右侧预览面板拉起极具视觉张力的协同远程桌面控制台。
-///   2. 同时，您必须使用**极具助手感、温和诚恳且情绪价值拉满的语气**对用户说：
-///      “*我已经帮您拉起了协同远程桌面。检测到该网站当前需要安全登录/验证码处理，我已自动暂停，请您在右侧预览区进行控制操作，完成后告知我以恢复。*”
-///   3. 大模型将自动进入暂停等待态，静待用户确认完成操作并接管。
+/// ## 2. Proactive Collaboration & Risk Mitigation (Proactively Triggering Takeover)
+/// - **Security & Captcha Threshold**: If you encounter any of the following anti-bot/risk mitigation walls during automated operations:
+///   * Complex slider captchas, puzzles, or graphic verifications (e.g., Geetest, hCaptcha, Turnstile).
+///   * Two-Factor Authentication (2FA/MFA) token inputs (e.g., Google Authenticator).
+///   * SMS/Email one-time passcode verification fields.
+///   * QR codes for mobile app scanning or secure bank passcode inputs.
+/// - **Takeover Action Standard**: Once you detect these verification elements, **DO NOT** attempt to bypass them programmatically. This will lead to account lockouts. You must:
+///   1. Immediately call this tool with `action="interactive"`. This will render a live VNC collaborative remote control console for the user.
+///   2. Accompany this with a polite, warm, and highly helpful message to the user:
+///      "*I have launched the collaborative remote desktop for you. Since this page currently requires security verification (e.g., SMS, puzzle, or MFA), I have paused the automation. Please complete the verification in the VNC preview panel on the right, and let me know once you are done to resume.*"
+///   3. Wait patiently for the user to complete the manual intervention.
 ///
-/// ## 3. 用户手动介入指示
-/// - 当用户明确提出“让我登录”、“我想自己操作”、“打开控制台”、“手动输入”、“我来控制”等需求时，您必须立即调用 `action="interactive"`，以便将控制权移交给用户。
+/// ## 3. Manual Intervention Guide
+/// - When the user explicitly requests manual control (e.g., "let me log in", "I want to do this myself", "open console", "manual input", "I'll take over"), you must immediately call `action="interactive"` to delegate control to the user.
 ///
 /// @param url The target website URL.
 /// @param action The browser action: "goto" (default), "click", "fill", "interactive".
