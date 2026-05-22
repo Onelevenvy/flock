@@ -136,7 +136,7 @@ pub async fn computer_use(
                 "middle" => "2",
                 _ => "1",
             };
-            let cmd = format!("export DISPLAY=:0 && xdotool mousemove {} {} click {}", px, py, click_btn);
+            let cmd = format!("export DISPLAY={} && xdotool mousemove {} {} click {}", crate::daytona::DISPLAY_ID, px, py, click_btn);
             let (out, code) = execute_command_in_sandbox(&db, &sandbox_id, &cmd).await
                 .map_err(|e| format!("执行鼠标点击指令失败: {}", e))?;
             if code != 0 {
@@ -147,7 +147,7 @@ pub async fn computer_use(
         "move" => {
             let px = x.unwrap_or(0);
             let py = y.unwrap_or(0);
-            let cmd = format!("export DISPLAY=:0 && xdotool mousemove {} {}", px, py);
+            let cmd = format!("export DISPLAY={} && xdotool mousemove {} {}", crate::daytona::DISPLAY_ID, px, py);
             let (out, code) = execute_command_in_sandbox(&db, &sandbox_id, &cmd).await
                 .map_err(|e| format!("执行鼠标移动指令失败: {}", e))?;
             if code != 0 {
@@ -158,7 +158,7 @@ pub async fn computer_use(
         "drag" => {
             let px = x.unwrap_or(0);
             let py = y.unwrap_or(0);
-            let cmd = format!("export DISPLAY=:0 && xdotool mousedown 1 mousemove {} {} mouseup 1", px, py);
+            let cmd = format!("export DISPLAY={} && xdotool mousedown 1 mousemove {} {} mouseup 1", crate::daytona::DISPLAY_ID, px, py);
             let (out, code) = execute_command_in_sandbox(&db, &sandbox_id, &cmd).await
                 .map_err(|e| format!("执行鼠标拖拽指令失败: {}", e))?;
             if code != 0 {
@@ -172,7 +172,7 @@ pub async fn computer_use(
                 "up" => "4",
                 _ => "5", // down
             };
-            let cmd = format!("export DISPLAY=:0 && xdotool click {}", scroll_btn);
+            let cmd = format!("export DISPLAY={} && xdotool click {}", crate::daytona::DISPLAY_ID, scroll_btn);
             let (out, code) = execute_command_in_sandbox(&db, &sandbox_id, &cmd).await
                 .map_err(|e| format!("执行鼠标滚动指令失败: {}", e))?;
             if code != 0 {
@@ -182,7 +182,7 @@ pub async fn computer_use(
         }
         "type" => {
             let t = text.ok_or_else(|| "键盘输入操作缺少必需的 'text' 参数。".to_string())?;
-            let cmd = format!("export DISPLAY=:0 && xdotool type --delay 10 '{}'", t.replace("'", "'\\''"));
+            let cmd = format!("export DISPLAY={} && xdotool type --delay 10 '{}'", crate::daytona::DISPLAY_ID, t.replace("'", "'\\''"));
             let (out, code) = execute_command_in_sandbox(&db, &sandbox_id, &cmd).await
                 .map_err(|e| format!("执行键盘输入指令失败: {}", e))?;
             if code != 0 {
@@ -192,7 +192,7 @@ pub async fn computer_use(
         }
         "press" => {
             let k = key.ok_or_else(|| "键盘按键操作缺少必需的 'key' 参数。".to_string())?;
-            let cmd = format!("export DISPLAY=:0 && xdotool key '{}'", k);
+            let cmd = format!("export DISPLAY={} && xdotool key '{}'", crate::daytona::DISPLAY_ID, k);
             let (out, code) = execute_command_in_sandbox(&db, &sandbox_id, &cmd).await
                 .map_err(|e| format!("执行键盘按键指令失败: {}", e))?;
             if code != 0 {
@@ -210,8 +210,8 @@ pub async fn computer_use(
 
     // 4. 所有操作完成后，自动截取一张当前桌面的最新图片，并保存至 `.flock/sandbox/screenshots/{name_id}.png` 供前端渲染
     crate::emit_info("正在捕获当前远程桌面截图并渲染预览...");
-    let ss_cmd = "export DISPLAY=:0 && scrot -o /tmp/desktop_screenshot.png && cat /tmp/desktop_screenshot.png | base64 -w 0";
-    let (b64_data, exit_code) = execute_command_in_sandbox(&db, &sandbox_id, ss_cmd).await
+    let ss_cmd = format!("export DISPLAY={} && scrot -o /tmp/desktop_screenshot.png && cat /tmp/desktop_screenshot.png | base64 -w 0", crate::daytona::DISPLAY_ID);
+    let (b64_data, exit_code) = execute_command_in_sandbox(&db, &sandbox_id, &ss_cmd).await
         .unwrap_or_default();
 
     let mut screenshot_saved = false;
@@ -232,7 +232,7 @@ pub async fn computer_use(
         Ok(u) => u,
         Err(e) => {
             crate::emit_info(&format!("获取动态 VNC URL 失败: {}。使用静态备用 URL...", e));
-            format!("https://6080-{}.proxy.app.daytona.io/vnc.html?autoconnect=true&resize=scale", sandbox_id)
+            format!("https://{}-{}.proxy.app.daytona.io/vnc.html?autoconnect=true&resize=scale", crate::daytona::WEBSOCKIFY_PORT, sandbox_id)
         }
     };
 
