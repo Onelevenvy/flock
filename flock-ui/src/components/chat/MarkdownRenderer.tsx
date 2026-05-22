@@ -120,12 +120,15 @@ export function MarkdownRenderer({ content }: MarkdownRendererProps) {
         img({ node, src, alt, ...props }: any) {
           let finalSrc = src;
           if (src) {
-            if (src.startsWith('file:///')) {
-              finalSrc = convertFileSrc(src.substring(8));
-            } else if (src.startsWith('file://')) {
-              finalSrc = convertFileSrc(src.substring(7));
-            } else if (src.startsWith('/') || /^[a-zA-Z]:\\/.test(src) || /^[a-zA-Z]:\//.test(src)) {
-              finalSrc = convertFileSrc(src);
+            const normalized = src.replace(/\\/g, '/');
+            if (normalized.startsWith('file:///')) {
+              finalSrc = convertFileSrc(normalized.substring(8));
+            } else if (normalized.startsWith('file://')) {
+              finalSrc = convertFileSrc(normalized.substring(7));
+            } else if (normalized.startsWith('/') || /^[a-zA-Z]:\//.test(normalized)) {
+              finalSrc = convertFileSrc(normalized);
+            } else {
+              finalSrc = convertFileSrc(normalized);
             }
           }
 

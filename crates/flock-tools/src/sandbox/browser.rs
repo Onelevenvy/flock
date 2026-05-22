@@ -90,7 +90,13 @@ try:
     with sync_playwright() as p:
         browser = p.chromium.connect_over_cdp("http://127.0.0.1:9222")
         context = browser.contexts[0]
-        page = context.pages[0] if context.pages else context.new_page()
+        active_page = None
+        if context.pages:
+            for p_candidate in reversed(context.pages):
+                if p_candidate.url and p_candidate.url != "about:blank":
+                    active_page = p_candidate
+                    break
+        page = active_page if active_page else (context.pages[0] if context.pages else context.new_page())
         
         try:
             page.goto("{url}", wait_until="domcontentloaded", timeout=15000)
@@ -271,7 +277,13 @@ try:
             browser = p.chromium.connect_over_cdp("http://127.0.0.1:9222")
             is_cdp = True
             context = browser.contexts[0]
-            page = context.pages[0] if context.pages else context.new_page()
+            active_page = None
+            if context.pages:
+                for p_candidate in reversed(context.pages):
+                    if p_candidate.url and p_candidate.url != "about:blank":
+                        active_page = p_candidate
+                        break
+            page = active_page if active_page else (context.pages[0] if context.pages else context.new_page())
         except Exception as e:
             print(f"CDP_CONNECT_WARNING: {{e}}", file=sys.stderr)
             browser = p.chromium.launch(headless=False, args=["--no-sandbox", "--disable-setuid-sandbox"])
