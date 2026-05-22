@@ -100,6 +100,90 @@ export function ImageView({ absPath, workspaceId, relativePath, fileName, refres
   }
 
   if (error && workspaceId && relativePath) {
+    const isNotFound = error.includes('NotFound') || error.includes('文件不存在') || error.includes('no such file or directory') || error.includes('entity not found');
+    if (isNotFound) {
+      return (
+        <Box
+          style={{
+            flex: 1,
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            justifyContent: 'center',
+            minHeight: '400px',
+            gap: '16px',
+            padding: '24px',
+            background: 'var(--flock-bg-deepest)',
+            backgroundImage: 'radial-gradient(var(--flock-border-dim, #374151) 1px, transparent 0)',
+            backgroundSize: '16px 16px',
+            borderRadius: '12px',
+            border: '1px dashed var(--flock-border-dim)',
+          }}
+        >
+          {/* 高级科技感雷达/桌面扫描图标 */}
+          <Box style={{ position: 'relative', width: 64, height: 64, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <span
+              style={{
+                position: 'absolute',
+                width: '100%',
+                height: '100%',
+                borderRadius: '50%',
+                border: '2px dashed var(--flock-accent, #3b82f6)',
+                opacity: 0.3,
+                animation: 'spin-dashed 20s linear infinite',
+              }}
+            />
+            <span
+              style={{
+                position: 'absolute',
+                width: '80%',
+                height: '80%',
+                borderRadius: '50%',
+                background: 'radial-gradient(circle, rgba(59,130,246,0.1) 0%, transparent 70%)',
+                animation: 'pulse-glow 2s ease-in-out infinite',
+              }}
+            />
+            <svg
+              width="32"
+              height="32"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="var(--flock-accent, #3b82f6)"
+              strokeWidth="1.5"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              style={{ filter: 'drop-shadow(0 0 8px rgba(59,130,246,0.5))' }}
+            >
+              <rect x="2" y="3" width="20" height="14" rx="2" ry="2" />
+              <line x1="8" y1="21" x2="16" y2="21" />
+              <line x1="12" y1="17" x2="12" y2="21" />
+            </svg>
+          </Box>
+
+          <Box style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '6px', textAlign: 'center' }}>
+            <Text size="sm" fw={600} style={{ color: 'var(--flock-text-base)' }}>
+              {t('chat.vnc.waitingForAction', { defaultValue: '沙盒屏幕快照未生成' })}
+            </Text>
+            <Text size="xs" c="dimmed" style={{ maxWidth: '340px', lineHeight: 1.5 }}>
+              {t('chat.vnc.noActionTip', { defaultValue: '这是一个全新或重置的工作区，当前尚未执行过任何浏览器或电脑操作。当大模型启动任务或在下方执行浏览器指令时，系统将在此自动呈现最精美的操作步骤快照与历史回放！' })}
+            </Text>
+          </Box>
+
+          <style>{`
+            @keyframes spin-dashed {
+              from { transform: rotate(0deg); }
+              to { transform: rotate(360deg); }
+            }
+            @keyframes pulse-glow {
+              0% { transform: scale(0.95); opacity: 0.4; }
+              50% { transform: scale(1.1); opacity: 0.8; }
+              100% { transform: scale(0.95); opacity: 0.4; }
+            }
+          `}</style>
+        </Box>
+      );
+    }
+
     return (
       <Box style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', minHeight: '400px', gap: '8px' }}>
         <Text size="sm" c="red">{t('chat.vnc.failedToLoadImage')}</Text>

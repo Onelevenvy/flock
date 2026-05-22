@@ -39,11 +39,15 @@ interface PreviewPanelProps {
 export function PreviewPanel({ embedded = false }: PreviewPanelProps) {
   const { t } = useTranslation();
   const { isPreviewOpen, previewFile, setPreviewFile } = useUiStore();
-  const { activeWorkspaceId } = useWorkspaceStore();
+  const { activeWorkspaceId, activeConversationId } = useWorkspaceStore();
 
   const ext = previewFile?.extension?.toLowerCase() || '';
   const lang = getLanguage(ext);
   const fileName = previewFile?.path.split(/[/\\]/).pop() || '';
+
+  const sessionId = activeConversationId || 'default';
+  const targetScreenshotName = `screenshot_${sessionId}.png`;
+  const targetScreenshotPath = `.flock/sandbox/screenshot_${sessionId}.png`;
 
   const { absPath, screenshotAbsPath, refreshTrigger, setRefreshTrigger } = usePreviewFileState(
     previewFile?.path,
@@ -164,7 +168,7 @@ export function PreviewPanel({ embedded = false }: PreviewPanelProps) {
       }}
     >
       <PreviewHeader
-        fileName={fileName === 'screenshot.png' || ext === 'vnc' ? 'FLOCK COMPUTER' : fileName}
+        fileName={fileName === targetScreenshotName || ext === 'vnc' ? 'FLOCK COMPUTER' : fileName}
         viewMode={viewMode}
         toggleable={toggleable}
         content={previewFile.content}
@@ -188,7 +192,7 @@ export function PreviewPanel({ embedded = false }: PreviewPanelProps) {
         }}
       >
         <Text size="xs" c="dimmed" style={{ fontFamily: 'var(--mantine-font-family-monospace)', opacity: 0.55 }}>
-          {previewFile.path === '.flock/sandbox/screenshot.png' || ext === 'vnc' ? 'FLOCK COMPUTER' : previewFile.path}
+          {previewFile.path === targetScreenshotPath || ext === 'vnc' ? 'FLOCK COMPUTER' : previewFile.path}
         </Text>
       </Box>
 
@@ -216,8 +220,8 @@ export function PreviewPanel({ embedded = false }: PreviewPanelProps) {
             absPath={absPath}
             workspaceId={activeWorkspaceId || ''}
             relativePath={previewFile.path}
-            fileName={fileName === 'screenshot.png' ? 'FLOCK COMPUTER' : fileName}
-            refreshKey={previewFile.path === '.flock/sandbox/screenshot.png' ? refreshTrigger : undefined}
+            fileName={fileName === targetScreenshotName ? 'FLOCK COMPUTER' : fileName}
+            refreshKey={previewFile.path === targetScreenshotPath ? refreshTrigger : undefined}
           />
         )}
 

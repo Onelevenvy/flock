@@ -36,3 +36,12 @@ pub fn tr(zh: &str, en: &str) -> String {
         en.to_string()
     }
 }
+
+tokio::task_local! {
+    pub static CURRENT_SESSION_ID: String;
+}
+
+pub fn get_current_session_id() -> String {
+    CURRENT_SESSION_ID.try_with(|id| id.clone()).unwrap_or_else(|_| "default".to_string())
+}
+

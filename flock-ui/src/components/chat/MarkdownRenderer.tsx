@@ -26,6 +26,41 @@ interface MarkdownRendererProps {
 export function MarkdownRenderer({ content }: MarkdownRendererProps) {
   const { t } = useTranslation();
 
+  // 预处理过滤超长 Base64，防止撑爆或卡死聊天界面
+  const filterBase64 = (text: string): string => {
+    if (!text) return "";
+    
+    // 1. 专门处理包含标记的 SCREENSHOT_B64_START / SCREENSHOT_B64_END
+    // 它可以跨多行，包含大量换行符和 base64 字符
+    const markerRegex = /SCREENSHOT_B64_START[\s\S]*?(SCREENSHOT_B64_END|$)/g;
+    let processed = text.replace(markerRegex, (match) => {
+      const cleanB64 = match
+        .replace("SCREENSHOT_B64_START", "")
+        .replace("SCREENSHOT_B64_END", "")
+        .trim();
+      
+      if (cleanB64.length > 100) {
+        const prefix = cleanB64.substring(0, 30);
+        const suffix = cleanB64.substring(Math.max(0, cleanB64.length - 20));
+        return `SCREENSHOT_B64_START [${t('vnc.screenshotDataFolded', { defaultValue: '截图二进制数据已折叠' })}: ${prefix}... (共 ${cleanB64.length} 字符) ...${suffix}] SCREENSHOT_B64_END`;
+      }
+      return match;
+    });
+
+    // 2. 兜底处理任何可能导致排版被撑爆的超长无空格单词 (直接报错打出的 raw base64)
+    // 只要一个连续单词的长度大于 120，且只包含 base64 常见字符，我们就将其截断并显示字数
+    const rawB64Regex = /\b([a-zA-Z0-9+/=]{120,})\b/g;
+    processed = processed.replace(rawB64Regex, (word) => {
+      const prefix = word.substring(0, 30);
+      const suffix = word.substring(word.length - 20);
+      return `${prefix}... [${t('vnc.base64FoldedShort', { defaultValue: '超长二进制/Base64数据已自动折叠' })}(共 ${word.length} 字符)] ...${suffix}`;
+    });
+
+    return processed;
+  };
+
+  const processedContent = filterBase64(content);
+
   return (
     <ReactMarkdown
       remarkPlugins={[remarkMath]}
@@ -218,7 +253,7 @@ export function MarkdownRenderer({ content }: MarkdownRendererProps) {
         },
       }}
     >
-      {content}
+      {processedContent}
     </ReactMarkdown>
   );
 }

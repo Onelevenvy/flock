@@ -12,11 +12,35 @@ use base64::{Engine as _, engine::general_purpose};
 
 /// A cloud-based web browser tool for rendering web pages, taking screenshots, and performing interactions.
 ///
-/// Usage:
-/// - Use this tool when you need to fetch web pages, interact with pages (click, fill), or visual screenshot verification.
-/// - Returns page screenshot or text content, and writes the screenshot to `.flock/sandbox/screenshot.png`.
-/// - Supported actions: "goto" (open URL and screenshot), "click" (click element), "fill" (type text), "interactive" (get VNC remote control proxy URL).
-/// - CRITICAL: If the user requests manual control, manual input, manual login, or wants to interact with the webpage himself, you MUST set action to "interactive". This will launch the remote VNC desktop in the preview area, allowing the user to take control.
+/// ## Core Features and Action Specification
+/// - This tool is used for rendering web pages, element interactions, and capturing screen states.
+/// - Supported actions:
+///   * `goto`: Open the target URL and render the page.
+///   * `click`: Click on a specific element identified by a CSS selector (requires `selector`).
+///   * `fill`: Type text into an input field identified by a CSS selector (requires `selector` and `text`).
+///   * `interactive`: Human takeover mode (CRITICAL).
+///
+/// ## 1. Visual Feedback Loop (Aligned with Manus / Top-tier AI Agents)
+/// - **MANDATORY RULE**: After performing any state-modifying action (especially `click` or `fill`), you must verify the page's visual changes in the next screenshot/state.
+/// - **Self-Correction & Fallback**: If you click or submit on a page 3 consecutive times but the page content or URL does not change, **DO NOT blindly repeat the action**. You must immediately do one of the following:
+///   * Switch to a different element selector strategy (e.g., use a more generic/advanced CSS selector, or check if the target is inside an iframe).
+///   * Inject a custom JS script to trigger native events directly.
+///   * Use the lower-level `ComputerUse` tool to simulate physical mouse clicks via coordinate-based inputs.
+///
+/// ## 2. Proactive Collaboration & Risk Mitigation (Proactively Triggering Takeover)
+/// - **Security & Captcha Threshold**: If you encounter any of the following anti-bot/risk mitigation walls during automated operations:
+///   * Complex slider captchas, puzzles, or graphic verifications (e.g., Geetest, hCaptcha, Turnstile).
+///   * Two-Factor Authentication (2FA/MFA) token inputs (e.g., Google Authenticator).
+///   * SMS/Email one-time passcode verification fields.
+///   * QR codes for mobile app scanning or secure bank passcode inputs.
+/// - **Takeover Action Standard**: Once you detect these verification elements, **DO NOT** attempt to bypass them programmatically. This will lead to account lockouts. You must:
+///   1. Immediately call this tool with `action="interactive"`. This will render a live VNC collaborative remote control console for the user.
+///   2. Accompany this with a polite, warm, and highly helpful message to the user:
+///      "*I have launched the collaborative remote desktop for you. Since this page currently requires security verification (e.g., SMS, puzzle, or MFA), I have paused the automation. Please complete the verification in the VNC preview panel on the right, and let me know once you are done to resume.*"
+///   3. Wait patiently for the user to complete the manual intervention.
+///
+/// ## 3. Manual Intervention Guide
+/// - When the user explicitly requests manual control (e.g., "let me log in", "I want to do this myself", "open console", "manual input", "I'll take over"), you must immediately call `action="interactive"` to delegate control to the user.
 ///
 /// @param url The target website URL.
 /// @param action The browser action: "goto" (default), "click", "fill", "interactive".
@@ -33,6 +57,8 @@ pub async fn browser(
 ) -> Result<String, String> {
     let db = crate::get_db_manager()
         .ok_or_else(|| "数据库管理器未初始化，无法读取沙箱配置。".to_string())?;
+
+    let session_id = flock_core::get_current_session_id();
 
     // 1. 获取或创建沙盒环境
     let sandbox_id = get_or_create_active_sandbox(&db).await
@@ -138,10 +164,14 @@ try:
         page_text = page.evaluate("() => document.body.innerText || ''").lower()
         url_lower = page.url.lower()
         
-        is_sensitive_login = "密码" in page_text or "password" in page_text or "signin" in url_lower or "login" in url_lower
-        is_sensitive_captcha = any(kw in page_text for kw in ["验证码", "captcha", "slider", "滑块", "点击验证", "验证", "安全校验", "verify"])
+        is_sensitive_login = any(kw in page_text for kw in ["密码", "password", "pass word"]) or "signin" in url_lower or "login" in url_lower
+        login_keywords = ["登录", "signin", "login", "sign in", "log in", "log-in", "sign-in"]
+        has_login_text = any(kw in page_text for kw in login_keywords)
         
-        need_takeover = has_password or has_captcha or (is_sensitive_login and ("登录" in page_text or "signin" in page_text or "login" in page_text)) or is_sensitive_captcha
+        captcha_keywords = ["验证码", "captcha", "slider", "滑块", "点击验证", "验证", "安全校验", "verify", "verification"]
+        is_sensitive_captcha = any(kw in page_text for kw in captcha_keywords)
+        
+        need_takeover = has_password or has_captcha or (is_sensitive_login and has_login_text) or is_sensitive_captcha
         print("CHECK_RESULT:" + json.dumps({{"
             "need_takeover": need_takeover,
             "has_password": has_password,
@@ -207,7 +237,7 @@ sys.exit(0)
                 let b64_data = &stdout_stderr[start_idx + start_marker.len()..end_idx].trim();
                 if let Ok(img_bytes) = general_purpose::STANDARD.decode(b64_data) {
                     let base_dir = crate::get_workspace_dir().unwrap_or_else(|| std::env::current_dir().unwrap_or_default());
-                    let ss_dir = base_dir.join(".flock/sandbox/screenshots");
+                    let ss_dir = base_dir.join(".flock/sandbox/screenshots").join(&session_id);
                     let ss_path = ss_dir.join(format!("{}.png", name_id));
                     if let Some(parent) = ss_path.parent() {
                         let _ = std::fs::create_dir_all(parent);
@@ -215,13 +245,13 @@ sys.exit(0)
                     let _ = std::fs::write(&ss_path, &img_bytes);
                     screenshot_saved = true;
                     // 同时保留一份覆盖的 screenshot.png 兼容以前的设计
-                    let _ = std::fs::write(base_dir.join(".flock/sandbox/screenshot.png"), &img_bytes);
+                    let _ = std::fs::write(base_dir.join(format!(".flock/sandbox/screenshot_{}.png", session_id)), &img_bytes);
                 }
             }
         }
 
         let base_dir = crate::get_workspace_dir().unwrap_or_else(|| std::env::current_dir().unwrap_or_default());
-        let abs_screenshot_path = base_dir.join(".flock/sandbox/screenshots").join(format!("{}.png", name_id));
+        let abs_screenshot_path = base_dir.join(".flock/sandbox/screenshots").join(&session_id).join(format!("{}.png", name_id));
         let abs_path_str = abs_screenshot_path.to_string_lossy().to_string();
 
         let image_md = if screenshot_saved {
@@ -413,13 +443,13 @@ sys.exit(0)
             let b64_data = &stdout_stderr[start_idx + start_marker.len()..end_idx].trim();
             if let Ok(img_bytes) = general_purpose::STANDARD.decode(b64_data) {
                 let base_dir = crate::get_workspace_dir().unwrap_or_else(|| std::env::current_dir().unwrap_or_default());
-                let ss_dir = base_dir.join(".flock/sandbox/screenshots");
+                let ss_dir = base_dir.join(".flock/sandbox/screenshots").join(&session_id);
                 let ss_path = ss_dir.join(format!("{}.png", name_id));
                 if let Some(parent) = ss_path.parent() {
                     let _ = std::fs::create_dir_all(parent);
                 }
                 let _ = std::fs::write(&ss_path, &img_bytes);
-                let _ = std::fs::write(base_dir.join(".flock/sandbox/screenshot.png"), &img_bytes);
+                let _ = std::fs::write(base_dir.join(format!(".flock/sandbox/screenshot_{}.png", session_id)), &img_bytes);
                 screenshot_saved = true;
                 crate::emit_info("网页截图已成功保存至工作区，已生成步骤快照。");
             }
@@ -435,7 +465,7 @@ sys.exit(0)
     }
 
     let base_dir = crate::get_workspace_dir().unwrap_or_else(|| std::env::current_dir().unwrap_or_default());
-    let abs_screenshot_path = base_dir.join(".flock/sandbox/screenshots").join(format!("{}.png", name_id));
+    let abs_screenshot_path = base_dir.join(".flock/sandbox/screenshots").join(&session_id).join(format!("{}.png", name_id));
     let abs_path_str = abs_screenshot_path.to_string_lossy().to_string();
 
     let image_md = if screenshot_saved {

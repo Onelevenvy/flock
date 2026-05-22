@@ -41,6 +41,7 @@ pub fn all_tools() -> ToolSet {
     reg.register(sandbox::browser::BrowserToolImpl::new());
     reg.register(sandbox::computer_use::ComputerUseToolImpl::new());
     reg.register(sandbox::sandbox_exec::SandboxExecToolImpl::new());
+    reg.register(sandbox::request_human_assistance::RequestHumanAssistanceToolImpl::new());
 
     // --- math ---
     infos.push(math::provider_info());

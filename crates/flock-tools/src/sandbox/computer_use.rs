@@ -11,28 +11,40 @@ use base64::{Engine as _, engine::general_purpose};
 
 /// A cloud-based GUI Computer Use tool for interacting with the sandbox desktop environment.
 ///
-/// Usage:
-/// - Use this tool for GUI desktop automation (clicks, keyboard input, drag-and-drop) or direct shell command execution in the sandbox.
-/// - **IMPORTANT**: For file system operations (mkdir, rm, ls, etc.), always prefer the `exec` action or the `CodeExecution` tool.
-///   Example: `action="exec", command="mkdir /home/daytona/my_folder"` to create a directory.
-/// - **MANUAL CONTROL & TERMINAL GUIDE**:
-///   If the user asks to "open console", "open terminal", "manual control", "human control", or "interact directly", 
-///   NEVER use non-existent actions like "interactive". 
-///   Instead, use `action="exec"`.
-///   to launch an interactive shell terminal in the VNC desktop environment so the user can interact.
-/// - For GUI interactions, controls mouse/keyboard via xdotool and captures screenshots with scrot.
-/// - Writes the screenshot to `.flock/sandbox/screenshot.png`.
+/// ## Core Features and Action Specification
+/// - This tool is used to control the sandbox desktop GUI via simulated mouse/keyboard actions, execute shell scripts, and capture screenshots.
+/// - **CLI/Command First**: For pure file-system or system administration operations (e.g., mkdir, rm, ls), always prefer using `action="exec"` (or the `CodeExecution` tool). It is significantly faster and more reliable than GUI simulation.
+/// - Supported actions:
+///   * `exec`      — Execute a shell command directly and asynchronously in the sandbox (Recommended for file/system operations).
+///   * `click`     — Click the mouse at (x, y). `button` options: "left"|"right"|"middle".
+///   * `move`      — Move the mouse cursor to (x, y).
+///   * `drag`      — Hold left click and drag from the current position to (x, y).
+///   * `scroll`    — Scroll the mouse wheel. `button` options: "up"|"down".
+///   * `type`      — Type text into the currently focused input field (requires `text`).
+///   * `press`     — Press a single key or key combination (e.g., "Return", "ctrl+c", requires `key`).
+///   * `screenshot`— Capture the current OS desktop screen.
+///   * `status`    — Query the readiness status of the desktop service.
 ///
-/// Supported actions:
-/// - `exec`      — Execute a shell command directly in the sandbox (RECOMMENDED for file/system operations).
-/// - `click`     — Click mouse at (x, y). button: "left"|"right"|"middle".
-/// - `move`      — Move mouse to (x, y).
-/// - `drag`      — Drag from current position to (x, y).
-/// - `scroll`    — Scroll mouse. button: "up"|"down".
-/// - `type`      — Type text into focused input.
-/// - `press`     — Press a key or hotkey (e.g. "Return", "ctrl+c").
-/// - `screenshot`— Capture current desktop state.
-/// - `status`    — Check desktop readiness.
+/// ## 1. Visual Feedback Loop (Aligned with Manus / Top-tier AI Agents)
+/// - **MANDATORY RULE**: After performing state-changing actions like `click`, `type`, or `press`, you must inspect the returned screen screenshot to verify the visual state.
+/// - **Self-Correction & Fallback**: If you click the same coordinate 3 consecutive times but the screen or active window shows no change/response, **DO NOT blindly repeat the click**. You must immediately:
+///   * Check if the window was shifted, closed, or obscured. Use `exec` with `xdotool search --onlyvisible --class [AppName]` to locate windows, or capture a full screenshot to recalibrate coordinates.
+///   * If it is a web-based app, switch to the `Browser` tool to perform precise DOM manipulation instead.
+///
+/// ## 2. Proactive Collaboration & Risk Mitigation (Proactively Triggering Takeover)
+/// - **Anti-Bot & Human Barrier Threshold**: If you see verifications on the desktop screen that require physical human interaction/devices:
+///   * Slider captchas, puzzles, or facial verifications.
+///   * SMS/Email passcodes requiring dynamic code lookup.
+///   * Login QR codes requiring mobile app scanning (e.g., WeChat, Alipay).
+///   * Bank/financial key fobs, physical security keys, or hardware authenticators.
+/// - **Takeover Action Standard**: Once you detect these verification elements, **DO NOT** attempt to brute-force them via coordinate clicking. This will cause account suspension. You must immediately:
+///   1. Stop all automated mouse/keyboard actions.
+///   2. Tell the user using a warm, polite, and highly supportive tone:
+///      "*I have launched the collaborative remote desktop for you. Since this application currently requires security verification/manual intervention, I have paused the automation. Please complete the verification in the VNC preview panel on the right, and let me know once you are done to resume.*"
+///   3. Wait patiently for the user to complete the manual intervention via VNC.
+///
+/// ## 3. Manual Intervention Guide
+/// - When the user explicitly requests manual control (e.g., "let me log in", "I want to do this myself", "open console", "manual input", "I'll take over"), reply warmly that the VNC desktop has been prepared on the right panel and wait for their manual actions to complete.
 ///
 /// @param action The operation to perform (see above).
 /// @param command Shell command to execute (required for `exec` action).
@@ -56,6 +68,8 @@ pub async fn computer_use(
     let db = crate::get_db_manager()
         .ok_or_else(|| "数据库管理器未初始化，无法读取沙箱配置。".to_string())?;
 
+    let session_id = flock_core::get_current_session_id();
+
     // 生成唯一的截图标识
     let now_ms = std::time::SystemTime::now()
         .duration_since(std::time::SystemTime::UNIX_EPOCH)
@@ -76,10 +90,35 @@ pub async fn computer_use(
         crate::emit_info(&format!("正在沙盒中执行命令: {}...", cmd));
         let (output, exit_code) = execute_command_in_sandbox(&db, &sandbox_id, &cmd).await
             .map_err(|e| format!("沙盒命令执行失败: {}", e))?;
+
+        // 智能动作帧捕获：检测当前是否有拉起 VNC 桌面的状态。
+        // 如果有，则在命令完成后也自动截取一张桌面快照，使用户能在 VNC 时间轴上看到命令引起的 UI 变化！
+        let mut image_md = String::new();
+        if let Ok(ready) = check_computer_use_status(&db, &sandbox_id).await {
+            if ready {
+                let ss_cmd = format!("export DISPLAY={} && scrot -o /tmp/desktop_screenshot.png && cat /tmp/desktop_screenshot.png | base64 -w 0", crate::daytona::DISPLAY_ID);
+                if let Ok((b64_data, exit_code)) = execute_command_in_sandbox(&db, &sandbox_id, &ss_cmd).await {
+                    if exit_code == 0 && !b64_data.is_empty() {
+                        if let Ok(img_bytes) = general_purpose::STANDARD.decode(b64_data.trim()) {
+                            let base_dir = crate::get_workspace_dir().unwrap_or_else(|| std::env::current_dir().unwrap_or_default());
+                            let ss_dir = base_dir.join(".flock/sandbox/screenshots").join(&session_id);
+                            let ss_path = ss_dir.join(format!("{}.png", name_id));
+                            let _ = std::fs::create_dir_all(&ss_dir);
+                            let _ = std::fs::write(&ss_path, &img_bytes);
+                            let _ = std::fs::write(base_dir.join(format!(".flock/sandbox/screenshot_{}.png", session_id)), &img_bytes);
+                            
+                            let abs_path_str = ss_path.to_string_lossy().to_string();
+                            image_md = format!("\n\n![桌面截图](file:///{})", abs_path_str);
+                        }
+                    }
+                }
+            }
+        }
+
         if exit_code == 0 {
-            return Ok(format!("命令执行成功。\n\n[输出]\n{}", output));
+            return Ok(format!("命令执行成功。\n\n[输出]\n{}{}", output, image_md));
         } else {
-            return Err(format!("命令执行失败 (退出码: {})。\n\n[错误输出]\n{}", exit_code, output));
+            return Err(format!("命令执行失败 (退出码: {})。\n\n[错误输出]\n{}{}", exit_code, output, image_md));
         }
     }
 
@@ -218,13 +257,13 @@ pub async fn computer_use(
     if exit_code == 0 && !b64_data.is_empty() {
         if let Ok(img_bytes) = general_purpose::STANDARD.decode(b64_data.trim()) {
             let base_dir = crate::get_workspace_dir().unwrap_or_else(|| std::env::current_dir().unwrap_or_default());
-            let ss_dir = base_dir.join(".flock/sandbox/screenshots");
+            let ss_dir = base_dir.join(".flock/sandbox/screenshots").join(&session_id);
             let ss_path = ss_dir.join(format!("{}.png", name_id));
             if let Some(parent) = ss_path.parent() {
                 let _ = std::fs::create_dir_all(parent);
             }
             let _ = std::fs::write(&ss_path, &img_bytes);
-            let _ = std::fs::write(base_dir.join(".flock/sandbox/screenshot.png"), &img_bytes);
+            let _ = std::fs::write(base_dir.join(format!(".flock/sandbox/screenshot_{}.png", session_id)), &img_bytes);
             screenshot_saved = true;
             crate::emit_info("远程桌面最新状态已成功截取并拉回工作区预览！");
         }
@@ -239,7 +278,7 @@ pub async fn computer_use(
     };
 
     let base_dir = crate::get_workspace_dir().unwrap_or_else(|| std::env::current_dir().unwrap_or_default());
-    let abs_screenshot_path = base_dir.join(".flock/sandbox/screenshots").join(format!("{}.png", name_id));
+    let abs_screenshot_path = base_dir.join(".flock/sandbox/screenshots").join(&session_id).join(format!("{}.png", name_id));
     let abs_path_str = abs_screenshot_path.to_string_lossy().to_string();
 
     let image_md = if screenshot_saved {

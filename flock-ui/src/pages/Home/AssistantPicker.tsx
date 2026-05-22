@@ -12,6 +12,7 @@ export const XIAOF_AGENT: Assistant = {
   system_prompt: '',
   tools: [],
   skills: [],
+  disabled_tools: [],
   is_builtin: true,
   sort_order: -1,
   created_at: '',
