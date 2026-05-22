@@ -102,5 +102,27 @@
     "btnOpenVnc": "Open Remote Desktop",
     "btnCancel": "Cancel",
     "cancelledReason": "User cancelled the human takeover"
+  },
+  "vnc": {
+    "liveDesktop": "📸 Desktop Screenshot",
+    "webConsole": "🌐 Live Console",
+    "playbackMode": "⏸ Playback ({{current}}/{{total}})",
+    "liveStatus": "Latest Screenshot",
+    "playbackTip": "💡 Tip: Showing step {{index}} historical snapshot. Use the timeline below or click arrows to navigate.",
+    "liveTip": "💡 **Tip**: Live screen sharing bypasses HTTPS certificate warnings and HSTS blocks, providing 100% reliable high-fidelity display of the sandbox desktop. You can let the Agent perform actions to stream-refresh the view.",
+    "openInBrowser": "Open in Browser",
+    "reloadConsole": "Reload Remote Console (Click here to refresh after VNC starts)",
+    "daytonaWarningTip": "💡 First time opening will show a Daytona preview warning. Click 'I Understand, Continue' to proceed. If it remains blank, the VNC service might be starting up (5-10 seconds); click the Refresh button 🔄 above to reload.",
+    "prevStep": "Previous Step",
+    "nextStep": "Next Step",
+    "backToLive": "Back to Live Console",
+    "playbackStatus": "Playback history: Frame {{current}} / {{total}}",
+    "liveStatusWithTotal": "Latest screenshot ({{total}} historical frames total)",
+    "liveLabel": "Latest (Screenshot)",
+    "stepLabel": "STEP {{index}}",
+    "establishingConnection": "Establishing secure connection, remote screen will appear shortly...",
+    "deployingDaytona": "Requesting and deploying Daytona sandbox environment...",
+    "failedToLoadImage": "Failed to load image",
+    "noImageAvailable": "No image path available"
   }
 }

@@ -44,12 +44,37 @@ pub struct ToolDef {
     pub needs_auth: bool,
 }
 
+/// A bilingual string containing both Chinese and English translations.
+#[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
+pub struct I18nString {
+    pub zh: String,
+    pub en: String,
+}
+
+impl I18nString {
+    pub fn new(zh: impl Into<String>, en: impl Into<String>) -> Self {
+        Self {
+            zh: zh.into(),
+            en: en.into(),
+        }
+    }
+
+    /// Construct a single bilingual string where zh and en are the same.
+    pub fn single(val: impl Into<String>) -> Self {
+        let val_str = val.into();
+        Self {
+            zh: val_str.clone(),
+            en: val_str,
+        }
+    }
+}
+
 /// Metadata for a tool provider (displayed in the UI).
 #[derive(Debug, Clone)]
 pub struct ProviderInfo {
     pub provider_id: String,
-    pub provider_name: String,
-    pub description: String,
+    pub provider_name: I18nString,
+    pub description: I18nString,
     pub icon: Option<String>,
     /// JSON schema describing the credentials this provider requires.
     /// If Some → provider needs auth; if None → no auth needed.

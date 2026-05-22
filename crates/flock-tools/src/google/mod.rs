@@ -1,7 +1,7 @@
 use crate::adapter::LangGraphToolAdapter;
 use crate::Tool;
 use flock_core::ipc_interface::events::ToolCategory;
-use flock_core::types::tool::ProviderInfo;
+use flock_core::types::tool::{ProviderInfo, I18nString};
 use langgraph_derive::tool;
 use serde_json::Value;
 
@@ -63,8 +63,8 @@ impl GoogleTool {
 pub fn provider_info() -> ProviderInfo {
     ProviderInfo {
         provider_id: "google".to_string(),
-        provider_name: r#"{"zh": "谷歌", "en": "Google"}"#.to_string(),
-        description: r#"{"zh": "Google 工具集合", "en": "Google toolset."}"#.to_string(),
+        provider_name: I18nString::new("谷歌", "Google"),
+        description: I18nString::new("Google 工具集合", "Google toolset."),
         icon: Some("google".to_string()),
         credentials_schema: None,
         test_input: Some(serde_json::json!({

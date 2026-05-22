@@ -23,7 +23,7 @@ pub async fn destroy_active_sandbox(db: &DbManager) -> anyhow::Result<()> {
     let base = get_api_base(cfg.api_url.as_ref().unwrap());
     let api_key = cfg.api_key.as_ref().unwrap();
 
-    crate::emit_info(&format!("正在销毁 Daytona 沙盒 {}...", sandbox_id));
+    crate::emit_info(&flock_core::tr(&format!("正在销毁 Daytona 沙盒 {}...", sandbox_id), &format!("Destroying Daytona sandbox {}...", sandbox_id)));
     let del_url = format!("{}/api/sandbox/{}", base, sandbox_id);
     match client.delete(&del_url)
         .header("Authorization", format!("Bearer {}", api_key))
@@ -32,15 +32,15 @@ pub async fn destroy_active_sandbox(db: &DbManager) -> anyhow::Result<()> {
     {
         Ok(resp) => {
             if resp.status().is_success() {
-                crate::emit_info(&format!("Daytona 沙盒 {} 已销毁。", sandbox_id));
+                crate::emit_info(&flock_core::tr(&format!("Daytona 沙盒 {} 已销毁。", sandbox_id), &format!("Daytona sandbox {} has been destroyed.", sandbox_id)));
             } else {
                 let status = resp.status();
                 let body = resp.text().await.unwrap_or_default();
-                crate::emit_info(&format!("销毁沙盒返回非成功状态 (HTTP {}): {}", status, body));
+                crate::emit_info(&flock_core::tr(&format!("销毁沙盒返回非成功状态 (HTTP {}): {}", status, body), &format!("Destroying sandbox returned non-success status (HTTP {}): {}", status, body)));
             }
         }
         Err(e) => {
-            crate::emit_info(&format!("销毁沙盒请求失败: {}", e));
+            crate::emit_info(&flock_core::tr(&format!("销毁沙盒请求失败: {}", e), &format!("Destroying sandbox request failed: {}", e)));
         }
     }
 
@@ -51,7 +51,7 @@ pub async fn destroy_active_sandbox(db: &DbManager) -> anyhow::Result<()> {
 /// 获取或创建活跃的沙盒 ID
 pub async fn get_or_create_active_sandbox(db: &DbManager) -> anyhow::Result<String> {
     let cfg = get_sandbox_config(db).await
-        .ok_or_else(|| anyhow::anyhow!("云端 Daytona 沙箱未启用或未配置。请在系统设置中配置有效的 API 地址和密钥。"))?;
+        .ok_or_else(|| anyhow::anyhow!(flock_core::tr("云端 Daytona 沙箱未启用或未配置。请在系统设置中配置有效的 API 地址和密钥。", "Cloud Daytona sandbox not enabled or configured. Please configure a valid API URL and Key in system settings.")))?;
 
     let mutex = get_sandbox_id_mutex();
     let mut lock = mutex.lock().await;
@@ -65,12 +65,12 @@ pub async fn get_or_create_active_sandbox(db: &DbManager) -> anyhow::Result<Stri
             let _ = set_sandbox_public(&cfg, id, true).await;
             return Ok(id.clone());
         }
-        crate::emit_info(&format!("Daytona 沙盒 {} 已失效，准备重新创建...", id));
+        crate::emit_info(&flock_core::tr(&format!("Daytona 沙盒 {} 已失效，准备重新创建...", id), &format!("Daytona sandbox {} has expired, preparing to recreate...", id)));
         *lock = None;
     }
 
     // crate::emit_info("正在向云端申请创建新 Daytona 沙盒...");
-    crate::emit_info("正在向云端申请启动沙盒...");
+    crate::emit_info(&flock_core::tr("正在向云端申请启动沙盒...", "Requesting to start sandbox from the cloud..."));
     
     let client = reqwest::Client::new();
     let base = get_api_base(cfg.api_url.as_ref().unwrap());
@@ -101,8 +101,10 @@ pub async fn get_or_create_active_sandbox(db: &DbManager) -> anyhow::Result<Stri
     let val: serde_json::Value = match serde_json::from_str(&res_text) {
         Ok(v) => v,
         Err(e) => anyhow::bail!(
-            "解析沙盒创建响应为 JSON 失败: {}. HTTP 状态码: {}, 原始响应体: {}", 
-            e, status, res_text
+            "{}", flock_core::tr(
+                &format!("解析沙盒创建响应为 JSON 失败: {}. HTTP 状态码: {}, 原始响应体: {}", e, status, res_text),
+                &format!("Failed to parse sandbox creation response as JSON: {}. HTTP status code: {}, original response body: {}", e, status, res_text)
+            )
         ),
     };
     
@@ -114,14 +116,17 @@ pub async fn get_or_create_active_sandbox(db: &DbManager) -> anyhow::Result<Stri
 
     let sandbox_id = match sandbox_id_val.and_then(|v| v.as_str()) {
         Some(s) => s.to_string(),
-        None => anyhow::bail!("无法在响应中解析出沙盒ID。原始响应体: {}", val),
+        None => anyhow::bail!("{}", flock_core::tr(
+            &format!("无法在响应中解析出沙盒ID。原始响应体: {}", val),
+            &format!("Unable to parse sandbox ID from response. Original response body: {}", val)
+        )),
     };
 
     // 轮询等待沙盒变为 "started" 状态
     // crate::emit_info(&format!("Daytona 沙盒创建成功 (ID: {})。启动中，正在等待网络与系统就绪...", sandbox_id));
     
     let mut started = false;
-    let mut last_status = "未知".to_string();
+    let mut last_status = flock_core::tr("未知", "Unknown");
     let mut last_resp_body = String::new();
     
     for i in 1..=90 {
@@ -150,36 +155,44 @@ pub async fn get_or_create_active_sandbox(db: &DbManager) -> anyhow::Result<Stri
                                     break;
                                 }
                             } else {
-                                last_status = "字段缺失".to_string();
+                                last_status = flock_core::tr("字段缺失", "Missing field");
                             }
                         } else {
-                            last_status = "非JSON".to_string();
+                            last_status = flock_core::tr("非JSON", "Not JSON");
                         }
                     } else {
-                        last_status = "读取响应体失败".to_string();
+                        last_status = flock_core::tr("读取响应体失败", "Failed to read response body");
                     }
                 } else {
                     last_status = format!("HTTP {}", status_code);
                 }
             }
             Err(e) => {
-                last_status = format!("网络请求失败: {}", e);
+                last_status = flock_core::tr(
+                    &format!("网络请求失败: {}", e),
+                    &format!("Network request failed: {}", e)
+                );
             }
         }
         
-        if i % 3 == 0 || (last_status != "creating" && last_status != "pending" && last_status != "未知") {
-            crate::emit_info(&format!("正在等待沙盒启动 (当前状态: {}, 已等待 {} 秒)...", last_status, i));
+        if i % 3 == 0 || (last_status != "creating" && last_status != "pending" && last_status != "Unknown" && last_status != "未知") {
+            crate::emit_info(&flock_core::tr(
+                &format!("正在等待沙盒启动 (当前状态: {}, 已等待 {} 秒)...", last_status, i),
+                &format!("Waiting for sandbox startup (current state: {}, waited {} seconds)...", last_status, i)
+            ));
         }
     }
 
     if !started {
         anyhow::bail!(
-            "等待沙盒启动超时。最后状态: {}。最后响应体: {}", 
-            last_status, last_resp_body
+            "{}", flock_core::tr(
+                &format!("等待沙盒启动超时。最后状态: {}。最后响应体: {}", last_status, last_resp_body),
+                &format!("Timeout waiting for sandbox startup. Last state: {}. Last response body: {}", last_status, last_resp_body)
+            )
         );
     }
 
-    crate::emit_info("Daytona 沙盒已就绪。");
+    crate::emit_info(&flock_core::tr("Daytona 沙盒已就绪。", "Daytona sandbox is ready."));
     // 显式将新创建的沙盒设为 public，双重保险
     let _ = set_sandbox_public(&cfg, &sandbox_id, true).await;
     *lock = Some(sandbox_id.clone());
@@ -236,11 +249,20 @@ pub async fn set_sandbox_public(
 
     let status = res.status();
     if status.is_success() {
-        crate::emit_info(&format!("Daytona 沙盒 {} 的 public 属性设置成功。", sandbox_id));
+        crate::emit_info(&flock_core::tr(
+            &format!("Daytona 沙盒 {} 的 public 属性设置成功。", sandbox_id),
+            &format!("Daytona sandbox {} public attribute set successfully.", sandbox_id)
+        ));
         Ok(())
     } else {
         let err_body = res.text().await.unwrap_or_default();
-        crate::emit_info(&format!("设置沙盒 public 属性失败 (HTTP {}): {}", status, err_body));
-        anyhow::bail!("设置沙盒 public 属性失败: {}", err_body)
+        crate::emit_info(&flock_core::tr(
+            &format!("设置沙盒 public 属性失败 (HTTP {}): {}", status, err_body),
+            &format!("Failed to set sandbox public attribute (HTTP {}): {}", status, err_body)
+        ));
+        anyhow::bail!("{}", flock_core::tr(
+            &format!("设置沙盒 public 属性失败: {}", err_body),
+            &format!("Failed to set sandbox public attribute: {}", err_body)
+        ))
     }
 }

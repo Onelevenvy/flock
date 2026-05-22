@@ -1,7 +1,7 @@
 use crate::adapter::LangGraphToolAdapter;
 use crate::Tool;
 use flock_core::ipc_interface::events::ToolCategory;
-use flock_core::types::tool::ProviderInfo;
+use flock_core::types::tool::{ProviderInfo, I18nString};
 use langgraph_derive::tool;
 use serde_json::Value;
 
@@ -78,8 +78,8 @@ impl SerperTool {
 pub fn provider_info() -> ProviderInfo {
     ProviderInfo {
         provider_id: "serper".to_string(),
-        provider_name: r#"{"zh": "Serper", "en": "Serper"}"#.to_string(),
-        description: r#"{"zh": "Serper提供的工具，支持全球的搜索", "en": "Serper tool for global internet search."}"#.to_string(),
+        provider_name: I18nString::new("Serper", "Serper"),
+        description: I18nString::new("Serper提供的工具，支持全球的搜索", "Serper tool for global internet search."),
         icon: Some("serper".to_string()),
         credentials_schema: Some(serde_json::json!({
             "SERPER_API_KEY": {

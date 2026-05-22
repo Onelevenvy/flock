@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { Box, Loader, Text } from '@mantine/core';
 import { invoke, convertFileSrc } from '@tauri-apps/api/core';
 import { useAgentStore } from '../../../../store/agentStore';
+import { useTranslation } from 'react-i18next';
 
 interface ImageViewProps {
   absPath?: string;
@@ -12,6 +13,7 @@ interface ImageViewProps {
 }
 
 export function ImageView({ absPath, workspaceId, relativePath, fileName, refreshKey }: ImageViewProps) {
+  const { t } = useTranslation();
   const [base64, setBase64] = useState<string>('');
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string>('');
@@ -73,10 +75,10 @@ export function ImageView({ absPath, workspaceId, relativePath, fileName, refres
       >
         <Loader size="md" color="var(--flock-accent)" type="bars" />
         <Text size="sm" fw={500} c="var(--flock-accent)" style={{ animation: 'pulse 2s infinite' }}>
-          正在建立安全连接，即将呈现远程画面...
+          {t('chat.vnc.establishingConnection')}
         </Text>
         <Text size="xs" c="dimmed">
-          正在申请并部署 Daytona 沙盒环境
+          {t('chat.vnc.deployingDaytona')}
         </Text>
         <style>{`
           @keyframes pulse {
@@ -100,7 +102,7 @@ export function ImageView({ absPath, workspaceId, relativePath, fileName, refres
   if (error && workspaceId && relativePath) {
     return (
       <Box style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', minHeight: '400px', gap: '8px' }}>
-        <Text size="sm" c="red">加载图片失败</Text>
+        <Text size="sm" c="red">{t('chat.vnc.failedToLoadImage')}</Text>
         <Text size="xs" c="dimmed">{error}</Text>
       </Box>
     );
@@ -138,7 +140,7 @@ export function ImageView({ absPath, workspaceId, relativePath, fileName, refres
           }}
         />
       ) : (
-        <Text size="sm" c="dimmed">暂无可用图片路径</Text>
+        <Text size="sm" c="dimmed">{t('chat.vnc.noImageAvailable')}</Text>
       )}
     </Box>
   );

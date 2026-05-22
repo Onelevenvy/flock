@@ -34,6 +34,11 @@ const mantineTheme = createTheme({
 function AppInner() {
   useEventStream();
   const { t } = useTranslation();
+  const language = useUiStore((s) => s.language);
+
+  useEffect(() => {
+    invoke('set_locale', { locale: language }).catch(err => console.error("set_locale failed:", err));
+  }, [language]);
 
   const errorMessage = useAgentStore((s) => s.errorMessage);
   const setError = useAgentStore((s) => s.setError);

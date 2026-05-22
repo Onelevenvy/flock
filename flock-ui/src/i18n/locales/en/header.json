@@ -1,5 +1,6 @@
 {
   "toggleSidebar": "Toggle Sidebar",
+  "toggleComputer": "Show/Hide Computer",
   "agentStatus": "Agent: {{status}}",
   "status": {
     "disconnected": "Disconnected",

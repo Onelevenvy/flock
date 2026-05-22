@@ -69,6 +69,9 @@ impl super::DbManager {
             let schema_json = info.credentials_schema.as_ref().map(|v| v.to_string());
             // Has schema → needs auth → start unavailable; no schema → auto available.
             let is_available = info.credentials_schema.is_none();
+            let provider_name_json = serde_json::to_string(&info.provider_name).unwrap_or_default();
+            let description_json = serde_json::to_string(&info.description).unwrap_or_default();
+            
             sqlx::query(
                 "INSERT INTO tool_provider (id, provider_name, description, credentials_schema, is_available, created_at, updated_at)
                  VALUES (?1, ?2, ?3, ?4, ?5, datetime('now'), datetime('now'))
@@ -79,8 +82,8 @@ impl super::DbManager {
                     updated_at = datetime('now')"
             )
                 .bind(&info.provider_id)
-                .bind(&info.provider_name)
-                .bind(&info.description)
+                .bind(&provider_name_json)
+                .bind(&description_json)
                 .bind(&schema_json)
                 .bind(is_available as i64)
                 .execute(self.pool())
@@ -102,8 +105,12 @@ impl super::DbManager {
         for def in tools {
             if seen.insert(&def.provider_id) {
                 let info = info_map.get(def.provider_id.as_str());
-                let provider_name = info.map(|p| p.provider_name.as_str()).unwrap_or(def.provider_name.as_str());
-                let desc = info.map(|p| p.description.as_str()).unwrap_or("");
+                let provider_name = info
+                    .map(|p| serde_json::to_string(&p.provider_name).unwrap_or_default())
+                    .unwrap_or_else(|| def.provider_name.clone());
+                let desc = info
+                    .map(|p| serde_json::to_string(&p.description).unwrap_or_default())
+                    .unwrap_or_default();
                 let schema_json = info
                     .and_then(|p| p.credentials_schema.as_ref())
                     .map(|v| v.to_string());
@@ -118,8 +125,8 @@ impl super::DbManager {
                         updated_at = datetime('now')"
                 )
                     .bind(&def.provider_id)
-                    .bind(provider_name)
-                    .bind(desc)
+                    .bind(&provider_name)
+                    .bind(&desc)
                     .bind(&schema_json)
                     .bind(is_available as i64)
                     .execute(self.pool())
