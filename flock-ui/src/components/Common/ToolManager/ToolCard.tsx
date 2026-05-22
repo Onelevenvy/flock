@@ -13,7 +13,7 @@ export interface ToolCardProps {
   tool: Tool;
   provider?: ToolProvider;
   enabled: boolean;
-  onToggle: () => void;
+  onToggle?: () => void;
   onRemove: () => void;
   disabled?: boolean;
 }
@@ -81,28 +81,46 @@ export function ToolCard({ tool, provider, enabled, onToggle, onRemove, disabled
           <ToolDetailPopover tool={tool} provider={provider} />
         )}
 
-        {/* 悬浮时显示：删除按钮 */}
-        {hovered && !disabled && (
-          <Tooltip label={t('workflow.properties.agent.toolRemove')} withinPortal>
-            <ActionIcon
-              variant="subtle"
-              color="red"
-              size="xs"
-              onClick={(e) => { e.stopPropagation(); onRemove(); }}
-            >
-              <IconX size={12} />
-            </ActionIcon>
-          </Tooltip>
-        )}
+        {onToggle ? (
+          <>
+            {/* 悬浮时显示：删除按钮 */}
+            {hovered && !disabled && (
+              <Tooltip label={t('workflow.properties.agent.toolRemove')} withinPortal>
+                <ActionIcon
+                  variant="subtle"
+                  color="red"
+                  size="xs"
+                  onClick={(e) => { e.stopPropagation(); onRemove(); }}
+                >
+                  <IconX size={12} />
+                </ActionIcon>
+              </Tooltip>
+            )}
 
-        {/* 开关（始终显示） */}
-        <Switch
-          size="xs"
-          checked={enabled}
-          onChange={() => !disabled && onToggle()}
-          onClick={(e) => e.stopPropagation()}
-          styles={{ track: { cursor: disabled ? 'not-allowed' : 'pointer' } }}
-        />
+            {/* 开关（始终显示） */}
+            <Switch
+              size="xs"
+              checked={enabled}
+              onChange={() => !disabled && onToggle()}
+              onClick={(e) => e.stopPropagation()}
+              styles={{ track: { cursor: disabled ? 'not-allowed' : 'pointer' } }}
+            />
+          </>
+        ) : (
+          /* 不支持 Toggle 时：直接始终显示删除按钮，无需 hover */
+          !disabled && (
+            <Tooltip label={t('workflow.properties.agent.toolRemove')} withinPortal>
+              <ActionIcon
+                variant="subtle"
+                color="red"
+                size="sm"
+                onClick={(e) => { e.stopPropagation(); onRemove(); }}
+              >
+                <IconX size={14} />
+              </ActionIcon>
+            </Tooltip>
+          )
+        )}
       </Group>
     </Box>
   );

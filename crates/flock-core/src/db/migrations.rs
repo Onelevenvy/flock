@@ -159,4 +159,9 @@ pub const MIGRATIONS: &[(i64, &str, &str)] = &[
         );
         CREATE INDEX IF NOT EXISTS idx_workflow_updated ON workflow(updated_at);",
     ),
+    (
+        3,
+        "add_assistant_disabled_tools",
+        "ALTER TABLE assistant ADD COLUMN disabled_tools TEXT NOT NULL DEFAULT '[]';",
+    ),
 ];

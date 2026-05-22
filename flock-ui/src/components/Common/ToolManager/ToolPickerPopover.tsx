@@ -26,6 +26,7 @@ import { getProviderName } from '../../../pages/Skills/helpers';
 
 import { useDisclosure } from '@mantine/hooks';
 import type { PopoverProps } from '@mantine/core';
+import { notifications } from '@mantine/notifications';
 
 export interface ToolPickerPopoverProps {
   /** 当前已选工具名列表 */
@@ -72,20 +73,62 @@ export function ToolPickerPopover({
   const getSelectedCount = (providerId: string) =>
     tools.filter((t) => t.provider_id === providerId && tempValue.includes(t.name)).length;
 
-  const handleToggleTool = (toolName: string) =>
+  const handleToggleTool = (toolName: string) => {
+    const tool = tools.find((t) => t.name === toolName);
+    if (tool) {
+      const provider = providers.find((p) => p.id === tool.provider_id);
+      const isUnauthorized = provider?.credentials_schema && !provider.is_available;
+      if (isUnauthorized && !tempValue.includes(toolName)) {
+        notifications.show({
+          title: t('assistant.form.toolUnauthorizedTitle', { defaultValue: '工具未授权' }),
+          message: t('assistant.form.toolUnauthorizedMsg', { 
+            defaultValue: '请先在「插件管理」页面配置并成功连通该工具的 API 凭证，方可添加使用。' 
+          }),
+          color: 'red',
+          autoClose: 5000,
+        });
+        return;
+      }
+    }
     setTempValue((prev) =>
       prev.includes(toolName) ? prev.filter((n) => n !== toolName) : [...prev, toolName]
     );
+  };
 
   const handleBatchToggle = (providerTools: typeof tools, e: React.MouseEvent) => {
     e.stopPropagation();
     const names = providerTools.map((t) => t.name);
     const allSelected = names.every((n) => tempValue.includes(n));
-    setTempValue((prev) =>
-      allSelected
-        ? prev.filter((n) => !names.includes(n))
-        : [...prev, ...names.filter((n) => !prev.includes(n))]
-    );
+    
+    if (allSelected) {
+      setTempValue((prev) => prev.filter((n) => !names.includes(n)));
+    } else {
+      // 批量添加，只添加已授权的
+      const allowedNames = names.filter((name) => {
+        const tool = providerTools.find((t) => t.name === name);
+        if (!tool) return true;
+        const provider = providers.find((p) => p.id === tool.provider_id);
+        const isUnauthorized = provider?.credentials_schema && !provider.is_available;
+        return !isUnauthorized;
+      });
+
+      const unauthorizedCount = names.length - allowedNames.length;
+      if (unauthorizedCount > 0) {
+        notifications.show({
+          title: t('assistant.form.toolUnauthorizedTitle', { defaultValue: '部分工具未授权' }),
+          message: t('assistant.form.batchToolUnauthorizedMsg', { 
+            defaultValue: '已为您自动过滤未授权的工具。请先在「插件管理」页面配置它们的 API 凭证。' 
+          }),
+          color: 'orange',
+          autoClose: 5000,
+        });
+      }
+
+      setTempValue((prev) => [
+        ...prev,
+        ...allowedNames.filter((n) => !prev.includes(n)),
+      ]);
+    }
   };
 
   const handleConfirm = () => { onChange(tempValue); close(); };
@@ -235,6 +278,7 @@ export function ToolPickerPopover({
                           <Stack gap={4}>
                             {provider.tools.map((tool) => {
                               const isSelected = tempValue.includes(tool.name);
+                              const isUnauthorized = provider.credentials_schema && !provider.is_available;
                               return (
                                 <Box
                                   key={tool.id}
@@ -243,18 +287,27 @@ export function ToolPickerPopover({
                                     display: 'flex', alignItems: 'center', padding: '6px 8px',
                                     borderRadius: 6,
                                     background: isSelected ? 'var(--flock-bg-hover)' : 'transparent',
-                                    cursor: 'pointer', transition: 'all 0.15s ease',
+                                    cursor: isUnauthorized ? 'not-allowed' : 'pointer',
+                                    opacity: isUnauthorized ? 0.55 : 1,
+                                    transition: 'all 0.15s ease',
                                   }}
-                                  onMouseEnter={(e) => { if (!isSelected) e.currentTarget.style.background = 'var(--flock-bg-hover)'; }}
-                                  onMouseLeave={(e) => { if (!isSelected) e.currentTarget.style.background = 'transparent'; }}
+                                  onMouseEnter={(e) => { if (!isUnauthorized && !isSelected) e.currentTarget.style.background = 'var(--flock-bg-hover)'; }}
+                                  onMouseLeave={(e) => { if (!isUnauthorized && !isSelected) e.currentTarget.style.background = 'transparent'; }}
                                 >
                                   <Group justify="space-between" align="center" style={{ width: '100%' }}>
-                                    <Text
-                                      size="xs" fw={isSelected ? 600 : 400}
-                                      style={{ fontFamily: 'var(--mantine-font-family-monospace)', color: 'var(--flock-text-bright)', lineHeight: 1.3 }}
-                                    >
-                                      {tool.name}
-                                    </Text>
+                                    <Group gap={6} align="center">
+                                      <Text
+                                        size="xs" fw={isSelected ? 600 : 400}
+                                        style={{ fontFamily: 'var(--mantine-font-family-monospace)', color: 'var(--flock-text-bright)', lineHeight: 1.3 }}
+                                      >
+                                        {tool.name}
+                                      </Text>
+                                      {isUnauthorized && (
+                                        <Text size="9px" fw={600} style={{ color: 'var(--mantine-color-red-6)' }}>
+                                          🔒 {t('assistant.form.unauthorizedTag', { defaultValue: '未授权' })}
+                                        </Text>
+                                      )}
+                                    </Group>
                                     {isSelected && (
                                       <Text size="10px" style={{ color: 'var(--flock-text-dim)', fontWeight: 500 }}>
                                         {t('assistant.form.addedTag')}

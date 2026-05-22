@@ -1,3 +1,5 @@
+use std::path::PathBuf;
+
 pub mod adapter;
 pub mod file_cache;
 
@@ -125,6 +127,26 @@ pub fn init_global_emitter(emitter: Arc<dyn flock_core::ipc_interface::writer::P
 /// Get the global emitter if initialized.
 pub fn get_global_emitter() -> Option<Arc<dyn flock_core::ipc_interface::writer::ProtocolEmitter>> {
     GLOBAL_EMITTER.get().cloned()
+}
+
+static GLOBAL_WORKSPACE_DIR: OnceLock<std::sync::RwLock<Option<PathBuf>>> = OnceLock::new();
+
+/// Initialize the active workspace directory for tool calculations.
+pub fn init_workspace_dir(dir: PathBuf) {
+    if let Some(lock) = GLOBAL_WORKSPACE_DIR.get() {
+        if let Ok(mut writer) = lock.write() {
+            *writer = Some(dir);
+        }
+    } else {
+        let _ = GLOBAL_WORKSPACE_DIR.set(std::sync::RwLock::new(Some(dir)));
+    }
+}
+
+/// Get the active workspace directory if set.
+pub fn get_workspace_dir() -> Option<PathBuf> {
+    GLOBAL_WORKSPACE_DIR.get()
+        .and_then(|lock| lock.read().ok())
+        .and_then(|reader| reader.clone())
 }
 
 /// Send an info message to the client.

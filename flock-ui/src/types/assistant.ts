@@ -6,6 +6,7 @@ export interface Assistant {
   model: string;
   system_prompt: string;
   tools: string[];
+  disabled_tools: string[];
   skills: string[];
   is_builtin: boolean;
   sort_order: number;
@@ -21,6 +22,7 @@ export interface UpsertAssistant {
   model: string;
   system_prompt: string;
   tools: string[];
+  disabled_tools: string[];
   skills: string[];
   is_builtin: boolean;
   sort_order: number;

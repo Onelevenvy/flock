@@ -126,6 +126,11 @@ pub async fn start_agent(
                     "Applying assistant overrides: name={}, tools={:?}, skills={:?}",
                     asst.name, asst.tools, asst.skills
                 );
+                let enabled_tools: Vec<String> = asst
+                    .tools
+                    .into_iter()
+                    .filter(|t| !asst.disabled_tools.contains(t))
+                    .collect();
                 let overrides = AssistantOverrides {
                     system_prompt: if asst.system_prompt.is_empty() {
                         None
@@ -133,7 +138,7 @@ pub async fn start_agent(
                         Some(asst.system_prompt)
                     },
                     model: if asst.model.is_empty() { None } else { Some(asst.model) },
-                    allowed_tool_providers: Some(asst.tools),
+                    allowed_tool_providers: Some(enabled_tools),
                     allowed_skill_names: Some(asst.skills),
                 };
                 bootstrap = bootstrap.with_assistant(overrides);

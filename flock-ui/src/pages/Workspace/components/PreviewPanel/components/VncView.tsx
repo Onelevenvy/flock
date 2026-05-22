@@ -18,6 +18,18 @@ interface VncViewProps {
   refreshTrigger: number;
 }
 
+// 提取物理路径中关于 .flock/sandbox/screenshots/ 的相对工作空间路径
+function getRelativePath(absPath: string): string {
+  if (!absPath) return "";
+  const normalized = absPath.replace(/\\/g, '/');
+  const keyword = ".flock/sandbox/screenshots/";
+  const idx = normalized.indexOf(keyword);
+  if (idx !== -1) {
+    return normalized.substring(idx);
+  }
+  return "";
+}
+
 // 提取消息中的 file:/// 物理绝对路径
 function extractScreenshots(messages: any[]): string[] {
   const list: string[] = [];
@@ -192,7 +204,7 @@ export function VncView({
             <ImageView
               absPath={screenshots[playbackIndex]}
               workspaceId={activeWorkspaceId}
-              relativePath=""
+              relativePath={getRelativePath(screenshots[playbackIndex])}
               fileName={`Step Snapshot ${playbackIndex + 1}`}
             />
             <Text size="xs" c="var(--flock-accent)" style={{ textAlign: 'center', fontWeight: 600 }}>

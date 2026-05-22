@@ -67,6 +67,7 @@ function ThinkingBlock({ text, defaultCollapsed }: { text: string; defaultCollap
             fontFamily: 'var(--mantine-font-family-monospace)',
             lineHeight: 1.65,
             color: 'var(--flock-text-secondary)',
+            wordBreak: 'break-all',
           }}
         >
           {text}
@@ -129,13 +130,23 @@ function ChunkRenderer({ chunk, isStreaming }: { chunk: MessageChunk; isStreamin
           gap: 8,
           border: '1px solid var(--flock-border-dim)',
           borderLeftWidth: 3,
+          minWidth: 0,
         }}
       >
         {!isSuccess && !isError && isStreaming && <Loader size={12} type="dots" color="var(--flock-accent)" />}
         {(!isSuccess && !isError && !isStreaming) && <Text size="xs" fw={800} style={{ color: '#0ca678', display: 'inline-flex', alignItems: 'center' }}>✓</Text>}
         {isSuccess && <Text size="xs" fw={800} style={{ color: '#0ca678', display: 'inline-flex', alignItems: 'center' }}>✓</Text>}
         {isError && <Text size="xs" fw={800} style={{ color: '#f03e3e', display: 'inline-flex', alignItems: 'center' }}>✗</Text>}
-        <Text size="xs" fw={500} style={{ color: 'var(--flock-text-secondary)', flex: 1 }}>
+        <Text
+          size="xs"
+          fw={500}
+          style={{
+            color: 'var(--flock-text-secondary)',
+            flex: 1,
+            minWidth: 0,
+            wordBreak: 'break-all',
+          }}
+        >
           {chunk.message}
         </Text>
       </Paper>

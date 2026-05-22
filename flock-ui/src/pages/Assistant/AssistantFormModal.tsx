@@ -33,6 +33,7 @@ export function AssistantFormModal({
   const [model, setModel] = useState<string | null>(null);
   const [systemPrompt, setSystemPrompt] = useState('');
   const [selectedTools, setSelectedTools] = useState<string[]>([]);
+  const [disabledTools, setDisabledTools] = useState<string[]>([]);
   const [selectedSkills, setSelectedSkills] = useState<string[]>([]);
   const [saving, setSaving] = useState(false);
   const [activeTab, setActiveTab] = useState<string | null>('edit');
@@ -54,6 +55,7 @@ export function AssistantFormModal({
       setModel(initial.model || null);
       setSystemPrompt(initial.system_prompt);
       setSelectedTools(initial.tools);
+      setDisabledTools(initial.disabled_tools || []);
       setSelectedSkills(initial.skills);
     } else {
       setName('');
@@ -62,6 +64,7 @@ export function AssistantFormModal({
       setModel(null);
       setSystemPrompt('');
       setSelectedTools([]);
+      setDisabledTools([]);
       setSelectedSkills([]);
     }
     loadOptions();
@@ -114,6 +117,7 @@ export function AssistantFormModal({
         model: model || '',
         system_prompt: systemPrompt.trim(),
         tools: selectedTools,
+        disabled_tools: disabledTools,
         skills: selectedSkills,
       });
       onClose();
@@ -309,6 +313,8 @@ export function AssistantFormModal({
             label={t('assistant.form.toolsLabel')}
             value={selectedTools}
             onChange={setSelectedTools}
+            disabledValue={disabledTools}
+            onDisabledChange={setDisabledTools}
             selectorPosition="bottom-start"
           />
 
