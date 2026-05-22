@@ -21,7 +21,7 @@ import { useAgentStore } from '../../store/agentStore';
 import { useWorkspaceStore } from '../../store/workspaceStore';
 import { useWorkspacesQuery } from '../../hooks/useWorkspaces';
 import { v4 as uuidv4 } from 'uuid';
-import { ActiveModelPicker } from '../Settings/ActiveModelPicker';
+import { ActiveModelPicker } from '../Common/ActiveModelPicker';
 
 const MODE_OPTIONS = [
   { value: 'default', labelKey: 'chat.mode.default', labelDefault: '审批模式', icon: IconShieldCheck, color: 'blue' },

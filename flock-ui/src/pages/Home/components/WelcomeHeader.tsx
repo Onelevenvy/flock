@@ -1,7 +1,7 @@
 import { Text } from '@mantine/core';
 
 interface WelcomeHeaderProps {
-  t: (key: string, defaultValue?: string) => string;
+  t: any;
 }
 
 export function WelcomeHeader({ t }: WelcomeHeaderProps) {

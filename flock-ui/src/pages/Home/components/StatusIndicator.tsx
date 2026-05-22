@@ -1,7 +1,7 @@
 import { Text, Group } from '@mantine/core';
 
 interface StatusIndicatorProps {
-  t: (key: string, defaultValue?: string | { [key: string]: any }) => string;
+  t: any;
   status: string;
   selectedAssistant: { name: string };
   activeWs: { name: string } | undefined;

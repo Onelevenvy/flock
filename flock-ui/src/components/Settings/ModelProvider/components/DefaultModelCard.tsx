@@ -1,9 +1,9 @@
 import { Card, Group, ThemeIcon, Box, Tooltip, Text } from '@mantine/core';
 import { IconCube, IconHelpCircle } from '@tabler/icons-react';
-import { ModelSelect } from '../../Common/ModelSelect';
+import { ModelSelect } from '../../../Common/ModelSelect';
 
 interface DefaultModelCardProps {
-  t: (key: string, defaultValue?: string) => string;
+  t: any;
   onlineModels: Array<{ value: string; label: string; providerName: string }>;
   value: string;
   onChange: (value: string | null) => void;

@@ -1,10 +1,10 @@
 import { Box, Textarea, Group, Menu, Tooltip, ActionIcon, Text } from '@mantine/core';
 import { IconSend, IconPlayerStop } from '@tabler/icons-react';
 import { WorkspacePicker } from '../WorkspacePicker';
-import { ActiveModelPicker } from '../../../components/Settings/ActiveModelPicker';
+import { ActiveModelPicker } from '../../../components/Common/ActiveModelPicker';
 
 interface InputCardProps {
-  t: (key: string, defaultValue?: string | { [key: string]: any }) => string;
+  t: any;
   textareaRef: React.RefObject<HTMLTextAreaElement>;
   placeholder: string;
   value: string;

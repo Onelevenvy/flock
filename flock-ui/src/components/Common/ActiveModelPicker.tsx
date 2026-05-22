@@ -4,7 +4,7 @@ import { IconCube, IconCheck } from '@tabler/icons-react';
 import { invoke } from '@tauri-apps/api/core';
 import { useWorkspacesQuery } from '../../hooks/useWorkspaces';
 import { reconnectCurrentAgent } from '../../lib/agentConnection';
-import { ModelSelect } from '../Common/ModelSelect';
+import { ModelSelect } from './ModelSelect';
 
 interface ModelProvider {
   id: string;
@@ -33,9 +33,9 @@ interface ActiveModel {
 
 /**
  * ActiveModelPicker
- * 输入栏（Home / InputBar）中用于切换当前激活模型的小型选择器。
+ * 输入栏 (Home / InputBar) 中用于切换当前激活模型的小型选择器。
  * 内部自行加载 providers / models 数据，切换后联动 reconnect agent。
- * 纯 UI 展示用 ModelSelect（通用组件）。
+ * 纯 UI 展示用 ModelSelect (通用组件)。
  */
 export function ActiveModelPicker() {
   const [providers, setProviders] = useState<ModelProvider[]>([]);
@@ -178,5 +178,3 @@ export function ActiveModelPicker() {
     />
   );
 }
-
-

@@ -1,29 +1,15 @@
 import { useState, useCallback, useRef, KeyboardEvent, useEffect } from 'react';
-import {
-  Box,
-  Text,
-  Group,
-  ActionIcon,
-  Tooltip,
-  Textarea,
-  Menu,
-} from '@mantine/core';
-import {
-  IconSend,
-  IconPlayerStop,
-  IconShieldCheck,
-  IconBolt,
-  IconFlame,
-} from '@tabler/icons-react';
+import { Box } from '@mantine/core';
+import { IconShieldCheck, IconBolt, IconFlame, } from '@tabler/icons-react';
 import { invoke } from '@tauri-apps/api/core';
 import { v4 as uuidv4 } from 'uuid';
 import { useAgentStore } from '../../store/agentStore';
 import { useWorkspaceStore } from '../../store/workspaceStore';
 import { useWorkspacesQuery, useCreateConversationMutation } from '../../hooks/useWorkspaces';
 import { type Assistant } from '../../types/assistant';
-import { ActiveModelPicker } from '../../components/Settings/ActiveModelPicker';
+
 import { AssistantPicker, XIAOF_AGENT } from './AssistantPicker';
-import { WorkspacePicker } from './WorkspacePicker';
+
 import { useAssistantsQuery } from '../../hooks/useAssistants';
 import { useTranslation } from 'react-i18next';
 import { WelcomeHeader } from './components/WelcomeHeader';
@@ -282,7 +268,7 @@ export function HomeView() {
 
       {/* 状态提示 */}
       <StatusIndicator
-        t={t}
+        t={t as any}
         status={status}
         selectedAssistant={selectedAssistant}
         activeWs={activeWs}

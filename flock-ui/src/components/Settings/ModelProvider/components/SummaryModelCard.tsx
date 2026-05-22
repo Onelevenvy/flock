@@ -1,9 +1,9 @@
 import { Card, Group, ThemeIcon, Box, Tooltip, Text } from '@mantine/core';
 import { IconSparkles, IconHelpCircle } from '@tabler/icons-react';
-import { ModelSelect } from '../../Common/ModelSelect';
+import { ModelSelect } from '../../../Common/ModelSelect';
 
 interface SummaryModelCardProps {
-  t: (key: string, defaultValue?: string) => string;
+  t: any;
   summaryModels: Array<{ value: string; label: string; providerName: string }>;
   value: string;
   onChange: (value: string | null) => void;
