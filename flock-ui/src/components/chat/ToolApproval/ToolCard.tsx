@@ -131,24 +131,18 @@ export function ToolCard({ chunk }: ToolCardProps) {
                 {t('chat.output')} {chunk.result_status === 'error' && <Badge color="red" size="xs">Error</Badge>}
               </Text>
               <ScrollArea.Autosize mah={450}>
-                {chunk.tool.name === 'Browser' || chunk.tool.name === 'ComputerUse' ? (
-                  <Box style={{ padding: '4px 0' }}>
-                    <MarkdownRenderer content={chunk.result} />
-                  </Box>
-                ) : (
-                  <Code
-                    block
-                    style={{
-                      fontSize: '11px',
-                      background: 'var(--flock-bg-deepest)',
-                      color: chunk.result_status === 'error'
-                        ? 'var(--mantine-color-red-4)'
-                        : 'var(--flock-text-primary)',
-                    }}
-                  >
-                    {chunk.result}
-                  </Code>
-                )}
+                <Code
+                  block
+                  style={{
+                    fontSize: '11px',
+                    background: 'var(--flock-bg-deepest)',
+                    color: chunk.result_status === 'error'
+                      ? 'var(--mantine-color-red-4)'
+                      : 'var(--flock-text-primary)',
+                  }}
+                >
+                  {chunk.result}
+                </Code>
               </ScrollArea.Autosize>
             </Box>
           )}

@@ -37,7 +37,11 @@ function extractScreenshots(messages: any[]): string[] {
         const scanText = textToScan.replace(/\\/g, '/');
         fileRegex.lastIndex = 0;
         while ((match = fileRegex.exec(scanText)) !== null) {
-          const path = match[1];
+          let path = match[1];
+          path = path.replace(/\//g, '\\');
+          if (path.startsWith('\\')) {
+            path = path.substring(1);
+          }
           if (!list.includes(path)) {
             list.push(path);
           }

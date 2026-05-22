@@ -120,15 +120,23 @@ export function MarkdownRenderer({ content }: MarkdownRendererProps) {
         img({ node, src, alt, ...props }: any) {
           let finalSrc = src;
           if (src) {
-            const normalized = src.replace(/\\/g, '/');
-            if (normalized.startsWith('file:///')) {
-              finalSrc = convertFileSrc(normalized.substring(8));
-            } else if (normalized.startsWith('file://')) {
-              finalSrc = convertFileSrc(normalized.substring(7));
-            } else if (normalized.startsWith('/') || /^[a-zA-Z]:\//.test(normalized)) {
-              finalSrc = convertFileSrc(normalized);
+            let localPath = src;
+            if (src.startsWith('file:///')) {
+              localPath = src.substring(8);
+            } else if (src.startsWith('file://')) {
+              localPath = src.substring(7);
+            }
+            
+            const normPath = localPath.replace(/\\/g, '/');
+            const isWindows = normPath.includes(':') || !normPath.startsWith('/');
+            if (isWindows) {
+              let winPath = normPath.replace(/\//g, '\\');
+              if (winPath.startsWith('\\')) {
+                winPath = winPath.substring(1);
+              }
+              finalSrc = convertFileSrc(winPath);
             } else {
-              finalSrc = convertFileSrc(normalized);
+              finalSrc = convertFileSrc(normPath);
             }
           }
 
