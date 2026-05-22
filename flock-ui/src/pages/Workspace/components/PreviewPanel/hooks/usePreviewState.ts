@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { invoke } from '@tauri-apps/api/core';
 import { useAgentStore } from '../../../../../store/agentStore';
+import { useWorkspaceStore } from '../../../../../store/workspaceStore';
 
 /**
  * Compute the formatted VNC URL with required query params for noVNC.
@@ -50,6 +51,9 @@ export function usePreviewFileState(
   const [absPath, setAbsPath] = useState<string>('');
   const [screenshotAbsPath, setScreenshotAbsPath] = useState<string>('');
   const [refreshTrigger, setRefreshTrigger] = useState<number>(0);
+  const activeConversationId = useWorkspaceStore((s) => s.activeConversationId);
+  const sessionId = activeConversationId || 'default';
+  const targetScreenshotPath = `.flock/sandbox/screenshot_${sessionId}.png`;
 
   // Detect running sandbox tools for polling frequency
   const messages = useAgentStore((s) => s.messages);
@@ -65,7 +69,7 @@ export function usePreviewFileState(
 
   // Auto-refresh polling for sandbox screenshot / VNC
   useEffect(() => {
-    const isSandboxPreview = previewFilePath === '.flock/sandbox/screenshot.png' || ext === 'vnc';
+    const isSandboxPreview = previewFilePath === targetScreenshotPath || ext === 'vnc';
     if (!isSandboxPreview || !isPreviewOpen) return;
 
     const interval = isSandboxToolRunning ? 500 : 1500;
@@ -74,19 +78,19 @@ export function usePreviewFileState(
     }, interval);
 
     return () => clearInterval(timer);
-  }, [previewFilePath, ext, isPreviewOpen, isSandboxToolRunning]);
+  }, [previewFilePath, targetScreenshotPath, ext, isPreviewOpen, isSandboxToolRunning]);
 
   // Resolve screenshot absolute path
   useEffect(() => {
     if (activeWorkspaceId) {
       invoke<string>('get_workspace_file_absolute_path', {
         workspaceId: activeWorkspaceId,
-        relativePath: '.flock/sandbox/screenshot.png',
+        relativePath: targetScreenshotPath,
       })
         .then((path) => { setScreenshotAbsPath(path); })
         .catch((e) => { console.log('Failed to get screenshot path:', e); });
     }
-  }, [activeWorkspaceId, previewFilePath]);
+  }, [activeWorkspaceId, targetScreenshotPath]);
 
   // Resolve file absolute path
   useEffect(() => {

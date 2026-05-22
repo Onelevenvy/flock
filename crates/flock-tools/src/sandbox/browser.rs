@@ -58,6 +58,8 @@ pub async fn browser(
     let db = crate::get_db_manager()
         .ok_or_else(|| "数据库管理器未初始化，无法读取沙箱配置。".to_string())?;
 
+    let session_id = flock_core::get_current_session_id();
+
     // 1. 获取或创建沙盒环境
     let sandbox_id = get_or_create_active_sandbox(&db).await
         .map_err(|e| format!("沙盒环境启动失败: {}", e))?;
@@ -231,7 +233,7 @@ sys.exit(0)
                 let b64_data = &stdout_stderr[start_idx + start_marker.len()..end_idx].trim();
                 if let Ok(img_bytes) = general_purpose::STANDARD.decode(b64_data) {
                     let base_dir = crate::get_workspace_dir().unwrap_or_else(|| std::env::current_dir().unwrap_or_default());
-                    let ss_dir = base_dir.join(".flock/sandbox/screenshots");
+                    let ss_dir = base_dir.join(".flock/sandbox/screenshots").join(&session_id);
                     let ss_path = ss_dir.join(format!("{}.png", name_id));
                     if let Some(parent) = ss_path.parent() {
                         let _ = std::fs::create_dir_all(parent);
@@ -239,13 +241,13 @@ sys.exit(0)
                     let _ = std::fs::write(&ss_path, &img_bytes);
                     screenshot_saved = true;
                     // 同时保留一份覆盖的 screenshot.png 兼容以前的设计
-                    let _ = std::fs::write(base_dir.join(".flock/sandbox/screenshot.png"), &img_bytes);
+                    let _ = std::fs::write(base_dir.join(format!(".flock/sandbox/screenshot_{}.png", session_id)), &img_bytes);
                 }
             }
         }
 
         let base_dir = crate::get_workspace_dir().unwrap_or_else(|| std::env::current_dir().unwrap_or_default());
-        let abs_screenshot_path = base_dir.join(".flock/sandbox/screenshots").join(format!("{}.png", name_id));
+        let abs_screenshot_path = base_dir.join(".flock/sandbox/screenshots").join(&session_id).join(format!("{}.png", name_id));
         let abs_path_str = abs_screenshot_path.to_string_lossy().to_string();
 
         let image_md = if screenshot_saved {
@@ -437,13 +439,13 @@ sys.exit(0)
             let b64_data = &stdout_stderr[start_idx + start_marker.len()..end_idx].trim();
             if let Ok(img_bytes) = general_purpose::STANDARD.decode(b64_data) {
                 let base_dir = crate::get_workspace_dir().unwrap_or_else(|| std::env::current_dir().unwrap_or_default());
-                let ss_dir = base_dir.join(".flock/sandbox/screenshots");
+                let ss_dir = base_dir.join(".flock/sandbox/screenshots").join(&session_id);
                 let ss_path = ss_dir.join(format!("{}.png", name_id));
                 if let Some(parent) = ss_path.parent() {
                     let _ = std::fs::create_dir_all(parent);
                 }
                 let _ = std::fs::write(&ss_path, &img_bytes);
-                let _ = std::fs::write(base_dir.join(".flock/sandbox/screenshot.png"), &img_bytes);
+                let _ = std::fs::write(base_dir.join(format!(".flock/sandbox/screenshot_{}.png", session_id)), &img_bytes);
                 screenshot_saved = true;
                 crate::emit_info("网页截图已成功保存至工作区，已生成步骤快照。");
             }
@@ -459,7 +461,7 @@ sys.exit(0)
     }
 
     let base_dir = crate::get_workspace_dir().unwrap_or_else(|| std::env::current_dir().unwrap_or_default());
-    let abs_screenshot_path = base_dir.join(".flock/sandbox/screenshots").join(format!("{}.png", name_id));
+    let abs_screenshot_path = base_dir.join(".flock/sandbox/screenshots").join(&session_id).join(format!("{}.png", name_id));
     let abs_path_str = abs_screenshot_path.to_string_lossy().to_string();
 
     let image_md = if screenshot_saved {

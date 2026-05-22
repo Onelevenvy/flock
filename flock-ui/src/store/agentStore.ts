@@ -121,8 +121,9 @@ export const useAgentStore = create<AgentStore>((set) => ({
       
       if (hasScreenshots) {
         // 如果历史会话中含有截图，则优雅地拉起虚拟的“VNC / 离线回放”页面，使用户能立即观看时间轴回放！
+        const sessionId = useWorkspaceStore.getState().activeConversationId || 'default';
         useUiStore.getState().setPreviewFile({
-          path: '.flock/sandbox/screenshot.png',
+          path: `.flock/sandbox/screenshot_${sessionId}.png`,
           content: '',
           extension: 'vnc', // 强行将扩展名置为 vnc 以走 VncView 逻辑
         });
@@ -136,6 +137,8 @@ export const useAgentStore = create<AgentStore>((set) => ({
   },
 
   handleEvent: (event: ProtocolEvent) => {
+    const sessionId = useWorkspaceStore.getState().activeConversationId || 'default';
+    const screenshotPath = `.flock/sandbox/screenshot_${sessionId}.png`;
     switch (event.type) {
       case 'ready':
         set({ status: 'ready', capabilities: event.capabilities });
@@ -301,9 +304,9 @@ export const useAgentStore = create<AgentStore>((set) => ({
                     }
                   } else {
                     const currentPreview = useUiStore.getState().previewFile;
-                    if (!currentPreview || currentPreview.path !== '.flock/sandbox/screenshot.png') {
+                    if (!currentPreview || currentPreview.path !== screenshotPath) {
                       useUiStore.getState().setPreviewFile({
-                        path: '.flock/sandbox/screenshot.png',
+                        path: screenshotPath,
                         content: '',
                         extension: 'png',
                       });
@@ -312,9 +315,9 @@ export const useAgentStore = create<AgentStore>((set) => ({
                 })
                 .catch(() => {
                   const currentPreview = useUiStore.getState().previewFile;
-                  if (!currentPreview || currentPreview.path !== '.flock/sandbox/screenshot.png') {
+                  if (!currentPreview || currentPreview.path !== screenshotPath) {
                     useUiStore.getState().setPreviewFile({
-                      path: '.flock/sandbox/screenshot.png',
+                      path: screenshotPath,
                       content: '',
                       extension: 'png',
                     });
@@ -409,9 +412,9 @@ export const useAgentStore = create<AgentStore>((set) => ({
                         }
                       } else {
                         const currentPreview = useUiStore.getState().previewFile;
-                        if (!currentPreview || currentPreview.path !== '.flock/sandbox/screenshot.png') {
+                        if (!currentPreview || currentPreview.path !== screenshotPath) {
                           useUiStore.getState().setPreviewFile({
-                            path: '.flock/sandbox/screenshot.png',
+                            path: screenshotPath,
                             content: '',
                             extension: 'png',
                           });
@@ -431,9 +434,9 @@ export const useAgentStore = create<AgentStore>((set) => ({
                       }
                     } else {
                       const currentPreview = useUiStore.getState().previewFile;
-                      if (!currentPreview || currentPreview.path !== '.flock/sandbox/screenshot.png') {
+                      if (!currentPreview || currentPreview.path !== screenshotPath) {
                         useUiStore.getState().setPreviewFile({
-                          path: '.flock/sandbox/screenshot.png',
+                          path: screenshotPath,
                           content: '',
                           extension: 'png',
                         });

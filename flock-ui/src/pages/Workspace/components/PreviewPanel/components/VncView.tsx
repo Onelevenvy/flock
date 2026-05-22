@@ -10,6 +10,7 @@ import {
 import { ImageView } from '../ImageView';
 import { useAgentStore } from '../../../../../store/agentStore';
 import { useTranslation } from 'react-i18next';
+import { useWorkspaceStore } from '../../../../../store/workspaceStore';
 
 interface VncViewProps {
   formattedVncUrl: string;
@@ -261,6 +262,7 @@ export function VncView({
 }: VncViewProps) {
   const { t } = useTranslation();
   const [activeTab, setActiveTab] = useState<'screenshot' | 'vnc'>('screenshot');
+  const activeConversationId = useWorkspaceStore((s) => s.activeConversationId);
 
   const messages = useAgentStore((s) => s.messages);
   const playbackIndex = useAgentStore((s) => s.playbackIndex);
@@ -424,7 +426,7 @@ export function VncView({
             <ImageView
               absPath={isOfflineMode && screenshots.length > 0 ? screenshots[screenshots.length - 1].path : screenshotAbsPath}
               workspaceId={activeWorkspaceId}
-              relativePath={isOfflineMode && screenshots.length > 0 ? getRelativePath(screenshots[screenshots.length - 1].path) : ".flock/sandbox/screenshot.png"}
+              relativePath={isOfflineMode && screenshots.length > 0 ? getRelativePath(screenshots[screenshots.length - 1].path) : `.flock/sandbox/screenshot_${activeConversationId || 'default'}.png`}
               fileName="FLOCK COMPUTER"
               refreshKey={refreshTrigger}
             />

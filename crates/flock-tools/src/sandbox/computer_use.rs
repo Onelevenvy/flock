@@ -68,6 +68,8 @@ pub async fn computer_use(
     let db = crate::get_db_manager()
         .ok_or_else(|| "数据库管理器未初始化，无法读取沙箱配置。".to_string())?;
 
+    let session_id = flock_core::get_current_session_id();
+
     // 生成唯一的截图标识
     let now_ms = std::time::SystemTime::now()
         .duration_since(std::time::SystemTime::UNIX_EPOCH)
@@ -99,11 +101,11 @@ pub async fn computer_use(
                     if exit_code == 0 && !b64_data.is_empty() {
                         if let Ok(img_bytes) = general_purpose::STANDARD.decode(b64_data.trim()) {
                             let base_dir = crate::get_workspace_dir().unwrap_or_else(|| std::env::current_dir().unwrap_or_default());
-                            let ss_dir = base_dir.join(".flock/sandbox/screenshots");
+                            let ss_dir = base_dir.join(".flock/sandbox/screenshots").join(&session_id);
                             let ss_path = ss_dir.join(format!("{}.png", name_id));
                             let _ = std::fs::create_dir_all(&ss_dir);
                             let _ = std::fs::write(&ss_path, &img_bytes);
-                            let _ = std::fs::write(base_dir.join(".flock/sandbox/screenshot.png"), &img_bytes);
+                            let _ = std::fs::write(base_dir.join(format!(".flock/sandbox/screenshot_{}.png", session_id)), &img_bytes);
                             
                             let abs_path_str = ss_path.to_string_lossy().to_string();
                             image_md = format!("\n\n![桌面截图](file:///{})", abs_path_str);
@@ -255,13 +257,13 @@ pub async fn computer_use(
     if exit_code == 0 && !b64_data.is_empty() {
         if let Ok(img_bytes) = general_purpose::STANDARD.decode(b64_data.trim()) {
             let base_dir = crate::get_workspace_dir().unwrap_or_else(|| std::env::current_dir().unwrap_or_default());
-            let ss_dir = base_dir.join(".flock/sandbox/screenshots");
+            let ss_dir = base_dir.join(".flock/sandbox/screenshots").join(&session_id);
             let ss_path = ss_dir.join(format!("{}.png", name_id));
             if let Some(parent) = ss_path.parent() {
                 let _ = std::fs::create_dir_all(parent);
             }
             let _ = std::fs::write(&ss_path, &img_bytes);
-            let _ = std::fs::write(base_dir.join(".flock/sandbox/screenshot.png"), &img_bytes);
+            let _ = std::fs::write(base_dir.join(format!(".flock/sandbox/screenshot_{}.png", session_id)), &img_bytes);
             screenshot_saved = true;
             crate::emit_info("远程桌面最新状态已成功截取并拉回工作区预览！");
         }
@@ -276,7 +278,7 @@ pub async fn computer_use(
     };
 
     let base_dir = crate::get_workspace_dir().unwrap_or_else(|| std::env::current_dir().unwrap_or_default());
-    let abs_screenshot_path = base_dir.join(".flock/sandbox/screenshots").join(format!("{}.png", name_id));
+    let abs_screenshot_path = base_dir.join(".flock/sandbox/screenshots").join(&session_id).join(format!("{}.png", name_id));
     let abs_path_str = abs_screenshot_path.to_string_lossy().to_string();
 
     let image_md = if screenshot_saved {

@@ -17,7 +17,10 @@ pub async fn run_session_actor(
         match cmd {
             SessionCommand::SendMessage { msg_id, content } => {
                 is_running.store(true, Ordering::SeqCst);
-                let run_result = engine.run(&content, &msg_id).await;
+                let session_id_clone = session_id.clone();
+                let run_result = flock_core::CURRENT_SESSION_ID.scope(session_id_clone, async {
+                    engine.run(&content, &msg_id).await
+                }).await;
                 if let Err(err) = run_result {
                     if matches!(err, flock_agent::engine::AgentError::UserAborted) {
                         log::info!("Agent run for session {} aborted by user.", session_id);
