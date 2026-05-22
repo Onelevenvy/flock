@@ -33,6 +33,8 @@
     "btnApproveOnce": "Yes, allow once",
     "btnApproveAlways": "Yes, always allow",
     "btnDeny": "No, deny",
+    "btnDenyWithFeedback": "No, deny with feedback",
+    "feedbackPlaceholder": "Enter feedback or reason for rejection (Enter to deny)...",
     "riskRead": "Read-only",
     "riskWrite": "Modify files",
     "riskExec": "Execute commands, caution",

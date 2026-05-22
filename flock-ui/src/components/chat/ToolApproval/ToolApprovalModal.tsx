@@ -10,6 +10,7 @@ import {
   ScrollArea,
   ThemeIcon,
   Box,
+  Textarea,
 } from '@mantine/core';
 import {
   IconEye,
@@ -65,6 +66,11 @@ export function ToolApprovalModal({ approval }: ToolApprovalModalProps) {
   const removePendingApproval = useAgentStore((s) => s.removePendingApproval);
   const theme = useUiStore((s) => s.theme);
   const isDark = theme === 'dark';
+  const [feedback, setFeedback] = React.useState('');
+
+  React.useEffect(() => {
+    setFeedback('');
+  }, [approval?.call_id]);
 
   if (!approval) return null;
 
@@ -79,8 +85,9 @@ export function ToolApprovalModal({ approval }: ToolApprovalModalProps) {
   };
 
   const handleDeny = async () => {
+    const reason = feedback.trim() || 'User denied';
     removePendingApproval(call_id);
-    await invoke('deny_tool', { callId: call_id, reason: 'User denied' });
+    await invoke('deny_tool', { callId: call_id, reason });
   };
 
   return (
@@ -158,6 +165,32 @@ export function ToolApprovalModal({ approval }: ToolApprovalModalProps) {
           </ScrollArea.Autosize>
         </Stack>
 
+        {/* 反馈输入框 */}
+        <Stack gap="4">
+          <Textarea
+            placeholder={t('chat.approval.feedbackPlaceholder')}
+            value={feedback}
+            onChange={(e) => setFeedback(e.currentTarget.value)}
+            minRows={2}
+            maxRows={4}
+            autosize
+            styles={{
+              input: {
+                fontSize: '12px',
+                backgroundColor: 'var(--flock-bg-deepest)',
+                border: '1px solid var(--flock-border-dim)',
+                color: 'var(--flock-text-primary)',
+              },
+            }}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) {
+                e.preventDefault();
+                handleDeny();
+              }
+            }}
+          />
+        </Stack>
+
         {/* 操作按钮 */}
         <Group justify="flex-end" gap="sm" mt="xs">
           <Button
@@ -166,7 +199,7 @@ export function ToolApprovalModal({ approval }: ToolApprovalModalProps) {
             leftSection={<IconX size={16} />}
             onClick={handleDeny}
           >
-            {t('chat.approval.deny')}
+            {feedback.trim() ? t('chat.approval.btnDenyWithFeedback') : t('chat.approval.deny')}
           </Button>
           <Button
             variant="light"

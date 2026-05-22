@@ -18,12 +18,16 @@ A multi AI agent desktop application built with Rust and Tauri.
 
 ## Overview
 
-Flock is a desktop application that provides an interactive interface for AI agents with tool orchestration capabilities. It supports multiple LLM providers and features a rich set of built-in tools, skills system, and memory management.
+Flock is a desktop application that provides an interactive interface for AI agents with tool orchestration, sandbox execution, visual workflow, and browser/computer-use capabilities. It supports multiple LLM providers and features a rich set of built-in tools, skills system, and memory management.
 
 ## Features
 
 - **Multi-Provider Support**: OpenAI-compatible, Anthropic, AWS Bedrock, Google Vertex
 - **Tool Orchestration**: Built-in tools (Read, Write, Edit, Bash, Grep, Glob) + MCP server integration
+- **Sandbox Execution**: Cloud-based sandbox containers for isolated code execution, with VNC desktop streaming and human takeover
+- **Visual Workflow**: ReactFlow-based workflow builder with 10 node types, conditional routing, and streaming execution with human-in-the-loop
+- **Browser Tools**: Playwright-based web automation inside the sandbox — navigate, click, fill forms, with captcha detection and human takeover
+- **Computer Use**: xdotool-based GUI automation — mouse, keyboard, screenshots, with full visual feedback loop
 - **Skills System**: Reusable prompt templates with YAML frontmatter, hot-reload support
 - **Memory System**: Persistent cross-session memory (user, feedback, project, reference types)
 - **Session Management**: Conversation history with SQLite-backed persistence
@@ -37,8 +41,8 @@ Flock is a desktop application that provides an interactive interface for AI age
 | Crate | Purpose |
 |-------|---------|
 | `flock-core` | Core types, configuration, database, IPC interface, cryptography |
-| `flock-agent` | Agent engine, session management, tool execution, memory, graph orchestration |
-| `flock-tools` | Tool registry, built-in tools, MCP integration, math/weather tools |
+| `flock-agent` | Agent engine, session management, tool execution, memory, graph orchestration, workflow engine |
+| `flock-tools` | Tool registry, built-in tools, MCP integration, sandbox tools  |
 | `flock-skills` | Skill discovery, loading, frontmatter parsing, hooks, permissions |
 | `flock-ui/src-tauri` | Tauri desktop app backend |
 
@@ -61,7 +65,7 @@ Flock is a desktop application that provides an interactive interface for AI age
 
 #### Dependencies
 
-This project relies on [langgraph-rs](https://github.com/Onelevenvy/langgraph-rs), which is automatically resolved as a Git dependency in `Cargo.toml`.
+This project relies on [langgraph-rust](https://github.com/Onelevenvy/langgraph-rust), which is automatically resolved as a Git dependency in `Cargo.toml`.
 
 ### Build & Run
 
@@ -111,11 +115,12 @@ While langgraph-rust is not the official LangGraph Rust implementation, it provi
 
 ## Roadmap
 
+- [x] **Sandbox**: Cloud-based isolated execution environment (Daytona) with VNC desktop and human takeover
 - [ ] **Workflow**: Visual workflow builder for complex agent orchestration
-- [ ] **Multi-Agent**: Support for multiple agents collaborating on tasks
+- [x] **Browser Tools**: Playwright-based web automation with captcha detection and human takeover
+- [x] **Computer Use**: xdotool-based GUI automation with visual feedback loop
 - [x] **Scheduled Tasks**: Automated task execution with cron-like scheduling
-- [ ] **Sandbox**: Isolated execution environment for code and commands
-- [ ] **Browser Tools**: Web browsing and interaction capabilities for agents
+- [ ] **Multi-Agent**: Support for multiple agents collaborating on tasks
 - [ ] **Extensions**: Integration with Claude Code, OpenCode, OpenClaw, Hermes, and other third-party agents
 
 ## License

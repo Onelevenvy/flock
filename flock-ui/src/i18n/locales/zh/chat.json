@@ -32,6 +32,8 @@
     "btnApproveOnce": "是，允许一次",
     "btnApproveAlways": "是，始终允许",
     "btnDeny": "否，拒绝",
+    "btnDenyWithFeedback": "否，拒绝并反馈",
+    "feedbackPlaceholder": "输入修改建议或拒绝原因（回车确认）...",
     "riskRead": "只读操作",
     "riskWrite": "修改文件",
     "riskExec": "执行命令，请谨慎",

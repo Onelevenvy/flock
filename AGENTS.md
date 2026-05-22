@@ -1,10 +1,10 @@
 # AGENTS.md
 
-This file provides guidance to Codex (Codex.ai/code) when working with code in this repository.
+This file provides guidance to CodeX when working with code in this repository.
 
 ## Project Overview
 
-Flock is a multi-provider AI agent CLI with tool orchestration support. It's a Rust workspace with a Tauri-based desktop UI (React + TypeScript + Mantine).
+Flock is a multi-provider AI agent desktop application with tool orchestration, sandbox execution, visual workflow, and browser/computer-use capabilities. It's a Rust workspace with a Tauri-based desktop UI (React + TypeScript + Mantine).
 
 ## Build & Development Commands
 
@@ -66,18 +66,20 @@ npm run lint
 | Crate | Purpose |
 |-------|---------|
 | `flock-core` | Core types, config, database, IPC interface, crypto, model factory |
-| `flock-agent` | Agent engine, session management, tool execution, memory, graph orchestration |
-| `flock-tools` | Tool registry, built-in tools (Read/Write/Edit/Bash/Grep/Glob), MCP integration, math/weather tools |
+| `flock-agent` | Agent engine, session management, tool execution, memory, graph orchestration, workflow engine |
+| `flock-tools` | Tool registry, built-in tools (Read/Write/Edit/Bash/Grep/Glob), MCP integration, sandbox tools (CodeExecution, SandboxExec, Browser, ComputerUse) |
 | `flock-skills` | Skill discovery, loading, frontmatter parsing, hooks, permissions, bundled skills |
 | `flock-ui/src-tauri` | Tauri desktop app backend (commands, agent state, workspace management) |
 | `workspace-hack` | cargo-hakari build optimization |
 
 ### Key Dependencies
 
-- **LangGraph**: Local Rust reimplementation (`../langgraph-rust/`) for agent graph orchestration
+- **LangGraph**: Rust reimplementation ([langgraph-rust](https://github.com/Onelevenvy/langgraph-rust)) for agent graph orchestration
 - **LLM Providers**: OpenAI-compatible (default), Anthropic, AWS Bedrock, Google Vertex
-- **Database**: SQLite via sqlx for sessions, conversations, providers, tools, MCP servers
+- **Database**: SQLite via sqlx for sessions, conversations, providers, tools, MCP servers, workflows
 - **Async Runtime**: Tokio
+- **Sandbox**: Daytona cloud container runtime for isolated code execution
+- **Browser Automation**: Playwright (Python, runs inside sandbox via CDP)
 
 ### Core Architecture Patterns
 
@@ -91,7 +93,20 @@ npm run lint
 - `Tool` trait defines the interface: `name()`, `description()`, `input_schema()`, `execute()`
 - `ToolRegistry` manages all registered tools
 - Built-in tools: Read, Write, Edit, Bash, Grep, Glob
+- Sandbox tools: CodeExecution, SandboxExec, Browser, ComputerUse, RequestHumanAssistance
 - Extensible via MCP servers and custom tool providers
+
+**Workflow Engine** (`flock-agent/src/workflow_graph/`):
+- Visual workflow builder with ReactFlow canvas
+- 10 node types: start, llm, agent, classifier, ifelse, answer, code, human, plugin, parameter_extractor
+- `build_workflow_graph()` compiles ReactFlow JSON into LangGraph `StateGraph`
+- Streaming execution with human-in-the-loop interrupts
+
+**Sandbox System** (`flock-tools/src/daytona/`):
+- Cloud-based Daytona container runtime for isolated execution
+- VNC desktop provisioning (Xvfb, fluxbox, x11vnc, websockify)
+- Lifecycle management: create, destroy, set-public, snapshot
+- Human takeover via VNC with approval flow
 
 **Skills System** (`flock-skills/`):
 - Markdown files with YAML frontmatter in `.flock/skills/`
@@ -123,18 +138,21 @@ npm run lint
 - React Query (server state)
 - react-markdown + react-syntax-highlighter (message rendering)
 - i18next (internationalization)
+- ReactFlow (workflow visual editor)
 
 **State Stores** (`flock-ui/src/store/`):
 - `agentStore`: Agent connection status, messages, pending approvals
 - `uiStore`: Theme, sidebar state, active view, file tree
 - `workspaceStore`: Active workspace/conversation, persisted to localStorage
+- `workflowStore`: ReactFlow nodes/edges, execution state, dirty tracking
 
 **Key Views**:
 - `HomeView`: Welcome screen, assistant selection, workspace picker
-- `WorkspaceView`: Chat panel + file tree + optional preview panel
+- `WorkspaceView`: Chat panel + file tree + optional preview panel (VNC, sandbox runner)
+- `WorkflowEditor`: Visual workflow builder with ReactFlow canvas, node palette, properties panel, execution panel
 - `AssistantPage`: CRUD for custom assistants
 - `SkillsPage`: Tools, MCP servers, and skills management
-- `SettingsModal`: Model providers, basic settings, system settings
+- `SettingsModal`: Model providers, basic settings, sandbox settings, system settings
 
 **Tauri Commands** (`flock-ui/src-tauri/src/commands/`):
 - Agent control: `start_agent`, `stop_agent`, `send_message`, `approve_tool`, `deny_tool`
@@ -143,6 +161,7 @@ npm run lint
 - Database: `list_providers`, `upsert_provider`, `list_models`, `upsert_model`
 - MCP: `list_mcp_servers`, `upsert_mcp_server`, `test_mcp_server`
 - Skills: `list_skills`, `get_extra_skill_dirs`, `add_extra_skill_dir`
+- Workflow: `list_workflows`, `get_workflow`, `create_workflow`, `update_workflow`, `delete_workflow`, `run_workflow`, `stop_workflow`
 
 ### Data Flow
 
@@ -172,5 +191,3 @@ When modifying the codebase or interacting with the user, please strictly adhere
 3. **Strict i18n Internationalization**: All newly introduced UI components must leverage `i18next` for user-facing texts (e.g. tooltips, titles, toast notifications, confirm boxes). Do not hardcode Chinese or English strings inside JSX.
 4. **Component Granularity**: Strive for modularity. Always split large layout or page files into focused, localized sub-components (placed in a nested `/components` folder). Avoid keeping all view code inside single massive `index.tsx` files.
 5. **UI Specification Compliance**: Ensure any new styling aligns with the design tokens defined in `docs/resources/ui_specification.md` (e.g. cold gray colors, `--flock-accent` solid blue branding, standard monospace typographies, and hover-card transitions) in both dark and light modes.
-
-
