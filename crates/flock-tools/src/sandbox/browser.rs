@@ -36,6 +36,13 @@ pub async fn browser(
 
     let act = action.unwrap_or_else(|| "goto".to_string());
     
+    // 生成唯一的截图标识
+    let now_ms = std::time::SystemTime::now()
+        .duration_since(std::time::SystemTime::UNIX_EPOCH)
+        .unwrap_or_default()
+        .as_millis();
+    let name_id = call_id.clone().unwrap_or_else(|| now_ms.to_string());
+    
     // 如果是 interactive 人工接管模式，我们直接返回远程桌面的 noVNC 代理链接，让前端渲染
     if act == "interactive" {
         let proxy_url = match crate::daytona::get_sandbox_vnc_url(&db, &sandbox_id).await {
@@ -54,39 +61,180 @@ pub async fn browser(
         // 调用统一的自愈拉起函数，确保 Xvfb, fluxbox, x11vnc, websockify 在 0.0.0.0 运行且 setsid 保活
         let _ = ensure_vnc_running_in_sandbox(&db, &sandbox_id).await;
 
-        // 主动在 VNC 桌面的 DISPLAY :0 中启动浏览器访问指定的 URL
-        crate::emit_info(&format!("正在远程桌面中打开网页: {}...", url));
-        let launch_browser_cmd = format!(
-            "sh -c '\
-             export DISPLAY=:0 && \
-             if command -v chromium >/dev/null 2>&1; then \
-                 setsid nohup chromium --no-sandbox --disable-gpu --disable-software-rasterizer \"{url}\" >/tmp/chromium.log 2>&1 & \
-             elif command -v chromium-browser >/dev/null 2>&1; then \
-                 setsid nohup chromium-browser --no-sandbox --disable-gpu --disable-software-rasterizer \"{url}\" >/tmp/chromium.log 2>&1 & \
-             elif command -v google-chrome >/dev/null 2>&1; then \
-                 setsid nohup google-chrome --no-sandbox --disable-gpu \"{url}\" >/tmp/chromium.log 2>&1 & \
-             fi'",
-            url = url.replace("'", "'\\''")
-        );
+        // 确保有头 Chromium 已拉起且开启了 CDP 调试端口 9222
+        crate::emit_info("正在远程桌面中初始化开启远程调试 (9222) 的浏览器...");
+        let check_and_start_cmd = "export DISPLAY=:0 && \
+            if ! python3 -c 'import socket; s = socket.socket(); s.connect((\"127.0.0.1\", 9222))' >/dev/null 2>&1; then \
+                echo 'Starting chromium exposing 9222 debugger port on DISPLAY=:0...' && \
+                if command -v chromium >/dev/null 2>&1; then \
+                    setsid nohup chromium --no-sandbox --remote-debugging-port=9222 --disable-gpu --disable-software-rasterizer >/tmp/interactive_chrome.log 2>&1 & \
+                elif command -v chromium-browser >/dev/null 2>&1; then \
+                    setsid nohup chromium-browser --no-sandbox --remote-debugging-port=9222 --disable-gpu --disable-software-rasterizer >/tmp/interactive_chrome.log 2>&1 & \
+                elif command -v google-chrome >/dev/null 2>&1; then \
+                    setsid nohup google-chrome --no-sandbox --remote-debugging-port=9222 --disable-gpu >/tmp/interactive_chrome.log 2>&1 & \
+                fi && \
+                sleep 3; \
+            fi";
+        let _ = execute_command_in_sandbox(&db, &sandbox_id, check_and_start_cmd).await;
+
+        // 运行网页分析脚本，并自动跳转
+        crate::emit_info(&format!("正在远程浏览器中打开网页并分析安全要素: {}...", url));
+        let py_check_script = format!(
+            r#"
+import sys
+import json
+import base64
+from playwright.sync_api import sync_playwright
+
+try:
+    with sync_playwright() as p:
+        browser = p.chromium.connect_over_cdp("http://127.0.0.1:9222")
+        context = browser.contexts[0]
+        active_page = None
+        if context.pages:
+            for p_candidate in reversed(context.pages):
+                if p_candidate.url and p_candidate.url != "about:blank":
+                    active_page = p_candidate
+                    break
+        page = active_page if active_page else (context.pages[0] if context.pages else context.new_page())
         
-        let db_clone = db.clone();
-        let sandbox_id_clone = sandbox_id.clone();
-        tokio::spawn(async move {
-            let _ = execute_command_in_sandbox(&db_clone, &sandbox_id_clone, &launch_browser_cmd).await;
-        });
-
-        let res_msg = format!(
-            "人机协同远程桌面已拉起！您可以在右侧工作区预览区直接控制远程浏览器，或使用以下链接访问：\n\n[Remote VNC Link]({})\n\n💡 **重要安全提示**：由于云端代理没有内置您的局域网泛域名证书，若右侧预览窗口显示“空白”或“您的连接不是专用连接”报错，**请务必点击上方 [Remote VNC Link]({}) 链接**，在新开的标签页中点击 **“高级”** -> **“继续前往/忽略警告”** 授权信任，然后返回本界面刷新即可完美进行控制！",
-            proxy_url, proxy_url
+        try:
+            page.goto("{url}", wait_until="domcontentloaded", timeout=15000)
+            page.wait_for_timeout(3000)
+        except Exception as e:
+            print(f"GOTO_WARNING: {{e}}", file=sys.stderr)
+            
+        captcha_selectors = [
+            'iframe[src*="recaptcha"]',
+            'iframe[src*="hcaptcha"]',
+            'iframe[src*="turnstile"]',
+            'div[class*="geetest"]',
+            'div[id*="geetest"]',
+            'div[class*="captcha"]',
+            'div[id*="captcha"]',
+            'iframe[src*="captcha"]',
+            'div[id*="cf-turnstile"]',
+            'div[class*="cf-turnstile"]'
+        ]
+        
+        has_password = page.locator('input[type="password"]').count() > 0
+        has_captcha = False
+        for sel in captcha_selectors:
+            try:
+                if page.locator(sel).count() > 0:
+                    has_captcha = True
+                    break
+            except Exception:
+                pass
+                
+        # 深度敏感校验字扫描：处理未处于活跃 Tab 的密码框与未弹出的风控滑块
+        page_text = page.evaluate("() => document.body.innerText || ''").lower()
+        url_lower = page.url.lower()
+        
+        is_sensitive_login = "密码" in page_text or "password" in page_text or "signin" in url_lower or "login" in url_lower
+        is_sensitive_captcha = any(kw in page_text for kw in ["验证码", "captcha", "slider", "滑块", "点击验证", "验证", "安全校验", "verify"])
+        
+        need_takeover = has_password or has_captcha or (is_sensitive_login and ("登录" in page_text or "signin" in page_text or "login" in page_text)) or is_sensitive_captcha
+        print("CHECK_RESULT:" + json.dumps({{"
+            "need_takeover": need_takeover,
+            "has_password": has_password,
+            "has_captcha": has_captcha
+        }}))
+        
+        try:
+            screenshot_bytes = page.screenshot(timeout=5000)
+            print("SCREENSHOT_B64_START")
+            print(base64.b64encode(screenshot_bytes).decode('utf-8'))
+            print("SCREENSHOT_B64_END")
+        except Exception as e:
+            print(f"SCREENSHOT_ERROR: {{e}}", file=sys.stderr)
+            
+except Exception as e:
+    print(f"FATAL_ERROR: {{e}}", file=sys.stderr)
+    sys.exit(1)
+sys.exit(0)
+"#,
+            url = url.replace("\"", "\\\"")
         );
 
-        // 如果有 call_id 并且能拿到全局 approval_manager，我们向前端发送需要人工接管事件，并进行异步挂起
-        if let (Some(cid), Some(mid), Some(app_mgr)) = (call_id, msg_id, crate::get_global_approval_manager()) {
-            crate::emit_info(&format!("正在通知前端拉起人工接管横幅 (Call ID: {})...", cid));
+        let b64_script = general_purpose::STANDARD.encode(py_check_script.as_bytes());
+        let run_check_cmd = format!(
+            "export PLAYWRIGHT_BROWSERS_PATH=/opt/playwright-browsers && \
+             export DISPLAY=:0 && \
+             mkdir -p /tmp && echo '{}' | base64 -d > /tmp/run_interactive.py && \
+             if ! python3 -c 'import playwright' >/dev/null 2>&1; then \
+                 echo 'Installing playwright...' && \
+                 python3 -m pip install --break-system-packages playwright && \
+                 python3 -m playwright install chromium && \
+                 python3 -m playwright install-deps chromium; \
+             fi; \
+             python3 /tmp/run_interactive.py",
+            b64_script
+        );
+
+        let (stdout_stderr, exit_code) = execute_command_in_sandbox(&db, &sandbox_id, &run_check_cmd).await
+            .map_err(|e| format!("网页分析执行出错: {}", e))?;
+
+        let mut need_takeover = false;
+        let mut has_password = false;
+        let mut has_captcha = false;
+
+        for line in stdout_stderr.lines() {
+            if let Some(stripped) = line.strip_prefix("CHECK_RESULT:") {
+                if let Ok(val) = serde_json::from_str::<serde_json::Value>(stripped) {
+                    need_takeover = val.get("need_takeover").and_then(|v| v.as_bool()).unwrap_or(false);
+                    has_password = val.get("has_password").and_then(|v| v.as_bool()).unwrap_or(false);
+                    has_captcha = val.get("has_captcha").and_then(|v| v.as_bool()).unwrap_or(false);
+                }
+            }
+        }
+
+        // 保存网页截图
+        let start_marker = "SCREENSHOT_B64_START";
+        let end_marker = "SCREENSHOT_B64_END";
+        let mut screenshot_saved = false;
+
+        if let Some(start_idx) = stdout_stderr.find(start_marker) {
+            if let Some(end_idx) = stdout_stderr.find(end_marker) {
+                let b64_data = &stdout_stderr[start_idx + start_marker.len()..end_idx].trim();
+                if let Ok(img_bytes) = general_purpose::STANDARD.decode(b64_data) {
+                    let ss_path = Path::new(".flock/sandbox/screenshots").join(format!("{}.png", name_id));
+                    if let Some(parent) = ss_path.parent() {
+                        let _ = std::fs::create_dir_all(parent);
+                    }
+                    let _ = std::fs::write(&ss_path, &img_bytes);
+                    screenshot_saved = true;
+                    // 同时保留一份覆盖的 screenshot.png 兼容以前的设计
+                    let _ = std::fs::write(".flock/sandbox/screenshot.png", &img_bytes);
+                }
+            }
+        }
+
+        let current_dir = std::env::current_dir().unwrap_or_default();
+        let abs_screenshot_path = current_dir.join(".flock/sandbox/screenshots").join(format!("{}.png", name_id));
+        let abs_path_str = abs_screenshot_path.to_string_lossy().to_string();
+
+        let image_md = if screenshot_saved {
+            format!("\n\n网页截图已完美捕获，您可以在右侧预览面板或下方查看历史记录回放：\n\n![网页截图](file:///{})", abs_path_str)
+        } else {
+            String::new()
+        };
+
+        if !need_takeover {
+            crate::emit_info("网页分析完毕：未检测到输入密码、验证码等敏感校验元素。自动跳过人机接管。");
+            return Ok(format!(
+                "人机协同远程桌面已拉起！网页分析完成：未检测到输入密码 (has_password: {})、验证码 (has_captcha: {}) 等敏感验证元素。**为了提高大模型执行效率，已自动跳过人工接管，Agent 继续流式自动运转。**{}\n\n[Remote VNC Link]({})",
+                has_password, has_captcha, image_md, proxy_url
+            ));
+        }
+
+        // 如果检测到了敏感元素，并且有 call_id 且能拿到全局 approval_manager，进行挂起
+        if let (Some(cid), Some(mid), Some(app_mgr)) = (call_id.clone(), msg_id, crate::get_global_approval_manager()) {
+            crate::emit_info(&format!("检测到敏感网页元素（密码输入框/验证码），正在通知前端拉起人工接管横幅 (Call ID: {})...", cid));
             crate::daytona::emit_human_takeover(
                 &cid,
                 &mid,
-                "人机协同远程桌面已拉起！由于当前操作需要人工介入（如输入密码、手动验证码、安全登录等），大模型自动执行已暂停。您可以在右侧预览面板中直接操作页面。完成后请点击横幅上的【我已完成操作】按钮以恢复大模型的自动运行。",
+                "人机协同远程桌面已拉起！检测到当前操作需要人工介入（如输入密码、手动验证码、安全登录等），大模型自动执行已暂停。您可以在右侧预览面板中直接操作页面。完成后请点击横幅上的【我已完成操作】按钮以恢复大模型的自动运行。",
                 Some(proxy_url.clone()),
             );
 
@@ -95,7 +243,10 @@ pub async fn browser(
             match rx.await {
                 Ok(flock_core::ipc_interface::approval::ToolApprovalResult::Approved) => {
                     crate::emit_info("收到前端已完成操作指令，正在恢复 Agent 自动执行。");
-                    return Ok("人工接管操作已顺利完成，用户已确认！Agent 已经成功从暂停点恢复，并继续自动执行后续流程。".to_string());
+                    return Ok(format!(
+                        "人工接管操作已顺利完成，用户已确认！Agent 已经成功从暂停点恢复，并继续自动执行后续流程。{}",
+                        image_md
+                    ));
                 }
                 Ok(flock_core::ipc_interface::approval::ToolApprovalResult::Denied { reason }) => {
                     crate::emit_info(&format!("人工接管被用户取消: {}", reason));
@@ -107,7 +258,10 @@ pub async fn browser(
             }
         }
 
-        return Ok(res_msg);
+        return Ok(format!(
+            "人机协同远程桌面已拉起！由于当前操作需要人工介入（如输入密码、手动验证码、安全登录等），大模型自动执行已暂停。请在右侧预览区进行控制操作。\n\n[Remote VNC Link]({}){}",
+            proxy_url, image_md
+        ));
     }
 
     // 2. 生成 Python Playwright 自动安装并执行截图的脚本
@@ -130,10 +284,16 @@ try:
             browser = p.chromium.connect_over_cdp("http://127.0.0.1:9222")
             is_cdp = True
             context = browser.contexts[0]
-            page = context.pages[0] if context.pages else context.new_page()
+            active_page = None
+            if context.pages:
+                for p_candidate in reversed(context.pages):
+                    if p_candidate.url and p_candidate.url != "about:blank":
+                        active_page = p_candidate
+                        break
+            page = active_page if active_page else (context.pages[0] if context.pages else context.new_page())
         except Exception as e:
             print(f"CDP_CONNECT_WARNING: {{e}}", file=sys.stderr)
-            browser = p.chromium.launch(headless=True, args=["--no-sandbox", "--disable-setuid-sandbox"])
+            browser = p.chromium.launch(headless=False, args=["--no-sandbox", "--disable-setuid-sandbox"])
             page = browser.new_page()
 
         action = "{act}"
@@ -194,20 +354,24 @@ sys.exit(0)
         text_val = text_val.replace("\"", "\\\"")
     );
 
+    // 确保 VNC 桌面服务在沙盒中同步先拉起，保证 headful 浏览器启动有 X 桌面环境
+    let _ = ensure_vnc_running_in_sandbox(&db, &sandbox_id).await;
+
     let b64_script = general_purpose::STANDARD.encode(py_script.as_bytes());
     let run_cmd = format!(
         "export PLAYWRIGHT_BROWSERS_PATH=/opt/playwright-browsers && \
+         export DISPLAY=:0 && \
          mkdir -p /tmp && echo '{}' | base64 -d > /tmp/run_browser.py && \
          if ! python3 -c 'import socket; s = socket.socket(); s.connect((\"127.0.0.1\", 9222))' >/dev/null 2>&1; then \
-             echo 'Starting headless chromium with remote debugging...' && \
+             echo 'Starting headful chromium with remote debugging on DISPLAY=:0...' && \
              if command -v chromium >/dev/null 2>&1; then \
-                 setsid nohup chromium --no-sandbox --remote-debugging-port=9222 --headless=new --disable-gpu --disable-software-rasterizer >/tmp/headless_chrome.log 2>&1 & \
+                 setsid nohup chromium --no-sandbox --remote-debugging-port=9222 --disable-gpu --disable-software-rasterizer >/tmp/headless_chrome.log 2>&1 & \
              elif command -v chromium-browser >/dev/null 2>&1; then \
-                 setsid nohup chromium-browser --no-sandbox --remote-debugging-port=9222 --headless=new --disable-gpu --disable-software-rasterizer >/tmp/headless_chrome.log 2>&1 & \
+                 setsid nohup chromium-browser --no-sandbox --remote-debugging-port=9222 --disable-gpu --disable-software-rasterizer >/tmp/headless_chrome.log 2>&1 & \
              elif command -v google-chrome >/dev/null 2>&1; then \
-                 setsid nohup google-chrome --no-sandbox --remote-debugging-port=9222 --headless=new --disable-gpu >/tmp/headless_chrome.log 2>&1 & \
+                 setsid nohup google-chrome --no-sandbox --remote-debugging-port=9222 --disable-gpu >/tmp/headless_chrome.log 2>&1 & \
              fi && \
-             sleep 2; \
+             sleep 3; \
          fi; \
          if ! python3 -c 'import playwright' >/dev/null 2>&1; then \
              echo 'Installing playwright...' && \
@@ -228,20 +392,23 @@ sys.exit(0)
         return Err(format!("沙箱浏览器执行失败: {}", stdout_stderr));
     }
 
-    // 3. 从 stdout 解析 Base64 图片数据并保存至本地 `.flock/sandbox/screenshot.png`
+    // 3. 从 stdout 解析 Base64 图片数据并保存至本地 `.flock/sandbox/screenshots/{name_id}.png`
     let start_marker = "SCREENSHOT_B64_START";
     let end_marker = "SCREENSHOT_B64_END";
+    let mut screenshot_saved = false;
 
     if let Some(start_idx) = stdout_stderr.find(start_marker) {
         if let Some(end_idx) = stdout_stderr.find(end_marker) {
             let b64_data = &stdout_stderr[start_idx + start_marker.len()..end_idx].trim();
             if let Ok(img_bytes) = general_purpose::STANDARD.decode(b64_data) {
-                let ss_path = Path::new(".flock/sandbox/screenshot.png");
+                let ss_path = Path::new(".flock/sandbox/screenshots").join(format!("{}.png", name_id));
                 if let Some(parent) = ss_path.parent() {
                     let _ = std::fs::create_dir_all(parent);
                 }
-                let _ = std::fs::write(ss_path, img_bytes);
-                crate::emit_info("网页截图已成功保存至工作区，正在渲染预览...");
+                let _ = std::fs::write(&ss_path, &img_bytes);
+                let _ = std::fs::write(".flock/sandbox/screenshot.png", &img_bytes);
+                screenshot_saved = true;
+                crate::emit_info("网页截图已成功保存至工作区，已生成步骤快照。");
             }
         }
     }
@@ -254,18 +421,19 @@ sys.exit(0)
         }
     }
 
-    // 后台异步启动 VNC 服务（不阻塞主流程），使 noVNC 标签可正常连接
-    {
-        let db_bg = db.clone();
-        let sb_bg = sandbox_id.clone();
-        tokio::spawn(async move {
-            let _ = ensure_vnc_running_in_sandbox(&db_bg, &sb_bg).await;
-        });
-    }
+    let current_dir = std::env::current_dir().unwrap_or_default();
+    let abs_screenshot_path = current_dir.join(".flock/sandbox/screenshots").join(format!("{}.png", name_id));
+    let abs_path_str = abs_screenshot_path.to_string_lossy().to_string();
+
+    let image_md = if screenshot_saved {
+        format!("\n\n![网页截图](file:///{})", abs_path_str)
+    } else {
+        String::new()
+    };
 
     Ok(format!(
-        "已成功打开并渲染网页 [{}](url)\n标题: {}\n操作类型: {}\n网页截图已拉回至工作区并显示在右侧预览区。",
-        url, page_title, act
+        "已成功打开并渲染网页 [{}](url)\n标题: {}\n操作类型: {}\n网页截图已成功捕获并完美存入步骤记录中。{}",
+        url, page_title, act, image_md
     ))
 }
 

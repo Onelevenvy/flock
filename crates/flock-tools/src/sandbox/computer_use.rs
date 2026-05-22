@@ -15,6 +15,11 @@ use base64::{Engine as _, engine::general_purpose};
 /// - Use this tool for GUI desktop automation (clicks, keyboard input, drag-and-drop) or direct shell command execution in the sandbox.
 /// - **IMPORTANT**: For file system operations (mkdir, rm, ls, etc.), always prefer the `exec` action or the `CodeExecution` tool.
 ///   Example: `action="exec", command="mkdir /home/daytona/my_folder"` to create a directory.
+/// - **MANUAL CONTROL & TERMINAL GUIDE**:
+///   If the user asks to "open console", "open terminal", "manual control", "human control", or "interact directly", 
+///   NEVER use non-existent actions like "interactive". 
+///   Instead, use `action="exec"` with `command="export DISPLAY=:0 && setsid sh -c 'if command -v lxterminal >/dev/null 2>&1; then lxterminal; elif command -v xterm >/dev/null 2>&1; then xterm; else sudo apt-get update && sudo apt-get install -y xterm && xterm; fi' &"` 
+///   to launch an interactive shell terminal in the VNC desktop environment so the user can interact.
 /// - For GUI interactions, controls mouse/keyboard via xdotool and captures screenshots with scrot.
 /// - Writes the screenshot to `.flock/sandbox/screenshot.png`.
 ///
@@ -45,9 +50,18 @@ pub async fn computer_use(
     button: Option<String>,
     text: Option<String>,
     key: Option<String>,
+    call_id: Option<String>,
+    msg_id: Option<String>,
 ) -> Result<String, String> {
     let db = crate::get_db_manager()
         .ok_or_else(|| "数据库管理器未初始化，无法读取沙箱配置。".to_string())?;
+
+    // 生成唯一的截图标识
+    let now_ms = std::time::SystemTime::now()
+        .duration_since(std::time::SystemTime::UNIX_EPOCH)
+        .unwrap_or_default()
+        .as_millis();
+    let name_id = call_id.clone().unwrap_or_else(|| now_ms.to_string());
 
     // 1. 获取或创建沙盒环境
     let sandbox_id = get_or_create_active_sandbox(&db).await
@@ -194,19 +208,22 @@ pub async fn computer_use(
         }
     }
 
-    // 4. 所有操作完成后，自动截取一张当前桌面的最新图片，并保存至 `.flock/sandbox/screenshot.png` 供前端渲染
+    // 4. 所有操作完成后，自动截取一张当前桌面的最新图片，并保存至 `.flock/sandbox/screenshots/{name_id}.png` 供前端渲染
     crate::emit_info("正在捕获当前远程桌面截图并渲染预览...");
     let ss_cmd = "export DISPLAY=:0 && scrot -o /tmp/desktop_screenshot.png && cat /tmp/desktop_screenshot.png | base64 -w 0";
     let (b64_data, exit_code) = execute_command_in_sandbox(&db, &sandbox_id, ss_cmd).await
         .unwrap_or_default();
 
+    let mut screenshot_saved = false;
     if exit_code == 0 && !b64_data.is_empty() {
         if let Ok(img_bytes) = general_purpose::STANDARD.decode(b64_data.trim()) {
-            let ss_path = Path::new(".flock/sandbox/screenshot.png");
+            let ss_path = Path::new(".flock/sandbox/screenshots").join(format!("{}.png", name_id));
             if let Some(parent) = ss_path.parent() {
                 let _ = std::fs::create_dir_all(parent);
             }
-            let _ = std::fs::write(ss_path, img_bytes);
+            let _ = std::fs::write(&ss_path, &img_bytes);
+            let _ = std::fs::write(".flock/sandbox/screenshot.png", &img_bytes);
+            screenshot_saved = true;
             crate::emit_info("远程桌面最新状态已成功截取并拉回工作区预览！");
         }
     }
@@ -218,9 +235,20 @@ pub async fn computer_use(
             format!("https://6080-{}.proxy.app.daytona.io/vnc.html?autoconnect=true&resize=scale", sandbox_id)
         }
     };
+
+    let current_dir = std::env::current_dir().unwrap_or_default();
+    let abs_screenshot_path = current_dir.join(".flock/sandbox/screenshots").join(format!("{}.png", name_id));
+    let abs_path_str = abs_screenshot_path.to_string_lossy().to_string();
+
+    let image_md = if screenshot_saved {
+        format!("\n\n![桌面截图](file:///{})", abs_path_str)
+    } else {
+        String::new()
+    };
+
     let final_res = format!(
-        "{}\n\n当前桌面远程连接如下：\n\n[Remote VNC Link]({})\n\n💡 **重要安全提示**：由于云端代理没有内置您的局域网泛域名证书，若右侧预览窗口显示“空白”或“您的连接不是专用连接”报错，**请务必点击上方 [Remote VNC Link]({}) 链接**，在新开的标签页中点击 **“高级”** -> **“继续前往/忽略警告”** 授权信任，然后返回本界面刷新即可完美进行控制！",
-        result_msg, proxy_url, proxy_url
+        "{}\n\n当前桌面远程连接如下：\n\n[Remote VNC Link]({})\n\n💡 **重要安全提示**：由于云端代理没有内置您的局域网泛域名证书，若右侧预览窗口显示“空白”或“您的连接不是专用连接”报错，**请务必点击上方 [Remote VNC Link]({}) 链接**，在新开的标签页中点击 **“高级”** -> **“继续前往/忽略警告”** 授权信任，然后返回本界面刷新即可完美进行控制！{}",
+        result_msg, proxy_url, proxy_url, image_md
     );
 
     Ok(final_res)

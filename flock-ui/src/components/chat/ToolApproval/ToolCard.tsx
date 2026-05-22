@@ -27,6 +27,7 @@ import {
 } from '@tabler/icons-react';
 import { useTranslation } from 'react-i18next';
 import { ToolRequestChunk, ToolCategory } from '../../../types/protocol';
+import { MarkdownRenderer } from '../MarkdownRenderer';
 
 const CATEGORY_COLOR: Record<ToolCategory, string> = {
   info: 'blue',
@@ -129,7 +130,7 @@ export function ToolCard({ chunk }: ToolCardProps) {
               <Text size="xs" c="dimmed" mb={2}>
                 {t('chat.output')} {chunk.result_status === 'error' && <Badge color="red" size="xs">Error</Badge>}
               </Text>
-              <ScrollArea.Autosize mah={150}>
+              <ScrollArea.Autosize mah={450}>
                 <Code
                   block
                   style={{
