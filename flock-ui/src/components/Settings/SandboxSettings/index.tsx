@@ -8,6 +8,8 @@ import {
   Badge,
   Alert,
   Divider,
+  Tabs,
+  Box,
 } from '@mantine/core';
 import {
   IconShieldLock,
@@ -16,13 +18,17 @@ import {
   IconInfoCircle,
   IconPlugConnected,
   IconPlugConnectedX,
+  IconSettings,
+  IconCpu,
+  IconCamera,
 } from '@tabler/icons-react';
 import { invoke } from '@tauri-apps/api/core';
 import { notifications } from '@mantine/notifications';
 import { useTranslation } from 'react-i18next';
 import { SandboxCredentials } from './components/SandboxCredentials';
-import { SandboxSnapshotSection } from './components/SandboxSnapshotSection';
 import { SandboxActions } from './components/SandboxActions';
+import { SandboxListSection } from './components/SandboxListSection';
+import { SnapshotListSection } from './components/SnapshotListSection';
 
 interface SandboxConfig {
   enabled: boolean;
@@ -45,6 +51,7 @@ export default function SandboxSettings() {
   const [disabling, setDisabling] = useState(false);
   const [creatingSnapshot, setCreatingSnapshot] = useState(false);
   const [isAvailable, setIsAvailable] = useState(false);
+  const [activeTab, setActiveTab] = useState<string>('config');
 
   const defaultSnapshotName = 'flock-playwright';
 
@@ -71,7 +78,7 @@ export default function SandboxSettings() {
     }
   };
 
-  /** Save config helper (does NOT toggle availability) */
+  /** Save config helper */
   const saveConfig = async (overrides?: Partial<SandboxConfig>) => {
     await invoke('set_app_config', {
       key: 'sandbox',
@@ -128,6 +135,7 @@ export default function SandboxSettings() {
     try {
       await saveConfig({ enabled: false });
       setIsAvailable(false);
+      setActiveTab('config');
       notifications.show({
         title: t('settings.sandbox.disableSuccess'),
         message: t('settings.sandbox.disableSuccessMsg'),
@@ -146,19 +154,8 @@ export default function SandboxSettings() {
     }
   };
 
-  const handleCreateSnapshot = async () => {
-    if (!apiUrl.trim() || !apiKey.trim()) {
-      notifications.show({
-        title: t('common.failed'),
-        message: t('settings.sandbox.testMissingFields'),
-        color: 'yellow',
-      });
-      return;
-    }
-
-    const snapName = snapshot.trim() || defaultSnapshotName;
+  const handleCreateSnapshot = async (snapName: string) => {
     setCreatingSnapshot(true);
-
     try {
       await saveConfig();
     } catch (_) { /* ignore */ }
@@ -184,6 +181,25 @@ export default function SandboxSettings() {
       });
     } finally {
       setCreatingSnapshot(false);
+    }
+  };
+
+  const handleSetDefaultSnapshot = async (name: string) => {
+    setSnapshot(name);
+    try {
+      await saveConfig({ snapshot: name });
+      notifications.show({
+        title: t('common.success'),
+        message: t('settings.sandbox.saveDefaultSuccess', { defaultValue: '默认快照模板已更新' }),
+        color: 'teal',
+        icon: <IconCheck size={18} />,
+      });
+    } catch (e) {
+      notifications.show({
+        title: t('common.failed'),
+        message: String(e),
+        color: 'red',
+      });
     }
   };
 
@@ -233,36 +249,61 @@ export default function SandboxSettings() {
           </Alert>
         )}
 
-        <Stack gap="lg">
-          <SandboxCredentials
-            apiUrl={apiUrl}
-            apiKey={apiKey}
-            onApiUrlChange={setApiUrl}
-            onApiKeyChange={setApiKey}
-          />
+        <Tabs value={activeTab} onChange={(val) => setActiveTab(val || 'config')} variant="pills" radius="md">
+          <Tabs.List style={{ marginBottom: 20 }}>
+            <Tabs.Tab value="config" leftSection={<IconSettings size={14} />}>
+              {t('settings.sandbox.tabConfig', { defaultValue: '参数配置' })}
+            </Tabs.Tab>
+            <Tabs.Tab
+              value="instances"
+              leftSection={<IconCpu size={14} />}
+              disabled={!isAvailable}
+            >
+              {t('settings.sandbox.tabInstances', { defaultValue: '沙盒管理' })}
+            </Tabs.Tab>
+            <Tabs.Tab
+              value="snapshots"
+              leftSection={<IconCamera size={14} />}
+              disabled={!isAvailable}
+            >
+              {t('settings.sandbox.tabSnapshots', { defaultValue: '快照模板' })}
+            </Tabs.Tab>
+          </Tabs.List>
 
-          {isAvailable && (
-            <SandboxSnapshotSection
-              snapshot={snapshot}
-              onSnapshotChange={setSnapshot}
+          <Tabs.Panel value="config">
+            <Stack gap="lg">
+              <SandboxCredentials
+                apiUrl={apiUrl}
+                apiKey={apiKey}
+                onApiUrlChange={setApiUrl}
+                onApiKeyChange={setApiKey}
+              />
+              <Divider color="var(--flock-border-subtle)" mt="md" />
+              <SandboxActions
+                isAvailable={isAvailable}
+                apiUrl={apiUrl}
+                apiKey={apiKey}
+                testing={testing}
+                disabling={disabling}
+                onTestConnection={handleTestConnection}
+                onDisable={handleDisable}
+              />
+            </Stack>
+          </Tabs.Panel>
+
+          <Tabs.Panel value="instances">
+            <SandboxListSection />
+          </Tabs.Panel>
+
+          <Tabs.Panel value="snapshots">
+            <SnapshotListSection
+              currentDefaultSnapshot={snapshot}
+              onSetDefaultSnapshot={handleSetDefaultSnapshot}
               onCreateSnapshot={handleCreateSnapshot}
               creatingSnapshot={creatingSnapshot}
-              defaultSnapshotName={defaultSnapshotName}
             />
-          )}
-
-          <Divider color="var(--flock-border-subtle)" mt="md" />
-
-          <SandboxActions
-            isAvailable={isAvailable}
-            apiUrl={apiUrl}
-            apiKey={apiKey}
-            testing={testing}
-            disabling={disabling}
-            onTestConnection={handleTestConnection}
-            onDisable={handleDisable}
-          />
-        </Stack>
+          </Tabs.Panel>
+        </Tabs>
       </Card>
     </Stack>
   );

@@ -121,6 +121,10 @@ pub fn run() {
             commands::set_app_config,
             commands::test_sandbox_connection,
             commands::create_playwright_snapshot,
+            commands::list_daytona_sandboxes,
+            commands::delete_daytona_sandbox,
+            commands::list_daytona_snapshots,
+            commands::delete_daytona_snapshot,
             // 工具提供商
             commands::list_tool_providers,
             commands::list_tools,

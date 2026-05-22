@@ -17,7 +17,7 @@ import {
   IconDeviceDesktop,
   IconShieldLock,
 } from '@tabler/icons-react';
-import ModelProviderPage from './ModelProvider';
+import ModelSettings from './ModelSettings';
 import XiaofSettings from './XiaofSettings';
 import SystemSettings from './SystemSettings';
 import SandboxSettings from './SandboxSettings';
@@ -177,7 +177,7 @@ export default function SettingsModal({ opened, onClose }: Props) {
               {activeTab === 'basic' && <XiaofSettings />}
               {activeTab === 'system' && <SystemSettings />}
               {activeTab === 'sandbox' && <SandboxSettings />}
-              {activeTab === 'model' && <ModelProviderPage />}
+              {activeTab === 'model' && <ModelSettings />}
               {activeTab === 'tool' && <PlaceholderPage title={t('settings.tabs.tool')} />}
             </Box>
           </Box>
