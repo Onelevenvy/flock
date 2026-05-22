@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 import { MantineProvider, createTheme } from '@mantine/core';
 import { Notifications, notifications } from '@mantine/notifications';
 import '@mantine/core/styles.css';
@@ -45,6 +45,8 @@ function AppInner() {
   const status = useAgentStore((s) => s.status);
   const setStatus = useAgentStore((s) => s.setStatus);
   const setWorkdir = useAgentStore((s) => s.setWorkdir);
+  const messages = useAgentStore((s) => s.messages);
+  const loadHistory = useAgentStore((s) => s.loadHistory);
   const { data: workspaces = [] } = useWorkspacesQuery();
   const {
     data: conversations = [],
@@ -52,12 +54,33 @@ function AppInner() {
     isFetching: conversationsFetching,
   } = useConversationsQuery(activeWorkspaceId);
 
+  const isHistoryRestored = useRef(false);
+
   useEffect(() => {
     if (!activeConversationId || !conversationsFetched || conversationsFetching) return;
     if (!conversations.some((conv) => conv.id === activeConversationId)) {
       setActiveConversation(null);
     }
   }, [activeConversationId, conversations, conversationsFetched, conversationsFetching, setActiveConversation]);
+
+  // 当 activeConversationId 存在且有效，且尚未恢复过历史时，在应用初始化时仅加载一次历史以恢复界面状态
+  useEffect(() => {
+    if (!conversationsFetched || conversationsFetching) return;
+
+    if (activeWorkspaceId && activeConversationId && !isHistoryRestored.current) {
+      if (conversations.some((conv) => conv.id === activeConversationId)) {
+        loadHistory(activeWorkspaceId, activeConversationId);
+      }
+    }
+    isHistoryRestored.current = true;
+  }, [
+    activeWorkspaceId,
+    activeConversationId,
+    conversationsFetched,
+    conversationsFetching,
+    conversations,
+    loadHistory,
+  ]);
 
   // 全局自动连接：只要有活跃的工作空间且处于 disconnected 状态，立刻初始化 Agent
   useEffect(() => {
