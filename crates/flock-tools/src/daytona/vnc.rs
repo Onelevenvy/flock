@@ -140,16 +140,20 @@ pub async fn ensure_vnc_running_in_sandbox(db: &DbManager, sandbox_id: &str) -> 
 
     crate::emit_info("检测到 VNC 服务未运行，手动拉起 Xvfb, VNC, noVNC...");
     let launch_cmd = "sh -c '\
-        export DISPLAY=:0 && \
-        rm -f /tmp/.X0-lock && \
-        setsid nohup Xvfb :0 -screen 0 1280x1024x24 >/tmp/xvfb.log 2>&1 & \
-        sleep 1 && \
-        setsid nohup fluxbox >/tmp/fluxbox.log 2>&1 & \
-        sleep 1 && \
-        setsid nohup x11vnc -display :0 -forever -shared -nopw -rfbport 5900 >/tmp/x11vnc.log 2>&1 & \
-        sleep 1 && \
-        setsid nohup websockify --web /usr/share/novnc 0.0.0.0:6080 localhost:5900 >/tmp/websockify.log 2>&1 & \
-        sleep 1'";
+        if command -v start-vnc >/dev/null 2>&1; then \
+            start-vnc; \
+        else \
+            export DISPLAY=:0 && \
+            rm -f /tmp/.X0-lock && \
+            setsid nohup Xvfb :0 -screen 0 1280x1024x24 >/tmp/xvfb.log 2>&1 & \
+            sleep 1 && \
+            setsid nohup fluxbox >/tmp/fluxbox.log 2>&1 & \
+            sleep 1 && \
+            setsid nohup x11vnc -display :0 -forever -shared -nopw -rfbport 5900 >/tmp/x11vnc.log 2>&1 & \
+            sleep 1 && \
+            setsid nohup websockify --web /usr/share/novnc 0.0.0.0:6080 localhost:5900 >/tmp/websockify.log 2>&1 & \
+            sleep 1; \
+        fi'";
     
     let (out, code) = execute_command_in_sandbox(db, sandbox_id, launch_cmd).await?;
     if code != 0 {
