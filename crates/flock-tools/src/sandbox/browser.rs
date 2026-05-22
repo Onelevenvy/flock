@@ -1,6 +1,10 @@
 use crate::adapter::LangGraphToolAdapter;
 use crate::Tool;
-use crate::daytona::{get_or_create_active_sandbox, execute_command_in_sandbox, start_computer_use_in_sandbox, check_computer_use_status, ensure_vnc_running_in_sandbox};
+use crate::daytona::{
+    get_or_create_active_sandbox, execute_command_in_sandbox,
+    start_computer_use_in_sandbox, check_computer_use_status,
+    ensure_vnc_running_in_sandbox, DISPLAY_ID, WEBSOCKIFY_PORT
+};
 use flock_core::ipc_interface::events::ToolCategory;
 use langgraph_derive::tool;
 use std::path::Path;
@@ -49,11 +53,11 @@ pub async fn browser(
             Ok(u) => u,
             Err(e) => {
                 crate::emit_info(&format!("获取动态 VNC URL 失败: {}。使用静态备用 URL...", e));
-                format!("https://6080-{}.proxy.app.daytona.io/vnc.html?autoconnect=true&resize=scale", sandbox_id)
+                format!("https://{}-{}.proxy.app.daytona.io/vnc.html?autoconnect=true&resize=scale", WEBSOCKIFY_PORT, sandbox_id)
             }
         };
         
-        crate::emit_info("正在向云端申请启动 Daytona 桌面服务 (noVNC)...");
+        crate::emit_info("正在向云端申请启动桌面服务...");
         if let Err(e) = start_computer_use_in_sandbox(&db, &sandbox_id).await {
             crate::emit_info(&format!("启动 Daytona 桌面服务请求失败: {}。尝试备用手动方案...", e));
         }
@@ -63,9 +67,10 @@ pub async fn browser(
 
         // 确保有头 Chromium 已拉起且开启了 CDP 调试端口 9222
         crate::emit_info("正在远程桌面中初始化开启远程调试 (9222) 的浏览器...");
-        let check_and_start_cmd = "export DISPLAY=:0 && \
+        let check_and_start_cmd = format!(
+            "export DISPLAY={display} && \
             if ! python3 -c 'import socket; s = socket.socket(); s.connect((\"127.0.0.1\", 9222))' >/dev/null 2>&1; then \
-                echo 'Starting chromium exposing 9222 debugger port on DISPLAY=:0...' && \
+                echo 'Starting chromium exposing 9222 debugger port on DISPLAY={display}...' && \
                 if command -v chromium >/dev/null 2>&1; then \
                     setsid nohup chromium --no-sandbox --remote-debugging-port=9222 --disable-gpu --disable-software-rasterizer >/tmp/interactive_chrome.log 2>&1 & \
                 elif command -v chromium-browser >/dev/null 2>&1; then \
@@ -74,8 +79,10 @@ pub async fn browser(
                     setsid nohup google-chrome --no-sandbox --remote-debugging-port=9222 --disable-gpu >/tmp/interactive_chrome.log 2>&1 & \
                 fi && \
                 sleep 3; \
-            fi";
-        let _ = execute_command_in_sandbox(&db, &sandbox_id, check_and_start_cmd).await;
+            fi",
+            display = DISPLAY_ID
+        );
+        let _ = execute_command_in_sandbox(&db, &sandbox_id, &check_and_start_cmd).await;
 
         // 运行网页分析脚本，并自动跳转
         crate::emit_info(&format!("正在远程浏览器中打开网页并分析安全要素: {}...", url));
@@ -160,7 +167,7 @@ sys.exit(0)
         let b64_script = general_purpose::STANDARD.encode(py_check_script.as_bytes());
         let run_check_cmd = format!(
             "export PLAYWRIGHT_BROWSERS_PATH=/opt/playwright-browsers && \
-             export DISPLAY=:0 && \
+             export DISPLAY={display} && \
              mkdir -p /tmp && echo '{}' | base64 -d > /tmp/run_interactive.py && \
              if ! python3 -c 'import playwright' >/dev/null 2>&1; then \
                  echo 'Installing playwright...' && \
@@ -169,7 +176,8 @@ sys.exit(0)
                  python3 -m playwright install-deps chromium; \
              fi; \
              python3 /tmp/run_interactive.py",
-            b64_script
+            b64_script,
+            display = DISPLAY_ID
         );
 
         let (stdout_stderr, exit_code) = execute_command_in_sandbox(&db, &sandbox_id, &run_check_cmd).await
@@ -360,10 +368,10 @@ sys.exit(0)
     let b64_script = general_purpose::STANDARD.encode(py_script.as_bytes());
     let run_cmd = format!(
         "export PLAYWRIGHT_BROWSERS_PATH=/opt/playwright-browsers && \
-         export DISPLAY=:0 && \
+         export DISPLAY={display} && \
          mkdir -p /tmp && echo '{}' | base64 -d > /tmp/run_browser.py && \
          if ! python3 -c 'import socket; s = socket.socket(); s.connect((\"127.0.0.1\", 9222))' >/dev/null 2>&1; then \
-             echo 'Starting headful chromium with remote debugging on DISPLAY=:0...' && \
+             echo 'Starting headful chromium with remote debugging on DISPLAY={display}...' && \
              if command -v chromium >/dev/null 2>&1; then \
                  setsid nohup chromium --no-sandbox --remote-debugging-port=9222 --disable-gpu --disable-software-rasterizer >/tmp/headless_chrome.log 2>&1 & \
              elif command -v chromium-browser >/dev/null 2>&1; then \
@@ -380,7 +388,8 @@ sys.exit(0)
              python3 -m playwright install-deps chromium; \
          fi; \
          python3 /tmp/run_browser.py",
-        b64_script
+        b64_script,
+        display = DISPLAY_ID
     );
 
 

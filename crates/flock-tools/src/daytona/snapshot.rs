@@ -1,5 +1,6 @@
 use flock_core::db::DbManager;
 use crate::daytona::config::{get_sandbox_config, get_api_base};
+use crate::daytona::{DISPLAY_ID, SCREEN_RESOLUTION, X11VNC_PORT, WEBSOCKIFY_PORT};
 
 /// 创建一个预装 Playwright 的 Daytona Snapshot
 pub async fn create_playwright_snapshot(
@@ -17,6 +18,14 @@ pub async fn create_playwright_snapshot(
     crate::emit_info(&format!("[Snapshot] 正在向 Daytona 发送快照构建请求: {}...", snapshot_name));
     let snap_url = format!("{}/api/snapshots", base_url);
     
+    let dockerfile_content = format!(
+        "FROM daytonaio/sandbox:latest\nUSER root\nENV DEBIAN_FRONTEND=noninteractive\nENV PLAYWRIGHT_BROWSERS_PATH=/opt/playwright-browsers\nRUN mkdir -p /opt/playwright-browsers && chmod 777 /opt/playwright-browsers\nRUN apt-get update && apt-get install -y python3-pip xvfb x11vnc novnc websockify fluxbox chromium xterm lxterminal && python3 -m pip install --break-system-packages playwright && PLAYWRIGHT_BROWSERS_PATH=/opt/playwright-browsers python3 -m playwright install-deps chromium && PLAYWRIGHT_BROWSERS_PATH=/opt/playwright-browsers python3 -m playwright install chromium\nRUN printf '#!/bin/bash\\nexport DISPLAY={display}\\nrm -f /tmp/.X0-lock\\nsetsid Xvfb {display} -screen 0 {res} >/tmp/xvfb.log 2>&1 &\\nsleep 1\\nsetsid fluxbox >/tmp/fluxbox.log 2>&1 &\\nsleep 1\\nsetsid x11vnc -display {display} -forever -shared -nopw -rfbport {vnc_port} >/tmp/x11vnc.log 2>&1 &\\nsleep 1\\nsetsid websockify --web /usr/share/novnc 0.0.0.0:{web_port} localhost:{vnc_port} >/tmp/websockify.log 2>&1 &\\nsleep 1\\n' > /usr/local/bin/start-vnc && chmod +x /usr/local/bin/start-vnc\nUSER daytona",
+        display = DISPLAY_ID,
+        res = SCREEN_RESOLUTION,
+        vnc_port = X11VNC_PORT,
+        web_port = WEBSOCKIFY_PORT
+    );
+
     let payload = serde_json::json!({
         "name": snapshot_name,
         "cpu": 1,
@@ -24,7 +33,7 @@ pub async fn create_playwright_snapshot(
         "memory": 2,
         "disk": 3,
         "buildInfo": {
-            "dockerfileContent": "FROM daytonaio/sandbox:latest\nUSER root\nENV DEBIAN_FRONTEND=noninteractive\nENV PLAYWRIGHT_BROWSERS_PATH=/opt/playwright-browsers\nRUN mkdir -p /opt/playwright-browsers && chmod 777 /opt/playwright-browsers\nRUN apt-get update && apt-get install -y python3-pip xvfb x11vnc novnc websockify fluxbox chromium xterm lxterminal && python3 -m pip install --break-system-packages playwright && PLAYWRIGHT_BROWSERS_PATH=/opt/playwright-browsers python3 -m playwright install-deps chromium && PLAYWRIGHT_BROWSERS_PATH=/opt/playwright-browsers python3 -m playwright install chromium\nRUN printf '#!/bin/bash\\nexport DISPLAY=:0\\nrm -f /tmp/.X0-lock\\nsetsid Xvfb :0 -screen 0 1280x1024x24 >/tmp/xvfb.log 2>&1 &\\nsleep 1\\nsetsid fluxbox >/tmp/fluxbox.log 2>&1 &\\nsleep 1\\nsetsid x11vnc -display :0 -forever -shared -nopw -rfbport 5900 >/tmp/x11vnc.log 2>&1 &\\nsleep 1\\nsetsid websockify --web /usr/share/novnc 0.0.0.0:6080 localhost:5900 >/tmp/websockify.log 2>&1 &\\nsleep 1\\n' > /usr/local/bin/start-vnc && chmod +x /usr/local/bin/start-vnc\nUSER daytona"
+            "dockerfileContent": dockerfile_content
         }
     });
 
