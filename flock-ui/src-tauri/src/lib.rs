@@ -119,6 +119,7 @@ pub fn run() {
             // 系统配置
             commands::get_app_config,
             commands::set_app_config,
+            commands::set_locale,
             commands::test_sandbox_connection,
             commands::create_playwright_snapshot,
             commands::list_daytona_sandboxes,

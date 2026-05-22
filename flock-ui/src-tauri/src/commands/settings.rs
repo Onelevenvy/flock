@@ -19,7 +19,10 @@ pub async fn set_app_config(
     value: serde_json::Value,
 ) -> Result<(), String> {
     db.set_config(&key, &value).await
-        .map_err(|e| format!("保存配置 '{}' 失败: {}", key, e))?;
+        .map_err(|e| flock_core::tr(
+            &format!("保存配置 '{}' 失败: {}", key, e),
+            &format!("Failed to save config '{}': {}", key, e)
+        ))?;
 
     // 当 sandbox 被禁用时，将其 provider 标记为不可用
     if key == "sandbox" {
@@ -52,20 +55,29 @@ pub async fn test_sandbox_connection(
         Ok(r) => r,
         Err(e) => {
             let _ = db.set_tool_provider_available("sandbox", false).await;
-            return Err(format!("无法连接到沙盒服务器: {}", e));
+            return Err(flock_core::tr(
+                &format!("无法连接到沙盒服务器: {}", e),
+                &format!("Failed to connect to sandbox server: {}", e)
+            ));
         }
     };
 
     if res.status().is_success() {
         db.set_tool_provider_available("sandbox", true)
             .await
-            .map_err(|e| format!("更新沙盒可用状态失败: {}", e))?;
-        Ok("连接成功".to_string())
+            .map_err(|e| flock_core::tr(
+                &format!("更新沙盒可用状态失败: {}", e),
+                &format!("Failed to update sandbox availability: {}", e)
+            ))?;
+        Ok(flock_core::tr("连接成功", "Connection successful"))
     } else {
         let status = res.status();
         let err_body = res.text().await.unwrap_or_default();
         let _ = db.set_tool_provider_available("sandbox", false).await;
-        Err(format!("验证失败，HTTP 状态码: {}。错误详情: {}", status, err_body))
+        Err(flock_core::tr(
+            &format!("验证失败，HTTP 状态码: {}。错误详情: {}", status, err_body),
+            &format!("Verification failed, HTTP status code: {}. Details: {}", status, err_body)
+        ))
     }
 }
 
@@ -95,7 +107,7 @@ pub async fn list_daytona_sandboxes(
 
     let db_ref: &DbManager = &*db;
     let cfg = get_sandbox_config(db_ref).await
-        .ok_or_else(|| "沙盒未配置或未启用".to_string())?;
+        .ok_or_else(|| flock_core::tr("沙盒未配置或未启用", "Sandbox not configured or enabled"))?;
 
     let base = get_api_base(cfg.api_url.as_ref().unwrap());
     let api_key = cfg.api_key.as_ref().unwrap();
@@ -106,11 +118,17 @@ pub async fn list_daytona_sandboxes(
         .header("Authorization", format!("Bearer {}", api_key))
         .send()
         .await
-        .map_err(|e| format!("请求沙盒列表失败: {}", e))?;
+        .map_err(|e| flock_core::tr(
+            &format!("请求沙盒列表失败: {}", e),
+            &format!("Failed to request sandbox list: {}", e)
+        ))?;
 
     let text = resp.text().await.unwrap_or_default();
     let val: serde_json::Value = serde_json::from_str(&text)
-        .map_err(|e| format!("解析沙盒列表失败: {}", e))?;
+        .map_err(|e| flock_core::tr(
+            &format!("解析沙盒列表失败: {}", e),
+            &format!("Failed to parse sandbox list: {}", e)
+        ))?;
 
     Ok(val)
 }
@@ -126,7 +144,7 @@ pub async fn delete_daytona_sandbox(
 
     let db_ref: &DbManager = &*db;
     let cfg = get_sandbox_config(db_ref).await
-        .ok_or_else(|| "沙盒未配置或未启用".to_string())?;
+        .ok_or_else(|| flock_core::tr("沙盒未配置或未启用", "Sandbox not configured or enabled"))?;
 
     let base = get_api_base(cfg.api_url.as_ref().unwrap());
     let api_key = cfg.api_key.as_ref().unwrap();
@@ -137,7 +155,10 @@ pub async fn delete_daytona_sandbox(
         .header("Authorization", format!("Bearer {}", api_key))
         .send()
         .await
-        .map_err(|e| format!("发送删除沙盒请求失败: {}", e))?;
+        .map_err(|e| flock_core::tr(
+            &format!("发送删除沙盒请求失败: {}", e),
+            &format!("Failed to send delete sandbox request: {}", e)
+        ))?;
 
     if resp.status().is_success() {
         // 如果删除的是当前活跃的沙盒，清理本地缓存
@@ -148,7 +169,10 @@ pub async fn delete_daytona_sandbox(
         }
         Ok(())
     } else {
-        Err(format!("删除沙盒失败，HTTP 状态码: {}", resp.status()))
+        Err(flock_core::tr(
+            &format!("删除沙盒失败，HTTP 状态码: {}", resp.status()),
+            &format!("Failed to delete sandbox, HTTP status code: {}", resp.status())
+        ))
     }
 }
 
@@ -162,7 +186,7 @@ pub async fn list_daytona_snapshots(
 
     let db_ref: &DbManager = &*db;
     let cfg = get_sandbox_config(db_ref).await
-        .ok_or_else(|| "沙盒未配置或未启用".to_string())?;
+        .ok_or_else(|| flock_core::tr("沙盒未配置或未启用", "Sandbox not configured or enabled"))?;
 
     let base = get_api_base(cfg.api_url.as_ref().unwrap());
     let api_key = cfg.api_key.as_ref().unwrap();
@@ -173,11 +197,17 @@ pub async fn list_daytona_snapshots(
         .header("Authorization", format!("Bearer {}", api_key))
         .send()
         .await
-        .map_err(|e| format!("请求快照列表失败: {}", e))?;
+        .map_err(|e| flock_core::tr(
+            &format!("请求快照列表失败: {}", e),
+            &format!("Failed to request snapshot list: {}", e)
+        ))?;
 
     let text = resp.text().await.unwrap_or_default();
     let val: serde_json::Value = serde_json::from_str(&text)
-        .map_err(|e| format!("解析快照列表失败: {}", e))?;
+        .map_err(|e| flock_core::tr(
+            &format!("解析快照列表失败: {}", e),
+            &format!("Failed to parse snapshot list: {}", e)
+        ))?;
 
     Ok(val)
 }
@@ -193,7 +223,7 @@ pub async fn delete_daytona_snapshot(
 
     let db_ref: &DbManager = &*db;
     let cfg = get_sandbox_config(db_ref).await
-        .ok_or_else(|| "沙盒未配置或未启用".to_string())?;
+        .ok_or_else(|| flock_core::tr("沙盒未配置或未启用", "Sandbox not configured or enabled"))?;
 
     let base = get_api_base(cfg.api_url.as_ref().unwrap());
     let api_key = cfg.api_key.as_ref().unwrap();
@@ -204,12 +234,23 @@ pub async fn delete_daytona_snapshot(
         .header("Authorization", format!("Bearer {}", api_key))
         .send()
         .await
-        .map_err(|e| format!("发送删除快照请求失败: {}", e))?;
+        .map_err(|e| flock_core::tr(
+            &format!("发送删除快照请求失败: {}", e),
+            &format!("Failed to send delete snapshot request: {}", e)
+        ))?;
 
     if resp.status().is_success() {
         Ok(())
     } else {
-        Err(format!("删除快照失败，HTTP 状态码: {}", resp.status()))
+        Err(flock_core::tr(
+            &format!("删除快照失败，HTTP 状态码: {}", resp.status()),
+            &format!("Failed to delete snapshot, HTTP status code: {}", resp.status())
+        ))
     }
+}
+
+#[tauri::command]
+pub fn set_locale(locale: String) {
+    flock_core::set_locale(&locale);
 }
 

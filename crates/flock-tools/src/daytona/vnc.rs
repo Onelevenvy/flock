@@ -9,7 +9,7 @@ pub async fn start_computer_use_in_sandbox(
     sandbox_id: &str,
 ) -> anyhow::Result<()> {
     let cfg = get_sandbox_config(db).await
-        .ok_or_else(|| anyhow::anyhow!("云端 Daytona 沙箱未配置或未启用"))?;
+        .ok_or_else(|| anyhow::anyhow!(flock_core::tr("云端 Daytona 沙箱未配置或未启用", "Cloud Daytona sandbox not configured or enabled")))?;
 
     let api_url = cfg.api_url.as_ref().unwrap().trim_end_matches('/');
     let api_key = cfg.api_key.as_ref().unwrap();
@@ -31,7 +31,10 @@ pub async fn start_computer_use_in_sandbox(
     let mut last_error = None;
 
     for url in urls {
-        crate::emit_info(&format!("正在请求 Daytona 桌面启动端点: {}...", url));
+        crate::emit_info(&flock_core::tr(
+            &format!("正在请求 Daytona 桌面启动端点: {}...", url),
+            &format!("Requesting Daytona desktop start endpoint: {}...", url)
+        ));
         let res = client.post(&url)
             .header("Authorization", format!("Bearer {}", api_key))
             .json(&serde_json::json!({}))
@@ -42,23 +45,32 @@ pub async fn start_computer_use_in_sandbox(
             Ok(resp) => {
                 let status = resp.status();
                 if status.is_success() {
-                    crate::emit_info("Daytona 桌面拉起请求已发送。");
+                    crate::emit_info(&flock_core::tr("Daytona 桌面拉起请求已发送。", "Daytona desktop launch request sent."));
                     return Ok(());
                 } else if status == reqwest::StatusCode::NOT_FOUND {
-                    last_error = Some(anyhow::anyhow!("ComputerUse start API 返回 404: {}", url));
+                    last_error = Some(anyhow::anyhow!(flock_core::tr(
+                        &format!("ComputerUse start API 返回 404: {}", url),
+                        &format!("ComputerUse start API returned 404: {}", url)
+                    )));
                     continue;
                 } else {
                     let err_body = resp.text().await.unwrap_or_default();
-                    return Err(anyhow::anyhow!("ComputerUse start API 响应失败 ({}): {}", url, err_body));
+                    return Err(anyhow::anyhow!(flock_core::tr(
+                        &format!("ComputerUse start API 响应失败 ({}): {}", url, err_body),
+                        &format!("ComputerUse start API response failed ({}): {}", url, err_body)
+                    )));
                 }
             }
             Err(e) => {
-                last_error = Some(anyhow::anyhow!("请求连接 Daytona 桌面端点失败: {}", e));
+                last_error = Some(anyhow::anyhow!(flock_core::tr(
+                    &format!("请求连接 Daytona 桌面端点失败: {}", e),
+                    &format!("Failed to connect to Daytona desktop endpoint: {}", e)
+                )));
             }
         }
     }
 
-    Err(last_error.unwrap_or_else(|| anyhow::anyhow!("无法连接沙盒 ComputerUse 启动接口")))
+    Err(last_error.unwrap_or_else(|| anyhow::anyhow!(flock_core::tr("无法连接沙盒 ComputerUse 启动接口", "Unable to connect to sandbox ComputerUse start endpoint"))))
 }
 
 /// 检查沙盒中的 Computer Use（VNC桌面）状态
@@ -67,7 +79,7 @@ pub async fn check_computer_use_status(
     sandbox_id: &str,
 ) -> anyhow::Result<bool> {
     let cfg = get_sandbox_config(db).await
-        .ok_or_else(|| anyhow::anyhow!("云端 Daytona 沙箱未配置或未启用"))?;
+        .ok_or_else(|| anyhow::anyhow!(flock_core::tr("云端 Daytona 沙箱未配置或未启用", "Cloud Daytona sandbox not configured or enabled")))?;
 
     let api_url = cfg.api_url.as_ref().unwrap().trim_end_matches('/');
     let api_key = cfg.api_key.as_ref().unwrap();
@@ -99,7 +111,10 @@ pub async fn check_computer_use_status(
                 let status = resp.status();
                 if status.is_success() {
                     let text = resp.text().await.unwrap_or_default();
-                    crate::emit_info(&format!("[VNC Status] 接口返回: {}", text));
+                    crate::emit_info(&flock_core::tr(
+                        &format!("[VNC Status] 接口返回: {}", text),
+                        &format!("[VNC Status] API returned: {}", text)
+                    ));
                     if let Ok(val) = serde_json::from_str::<serde_json::Value>(&text) {
                         // 兼容 data 嵌套或扁平的结构
                         let status_val = val.get("status")
@@ -113,20 +128,29 @@ pub async fn check_computer_use_status(
                     }
                     return Ok(true);
                 } else if status == reqwest::StatusCode::NOT_FOUND {
-                    last_error = Some(anyhow::anyhow!("ComputerUse status API 返回 404: {}", url));
+                    last_error = Some(anyhow::anyhow!(flock_core::tr(
+                        &format!("ComputerUse status API 返回 404: {}", url),
+                        &format!("ComputerUse status API returned 404: {}", url)
+                    )));
                     continue;
                 } else {
                     let err_body = resp.text().await.unwrap_or_default();
-                    return Err(anyhow::anyhow!("ComputerUse status API 响应失败 ({}): {}", url, err_body));
+                    return Err(anyhow::anyhow!(flock_core::tr(
+                        &format!("ComputerUse status API 响应失败 ({}): {}", url, err_body),
+                        &format!("ComputerUse status API response failed ({}): {}", url, err_body)
+                    )));
                 }
             }
             Err(e) => {
-                last_error = Some(anyhow::anyhow!("请求连接 Daytona 桌面状态端点失败: {}", e));
+                last_error = Some(anyhow::anyhow!(flock_core::tr(
+                    &format!("请求连接 Daytona 桌面状态端点失败: {}", e),
+                    &format!("Failed to connect to Daytona desktop status endpoint: {}", e)
+                )));
             }
         }
     }
 
-    Err(last_error.unwrap_or_else(|| anyhow::anyhow!("无法获取沙盒 ComputerUse 状态")))
+    Err(last_error.unwrap_or_else(|| anyhow::anyhow!(flock_core::tr("无法获取沙盒 ComputerUse 状态", "Unable to get sandbox ComputerUse status"))))
 }
 
 /// 确保沙盒中 VNC 桌面相关进程正在后台运行，具有自愈拉起和 setsid/nohup 防进程清理机制。
@@ -135,11 +159,11 @@ pub async fn ensure_vnc_running_in_sandbox(db: &DbManager, sandbox_id: &str) -> 
     let check_cmd = format!("python3 -c \"import socket; s = socket.socket(); s.connect(('127.0.0.1', {}))\"", WEBSOCKIFY_PORT);
     let (_, exit_code) = execute_command_in_sandbox(db, sandbox_id, &check_cmd).await.unwrap_or(("-1".to_string(), -1));
     if exit_code == 0 {
-        crate::emit_info("检测到 VNC 桌面服务已经在运行。");
+        crate::emit_info(&flock_core::tr("检测到 VNC 桌面服务已经在运行。", "Detected VNC desktop service is already running."));
         return Ok(());
     }
 
-    crate::emit_info("检测到 VNC 服务未运行，手动拉起 Xvfb, VNC, noVNC...");
+    crate::emit_info(&flock_core::tr("检测到 VNC 服务未运行，手动拉起 Xvfb, VNC, noVNC...", "Detected VNC service not running, manually starting Xvfb, VNC, noVNC..."));
     let launch_cmd = format!("sh -c '\
         if command -v start-vnc >/dev/null 2>&1; then \
             start-vnc; \
@@ -163,9 +187,12 @@ pub async fn ensure_vnc_running_in_sandbox(db: &DbManager, sandbox_id: &str) -> 
     
     let (out, code) = execute_command_in_sandbox(db, sandbox_id, &launch_cmd).await?;
     if code != 0 {
-        crate::emit_info(&format!("手动拉起桌面服务进程失败 (退出码 {}): {}", code, out));
+        crate::emit_info(&flock_core::tr(
+            &format!("手动拉起桌面服务进程失败 (退出码 {}): {}", code, out),
+            &format!("Failed to manually start desktop service process (exit code {}): {}", code, out)
+        ));
     } else {
-        crate::emit_info("手动拉起桌面服务进程指令已发送。");
+        crate::emit_info(&flock_core::tr("手动拉起桌面服务进程指令已发送。", "Manual start desktop service process command sent."));
     }
     
     Ok(())
@@ -178,7 +205,7 @@ pub async fn get_sandbox_vnc_url(
     sandbox_id: &str,
 ) -> anyhow::Result<String> {
     let cfg = get_sandbox_config(db).await
-        .ok_or_else(|| anyhow::anyhow!("云端 Daytona 沙箱未配置或未启用"))?;
+        .ok_or_else(|| anyhow::anyhow!(flock_core::tr("云端 Daytona 沙箱未配置或未启用", "Cloud Daytona sandbox not configured or enabled")))?;
 
     let client = reqwest::Client::new();
     let base = get_api_base(cfg.api_url.as_ref().unwrap());
@@ -193,11 +220,17 @@ pub async fn get_sandbox_vnc_url(
     let status = resp.status();
     let text = resp.text().await.unwrap_or_default();
     if !status.is_success() {
-        anyhow::bail!("获取预览URL失败 (HTTP {}): {}", status, text);
+        anyhow::bail!("{}", flock_core::tr(
+            &format!("获取预览URL失败 (HTTP {}): {}", status, text),
+            &format!("Failed to get preview URL (HTTP {}): {}", status, text)
+        ));
     }
 
     let val: serde_json::Value = serde_json::from_str(&text)
-        .map_err(|e| anyhow::anyhow!("解析预览URL响应失败: {}. 原始响应: {}", e, text))?;
+        .map_err(|e| anyhow::anyhow!(flock_core::tr(
+            &format!("解析预览URL响应失败: {}. 原始响应: {}", e, text),
+            &format!("Failed to parse preview URL response: {}. Original response: {}", e, text)
+        )))?;
 
     let mut url_str = val.get("url")
         .or_else(|| val.get("signedUrl"))

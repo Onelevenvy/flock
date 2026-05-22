@@ -1,7 +1,7 @@
 use crate::adapter::LangGraphToolAdapter;
 use crate::Tool;
 use flock_core::ipc_interface::events::ToolCategory;
-use flock_core::types::tool::ProviderInfo;
+use flock_core::types::tool::{ProviderInfo, I18nString};
 use langgraph_derive::tool;
 
 /// Evaluates a math expression locally using meval.
@@ -32,8 +32,11 @@ impl MathTool {
 pub fn provider_info() -> ProviderInfo {
     ProviderInfo {
         provider_id: "math".to_string(),
-        provider_name: r#"{"zh": "数学计算器", "en": "Math Calculator"}"#.to_string(),
-        description: r#"{"zh": "数学表达式计算工具，支持基本运算、函数和常量", "en": "Mathematical expression calculator tool supporting basic operations, functions, and constants."}"#.to_string(),
+        provider_name: I18nString::new("数学计算器", "Math Calculator"),
+        description: I18nString::new(
+            "数学表达式计算工具，支持基本运算、函数和常量",
+            "Mathematical expression calculator tool supporting basic operations, functions, and constants."
+        ),
         icon: None,
         credentials_schema: None,
         test_input: None,

@@ -1,7 +1,7 @@
 use crate::adapter::LangGraphToolAdapter;
 use crate::Tool;
 use flock_core::ipc_interface::events::ToolCategory;
-use flock_core::types::tool::ProviderInfo;
+use flock_core::types::tool::{ProviderInfo, I18nString};
 use langgraph_derive::tool;
 use serde_json::Value;
 use md5::{Md5, Digest};
@@ -88,8 +88,8 @@ impl BaiduTool {
 pub fn provider_info() -> ProviderInfo {
     ProviderInfo {
         provider_id: "baidu".to_string(),
-        provider_name: r#"{"zh": "百度", "en": "Baidu"}"#.to_string(),
-        description: r#"{"zh": "百度工具集合，提供翻译等功能", "en": "Baidu toolset, provides translation and other functions."}"#.to_string(),
+        provider_name: I18nString::new("百度", "Baidu"),
+        description: I18nString::new("百度工具集合，提供翻译等功能", "Baidu toolset, provides translation and other functions."),
         icon: Some("baidu".to_string()),
         credentials_schema: Some(serde_json::json!({
             "BAIDU_APPID": {

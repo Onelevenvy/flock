@@ -185,7 +185,7 @@ pub async fn cleanup_all_sandboxes(
 
     let db_ref: &DbManager = &*db;
     let cfg = get_sandbox_config(db_ref).await
-        .ok_or_else(|| "沙盒未配置或未启用".to_string())?;
+        .ok_or_else(|| flock_core::tr("沙盒未配置或未启用", "Sandbox not configured or enabled"))?;
 
     let base = get_api_base(cfg.api_url.as_ref().unwrap());
     let api_key = cfg.api_key.as_ref().unwrap();
@@ -196,11 +196,17 @@ pub async fn cleanup_all_sandboxes(
         .header("Authorization", format!("Bearer {}", api_key))
         .send()
         .await
-        .map_err(|e| format!("获取沙盒列表失败: {}", e))?;
+        .map_err(|e| flock_core::tr(
+            &format!("获取沙盒列表失败: {}", e),
+            &format!("Failed to retrieve sandbox list: {}", e)
+        ))?;
 
     let text = resp.text().await.unwrap_or_default();
     let val: serde_json::Value = serde_json::from_str(&text)
-        .map_err(|e| format!("解析沙盒列表失败: {}", e))?;
+        .map_err(|e| flock_core::tr(
+            &format!("解析沙盒列表失败: {}", e),
+            &format!("Failed to parse sandbox list: {}", e)
+        ))?;
 
     let sandboxes = val.as_array()
         .cloned()
@@ -239,7 +245,10 @@ pub async fn cleanup_all_sandboxes(
     // 清除本地缓存
     let _ = flock_tools::daytona::destroy_active_sandbox(db_ref).await;
 
-    Ok(format!("清理完成：已销毁 {} 个沙盒，失败 {} 个。", deleted, failed))
+    Ok(flock_core::tr(
+        &format!("清理完成：已销毁 {} 个沙盒，失败 {} 个。", deleted, failed),
+        &format!("Cleanup complete: destroyed {} sandboxes, failed {}.", deleted, failed)
+    ))
 }
 
 /// 获取当前活动沙盒的 VNC 代理链接
@@ -252,7 +261,10 @@ pub async fn get_active_sandbox_vnc_url(
         match flock_tools::daytona::get_sandbox_vnc_url(&*db, &sandbox_id).await {
             Ok(url) => Ok(Some(url)),
             Err(e) => {
-                println!("获取动态 VNC URL 失败: {}。使用静态备用 URL...", e);
+                println!("{}", flock_core::tr(
+                    &format!("获取动态 VNC URL 失败: {}。使用静态备用 URL...", e),
+                    &format!("Failed to retrieve dynamic VNC URL: {}. Using static fallback URL...", e)
+                ));
                 Ok(Some(format!("https://6080-{}.proxy.app.daytona.io/vnc.html?autoconnect=true&resize=scale", sandbox_id)))
             }
         }

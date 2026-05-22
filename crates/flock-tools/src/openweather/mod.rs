@@ -1,7 +1,7 @@
 use crate::adapter::LangGraphToolAdapter;
 use crate::Tool;
 use flock_core::ipc_interface::events::ToolCategory;
-use flock_core::types::tool::ProviderInfo;
+use flock_core::types::tool::{ProviderInfo, I18nString};
 use langgraph_derive::tool;
 use serde_json::Value;
 
@@ -70,8 +70,11 @@ impl OpenWeatherTool {
 pub fn provider_info() -> ProviderInfo {
     ProviderInfo {
         provider_id: "openweather".to_string(),
-        provider_name: r#"{"zh": "Open Weather", "en": "Open Weather"}"#.to_string(),
-        description: r#"{"zh": "OpenWeather 提供的天气查询工具，支持全球城市的天气信息查询，包括温度、湿度、风速等数据", "en": "Weather query tool provided by OpenWeather, supporting weather queries for global cities including temperature, humidity, wind speed, and more."}"#.to_string(),
+        provider_name: I18nString::new("Open Weather", "Open Weather"),
+        description: I18nString::new(
+            "OpenWeather 提供的天气查询工具，支持全球城市的天气信息查询，包括温度、湿度、风速等数据",
+            "Weather query tool provided by OpenWeather, supporting weather queries for global cities including temperature, humidity, wind speed, and more."
+        ),
         icon: Some("openweather".to_string()),
         credentials_schema: Some(serde_json::json!({
             "OPEN_WEATHER_API_KEY": {

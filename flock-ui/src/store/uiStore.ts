@@ -1,5 +1,6 @@
 import { create } from 'zustand';
 import i18n from '../i18n';
+import { invoke } from '@tauri-apps/api/core';
 
 export type ThemeMode = 'light' | 'dark';
 
@@ -79,6 +80,7 @@ export const useUiStore = create<UiStore>((set) => ({
   setLanguage: (lang) => {
     localStorage.setItem('flock-lang', lang);
     i18n.changeLanguage(lang);
+    invoke('set_locale', { locale: lang }).catch(err => console.error("set_locale failed:", err));
     set({ language: lang });
   },
 
