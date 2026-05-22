@@ -1,5 +1,6 @@
 {
   "toggleSidebar": "切换侧边栏",
+  "toggleComputer": "显示/隐藏电脑桌面",
   "agentStatus": "Agent: {{status}}",
   "status": {
     "disconnected": "未连接",
