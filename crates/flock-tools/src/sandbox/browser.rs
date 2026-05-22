@@ -164,10 +164,14 @@ try:
         page_text = page.evaluate("() => document.body.innerText || ''").lower()
         url_lower = page.url.lower()
         
-        is_sensitive_login = "密码" in page_text or "password" in page_text or "signin" in url_lower or "login" in url_lower
-        is_sensitive_captcha = any(kw in page_text for kw in ["验证码", "captcha", "slider", "滑块", "点击验证", "验证", "安全校验", "verify"])
+        is_sensitive_login = any(kw in page_text for kw in ["密码", "password", "pass word"]) or "signin" in url_lower or "login" in url_lower
+        login_keywords = ["登录", "signin", "login", "sign in", "log in", "log-in", "sign-in"]
+        has_login_text = any(kw in page_text for kw in login_keywords)
         
-        need_takeover = has_password or has_captcha or (is_sensitive_login and ("登录" in page_text or "signin" in page_text or "login" in page_text)) or is_sensitive_captcha
+        captcha_keywords = ["验证码", "captcha", "slider", "滑块", "点击验证", "验证", "安全校验", "verify", "verification"]
+        is_sensitive_captcha = any(kw in page_text for kw in captcha_keywords)
+        
+        need_takeover = has_password or has_captcha or (is_sensitive_login and has_login_text) or is_sensitive_captcha
         print("CHECK_RESULT:" + json.dumps({{"
             "need_takeover": need_takeover,
             "has_password": has_password,
