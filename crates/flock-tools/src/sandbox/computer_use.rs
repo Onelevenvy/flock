@@ -88,10 +88,35 @@ pub async fn computer_use(
         crate::emit_info(&format!("正在沙盒中执行命令: {}...", cmd));
         let (output, exit_code) = execute_command_in_sandbox(&db, &sandbox_id, &cmd).await
             .map_err(|e| format!("沙盒命令执行失败: {}", e))?;
+
+        // 智能动作帧捕获：检测当前是否有拉起 VNC 桌面的状态。
+        // 如果有，则在命令完成后也自动截取一张桌面快照，使用户能在 VNC 时间轴上看到命令引起的 UI 变化！
+        let mut image_md = String::new();
+        if let Ok(ready) = check_computer_use_status(&db, &sandbox_id).await {
+            if ready {
+                let ss_cmd = format!("export DISPLAY={} && scrot -o /tmp/desktop_screenshot.png && cat /tmp/desktop_screenshot.png | base64 -w 0", crate::daytona::DISPLAY_ID);
+                if let Ok((b64_data, exit_code)) = execute_command_in_sandbox(&db, &sandbox_id, &ss_cmd).await {
+                    if exit_code == 0 && !b64_data.is_empty() {
+                        if let Ok(img_bytes) = general_purpose::STANDARD.decode(b64_data.trim()) {
+                            let base_dir = crate::get_workspace_dir().unwrap_or_else(|| std::env::current_dir().unwrap_or_default());
+                            let ss_dir = base_dir.join(".flock/sandbox/screenshots");
+                            let ss_path = ss_dir.join(format!("{}.png", name_id));
+                            let _ = std::fs::create_dir_all(&ss_dir);
+                            let _ = std::fs::write(&ss_path, &img_bytes);
+                            let _ = std::fs::write(base_dir.join(".flock/sandbox/screenshot.png"), &img_bytes);
+                            
+                            let abs_path_str = ss_path.to_string_lossy().to_string();
+                            image_md = format!("\n\n![桌面截图](file:///{})", abs_path_str);
+                        }
+                    }
+                }
+            }
+        }
+
         if exit_code == 0 {
-            return Ok(format!("命令执行成功。\n\n[输出]\n{}", output));
+            return Ok(format!("命令执行成功。\n\n[输出]\n{}{}", output, image_md));
         } else {
-            return Err(format!("命令执行失败 (退出码: {})。\n\n[错误输出]\n{}", exit_code, output));
+            return Err(format!("命令执行失败 (退出码: {})。\n\n[错误输出]\n{}{}", exit_code, output, image_md));
         }
     }
 

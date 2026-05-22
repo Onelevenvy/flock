@@ -163,6 +163,28 @@ impl DbManager {
         let session_messages: Vec<serde_json::Value> =
             serde_json::from_str(&messages_json).unwrap_or_default();
 
+        // 1. 第一阶段扫描：预提取所有的 tool_result 内容并通过 tool_use_id 进行索引建立
+        let mut tool_results = std::collections::HashMap::new();
+        for msg in &session_messages {
+            if let Some(msg_obj) = msg.as_object() {
+                if let Some(content) = msg_obj.get("content").and_then(|v| v.as_array()) {
+                    for part in content {
+                        if let Some(part_obj) = part.as_object() {
+                            let p_type = part_obj.get("type").and_then(|v| v.as_str()).unwrap_or("");
+                            if p_type == "tool_result" {
+                                if let (Some(tool_use_id), Some(content_val)) = (
+                                    part_obj.get("tool_use_id").and_then(|v| v.as_str()),
+                                    part_obj.get("content").and_then(|v| v.as_str()),
+                                ) {
+                                    tool_results.insert(tool_use_id.to_string(), content_val.to_string());
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
         let mut messages = Vec::new();
 
         for (idx, msg) in session_messages.into_iter().enumerate() {
@@ -230,16 +252,21 @@ impl DbManager {
                                 "description": ""
                             });
 
+                            let cid = obj
+                                .get("id")
+                                .and_then(|v| v.as_str())
+                                .map(|s| s.to_string());
+
+                            // 将对应的 tool_result 合并进 chunk.result 供前端渲染及回放提取
+                            let result_content = cid.as_ref().and_then(|id| tool_results.get(id).cloned());
+
                             chunks.push(MessageChunk {
                                 kind: "tool_request".to_string(),
                                 text: None,
-                                call_id: obj
-                                    .get("id")
-                                    .and_then(|v| v.as_str())
-                                    .map(|s| s.to_string()),
+                                call_id: cid,
                                 tool: Some(tool_info),
                                 status: Some("done".to_string()),
-                                result: None,
+                                result: result_content,
                             });
                         }
                         "tool_result" => {
