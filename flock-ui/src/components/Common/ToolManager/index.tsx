@@ -16,6 +16,7 @@ import { useMemo } from 'react';
 import { Box, Text, Group, Stack, ActionIcon } from '@mantine/core';
 import { IconX } from '@tabler/icons-react';
 import { useTranslation } from 'react-i18next';
+import { notifications } from '@mantine/notifications';
 import { useAvailableTools, type Tool } from '../../../hooks/useAvailableTools';
 import { ToolCard } from './ToolCard';
 import { ToolPickerPopover } from './ToolPickerPopover';
@@ -74,7 +75,25 @@ export default function ToolManager({
       onChange(value.filter((n) => n !== toolName));
       onDisabledChange?.([...disabledValue.filter((n) => n !== toolName), toolName]);
     } else {
-      // 打开：移出 disabledValue，移入 value（如不在则加）
+      // 开启：移出 disabledValue，移入 value
+      // 增加防呆鉴权检测：如果未授权则不给开启并弹警告
+      const tool = tools.find((t) => t.name === toolName);
+      if (tool) {
+        const provider = providers.find((p) => p.id === tool.provider_id);
+        const isUnauthorized = provider?.credentials_schema && !provider.is_available;
+        if (isUnauthorized) {
+          notifications.show({
+            title: t('assistant.form.toolUnauthorizedTitle', { defaultValue: '工具未授权' }),
+            message: t('assistant.form.toolUnauthorizedMsg', { 
+              defaultValue: '请先在「插件管理」页面配置并成功连通该工具的 API 凭证，方可添加使用。' 
+            }),
+            color: 'red',
+            autoClose: 5000,
+          });
+          return;
+        }
+      }
+
       onDisabledChange?.(disabledValue.filter((n) => n !== toolName));
       if (!value.includes(toolName)) {
         onChange([...value, toolName]);
