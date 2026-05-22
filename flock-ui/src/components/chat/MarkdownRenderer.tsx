@@ -9,6 +9,7 @@ import {
 import {
   IconCopy,
   IconCheck,
+  IconPhoto,
 } from '@tabler/icons-react';
 import ReactMarkdown from 'react-markdown';
 import remarkMath from 'remark-math';
@@ -16,6 +17,7 @@ import rehypeMathjax from 'rehype-mathjax';
 import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
 import { vscDarkPlus } from 'react-syntax-highlighter/dist/esm/styles/prism';
 import { useTranslation } from 'react-i18next';
+import { convertFileSrc } from '@tauri-apps/api/core';
 
 interface MarkdownRendererProps {
   content: string;
@@ -113,6 +115,94 @@ export function MarkdownRenderer({ content }: MarkdownRendererProps) {
             >
               {children}
             </code>
+          );
+        },
+        img({ node, src, alt, ...props }: any) {
+          let finalSrc = src;
+          if (src) {
+            if (src.startsWith('file:///')) {
+              finalSrc = convertFileSrc(src.substring(8));
+            } else if (src.startsWith('file://')) {
+              finalSrc = convertFileSrc(src.substring(7));
+            } else if (src.startsWith('/') || /^[a-zA-Z]:\\/.test(src) || /^[a-zA-Z]:\//.test(src)) {
+              finalSrc = convertFileSrc(src);
+            }
+          }
+
+          return (
+            <Box
+              style={{
+                position: 'relative',
+                borderRadius: '12px',
+                overflow: 'hidden',
+                margin: '16px 0',
+                background: 'rgba(255, 255, 255, 0.02)',
+                backdropFilter: 'blur(20px)',
+                border: '1px solid rgba(255, 255, 255, 0.08)',
+                boxShadow: '0 8px 32px 0 rgba(0, 0, 0, 0.37)',
+                transition: 'all 0.3s ease',
+              }}
+              onMouseEnter={(e: any) => {
+                e.currentTarget.style.transform = 'translateY(-2px)';
+                e.currentTarget.style.borderColor = 'var(--flock-accent, #3b82f6)';
+                e.currentTarget.style.boxShadow = '0 12px 40px 0 rgba(59, 130, 246, 0.25)';
+              }}
+              onMouseLeave={(e: any) => {
+                e.currentTarget.style.transform = 'translateY(0)';
+                e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.08)';
+                e.currentTarget.style.boxShadow = '0 8px 32px 0 rgba(0, 0, 0, 0.37)';
+              }}
+            >
+              {/* 卡片头部精致栏 */}
+              <Group
+                justify="space-between"
+                px="md"
+                py={8}
+                style={{
+                  background: 'rgba(255, 255, 255, 0.04)',
+                  borderBottom: '1px solid rgba(255, 255, 255, 0.05)',
+                }}
+              >
+                <Group gap="xs">
+                  <IconPhoto size={14} color="var(--flock-accent, #3b82f6)" />
+                  <Text size="xs" fw={600} c="dimmed">
+                    {alt || '网页操作步骤截图'}
+                  </Text>
+                </Group>
+                <Text size="10px" c="var(--flock-accent, #3b82f6)" style={{ textTransform: 'uppercase', letterSpacing: '1px' }}>
+                  STEP SNAPSHOT
+                </Text>
+              </Group>
+
+              {/* 截图渲染区域 */}
+              <Box
+                style={{
+                  padding: '12px',
+                  display: 'flex',
+                  justifyContent: 'center',
+                  background: 'rgba(0, 0, 0, 0.2)',
+                }}
+              >
+                <img
+                  src={finalSrc}
+                  alt={alt || '网页截图'}
+                  style={{
+                    maxWidth: '100%',
+                    maxHeight: '380px',
+                    objectFit: 'contain',
+                    borderRadius: '6px',
+                    transition: 'transform 0.5s ease',
+                  }}
+                  onMouseEnter={(e: any) => {
+                    e.currentTarget.style.transform = 'scale(1.02)';
+                  }}
+                  onMouseLeave={(e: any) => {
+                    e.currentTarget.style.transform = 'scale(1)';
+                  }}
+                  {...props}
+                />
+              </Box>
+            </Box>
           );
         },
       }}
