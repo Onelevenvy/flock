@@ -25,6 +25,8 @@ pub struct SystemPromptCache {
     pub(crate) last_toon_enabled: bool,
     /// Whether to include tool usage guidance in the system prompt.
     pub include_tool_guidance: bool,
+    /// Whether to inject AGENTS.md in the system prompt.
+    pub inject_agents_md: bool,
 }
 
 impl SystemPromptCache {
@@ -35,6 +37,7 @@ impl SystemPromptCache {
             last_plan_mode: false,
             last_toon_enabled: false,
             include_tool_guidance: true,
+            inject_agents_md: true,
         }
     }
 
@@ -151,12 +154,14 @@ pub fn build_system_prompt(
     }
 
     // Section: AGENTS.md (session permanent, hierarchical)
-    let agents_section = cache.sections.entry("agents_md").or_insert_with(|| {
-        let files = agents_md::collect_agents_md(cwd);
-        agents_md::format_agents_md_section(&files)
-    });
-    if !agents_section.is_empty() {
-        parts.push(agents_section.clone());
+    if cache.inject_agents_md {
+        let agents_section = cache.sections.entry("agents_md").or_insert_with(|| {
+            let files = agents_md::collect_agents_md(cwd);
+            agents_md::format_agents_md_section(&files)
+        });
+        if !agents_section.is_empty() {
+            parts.push(agents_section.clone());
+        }
     }
 
     // Section: memory (cached, event-invalidated)

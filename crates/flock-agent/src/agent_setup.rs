@@ -256,6 +256,7 @@ impl AgentBuilder {
 
         let mut prompt_cache = crate::context::SystemPromptCache::new();
         prompt_cache.include_tool_guidance = include_tool_guidance;
+        prompt_cache.inject_agents_md = self.assistant_overrides.is_none();
         let system_prompt = crate::context::build_system_prompt(
             &mut prompt_cache,
             base_prompt,
