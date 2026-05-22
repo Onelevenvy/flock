@@ -127,7 +127,14 @@ try:
             except Exception:
                 pass
                 
-        need_takeover = has_password or has_captcha
+        # 深度敏感校验字扫描：处理未处于活跃 Tab 的密码框与未弹出的风控滑块
+        page_text = page.evaluate("() => document.body.innerText || ''").lower()
+        url_lower = page.url.lower()
+        
+        is_sensitive_login = "密码" in page_text or "password" in page_text or "signin" in url_lower or "login" in url_lower
+        is_sensitive_captcha = any(kw in page_text for kw in ["验证码", "captcha", "slider", "滑块", "点击验证", "验证", "安全校验", "verify"])
+        
+        need_takeover = has_password or has_captcha or (is_sensitive_login and ("登录" in page_text or "signin" in page_text or "login" in page_text)) or is_sensitive_captcha
         print("CHECK_RESULT:" + json.dumps({{"
             "need_takeover": need_takeover,
             "has_password": has_password,

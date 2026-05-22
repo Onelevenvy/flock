@@ -27,6 +27,7 @@ import {
 } from '@tabler/icons-react';
 import { useTranslation } from 'react-i18next';
 import { ToolRequestChunk, ToolCategory } from '../../../types/protocol';
+import { MarkdownRenderer } from '../MarkdownRenderer';
 
 const CATEGORY_COLOR: Record<ToolCategory, string> = {
   info: 'blue',
@@ -129,19 +130,25 @@ export function ToolCard({ chunk }: ToolCardProps) {
               <Text size="xs" c="dimmed" mb={2}>
                 {t('chat.output')} {chunk.result_status === 'error' && <Badge color="red" size="xs">Error</Badge>}
               </Text>
-              <ScrollArea.Autosize mah={150}>
-                <Code
-                  block
-                  style={{
-                    fontSize: '11px',
-                    background: 'var(--flock-bg-deepest)',
-                    color: chunk.result_status === 'error'
-                      ? 'var(--mantine-color-red-4)'
-                      : 'var(--flock-text-primary)',
-                  }}
-                >
-                  {chunk.result}
-                </Code>
+              <ScrollArea.Autosize mah={450}>
+                {chunk.tool.name === 'Browser' || chunk.tool.name === 'ComputerUse' ? (
+                  <Box style={{ padding: '4px 0' }}>
+                    <MarkdownRenderer content={chunk.result} />
+                  </Box>
+                ) : (
+                  <Code
+                    block
+                    style={{
+                      fontSize: '11px',
+                      background: 'var(--flock-bg-deepest)',
+                      color: chunk.result_status === 'error'
+                        ? 'var(--mantine-color-red-4)'
+                        : 'var(--flock-text-primary)',
+                    }}
+                  >
+                    {chunk.result}
+                  </Code>
+                )}
               </ScrollArea.Autosize>
             </Box>
           )}

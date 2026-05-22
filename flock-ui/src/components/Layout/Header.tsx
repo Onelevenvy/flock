@@ -9,6 +9,7 @@ import {
 import {
   IconLayoutSidebar,
   IconCircleFilled,
+  IconDeviceDesktop,
 } from '@tabler/icons-react';
 
 import { useAgentStore } from '../../store/agentStore';
@@ -16,6 +17,7 @@ import { useUiStore } from '../../store/uiStore';
 import { useWorkspaceStore } from '../../store/workspaceStore';
 import { useAssistantsQuery } from '../../hooks/useAssistants';
 import { useTranslation } from 'react-i18next';
+import { invoke } from '@tauri-apps/api/core';
 
 const STATUS_COLOR: Record<string, string> = {
   disconnected: 'gray',
@@ -28,7 +30,7 @@ const STATUS_COLOR: Record<string, string> = {
 export function Header() {
   const { t } = useTranslation();
   const status = useAgentStore((s) => s.status);
-  const { toggleSidebar } = useUiStore();
+  const { toggleSidebar, isPreviewOpen, previewFile, setPreviewFile } = useUiStore();
   const statusColor = STATUS_COLOR[status] ?? 'gray';
   const statusLabel = t(`header.status.${status}`, { defaultValue: status });
 
@@ -46,6 +48,41 @@ export function Header() {
     ? t('header.defaultAssistant')
     : t('header.customAssistant');
 
+  const isComputerOpen = isPreviewOpen && (
+    previewFile?.extension === 'vnc' ||
+    previewFile?.path === '.flock/sandbox/screenshot.png' ||
+    previewFile?.path === 'vnc'
+  );
+
+  const handleToggleComputer = async () => {
+    if (isComputerOpen) {
+      setPreviewFile(null);
+    } else {
+      try {
+        const vncUrl = await invoke<string | null>('get_active_sandbox_vnc_url');
+        if (vncUrl) {
+          setPreviewFile({
+            path: vncUrl,
+            content: '',
+            extension: 'vnc',
+          });
+        } else {
+          setPreviewFile({
+            path: 'vnc',
+            content: '',
+            extension: 'vnc',
+          });
+        }
+      } catch (e) {
+        setPreviewFile({
+          path: 'vnc',
+          content: '',
+          extension: 'vnc',
+        });
+      }
+    }
+  };
+
   return (
     <Box
       style={{
@@ -59,16 +96,29 @@ export function Header() {
         flexShrink: 0,
       }}
     >
-      <Tooltip label={t('header.toggleSidebar')} withArrow>
-        <ActionIcon
-          variant="subtle"
-          color="gray"
-          size="sm"
-          onClick={toggleSidebar}
-        >
-          <IconLayoutSidebar size={16} />
-        </ActionIcon>
-      </Tooltip>
+      <Group gap={8}>
+        <Tooltip label={t('header.toggleSidebar')} withArrow>
+          <ActionIcon
+            variant="subtle"
+            color="gray"
+            size="sm"
+            onClick={toggleSidebar}
+          >
+            <IconLayoutSidebar size={16} />
+          </ActionIcon>
+        </Tooltip>
+
+        <Tooltip label={t('header.toggleComputer', { defaultValue: '显示/隐藏电脑桌面' })} withArrow>
+          <ActionIcon
+            variant="subtle"
+            color={isComputerOpen ? 'blue' : 'gray'}
+            size="sm"
+            onClick={handleToggleComputer}
+          >
+            <IconDeviceDesktop size={16} />
+          </ActionIcon>
+        </Tooltip>
+      </Group>
 
       <Group gap={12}>
         {/* Active Assistant display next to status */}
