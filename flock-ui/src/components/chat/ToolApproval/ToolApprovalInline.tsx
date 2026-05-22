@@ -7,6 +7,7 @@ import {
   ThemeIcon,
   Code,
   ScrollArea,
+  Input,
 } from '@mantine/core';
 import {
   IconEye,
@@ -59,6 +60,11 @@ export function ToolApprovalInline({ approval }: ToolApprovalInlineProps) {
   const removePendingApproval = useAgentStore((s) => s.removePendingApproval);
   const theme = useUiStore((s) => s.theme);
   const isDark = theme === 'dark';
+  const [feedback, setFeedback] = React.useState('');
+
+  useEffect(() => {
+    setFeedback('');
+  }, [approval?.call_id]);
 
   const handleApprove = useCallback(
     async (scope: 'once' | 'always') => {
@@ -71,9 +77,10 @@ export function ToolApprovalInline({ approval }: ToolApprovalInlineProps) {
 
   const handleDeny = useCallback(async () => {
     if (!approval) return;
+    const reason = feedback.trim() || 'User denied';
     removePendingApproval(approval.call_id);
-    await invoke('deny_tool', { callId: approval.call_id, reason: 'User denied' });
-  }, [approval, removePendingApproval]);
+    await invoke('deny_tool', { callId: approval.call_id, reason });
+  }, [approval, removePendingApproval, feedback]);
 
   // 键盘快捷键：Enter=允许一次, A=始终允许, Esc=拒绝
   useEffect(() => {
@@ -265,32 +272,59 @@ export function ToolApprovalInline({ approval }: ToolApprovalInlineProps) {
           </Text>
         </Group>
 
-        {/* 拒绝 */}
-        <Group
-          gap={6}
-          style={{ cursor: 'pointer' }}
-          onClick={handleDeny}
-          className="approval-btn"
-        >
-          <Box
-            style={{
-              width: 34,
-              height: 22,
-              borderRadius: 5,
-              background: 'var(--flock-bg-surface)',
-              border: '1px solid var(--flock-border-dim)',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-            }}
+        {/* 拒绝和输入反馈 */}
+        <Group gap={12} style={{ width: '100%' }} wrap="nowrap">
+          <Group
+            gap={6}
+            style={{ cursor: 'pointer', flexShrink: 0 }}
+            onClick={handleDeny}
+            className="approval-btn"
           >
-            <Text size="xs" fw={600} style={{ fontSize: 10, letterSpacing: '0.03em' }}>
-              Esc
+            <Box
+              style={{
+                width: 34,
+                height: 22,
+                borderRadius: 5,
+                background: 'var(--flock-bg-surface)',
+                border: '1px solid var(--flock-border-dim)',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+              }}
+            >
+              <Text size="xs" fw={600} style={{ fontSize: 10, letterSpacing: '0.03em' }}>
+                Esc
+              </Text>
+            </Box>
+            <Text size="xs" c={isDark ? 'red.4' : 'red.8'} fw={600} style={{ whiteSpace: 'nowrap' }}>
+              {feedback.trim() ? t('chat.approval.btnDenyWithFeedback') : t('chat.approval.btnDeny')}
             </Text>
-          </Box>
-          <Text size="xs" c={isDark ? 'red.4' : 'red.8'} fw={600}>
-            {t('chat.approval.btnDeny')}
-          </Text>
+          </Group>
+
+          <Input
+            placeholder={t('chat.approval.feedbackPlaceholder')}
+            value={feedback}
+            onChange={(e) => setFeedback(e.currentTarget.value)}
+            style={{ flexGrow: 1 }}
+            size="xs"
+            styles={{
+              input: {
+                height: 26,
+                fontSize: '11px',
+                backgroundColor: 'var(--flock-bg-deepest)',
+                border: '1px solid var(--flock-border-dim)',
+                color: 'var(--flock-text-primary)',
+                borderRadius: '4px',
+                width: '100%',
+              },
+            }}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter') {
+                e.preventDefault();
+                handleDeny();
+              }
+            }}
+          />
         </Group>
       </Box>
     </Box>
