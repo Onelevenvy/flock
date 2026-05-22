@@ -101,5 +101,27 @@
     "btnOpenVnc": "打开远程桌面",
     "btnCancel": "取消",
     "cancelledReason": "用户取消了人工接管操作"
+  },
+  "vnc": {
+    "liveDesktop": "📸 实时桌面",
+    "webConsole": "🌐 网页控制台",
+    "playbackMode": "⏸ 回放模式 ({{current}}/{{total}})",
+    "liveStatus": "LIVE 实时",
+    "playbackTip": "💡 提示：当前展示第 {{index}} 步历史快照，可通过下方时间轴拖动或点击箭头进行翻页。",
+    "liveTip": "💡 **提示**：图像传屏模式免受 HTTPS 证书及 HSTS 拦截影响，为您 100% 稳定高保真展现当前沙盒桌面状态。您可以让 Agent 执行操作以流式刷新画面。",
+    "openInBrowser": "在浏览器中打开",
+    "reloadConsole": "重载远程控制台（VNC 服务启动后点此刷新）",
+    "daytonaWarningTip": "💡 首次打开会看到 Daytona 预览警告，点击 I Understand, Continue 即可进入。若点击后仍空白，说明 VNC 服务正在后台启动（约 5-10 秒），点击上方 刷新按钮 🔄 重载即可。",
+    "prevStep": "上一步",
+    "nextStep": "下一步",
+    "backToLive": "返回实时控制台",
+    "playbackStatus": "正在回放历史：第 {{current}} / {{total}} 帧",
+    "liveStatusWithTotal": "当前处于实时画面 (共 {{total}} 帧历史)",
+    "liveLabel": "LIVE (实时)",
+    "stepLabel": "STEP {{index}}",
+    "establishingConnection": "正在建立安全连接，即将呈现远程画面...",
+    "deployingDaytona": "正在申请并部署 Daytona 沙盒环境",
+    "failedToLoadImage": "加载图片失败",
+    "noImageAvailable": "暂无可用图片路径"
   }
 }

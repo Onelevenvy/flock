@@ -9,6 +9,7 @@ import {
 } from '@tabler/icons-react';
 import { ImageView } from '../ImageView';
 import { useAgentStore } from '../../../../../store/agentStore';
+import { useTranslation } from 'react-i18next';
 
 interface VncViewProps {
   formattedVncUrl: string;
@@ -58,6 +59,7 @@ export function VncView({
   activeWorkspaceId,
   refreshTrigger,
 }: VncViewProps) {
+  const { t } = useTranslation();
   const [activeTab, setActiveTab] = useState<'screenshot' | 'vnc'>('screenshot');
   const [playbackIndex, setPlaybackIndex] = useState<number>(-1);
 
@@ -122,7 +124,7 @@ export function VncView({
               color: (!isPlaybackMode && activeTab === 'screenshot') ? '#fff' : 'var(--flock-text-dimmed)',
             }}
           >
-            📸 实时大图 (图像传屏)
+            {t('chat.vnc.liveDesktop')}
           </Box>
           <Box
             onClick={() => {
@@ -140,7 +142,7 @@ export function VncView({
               color: (!isPlaybackMode && activeTab === 'vnc') ? '#fff' : 'var(--flock-text-dimmed)',
             }}
           >
-            🌐 网页控制台 (noVNC)
+            {t('chat.vnc.webConsole')}
           </Box>
         </Box>
 
@@ -148,7 +150,7 @@ export function VncView({
         <Group gap="xs">
           {isPlaybackMode ? (
             <Badge variant="light" color="orange" size="sm" style={{ height: 24, fontSize: '11px' }}>
-              ⏸ 回放模式 ({playbackIndex + 1}/{screenshots.length})
+              {t('chat.vnc.playbackMode', { current: playbackIndex + 1, total: screenshots.length })}
             </Badge>
           ) : (
             <Badge
@@ -169,7 +171,7 @@ export function VncView({
                 />
               }
             >
-              LIVE 实时
+              {t('chat.vnc.liveStatus')}
             </Badge>
           )}
           <style>{`
@@ -194,7 +196,7 @@ export function VncView({
               fileName={`Step Snapshot ${playbackIndex + 1}`}
             />
             <Text size="xs" c="var(--flock-accent)" style={{ textAlign: 'center', fontWeight: 600 }}>
-              💡 提示：当前展示第 {playbackIndex + 1} 步历史快照，可通过下方时间轴拖动或点击箭头进行翻页。
+              {t('chat.vnc.playbackTip', { index: playbackIndex + 1 })}
             </Text>
           </Box>
         )}
@@ -210,7 +212,7 @@ export function VncView({
               refreshKey={refreshTrigger}
             />
             <Text size="xs" c="dimmed" style={{ textAlign: 'center', maxWidth: '80%', lineHeight: '1.6' }}>
-              💡 **提示**：图像传屏模式免受 HTTPS 证书及 HSTS 拦截影响，为您 100% 稳定高保真展现当前沙盒桌面状态。您可以让 Agent 执行操作以流式刷新画面。
+              {t('chat.vnc.liveTip')}
             </Text>
           </Box>
         )}
@@ -231,7 +233,7 @@ export function VncView({
                 size="sm"
                 variant="subtle"
                 color="gray"
-                title="在浏览器中打开"
+                title={t('chat.vnc.openInBrowser')}
                 onClick={() => window.open(formattedVncUrl, '_blank')}
               >
                 <IconExternalLink size={13} />
@@ -240,7 +242,7 @@ export function VncView({
                 size="sm"
                 variant="subtle"
                 color="blue"
-                title="重载远程控制台（VNC 服务启动后点此刷新）"
+                title={t('chat.vnc.reloadConsole')}
                 onClick={() => {
                   const iframe = document.getElementById('flock-vnc-iframe') as HTMLIFrameElement | null;
                   if (iframe) {
@@ -267,17 +269,18 @@ export function VncView({
               allow="fullscreen; clipboard-read; clipboard-write; autoplay"
             />
 
-            <Box style={{
-              padding: '8px 12px',
-              borderRadius: '8px',
-              border: '1px solid rgba(59,130,246,0.3)',
-              background: 'rgba(59,130,246,0.05)',
-              fontSize: '11px',
-              color: 'var(--flock-text-dimmed)',
-              lineHeight: '1.6'
-            }}>
-              💡 首次打开会看到 Daytona 预览警告，点击 <strong>I Understand, Continue</strong> 即可进入。若点击后仍空白，说明 VNC 服务正在后台启动（约 5-10 秒），点击上方 <strong>刷新按钮 🔄</strong> 重载即可。
-            </Box>
+            <Box 
+              style={{
+                padding: '8px 12px',
+                borderRadius: '8px',
+                border: '1px solid rgba(59,130,246,0.3)',
+                background: 'rgba(59,130,246,0.05)',
+                fontSize: '11px',
+                color: 'var(--flock-text-dimmed)',
+                lineHeight: '1.6'
+              }}
+              dangerouslySetInnerHTML={{ __html: t('chat.vnc.daytonaWarningTip') }}
+            />
           </Box>
         )}
       </Box>
@@ -298,20 +301,20 @@ export function VncView({
         >
           <Group justify="space-between" align="center">
             <Group gap={8}>
-              <Tooltip label="上一步" withArrow>
+              <Tooltip label={t('chat.vnc.prevStep')} withArrow>
                 <ActionIcon variant="subtle" size="sm" onClick={handlePrev} disabled={screenshots.length <= 1}>
                   <IconPlayerSkipBack size={14} />
                 </ActionIcon>
               </Tooltip>
 
-              <Tooltip label="下一步" withArrow>
+              <Tooltip label={t('chat.vnc.nextStep')} withArrow>
                 <ActionIcon variant="subtle" size="sm" onClick={handleNext} disabled={screenshots.length <= 1}>
                   <IconPlayerSkipForward size={14} />
                 </ActionIcon>
               </Tooltip>
 
               {isPlaybackMode && (
-                <Tooltip label="返回实时控制台" withArrow>
+                <Tooltip label={t('chat.vnc.backToLive')} withArrow>
                   <ActionIcon variant="light" color="teal" size="sm" onClick={handleGoLive}>
                     <IconDeviceDesktop size={14} />
                   </ActionIcon>
@@ -320,7 +323,9 @@ export function VncView({
             </Group>
 
             <Text size="xs" fw={500} c={isPlaybackMode ? 'orange' : 'teal'}>
-              {isPlaybackMode ? `正在回放历史：第 ${playbackIndex + 1} / ${screenshots.length} 帧` : `当前处于实时画面 (共 ${screenshots.length} 帧历史)`}
+              {isPlaybackMode 
+                ? t('chat.vnc.playbackStatus', { current: playbackIndex + 1, total: screenshots.length }) 
+                : t('chat.vnc.liveStatusWithTotal', { total: screenshots.length })}
             </Text>
           </Group>
 
@@ -338,8 +343,8 @@ export function VncView({
                 }
               }}
               label={(val) => {
-                if (val === screenshots.length) return 'LIVE (实时)';
-                return `STEP ${val + 1}`;
+                if (val === screenshots.length) return t('chat.vnc.liveLabel');
+                return t('chat.vnc.stepLabel', { index: val + 1 });
               }}
               step={1}
               color={isPlaybackMode ? 'orange' : 'teal'}
