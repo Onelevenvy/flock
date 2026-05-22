@@ -26,6 +26,9 @@ import { AssistantPicker, XIAOF_AGENT } from './AssistantPicker';
 import { WorkspacePicker } from './WorkspacePicker';
 import { useAssistantsQuery } from '../../hooks/useAssistants';
 import { useTranslation } from 'react-i18next';
+import { WelcomeHeader } from './components/WelcomeHeader';
+import { InputCard } from './components/InputCard';
+import { StatusIndicator } from './components/StatusIndicator';
 
 export function HomeView() {
   const { t } = useTranslation();
@@ -213,6 +216,25 @@ export function HomeView() {
   const activeOption = MODE_OPTIONS.find(o => o.value === currentMode) || MODE_OPTIONS[0];
   const ActiveModeIcon = activeOption.icon;
 
+  const handleRetry = async () => {
+    if (!activeWorkspaceId || !activeWs) return;
+    setStatus('connecting');
+    try {
+      await invoke('start_agent', {
+        workdir: activeWs.path,
+        sessionId: activeConversationId || null,
+        assistantId: selectedAssistant.id === '__xiaof__' ? null : selectedAssistant.id,
+        projectDir: null,
+        apiKey: null,
+        extraArgs: null,
+      });
+      setStatus('ready');
+    } catch (e: any) {
+      setStatus('error');
+      useAgentStore.getState().setError(String(e));
+    }
+  };
+
   return (
     <Box
       style={{
@@ -228,17 +250,7 @@ export function HomeView() {
       }}
     >
       {/* 欢迎语 */}
-      <Text
-        fw={700}
-        style={{
-          fontSize: 28,
-          color: 'var(--flock-text-bright)',
-          marginBottom: 24,
-          letterSpacing: '-0.5px',
-        }}
-      >
-        {t('home.welcome')}
-      </Text>
+      <WelcomeHeader t={t} />
 
       {/* 助手选择器 */}
       <Box mb={16} style={{ width: '100%', maxWidth: 680 }}>
@@ -246,163 +258,37 @@ export function HomeView() {
       </Box>
 
       {/* 输入框卡片 */}
-      <Box
-        style={{
-          width: '100%',
-          maxWidth: 680,
-          background: 'var(--flock-bg-raised)',
-          border: '1px solid var(--flock-border-base)',
-          borderRadius: 16,
-          padding: '12px 14px 10px',
-          boxShadow: '0 4px 24px rgba(0,0,0,0.08)',
-        }}
-        className="home-input-card"
-      >
-        {/* 文本输入 */}
-        <Textarea
-          ref={textareaRef}
-          placeholder={placeholder}
-          value={value}
-          onChange={e => setValue(e.currentTarget.value)}
-          onKeyDown={handleKeyDown}
-          disabled={!activeWorkspaceId || status === 'connecting'}
-          autosize
-          minRows={2}
-          maxRows={10}
-          styles={{
-            input: {
-              background: 'transparent',
-              border: 'none',
-              padding: 0,
-              color: 'var(--flock-text-primary)',
-              fontSize: 14,
-              lineHeight: 1.6,
-              resize: 'none',
-              outline: 'none',
-              boxShadow: 'none',
-            },
-          }}
-        />
-
-        {/* 底部工具栏 */}
-        <Group justify="space-between" mt={10}>
-          {/* 左侧：工作区 + 模型 */}
-          <Group gap={8} wrap="nowrap">
-            <WorkspacePicker onSelect={handleSelectWorkspace} />
-            <ActiveModelPicker />
-          </Group>
-
-          {/* 右侧：模式 + 发送 */}
-          <Group gap={6} wrap="nowrap">
-            {/* 审批模式 */}
-            {status === 'ready' && capabilities && (
-              <Menu shadow="md" width={140} position="top-end">
-                <Menu.Target>
-                  <Tooltip label={`${t('home.runMode')}: ${activeOption.label}`} withArrow>
-                    <ActionIcon size="sm" variant="subtle" color={activeOption.color} radius="md">
-                      <ActiveModeIcon size={15} />
-                    </ActionIcon>
-                  </Tooltip>
-                </Menu.Target>
-                <Menu.Dropdown>
-                  <Menu.Label>{t('home.runMode')}</Menu.Label>
-                  {MODE_OPTIONS.map(opt => (
-                    <Menu.Item
-                      key={opt.value}
-                      leftSection={<opt.icon size={13} color={`var(--mantine-color-${opt.color}-5)`} />}
-                      onClick={() => handleModeChange(opt.value)}
-                      style={{ fontWeight: currentMode === opt.value ? 600 : 400 }}
-                    >
-                      {opt.label}
-                    </Menu.Item>
-                  ))}
-                </Menu.Dropdown>
-              </Menu>
-            )}
-
-            {isStreaming ? (
-              <Tooltip label={t('home.stopGeneration', { defaultValue: '停止生成' })} withArrow>
-                <ActionIcon size="md" color="red" variant="light" radius="xl" onClick={handleStop}>
-                  <IconPlayerStop size={15} />
-                </ActionIcon>
-              </Tooltip>
-            ) : (
-              <Tooltip label={canSend ? t('home.sendEnter') : !activeWorkspaceId ? t('home.pleaseSelectWorkspace') : t('home.sendMessagePlaceholder')} withArrow>
-                <ActionIcon
-                  size="md"
-                  color="blue"
-                  variant={canSend ? 'filled' : 'subtle'}
-                  radius="xl"
-                  onClick={handleSend}
-                  disabled={!canSend}
-                  style={{
-                    background: canSend ? 'var(--flock-accent)' : undefined,
-                    boxShadow: canSend ? '0 2px 10px rgba(21, 90, 239, 0.25)' : 'none',
-                    transition: 'all 0.2s ease',
-                  }}
-                >
-                  <IconSend size={15} />
-                </ActionIcon>
-              </Tooltip>
-            )}
-          </Group>
-        </Group>
-      </Box>
+      <InputCard
+        t={t}
+        textareaRef={textareaRef}
+        placeholder={placeholder}
+        value={value}
+        onChange={setValue}
+        onKeyDown={handleKeyDown}
+        disabled={!activeWorkspaceId || status === 'connecting'}
+        activeWorkspaceId={activeWorkspaceId}
+        status={status}
+        capabilities={capabilities}
+        currentMode={currentMode}
+        activeOption={activeOption}
+        modeOptions={MODE_OPTIONS}
+        onModeChange={handleModeChange}
+        isStreaming={isStreaming}
+        canSend={canSend}
+        onSend={handleSend}
+        onStop={handleStop}
+        onSelectWorkspace={handleSelectWorkspace}
+      />
 
       {/* 状态提示 */}
-      {status === 'connecting' && (
-        <Text size="xs" c="dimmed" mt={12} style={{ opacity: 0.6 }}>
-          {t('home.connectingAgent', { name: selectedAssistant.name })}
-        </Text>
-      )}
-      {status === 'error' && (
-        <Group gap={6} mt={12}>
-          <Text size="xs" color="red" style={{ opacity: 0.8 }}>
-            Agent 连接失败
-          </Text>
-          <button
-            style={{
-              background: 'none',
-              border: 'none',
-              padding: 0,
-              fontSize: '12px',
-              color: 'var(--flock-accent)',
-              textDecoration: 'underline',
-              cursor: 'pointer'
-            }}
-            onClick={async () => {
-              if (!activeWorkspaceId || !activeWs) return;
-              setStatus('connecting');
-              try {
-                await invoke('start_agent', {
-                  workdir: activeWs.path,
-                  sessionId: activeConversationId || null,
-                  assistantId: selectedAssistant.id === '__xiaof__' ? null : selectedAssistant.id,
-                  projectDir: null,
-                  apiKey: null,
-                  extraArgs: null,
-                });
-                setStatus('ready');
-              } catch (e: any) {
-                setStatus('error');
-                useAgentStore.getState().setError(String(e));
-              }
-            }}
-          >
-            点击重试
-          </button>
-        </Group>
-      )}
-      {status === 'ready' && activeWs && (
-        <Text size="xs" c="dimmed" mt={10} style={{ opacity: 0.45, fontSize: 11 }}>
-          {t('home.disclaimer', { name: selectedAssistant.name, workspace: activeWs.name })}
-        </Text>
-      )}
-      {!activeWorkspaceId && (
-        <Text size="xs" c="dimmed" mt={10} style={{ opacity: 0.5 }}>
-          {t('home.startDialogHelp')}
-        </Text>
-      )}
+      <StatusIndicator
+        t={t}
+        status={status}
+        selectedAssistant={selectedAssistant}
+        activeWs={activeWs}
+        activeWorkspaceId={activeWorkspaceId}
+        onRetry={handleRetry}
+      />
     </Box>
   );
 }
