@@ -29,7 +29,50 @@ import { ToolCard } from './ToolApproval/ToolCard';
 import { useWorkspaceStore } from '../../store/workspaceStore';
 import { useWorkspacesQuery, useCreateConversationMutation } from '../../hooks/useWorkspaces';
 import { useAgentStore } from '../../store/agentStore';
+import { useUiStore } from '../../store/uiStore';
 import { MarkdownRenderer } from './MarkdownRenderer';
+
+// 结构化提取消息中的截图物理绝对路径
+function extractScreenshotsStructured(messages: any[]): { path: string; callId: string }[] {
+  const list: { path: string; callId: string }[] = [];
+  const fileRegex = /file:\/\/\/([a-zA-Z]:[^\s'")\]\)]+\.png)/gi;
+  
+  const foundPaths: string[] = [];
+  messages.forEach(msg => {
+    if (!msg.chunks) return;
+    msg.chunks.forEach((chunk: any) => {
+      let textToScan = '';
+      if (chunk.kind === 'text') {
+        textToScan = chunk.text || '';
+      } else if (chunk.kind === 'tool_request' && chunk.result) {
+        textToScan = chunk.result || '';
+      }
+      
+      if (textToScan) {
+        let match;
+        const scanText = textToScan.replace(/\\/g, '/');
+        fileRegex.lastIndex = 0;
+        while ((match = fileRegex.exec(scanText)) !== null) {
+          let path = match[1].replace(/\//g, '\\');
+          if (path.startsWith('\\')) {
+            path = path.substring(1);
+          }
+          if (!foundPaths.includes(path)) {
+            foundPaths.push(path);
+          }
+        }
+      }
+    });
+  });
+
+  foundPaths.forEach(path => {
+    const baseName = path.split(/[/\\]/).pop() || '';
+    const callId = baseName.replace(/\.png$/i, '');
+    list.push({ path, callId });
+  });
+
+  return list;
+}
 
 // ---- 思考块 ----
 function ThinkingBlock({ text, defaultCollapsed }: { text: string; defaultCollapsed: boolean }) {
@@ -160,6 +203,17 @@ function MessageBubble({ message }: { message: ChatMessage }) {
   const isUser = message.role === 'user';
   const { t } = useTranslation();
 
+  // 检查本条消息中是否含有截图
+  const hasScreenshots = message.chunks.some((chunk: any) => {
+    let text = '';
+    if (chunk.kind === 'text') {
+      text = chunk.text || '';
+    } else if (chunk.kind === 'tool_request' && chunk.result) {
+      text = chunk.result || '';
+    }
+    return text.includes('.flock/sandbox/screenshots') || text.includes('.flock\\sandbox\\screenshots');
+  });
+
   return (
     <Box
       style={{
@@ -226,6 +280,71 @@ function MessageBubble({ message }: { message: ChatMessage }) {
               <Group gap={4}>
                 <Loader size={12} type="dots" color="blue" />
                 <Text size="xs" c="dimmed">{t('chat.thinking')}</Text>
+              </Group>
+            )}
+
+            {/* 双向联动：一键拉起沙盒回放时间轴并跳转到指定步骤 */}
+            {hasScreenshots && !message.streaming && (
+              <Group mt="xs" gap="xs">
+                <Button
+                  size="xs"
+                  variant="light"
+                  color="teal"
+                  leftSection={<span style={{ display: 'inline-block', width: 6, height: 6, borderRadius: '50%', background: '#0ca678' }} />}
+                  styles={{
+                    root: {
+                      fontSize: '11px',
+                      height: '24px',
+                      padding: '0 8px',
+                      background: 'rgba(12, 166, 120, 0.08)',
+                      border: '1px solid rgba(12, 166, 120, 0.25)',
+                      transition: 'all 0.2s ease',
+                      '&:hover': {
+                        background: 'rgba(12, 166, 120, 0.15)',
+                      }
+                    }
+                  }}
+                  onClick={() => {
+                    const allMessages = useAgentStore.getState().messages;
+                    const allScreenshots = extractScreenshotsStructured(allMessages);
+                    
+                    const thisMsgScreenshotPaths: string[] = [];
+                    const fileRegex = /file:\/\/\/([a-zA-Z]:[^\s'")\]\)]+\.png)/gi;
+                    message.chunks.forEach((chunk: any) => {
+                      let textToScan = '';
+                      if (chunk.kind === 'text') {
+                        textToScan = chunk.text || '';
+                      } else if (chunk.kind === 'tool_request' && chunk.result) {
+                        textToScan = chunk.result || '';
+                      }
+                      if (textToScan) {
+                        let match;
+                        const scanText = textToScan.replace(/\\/g, '/');
+                        fileRegex.lastIndex = 0;
+                        while ((match = fileRegex.exec(scanText)) !== null) {
+                          let path = match[1].replace(/\//g, '\\');
+                          if (path.startsWith('\\')) path = path.substring(1);
+                          thisMsgScreenshotPaths.push(path);
+                        }
+                      }
+                    });
+
+                    if (thisMsgScreenshotPaths.length > 0) {
+                      const targetIdx = allScreenshots.findIndex(s => thisMsgScreenshotPaths.includes(s.path));
+                      if (targetIdx !== -1) {
+                        useAgentStore.getState().setPlaybackIndex(targetIdx);
+                      }
+                    }
+
+                    useUiStore.getState().setPreviewFile({
+                      path: '.flock/sandbox/screenshot.png',
+                      content: '',
+                      extension: 'vnc',
+                    });
+                  }}
+                >
+                  {t('chat.viewStepsPlayback', { defaultValue: '查看此步骤屏幕回放' })}
+                </Button>
               </Group>
             )}
           </Stack>

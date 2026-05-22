@@ -18,6 +18,17 @@ interface VncViewProps {
   refreshTrigger: number;
 }
 
+export interface ScreenshotInfo {
+  path: string;
+  callId: string;
+  action?: string;
+  x?: number;
+  y?: number;
+  text?: string;
+  key?: string;
+  toolName?: string;
+}
+
 // 提取物理路径中关于 .flock/sandbox/screenshots/ 的相对工作空间路径
 function getRelativePath(absPath: string): string {
   if (!absPath) return "";
@@ -30,11 +41,13 @@ function getRelativePath(absPath: string): string {
   return "";
 }
 
-// 提取消息中的 file:/// 物理绝对路径
-function extractScreenshots(messages: any[]): string[] {
-  const list: string[] = [];
-  const fileRegex = /file:\/\/\/([a-zA-Z]:[^\s'")\]\)]+)/gi;
+// 结构化提取消息中的截图物理绝对路径，并关联当时的 Tool 动作参数
+function extractScreenshotsStructured(messages: any[]): ScreenshotInfo[] {
+  const list: ScreenshotInfo[] = [];
+  const fileRegex = /file:\/\/\/([a-zA-Z]:[^\s'")\]\)]+\.png)/gi;
   
+  // 1. 扫描所有图片物理路径
+  const foundPaths: string[] = [];
   messages.forEach(msg => {
     if (!msg.chunks) return;
     msg.chunks.forEach((chunk: any) => {
@@ -55,14 +68,189 @@ function extractScreenshots(messages: any[]): string[] {
           if (path.startsWith('\\')) {
             path = path.substring(1);
           }
-          if (!list.includes(path)) {
-            list.push(path);
+          if (!foundPaths.includes(path)) {
+            foundPaths.push(path);
           }
         }
       }
     });
   });
+
+  // 2. 根据物理路径，提取文件名中的 callId 并关联动作
+  foundPaths.forEach(path => {
+    const baseName = path.split(/[/\\]/).pop() || '';
+    const callId = baseName.replace(/\.png$/i, '');
+    
+    let action = '';
+    let x: number | undefined = undefined;
+    let y: number | undefined = undefined;
+    let text = '';
+    let key = '';
+    let toolName = '';
+
+    for (const msg of messages) {
+      if (!msg.chunks) continue;
+      const foundChunk = msg.chunks.find((c: any) => c.kind === 'tool_request' && c.call_id === callId);
+      if (foundChunk && foundChunk.tool) {
+        toolName = foundChunk.tool.name || '';
+        const args = foundChunk.tool.args || {};
+        try {
+          const parsedArgs = typeof args === 'string' ? JSON.parse(args) : args;
+          action = parsedArgs.action || '';
+          x = typeof parsedArgs.x === 'number' ? parsedArgs.x : (parsedArgs.x ? parseInt(parsedArgs.x) : undefined);
+          y = typeof parsedArgs.y === 'number' ? parsedArgs.y : (parsedArgs.y ? parseInt(parsedArgs.y) : undefined);
+          text = parsedArgs.text || '';
+          key = parsedArgs.key || parsedArgs.button || '';
+        } catch (e) {
+          // Fallback if parsing fails
+        }
+        break;
+      }
+    }
+
+    list.push({
+      path,
+      callId,
+      action,
+      x,
+      y,
+      text,
+      key,
+      toolName
+    });
+  });
+
   return list;
+}
+
+// Manus 风格的动作高亮悬浮图层
+function ActionOverlay({ info }: { info: ScreenshotInfo }) {
+  if (info.x === undefined || info.y === undefined || info.x < 0 || info.y < 0) return null;
+
+  // 根据 Daytona 标准分辨率 1024x768 换算为百分比
+  const xPercent = Math.min(Math.max((info.x / 1024) * 100, 0), 100);
+  const yPercent = Math.min(Math.max((info.y / 768) * 100, 0), 100);
+
+  const isClick = ['click', 'move', 'drag', 'double_click', 'right_click'].includes(info.action?.toLowerCase() || '');
+  const isType = ['type', 'fill'].includes(info.action?.toLowerCase() || '');
+
+  return (
+    <Box
+      style={{
+        position: 'absolute',
+        left: `${xPercent}%`,
+        top: `${yPercent}%`,
+        transform: 'translate(-50%, -50%)',
+        pointerEvents: 'none',
+        zIndex: 50,
+      }}
+    >
+      {/* 1. 脉冲波纹红圈 (点击动作) */}
+      {isClick && (
+        <>
+          <Box
+            style={{
+              width: 28,
+              height: 28,
+              borderRadius: '50%',
+              background: 'rgba(255, 59, 48, 0.35)',
+              border: '2px solid #ff3b30',
+              position: 'absolute',
+              top: '50%',
+              left: '50%',
+              transform: 'translate(-50%, -50%)',
+              animation: 'ripple 1.5s infinite ease-out',
+            }}
+          />
+          <Box
+            style={{
+              width: 8,
+              height: 8,
+              borderRadius: '50%',
+              background: '#ff3b30',
+              boxShadow: '0 0 8px rgba(255, 59, 48, 0.8)',
+              position: 'absolute',
+              top: '50%',
+              left: '50%',
+              transform: 'translate(-50%, -50%)',
+            }}
+          />
+        </>
+      )}
+
+      {/* 2. 绿色输入框焦点与输入提示 (打字输入动作) */}
+      {isType && (
+        <>
+          <Box
+            style={{
+              width: 20,
+              height: 20,
+              border: '2px dashed #34c759',
+              borderRadius: 4,
+              position: 'absolute',
+              top: '50%',
+              left: '50%',
+              transform: 'translate(-50%, -50%)',
+              animation: 'typePulse 2.0s infinite ease-in-out',
+            }}
+          />
+          <Box
+            style={{
+              background: 'rgba(0, 0, 0, 0.85)',
+              backdropFilter: 'blur(6px)',
+              border: '1px solid rgba(52, 199, 89, 0.4)',
+              color: '#34c759',
+              padding: '4px 8px',
+              borderRadius: 6,
+              fontSize: '11px',
+              fontWeight: 600,
+              whiteSpace: 'nowrap',
+              position: 'absolute',
+              top: 22,
+              left: '50%',
+              transform: 'translateX(-50%)',
+              boxShadow: '0 4px 12px rgba(0,0,0,0.3)',
+            }}
+          >
+            输入: "{info.text}"
+          </Box>
+        </>
+      )}
+
+      {/* 3. 步骤动作 Tooltip */}
+      <Box
+        style={{
+          background: 'rgba(26, 27, 30, 0.9)',
+          border: '1px solid var(--flock-border-dim)',
+          color: '#eef2f6',
+          padding: '4px 8px',
+          borderRadius: 6,
+          fontSize: '10px',
+          fontWeight: 600,
+          whiteSpace: 'nowrap',
+          position: 'absolute',
+          bottom: 22,
+          left: '50%',
+          transform: 'translateX(-50%)',
+          boxShadow: '0 4px 12px rgba(0,0,0,0.25)',
+        }}
+      >
+        {info.action ? `${info.action.toUpperCase()}` : 'ACTION'} ({info.x}, {info.y})
+      </Box>
+
+      {/* 关键帧动画注入 */}
+      <style>{`
+        @keyframes ripple {
+          0% { transform: translate(-50%, -50%) scale(0.6); opacity: 1; }
+          100% { transform: translate(-50%, -50%) scale(2.2); opacity: 0; }
+        }
+        @keyframes typePulse {
+          0%, 100% { transform: translate(-50%, -50%) scale(1); opacity: 0.7; }
+          50% { transform: translate(-50%, -50%) scale(1.15); opacity: 1; }
+        }
+      `}</style>
+    </Box>
+  );
 }
 
 export function VncView({
@@ -73,22 +261,28 @@ export function VncView({
 }: VncViewProps) {
   const { t } = useTranslation();
   const [activeTab, setActiveTab] = useState<'screenshot' | 'vnc'>('screenshot');
-  const [playbackIndex, setPlaybackIndex] = useState<number>(-1);
 
   const messages = useAgentStore((s) => s.messages);
-  const screenshots = extractScreenshots(messages);
+  const playbackIndex = useAgentStore((s) => s.playbackIndex);
+  const setPlaybackIndex = useAgentStore((s) => s.setPlaybackIndex);
 
-  // When VNC URL is set, switch to VNC tab
+  const screenshots = extractScreenshotsStructured(messages);
+
+  const isOfflineMode = !formattedVncUrl; // 无活跃 VNC 代理时属于离线回放模式
+
+  // 当有 VNC URL 时默认切到 VNC，否则强制使用截图 Tab
   useEffect(() => {
     if (formattedVncUrl) {
       setActiveTab('vnc');
+    } else {
+      setActiveTab('screenshot');
     }
   }, [formattedVncUrl]);
 
   // 重置回放索引当消息数量变化时
   useEffect(() => {
     setPlaybackIndex(-1);
-  }, [messages.length]);
+  }, [messages.length, setPlaybackIndex]);
 
   const isPlaybackMode = playbackIndex >= 0 && playbackIndex < screenshots.length;
 
@@ -136,26 +330,29 @@ export function VncView({
               color: (!isPlaybackMode && activeTab === 'screenshot') ? '#fff' : 'var(--flock-text-dimmed)',
             }}
           >
-            {t('chat.vnc.liveDesktop')}
+            {isOfflineMode ? t('chat.vnc.screenshotPlayback', { defaultValue: '历史画面回放' }) : t('chat.vnc.liveDesktop')}
           </Box>
-          <Box
-            onClick={() => {
-              if (isPlaybackMode) setPlaybackIndex(-1);
-              setActiveTab('vnc');
-            }}
-            style={{
-              padding: '6px 12px',
-              borderRadius: '6px',
-              cursor: 'pointer',
-              fontSize: '13px',
-              fontWeight: 600,
-              transition: 'all 0.2s ease',
-              background: (!isPlaybackMode && activeTab === 'vnc') ? 'var(--flock-accent)' : 'transparent',
-              color: (!isPlaybackMode && activeTab === 'vnc') ? '#fff' : 'var(--flock-text-dimmed)',
-            }}
-          >
-            {t('chat.vnc.webConsole')}
-          </Box>
+          
+          {!isOfflineMode && (
+            <Box
+              onClick={() => {
+                if (isPlaybackMode) setPlaybackIndex(-1);
+                setActiveTab('vnc');
+              }}
+              style={{
+                padding: '6px 12px',
+                borderRadius: '6px',
+                cursor: 'pointer',
+                fontSize: '13px',
+                fontWeight: 600,
+                transition: 'all 0.2s ease',
+                background: (!isPlaybackMode && activeTab === 'vnc') ? 'var(--flock-accent)' : 'transparent',
+                color: (!isPlaybackMode && activeTab === 'vnc') ? '#fff' : 'var(--flock-text-dimmed)',
+              }}
+            >
+              {t('chat.vnc.webConsole')}
+            </Box>
+          )}
         </Box>
 
         {/* 状态徽章：Live 状态或是回放状态 */}
@@ -163,6 +360,10 @@ export function VncView({
           {isPlaybackMode ? (
             <Badge variant="light" color="orange" size="sm" style={{ height: 24, fontSize: '11px' }}>
               {t('chat.vnc.playbackMode', { current: playbackIndex + 1, total: screenshots.length })}
+            </Badge>
+          ) : isOfflineMode ? (
+            <Badge variant="light" color="gray" size="sm" style={{ height: 24, fontSize: '11px' }}>
+              {t('chat.vnc.offlineReplay', { defaultValue: '离线历史记录' })}
             </Badge>
           ) : (
             <Badge
@@ -201,36 +402,40 @@ export function VncView({
         {/* === 1. 回放模式展示 === */}
         {isPlaybackMode && (
           <Box style={{ display: 'flex', flexDirection: 'column', gap: '12px', alignItems: 'center', justifyContent: 'center', width: '100%', minHeight: '400px' }}>
-            <ImageView
-              absPath={screenshots[playbackIndex]}
-              workspaceId={activeWorkspaceId}
-              relativePath={getRelativePath(screenshots[playbackIndex])}
-              fileName={`Step Snapshot ${playbackIndex + 1}`}
-            />
+            <Box style={{ position: 'relative', width: '100%', display: 'flex', justifyContent: 'center' }}>
+              <ImageView
+                absPath={screenshots[playbackIndex].path}
+                workspaceId={activeWorkspaceId}
+                relativePath={getRelativePath(screenshots[playbackIndex].path)}
+                fileName={`Step Snapshot ${playbackIndex + 1}`}
+              />
+              {/* Manus 风格的动作高亮叠加图层 */}
+              <ActionOverlay info={screenshots[playbackIndex]} />
+            </Box>
             <Text size="xs" c="var(--flock-accent)" style={{ textAlign: 'center', fontWeight: 600 }}>
               {t('chat.vnc.playbackTip', { index: playbackIndex + 1 })}
             </Text>
           </Box>
         )}
 
-        {/* === 2. 实时大图展示 === */}
+        {/* === 2. 实时大图展示 (或离线模式下的首屏静态展示) === */}
         {!isPlaybackMode && activeTab === 'screenshot' && (
           <Box style={{ display: 'flex', flexDirection: 'column', gap: '12px', alignItems: 'center', justifyContent: 'center', width: '100%', minHeight: '400px' }}>
             <ImageView
-              absPath={screenshotAbsPath}
+              absPath={isOfflineMode && screenshots.length > 0 ? screenshots[screenshots.length - 1].path : screenshotAbsPath}
               workspaceId={activeWorkspaceId}
-              relativePath=".flock/sandbox/screenshot.png"
+              relativePath={isOfflineMode && screenshots.length > 0 ? getRelativePath(screenshots[screenshots.length - 1].path) : ".flock/sandbox/screenshot.png"}
               fileName="FLOCK COMPUTER"
               refreshKey={refreshTrigger}
             />
             <Text size="xs" c="dimmed" style={{ textAlign: 'center', maxWidth: '80%', lineHeight: '1.6' }}>
-              {t('chat.vnc.liveTip')}
+              {isOfflineMode ? t('chat.vnc.offlineReplayTip', { defaultValue: '会话已结束，当前为纯画面回放，支持在下方拖拽回溯 Agent 的执行步骤。' }) : t('chat.vnc.liveTip')}
             </Text>
           </Box>
         )}
 
         {/* === 3. VNC 网页控制台展示 === */}
-        {!isPlaybackMode && activeTab === 'vnc' && (
+        {!isPlaybackMode && activeTab === 'vnc' && !isOfflineMode && (
           <Box style={{ display: 'flex', flexDirection: 'column', gap: '8px', width: '100%' }}>
             {/* 工具栏：链接 + 刷新 */}
             <Box style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
@@ -325,7 +530,7 @@ export function VncView({
                 </ActionIcon>
               </Tooltip>
 
-              {isPlaybackMode && (
+              {isPlaybackMode && !isOfflineMode && (
                 <Tooltip label={t('chat.vnc.backToLive')} withArrow>
                   <ActionIcon variant="light" color="teal" size="sm" onClick={handleGoLive}>
                     <IconDeviceDesktop size={14} />
@@ -337,6 +542,8 @@ export function VncView({
             <Text size="xs" fw={500} c={isPlaybackMode ? 'orange' : 'teal'}>
               {isPlaybackMode 
                 ? t('chat.vnc.playbackStatus', { current: playbackIndex + 1, total: screenshots.length }) 
+                : isOfflineMode
+                ? t('chat.vnc.offlineReplayTotal', { total: screenshots.length, defaultValue: `回放共计 ${screenshots.length} 步` })
                 : t('chat.vnc.liveStatusWithTotal', { total: screenshots.length })}
             </Text>
           </Group>
@@ -345,18 +552,19 @@ export function VncView({
           <Box style={{ padding: '0 8px' }}>
             <Slider
               min={0}
-              max={screenshots.length}
-              value={playbackIndex === -1 ? screenshots.length : playbackIndex}
+              max={screenshots.length - (isOfflineMode ? 1 : 0)}
+              value={playbackIndex === -1 ? (isOfflineMode ? screenshots.length - 1 : screenshots.length) : playbackIndex}
               onChange={(val) => {
-                if (val === screenshots.length) {
+                if (!isOfflineMode && val === screenshots.length) {
                   setPlaybackIndex(-1);
                 } else {
                   setPlaybackIndex(val);
                 }
               }}
               label={(val) => {
-                if (val === screenshots.length) return t('chat.vnc.liveLabel');
-                return t('chat.vnc.stepLabel', { index: val + 1 });
+                if (!isOfflineMode && val === screenshots.length) return t('chat.vnc.liveLabel');
+                const actionDesc = screenshots[val]?.action ? ` (${screenshots[val].action})` : '';
+                return t('chat.vnc.stepLabel', { index: val + 1 }) + actionDesc;
               }}
               step={1}
               color={isPlaybackMode ? 'orange' : 'teal'}
@@ -382,3 +590,4 @@ export function VncView({
     </Box>
   );
 }
+

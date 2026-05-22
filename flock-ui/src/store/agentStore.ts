@@ -28,6 +28,9 @@ interface AgentStore {
   // 人工接管状态（类似 Coze Space 的 human-in-the-loop）
   humanTakeover: HumanTakeoverInfo | null;
 
+  // === 历史截图回放全局索引 ===
+  playbackIndex: number;
+
   // === Actions ===
 
   setStatus: (status: AgentStatus) => void;
@@ -48,6 +51,7 @@ interface AgentStore {
 
   clearMessages: () => void;
   loadHistory: (workspaceId: string, convId: string) => Promise<void>;
+  setPlaybackIndex: (index: number) => void;
 }
 
 import { invoke } from '@tauri-apps/api/core';
@@ -60,11 +64,13 @@ export const useAgentStore = create<AgentStore>((set) => ({
   messages: [],
   pendingApprovals: [],
   humanTakeover: null,
+  playbackIndex: -1,
 
   setStatus: (status) => set({ status }),
   setWorkdir: (dir) => set({ workdir: dir }),
   setError: (msg) => set({ errorMessage: msg }),
   setCapabilities: (caps) => set({ capabilities: caps }),
+  setPlaybackIndex: (playbackIndex) => set({ playbackIndex }),
 
   addUserMessage: (id, content) =>
     set((state) => ({
@@ -98,12 +104,34 @@ export const useAgentStore = create<AgentStore>((set) => ({
           return c;
         })
       }));
-      set({ messages: formattedHistory, pendingApprovals: [] });
-      // 切换或载入对话历史时，自动清空并关闭当前的屏幕截图预览！
-      useUiStore.getState().setPreviewFile(null);
+      set({ messages: formattedHistory, pendingApprovals: [], playbackIndex: -1 });
+      
+      // 检查历史记录中是否包含任何截图
+      const hasScreenshots = formattedHistory.some(msg => 
+        msg.chunks?.some((chunk: any) => {
+          let text = '';
+          if (chunk.kind === 'text') {
+            text = chunk.text || '';
+          } else if (chunk.kind === 'tool_request' && chunk.result) {
+            text = chunk.result || '';
+          }
+          return text.includes('.flock/sandbox/screenshots') || text.includes('.flock\\sandbox\\screenshots');
+        })
+      );
+      
+      if (hasScreenshots) {
+        // 如果历史会话中含有截图，则优雅地拉起虚拟的“VNC / 离线回放”页面，使用户能立即观看时间轴回放！
+        useUiStore.getState().setPreviewFile({
+          path: '.flock/sandbox/screenshot.png',
+          content: '',
+          extension: 'vnc', // 强行将扩展名置为 vnc 以走 VncView 逻辑
+        });
+      } else {
+        useUiStore.getState().setPreviewFile(null);
+      }
     } catch (e) {
       console.error('Failed to load history:', e);
-      set({ messages: [], pendingApprovals: [] });
+      set({ messages: [], pendingApprovals: [], playbackIndex: -1 });
     }
   },
 
