@@ -20,6 +20,11 @@ impl ToolRegistry {
         self.tools.push(tool);
     }
 
+    /// Remove a tool by name
+    pub fn remove(&mut self, name: &str) {
+        self.tools.retain(|t| t.name() != name);
+    }
+
     /// Find a tool by name
     pub fn get(&self, name: &str) -> Option<&dyn Tool> {
         self.tools

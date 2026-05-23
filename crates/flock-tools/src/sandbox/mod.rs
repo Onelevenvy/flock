@@ -3,6 +3,7 @@ pub mod browser;
 pub mod computer_use;
 pub mod sandbox_exec;
 pub mod request_human_assistance;
+pub mod fs_tools;
 
 
 use flock_core::types::tool::{ProviderInfo, I18nString};

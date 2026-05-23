@@ -42,6 +42,9 @@ pub fn all_tools() -> ToolSet {
     reg.register(sandbox::computer_use::ComputerUseToolImpl::new());
     reg.register(sandbox::sandbox_exec::SandboxExecToolImpl::new());
     reg.register(sandbox::request_human_assistance::RequestHumanAssistanceToolImpl::new());
+    reg.register(sandbox::fs_tools::SandboxReadToolImpl::new());
+    reg.register(sandbox::fs_tools::SandboxWriteToolImpl::new());
+    reg.register(sandbox::fs_tools::SandboxEditToolImpl::new());
 
     // --- math ---
     infos.push(math::provider_info());

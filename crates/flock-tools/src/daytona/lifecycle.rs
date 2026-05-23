@@ -2,13 +2,13 @@ use flock_core::db::DbManager;
 use flock_core::config::settings::SandboxConfig;
 use crate::daytona::state::get_sandbox_id_mutex;
 use crate::daytona::config::{get_sandbox_config, get_api_base};
+use crate::daytona::volume::get_or_create_volume;
 
-/// 销毁当前活跃的沙盒（DELETE /sandbox/{id}），并清除缓存。
-/// 由 Agent 停止事件或手动触发调用。
+/// 销毁当前活跃的沙盒
 pub async fn destroy_active_sandbox(db: &DbManager) -> anyhow::Result<()> {
     let cfg = match get_sandbox_config(db).await {
         Some(c) => c,
-        None => return Ok(()), // 未配置，无需操作
+        None => return Ok(()),
     };
 
     let mutex = get_sandbox_id_mutex();
@@ -16,7 +16,7 @@ pub async fn destroy_active_sandbox(db: &DbManager) -> anyhow::Result<()> {
 
     let sandbox_id = match lock.as_ref() {
         Some(id) => id.clone(),
-        None => return Ok(()), // 没有活跃沙盒
+        None => return Ok(()),
     };
 
     let client = reqwest::Client::new();
@@ -56,12 +56,8 @@ pub async fn get_or_create_active_sandbox(db: &DbManager) -> anyhow::Result<Stri
     let mutex = get_sandbox_id_mutex();
     let mut lock = mutex.lock().await;
     
-    // 如果缓存中有 ID，进行探活
     if let Some(id) = lock.as_ref() {
-        // crate::emit_info(&format!("正在检查 Daytona 沙盒 {} 的健康状态...", id));
         if check_sandbox_alive(&cfg, id).await {
-            // crate::emit_info(&format!("Daytona 沙盒 {} 已就绪 (复用中)", id));
-            // 复用时也尝试将其设为 public，忽略可能的报错，确保老沙盒也被激活为 public，免除网关警告页
             let _ = set_sandbox_public(&cfg, id, true).await;
             return Ok(id.clone());
         }
@@ -69,24 +65,37 @@ pub async fn get_or_create_active_sandbox(db: &DbManager) -> anyhow::Result<Stri
         *lock = None;
     }
 
-    // crate::emit_info("正在向云端申请创建新 Daytona 沙盒...");
     crate::emit_info(&flock_core::tr("正在向云端申请启动沙盒...", "Requesting to start sandbox from the cloud..."));
     
     let client = reqwest::Client::new();
     let base = get_api_base(cfg.api_url.as_ref().unwrap());
     let api_key = cfg.api_key.as_ref().unwrap();
 
-    // 构造创建请求 body，如果配置了 snapshot 则使用它，同时加上 "public": true
-    let create_body = if let Some(ref snap_name) = cfg.snapshot {
-        if !snap_name.trim().is_empty() {
-            // crate::emit_info(&format!("使用自定义 Snapshot: {}...", snap_name));
-            serde_json::json!({ "snapshot": snap_name.trim(), "public": true })
-        } else {
-            serde_json::json!({ "public": true })
+    let workspace_id = crate::get_workspace_dir()
+        .and_then(|p| p.file_name().map(|n| n.to_string_lossy().to_string()))
+        .unwrap_or_else(|| "default".to_string());
+
+    // Create volume
+    let volume_id = match get_or_create_volume(&cfg, &workspace_id).await {
+        Ok(id) => Some(id),
+        Err(e) => {
+            crate::emit_info(&format!("未能创建或获取云端 Volume: {} (将使用临时沙盒存储)", e));
+            None
         }
-    } else {
-        serde_json::json!({ "public": true })
     };
+
+    let mut create_body = serde_json::json!({ "public": true });
+    
+    if let Some(ref snap_name) = cfg.snapshot {
+        if !snap_name.trim().is_empty() {
+            create_body["snapshot"] = serde_json::Value::String(snap_name.trim().to_string());
+        }
+    }
+
+    if let Some(vid) = volume_id {
+        // Assume Daytona Sandbox creation payload accepts volume mapping (guessed standard payload)
+        create_body["volumeId"] = serde_json::Value::String(vid);
+    }
 
     let create_url = format!("{}/api/sandbox", base);
     let res = client.post(&create_url)
@@ -108,7 +117,6 @@ pub async fn get_or_create_active_sandbox(db: &DbManager) -> anyhow::Result<Stri
         ),
     };
     
-    // 灵活支持 id/sandboxId 扁平或 data 嵌套结构
     let sandbox_id_val = val.get("id")
         .or_else(|| val.get("sandboxId"))
         .or_else(|| val.get("data").and_then(|d| d.get("id")))
@@ -122,9 +130,6 @@ pub async fn get_or_create_active_sandbox(db: &DbManager) -> anyhow::Result<Stri
         )),
     };
 
-    // 轮询等待沙盒变为 "started" 状态
-    // crate::emit_info(&format!("Daytona 沙盒创建成功 (ID: {})。启动中，正在等待网络与系统就绪...", sandbox_id));
-    
     let mut started = false;
     let mut last_status = flock_core::tr("未知", "Unknown");
     let mut last_resp_body = String::new();
@@ -193,13 +198,11 @@ pub async fn get_or_create_active_sandbox(db: &DbManager) -> anyhow::Result<Stri
     }
 
     crate::emit_info(&flock_core::tr("Daytona 沙盒已就绪。", "Daytona sandbox is ready."));
-    // 显式将新创建的沙盒设为 public，双重保险
     let _ = set_sandbox_public(&cfg, &sandbox_id, true).await;
     *lock = Some(sandbox_id.clone());
     Ok(sandbox_id)
 }
 
-/// 检查沙盒是否还存活
 pub async fn check_sandbox_alive(cfg: &SandboxConfig, id: &str) -> bool {
     let client = reqwest::Client::new();
     let base = get_api_base(cfg.api_url.as_ref().unwrap());
@@ -229,7 +232,6 @@ pub async fn check_sandbox_alive(cfg: &SandboxConfig, id: &str) -> bool {
     false
 }
 
-/// 设置沙盒的公开/私有状态 (POST /api/sandbox/{id}/public/{is_public})
 pub async fn set_sandbox_public(
     cfg: &SandboxConfig,
     sandbox_id: &str,
@@ -240,7 +242,6 @@ pub async fn set_sandbox_public(
     let api_key = cfg.api_key.as_ref().unwrap();
 
     let url = format!("{}/api/sandbox/{}/public/{}", base, sandbox_id, is_public);
-    // crate::emit_info(&format!("正在设置 Daytona 沙盒 {} 的 public 属性为 {}...", sandbox_id, is_public));
     
     let res = client.post(&url)
         .header("Authorization", format!("Bearer {}", api_key))

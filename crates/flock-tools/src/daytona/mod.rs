@@ -5,6 +5,8 @@ mod exec;
 mod vnc;
 mod snapshot;
 mod constants;
+pub mod volume;
+pub mod fs;
 
 pub use state::{get_active_sandbox_id, emit_human_takeover};
 pub use config::{get_sandbox_config, get_api_base};
