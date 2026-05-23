@@ -34,7 +34,7 @@ export function FileTreeItem({
   onDelete,
 }: FileTreeItemProps) {
   const { t } = useTranslation();
-  const { expandedDirs, toggleExpandDir, setPreviewFile } = useUiStore();
+  const { expandedDirs, toggleExpandDir, openEnvironment } = useUiStore();
   const [children, setChildren] = useState<FileEntry[]>(entry.children || []);
   const [loading, setLoading] = useState(false);
   const isExpanded = expandedDirs.has(entry.path);
@@ -71,15 +71,22 @@ export function FileTreeItem({
           workspaceId,
           relativePath: entry.path,
         });
-        setPreviewFile({ path: entry.path, content, extension: entry.extension });
+        const file = { path: entry.path, content, extension: entry.extension };
+        if (ext === 'html' || ext === 'htm') {
+          openEnvironment('browser', file);
+        } else if (ext === 'log') {
+          openEnvironment('terminal', file);
+        } else {
+          openEnvironment('code', file);
+        }
       } catch {
         // ignore
       }
     } else {
       // Binary file (image, PDF, office, etc.) - load without fetching text content
-      setPreviewFile({ path: entry.path, content: '', extension: entry.extension });
+      openEnvironment('code', { path: entry.path, content: '', extension: entry.extension });
     }
-  }, [entry, workspaceId, setPreviewFile]);
+  }, [entry, workspaceId, openEnvironment]);
 
   const paddingLeft = depth * 14 + 8;
 

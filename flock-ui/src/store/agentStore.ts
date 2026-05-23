@@ -122,13 +122,13 @@ export const useAgentStore = create<AgentStore>((set) => ({
       if (hasScreenshots) {
         // 如果历史会话中含有截图，则优雅地拉起虚拟的“VNC / 离线回放”页面，使用户能立即观看时间轴回放！
         const sessionId = useWorkspaceStore.getState().activeConversationId || 'default';
-        useUiStore.getState().setPreviewFile({
+        useUiStore.getState().openEnvironment('computer', {
           path: `.flock/sandbox/screenshot_${sessionId}.png`,
           content: '',
           extension: 'vnc', // 强行将扩展名置为 vnc 以走 VncView 逻辑
         });
       } else {
-        useUiStore.getState().setPreviewFile(null);
+        useUiStore.getState().closeEnvironment();
       }
     } catch (e) {
       console.error('Failed to load history:', e);
@@ -255,7 +255,12 @@ export const useAgentStore = create<AgentStore>((set) => ({
           if (
             lowerTool.includes('browser') ||
             lowerTool.includes('computer_use') ||
-            lowerTool.includes('computeruse')
+            lowerTool.includes('computeruse') ||
+            lowerTool.includes('sandboxexec') ||
+            lowerTool.includes('sandbox_exec') ||
+            lowerTool.includes('bash') ||
+            lowerTool.includes('python') ||
+            lowerTool.includes('code_execution')
           ) {
             // 判断是否是 computer_use 且 action 为 exec
             let isExec = false;
@@ -284,7 +289,7 @@ export const useAgentStore = create<AgentStore>((set) => ({
               // 命令行命令，将其直接输出为 log
               const currentPreview = useUiStore.getState().previewFile;
               if (!currentPreview || currentPreview.path !== '.flock/sandbox/code_result.log') {
-                useUiStore.getState().setPreviewFile({
+                useUiStore.getState().openEnvironment('terminal', {
                   path: '.flock/sandbox/code_result.log',
                   content: '正在执行沙盒命令...',
                   extension: 'log',
@@ -296,7 +301,7 @@ export const useAgentStore = create<AgentStore>((set) => ({
                   if (vncUrl) {
                     const currentPreview = useUiStore.getState().previewFile;
                     if (!currentPreview || currentPreview.path !== vncUrl) {
-                      useUiStore.getState().setPreviewFile({
+                      useUiStore.getState().openEnvironment('computer', {
                         path: vncUrl,
                         content: '',
                         extension: 'vnc',
@@ -305,7 +310,7 @@ export const useAgentStore = create<AgentStore>((set) => ({
                   } else {
                     const currentPreview = useUiStore.getState().previewFile;
                     if (!currentPreview || currentPreview.path !== screenshotPath) {
-                      useUiStore.getState().setPreviewFile({
+                      useUiStore.getState().openEnvironment('computer', {
                         path: screenshotPath,
                         content: '',
                         extension: 'png',
@@ -316,7 +321,7 @@ export const useAgentStore = create<AgentStore>((set) => ({
                 .catch(() => {
                   const currentPreview = useUiStore.getState().previewFile;
                   if (!currentPreview || currentPreview.path !== screenshotPath) {
-                    useUiStore.getState().setPreviewFile({
+                    useUiStore.getState().openEnvironment('computer', {
                       path: screenshotPath,
                       content: '',
                       extension: 'png',
@@ -380,7 +385,7 @@ export const useAgentStore = create<AgentStore>((set) => ({
                 const targetUrl = match[1];
                 const currentPreview = useUiStore.getState().previewFile;
                 if (!currentPreview || currentPreview.path !== targetUrl) {
-                  useUiStore.getState().setPreviewFile({
+                  useUiStore.getState().openEnvironment('computer', {
                     path: targetUrl,
                     content: '',
                     extension: 'vnc',
@@ -393,7 +398,7 @@ export const useAgentStore = create<AgentStore>((set) => ({
                     if (vncUrl) {
                       const currentPreview = useUiStore.getState().previewFile;
                       if (!currentPreview || currentPreview.path !== vncUrl) {
-                        useUiStore.getState().setPreviewFile({
+                        useUiStore.getState().openEnvironment('computer', {
                           path: vncUrl,
                           content: '',
                           extension: 'vnc',
@@ -404,7 +409,7 @@ export const useAgentStore = create<AgentStore>((set) => ({
                         // 如果是 computer_use 且没有 VNC 链接（即 exec 动作），则展示日志输出，不报“文件不存在”错误
                         const currentPreview = useUiStore.getState().previewFile;
                         if (!currentPreview || currentPreview.path !== '.flock/sandbox/code_result.log') {
-                          useUiStore.getState().setPreviewFile({
+                          useUiStore.getState().openEnvironment('terminal', {
                             path: '.flock/sandbox/code_result.log',
                             content: event.output || '',
                             extension: 'log',
@@ -413,7 +418,7 @@ export const useAgentStore = create<AgentStore>((set) => ({
                       } else {
                         const currentPreview = useUiStore.getState().previewFile;
                         if (!currentPreview || currentPreview.path !== screenshotPath) {
-                          useUiStore.getState().setPreviewFile({
+                          useUiStore.getState().openEnvironment('computer', {
                             path: screenshotPath,
                             content: '',
                             extension: 'png',
@@ -426,7 +431,7 @@ export const useAgentStore = create<AgentStore>((set) => ({
                     if (lowerTool.includes('computer_use') || lowerTool.includes('computeruse')) {
                       const currentPreview = useUiStore.getState().previewFile;
                       if (!currentPreview || currentPreview.path !== '.flock/sandbox/code_result.log') {
-                        useUiStore.getState().setPreviewFile({
+                        useUiStore.getState().openEnvironment('terminal', {
                           path: '.flock/sandbox/code_result.log',
                           content: event.output || '',
                           extension: 'log',
@@ -435,7 +440,7 @@ export const useAgentStore = create<AgentStore>((set) => ({
                     } else {
                       const currentPreview = useUiStore.getState().previewFile;
                       if (!currentPreview || currentPreview.path !== screenshotPath) {
-                        useUiStore.getState().setPreviewFile({
+                        useUiStore.getState().openEnvironment('computer', {
                           path: screenshotPath,
                           content: '',
                           extension: 'png',
@@ -444,10 +449,10 @@ export const useAgentStore = create<AgentStore>((set) => ({
                     }
                   });
               }
-            } else if (lowerTool.includes('code_execution')) {
+            } else if (lowerTool.includes('code_execution') || lowerTool.includes('sandboxexec') || lowerTool.includes('sandbox_exec') || lowerTool.includes('bash') || lowerTool.includes('python')) {
               const currentPreview = useUiStore.getState().previewFile;
               if (!currentPreview || currentPreview.path !== '.flock/sandbox/code_result.log') {
-                useUiStore.getState().setPreviewFile({
+                useUiStore.getState().openEnvironment('terminal', {
                   path: '.flock/sandbox/code_result.log',
                   content: event.output || '',
                   extension: 'log',
@@ -549,7 +554,7 @@ export const useAgentStore = create<AgentStore>((set) => ({
         }});
         // 如果有远程 URL，自动切换预览面板到 VNC 控制模式
         if (event.remote_url) {
-          useUiStore.getState().setPreviewFile({
+          useUiStore.getState().openEnvironment('computer', {
             path: event.remote_url,
             content: '',
             extension: 'vnc',
@@ -570,7 +575,7 @@ export const useAgentStore = create<AgentStore>((set) => ({
   clearHumanTakeover: () => set({ humanTakeover: null }),
 
   clearMessages: () => {
-    useUiStore.getState().setPreviewFile(null);
+    useUiStore.getState().closeEnvironment();
     set({ messages: [], pendingApprovals: [] });
   },
 }));

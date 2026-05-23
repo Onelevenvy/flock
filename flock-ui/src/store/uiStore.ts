@@ -19,6 +19,8 @@ function getInitialTheme(): ThemeMode {
   return 'light';
 }
 
+export type EnvironmentMode = 'closed' | 'code' | 'terminal' | 'browser' | 'computer';
+
 interface UiStore {
   // 主题
   theme: ThemeMode;
@@ -36,6 +38,9 @@ interface UiStore {
 
   // 当前预览的文件
   previewFile: { path: string; content: string; extension?: string } | null;
+
+  // Artifact & Environment
+  environmentMode: EnvironmentMode;
 
   // 文件树状态
   expandedDirs: Set<string>;
@@ -59,6 +64,9 @@ interface UiStore {
   togglePreview: () => void;
   setPreviewOpen: (open: boolean) => void;
   setPreviewFile: (file: { path: string; content: string; extension?: string } | null) => void;
+  setEnvironmentMode: (mode: EnvironmentMode) => void;
+  openEnvironment: (mode: EnvironmentMode, file?: { path: string; content: string; extension?: string }) => void;
+  closeEnvironment: () => void;
   toggleExpandDir: (path: string) => void;
   setActiveSideView: (view: 'workspace' | 'conversations' | 'files' | 'settings') => void;
   triggerFileTreeRefresh: () => void;
@@ -96,6 +104,7 @@ export const useUiStore = create<UiStore>((set) => ({
   isFileTreeOpen: false,
   isPreviewOpen: false,
   previewFile: null,
+  environmentMode: 'closed',
   expandedDirs: new Set(),
   activeSideView: 'workspace',
   fileTreeRefreshKey: 0,
@@ -109,6 +118,14 @@ export const useUiStore = create<UiStore>((set) => ({
   togglePreview: () => set((s) => ({ isPreviewOpen: !s.isPreviewOpen })),
   setPreviewOpen: (open) => set({ isPreviewOpen: open }),
   setPreviewFile: (file) => set({ previewFile: file, isPreviewOpen: !!file }),
+  setEnvironmentMode: (mode) => set({ environmentMode: mode, isPreviewOpen: mode !== 'closed' }),
+  openEnvironment: (mode, file) => set((s) => {
+    if (file) {
+      return { environmentMode: mode, isPreviewOpen: true, previewFile: file };
+    }
+    return { environmentMode: mode, isPreviewOpen: true };
+  }),
+  closeEnvironment: () => set({ environmentMode: 'closed', isPreviewOpen: false }),
 
   toggleExpandDir: (path) =>
     set((s) => {

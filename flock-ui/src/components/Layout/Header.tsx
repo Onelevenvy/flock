@@ -30,7 +30,7 @@ const STATUS_COLOR: Record<string, string> = {
 export function Header() {
   const { t } = useTranslation();
   const status = useAgentStore((s) => s.status);
-  const { toggleSidebar, isPreviewOpen, previewFile, setPreviewFile } = useUiStore();
+  const { toggleSidebar, environmentMode, openEnvironment, closeEnvironment } = useUiStore();
   const statusColor = STATUS_COLOR[status] ?? 'gray';
   const statusLabel = t(`header.status.${status}`, { defaultValue: status });
 
@@ -48,33 +48,29 @@ export function Header() {
     ? t('header.defaultAssistant')
     : t('header.customAssistant');
 
-  const isComputerOpen = isPreviewOpen && (
-    previewFile?.extension === 'vnc' ||
-    previewFile?.path === '.flock/sandbox/screenshot.png' ||
-    previewFile?.path === 'vnc'
-  );
+  const isComputerOpen = environmentMode === 'computer';
 
   const handleToggleComputer = async () => {
     if (isComputerOpen) {
-      setPreviewFile(null);
+      closeEnvironment();
     } else {
       try {
         const vncUrl = await invoke<string | null>('get_active_sandbox_vnc_url');
         if (vncUrl) {
-          setPreviewFile({
+          openEnvironment('computer', {
             path: vncUrl,
             content: '',
             extension: 'vnc',
           });
         } else {
-          setPreviewFile({
+          openEnvironment('computer', {
             path: 'vnc',
             content: '',
             extension: 'vnc',
           });
         }
       } catch (e) {
-        setPreviewFile({
+        openEnvironment('computer', {
           path: 'vnc',
           content: '',
           extension: 'vnc',
