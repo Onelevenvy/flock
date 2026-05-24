@@ -13,6 +13,13 @@ use base64::{Engine as _, engine::general_purpose};
 /// - The execution is fully isolated and does not affect the host machine.
 /// - Results will be written to the log file `.flock/sandbox/code_result.log` and shown in the preview panel.
 ///
+/// IMPORTANT PATH RULES:
+/// - The sandbox workspace is mounted at `/workspace` - all file operations should use this path
+/// - Use relative paths like `file.txt` or `subdir/file.txt` (automatically mapped to `/workspace/...`)
+/// - Or use absolute paths starting with `/workspace/` like `/workspace/file.txt`
+/// - Do NOT use local machine paths like `/Users/...` or `C:\...` - they don't exist in the sandbox
+/// - Example: `with open('/workspace/output.txt', 'w') as f: f.write('hello')`
+///
 /// @param code The Python code content to execute.
 #[tool("CodeExecution")]
 pub async fn code_execution(code: String) -> Result<String, String> {

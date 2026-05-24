@@ -3,14 +3,14 @@ use flock_core::db::DbManager;
 use flock_tools::daytona::{get_active_sandbox_id, fs::DaytonaFs};
 use std::path::PathBuf;
 
-async fn is_sandbox_active(db: &DbManager) -> bool {
+async fn is_sandbox_active(db: &crate::SharedDbManager) -> bool {
     get_active_sandbox_id().await.is_some()
 }
 
 /// 列出工作空间文件
 #[tauri::command]
 pub async fn list_workspace_files(
-    db: tauri::State<'_, DbManager>,
+    db: tauri::State<'_, crate::SharedDbManager>,
     workspace_id: String,
     relative_path: String,
     recursive: bool,
@@ -41,7 +41,7 @@ fn map_daytona_entry(entry: flock_tools::daytona::fs::DaytonaFileEntry) -> works
 /// 读取文件内容（预览）
 #[tauri::command]
 pub async fn read_workspace_file(
-    db: tauri::State<'_, DbManager>,
+    db: tauri::State<'_, crate::SharedDbManager>,
     workspace_id: String,
     relative_path: String,
 ) -> Result<String, String> {
@@ -129,7 +129,7 @@ pub fn open_external_url(url: String) -> Result<(), String> {
 /// 在工作空间中创建文件
 #[tauri::command]
 pub async fn create_workspace_file(
-    db: tauri::State<'_, DbManager>,
+    db: tauri::State<'_, crate::SharedDbManager>,
     workspace_id: String,
     relative_path: String,
     content: String,
@@ -162,7 +162,7 @@ pub async fn create_workspace_file(
 /// 在工作空间中创建文件夹
 #[tauri::command]
 pub async fn create_workspace_directory(
-    db: tauri::State<'_, DbManager>,
+    db: tauri::State<'_, crate::SharedDbManager>,
     workspace_id: String,
     relative_path: String,
 ) -> Result<(), String> {
@@ -193,7 +193,7 @@ pub async fn create_workspace_directory(
 /// 在工作空间中上传/写入二进制文件
 #[tauri::command]
 pub async fn upload_workspace_file(
-    db: tauri::State<'_, DbManager>,
+    db: tauri::State<'_, crate::SharedDbManager>,
     workspace_id: String,
     relative_path: String,
     content: Vec<u8>,
@@ -226,7 +226,7 @@ pub async fn upload_workspace_file(
 /// 删除工作空间的文件或文件夹
 #[tauri::command]
 pub async fn delete_workspace_file_or_dir(
-    db: tauri::State<'_, DbManager>,
+    db: tauri::State<'_, crate::SharedDbManager>,
     workspace_id: String,
     relative_path: String,
 ) -> Result<(), String> {
@@ -259,7 +259,7 @@ pub async fn delete_workspace_file_or_dir(
 /// 下载/导出文件到本地其他目录
 #[tauri::command]
 pub async fn download_workspace_file(
-    db: tauri::State<'_, DbManager>,
+    db: tauri::State<'_, crate::SharedDbManager>,
     workspace_id: String,
     relative_path: String,
     local_dest_path: String,
@@ -295,7 +295,7 @@ pub async fn download_workspace_file(
 /// 以 Base64 格式读取工作区中的二进制文件（通常用于绕过资产安全策略与 CSP 读取图片）
 #[tauri::command]
 pub async fn read_workspace_file_as_base64(
-    db: tauri::State<'_, DbManager>,
+    db: tauri::State<'_, crate::SharedDbManager>,
     workspace_id: String,
     relative_path: String,
 ) -> Result<String, String> {

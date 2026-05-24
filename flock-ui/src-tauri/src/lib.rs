@@ -124,6 +124,7 @@ pub fn run() {
             commands::create_playwright_snapshot,
             commands::list_daytona_sandboxes,
             commands::delete_daytona_sandbox,
+            commands::reuse_sandbox,
             commands::list_daytona_snapshots,
             commands::delete_daytona_snapshot,
             // 工具提供商

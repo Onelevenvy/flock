@@ -109,11 +109,36 @@ pub async fn get_or_create_active_sandbox(db: &DbManager) -> anyhow::Result<Stri
     }
 
     let create_url = format!("{}/api/sandbox", base);
-    let res = client.post(&create_url)
-        .header("Authorization", format!("Bearer {}", api_key))
-        .json(&create_body)
-        .send()
-        .await?;
+
+    // 添加重试机制，最多重试3次
+    let mut last_error = None;
+    let mut res = None;
+    for attempt in 1..=3 {
+        crate::emit_info(&flock_core::tr(
+            &format!("尝试创建沙盒 (第{}次)...", attempt),
+            &format!("Attempting to create sandbox (attempt {})...", attempt)
+        ));
+
+        match client.post(&create_url)
+            .header("Authorization", format!("Bearer {}", api_key))
+            .json(&create_body)
+            .send()
+            .await
+        {
+            Ok(response) => {
+                res = Some(response);
+                break;
+            }
+            Err(e) => {
+                last_error = Some(anyhow::anyhow!("{}", e));
+                if attempt < 3 {
+                    tokio::time::sleep(tokio::time::Duration::from_secs(2)).await;
+                }
+            }
+        }
+    }
+
+    let res = res.ok_or_else(|| last_error.unwrap_or_else(|| anyhow::anyhow!("Failed to create sandbox after 3 attempts")))?;
 
     let status = res.status();
     let res_text = res.text().await.unwrap_or_default();
