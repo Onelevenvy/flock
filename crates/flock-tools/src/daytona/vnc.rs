@@ -78,6 +78,13 @@ pub async fn check_computer_use_status(
     db: &DbManager,
     sandbox_id: &str,
 ) -> anyhow::Result<bool> {
+    // 优先检查沙盒内 VNC/WebSockify 端口是否已就绪（应对我们手动拉起的情况，Daytona API 可能会一直返回 partial）
+    let check_cmd = format!("python3 -c \"import socket; s = socket.socket(); s.connect(('127.0.0.1', {}))\"", WEBSOCKIFY_PORT);
+    let (_, exit_code) = execute_command_in_sandbox(db, sandbox_id, &check_cmd).await.unwrap_or(("-1".to_string(), -1));
+    if exit_code == 0 {
+        return Ok(true);
+    }
+
     let cfg = get_sandbox_config(db).await
         .ok_or_else(|| anyhow::anyhow!(flock_core::tr("云端 Daytona 沙箱未配置或未启用", "Cloud Daytona sandbox not configured or enabled")))?;
 

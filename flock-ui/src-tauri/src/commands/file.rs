@@ -299,7 +299,10 @@ pub async fn read_workspace_file_as_base64(
     workspace_id: String,
     relative_path: String,
 ) -> Result<String, String> {
-    if is_sandbox_active(&db).await {
+    // 对于截屏等已经在宿主机缓存的文件，直接从宿主机读取
+    let is_screenshot = relative_path.starts_with(".flock/sandbox/screenshot");
+    
+    if is_sandbox_active(&db).await && !is_screenshot {
         DaytonaFs::read_file_base64(&db, &relative_path).await.map_err(|e| e.to_string())
     } else {
         use base64::{Engine as _, engine::general_purpose};

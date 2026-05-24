@@ -93,7 +93,10 @@ pub async fn browser(
     let sandbox_id = get_or_create_active_sandbox(&db).await
         .map_err(|e| format!("沙盒环境启动失败: {}", e))?;
 
-    let act = action.unwrap_or_else(|| "goto".to_string());
+    let mut act = action.unwrap_or_else(|| "goto".to_string()).to_lowercase();
+    if act == "open" || act == "navigate" {
+        act = "goto".to_string();
+    }
     
     // 生成唯一的截图标识
     let now_ms = std::time::SystemTime::now()
