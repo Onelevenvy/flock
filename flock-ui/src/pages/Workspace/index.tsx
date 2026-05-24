@@ -7,7 +7,7 @@ import { InputBar } from '../../components/chat/InputBar';
 import { ToolApprovalInline } from '../../components/chat/ToolApproval/ToolApprovalInline';
 import { HumanTakeoverBanner } from '../../components/chat/ToolApproval/HumanTakeoverBanner';
 import { FileTreePanel } from './components/FileTreePanel';
-import { PreviewPanel } from './components/PreviewPanel';
+import { EnvironmentPanel } from './components/EnvironmentPanel';
 
 export function WorkspaceView() {
   const { isPreviewOpen } = useUiStore();
@@ -40,7 +40,7 @@ export function WorkspaceView() {
               boxShadow: '0 4px 20px rgba(0, 0, 0, 0.03)',
             }}
           >
-            <PreviewPanel embedded />
+            <EnvironmentPanel embedded />
           </Box>
 
           {/* 右侧：窄版 Chat 面板 */}

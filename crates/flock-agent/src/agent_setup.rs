@@ -168,6 +168,30 @@ impl AgentBuilder {
         let mut registry = tool_set.registry;
         let provider_infos = tool_set.provider_infos;
 
+        // --- Filter Sandbox Tools based on config ---
+        let is_sandbox_configured = if let Some(db) = &self.config.db_manager {
+            flock_tools::daytona::get_sandbox_config(db).await.is_some()
+        } else {
+            false
+        };
+
+        if is_sandbox_configured {
+            // Keep Sandbox versions, remove local versions
+            registry.remove("Bash");
+            registry.remove("Read");
+            registry.remove("Write");
+            registry.remove("Edit");
+        } else {
+            // Remove Sandbox versions, keep local versions
+            registry.remove("CodeExecution");
+            registry.remove("Browser");
+            registry.remove("ComputerUse");
+            registry.remove("SandboxExec");
+            registry.remove("SandboxRead");
+            registry.remove("SandboxWrite");
+            registry.remove("SandboxEdit");
+        }
+
         let builtin_names: Vec<String> = registry.tool_names();
 
         let mut mcp_managers: Vec<Arc<McpManager>> = Vec::new();
