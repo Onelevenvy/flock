@@ -24,6 +24,7 @@ use base64::{Engine as _, engine::general_purpose};
 ///   * `press`     — Press a single key or key combination (e.g., "Return", "ctrl+c", requires `key`).
 ///   * `screenshot`— Capture the current OS desktop screen.
 ///   * `status`    — Query the readiness status of the desktop service.
+///   * `interactive` — Trigger human takeover mode (suspends the agent and pops up the VNC desktop).
 ///
 /// IMPORTANT PATH RULES:
 /// - The sandbox workspace is mounted at `/workspace` - all file operations should use this path
@@ -51,7 +52,7 @@ use base64::{Engine as _, engine::general_purpose};
 ///   3. Wait patiently for the user to complete the manual intervention via VNC.
 ///
 /// ## 3. Manual Intervention Guide
-/// - When the user explicitly requests manual control (e.g., "let me log in", "I want to do this myself", "open console", "manual input", "I'll take over"), reply warmly that the VNC desktop has been prepared on the right panel and wait for their manual actions to complete.
+/// - When the user explicitly requests manual control (e.g., "let me log in", "I want to do this myself", "open console", "manual input", "I'll take over"), immediately call this tool with `action="interactive"` to delegate control to the user.
 ///
 /// @param action The operation to perform (see above).
 /// @param command Shell command to execute (required for `exec` action).
@@ -170,6 +171,38 @@ pub async fn computer_use(
     let mut result_msg = String::new();
 
     match act.as_str() {
+        "interactive" => {
+            let proxy_url = crate::daytona::get_sandbox_vnc_url(&db, &sandbox_id).await
+                .unwrap_or_else(|_| format!("https://{}-{}.proxy.app.daytona.io/vnc.html?autoconnect=true&resize=scale", crate::daytona::WEBSOCKIFY_PORT, sandbox_id));
+            
+            if let (Some(cid), Some(mid), Some(app_mgr)) = (call_id.clone(), msg_id, crate::get_global_approval_manager()) {
+                crate::emit_info(&format!("检测到敏感桌面操作（验证码/人工介入），正在通知前端拉起人工接管横幅 (Call ID: {})...", cid));
+                crate::daytona::emit_human_takeover(
+                    &cid,
+                    &mid,
+                    "人机协同远程桌面已拉起！检测到当前桌面应用需要人工介入（如滑动拼图验证、扫码登录等），大模型自动执行已暂停。您可以在右侧预览面板中直接操作页面。完成后请点击横幅上的【我已完成操作】按钮以恢复大模型的自动运行。",
+                    Some(proxy_url.clone()),
+                );
+
+                let rx = app_mgr.request_approval(&cid, &ToolCategory::Exec);
+                match rx.await {
+                    Ok(flock_core::ipc_interface::approval::ToolApprovalResult::Approved) => {
+                        crate::emit_info("收到前端已完成操作指令，正在恢复 Agent 自动执行。");
+                        result_msg = "人工接管操作已顺利完成，用户已确认！Agent 已经成功从暂停点恢复，并继续自动执行后续流程。".to_string();
+                    }
+                    Ok(flock_core::ipc_interface::approval::ToolApprovalResult::Denied { reason }) => {
+                        crate::emit_info(&format!("人工接管被用户取消: {}", reason));
+                        return Err(format!("人工接管被取消，原因为: {}", reason));
+                    }
+                    Err(e) => {
+                        crate::emit_info(&format!("人工接管等待通道意外中断: {}", e));
+                        return Err(format!("人工接管等待通道意外中断: {}", e));
+                    }
+                }
+            } else {
+                result_msg = format!("人机协同远程桌面已拉起！由于当前操作需要人工介入（如验证码、安全登录等），请在右侧预览区进行控制操作。\n\n[Remote VNC Link]({})", proxy_url);
+            }
+        }
         "status" => {
             result_msg = "Daytona 桌面环境已启动且处于活跃就绪状态。".to_string();
         }
