@@ -8,6 +8,7 @@ import {
 } from '@mantine/core';
 import {
   IconLayoutSidebar,
+  IconFolder,
   IconCircleFilled,
   IconDeviceDesktop,
 } from '@tabler/icons-react';
@@ -29,7 +30,7 @@ const STATUS_COLOR: Record<string, string> = {
 export function Header() {
   const { t } = useTranslation();
   const status = useAgentStore((s) => s.status);
-  const { toggleSidebar, environmentMode, openEnvironment, closeEnvironment } = useUiStore();
+  const { toggleSidebar, isFileTreeOpen, toggleFileTree, environmentMode, openEnvironment, closeEnvironment } = useUiStore();
   const statusColor = STATUS_COLOR[status] ?? 'gray';
   const statusLabel = t(`header.status.${status}`, { defaultValue: status });
 
@@ -80,6 +81,17 @@ export function Header() {
             onClick={toggleSidebar}
           >
             <IconLayoutSidebar size={16} />
+          </ActionIcon>
+        </Tooltip>
+
+        <Tooltip label={t('header.toggleFileTree', { defaultValue: '显示/隐藏工作空间文件树' })} withArrow>
+          <ActionIcon
+            variant="subtle"
+            color={isFileTreeOpen ? 'blue' : 'gray'}
+            size="sm"
+            onClick={toggleFileTree}
+          >
+            <IconFolder size={16} />
           </ActionIcon>
         </Tooltip>
 

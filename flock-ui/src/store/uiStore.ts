@@ -119,7 +119,7 @@ export const useUiStore = create<UiStore>((set) => ({
   setPreviewOpen: (open) => set({ isPreviewOpen: open }),
   setPreviewFile: (file) => set({ previewFile: file, isPreviewOpen: !!file }),
   setEnvironmentMode: (mode) => set({ environmentMode: mode, isPreviewOpen: mode !== 'closed' }),
-  openEnvironment: (mode, file) => set((s) => {
+  openEnvironment: (mode, file) => set(() => {
     if (file) {
       return { environmentMode: mode, isPreviewOpen: true, previewFile: file };
     }
