@@ -1,6 +1,7 @@
 use flock_core::db::DbManager;
 use crate::daytona::{execute_command_in_sandbox, get_or_create_active_sandbox};
 use serde::{Deserialize, Serialize};
+use std::path::{Component, Path};
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct DaytonaFileEntry {
@@ -15,6 +16,46 @@ pub struct DaytonaFileEntry {
 pub struct DaytonaFs;
 
 impl DaytonaFs {
+    /// Normalize any input path into a safe relative path under `/workspace`.
+    ///
+    /// Rules:
+    /// - `foo/bar` -> `foo/bar`
+    /// - `/workspace/foo/bar` -> `foo/bar`
+    /// - `/home/daytona/foo` -> `home/daytona/foo` (still mapped under `/workspace`)
+    /// - parent traversal (`..`) is rejected
+    fn normalize_workspace_relative_path(input: &str) -> anyhow::Result<String> {
+        let trimmed = input.trim();
+        if trimmed.is_empty() {
+            anyhow::bail!("Path cannot be empty");
+        }
+
+        let no_workspace_prefix = if let Some(rest) = trimmed.strip_prefix("/workspace/") {
+            rest
+        } else if trimmed == "/workspace" {
+            ""
+        } else if let Some(rest) = trimmed.strip_prefix("/workspace") {
+            rest.trim_start_matches('/')
+        } else {
+            trimmed.trim_start_matches('/')
+        };
+
+        let mut parts: Vec<String> = Vec::new();
+        for comp in Path::new(no_workspace_prefix).components() {
+            match comp {
+                Component::Normal(seg) => parts.push(seg.to_string_lossy().to_string()),
+                Component::CurDir => {}
+                Component::ParentDir => anyhow::bail!("Path cannot contain '..': {}", input),
+                Component::RootDir | Component::Prefix(_) => {}
+            }
+        }
+
+        if parts.is_empty() {
+            anyhow::bail!("Path points to workspace root; file path is required: {}", input);
+        }
+
+        Ok(parts.join("/"))
+    }
+
     async fn run_cmd(db: &DbManager, cmd: &str) -> anyhow::Result<String> {
         let sandbox_id = get_or_create_active_sandbox(db).await?;
         let (out, code) = execute_command_in_sandbox(db, &sandbox_id, cmd).await?;
@@ -83,19 +124,22 @@ except Exception as e:
     }
 
     pub async fn read_file(db: &DbManager, relative_path: &str) -> anyhow::Result<String> {
-        let target = format!("/workspace/{}", relative_path);
+        let rel = Self::normalize_workspace_relative_path(relative_path)?;
+        let target = format!("/workspace/{}", rel);
         let cmd = format!("cat '{}'", target.replace('\'', "'\\''"));
         Self::run_cmd(db, &cmd).await
     }
 
     pub async fn read_file_base64(db: &DbManager, relative_path: &str) -> anyhow::Result<String> {
-        let target = format!("/workspace/{}", relative_path);
+        let rel = Self::normalize_workspace_relative_path(relative_path)?;
+        let target = format!("/workspace/{}", rel);
         let cmd = format!("base64 -w 0 '{}'", target.replace('\'', "'\\''"));
         Self::run_cmd(db, &cmd).await
     }
 
     pub async fn write_file(db: &DbManager, relative_path: &str, content: &str) -> anyhow::Result<()> {
-        let target = format!("/workspace/{}", relative_path);
+        let rel = Self::normalize_workspace_relative_path(relative_path)?;
+        let target = format!("/workspace/{}", rel);
         let parent = std::path::Path::new(&target).parent().unwrap_or(std::path::Path::new("/workspace"));
         let b64_content = base64::Engine::encode(&base64::engine::general_purpose::STANDARD, content);
         
@@ -109,7 +153,8 @@ except Exception as e:
     }
 
     pub async fn upload_file(db: &DbManager, relative_path: &str, content: &[u8]) -> anyhow::Result<()> {
-        let target = format!("/workspace/{}", relative_path);
+        let rel = Self::normalize_workspace_relative_path(relative_path)?;
+        let target = format!("/workspace/{}", rel);
         let parent = std::path::Path::new(&target).parent().unwrap_or(std::path::Path::new("/workspace"));
         let b64_content = base64::Engine::encode(&base64::engine::general_purpose::STANDARD, content);
         
@@ -123,14 +168,16 @@ except Exception as e:
     }
 
     pub async fn delete_path(db: &DbManager, relative_path: &str) -> anyhow::Result<()> {
-        let target = format!("/workspace/{}", relative_path);
+        let rel = Self::normalize_workspace_relative_path(relative_path)?;
+        let target = format!("/workspace/{}", rel);
         let cmd = format!("rm -rf '{}'", target.replace('\'', "'\\''"));
         Self::run_cmd(db, &cmd).await?;
         Ok(())
     }
 
     pub async fn create_dir(db: &DbManager, relative_path: &str) -> anyhow::Result<()> {
-        let target = format!("/workspace/{}", relative_path);
+        let rel = Self::normalize_workspace_relative_path(relative_path)?;
+        let target = format!("/workspace/{}", rel);
         let cmd = format!("mkdir -p '{}'", target.replace('\'', "'\\''"));
         Self::run_cmd(db, &cmd).await?;
         Ok(())
