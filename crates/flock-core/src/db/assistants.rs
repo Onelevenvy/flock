@@ -190,7 +190,8 @@ impl DbManager {
             let skills_json = serde_json::to_string(&asst.skills)?;
             let now = chrono::Utc::now().to_rfc3339();
 
-            // Insert if not exists; on conflict update only name/icon/description/sort_order
+            // Insert if not exists; on conflict update only metadata fields.
+            // Keep user-edited runtime fields (model/system_prompt/tools/disabled_tools/skills).
             sqlx::query(
                 "INSERT INTO assistant
                  (id, name, icon, description, model, system_prompt, tools, disabled_tools, skills,
@@ -200,7 +201,6 @@ impl DbManager {
                     name        = excluded.name,
                     icon        = excluded.icon,
                     description = excluded.description,
-                    tools       = excluded.tools,
                     sort_order  = excluded.sort_order,
                     updated_at  = excluded.updated_at",
             )
@@ -355,6 +355,9 @@ pub fn builtin_assistants() -> Vec<UpsertAssistant> {
                 "ComputerUse".to_string(),
                 "RequestHumanAssistance".to_string(),
                 "SandboxExec".to_string(),
+                "SandboxRead".to_string(),
+                "SandboxWrite".to_string(),
+                "SandboxEdit".to_string(),
             ],
             disabled_tools: vec![],
             skills: vec![],
@@ -363,4 +366,3 @@ pub fn builtin_assistants() -> Vec<UpsertAssistant> {
         },
     ]
 }
-

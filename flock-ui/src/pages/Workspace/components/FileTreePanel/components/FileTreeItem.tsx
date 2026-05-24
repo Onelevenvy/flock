@@ -17,6 +17,7 @@ import {
 } from '@tabler/icons-react';
 import { invoke } from '@tauri-apps/api/core';
 import { useTranslation } from 'react-i18next';
+import { notifications } from '@mantine/notifications';
 import { useUiStore, FileEntry } from '../../../../../store/uiStore';
 import { getFileIcon, formatSize } from '../utils';
 
@@ -79,14 +80,18 @@ export function FileTreeItem({
         } else {
           openEnvironment('code', file);
         }
-      } catch {
-        // ignore
+      } catch (err) {
+        notifications.show({
+          title: t('chat.workspace.previewFailed', { defaultValue: 'Preview failed' }),
+          message: String(err),
+          color: 'red',
+        });
       }
     } else {
       // Binary file (image, PDF, office, etc.) - load without fetching text content
       openEnvironment('code', { path: entry.path, content: '', extension: entry.extension });
     }
-  }, [entry, workspaceId, openEnvironment]);
+  }, [entry, workspaceId, openEnvironment, t]);
 
   const paddingLeft = depth * 14 + 8;
 

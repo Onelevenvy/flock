@@ -8,6 +8,7 @@ use flock_core::types::message::ContentBlock;
 use flock_core::types::skill_types::ContextModifier;
 use flock_core::types::tool::ToolResult;
 use flock_tools::registry::ToolRegistry;
+use base64::Engine;
 
 use super::types::{ToolCallOutcome, ExecutionControl};
 use super::helpers::{group_calls, truncate_result, maybe_append_deferred_hint};
@@ -49,8 +50,8 @@ pub async fn run_tools(
                 })
                 .collect();
             let batch_results = futures::future::join_all(futures).await;
-            for (block, modifier) in batch_results {
-                results.push(block);
+            for (blocks, modifier) in batch_results {
+                results.extend(blocks);
                 modifiers.push(modifier);
             }
         } else {
@@ -62,11 +63,11 @@ pub async fn run_tools(
                     }
                     None => {
                         // Reborrow as shared for execute_single, then reclaim mut for merge.
-                        let block;
+                        let blocks;
                         let modifier;
                         {
                             let hooks_shared: Option<&HookEngine> = hooks.as_deref();
-                            (block, modifier) = execute_single(
+                            (blocks, modifier) = execute_single(
                                 registry,
                                 call,
                                 hooks_shared,
@@ -77,10 +78,12 @@ pub async fn run_tools(
                             .await;
                         }
                         // Merge skill hooks after a successful sequential execution.
-                        if !block_is_error(&block) {
-                            update_plugin_hooks(registry, call, hooks.as_deref_mut());
+                        if let Some(first_block) = blocks.first() {
+                            if !block_is_error(first_block) {
+                                update_plugin_hooks(registry, call, hooks.as_deref_mut());
+                            }
                         }
-                        results.push(block);
+                        results.extend(blocks);
                         modifiers.push(modifier);
                     }
                 }
@@ -91,6 +94,43 @@ pub async fn run_tools(
     Ok(ToolCallOutcome { results, modifiers })
 }
 
+fn extract_images_from_tool_result(
+    content: String,
+    tool_use_id: String,
+    is_error: bool,
+) -> Vec<ContentBlock> {
+    let mut blocks = Vec::new();
+    blocks.push(ContentBlock::ToolResult {
+        tool_use_id,
+        content: content.clone(),
+        is_error,
+    });
+
+    let re = regex::Regex::new(r"!\[.*?\]\((file://(.*?))\)").unwrap();
+    for cap in re.captures_iter(&content) {
+        if let Some(path_match) = cap.get(2) {
+            let path = path_match.as_str();
+            if let Ok(bytes) = std::fs::read(path) {
+                let base64 = base64::engine::general_purpose::STANDARD.encode(&bytes);
+                let ext = path.split('.').last().unwrap_or("").to_lowercase();
+                let mime = match ext.as_str() {
+                    "png" => "image/png",
+                    "jpeg" | "jpg" => "image/jpeg",
+                    "gif" => "image/gif",
+                    "webp" => "image/webp",
+                    _ => "image/png",
+                }.to_string();
+                
+                blocks.push(ContentBlock::Image {
+                    media_type: mime,
+                    data: base64,
+                });
+            }
+        }
+    }
+    blocks
+}
+
 pub async fn execute_single(
     registry: &ToolRegistry,
     call: &ContentBlock,
@@ -98,7 +138,7 @@ pub async fn execute_single(
     compaction_level: flock_core::context_compression::CompressionLevel,
     toon_enabled: bool,
     msg_id: &str,
-) -> (ContentBlock, Option<ContextModifier>) {
+) -> (Vec<ContentBlock>, Option<ContextModifier>) {
     let ContentBlock::ToolUse { id, name, input } = call else {
         unreachable!("execute_single called with non-ToolUse block")
     };
@@ -108,11 +148,11 @@ pub async fn execute_single(
         && let Err(e) = hook_engine.run_pre_tool_use(name, input).await
     {
         return (
-            ContentBlock::ToolResult {
+            vec![ContentBlock::ToolResult {
                 tool_use_id: id.clone(),
                 content: format!("Blocked by hook: {}", e),
                 is_error: true,
-            },
+            }],
             None,
         );
     }
@@ -171,11 +211,7 @@ pub async fn execute_single(
     }
 
     (
-        ContentBlock::ToolResult {
-            tool_use_id: id.clone(),
-            content: result.content,
-            is_error: result.is_error,
-        },
+        extract_images_from_tool_result(result.content, id.clone(), result.is_error),
         modifier,
     )
 }
@@ -268,10 +304,10 @@ pub async fn execute_tool_calls_with_approval(
 
             let batch_results = futures::future::join_all(futures).await;
 
-            for (idx, (result, modifier)) in batch_results.into_iter().enumerate() {
+            for (idx, (blocks, modifier)) in batch_results.into_iter().enumerate() {
                 let call = approved_calls[idx];
                 if let ContentBlock::ToolUse { id, name, .. } = call {
-                    if let ContentBlock::ToolResult { content, is_error, .. } = &result {
+                    if let Some(ContentBlock::ToolResult { content, is_error, .. }) = blocks.first() {
                         let status = if *is_error { ToolStatus::Error } else { ToolStatus::Success };
                         let _ = writer.emit(&ProtocolEvent::ToolResult {
                             msg_id: msg_id.to_string(),
@@ -284,7 +320,7 @@ pub async fn execute_tool_calls_with_approval(
                         });
                     }
                 }
-                results.push(result);
+                results.extend(blocks);
                 modifiers.push(modifier);
             }
         } else {
@@ -339,14 +375,14 @@ pub async fn execute_tool_calls_with_approval(
                     tool_name: name.clone(),
                 });
 
-                let result;
+                let blocks;
                 let modifier;
                 {
                     let hooks_shared: Option<&HookEngine> = hooks.as_deref();
-                    (result, modifier) = execute_single(registry, call, hooks_shared, compaction_level, toon_enabled, msg_id).await;
+                    (blocks, modifier) = execute_single(registry, call, hooks_shared, compaction_level, toon_enabled, msg_id).await;
                 }
 
-                if let ContentBlock::ToolResult { content, is_error, .. } = &result {
+                if let Some(ContentBlock::ToolResult { content, is_error, .. }) = blocks.first() {
                     let status = if *is_error { ToolStatus::Error } else { ToolStatus::Success };
                     let _ = writer.emit(&ProtocolEvent::ToolResult {
                         msg_id: msg_id.to_string(),
@@ -359,11 +395,13 @@ pub async fn execute_tool_calls_with_approval(
                     });
                 }
 
-                if !block_is_error(&result) {
-                    update_plugin_hooks(registry, call, hooks.as_deref_mut());
+                if let Some(first_block) = blocks.first() {
+                    if !block_is_error(first_block) {
+                        update_plugin_hooks(registry, call, hooks.as_deref_mut());
+                    }
                 }
 
-                results.push(result);
+                results.extend(blocks);
                 modifiers.push(modifier);
             }
         }

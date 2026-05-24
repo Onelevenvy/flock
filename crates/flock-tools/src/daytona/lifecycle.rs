@@ -23,6 +23,12 @@ pub async fn destroy_active_sandbox(db: &DbManager) -> anyhow::Result<()> {
     let base = get_api_base(cfg.api_url.as_ref().unwrap());
     let api_key = cfg.api_key.as_ref().unwrap();
 
+    if let Some(ws_path) = crate::get_workspace_dir() {
+        if let Err(e) = crate::daytona::sync::sync_down(db, &sandbox_id, &ws_path).await {
+            crate::emit_info(&format!("Sync Down failed: {}", e));
+        }
+    }
+
     crate::emit_info(&flock_core::tr(&format!("正在销毁 Daytona 沙盒 {}...", sandbox_id), &format!("Destroying Daytona sandbox {}...", sandbox_id)));
     let del_url = format!("{}/api/sandbox/{}", base, sandbox_id);
     match client.delete(&del_url)
@@ -93,16 +99,52 @@ pub async fn get_or_create_active_sandbox(db: &DbManager) -> anyhow::Result<Stri
     }
 
     if let Some(vid) = volume_id {
-        // Assume Daytona Sandbox creation payload accepts volume mapping (guessed standard payload)
-        create_body["volumeId"] = serde_json::Value::String(vid);
+        // Daytona API expects volumes array with mountPath specification
+        // See: https://www.daytona.io/docs/en/volumes
+        let mount_path = "/workspace";
+        create_body["volumes"] = serde_json::json!([
+            {
+                "volumeId": vid,
+                "mountPath": mount_path
+            }
+        ]);
+        crate::emit_info(&flock_core::tr(
+            &format!("Volume {} 将挂载到 {}", vid, mount_path),
+            &format!("Volume {} will be mounted to {}", vid, mount_path)
+        ));
     }
 
     let create_url = format!("{}/api/sandbox", base);
-    let res = client.post(&create_url)
-        .header("Authorization", format!("Bearer {}", api_key))
-        .json(&create_body)
-        .send()
-        .await?;
+
+    // 添加重试机制，最多重试3次
+    let mut last_error = None;
+    let mut res = None;
+    for attempt in 1..=3 {
+        crate::emit_info(&flock_core::tr(
+            &format!("尝试创建沙盒 (第{}次)...", attempt),
+            &format!("Attempting to create sandbox (attempt {})...", attempt)
+        ));
+
+        match client.post(&create_url)
+            .header("Authorization", format!("Bearer {}", api_key))
+            .json(&create_body)
+            .send()
+            .await
+        {
+            Ok(response) => {
+                res = Some(response);
+                break;
+            }
+            Err(e) => {
+                last_error = Some(anyhow::anyhow!("{}", e));
+                if attempt < 3 {
+                    tokio::time::sleep(tokio::time::Duration::from_secs(2)).await;
+                }
+            }
+        }
+    }
+
+    let res = res.ok_or_else(|| last_error.unwrap_or_else(|| anyhow::anyhow!("Failed to create sandbox after 3 attempts")))?;
 
     let status = res.status();
     let res_text = res.text().await.unwrap_or_default();
@@ -199,7 +241,39 @@ pub async fn get_or_create_active_sandbox(db: &DbManager) -> anyhow::Result<Stri
 
     crate::emit_info(&flock_core::tr("Daytona 沙盒已就绪。", "Daytona sandbox is ready."));
     let _ = set_sandbox_public(&cfg, &sandbox_id, true).await;
+
+    // Ensure /workspace directory exists (volume may not be mounted if creation failed)
+    let ensure_workspace_cmd = "mkdir -p /workspace && ls -la /workspace";
+    match crate::daytona::execute_command_in_sandbox(db, &sandbox_id, ensure_workspace_cmd).await {
+        Ok((out, code)) => {
+            if code == 0 {
+                crate::emit_info(&flock_core::tr(
+                    &format!("/workspace 目录已就绪: {}", out),
+                    &format!("/workspace directory is ready: {}", out)
+                ));
+            } else {
+                crate::emit_info(&flock_core::tr(
+                    &format!("创建 /workspace 目录失败 (退出码 {}): {}", code, out),
+                    &format!("Failed to create /workspace directory (exit code {}): {}", code, out)
+                ));
+            }
+        }
+        Err(e) => {
+            crate::emit_info(&flock_core::tr(
+                &format!("检查 /workspace 目录失败: {}", e),
+                &format!("Failed to check /workspace directory: {}", e)
+            ));
+        }
+    }
+
     *lock = Some(sandbox_id.clone());
+
+    if let Some(ws_path) = crate::get_workspace_dir() {
+        if let Err(e) = crate::daytona::sync::sync_up(db, &sandbox_id, &ws_path).await {
+            crate::emit_info(&format!("Sync Up failed: {}", e));
+        }
+    }
+
     Ok(sandbox_id)
 }
 

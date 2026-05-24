@@ -8,6 +8,7 @@ import {
 } from '@mantine/core';
 import {
   IconLayoutSidebar,
+  IconFolder,
   IconCircleFilled,
   IconDeviceDesktop,
 } from '@tabler/icons-react';
@@ -17,7 +18,6 @@ import { useUiStore } from '../../store/uiStore';
 import { useWorkspaceStore } from '../../store/workspaceStore';
 import { useAssistantsQuery } from '../../hooks/useAssistants';
 import { useTranslation } from 'react-i18next';
-import { invoke } from '@tauri-apps/api/core';
 
 const STATUS_COLOR: Record<string, string> = {
   disconnected: 'gray',
@@ -30,7 +30,7 @@ const STATUS_COLOR: Record<string, string> = {
 export function Header() {
   const { t } = useTranslation();
   const status = useAgentStore((s) => s.status);
-  const { toggleSidebar, environmentMode, openEnvironment, closeEnvironment } = useUiStore();
+  const { toggleSidebar, isFileTreeOpen, toggleFileTree, environmentMode, openEnvironment, closeEnvironment } = useUiStore();
   const statusColor = STATUS_COLOR[status] ?? 'gray';
   const statusLabel = t(`header.status.${status}`, { defaultValue: status });
 
@@ -48,34 +48,14 @@ export function Header() {
     ? t('header.defaultAssistant')
     : t('header.customAssistant');
 
-  const isComputerOpen = environmentMode === 'computer';
+  const isEnvironmentOpen = environmentMode !== 'closed';
 
-  const handleToggleComputer = async () => {
-    if (isComputerOpen) {
+  const handleToggleEnvironment = () => {
+    if (isEnvironmentOpen) {
       closeEnvironment();
     } else {
-      try {
-        const vncUrl = await invoke<string | null>('get_active_sandbox_vnc_url');
-        if (vncUrl) {
-          openEnvironment('computer', {
-            path: vncUrl,
-            content: '',
-            extension: 'vnc',
-          });
-        } else {
-          openEnvironment('computer', {
-            path: 'vnc',
-            content: '',
-            extension: 'vnc',
-          });
-        }
-      } catch (e) {
-        openEnvironment('computer', {
-          path: 'vnc',
-          content: '',
-          extension: 'vnc',
-        });
-      }
+      // 默认打开code面板
+      openEnvironment('code');
     }
   };
 
@@ -104,12 +84,23 @@ export function Header() {
           </ActionIcon>
         </Tooltip>
 
-        <Tooltip label={t('header.toggleComputer', { defaultValue: '显示/隐藏电脑桌面' })} withArrow>
+        <Tooltip label={t('header.toggleFileTree', { defaultValue: '显示/隐藏工作空间文件树' })} withArrow>
           <ActionIcon
             variant="subtle"
-            color={isComputerOpen ? 'blue' : 'gray'}
+            color={isFileTreeOpen ? 'blue' : 'gray'}
             size="sm"
-            onClick={handleToggleComputer}
+            onClick={toggleFileTree}
+          >
+            <IconFolder size={16} />
+          </ActionIcon>
+        </Tooltip>
+
+        <Tooltip label={t('header.toggleEnvironment', { defaultValue: '显示/隐藏预览面板' })} withArrow>
+          <ActionIcon
+            variant="subtle"
+            color={isEnvironmentOpen ? 'blue' : 'gray'}
+            size="sm"
+            onClick={handleToggleEnvironment}
           >
             <IconDeviceDesktop size={16} />
           </ActionIcon>

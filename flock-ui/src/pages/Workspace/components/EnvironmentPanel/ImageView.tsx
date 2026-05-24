@@ -100,7 +100,8 @@ export function ImageView({ absPath, workspaceId, relativePath, fileName, refres
   }
 
   if (error && workspaceId && relativePath) {
-    const isNotFound = error.includes('NotFound') || error.includes('文件不存在') || error.includes('no such file or directory') || error.includes('entity not found');
+    const errLower = error.toLowerCase();
+    const isNotFound = errLower.includes('notfound') || errLower.includes('文件不存在') || errLower.includes('no such file or directory') || errLower.includes('entity not found');
     if (isNotFound) {
       return (
         <Box

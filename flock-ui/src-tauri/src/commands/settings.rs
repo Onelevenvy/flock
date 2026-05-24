@@ -178,6 +178,38 @@ pub async fn delete_daytona_sandbox(
     }
 }
 
+/// 复用指定的沙盒（设置为当前活跃沙盒）
+#[tauri::command]
+pub async fn reuse_sandbox(
+    db: State<'_, SharedDbManager>,
+    sandbox_id: String,
+) -> Result<String, String> {
+    use flock_core::db::DbManager;
+    use flock_tools::daytona::{get_sandbox_config, check_sandbox_alive};
+
+    let db_ref: &DbManager = &*db;
+    let cfg = get_sandbox_config(db_ref).await
+        .ok_or_else(|| flock_core::tr("沙盒未配置或未启用", "Sandbox not configured or enabled"))?;
+
+    // 验证沙盒是否存活
+    if !check_sandbox_alive(&cfg, &sandbox_id).await {
+        return Err(flock_core::tr(
+            &format!("沙盒 {} 不存在或已停止", sandbox_id),
+            &format!("Sandbox {} does not exist or has stopped", sandbox_id)
+        ));
+    }
+
+    // 设置为活跃沙盒
+    let mutex = flock_tools::daytona::get_sandbox_id_mutex();
+    let mut lock = mutex.lock().await;
+    *lock = Some(sandbox_id.clone());
+
+    Ok(flock_core::tr(
+        &format!("已切换到沙盒 {}", sandbox_id),
+        &format!("Switched to sandbox {}", sandbox_id)
+    ))
+}
+
 /// 列出所有 Daytona 快照
 #[tauri::command]
 pub async fn list_daytona_snapshots(

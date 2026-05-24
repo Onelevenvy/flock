@@ -251,10 +251,17 @@ pub fn to_langgraph_message(flock_msg: Message) -> LgMessage {
     let mut text = String::new();
     let mut thinking = None;
     let mut tool_calls = Vec::new();
+    let mut lg_blocks = Vec::new();
+
+    let mut tool_call_id_opt = None;
+    let mut is_error_opt = false;
 
     for block in flock_msg.content {
         match block {
-            ContentBlock::Text { text: t } => text.push_str(&t),
+            ContentBlock::Text { text: t } => {
+                text.push_str(&t);
+                lg_blocks.push(langgraph_prebuilt::types::ContentBlock::Text { text: t });
+            }
             ContentBlock::Thinking { thinking: t } => thinking = Some(t),
             ContentBlock::ToolUse { id, name, input } => {
                 tool_calls.push(langgraph_prebuilt::ToolCall {
@@ -264,20 +271,45 @@ pub fn to_langgraph_message(flock_msg: Message) -> LgMessage {
                 });
             }
             ContentBlock::ToolResult { tool_use_id, content, is_error } => {
-                return LgMessage::Tool {
-                    tool_call_id: tool_use_id,
-                    content: langgraph_prebuilt::types::MessageContent::Text(content),
-                    name: None,
-                    id: None,
-                    status: if is_error { "error".to_string() } else { "success".to_string() },
-                };
+                tool_call_id_opt = Some(tool_use_id);
+                is_error_opt = is_error;
+                lg_blocks.push(langgraph_prebuilt::types::ContentBlock::Text { text: content.clone() });
+                text.push_str(&content);
+            }
+            ContentBlock::Image { media_type, data } => {
+                lg_blocks.push(langgraph_prebuilt::types::ContentBlock::ImageUrl {
+                    image_url: langgraph_prebuilt::types::ImageUrl {
+                        url: format!("data:{};base64,{}", media_type, data),
+                        detail: None,
+                    }
+                });
             }
         }
     }
 
+    if let Some(tool_use_id) = tool_call_id_opt {
+        return LgMessage::Tool {
+            tool_call_id: tool_use_id,
+            content: langgraph_prebuilt::types::MessageContent::Blocks(lg_blocks),
+            name: None,
+            id: None,
+            status: if is_error_opt { "error".to_string() } else { "success".to_string() },
+        };
+    }
+
     match flock_msg.role {
         Role::System => LgMessage::system(text),
-        Role::User => LgMessage::human(text),
+        Role::User => {
+            let has_image = lg_blocks.iter().any(|b| matches!(b, langgraph_prebuilt::types::ContentBlock::ImageUrl { .. }));
+            if has_image {
+                LgMessage::Human {
+                    content: langgraph_prebuilt::types::MessageContent::Blocks(lg_blocks),
+                    id: None,
+                }
+            } else {
+                LgMessage::human(text)
+            }
+        }
         Role::Assistant => {
             if tool_calls.is_empty() {
                 let mut msg = LgMessage::ai(text);

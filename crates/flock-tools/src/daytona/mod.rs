@@ -8,9 +8,9 @@ mod constants;
 pub mod volume;
 pub mod fs;
 
-pub use state::{get_active_sandbox_id, emit_human_takeover};
+pub use state::{get_active_sandbox_id, emit_human_takeover, get_sandbox_id_mutex};
 pub use config::{get_sandbox_config, get_api_base};
-pub use lifecycle::{destroy_active_sandbox, get_or_create_active_sandbox, set_sandbox_public};
+pub use lifecycle::{destroy_active_sandbox, get_or_create_active_sandbox, set_sandbox_public, check_sandbox_alive};
 pub use exec::{execute_command_in_sandbox, DaytonaSandboxResponse};
 pub use vnc::{
     start_computer_use_in_sandbox, check_computer_use_status,
@@ -19,3 +19,4 @@ pub use vnc::{
 pub use snapshot::create_playwright_snapshot;
 pub use constants::*;
 
+pub mod sync;

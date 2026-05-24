@@ -31,6 +31,9 @@ md-5.workspace        = true
 base64.workspace      = true
 
 workspace-hack.workspace = true
+ignore = "0.4.25"
+tar = "0.4.46"
+flate2 = "1.1.9"
 
 
 [dev-dependencies]

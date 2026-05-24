@@ -52,42 +52,54 @@ pub async fn execute_command_in_sandbox(
     let client = reqwest::Client::new();
     let payload = ExecuteRequest {
         command: command.to_string(),
-        cwd: Some("/home/daytona".to_string()),
+        cwd: Some("/workspace".to_string()),
         timeout: Some(60),
     };
 
     let mut last_error = None;
-    for url in urls {
-        let res = client.post(&url)
-            .header("Authorization", format!("Bearer {}", api_key))
-            .json(&payload)
-            .send()
-            .await;
+    let max_retries = 3;
 
-        match res {
-            Ok(resp) => {
-                let status = resp.status();
-                if status.is_success() {
-                    let resp_text = resp.text().await.unwrap_or_default();
-                    if let Ok(exec_res) = serde_json::from_str::<ExecuteResponse>(&resp_text) {
-                        let result = exec_res.result.unwrap_or_default();
-                        let exit_code = exec_res.exit_code.unwrap_or(0);
-                        return Ok((result, exit_code));
+    for attempt in 1..=max_retries {
+        for url in &urls {
+            let res = client.post(url)
+                .header("Authorization", format!("Bearer {}", api_key))
+                .json(&payload)
+                .send()
+                .await;
+
+            match res {
+                Ok(resp) => {
+                    let status = resp.status();
+                    if status.is_success() {
+                        let resp_text = resp.text().await.unwrap_or_default();
+                        if let Ok(exec_res) = serde_json::from_str::<ExecuteResponse>(&resp_text) {
+                            let result = exec_res.result.unwrap_or_default();
+                            let exit_code = exec_res.exit_code.unwrap_or(0);
+                            return Ok((result, exit_code));
+                        } else {
+                            return Err(anyhow::anyhow!("解析执行响应失败。原始响应体: {}", resp_text));
+                        }
+                    } else if status == reqwest::StatusCode::NOT_FOUND {
+                        // 如果 404，我们尝试下一个候选 endpoint
+                        last_error = Some(anyhow::anyhow!("Toolbox API 返回 404: {}", url));
+                        continue;
+                    } else if status.is_server_error() || status.as_u16() == 502 || status.as_u16() == 503 {
+                        last_error = Some(anyhow::anyhow!("Toolbox API 响应服务端错误 ({}): {}", url, status));
+                        // 可能是沙盒内的 agent 还没完全起来，继续重试
                     } else {
-                        return Err(anyhow::anyhow!("解析执行响应失败。原始响应体: {}", resp_text));
+                        let err_body = resp.text().await.unwrap_or_default();
+                        return Err(anyhow::anyhow!("Toolbox API 响应失败 ({}): {}", url, err_body));
                     }
-                } else if status == reqwest::StatusCode::NOT_FOUND {
-                    // 如果 404，我们尝试下一个候选 endpoint
-                    last_error = Some(anyhow::anyhow!("Toolbox API 返回 404: {}", url));
-                    continue;
-                } else {
-                    let err_body = resp.text().await.unwrap_or_default();
-                    return Err(anyhow::anyhow!("Toolbox API 响应失败 ({}): {}", url, err_body));
+                }
+                Err(e) => {
+                    last_error = Some(anyhow::anyhow!("请求连接 Toolbox 失败: {}", e));
                 }
             }
-            Err(e) => {
-                last_error = Some(anyhow::anyhow!("请求连接 Toolbox 失败: {}", e));
-            }
+        }
+        
+        // 如果不是最后一次尝试，等待一小段时间再重试
+        if attempt < max_retries {
+            tokio::time::sleep(tokio::time::Duration::from_secs(2)).await;
         }
     }
 
