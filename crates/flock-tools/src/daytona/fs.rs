@@ -23,7 +23,7 @@ impl DaytonaFs {
     /// - `/workspace/foo/bar` -> `foo/bar`
     /// - `/home/daytona/foo` -> `home/daytona/foo` (still mapped under `/workspace`)
     /// - parent traversal (`..`) is rejected
-    fn normalize_workspace_relative_path(input: &str) -> anyhow::Result<String> {
+    pub fn normalize_workspace_relative_path(input: &str) -> anyhow::Result<String> {
         let trimmed = input.trim();
         if trimmed.is_empty() {
             anyhow::bail!("Path cannot be empty");

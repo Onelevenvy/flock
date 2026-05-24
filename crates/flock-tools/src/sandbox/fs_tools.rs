@@ -38,7 +38,34 @@ pub async fn sandbox_read(path: String) -> Result<String, String> {
 pub async fn sandbox_write(path: String, content: String) -> Result<String, String> {
     let db = crate::get_db_manager().ok_or_else(|| "Database manager not initialized".to_string())?;
     crate::emit_info(&format!("正在沙盒中写入文件: {}...", path));
+
+    // Write to cloud sandbox
     DaytonaFs::write_file(&db, &path, &content).await.map_err(|e| format!("写入失败: {}", e))?;
+
+    // Auto-sync to local workspace for preview and access
+    if let Some(workspace_dir) = crate::get_workspace_dir() {
+        let rel_path = DaytonaFs::normalize_workspace_relative_path(&path)
+            .map_err(|e| format!("路径规范化失败: {}", e))?;
+        let local_path = workspace_dir.join(&rel_path);
+
+        // Create parent directories if needed
+        if let Some(parent) = local_path.parent() {
+            if let Err(e) = std::fs::create_dir_all(parent) {
+                crate::emit_info(&format!("创建本地目录失败: {}", e));
+            }
+        }
+
+        // Write file to local workspace
+        match std::fs::write(&local_path, &content) {
+            Ok(_) => {
+                crate::emit_info(&format!("文件已同步到本地: {}", local_path.display()));
+            }
+            Err(e) => {
+                crate::emit_info(&format!("同步到本地失败: {} (文件仍在云端沙盒中)", e));
+            }
+        }
+    }
+
     Ok(format!("Successfully wrote to {}", path))
 }
 
