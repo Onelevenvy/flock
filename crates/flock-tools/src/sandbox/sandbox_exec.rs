@@ -60,6 +60,13 @@ pub async fn sandbox_exec(
     let (output, exit_code) = execute_command_in_sandbox(&db, &sandbox_id, &cmd_with_timeout).await
         .map_err(|e| format!("沙盒命令执行失败: {}", e))?;
 
+    // 每次执行后拉取变更到本地
+    if let Some(ws_path) = crate::get_workspace_dir() {
+        if let Err(e) = crate::daytona::sync::sync_down(&db, &sandbox_id, &ws_path).await {
+            crate::emit_info(&format!("自动 Sync Down 失败: {}", e));
+        }
+    }
+
     if exit_code == 0 {
         Ok(format!("命令执行成功 (退出码: 0)。\n\n[输出]\n{}", output))
     } else {

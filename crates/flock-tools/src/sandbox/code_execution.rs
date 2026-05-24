@@ -41,6 +41,13 @@ pub async fn code_execution(code: String) -> Result<String, String> {
     let (stdout_stderr, exit_code) = execute_command_in_sandbox(&db, &sandbox_id, &setup_and_run_cmd).await
         .map_err(|e| format!("代码执行失败: {}", e))?;
 
+    // 每次执行后拉取变更到本地
+    if let Some(ws_path) = crate::get_workspace_dir() {
+        if let Err(e) = crate::daytona::sync::sync_down(&db, &sandbox_id, &ws_path).await {
+            crate::emit_info(&format!("自动 Sync Down 失败: {}", e));
+        }
+    }
+
     // 3. 将结果写到本地日志文件 `.flock/sandbox/code_result.log` 供前端预览
     let log_path = crate::get_workspace_dir()
         .unwrap_or_else(|| std::env::current_dir().unwrap_or_default())

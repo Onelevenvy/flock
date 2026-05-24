@@ -28,6 +28,10 @@ pub fn estimate_tokens_from_messages(messages: &[Message], system_prompt: Option
                 ContentBlock::ToolResult { content, .. } => {
                     total_chars += content.len();
                 }
+                ContentBlock::Image { data, .. } => {
+                    // Image base64 takes roughly 1 token per 3 chars
+                    json_chars += data.len();
+                }
             }
         }
     }

@@ -19,3 +19,4 @@ pub use vnc::{
 pub use snapshot::create_playwright_snapshot;
 pub use constants::*;
 
+pub mod sync;

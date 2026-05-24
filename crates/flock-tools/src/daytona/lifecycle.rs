@@ -23,6 +23,12 @@ pub async fn destroy_active_sandbox(db: &DbManager) -> anyhow::Result<()> {
     let base = get_api_base(cfg.api_url.as_ref().unwrap());
     let api_key = cfg.api_key.as_ref().unwrap();
 
+    if let Some(ws_path) = crate::get_workspace_dir() {
+        if let Err(e) = crate::daytona::sync::sync_down(db, &sandbox_id, &ws_path).await {
+            crate::emit_info(&format!("Sync Down failed: {}", e));
+        }
+    }
+
     crate::emit_info(&flock_core::tr(&format!("正在销毁 Daytona 沙盒 {}...", sandbox_id), &format!("Destroying Daytona sandbox {}...", sandbox_id)));
     let del_url = format!("{}/api/sandbox/{}", base, sandbox_id);
     match client.delete(&del_url)
@@ -261,6 +267,13 @@ pub async fn get_or_create_active_sandbox(db: &DbManager) -> anyhow::Result<Stri
     }
 
     *lock = Some(sandbox_id.clone());
+
+    if let Some(ws_path) = crate::get_workspace_dir() {
+        if let Err(e) = crate::daytona::sync::sync_up(db, &sandbox_id, &ws_path).await {
+            crate::emit_info(&format!("Sync Up failed: {}", e));
+        }
+    }
+
     Ok(sandbox_id)
 }
 
