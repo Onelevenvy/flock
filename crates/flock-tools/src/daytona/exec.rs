@@ -52,7 +52,7 @@ pub async fn execute_command_in_sandbox(
     let client = reqwest::Client::new();
     let payload = ExecuteRequest {
         command: command.to_string(),
-        cwd: Some("/home/daytona".to_string()),
+        cwd: Some("/workspace".to_string()),
         timeout: Some(60),
     };
 

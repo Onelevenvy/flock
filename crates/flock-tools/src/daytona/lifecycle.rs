@@ -93,8 +93,19 @@ pub async fn get_or_create_active_sandbox(db: &DbManager) -> anyhow::Result<Stri
     }
 
     if let Some(vid) = volume_id {
-        // Assume Daytona Sandbox creation payload accepts volume mapping (guessed standard payload)
-        create_body["volumeId"] = serde_json::Value::String(vid);
+        // Daytona API expects volumes array with mountPath specification
+        // See: https://www.daytona.io/docs/en/volumes
+        let mount_path = "/workspace";
+        create_body["volumes"] = serde_json::json!([
+            {
+                "volumeId": vid,
+                "mountPath": mount_path
+            }
+        ]);
+        crate::emit_info(&flock_core::tr(
+            &format!("Volume {} 将挂载到 {}", vid, mount_path),
+            &format!("Volume {} will be mounted to {}", vid, mount_path)
+        ));
     }
 
     let create_url = format!("{}/api/sandbox", base);
@@ -199,6 +210,31 @@ pub async fn get_or_create_active_sandbox(db: &DbManager) -> anyhow::Result<Stri
 
     crate::emit_info(&flock_core::tr("Daytona 沙盒已就绪。", "Daytona sandbox is ready."));
     let _ = set_sandbox_public(&cfg, &sandbox_id, true).await;
+
+    // Ensure /workspace directory exists (volume may not be mounted if creation failed)
+    let ensure_workspace_cmd = "mkdir -p /workspace && ls -la /workspace";
+    match crate::daytona::execute_command_in_sandbox(db, &sandbox_id, ensure_workspace_cmd).await {
+        Ok((out, code)) => {
+            if code == 0 {
+                crate::emit_info(&flock_core::tr(
+                    &format!("/workspace 目录已就绪: {}", out),
+                    &format!("/workspace directory is ready: {}", out)
+                ));
+            } else {
+                crate::emit_info(&flock_core::tr(
+                    &format!("创建 /workspace 目录失败 (退出码 {}): {}", code, out),
+                    &format!("Failed to create /workspace directory (exit code {}): {}", code, out)
+                ));
+            }
+        }
+        Err(e) => {
+            crate::emit_info(&flock_core::tr(
+                &format!("检查 /workspace 目录失败: {}", e),
+                &format!("Failed to check /workspace directory: {}", e)
+            ));
+        }
+    }
+
     *lock = Some(sandbox_id.clone());
     Ok(sandbox_id)
 }
