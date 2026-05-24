@@ -35,7 +35,7 @@ import { MarkdownRenderer } from './MarkdownRenderer';
 // 结构化提取消息中的截图物理绝对路径
 function extractScreenshotsStructured(messages: any[]): { path: string; callId: string }[] {
   const list: { path: string; callId: string }[] = [];
-  const fileRegex = /file:\/\/\/([a-zA-Z]:[^\s'")\]\)]+\.png)/gi;
+  const fileRegex = /file:\/\/\/([^\s'")\])]+\.png)/gi;
   
   const foundPaths: string[] = [];
   messages.forEach(msg => {
@@ -53,8 +53,8 @@ function extractScreenshotsStructured(messages: any[]): { path: string; callId: 
         const scanText = textToScan.replace(/\\/g, '/');
         fileRegex.lastIndex = 0;
         while ((match = fileRegex.exec(scanText)) !== null) {
-          let path = match[1].replace(/\//g, '\\');
-          if (path.startsWith('\\')) {
+          let path = match[1];
+          if (path.match(/^\/[a-zA-Z]:/)) {
             path = path.substring(1);
           }
           if (!foundPaths.includes(path)) {
@@ -309,7 +309,7 @@ function MessageBubble({ message }: { message: ChatMessage }) {
                     const allScreenshots = extractScreenshotsStructured(allMessages);
                     
                     const thisMsgScreenshotPaths: string[] = [];
-                    const fileRegex = /file:\/\/\/([a-zA-Z]:[^\s'")\]\)]+\.png)/gi;
+                    const fileRegex = /file:\/\/\/([^\s'")\])]+\.png)/gi;
                     message.chunks.forEach((chunk: any) => {
                       let textToScan = '';
                       if (chunk.kind === 'text') {
@@ -322,8 +322,8 @@ function MessageBubble({ message }: { message: ChatMessage }) {
                         const scanText = textToScan.replace(/\\/g, '/');
                         fileRegex.lastIndex = 0;
                         while ((match = fileRegex.exec(scanText)) !== null) {
-                          let path = match[1].replace(/\//g, '\\');
-                          if (path.startsWith('\\')) path = path.substring(1);
+                          let path = match[1];
+                          if (path.match(/^\/[a-zA-Z]:/)) path = path.substring(1);
                           thisMsgScreenshotPaths.push(path);
                         }
                       }

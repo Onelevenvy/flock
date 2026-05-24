@@ -45,7 +45,7 @@ function getRelativePath(absPath: string): string {
 // 结构化提取消息中的截图物理绝对路径，并关联当时的 Tool 动作参数
 function extractScreenshotsStructured(messages: any[]): ScreenshotInfo[] {
   const list: ScreenshotInfo[] = [];
-  const fileRegex = /file:\/\/\/([a-zA-Z]:[^\s'")\]\)]+\.png)/gi;
+  const fileRegex = /file:\/\/\/([^\s'")\])]+\.png)/gi;
   
   // 1. 扫描所有图片物理路径
   const foundPaths: string[] = [];
@@ -65,8 +65,8 @@ function extractScreenshotsStructured(messages: any[]): ScreenshotInfo[] {
         fileRegex.lastIndex = 0;
         while ((match = fileRegex.exec(scanText)) !== null) {
           let path = match[1];
-          path = path.replace(/\//g, '\\');
-          if (path.startsWith('\\')) {
+          // 如果是 Windows 风格的以 / 开头的路径 (如 /C:/...)，则去掉前导斜杠
+          if (path.match(/^\/[a-zA-Z]:/)) {
             path = path.substring(1);
           }
           if (!foundPaths.includes(path)) {
