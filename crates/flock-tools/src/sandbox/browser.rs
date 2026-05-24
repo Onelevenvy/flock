@@ -13,39 +13,33 @@ use base64::{Engine as _, engine::general_purpose};
 /// A cloud-based web browser tool for rendering web pages, taking screenshots, and performing interactions.
 ///
 /// ## Core Features and Action Specification
-/// - This tool is used for rendering web pages, element interactions, and capturing screen states.
 /// - Supported actions:
 ///   * `goto`: Open the target URL and render the page.
-///   * `click`: Click on a specific element identified by a CSS selector (requires `selector`).
-///   * `fill`: Type text into an input field identified by a CSS selector (requires `selector` and `text`).
-///   * `interactive`: Human takeover mode (CRITICAL).
+///   * `click_id`: (RECOMMENDED) Click on an element identified by its extracted `element_id`.
+///   * `fill_id`: (RECOMMENDED) Type text into an input field identified by its extracted `element_id`.
+///   * `click_coord`: Click by explicit X, Y coordinates (requires `x` and `y`).
+///   * `click`: Click via CSS selector (fallback, requires `selector`).
+///   * `fill`: Type text via CSS selector (fallback, requires `selector` and `text`).
+///   * `scroll_down` / `scroll_up`: Scroll the page.
+///   * `press_key`: Simulate pressing a keyboard key (e.g. "Enter").
+///   * `interactive`: Human takeover mode.
 ///
-/// ## 1. Visual Feedback Loop (Aligned with Manus / Top-tier AI Agents)
-/// - **MANDATORY RULE**: After performing any state-modifying action (especially `click` or `fill`), you must verify the page's visual changes in the next screenshot/state.
-/// - **Self-Correction & Fallback**: If you click or submit on a page 3 consecutive times but the page content or URL does not change, **DO NOT blindly repeat the action**. You must immediately do one of the following:
-///   * Switch to a different element selector strategy (e.g., use a more generic/advanced CSS selector, or check if the target is inside an iframe).
-///   * Inject a custom JS script to trigger native events directly.
-///   * Use the lower-level `ComputerUse` tool to simulate physical mouse clicks via coordinate-based inputs.
+/// ## 1. Visual Feedback & Element ID Usage
+/// - The tool automatically extracts the interactive DOM nodes and assigns them an `element_id`.
+/// - You will receive a DOM map (e.g. `[12] input "Search" (x: 150, y: 300)`) along with a screenshot.
+/// - **Always prefer using `click_id` / `fill_id` / `click_coord` over brittle CSS selectors.**
 ///
-/// ## 2. Proactive Collaboration & Risk Mitigation (Proactively Triggering Takeover)
-/// - **Security & Captcha Threshold**: If you encounter any of the following anti-bot/risk mitigation walls during automated operations:
-///   * Complex slider captchas, puzzles, or graphic verifications (e.g., Geetest, hCaptcha, Turnstile).
-///   * Two-Factor Authentication (2FA/MFA) token inputs (e.g., Google Authenticator).
-///   * SMS/Email one-time passcode verification fields.
-///   * QR codes for mobile app scanning or secure bank passcode inputs.
-/// - **Takeover Action Standard**: Once you detect these verification elements, **DO NOT** attempt to bypass them programmatically. This will lead to account lockouts. You must:
-///   1. Immediately call this tool with `action="interactive"`. This will render a live VNC collaborative remote control console for the user.
-///   2. Accompany this with a polite, warm, and highly helpful message to the user:
-///      "*I have launched the collaborative remote desktop for you. Since this page currently requires security verification (e.g., SMS, puzzle, or MFA), I have paused the automation. Please complete the verification in the VNC preview panel on the right, and let me know once you are done to resume.*"
-///   3. Wait patiently for the user to complete the manual intervention.
-///
-/// ## 3. Manual Intervention Guide
-/// - When the user explicitly requests manual control (e.g., "let me log in", "I want to do this myself", "open console", "manual input", "I'll take over"), you must immediately call `action="interactive"` to delegate control to the user.
+/// ## 2. Manual Intervention Guide
+/// - When encountering captchas or 2FA, immediately use `action="interactive"`.
 ///
 /// @param url The target website URL.
-/// @param action The browser action: "goto" (default), "click", "fill", "interactive".
-/// @param selector Optional CSS selector to click or fill (required for click/fill).
-/// @param text Optional text content to type into an input field (required for fill).
+/// @param action "goto", "click_id", "fill_id", "click_coord", "click", "fill", "scroll_down", "scroll_up", "press_key", "interactive".
+/// @param selector Optional CSS selector.
+/// @param text Optional text to fill.
+/// @param element_id Optional ID from the extracted DOM map.
+/// @param x Optional X coordinate.
+/// @param y Optional Y coordinate.
+/// @param key Optional key to press (e.g. "Enter", "Tab").
 fn clean_b64_from_output(s: &str) -> String {
     let start_marker = "SCREENSHOT_B64_START";
     let end_marker = "SCREENSHOT_B64_END";
@@ -81,6 +75,10 @@ pub async fn browser(
     action: Option<String>,
     selector: Option<String>,
     text: Option<String>,
+    element_id: Option<i32>,
+    x: Option<i32>,
+    y: Option<i32>,
+    key: Option<String>,
     call_id: Option<String>,
     msg_id: Option<String>,
 ) -> Result<String, String> {
@@ -144,87 +142,9 @@ pub async fn browser(
 
         // 运行网页分析脚本，并自动跳转
         crate::emit_info(&format!("正在远程浏览器中打开网页并分析安全要素: {}...", url));
-        let py_check_script = format!(
-            r#"
-import sys
-import json
-import base64
-from playwright.sync_api import sync_playwright
-
-try:
-    with sync_playwright() as p:
-        browser = p.chromium.connect_over_cdp("http://127.0.0.1:9222")
-        context = browser.contexts[0]
-        active_page = None
-        if context.pages:
-            for p_candidate in reversed(context.pages):
-                if p_candidate.url and p_candidate.url != "about:blank":
-                    active_page = p_candidate
-                    break
-        page = active_page if active_page else (context.pages[0] if context.pages else context.new_page())
-        
-        try:
-            page.goto("{url}", wait_until="domcontentloaded", timeout=15000)
-            page.wait_for_timeout(3000)
-        except Exception as e:
-            print(f"GOTO_WARNING: {{e}}", file=sys.stderr)
-            
-        captcha_selectors = [
-            'iframe[src*="recaptcha"]',
-            'iframe[src*="hcaptcha"]',
-            'iframe[src*="turnstile"]',
-            'div[class*="geetest"]',
-            'div[id*="geetest"]',
-            'div[class*="captcha"]',
-            'div[id*="captcha"]',
-            'iframe[src*="captcha"]',
-            'div[id*="cf-turnstile"]',
-            'div[class*="cf-turnstile"]'
-        ]
-        
-        has_password = page.locator('input[type="password"]').count() > 0
-        has_captcha = False
-        for sel in captcha_selectors:
-            try:
-                if page.locator(sel).count() > 0:
-                    has_captcha = True
-                    break
-            except Exception:
-                pass
-                
-        # 深度敏感校验字扫描：处理未处于活跃 Tab 的密码框与未弹出的风控滑块
-        page_text = page.evaluate("() => document.body.innerText || ''").lower()
-        url_lower = page.url.lower()
-        
-        is_sensitive_login = any(kw in page_text for kw in ["密码", "password", "pass word"]) or "signin" in url_lower or "login" in url_lower
-        login_keywords = ["登录", "signin", "login", "sign in", "log in", "log-in", "sign-in"]
-        has_login_text = any(kw in page_text for kw in login_keywords)
-        
-        captcha_keywords = ["验证码", "captcha", "slider", "滑块", "点击验证", "验证", "安全校验", "verify", "verification"]
-        is_sensitive_captcha = any(kw in page_text for kw in captcha_keywords)
-        
-        need_takeover = has_password or has_captcha or (is_sensitive_login and has_login_text) or is_sensitive_captcha
-        print("CHECK_RESULT:" + json.dumps({{"
-            "need_takeover": need_takeover,
-            "has_password": has_password,
-            "has_captcha": has_captcha
-        }}))
-        
-        try:
-            screenshot_bytes = page.screenshot(timeout=5000)
-            print("SCREENSHOT_B64_START")
-            print(base64.b64encode(screenshot_bytes).decode('utf-8'))
-            print("SCREENSHOT_B64_END")
-        except Exception as e:
-            print(f"SCREENSHOT_ERROR: {{e}}", file=sys.stderr)
-            
-except Exception as e:
-    print(f"FATAL_ERROR: {{e}}", file=sys.stderr)
-    sys.exit(1)
-sys.exit(0)
-"#,
-            url = url.replace("\"", "\\\"")
-        );
+        let py_check_script_template = include_str!("scripts/browser_security_check.py");
+        let url_b64 = general_purpose::STANDARD.encode(url.as_bytes());
+        let py_check_script = py_check_script_template.replace("###URL_B64###", &url_b64);
 
         let b64_script = general_purpose::STANDARD.encode(py_check_script.as_bytes());
         let run_check_cmd = format!(
@@ -336,95 +256,19 @@ sys.exit(0)
         ));
     }
 
-    // 2. 生成 Python Playwright 自动安装并执行截图的脚本
-    let sel_val = selector.unwrap_or_default();
-    let text_val = text.unwrap_or_default();
-    
-    let py_script = format!(
-        r#"
-import sys
-import base64
-from playwright.sync_api import sync_playwright
-
-try:
-    with sync_playwright() as p:
-        browser = None
-        is_cdp = False
-        
-        # 优先尝试连接 CDP 调试端口以保持会话状态
-        try:
-            browser = p.chromium.connect_over_cdp("http://127.0.0.1:9222")
-            is_cdp = True
-            context = browser.contexts[0]
-            active_page = None
-            if context.pages:
-                for p_candidate in reversed(context.pages):
-                    if p_candidate.url and p_candidate.url != "about:blank":
-                        active_page = p_candidate
-                        break
-            page = active_page if active_page else (context.pages[0] if context.pages else context.new_page())
-        except Exception as e:
-            print(f"CDP_CONNECT_WARNING: {{e}}", file=sys.stderr)
-            browser = p.chromium.launch(headless=False, args=["--no-sandbox", "--disable-setuid-sandbox"])
-            page = browser.new_page()
-
-        action = "{act}"
-        url = "{url}"
-        
-        should_goto = False
-        if action == "goto" or not is_cdp:
-            should_goto = True
-        else:
-            current_url = page.url
-            if current_url == "about:blank" or not current_url:
-                should_goto = True
-
-        if should_goto:
-            try:
-                page.goto(url, wait_until="domcontentloaded", timeout=15000)
-            except Exception as e:
-                print(f"GOTO_WARNING: {{e}}", file=sys.stderr)
-        
-        if action == "click" and "{sel_val}":
-            try:
-                page.click("{sel_val}", timeout=5000)
-                page.wait_for_timeout(1000)
-            except Exception as e:
-                print(f"CLICK_WARNING: {{e}}", file=sys.stderr)
-        elif action == "fill" and "{sel_val}":
-            try:
-                page.fill("{sel_val}", "{text_val}", timeout=5000)
-                page.wait_for_timeout(1000)
-            except Exception as e:
-                print(f"FILL_WARNING: {{e}}", file=sys.stderr)
-            
-        try:
-            screenshot_bytes = page.screenshot(timeout=5000)
-            print("SCREENSHOT_B64_START")
-            print(base64.b64encode(screenshot_bytes).decode('utf-8'))
-            print("SCREENSHOT_B64_END")
-        except Exception as e:
-            print(f"SCREENSHOT_ERROR: {{e}}", file=sys.stderr)
-        
-        try:
-            title = page.title()
-            print(f"TITLE: {{title}}")
-        except Exception as e:
-            pass
-            
-        if not is_cdp:
-            browser.close()
-except Exception as e:
-    print(f"FATAL_ERROR: {{e}}", file=sys.stderr)
-    sys.exit(1)
-
-sys.exit(0)
-"#,
-        url = url,
-        act = act,
-        sel_val = sel_val.replace("\"", "\\\""),
-        text_val = text_val.replace("\"", "\\\"")
-    );
+    let py_script_template = include_str!("scripts/browser_actions.py");
+    let config_json = serde_json::json!({
+        "url": url,
+        "action": act,
+        "selector": selector,
+        "text": text,
+        "element_id": element_id,
+        "x": x,
+        "y": y,
+        "key": key
+    });
+    let config_b64 = general_purpose::STANDARD.encode(config_json.to_string().as_bytes());
+    let py_script = py_script_template.replace("###CONFIG_B64###", &config_b64);
 
     // 确保 VNC 桌面服务在沙盒中同步先拉起，保证 headful 浏览器启动有 X 桌面环境
     let _ = ensure_vnc_running_in_sandbox(&db, &sandbox_id).await;
@@ -497,6 +341,19 @@ sys.exit(0)
         }
     }
 
+    // 提取 DOM_TREE 信息
+    let dom_start_marker = "DOM_TREE_START";
+    let dom_end_marker = "DOM_TREE_END";
+    let mut dom_tree_md = String::new();
+    if let Some(start_idx) = stdout_stderr.find(dom_start_marker) {
+        if let Some(end_idx) = stdout_stderr.find(dom_end_marker) {
+            let tree_data = &stdout_stderr[start_idx + dom_start_marker.len()..end_idx].trim();
+            if !tree_data.is_empty() {
+                dom_tree_md = format!("\n\n### Interactive Elements (DOM Tree)\n```text\n{}\n```\n*Note: Use `click_id` / `fill_id` / `click_coord` with the extracted IDs or coordinates for precision.*", tree_data);
+            }
+        }
+    }
+
     let base_dir = crate::get_workspace_dir().unwrap_or_else(|| std::env::current_dir().unwrap_or_default());
     let abs_screenshot_path = base_dir.join(".flock/sandbox/screenshots").join(&session_id).join(format!("{}.png", name_id));
     let abs_path_str = abs_screenshot_path.to_string_lossy().to_string();
@@ -508,8 +365,8 @@ sys.exit(0)
     };
 
     Ok(format!(
-        "已成功打开并渲染网页 [{}](url)\n标题: {}\n操作类型: {}\n网页截图已成功捕获并完美存入步骤记录中。{}",
-        url, page_title, act, image_md
+        "已成功执行操作 [{}].\n当前网址: {}\n标题: {}{}{}",
+        act, url, page_title, dom_tree_md, image_md
     ))
 }
 
