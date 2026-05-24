@@ -9,17 +9,24 @@ use langgraph_derive::tool;
 /// Usage:
 /// - Use this tool to run any shell command in the sandbox environment (e.g. mkdir, ls, rm, cat, python3, etc.).
 /// - This is the RECOMMENDED tool for file system operations inside the sandbox.
-/// - The sandbox runs Linux (Ubuntu). Commands execute in `/home/daytona` by default.
+/// - The sandbox runs Linux (Ubuntu). Commands execute in `/workspace` by default.
 /// - Use this tool instead of `ComputerUse` when you just need to run a command without GUI interaction.
 ///
+/// IMPORTANT PATH RULES:
+/// - The sandbox workspace is mounted at `/workspace` - all file operations should use this path
+/// - Use relative paths like `file.txt` or `subdir/file.txt` (automatically mapped to `/workspace/...`)
+/// - Or use absolute paths starting with `/workspace/` like `/workspace/file.txt`
+/// - Do NOT use local machine paths like `/Users/...` or `C:\...` - they don't exist in the sandbox
+/// - Files written to `/workspace` are automatically synced to local workspace for preview
+///
 /// Examples:
-/// - Create a directory: command="mkdir /home/daytona/my_project"
-/// - List files: command="ls -la /home/daytona"
+/// - Create a directory: command="mkdir /workspace/my_project"
+/// - List files: command="ls -la /workspace"
 /// - Run a script: command="python3 /tmp/my_script.py"
 /// - Install a package: command="pip install requests"
 ///
 /// @param command The shell command to execute in the sandbox.
-/// @param cwd Optional working directory (default: /home/daytona).
+/// @param cwd Optional working directory (default: /workspace).
 /// @param timeout Optional timeout in seconds (default: 60).
 #[tool("SandboxExec")]
 pub async fn sandbox_exec(

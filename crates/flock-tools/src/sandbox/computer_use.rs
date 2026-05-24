@@ -25,6 +25,13 @@ use base64::{Engine as _, engine::general_purpose};
 ///   * `screenshot`— Capture the current OS desktop screen.
 ///   * `status`    — Query the readiness status of the desktop service.
 ///
+/// IMPORTANT PATH RULES:
+/// - The sandbox workspace is mounted at `/workspace` - all file operations should use this path
+/// - Use relative paths like `file.txt` or `subdir/file.txt` (automatically mapped to `/workspace/...`)
+/// - Or use absolute paths starting with `/workspace/` like `/workspace/file.txt`
+/// - Do NOT use local machine paths like `/Users/...` or `C:\...` - they don't exist in the sandbox
+/// - Files written to `/workspace` are automatically synced to local workspace for preview
+///
 /// ## 1. Visual Feedback Loop (Aligned with Manus / Top-tier AI Agents)
 /// - **MANDATORY RULE**: After performing state-changing actions like `click`, `type`, or `press`, you must inspect the returned screen screenshot to verify the visual state.
 /// - **Self-Correction & Fallback**: If you click the same coordinate 3 consecutive times but the screen or active window shows no change/response, **DO NOT blindly repeat the click**. You must immediately:
@@ -86,7 +93,7 @@ pub async fn computer_use(
 
     // --- exec action: 直接在沙盒内执行 shell 命令，无需启动 VNC 桌面 ---
     if act == "exec" {
-        let cmd = command.ok_or_else(|| "`exec` action 需要提供 `command` 参数。例如：command=\"mkdir /home/daytona/aaaaa\"".to_string())?;
+        let cmd = command.ok_or_else(|| "`exec` action 需要提供 `command` 参数。例如：command=\"mkdir /workspace/my_project\"".to_string())?;
         crate::emit_info(&format!("正在沙盒中执行命令: {}...", cmd));
         let (output, exit_code) = execute_command_in_sandbox(&db, &sandbox_id, &cmd).await
             .map_err(|e| format!("沙盒命令执行失败: {}", e))?;

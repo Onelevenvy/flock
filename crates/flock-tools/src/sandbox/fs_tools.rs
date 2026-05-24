@@ -15,6 +15,12 @@ use langgraph_derive::tool;
 /// - This tool reads from the active sandbox instance, not from the local host.
 /// - Use this tool for deterministic file reads instead of shelling out with `SandboxExec`.
 ///
+/// IMPORTANT PATH RULES:
+/// - The sandbox workspace is mounted at `/workspace` - all file operations should use this path
+/// - Use relative paths like `file.txt` or `subdir/file.txt` (automatically mapped to `/workspace/...`)
+/// - Or use absolute paths starting with `/workspace/` like `/workspace/file.txt`
+/// - Do NOT use local machine paths like `/Users/...` or `C:\...` - they don't exist in the sandbox
+///
 /// @param path The file path to read (mapped into `/workspace`).
 #[tool("SandboxRead")]
 pub async fn sandbox_read(path: String) -> Result<String, String> {
@@ -31,6 +37,13 @@ pub async fn sandbox_read(path: String) -> Result<String, String> {
 /// - This tool overwrites the file content at `path`.
 /// - Parent directory creation behavior depends on the underlying sandbox filesystem API.
 /// - Use this tool for structured file writes instead of composing shell redirection commands.
+/// - Files are automatically synced to local workspace for preview and access.
+///
+/// IMPORTANT PATH RULES:
+/// - The sandbox workspace is mounted at `/workspace` - all file operations should use this path
+/// - Use relative paths like `file.txt` or `subdir/file.txt` (automatically mapped to `/workspace/...`)
+/// - Or use absolute paths starting with `/workspace/` like `/workspace/file.txt`
+/// - Do NOT use local machine paths like `/Users/...` or `C:\...` - they don't exist in the sandbox
 ///
 /// @param path The file path to write (mapped into `/workspace`).
 /// @param content The full content to write into the target file.
@@ -77,6 +90,13 @@ pub async fn sandbox_write(path: String, content: String) -> Result<String, Stri
 /// - The tool first reads the file, then replaces all occurrences of `old_text`
 ///   with `new_text`, and writes the updated content back.
 /// - Returns an error if `old_text` does not exist in the file.
+/// - Files are automatically synced to local workspace for preview and access.
+///
+/// IMPORTANT PATH RULES:
+/// - The sandbox workspace is mounted at `/workspace` - all file operations should use this path
+/// - Use relative paths like `file.txt` or `subdir/file.txt` (automatically mapped to `/workspace/...`)
+/// - Or use absolute paths starting with `/workspace/` like `/workspace/file.txt`
+/// - Do NOT use local machine paths like `/Users/...` or `C:\...` - they don't exist in the sandbox
 ///
 /// @param path The file path to edit (mapped into `/workspace`).
 /// @param old_text The exact text fragment to search for.
@@ -85,14 +105,39 @@ pub async fn sandbox_write(path: String, content: String) -> Result<String, Stri
 pub async fn sandbox_edit(path: String, old_text: String, new_text: String) -> Result<String, String> {
     let db = crate::get_db_manager().ok_or_else(|| "Database manager not initialized".to_string())?;
     crate::emit_info(&format!("正在沙盒中编辑文件: {}...", path));
-    
+
     let content = DaytonaFs::read_file(&db, &path).await.map_err(|e| format!("读取失败: {}", e))?;
     if !content.contains(&old_text) {
         return Err("The old_text was not found in the file.".to_string());
     }
-    
+
     let new_content = content.replace(&old_text, &new_text);
     DaytonaFs::write_file(&db, &path, &new_content).await.map_err(|e| format!("写入失败: {}", e))?;
+
+    // Auto-sync to local workspace for preview and access
+    if let Some(workspace_dir) = crate::get_workspace_dir() {
+        let rel_path = DaytonaFs::normalize_workspace_relative_path(&path)
+            .map_err(|e| format!("路径规范化失败: {}", e))?;
+        let local_path = workspace_dir.join(&rel_path);
+
+        // Create parent directories if needed
+        if let Some(parent) = local_path.parent() {
+            if let Err(e) = std::fs::create_dir_all(parent) {
+                crate::emit_info(&format!("创建本地目录失败: {}", e));
+            }
+        }
+
+        // Write file to local workspace
+        match std::fs::write(&local_path, &new_content) {
+            Ok(_) => {
+                crate::emit_info(&format!("文件已同步到本地: {}", local_path.display()));
+            }
+            Err(e) => {
+                crate::emit_info(&format!("同步到本地失败: {} (文件仍在云端沙盒中)", e));
+            }
+        }
+    }
+
     Ok(format!("Successfully edited {}", path))
 }
 
