@@ -315,47 +315,14 @@ export function VncView({
       
       {/* 头部导航区域 */}
       <Box style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderBottom: '1px solid var(--flock-border-dim)', paddingBottom: '8px' }}>
-        <Box style={{ display: 'flex', gap: '16px' }}>
-          <Box
-            onClick={() => {
-              if (isPlaybackMode) setPlaybackIndex(-1);
-              setActiveTab('screenshot');
-            }}
-            style={{
-              padding: '6px 12px',
-              borderRadius: '6px',
-              cursor: 'pointer',
-              fontSize: '13px',
-              fontWeight: 600,
-              transition: 'all 0.2s ease',
-              background: (!isPlaybackMode && activeTab === 'screenshot') ? 'var(--flock-accent)' : 'transparent',
-              color: (!isPlaybackMode && activeTab === 'screenshot') ? '#fff' : 'var(--flock-text-dimmed)',
-            }}
-          >
-            {isOfflineMode ? t('chat.vnc.screenshotPlayback', { defaultValue: '历史画面回放' }) : t('chat.vnc.liveDesktop')}
-          </Box>
-          
-          {!isOfflineMode && (
-            <Box
-              onClick={() => {
-                if (isPlaybackMode) setPlaybackIndex(-1);
-                setActiveTab('vnc');
-              }}
-              style={{
-                padding: '6px 12px',
-                borderRadius: '6px',
-                cursor: 'pointer',
-                fontSize: '13px',
-                fontWeight: 600,
-                transition: 'all 0.2s ease',
-                background: (!isPlaybackMode && activeTab === 'vnc') ? 'var(--flock-accent)' : 'transparent',
-                color: (!isPlaybackMode && activeTab === 'vnc') ? '#fff' : 'var(--flock-text-dimmed)',
-              }}
-            >
-              {t('chat.vnc.webConsole')}
-            </Box>
-          )}
-        </Box>
+        <Group gap={8}>
+          <IconDeviceDesktop size={14} color="var(--flock-accent)" />
+          <Text size="xs" fw={700} style={{ color: 'var(--flock-text-bright)', letterSpacing: '0.5px' }}>
+            {isOfflineMode 
+              ? t('chat.vnc.screenshotPlaybackTitle', { defaultValue: 'DESKTOP PLAYBACK' }) 
+              : t('chat.vnc.liveDesktopTitle', { defaultValue: 'LIVE DESKTOP' })}
+          </Text>
+        </Group>
 
         {/* 状态徽章：Live 状态或是回放状态 */}
         <Group gap="xs">
