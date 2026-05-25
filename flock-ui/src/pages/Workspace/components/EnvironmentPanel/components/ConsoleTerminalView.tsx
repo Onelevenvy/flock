@@ -1,5 +1,6 @@
 import React, { useEffect, useRef } from 'react';
 import { Box, Text, ScrollArea, Group } from '@mantine/core';
+import { useUiStore } from '../../../../../store/uiStore';
 
 interface ConsoleTerminalViewProps {
   content: string;
@@ -7,6 +8,8 @@ interface ConsoleTerminalViewProps {
 
 export function ConsoleTerminalView({ content }: ConsoleTerminalViewProps) {
   const viewportRef = useRef<HTMLDivElement>(null);
+  const theme = useUiStore((s) => s.theme);
+  const isDark = theme === 'dark';
 
   // 自动滚动到最新日志
   useEffect(() => {
@@ -21,12 +24,12 @@ export function ConsoleTerminalView({ content }: ConsoleTerminalViewProps) {
         display: 'flex',
         flexDirection: 'column',
         height: '100%',
-        background: '#121212', // 深色终端背景
+        background: isDark ? '#121212' : '#f8f9fa', // 深色/浅色终端背景
         borderRadius: '8px',
         overflow: 'hidden',
-        boxShadow: '0 4px 20px rgba(0,0,0,0.4) inset',
+        boxShadow: isDark ? '0 4px 20px rgba(0,0,0,0.4) inset' : '0 2px 8px rgba(0,0,0,0.06) inset',
         margin: '16px',
-        border: '1px solid #333',
+        border: isDark ? '1px solid #333' : '1px solid #e4e4e7',
       }}
     >
       {/* 终端顶部标题栏 (macOS 风格) */}
@@ -36,8 +39,8 @@ export function ConsoleTerminalView({ content }: ConsoleTerminalViewProps) {
           alignItems: 'center',
           justifyContent: 'center',
           height: '28px',
-          background: '#2d2d2d',
-          borderBottom: '1px solid #111',
+          background: isDark ? '#2d2d2d' : '#f1f3f5',
+          borderBottom: isDark ? '1px solid #111' : '1px solid #e4e4e7',
           position: 'relative',
           flexShrink: 0,
         }}
@@ -47,7 +50,7 @@ export function ConsoleTerminalView({ content }: ConsoleTerminalViewProps) {
           <Box style={{ width: 12, height: 12, borderRadius: '50%', background: '#ffbd2e' }} />
           <Box style={{ width: 12, height: 12, borderRadius: '50%', background: '#27c93f' }} />
         </Group>
-        <Text size="xs" c="#888" fw={600} style={{ fontFamily: 'var(--mantine-font-family-monospace)' }}>
+        <Text size="xs" c={isDark ? '#888' : '#71717a'} fw={600} style={{ fontFamily: 'var(--mantine-font-family-monospace)' }}>
           bash — flock-sandbox
         </Text>
       </Box>
@@ -63,7 +66,7 @@ export function ConsoleTerminalView({ content }: ConsoleTerminalViewProps) {
             fontFamily: 'var(--mantine-font-family-monospace)',
             fontSize: '13px',
             lineHeight: '1.5',
-            color: '#a9b7c6', // 经典的 IDE/Terminal 文字颜色
+            color: isDark ? '#a9b7c6' : '#18181b', // 经典的 IDE/Terminal 文字颜色
           }}
         >
           {content || '等待命令执行...'}
@@ -73,7 +76,7 @@ export function ConsoleTerminalView({ content }: ConsoleTerminalViewProps) {
         <style>{`
           .blinking-cursor {
             font-weight: bold;
-            color: #fff;
+            color: ${isDark ? '#fff' : '#18181b'};
             animation: 1s blink step-end infinite;
             margin-left: 2px;
           }

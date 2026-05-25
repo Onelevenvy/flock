@@ -19,8 +19,10 @@ import ReactMarkdown from 'react-markdown';
 import remarkMath from 'remark-math';
 import rehypeMathjax from 'rehype-mathjax';
 import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
-import { vscDarkPlus } from 'react-syntax-highlighter/dist/esm/styles/prism';
+import { vscDarkPlus, prism } from 'react-syntax-highlighter/dist/esm/styles/prism';
 import { useTranslation } from 'react-i18next';
+import { useUiStore } from '../../store/uiStore';
+
 import { convertFileSrc } from '@tauri-apps/api/core';
 
 interface CollapsibleCodeBlockProps {
@@ -30,6 +32,8 @@ interface CollapsibleCodeBlockProps {
 }
 
 function CollapsibleCodeBlock({ codeString, lang, t }: CollapsibleCodeBlockProps) {
+  const theme = useUiStore((s) => s.theme);
+  const isDark = theme === 'dark';
   const [collapsed, setCollapsed] = useState(true);
   const lineCount = codeString.split('\n').length;
   // 检测是否是 DOM 树交互元素（以 (x: x, y: y) 坐标结构为特征）
@@ -43,8 +47,8 @@ function CollapsibleCodeBlock({ codeString, lang, t }: CollapsibleCodeBlockProps
         borderRadius: '8px',
         overflow: 'hidden',
         margin: '8px 0',
-        border: '1px solid rgba(255, 255, 255, 0.08)',
-        background: '#1e1e1e',
+        border: isDark ? '1px solid rgba(255, 255, 255, 0.08)' : '1px solid rgba(0, 0, 0, 0.08)',
+        background: isDark ? '#1e1e1e' : '#f8f9fa',
       }}
     >
       {/* 代码头部栏 */}
@@ -53,8 +57,8 @@ function CollapsibleCodeBlock({ codeString, lang, t }: CollapsibleCodeBlockProps
         px="sm"
         py={4}
         style={{
-          background: '#181818',
-          borderBottom: '1px solid rgba(255,255,255,0.05)',
+          background: isDark ? '#181818' : '#f1f3f5',
+          borderBottom: isDark ? '1px solid rgba(255,255,255,0.05)' : '1px solid rgba(0,0,0,0.05)',
         }}
       >
         <Group gap={6}>
@@ -96,7 +100,7 @@ function CollapsibleCodeBlock({ codeString, lang, t }: CollapsibleCodeBlockProps
       >
         <SyntaxHighlighter
           language={lang}
-          style={vscDarkPlus}
+          style={isDark ? vscDarkPlus : prism}
           customStyle={{
             margin: 0,
             background: 'transparent',
@@ -118,7 +122,9 @@ function CollapsibleCodeBlock({ codeString, lang, t }: CollapsibleCodeBlockProps
               left: 0,
               width: '100%',
               height: '45px',
-              background: 'linear-gradient(to top, rgba(30,30,30,1) 0%, rgba(30,30,30,0.5) 70%, rgba(30,30,30,0) 100%)',
+              background: isDark 
+                ? 'linear-gradient(to top, rgba(30,30,30,1) 0%, rgba(30,30,30,0.5) 70%, rgba(30,30,30,0) 100%)'
+                : 'linear-gradient(to top, rgba(248,249,250,1) 0%, rgba(248,249,250,0.5) 70%, rgba(248,249,250,0) 100%)',
               pointerEvents: 'none',
             }}
           />
@@ -130,8 +136,8 @@ function CollapsibleCodeBlock({ codeString, lang, t }: CollapsibleCodeBlockProps
         <Box
           onClick={() => setCollapsed(!collapsed)}
           style={{
-            background: '#1a1a1a',
-            borderTop: '1px solid rgba(255, 255, 255, 0.04)',
+            background: isDark ? '#1a1a1a' : '#f1f3f5',
+            borderTop: isDark ? '1px solid rgba(255, 255, 255, 0.04)' : '1px solid rgba(0, 0, 0, 0.04)',
             height: '28px',
             display: 'flex',
             alignItems: 'center',
@@ -144,8 +150,8 @@ function CollapsibleCodeBlock({ codeString, lang, t }: CollapsibleCodeBlockProps
             userSelect: 'none',
             transition: 'background 0.2s',
           }}
-          onMouseEnter={(e: any) => e.currentTarget.style.background = '#222'}
-          onMouseLeave={(e: any) => e.currentTarget.style.background = '#1a1a1a'}
+          onMouseEnter={(e: any) => e.currentTarget.style.background = isDark ? '#222' : '#e9ecef'}
+          onMouseLeave={(e: any) => e.currentTarget.style.background = isDark ? '#1a1a1a' : '#f1f3f5'}
         >
           {collapsed ? (
             <>
@@ -170,6 +176,8 @@ interface MarkdownRendererProps {
 
 export function MarkdownRenderer({ content }: MarkdownRendererProps) {
   const { t } = useTranslation();
+  const theme = useUiStore((s) => s.theme);
+  const isDark = theme === 'dark';
 
   // 预处理过滤超长 Base64，防止撑爆或卡死聊天界面
   const filterBase64 = (text: string): string => {
@@ -269,21 +277,25 @@ export function MarkdownRenderer({ content }: MarkdownRendererProps) {
                 borderRadius: '12px',
                 overflow: 'hidden',
                 margin: '16px 0',
-                background: 'rgba(255, 255, 255, 0.02)',
+                background: isDark ? 'rgba(255, 255, 255, 0.02)' : 'rgba(0, 0, 0, 0.01)',
                 backdropFilter: 'blur(20px)',
-                border: '1px solid rgba(255, 255, 255, 0.08)',
-                boxShadow: '0 8px 32px 0 rgba(0, 0, 0, 0.37)',
+                border: isDark ? '1px solid rgba(255, 255, 255, 0.08)' : '1px solid rgba(0, 0, 0, 0.08)',
+                boxShadow: isDark ? '0 8px 32px 0 rgba(0, 0, 0, 0.37)' : '0 8px 24px 0 rgba(0, 0, 0, 0.08)',
                 transition: 'all 0.3s ease',
               }}
               onMouseEnter={(e: any) => {
                 e.currentTarget.style.transform = 'translateY(-2px)';
                 e.currentTarget.style.borderColor = 'var(--flock-accent, #3b82f6)';
-                e.currentTarget.style.boxShadow = '0 12px 40px 0 rgba(59, 130, 246, 0.25)';
+                e.currentTarget.style.boxShadow = isDark 
+                  ? '0 12px 40px 0 rgba(59, 130, 246, 0.25)' 
+                  : '0 12px 24px 0 rgba(21, 90, 239, 0.15)';
               }}
               onMouseLeave={(e: any) => {
                 e.currentTarget.style.transform = 'translateY(0)';
-                e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.08)';
-                e.currentTarget.style.boxShadow = '0 8px 32px 0 rgba(0, 0, 0, 0.37)';
+                e.currentTarget.style.borderColor = isDark ? 'rgba(255, 255, 255, 0.08)' : 'rgba(0, 0, 0, 0.08)';
+                e.currentTarget.style.boxShadow = isDark 
+                  ? '0 8px 32px 0 rgba(0, 0, 0, 0.37)' 
+                  : '0 8px 24px 0 rgba(0, 0, 0, 0.08)';
               }}
             >
               {/* 卡片头部精致栏 */}
@@ -292,8 +304,8 @@ export function MarkdownRenderer({ content }: MarkdownRendererProps) {
                 px="md"
                 py={8}
                 style={{
-                  background: 'rgba(255, 255, 255, 0.04)',
-                  borderBottom: '1px solid rgba(255, 255, 255, 0.05)',
+                  background: isDark ? 'rgba(255, 255, 255, 0.04)' : 'rgba(0, 0, 0, 0.03)',
+                  borderBottom: isDark ? '1px solid rgba(255, 255, 255, 0.05)' : '1px solid rgba(0, 0, 0, 0.05)',
                 }}
               >
                 <Group gap="xs">
@@ -313,7 +325,7 @@ export function MarkdownRenderer({ content }: MarkdownRendererProps) {
                   padding: '12px',
                   display: 'flex',
                   justifyContent: 'center',
-                  background: 'rgba(0, 0, 0, 0.2)',
+                  background: isDark ? 'rgba(0, 0, 0, 0.2)' : 'rgba(0, 0, 0, 0.03)',
                 }}
               >
                 <img
