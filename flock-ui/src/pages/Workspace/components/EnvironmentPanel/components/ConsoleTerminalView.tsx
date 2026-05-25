@@ -1,4 +1,4 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { Box, Text, ScrollArea, Group } from '@mantine/core';
 import { useUiStore } from '../../../../../store/uiStore';
 
@@ -11,12 +11,80 @@ export function ConsoleTerminalView({ content }: ConsoleTerminalViewProps) {
   const theme = useUiStore((s) => s.theme);
   const isDark = theme === 'dark';
 
-  // 自动滚动到最新日志
+  const [displayedContent, setDisplayedContent] = useState('');
+  const queueRef = useRef<string[]>([]);
+  const timerRef = useRef<number | null>(null);
+
+  // 完美流式吐字仿真：将一次性返回的大坨日志转为极速跳动的命令行流动动画
+  useEffect(() => {
+    if (!content) {
+      setDisplayedContent('');
+      queueRef.current = [];
+      if (timerRef.current) {
+        cancelAnimationFrame(timerRef.current);
+        timerRef.current = null;
+      }
+      return;
+    }
+
+    // 等待和正在执行的状态，无需加打字机，直接显示
+    if (content === '正在执行沙盒命令...' || content.startsWith('正在执行') || content.startsWith('等待命令')) {
+      setDisplayedContent(content);
+      queueRef.current = [];
+      if (timerRef.current) {
+        cancelAnimationFrame(timerRef.current);
+        timerRef.current = null;
+      }
+      return;
+    }
+
+    // 识别是增量更新还是全新输出
+    if (content.startsWith(displayedContent)) {
+      const extra = content.substring(displayedContent.length);
+      if (extra) {
+        const newLines = extra.split('\n');
+        queueRef.current.push(...newLines);
+      }
+    } else {
+      const newLines = content.split('\n');
+      setDisplayedContent('');
+      queueRef.current = newLines;
+    }
+
+    // 启动流式吐字渲染定时器
+    if (!timerRef.current) {
+      const processQueue = () => {
+        if (queueRef.current.length > 0) {
+          // 每次弹出 1-3 行以提供飞速流动又不致卡顿的视觉极客感
+          const batchSize = Math.min(3, queueRef.current.length);
+          const batch = queueRef.current.splice(0, batchSize);
+          
+          setDisplayedContent((prev) => {
+            const separator = prev ? (prev.endsWith('\n') ? '' : '\n') : '';
+            return prev + separator + batch.join('\n');
+          });
+          timerRef.current = requestAnimationFrame(processQueue);
+        } else {
+          timerRef.current = null;
+        }
+      };
+      timerRef.current = requestAnimationFrame(processQueue);
+    }
+
+    return () => {
+      if (timerRef.current) {
+        cancelAnimationFrame(timerRef.current);
+        timerRef.current = null;
+      }
+    };
+  }, [content]);
+
+  // displayedContent 改变时触发，使终端滚屏极速且流畅
   useEffect(() => {
     if (viewportRef.current) {
       viewportRef.current.scrollTo({ top: viewportRef.current.scrollHeight, behavior: 'smooth' });
     }
-  }, [content]);
+  }, [displayedContent]);
 
   return (
     <Box
@@ -69,7 +137,7 @@ export function ConsoleTerminalView({ content }: ConsoleTerminalViewProps) {
             color: isDark ? '#a9b7c6' : '#18181b', // 经典的 IDE/Terminal 文字颜色
           }}
         >
-          {content || '等待命令执行...'}
+          {displayedContent || '等待命令执行...'}
           {/* 光标闪烁效果 */}
           <span className="blinking-cursor">_</span>
         </Box>
