@@ -201,6 +201,12 @@ def main():
             print("SCREENSHOT_B64_END")
         except Exception as e:
             print(f"SCREENSHOT_ERROR: {e}", file=sys.stderr)
+
+        # 截图保存（带红框的 AI 识别图）完成后，立即清理掉插入到页面 DOM 中的红框标记元素，防止红框在 VNC 中残留污染用户画面
+        try:
+            page.evaluate("() => document.querySelectorAll('.flock-mark-box').forEach(el => el.remove())")
+        except Exception:
+            pass
         
         try:
             title = page.title()
