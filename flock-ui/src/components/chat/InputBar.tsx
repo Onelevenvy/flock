@@ -237,20 +237,22 @@ export function InputBar() {
         />
 
         {/* 底部工具栏 */}
-        <Group justify="space-between" mt={6}>
-          <Group gap={8}>
+        <Group justify="space-between" mt={6} wrap="nowrap" style={{ width: '100%' }}>
+          <Group gap={8} wrap="nowrap" style={{ flexShrink: 1, minWidth: 0 }}>
             <ActiveModelPicker />
             {value.length > 0 && (
-              <Text size="xs" style={{ color: 'var(--flock-text-dim)', fontSize: 11 }}>
+              <Text size="xs" style={{ color: 'var(--flock-text-dim)', fontSize: 11, flexShrink: 0, whiteSpace: 'nowrap' }}>
                 {value.length} {t('chat.characterCount')}
               </Text>
             )}
           </Group>
 
-          <Group gap={6}>
-            <Text size="xs" style={{ color: 'var(--flock-text-dim)', opacity: 0.8, fontSize: 11 }}>
-              {canSend ? t('chat.enterToSend') : ''}
-            </Text>
+          <Group gap={6} wrap="nowrap" style={{ flexShrink: 0 }}>
+            {canSend && (
+              <Text size="xs" style={{ color: 'var(--flock-text-dim)', opacity: 0.8, fontSize: 11, whiteSpace: 'nowrap' }}>
+                {t('chat.enterToSend')}
+              </Text>
+            )}
 
             <ModeSelector />
 
