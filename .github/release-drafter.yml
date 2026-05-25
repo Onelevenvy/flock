@@ -1,0 +1,86 @@
+name-template: 'v$RESOLVED_VERSION'
+tag-template: 'v$RESOLVED_VERSION'
+categories:
+  - title: '🚀 Features'
+    labels:
+      - 'feature'
+      - 'enhancement'
+      - 'feat'
+  - title: '🐛 Bug Fixes'
+    labels:
+      - 'bug'
+      - 'fix'
+  - title: '📝 Documentation'
+    labels:
+      - 'documentation'
+      - 'docs'
+  - title: '⚙️ Maintenance'
+    labels:
+      - 'chore'
+      - 'dependencies'
+      - 'refactor'
+      - 'ci'
+      - 'build'
+change-template: '- $TITLE (#$NUMBER) by @$AUTHOR'
+change-title-escapes: '\<*_&' # Escape Markdown characters
+
+# 自动根据 PR 标题和分支名称为 PR 贴上分类标签
+autolabeler:
+  - label: 'feat'
+    title:
+      - '/^feat(\(.*?\))?:/i'
+      - '/^feature(\(.*?\))?:/i'
+    branch:
+      - 'feat/*'
+      - 'feature/*'
+  - label: 'fix'
+    title:
+      - '/^fix(\(.*?\))?:/i'
+      - '/^bugfix(\(.*?\))?:/i'
+    branch:
+      - 'fix/*'
+      - 'bugfix/*'
+  - label: 'docs'
+    title:
+      - '/^docs(\(.*?\))?:/i'
+    branch:
+      - 'docs/*'
+  - label: 'chore'
+    title:
+      - '/^chore(\(.*?\))?:/i'
+      - '/^refactor(\(.*?\))?:/i'
+      - '/^ci(\(.*?\))?:/i'
+      - '/^build(\(.*?\))?:/i'
+    branch:
+      - 'chore/*'
+      - 'refactor/*'
+      - 'ci/*'
+      - 'build/*'
+
+version-resolver:
+  major:
+    labels:
+      - 'major'
+      - 'breaking'
+  minor:
+    labels:
+      - 'minor'
+      - 'feature'
+      - 'feat'
+  patch:
+    labels:
+      - 'patch'
+      - 'bug'
+      - 'fix'
+      - 'chore'
+      - 'dependencies'
+      - 'refactor'
+      - 'ci'
+      - 'build'
+  default: patch
+template: |
+  ## What's Changed
+
+  $CHANGES
+
+  **Full Changelog**: https://github.com/$OWNER/$REPOSITORY/compare/$PREVIOUS_TAG...v$RESOLVED_VERSION
