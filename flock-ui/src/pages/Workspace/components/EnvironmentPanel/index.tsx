@@ -185,11 +185,11 @@ export function EnvironmentPanel({ embedded = false }: EnvironmentPanelProps) {
           onChange={(val: any) => setEnvironmentMode(val)}
           data={[
             {
-              value: 'code',
+              value: 'artifact',
               label: (
                 <Center style={{ gap: 6 }}>
                   <IconCode size={14} />
-                  <span>{t('chat.workspace.tabCode', { defaultValue: 'Files' })}</span>
+                  <span>{t('chat.workspace.tabArtifact', { defaultValue: 'Artifact' })}</span>
                 </Center>
               ),
             },
@@ -199,15 +199,6 @@ export function EnvironmentPanel({ embedded = false }: EnvironmentPanelProps) {
                 <Center style={{ gap: 6 }}>
                   <IconTerminal2 size={14} />
                   <span>{t('chat.workspace.tabTerminal', { defaultValue: 'Terminal' })}</span>
-                </Center>
-              ),
-            },
-            {
-              value: 'browser',
-              label: (
-                <Center style={{ gap: 6 }}>
-                  <IconBrowser size={14} />
-                  <span>{t('chat.workspace.tabBrowser', { defaultValue: 'Browser' })}</span>
                 </Center>
               ),
             },
@@ -235,7 +226,7 @@ export function EnvironmentPanel({ embedded = false }: EnvironmentPanelProps) {
       </Box>
 
       {/* Code/Files 模式独有的 PreviewHeader */}
-      {environmentMode === 'code' && previewFile && (
+      {environmentMode === 'artifact' && previewFile && (
         <PreviewHeader
           fileName={fileName === targetScreenshotName || ext === 'vnc' ? 'FLOCK COMPUTER' : fileName}
           viewMode={viewMode}
@@ -252,7 +243,7 @@ export function EnvironmentPanel({ embedded = false }: EnvironmentPanelProps) {
       )}
 
       {/* 文件路径指示器 (仅在 Code 模式下) */}
-      {environmentMode === 'code' && previewFile && (
+      {environmentMode === 'artifact' && previewFile && (
         <Box
           px="md"
           py={4}
@@ -273,24 +264,11 @@ export function EnvironmentPanel({ embedded = false }: EnvironmentPanelProps) {
         {/* === TERMINAL 模式 === */}
         {environmentMode === 'terminal' && (
           <Box style={{ height: '100%', minHeight: 400 }}>
-             {previewFile ? (
+             {previewFile && previewFile.path.endsWith('.log') ? (
                <ConsoleTerminalView content={previewFile.content} />
              ) : (
                <Center style={{ height: '100%', color: 'var(--flock-text-dimmed)' }}>
                  <Text size="sm">{t('chat.workspace.noLogSelected', { defaultValue: 'No terminal session active' })}</Text>
-               </Center>
-             )}
-          </Box>
-        )}
-
-        {/* === BROWSER 模式 === */}
-        {environmentMode === 'browser' && (
-          <Box style={{ height: '100%', minHeight: 400 }}>
-             {(isHtml || toggleable) && previewFile ? (
-               <SandboxRunner content={previewFile.content} />
-             ) : (
-               <Center style={{ height: '100%', color: 'var(--flock-text-dimmed)' }}>
-                 <Text size="sm">{t('chat.workspace.noHtmlPreview', { defaultValue: 'No active web preview' })}</Text>
                </Center>
              )}
           </Box>
@@ -309,7 +287,7 @@ export function EnvironmentPanel({ embedded = false }: EnvironmentPanelProps) {
         )}
 
         {/* === CODE / FILES 模式 === */}
-        {environmentMode === 'code' && previewFile && (
+        {environmentMode === 'artifact' && previewFile && (
           <>
             {/* 1. HTML 预览 (Fallback if explicitly in preview mode) */}
             {isHtml && viewMode === 'preview' && (
@@ -363,7 +341,7 @@ export function EnvironmentPanel({ embedded = false }: EnvironmentPanelProps) {
           </>
         )}
 
-        {environmentMode === 'code' && !previewFile && (
+        {environmentMode === 'artifact' && !previewFile && (
            <Center style={{ height: '100%', color: 'var(--flock-text-dimmed)' }}>
              <Text size="sm">{t('chat.workspace.noFileSelected', { defaultValue: 'No file selected' })}</Text>
            </Center>

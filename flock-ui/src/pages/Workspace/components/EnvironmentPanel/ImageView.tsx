@@ -10,9 +10,10 @@ interface ImageViewProps {
   relativePath?: string;
   fileName: string;
   refreshKey?: number;
+  fullWidth?: boolean;
 }
 
-export function ImageView({ absPath, workspaceId, relativePath, fileName, refreshKey }: ImageViewProps) {
+export function ImageView({ absPath, workspaceId, relativePath, fileName, refreshKey, fullWidth }: ImageViewProps) {
   const { t } = useTranslation();
   const [base64, setBase64] = useState<string>('');
   const [loading, setLoading] = useState<boolean>(true);
@@ -203,11 +204,13 @@ export function ImageView({ absPath, workspaceId, relativePath, fileName, refres
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
-        padding: '24px',
-        background: 'var(--flock-bg-deepest)',
-        backgroundImage: 'radial-gradient(var(--flock-border-dim, #374151) 1px, transparent 0)',
+        padding: fullWidth ? '0px' : '24px',
+        background: fullWidth ? 'transparent' : 'var(--flock-bg-deepest)',
+        backgroundImage: fullWidth ? 'none' : 'radial-gradient(var(--flock-border-dim, #374151) 1px, transparent 0)',
         backgroundSize: '16px 16px',
-        minHeight: '400px',
+        minHeight: fullWidth ? '100%' : '400px',
+        width: '100%',
+        height: '100%',
       }}
     >
       {src ? (
@@ -215,13 +218,15 @@ export function ImageView({ absPath, workspaceId, relativePath, fileName, refres
           src={src}
           alt={fileName}
           style={{
+            width: '100%',
+            height: '100%',
             maxWidth: '100%',
-            maxHeight: '450px',
+            maxHeight: '100%',
             objectFit: 'contain',
-            borderRadius: '8px',
-            boxShadow: '0 8px 30px rgba(0,0,0,0.2)',
-            background: 'var(--flock-bg-base)',
-            border: '1px solid var(--flock-border-subtle)',
+            borderRadius: fullWidth ? '0px' : '8px',
+            boxShadow: fullWidth ? 'none' : '0 8px 30px rgba(0,0,0,0.2)',
+            background: 'transparent',
+            border: 'none',
           }}
         />
       ) : (

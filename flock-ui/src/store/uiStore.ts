@@ -19,7 +19,7 @@ function getInitialTheme(): ThemeMode {
   return 'light';
 }
 
-export type EnvironmentMode = 'closed' | 'code' | 'terminal' | 'browser' | 'computer';
+export type EnvironmentMode = 'closed' | 'artifact' | 'terminal' | 'computer';
 
 interface UiStore {
   // 主题

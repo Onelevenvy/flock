@@ -315,50 +315,47 @@ export function VncView({
       
       {/* 头部导航区域 */}
       <Box style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderBottom: '1px solid var(--flock-border-dim)', paddingBottom: '8px' }}>
-        <Box style={{ display: 'flex', gap: '16px' }}>
-          <Box
-            onClick={() => {
-              if (isPlaybackMode) setPlaybackIndex(-1);
-              setActiveTab('screenshot');
-            }}
-            style={{
-              padding: '6px 12px',
-              borderRadius: '6px',
-              cursor: 'pointer',
-              fontSize: '13px',
-              fontWeight: 600,
-              transition: 'all 0.2s ease',
-              background: (!isPlaybackMode && activeTab === 'screenshot') ? 'var(--flock-accent)' : 'transparent',
-              color: (!isPlaybackMode && activeTab === 'screenshot') ? '#fff' : 'var(--flock-text-dimmed)',
-            }}
-          >
-            {isOfflineMode ? t('chat.vnc.screenshotPlayback', { defaultValue: '历史画面回放' }) : t('chat.vnc.liveDesktop')}
-          </Box>
-          
-          {!isOfflineMode && (
-            <Box
-              onClick={() => {
-                if (isPlaybackMode) setPlaybackIndex(-1);
-                setActiveTab('vnc');
-              }}
-              style={{
-                padding: '6px 12px',
-                borderRadius: '6px',
-                cursor: 'pointer',
-                fontSize: '13px',
-                fontWeight: 600,
-                transition: 'all 0.2s ease',
-                background: (!isPlaybackMode && activeTab === 'vnc') ? 'var(--flock-accent)' : 'transparent',
-                color: (!isPlaybackMode && activeTab === 'vnc') ? '#fff' : 'var(--flock-text-dimmed)',
-              }}
-            >
-              {t('chat.vnc.webConsole')}
-            </Box>
-          )}
-        </Box>
+        <Group gap={8}>
+          <IconDeviceDesktop size={14} color="var(--flock-accent)" />
+          <Text size="xs" fw={700} style={{ color: 'var(--flock-text-bright)', letterSpacing: '0.5px' }}>
+            {isOfflineMode 
+              ? t('chat.vnc.screenshotPlaybackTitle', { defaultValue: 'DESKTOP PLAYBACK' }) 
+              : t('chat.vnc.liveDesktopTitle', { defaultValue: 'LIVE DESKTOP' })}
+          </Text>
+        </Group>
 
         {/* 状态徽章：Live 状态或是回放状态 */}
         <Group gap="xs">
+          {!isPlaybackMode && !isOfflineMode && (
+            <Group gap={6} mr={6}>
+              <Tooltip label={t('chat.vnc.openInBrowser')} withArrow>
+                <ActionIcon
+                  size="sm"
+                  variant="subtle"
+                  color="gray"
+                  onClick={() => window.open(formattedVncUrl, '_blank')}
+                >
+                  <IconExternalLink size={14} />
+                </ActionIcon>
+              </Tooltip>
+              <Tooltip label={t('chat.vnc.reloadConsole')} withArrow>
+                <ActionIcon
+                  size="sm"
+                  variant="subtle"
+                  color="blue"
+                  onClick={() => {
+                    const iframe = document.getElementById('flock-vnc-iframe') as HTMLIFrameElement | null;
+                    if (iframe) {
+                      iframe.src = formattedVncUrl;
+                    }
+                  }}
+                >
+                  <IconRefresh size={14} />
+                </ActionIcon>
+              </Tooltip>
+            </Group>
+          )}
+
           {isPlaybackMode ? (
             <Badge variant="light" color="orange" size="sm" style={{ height: 24, fontSize: '11px' }}>
               {t('chat.vnc.playbackMode', { current: playbackIndex + 1, total: screenshots.length })}
@@ -403,76 +400,68 @@ export function VncView({
       <Box style={{ flex: 1, position: 'relative', width: '100%' }}>
         {/* === 1. 回放模式展示 === */}
         {isPlaybackMode && (
-          <Box style={{ display: 'flex', flexDirection: 'column', gap: '12px', alignItems: 'center', justifyContent: 'center', width: '100%', minHeight: '400px' }}>
-            <Box style={{ position: 'relative', width: '100%', display: 'flex', justifyContent: 'center' }}>
+          <Box style={{ display: 'flex', flexDirection: 'column', gap: '8px', width: '100%' }}>
+            <Box 
+              style={{ 
+                position: 'relative', 
+                width: '100%', 
+                height: 'calc(100vh - 380px)', // 与 VNC 实时尺寸 100% 物理对齐！
+                border: '1px solid var(--flock-border-dim)',
+                background: 'var(--flock-bg-deep)',
+                borderRadius: 12,
+                boxShadow: '0 8px 24px rgba(0,0,0,0.2)',
+                overflow: 'hidden',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center'
+              }}
+            >
               <ImageView
                 absPath={screenshots[playbackIndex].path}
                 workspaceId={activeWorkspaceId}
                 relativePath={getRelativePath(screenshots[playbackIndex].path)}
                 fileName={`Step Snapshot ${playbackIndex + 1}`}
+                fullWidth={true}
               />
               {/* Manus 风格的动作高亮叠加图层 */}
               <ActionOverlay info={screenshots[playbackIndex]} />
             </Box>
-            <Text size="xs" c="var(--flock-accent)" style={{ textAlign: 'center', fontWeight: 600 }}>
-              {t('chat.vnc.playbackTip', { index: playbackIndex + 1 })}
-            </Text>
           </Box>
         )}
 
         {/* === 2. 实时大图展示 (或离线模式下的首屏静态展示) === */}
         {!isPlaybackMode && activeTab === 'screenshot' && (
-          <Box style={{ display: 'flex', flexDirection: 'column', gap: '12px', alignItems: 'center', justifyContent: 'center', width: '100%', minHeight: '400px' }}>
-            <ImageView
-              absPath={isOfflineMode && screenshots.length > 0 ? screenshots[screenshots.length - 1].path : screenshotAbsPath}
-              workspaceId={activeWorkspaceId}
-              relativePath={isOfflineMode && screenshots.length > 0 ? getRelativePath(screenshots[screenshots.length - 1].path) : `.flock/sandbox/screenshot_${activeConversationId || 'default'}.png`}
-              fileName="FLOCK COMPUTER"
-              refreshKey={refreshTrigger}
-            />
-            <Text size="xs" c="dimmed" style={{ textAlign: 'center', maxWidth: '80%', lineHeight: '1.6' }}>
-              {isOfflineMode ? t('chat.vnc.offlineReplayTip', { defaultValue: '会话已结束，当前为纯画面回放，支持在下方拖拽回溯 Agent 的执行步骤。' }) : t('chat.vnc.liveTip')}
-            </Text>
+          <Box style={{ display: 'flex', flexDirection: 'column', gap: '8px', width: '100%' }}>
+            <Box 
+              style={{ 
+                position: 'relative', 
+                width: '100%', 
+                height: 'calc(100vh - 380px)', // 同样与 VNC 高度绝对对齐！
+                border: '1px solid var(--flock-border-dim)',
+                background: 'var(--flock-bg-deep)',
+                borderRadius: 12,
+                boxShadow: '0 8px 24px rgba(0,0,0,0.2)',
+                overflow: 'hidden',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center'
+              }}
+            >
+              <ImageView
+                absPath={isOfflineMode && screenshots.length > 0 ? screenshots[screenshots.length - 1].path : screenshotAbsPath}
+                workspaceId={activeWorkspaceId}
+                relativePath={isOfflineMode && screenshots.length > 0 ? getRelativePath(screenshots[screenshots.length - 1].path) : `.flock/sandbox/screenshot_${activeConversationId || 'default'}.png`}
+                fileName="FLOCK COMPUTER"
+                refreshKey={refreshTrigger}
+                fullWidth={true}
+              />
+            </Box>
           </Box>
         )}
 
         {/* === 3. VNC 网页控制台展示 === */}
         {!isPlaybackMode && activeTab === 'vnc' && !isOfflineMode && (
-          <Box style={{ display: 'flex', flexDirection: 'column', gap: '8px', width: '100%' }}>
-            {/* 工具栏：链接 + 刷新 */}
-            <Box style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <Text
-                size="xs"
-                c="dimmed"
-                style={{ flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}
-              >
-                {formattedVncUrl}
-              </Text>
-              <ActionIcon
-                size="sm"
-                variant="subtle"
-                color="gray"
-                title={t('chat.vnc.openInBrowser')}
-                onClick={() => window.open(formattedVncUrl, '_blank')}
-              >
-                <IconExternalLink size={13} />
-              </ActionIcon>
-              <ActionIcon
-                size="sm"
-                variant="subtle"
-                color="blue"
-                title={t('chat.vnc.reloadConsole')}
-                onClick={() => {
-                  const iframe = document.getElementById('flock-vnc-iframe') as HTMLIFrameElement | null;
-                  if (iframe) {
-                    iframe.src = formattedVncUrl;
-                  }
-                }}
-              >
-                <IconRefresh size={13} />
-              </ActionIcon>
-            </Box>
-
+          <Box style={{ width: '100%', height: '100%' }}>
             <iframe
               id="flock-vnc-iframe"
               key={formattedVncUrl}
@@ -483,22 +472,10 @@ export function VncView({
                 border: '1px solid var(--flock-border-dim)',
                 background: 'var(--flock-bg-deep)',
                 borderRadius: 12,
-                boxShadow: '0 8px 24px rgba(0,0,0,0.2)'
+                boxShadow: '0 8px 24px rgba(0,0,0,0.2)',
+                display: 'block'
               }}
               allow="fullscreen; clipboard-read; clipboard-write; autoplay"
-            />
-
-            <Box 
-              style={{
-                padding: '8px 12px',
-                borderRadius: '8px',
-                border: '1px solid rgba(59,130,246,0.3)',
-                background: 'rgba(59,130,246,0.05)',
-                fontSize: '11px',
-                color: 'var(--flock-text-dimmed)',
-                lineHeight: '1.6'
-              }}
-              dangerouslySetInnerHTML={{ __html: t('chat.vnc.daytonaWarningTip') }}
             />
           </Box>
         )}

@@ -54,8 +54,8 @@ export function Header() {
     if (isEnvironmentOpen) {
       closeEnvironment();
     } else {
-      // 默认打开code面板
-      openEnvironment('code');
+      // 默认打开 artifact 面板
+      openEnvironment('artifact');
     }
   };
 
