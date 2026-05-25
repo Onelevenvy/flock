@@ -122,7 +122,10 @@ def main():
         
         try:
             # Take clean/raw screenshot first
-            page.evaluate("() => document.querySelectorAll('.flock-mark-box').forEach(el => el.remove())")
+            try:
+                page.evaluate("() => document.querySelectorAll('.flock-mark-box').forEach(el => el.remove())")
+            except Exception:
+                pass
             raw_screenshot_bytes = page.screenshot(timeout=5000)
             print("RAW_SCREENSHOT_B64_START")
             print(base64.b64encode(raw_screenshot_bytes).decode('utf-8'))

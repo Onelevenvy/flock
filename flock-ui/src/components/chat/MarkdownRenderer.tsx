@@ -88,7 +88,7 @@ function CollapsibleCodeBlock({ codeString, lang, t }: CollapsibleCodeBlockProps
         style={{ 
           fontSize: 13, 
           background: 'transparent',
-          maxHeight: (shouldCollapse && collapsed) ? '135px' : 'none',
+          maxHeight: (shouldCollapse && collapsed) ? (isDomTree ? '85px' : '135px') : 'none',
           overflow: 'hidden',
           position: 'relative',
           transition: 'max-height 0.25s ease-in-out',
