@@ -38,7 +38,7 @@ export type ProtocolEvent =
   | { type: 'text_delta'; text: string; msg_id: string }
   | { type: 'thinking'; text: string; msg_id: string }
   | { type: 'tool_request'; msg_id: string; call_id: string; tool: ToolInfo }
-  | { type: 'tool_running'; msg_id: string; call_id: string; tool_name: string }
+  | { type: 'tool_running'; msg_id: string; call_id: string; tool_name: string; args?: any }
   | { type: 'tool_result'; msg_id: string; call_id: string; tool_name: string; status: ToolStatus; output: string; output_type: OutputType; metadata?: unknown }
   | { type: 'tool_cancelled'; msg_id: string; call_id: string; reason: string }
   | { type: 'stream_end'; msg_id: string; usage?: Usage }

@@ -284,11 +284,12 @@ pub async fn execute_tool_calls_with_approval(
 
             // Emit Running events for all approved
             for call in &approved_calls {
-                if let ContentBlock::ToolUse { id, name, .. } = call {
+                if let ContentBlock::ToolUse { id, name, input } = call {
                     let _ = writer.emit(&ProtocolEvent::ToolRunning {
                         msg_id: msg_id.to_string(),
                         call_id: id.clone(),
                         tool_name: name.clone(),
+                        args: Some(input.clone()),
                     });
                 }
             }
@@ -373,6 +374,7 @@ pub async fn execute_tool_calls_with_approval(
                     msg_id: msg_id.to_string(),
                     call_id: id.clone(),
                     tool_name: name.clone(),
+                    args: Some(input.clone()),
                 });
 
                 let blocks;

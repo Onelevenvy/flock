@@ -41,12 +41,26 @@ function buildLiveTerminalContent(messages: any[]): string {
       const toolName = chunk.tool?.name || '';
       const lowerTool = toolName.toLowerCase();
       
+      // 安全地解析参数，因为 args 可能是 JSON 字符串或对象
+      let args: any = {};
+      if (chunk.tool?.args) {
+        try {
+          if (typeof chunk.tool.args === 'string') {
+            args = JSON.parse(chunk.tool.args);
+          } else {
+            args = chunk.tool.args;
+          }
+        } catch (e) {
+          args = {};
+        }
+      }
+      
       // 匹配沙盒相关命令执行工具
       const isSandboxExec = lowerTool.includes('sandboxexec') || lowerTool.includes('sandbox_exec');
       const isCodeExec = lowerTool.includes('code_execution');
       const isBash = lowerTool.includes('bash') || lowerTool.includes('python');
       const isComputerUseExec = (lowerTool.includes('computer_use') || lowerTool.includes('computeruse')) && 
-        (chunk.tool?.args?.action === 'exec' || chunk.tool?.args?.action === 'EXEC');
+        (args.action === 'exec' || args.action === 'EXEC');
 
       if (!isSandboxExec && !isCodeExec && !isBash && !isComputerUseExec) {
         continue;
@@ -55,10 +69,10 @@ function buildLiveTerminalContent(messages: any[]): string {
       // 重建终端输入命令
       let cmdStr = '';
       if (isCodeExec) {
-        const rawCode = chunk.tool?.args?.code || '';
+        const rawCode = args.code || '';
         cmdStr = `python3 << 'EOF'\n${rawCode}\nEOF`;
       } else {
-        cmdStr = chunk.tool?.args?.command || chunk.tool?.args?.code || '';
+        cmdStr = args.command || args.code || args.script || '';
       }
 
       // 写入命令提示符与命令输入
@@ -87,11 +101,25 @@ function buildLiveTerminalContent(messages: any[]): string {
     .filter((c) => {
       if (c.kind !== 'tool_request') return false;
       const lower = (c.tool?.name || '').toLowerCase();
+      
+      let args: any = {};
+      if (c.tool?.args) {
+        try {
+          if (typeof c.tool.args === 'string') {
+            args = JSON.parse(c.tool.args);
+          } else {
+            args = c.tool.args;
+          }
+        } catch (e) {
+          args = {};
+        }
+      }
+      
       const isSandboxExec = lower.includes('sandboxexec') || lower.includes('sandbox_exec');
       const isCodeExec = lower.includes('code_execution');
       const isBash = lower.includes('bash') || lower.includes('python');
       const isComputerUseExec = (lower.includes('computer_use') || lower.includes('computeruse')) && 
-        (c.tool?.args?.action === 'exec' || c.tool?.args?.action === 'EXEC');
+        (args.action === 'exec' || args.action === 'EXEC');
       return isSandboxExec || isCodeExec || isBash || isComputerUseExec;
     })
     .pop();

@@ -226,7 +226,16 @@ export const useAgentStore = create<AgentStore>((set) => ({
             const updatedChunks = m.chunks.map((c) => {
               if (c.kind === 'tool_request' && c.call_id === event.call_id) {
                 updated = true;
-                return { ...c, status: 'running' as const };
+                const existingArgs = c.tool?.args || {};
+                const mergedArgs = event.args ? { ...existingArgs, ...(typeof event.args === 'string' ? JSON.parse(event.args) : event.args) } : existingArgs;
+                return { 
+                  ...c, 
+                  status: 'running' as const,
+                  tool: {
+                    ...c.tool,
+                    args: mergedArgs
+                  }
+                };
               }
               return c;
             });
@@ -237,7 +246,7 @@ export const useAgentStore = create<AgentStore>((set) => ({
                 tool: {
                   name: event.tool_name,
                   category: 'exec' as any,
-                  args: {},
+                  args: event.args || {},
                   description: '',
                 },
                 status: 'running',
