@@ -377,6 +377,7 @@ export function VncView({
                 workspaceId={activeWorkspaceId}
                 relativePath={getRelativePath(screenshots[playbackIndex].path)}
                 fileName={`Step Snapshot ${playbackIndex + 1}`}
+                fullWidth={true}
               />
               {/* Manus 风格的动作高亮叠加图层 */}
               <ActionOverlay info={screenshots[playbackIndex]} />
@@ -396,6 +397,7 @@ export function VncView({
               relativePath={isOfflineMode && screenshots.length > 0 ? getRelativePath(screenshots[screenshots.length - 1].path) : `.flock/sandbox/screenshot_${activeConversationId || 'default'}.png`}
               fileName="FLOCK COMPUTER"
               refreshKey={refreshTrigger}
+              fullWidth={true}
             />
             <Text size="xs" c="dimmed" style={{ textAlign: 'center', maxWidth: '80%', lineHeight: '1.6' }}>
               {isOfflineMode ? t('chat.vnc.offlineReplayTip', { defaultValue: '会话已结束，当前为纯画面回放，支持在下方拖拽回溯 Agent 的执行步骤。' }) : t('chat.vnc.liveTip')}

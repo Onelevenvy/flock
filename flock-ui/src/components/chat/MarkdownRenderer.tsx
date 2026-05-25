@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import {
   Box,
   Text,
@@ -5,11 +6,14 @@ import {
   ActionIcon,
   CopyButton,
   Tooltip,
+  Badge,
 } from '@mantine/core';
 import {
   IconCopy,
   IconCheck,
   IconPhoto,
+  IconChevronDown,
+  IconChevronUp,
 } from '@tabler/icons-react';
 import ReactMarkdown from 'react-markdown';
 import remarkMath from 'remark-math';
@@ -18,6 +22,147 @@ import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
 import { vscDarkPlus } from 'react-syntax-highlighter/dist/esm/styles/prism';
 import { useTranslation } from 'react-i18next';
 import { convertFileSrc } from '@tauri-apps/api/core';
+
+interface CollapsibleCodeBlockProps {
+  codeString: string;
+  lang: string;
+  t: any;
+}
+
+function CollapsibleCodeBlock({ codeString, lang, t }: CollapsibleCodeBlockProps) {
+  const [collapsed, setCollapsed] = useState(true);
+  const lineCount = codeString.split('\n').length;
+  // 检测是否是 DOM 树交互元素，或者行数超长
+  const isDomTree = codeString.includes('Interactive Elements') || codeString.includes('DOM Tree');
+  const shouldCollapse = lineCount > 18 || isDomTree;
+
+  return (
+    <Box
+      style={{
+        position: 'relative',
+        borderRadius: '8px',
+        overflow: 'hidden',
+        margin: '8px 0',
+        border: '1px solid rgba(255, 255, 255, 0.08)',
+        background: '#1e1e1e',
+      }}
+    >
+      {/* 代码头部栏 */}
+      <Group
+        justify="space-between"
+        px="sm"
+        py={4}
+        style={{
+          background: '#181818',
+          borderBottom: '1px solid rgba(255,255,255,0.05)',
+        }}
+      >
+        <Group gap={6}>
+          <Text size="xs" c="dimmed" style={{ fontFamily: 'var(--mantine-font-family-monospace)' }}>
+            {lang}
+          </Text>
+          {isDomTree && (
+            <Badge size="xs" color="teal" variant="light" style={{ fontSize: 9, height: 16 }}>
+              DOM Tree
+            </Badge>
+          )}
+        </Group>
+        <CopyButton value={codeString} timeout={2000}>
+          {({ copied, copy }) => (
+            <Tooltip label={copied ? t('chat.copied') : t('chat.copyCode')} withArrow>
+              <ActionIcon
+                size="xs"
+                variant="transparent"
+                color={copied ? 'green' : 'gray'}
+                onClick={copy}
+              >
+                {copied ? <IconCheck size={12} /> : <IconCopy size={12} />}
+              </ActionIcon>
+            </Tooltip>
+          )}
+        </CopyButton>
+      </Group>
+      
+      {/* 代码高亮内容 */}
+      <Box 
+        style={{ 
+          fontSize: 13, 
+          background: 'transparent',
+          maxHeight: (shouldCollapse && collapsed) ? '135px' : 'none',
+          overflow: 'hidden',
+          position: 'relative',
+          transition: 'max-height 0.25s ease-in-out',
+        }}
+      >
+        <SyntaxHighlighter
+          language={lang}
+          style={vscDarkPlus}
+          customStyle={{
+            margin: 0,
+            background: 'transparent',
+            padding: '12px',
+            fontSize: 13,
+            lineHeight: 1.5,
+          }}
+          wrapLongLines={true}
+        >
+          {codeString}
+        </SyntaxHighlighter>
+
+        {/* 渐变遮罩 (仅在折叠时显示) */}
+        {shouldCollapse && collapsed && (
+          <Box
+            style={{
+              position: 'absolute',
+              bottom: 0,
+              left: 0,
+              width: '100%',
+              height: '45px',
+              background: 'linear-gradient(to top, rgba(30,30,30,1) 0%, rgba(30,30,30,0.5) 70%, rgba(30,30,30,0) 100%)',
+              pointerEvents: 'none',
+            }}
+          />
+        )}
+      </Box>
+
+      {/* 展开/收起切换按钮栏 */}
+      {shouldCollapse && (
+        <Box
+          onClick={() => setCollapsed(!collapsed)}
+          style={{
+            background: '#1a1a1a',
+            borderTop: '1px solid rgba(255, 255, 255, 0.04)',
+            height: '28px',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            cursor: 'pointer',
+            fontSize: '11px',
+            color: 'var(--flock-accent)',
+            fontWeight: 600,
+            gap: '4px',
+            userSelect: 'none',
+            transition: 'background 0.2s',
+          }}
+          onMouseEnter={(e: any) => e.currentTarget.style.background = '#222'}
+          onMouseLeave={(e: any) => e.currentTarget.style.background = '#1a1a1a'}
+        >
+          {collapsed ? (
+            <>
+              <span>展开全部内容 (共 {lineCount} 行)</span>
+              <IconChevronDown size={11} />
+            </>
+          ) : (
+            <>
+              <span>收起内容</span>
+              <IconChevronUp size={11} />
+            </>
+          )}
+        </Box>
+      )}
+    </Box>
+  );
+}
 
 interface MarkdownRendererProps {
   content: string;
@@ -68,69 +213,11 @@ export function MarkdownRenderer({ content }: MarkdownRendererProps) {
       components={{
         code({ node, inline, className, children, ...props }: any) {
           const match = /language-(\w+)/.exec(className || '');
-          const lang = match ? match[1] : '';
+          const lang = match ? match[1] : 'text';
 
-          if (!inline && lang) {
+          if (!inline) {
             const codeString = String(children).replace(/\n$/, '');
-            return (
-              <Box
-                style={{
-                  position: 'relative',
-                  borderRadius: '8px',
-                  overflow: 'hidden',
-                  margin: '8px 0',
-                  border: '1px solid rgba(255, 255, 255, 0.08)',
-                  background: '#1e1e1e',
-                }}
-              >
-                {/* 代码头部栏 */}
-                <Group
-                  justify="space-between"
-                  px="sm"
-                  py={4}
-                  style={{
-                    background: '#181818',
-                    borderBottom: '1px solid rgba(255,255,255,0.05)',
-                  }}
-                >
-                  <Text size="xs" c="dimmed" style={{ fontFamily: 'var(--mantine-font-family-monospace)' }}>
-                    {lang}
-                  </Text>
-                  <CopyButton value={codeString} timeout={2000}>
-                    {({ copied, copy }) => (
-                      <Tooltip label={copied ? t('chat.copied') : t('chat.copyCode')} withArrow>
-                        <ActionIcon
-                          size="xs"
-                          variant="transparent"
-                          color={copied ? 'green' : 'gray'}
-                          onClick={copy}
-                        >
-                          {copied ? <IconCheck size={12} /> : <IconCopy size={12} />}
-                        </ActionIcon>
-                      </Tooltip>
-                    )}
-                  </CopyButton>
-                </Group>
-                
-                {/* 代码高亮内容 */}
-                <Box style={{ fontSize: 13, background: 'transparent' }}>
-                  <SyntaxHighlighter
-                    language={lang}
-                    style={vscDarkPlus}
-                    customStyle={{
-                      margin: 0,
-                      background: 'transparent',
-                      padding: '12px',
-                      fontSize: 13,
-                      lineHeight: 1.5,
-                    }}
-                    wrapLongLines={true}
-                  >
-                    {codeString}
-                  </SyntaxHighlighter>
-                </Box>
-              </Box>
-            );
+            return <CollapsibleCodeBlock codeString={codeString} lang={lang} t={t} />;
           }
 
           // 行内代码样式

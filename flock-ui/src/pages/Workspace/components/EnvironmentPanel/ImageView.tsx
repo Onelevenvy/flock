@@ -12,7 +12,7 @@ interface ImageViewProps {
   refreshKey?: number;
 }
 
-export function ImageView({ absPath, workspaceId, relativePath, fileName, refreshKey }: ImageViewProps) {
+export function ImageView({ absPath, workspaceId, relativePath, fileName, refreshKey, fullWidth }: ImageViewProps) {
   const { t } = useTranslation();
   const [base64, setBase64] = useState<string>('');
   const [loading, setLoading] = useState<boolean>(true);
