@@ -14,9 +14,16 @@ export function ConsoleTerminalView({ content }: ConsoleTerminalViewProps) {
   const [displayedContent, setDisplayedContent] = useState('');
   const queueRef = useRef<string[]>([]);
   const timerRef = useRef<number | null>(null);
+  const lastProcessedContentRef = useRef('');
 
-  // 完美流式吐字仿真：将一次性返回的大坨日志转为极速跳动的命令行流动动画
+  
   useEffect(() => {
+    // 根源防御：如果传入的 content 与上一轮已开始处理的 content 物理上完全一致，立刻强行拦截，防止重复追加导致双份打印
+    if (content === lastProcessedContentRef.current) {
+      return;
+    }
+    lastProcessedContentRef.current = content;
+
     if (!content) {
       setDisplayedContent('');
       queueRef.current = [];
@@ -77,7 +84,7 @@ export function ConsoleTerminalView({ content }: ConsoleTerminalViewProps) {
         timerRef.current = null;
       }
     };
-  }, [content]);
+  }, [content, displayedContent]);
 
   // displayedContent 改变时触发，使终端滚屏极速且流畅
   useEffect(() => {

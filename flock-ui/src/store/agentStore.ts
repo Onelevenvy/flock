@@ -262,9 +262,16 @@ export const useAgentStore = create<AgentStore>((set) => ({
             lowerTool.includes('python') ||
             lowerTool.includes('code_execution')
           ) {
-            // 判断是否是 computer_use 且 action 为 exec
-            let isExec = false;
-            if (lowerTool.includes('computer_use') || lowerTool.includes('computeruse')) {
+            // 判定是否是纯命令行工具（而非 GUI 浏览器或桌面操作），若是，则在执行伊始就应该直接打开终端
+            const isCommandLine = 
+              lowerTool.includes('sandboxexec') || 
+              lowerTool.includes('sandbox_exec') || 
+              lowerTool.includes('bash') || 
+              lowerTool.includes('python') || 
+              lowerTool.includes('code_execution');
+
+            let isExec = isCommandLine;
+            if (!isExec && (lowerTool.includes('computer_use') || lowerTool.includes('computeruse'))) {
               try {
                 // 因为是自动批准（免确认）的，我们需要尽量从 messages 中找一次 arguments
                 const currentMessages = useAgentStore.getState().messages;
