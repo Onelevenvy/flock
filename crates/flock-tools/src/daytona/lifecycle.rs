@@ -324,10 +324,10 @@ pub async fn set_sandbox_public(
 
     let status = res.status();
     if status.is_success() {
-        crate::emit_info(&flock_core::tr(
-            &format!("Daytona 沙盒 {} 的 public 属性设置成功。", sandbox_id),
-            &format!("Daytona sandbox {} public attribute set successfully.", sandbox_id)
-        ));
+        // crate::emit_info(&flock_core::tr(
+        //     &format!("Daytona 沙盒 {} 的 public 属性设置成功。", sandbox_id),
+        //     &format!("Daytona sandbox {} public attribute set successfully.", sandbox_id)
+        // ));
         Ok(())
     } else {
         let err_body = res.text().await.unwrap_or_default();

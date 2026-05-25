@@ -73,12 +73,10 @@ export function FileTreeItem({
           relativePath: entry.path,
         });
         const file = { path: entry.path, content, extension: entry.extension };
-        if (ext === 'html' || ext === 'htm') {
-          openEnvironment('browser', file);
-        } else if (ext === 'log') {
+        if (ext === 'log') {
           openEnvironment('terminal', file);
         } else {
-          openEnvironment('code', file);
+          openEnvironment('artifact', file);
         }
       } catch (err) {
         notifications.show({
@@ -89,7 +87,7 @@ export function FileTreeItem({
       }
     } else {
       // Binary file (image, PDF, office, etc.) - load without fetching text content
-      openEnvironment('code', { path: entry.path, content: '', extension: entry.extension });
+      openEnvironment('artifact', { path: entry.path, content: '', extension: entry.extension });
     }
   }, [entry, workspaceId, openEnvironment, t]);
 

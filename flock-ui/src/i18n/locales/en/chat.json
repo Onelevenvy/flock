@@ -86,6 +86,7 @@
     "flockComputer": "Flock Computer",
     "tabPreview": "Preview",
     "tabCode": "Code",
+    "tabArtifact": "Artifact",
     "downloadSuccess": "Download successful",
     "downloadSuccessDesc": "Exported to local: {{dest}}",
     "downloadFailed": "Download failed",

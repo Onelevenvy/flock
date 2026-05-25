@@ -85,6 +85,7 @@
     "flockComputer": "Flock Computer",
     "tabPreview": "预览",
     "tabCode": "代码",
+    "tabArtifact": "Artifact",
     "downloadSuccess": "下载成功",
     "downloadSuccessDesc": "已导出至本地：{{dest}}",
     "downloadFailed": "下载失败",
