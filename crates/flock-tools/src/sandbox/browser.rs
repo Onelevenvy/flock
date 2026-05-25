@@ -33,7 +33,7 @@ use base64::{Engine as _, engine::general_purpose};
 /// - When encountering captchas or 2FA, immediately use `action="interactive"`.
 ///
 /// @param url The target website URL.
-/// @param action "goto", "click_id", "fill_id", "click_coord", "click", "fill", "scroll_down", "scroll_up", "press_key", "interactive".
+/// @param action (Optional) The browser action to perform. MUST be one of: 'goto' (navigate to URL), 'click_id' (click element by numeric ID from DOM Tree), 'fill_id' (fill text input by numeric ID from DOM Tree), 'click_coord' (click specific coordinate x,y), 'click' (click by selector), 'fill' (type by selector), 'scroll_down' (scroll down page), 'scroll_up' (scroll up page), 'press_key' (press keyboard key), 'interactive' (human takeover). Defaults to 'goto'.
 /// @param selector Optional CSS selector.
 /// @param text Optional text to fill.
 /// @param element_id Optional ID from the extracted DOM map.
@@ -41,30 +41,54 @@ use base64::{Engine as _, engine::general_purpose};
 /// @param y Optional Y coordinate.
 /// @param key Optional key to press (e.g. "Enter", "Tab").
 fn clean_b64_from_output(s: &str) -> String {
+    let mut temp = String::new();
+    let raw_start = "RAW_SCREENSHOT_B64_START";
+    let raw_end = "RAW_SCREENSHOT_B64_END";
+    let mut current_pos = 0;
+    
+    while let Some(start_idx) = s[current_pos..].find(raw_start) {
+        let absolute_start = current_pos + start_idx;
+        temp.push_str(&s[current_pos..absolute_start]);
+        temp.push_str(raw_start);
+        temp.push_str("\n[干净截图二进制Base64数据已自动折叠]\n");
+        
+        let rest = &s[absolute_start + raw_start.len()..];
+        if let Some(end_idx) = rest.find(raw_end) {
+            temp.push_str(raw_end);
+            current_pos = absolute_start + raw_start.len() + end_idx + raw_end.len();
+        } else {
+            current_pos = s.len();
+            break;
+        }
+    }
+    if current_pos < s.len() {
+        temp.push_str(&s[current_pos..]);
+    }
+
     let start_marker = "SCREENSHOT_B64_START";
     let end_marker = "SCREENSHOT_B64_END";
     
     let mut result = String::new();
     let mut current_pos = 0;
     
-    while let Some(start_idx) = s[current_pos..].find(start_marker) {
+    while let Some(start_idx) = temp[current_pos..].find(start_marker) {
         let absolute_start = current_pos + start_idx;
-        result.push_str(&s[current_pos..absolute_start]);
+        result.push_str(&temp[current_pos..absolute_start]);
         result.push_str(start_marker);
         result.push_str("\n[截图二进制Base64数据已自动折叠]\n");
         
-        let rest = &s[absolute_start + start_marker.len()..];
+        let rest = &temp[absolute_start + start_marker.len()..];
         if let Some(end_idx) = rest.find(end_marker) {
             result.push_str(end_marker);
             current_pos = absolute_start + start_marker.len() + end_idx + end_marker.len();
         } else {
-            current_pos = s.len();
+            current_pos = temp.len();
             break;
         }
     }
     
-    if current_pos < s.len() {
-        result.push_str(&s[current_pos..]);
+    if current_pos < temp.len() {
+        result.push_str(&temp[current_pos..]);
     }
     result
 }
@@ -310,27 +334,58 @@ pub async fn browser(
         return Err(format!("沙箱浏览器执行失败: {}", cleaned_output));
     }
 
-    // 3. 从 stdout 解析 Base64 图片数据并保存至本地 `.flock/sandbox/screenshots/{name_id}.png`
+    // 3. 从 stdout 解析 Base64 图片数据并保存至本地
+    let raw_start_marker = "RAW_SCREENSHOT_B64_START";
+    let raw_end_marker = "RAW_SCREENSHOT_B64_END";
     let start_marker = "SCREENSHOT_B64_START";
     let end_marker = "SCREENSHOT_B64_END";
     let mut screenshot_saved = false;
+
+    let mut raw_screenshot_bytes: Option<Vec<u8>> = None;
+    let mut labeled_screenshot_bytes: Option<Vec<u8>> = None;
+
+    if let Some(start_idx) = stdout_stderr.find(raw_start_marker) {
+        if let Some(end_idx) = stdout_stderr.find(raw_end_marker) {
+            let b64_data = &stdout_stderr[start_idx + raw_start_marker.len()..end_idx].trim();
+            if let Ok(img_bytes) = general_purpose::STANDARD.decode(b64_data) {
+                raw_screenshot_bytes = Some(img_bytes);
+            }
+        }
+    }
 
     if let Some(start_idx) = stdout_stderr.find(start_marker) {
         if let Some(end_idx) = stdout_stderr.find(end_marker) {
             let b64_data = &stdout_stderr[start_idx + start_marker.len()..end_idx].trim();
             if let Ok(img_bytes) = general_purpose::STANDARD.decode(b64_data) {
-                let base_dir = crate::get_workspace_dir().unwrap_or_else(|| std::env::current_dir().unwrap_or_default());
-                let ss_dir = base_dir.join(".flock/sandbox/screenshots").join(&session_id);
-                let ss_path = ss_dir.join(format!("{}.png", name_id));
-                if let Some(parent) = ss_path.parent() {
-                    let _ = std::fs::create_dir_all(parent);
-                }
-                let _ = std::fs::write(&ss_path, &img_bytes);
-                let _ = std::fs::write(base_dir.join(format!(".flock/sandbox/screenshot_{}.png", session_id)), &img_bytes);
-                screenshot_saved = true;
-                crate::emit_info("网页截图已成功保存至工作区，已生成步骤快照。");
+                labeled_screenshot_bytes = Some(img_bytes);
             }
         }
+    }
+
+    let base_dir = crate::get_workspace_dir().unwrap_or_else(|| std::env::current_dir().unwrap_or_default());
+    let ss_dir = base_dir.join(".flock/sandbox/screenshots").join(&session_id);
+    let _ = std::fs::create_dir_all(&ss_dir);
+
+    let ss_path = ss_dir.join(format!("{}.png", name_id));
+    let ss_path_labeled = ss_dir.join(format!("{}_labeled.png", name_id));
+
+    if let Some(raw_bytes) = raw_screenshot_bytes {
+        let _ = std::fs::write(&ss_path, &raw_bytes);
+        let _ = std::fs::write(base_dir.join(format!(".flock/sandbox/screenshot_{}.png", session_id)), &raw_bytes);
+        screenshot_saved = true;
+
+        if let Some(labeled_bytes) = labeled_screenshot_bytes {
+            let _ = std::fs::write(&ss_path_labeled, &labeled_bytes);
+        } else {
+            let _ = std::fs::write(&ss_path_labeled, &raw_bytes);
+        }
+        crate::emit_info("网页双轨截图捕获完成：已生成干净步骤快照供用户预览，并生成标记元素图供大模型执行。");
+    } else if let Some(labeled_bytes) = labeled_screenshot_bytes {
+        let _ = std::fs::write(&ss_path, &labeled_bytes);
+        let _ = std::fs::write(base_dir.join(format!(".flock/sandbox/screenshot_{}.png", session_id)), &labeled_bytes);
+        let _ = std::fs::write(&ss_path_labeled, &labeled_bytes);
+        screenshot_saved = true;
+        crate::emit_info("网页截图已成功保存至工作区，已生成步骤快照（带标记 fallback）。");
     }
 
     // 提取标题信息
@@ -354,8 +409,7 @@ pub async fn browser(
         }
     }
 
-    let base_dir = crate::get_workspace_dir().unwrap_or_else(|| std::env::current_dir().unwrap_or_default());
-    let abs_screenshot_path = base_dir.join(".flock/sandbox/screenshots").join(&session_id).join(format!("{}.png", name_id));
+    let abs_screenshot_path = base_dir.join(".flock/sandbox/screenshots").join(&session_id).join(format!("{}_labeled.png", name_id));
     let abs_path_str = abs_screenshot_path.to_string_lossy().to_string();
 
     let image_md = if screenshot_saved {
