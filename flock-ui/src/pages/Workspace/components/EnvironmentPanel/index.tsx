@@ -226,7 +226,7 @@ export function EnvironmentPanel({ embedded = false }: EnvironmentPanelProps) {
       </Box>
 
       {/* Code/Files 模式独有的 PreviewHeader */}
-      {environmentMode === 'artifact' && previewFile && (
+      {environmentMode === 'artifact' && previewFile && previewFile.path !== '.flock/sandbox/code_result.log' && (
         <PreviewHeader
           fileName={fileName === targetScreenshotName || ext === 'vnc' ? 'FLOCK COMPUTER' : fileName}
           viewMode={viewMode}
@@ -243,7 +243,7 @@ export function EnvironmentPanel({ embedded = false }: EnvironmentPanelProps) {
       )}
 
       {/* 文件路径指示器 (仅在 Code 模式下) */}
-      {environmentMode === 'artifact' && previewFile && (
+      {environmentMode === 'artifact' && previewFile && previewFile.path !== '.flock/sandbox/code_result.log' && (
         <Box
           px="md"
           py={4}
@@ -287,7 +287,7 @@ export function EnvironmentPanel({ embedded = false }: EnvironmentPanelProps) {
         )}
 
         {/* === CODE / FILES 模式 === */}
-        {environmentMode === 'artifact' && previewFile && (
+        {environmentMode === 'artifact' && previewFile && previewFile.path !== '.flock/sandbox/code_result.log' && (
           <>
             {/* 1. HTML 预览 (Fallback if explicitly in preview mode) */}
             {isHtml && viewMode === 'preview' && (
@@ -341,7 +341,7 @@ export function EnvironmentPanel({ embedded = false }: EnvironmentPanelProps) {
           </>
         )}
 
-        {environmentMode === 'artifact' && !previewFile && (
+        {environmentMode === 'artifact' && (!previewFile || previewFile.path === '.flock/sandbox/code_result.log') && (
            <Center style={{ height: '100%', color: 'var(--flock-text-dimmed)' }}>
              <Text size="sm">{t('chat.workspace.noFileSelected', { defaultValue: 'No file selected' })}</Text>
            </Center>
