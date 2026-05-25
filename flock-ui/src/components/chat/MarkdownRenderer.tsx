@@ -32,9 +32,9 @@ interface CollapsibleCodeBlockProps {
 function CollapsibleCodeBlock({ codeString, lang, t }: CollapsibleCodeBlockProps) {
   const [collapsed, setCollapsed] = useState(true);
   const lineCount = codeString.split('\n').length;
-  // 检测是否是 DOM 树交互元素，或者行数超长
-  const isDomTree = codeString.includes('Interactive Elements') || codeString.includes('DOM Tree');
-  const shouldCollapse = lineCount > 18 || isDomTree;
+  // 检测是否是 DOM 树交互元素（以 (x: x, y: y) 坐标结构为特征）
+  const isDomTree = lang === 'text' && codeString.includes(' (x: ') && codeString.includes(', y: ');
+  const shouldCollapse = lineCount > 8 || isDomTree;
 
   return (
     <Box
@@ -200,22 +200,6 @@ export function MarkdownRenderer({ content }: MarkdownRendererProps) {
       const suffix = word.substring(word.length - 20);
       return `${prefix}... [${t('vnc.base64FoldedShort', { defaultValue: '超长二进制/Base64数据已自动折叠' })}(共 ${word.length} 字符)] ...${suffix}`;
     });
-
-    // 3. 智能截断并折叠超长 DOM Tree 技术坐标数据，不抢占用户的聊天视线，同时保证大模型已在后端接收到完整信息进行精准定位
-    const domTreeMarker = '### Interactive Elements (DOM Tree)';
-    if (processed.includes(domTreeMarker)) {
-      const parts = processed.split(domTreeMarker);
-      const prefix = parts[0];
-      const domTreeText = parts[1] || '';
-      
-      const lines = domTreeText.split('\n');
-      if (lines.length > 8) {
-        // 展示前 5 行以供预览，其余以高科技感提示文案收缩
-        const visibleLines = lines.slice(0, 5).join('\n');
-        const hiddenCount = lines.length - 5;
-        processed = `${prefix}${domTreeMarker}\n${visibleLines}\n\n*... [已折叠 ${hiddenCount} 行技术定位树参数，大模型已接收到完整参数进行精准交互] ...*`;
-      }
-    }
 
     return processed;
   };

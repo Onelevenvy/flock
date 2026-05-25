@@ -79,7 +79,11 @@ function extractScreenshotsStructured(messages: any[]): ScreenshotInfo[] {
 
   // 2. 根据物理路径，提取文件名中的 callId 并关联动作
   foundPaths.forEach(path => {
-    const baseName = path.split(/[/\\]/).pop() || '';
+    let cleanPath = path;
+    if (path.endsWith('_labeled.png')) {
+      cleanPath = path.substring(0, path.length - 12) + '.png';
+    }
+    const baseName = cleanPath.split(/[/\\]/).pop() || '';
     const callId = baseName.replace(/\.png$/i, '');
     
     let action = '';
@@ -110,7 +114,7 @@ function extractScreenshotsStructured(messages: any[]): ScreenshotInfo[] {
     }
 
     list.push({
-      path,
+      path: cleanPath,
       callId,
       action,
       x,
