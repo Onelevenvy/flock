@@ -16,12 +16,11 @@ export function ConsoleTerminalView({ content }: ConsoleTerminalViewProps) {
   const timerRef = useRef<number | null>(null);
   const lastProcessedContentRef = useRef('');
 
-  
   useEffect(() => {
-    // 根源防御：如果传入的 content 与上一轮已开始处理的 content 物理上完全一致，立刻强行拦截，防止重复追加导致双份打印
     if (content === lastProcessedContentRef.current) {
       return;
     }
+    const prevContent = lastProcessedContentRef.current;
     lastProcessedContentRef.current = content;
 
     if (!content) {
@@ -45,9 +44,9 @@ export function ConsoleTerminalView({ content }: ConsoleTerminalViewProps) {
       return;
     }
 
-    // 识别是增量更新还是全新输出
-    if (content.startsWith(displayedContent)) {
-      const extra = content.substring(displayedContent.length);
+  
+    if (prevContent && content.startsWith(prevContent)) {
+      const extra = content.substring(prevContent.length);
       if (extra) {
         const newLines = extra.split('\n');
         queueRef.current.push(...newLines);
@@ -84,7 +83,7 @@ export function ConsoleTerminalView({ content }: ConsoleTerminalViewProps) {
         timerRef.current = null;
       }
     };
-  }, [content, displayedContent]);
+  }, [content]);
 
   // displayedContent 改变时触发，使终端滚屏极速且流畅
   useEffect(() => {
