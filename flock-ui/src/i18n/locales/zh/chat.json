@@ -128,5 +128,11 @@
     "noImageAvailable": "暂无可用图片路径",
     "screenshotDataFolded": "截图二进制数据已折叠",
     "base64FoldedShort": "超长二进制/Base64数据已自动折叠"
-  }
+  },
+  "sandboxLogs": "沙盒运行日志 (共 {{count}} 步)",
+  "showOutput": "展开输出",
+  "hideOutput": "收起输出",
+  "sandboxLogsSuccess": "沙盒操作已全部完成",
+  "sandboxLogsRunning": "正在执行沙盒操作",
+  "sandboxLogsError": "沙盒操作执行失败"
 }
