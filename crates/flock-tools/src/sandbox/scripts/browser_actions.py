@@ -209,7 +209,13 @@ def main():
             pass
             
         if not is_cdp:
-            browser.close()
+            try:
+                browser.close()
+            except Exception:
+                pass
+
+        # 强制正常退出当前进程，避开 with 块清理时 Playwright CDP 连接异常导致的退出码非零问题
+        os._exit(0)
 
 if __name__ == "__main__":
     main()
