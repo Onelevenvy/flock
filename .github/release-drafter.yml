@@ -23,6 +23,40 @@ categories:
       - 'build'
 change-template: '- $TITLE (#$NUMBER) by @$AUTHOR'
 change-title-escapes: '\<*_&' # Escape Markdown characters
+
+# 自动根据 PR 标题和分支名称为 PR 贴上分类标签
+autolabeler:
+  - label: 'feat'
+    title:
+      - '/^feat(\(.*?\))?:/i'
+      - '/^feature(\(.*?\))?:/i'
+    branch:
+      - 'feat/*'
+      - 'feature/*'
+  - label: 'fix'
+    title:
+      - '/^fix(\(.*?\))?:/i'
+      - '/^bugfix(\(.*?\))?:/i'
+    branch:
+      - 'fix/*'
+      - 'bugfix/*'
+  - label: 'docs'
+    title:
+      - '/^docs(\(.*?\))?:/i'
+    branch:
+      - 'docs/*'
+  - label: 'chore'
+    title:
+      - '/^chore(\(.*?\))?:/i'
+      - '/^refactor(\(.*?\))?:/i'
+      - '/^ci(\(.*?\))?:/i'
+      - '/^build(\(.*?\))?:/i'
+    branch:
+      - 'chore/*'
+      - 'refactor/*'
+      - 'ci/*'
+      - 'build/*'
+
 version-resolver:
   major:
     labels:
