@@ -33,7 +33,7 @@ use base64::{Engine as _, engine::general_purpose};
 /// - When encountering captchas or 2FA, immediately use `action="interactive"`.
 ///
 /// @param url The target website URL.
-/// @param action The browser action to perform. MUST be one of: 'goto' (navigate to URL), 'click_id' (click element by numeric ID from DOM Tree), 'fill_id' (fill text input by numeric ID from DOM Tree), 'click_coord' (click specific coordinate x,y), 'click' (click by selector), 'fill' (type by selector), 'scroll_down' (scroll down page), 'scroll_up' (scroll up page), 'press_key' (press keyboard key), 'interactive' (human takeover). Defaults to 'goto'.
+/// @param action (Optional) The browser action to perform. MUST be one of: 'goto' (navigate to URL), 'click_id' (click element by numeric ID from DOM Tree), 'fill_id' (fill text input by numeric ID from DOM Tree), 'click_coord' (click specific coordinate x,y), 'click' (click by selector), 'fill' (type by selector), 'scroll_down' (scroll down page), 'scroll_up' (scroll up page), 'press_key' (press keyboard key), 'interactive' (human takeover). Defaults to 'goto'.
 /// @param selector Optional CSS selector.
 /// @param text Optional text to fill.
 /// @param element_id Optional ID from the extracted DOM map.
