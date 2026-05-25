@@ -120,6 +120,16 @@ def main():
         except Exception as e:
             print(f"ACTION_WARNING: {e}", file=sys.stderr)
         
+        try:
+            # Take clean/raw screenshot first
+            page.evaluate("() => document.querySelectorAll('.flock-mark-box').forEach(el => el.remove())")
+            raw_screenshot_bytes = page.screenshot(timeout=5000)
+            print("RAW_SCREENSHOT_B64_START")
+            print(base64.b64encode(raw_screenshot_bytes).decode('utf-8'))
+            print("RAW_SCREENSHOT_B64_END")
+        except Exception as e:
+            print(f"RAW_SCREENSHOT_ERROR: {e}", file=sys.stderr)
+
         dom_markdown = ""
         try:
             page.wait_for_timeout(1000)
