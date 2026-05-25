@@ -47,7 +47,7 @@ pub async fn code_execution(code: String) -> Result<String, String> {
         let sandbox_id_clone = sandbox_id.clone();
         tokio::spawn(async move {
             if let Err(e) = crate::daytona::sync::sync_down(&db_clone, &sandbox_id_clone, &ws_path).await {
-                crate::emit_info(&format!("自动 Sync Down 失败: {}", e));
+                eprintln!("自动 Sync Down 失败: {}", e);
             }
         });
     }
