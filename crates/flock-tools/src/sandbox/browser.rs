@@ -120,6 +120,25 @@ pub async fn browser(
         act = "goto".to_string();
     }
     
+    // 大模型智能自愈与动作自动修正
+    if act == "act" {
+        if element_id.is_some() {
+            act = "click_id".to_string();
+        } else if selector.is_some() {
+            act = "click".to_string();
+        } else if x.is_some() && y.is_some() {
+            act = "click_coord".to_string();
+        } else {
+            act = "click".to_string();
+        }
+    }
+    if act == "click" && element_id.is_some() {
+        act = "click_id".to_string();
+    }
+    if act == "fill" && element_id.is_some() {
+        act = "fill_id".to_string();
+    }
+    
     // 如果是 goto 或 interactive 动作，必须提供 url 参数
     if (act == "goto" || act == "interactive") && url.is_none() {
         return Err("执行 goto 或 interactive 操作时，必须提供 url 参数。".to_string());
@@ -342,29 +361,17 @@ pub async fn browser(
     }
 
     // 3. 从 stdout 解析 Base64 图片数据并保存至本地
-    let raw_start_marker = "RAW_SCREENSHOT_B64_START";
-    let raw_end_marker = "RAW_SCREENSHOT_B64_END";
     let start_marker = "SCREENSHOT_B64_START";
     let end_marker = "SCREENSHOT_B64_END";
     let mut screenshot_saved = false;
 
-    let mut raw_screenshot_bytes: Option<Vec<u8>> = None;
-    let mut labeled_screenshot_bytes: Option<Vec<u8>> = None;
-
-    if let Some(start_idx) = stdout_stderr.find(raw_start_marker) {
-        if let Some(end_idx) = stdout_stderr.find(raw_end_marker) {
-            let b64_data = &stdout_stderr[start_idx + raw_start_marker.len()..end_idx].trim();
-            if let Ok(img_bytes) = general_purpose::STANDARD.decode(b64_data) {
-                raw_screenshot_bytes = Some(img_bytes);
-            }
-        }
-    }
+    let mut screenshot_bytes: Option<Vec<u8>> = None;
 
     if let Some(start_idx) = stdout_stderr.find(start_marker) {
         if let Some(end_idx) = stdout_stderr.find(end_marker) {
             let b64_data = &stdout_stderr[start_idx + start_marker.len()..end_idx].trim();
             if let Ok(img_bytes) = general_purpose::STANDARD.decode(b64_data) {
-                labeled_screenshot_bytes = Some(img_bytes);
+                screenshot_bytes = Some(img_bytes);
             }
         }
     }
@@ -376,23 +383,13 @@ pub async fn browser(
     let ss_path = ss_dir.join(format!("{}.png", name_id));
     let ss_path_labeled = ss_dir.join(format!("{}_labeled.png", name_id));
 
-    if let Some(raw_bytes) = raw_screenshot_bytes {
-        let _ = std::fs::write(&ss_path, &raw_bytes);
-        let _ = std::fs::write(base_dir.join(format!(".flock/sandbox/screenshot_{}.png", session_id)), &raw_bytes);
+    // 使用带红框标记的单图作为主输出，保证用户视觉和 AI 视觉完全对齐，性能最高
+    if let Some(bytes) = screenshot_bytes {
+        let _ = std::fs::write(&ss_path, &bytes);
+        let _ = std::fs::write(base_dir.join(format!(".flock/sandbox/screenshot_{}.png", session_id)), &bytes);
+        let _ = std::fs::write(&ss_path_labeled, &bytes);
         screenshot_saved = true;
-
-        if let Some(labeled_bytes) = labeled_screenshot_bytes {
-            let _ = std::fs::write(&ss_path_labeled, &labeled_bytes);
-        } else {
-            let _ = std::fs::write(&ss_path_labeled, &raw_bytes);
-        }
-        crate::emit_info("网页双轨截图捕获完成：已生成干净步骤快照供用户预览，并生成标记元素图供大模型执行。");
-    } else if let Some(labeled_bytes) = labeled_screenshot_bytes {
-        let _ = std::fs::write(&ss_path, &labeled_bytes);
-        let _ = std::fs::write(base_dir.join(format!(".flock/sandbox/screenshot_{}.png", session_id)), &labeled_bytes);
-        let _ = std::fs::write(&ss_path_labeled, &labeled_bytes);
-        screenshot_saved = true;
-        crate::emit_info("网页截图已成功保存至工作区，已生成步骤快照（带标记 fallback）。");
+        crate::emit_info("网页截图捕获完成：已保存红框标记图供给用户预览与大模型执行。");
     }
 
     // 提取标题信息

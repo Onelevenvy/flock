@@ -120,19 +120,7 @@ def main():
         except Exception as e:
             print(f"ACTION_WARNING: {e}", file=sys.stderr)
         
-        try:
-            # Take clean/raw screenshot first
-            try:
-                page.evaluate("() => document.querySelectorAll('.flock-mark-box').forEach(el => el.remove())")
-            except Exception:
-                pass
-            raw_screenshot_bytes = page.screenshot(timeout=5000)
-            print("RAW_SCREENSHOT_B64_START")
-            print(base64.b64encode(raw_screenshot_bytes).decode('utf-8'))
-            print("RAW_SCREENSHOT_B64_END")
-        except Exception as e:
-            print(f"RAW_SCREENSHOT_ERROR: {e}", file=sys.stderr)
-
+        
         dom_markdown = ""
         try:
             page.wait_for_timeout(1000)
@@ -202,11 +190,6 @@ def main():
         except Exception as e:
             print(f"SCREENSHOT_ERROR: {e}", file=sys.stderr)
 
-        # 截图保存（带红框的 AI 识别图）完成后，立即清理掉插入到页面 DOM 中的红框标记元素，防止红框在 VNC 中残留污染用户画面
-        try:
-            page.evaluate("() => document.querySelectorAll('.flock-mark-box').forEach(el => el.remove())")
-        except Exception:
-            pass
         
         try:
             title = page.title()
