@@ -1,15 +1,119 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { Box, Text, ScrollArea, Group } from '@mantine/core';
 import { useUiStore } from '../../../../../store/uiStore';
+import { useAgentStore } from '../../../../../store/agentStore';
 
 interface ConsoleTerminalViewProps {
   content: string;
+}
+
+// 提取并清洗底层返回的冗余固定文案，只保留纯净的命令行 stdout/stderr
+function cleanOutput(output: string): string {
+  if (!output) return '';
+  
+  let cleaned = output;
+  
+  // 清洗成功头部
+  cleaned = cleaned.replace(/^命令执行成功 \(退出码: 0\)。\n\n\[输出\]\n/, '');
+  cleaned = cleaned.replace(/^命令执行成功。\n\n\[输出\]\n/, '');
+  cleaned = cleaned.replace(/^代码执行成功。\n\n\[输出结果\]\n/, '');
+  
+  // 清洗失败头部
+  cleaned = cleaned.replace(/^命令执行失败 \(退出码: \d+\)。\n\n\[错误输出\]\n/, '');
+  cleaned = cleaned.replace(/^代码执行失败，退出码: \d+。\n\n\[错误输出\]\n/, '');
+  
+  // 清洗 trailing remote desktop / VNC link info and screenshots
+  cleaned = cleaned.replace(/\n\n!\[桌面截图\]\(file:\/\/\/[^\)]+\)/g, '');
+  cleaned = cleaned.replace(/\n\n当前桌面远程连接如下：[\s\S]*$/g, '');
+  
+  return cleaned.replace(/\n+$/, ''); // 仅移除尾随空行，保留中间排版
+}
+
+// 遍历当前会话的 messages，重构极具极客感且持久的历史终端流
+function buildLiveTerminalContent(messages: any[]): string {
+  const terminalLines: string[] = [];
+
+  for (const msg of messages) {
+    if (!msg.chunks) continue;
+    for (const chunk of msg.chunks) {
+      if (chunk.kind !== 'tool_request') continue;
+      
+      const toolName = chunk.tool?.name || '';
+      const lowerTool = toolName.toLowerCase();
+      
+      // 匹配沙盒相关命令执行工具
+      const isSandboxExec = lowerTool.includes('sandboxexec') || lowerTool.includes('sandbox_exec');
+      const isCodeExec = lowerTool.includes('code_execution');
+      const isBash = lowerTool.includes('bash') || lowerTool.includes('python');
+      const isComputerUseExec = (lowerTool.includes('computer_use') || lowerTool.includes('computeruse')) && 
+        (chunk.tool?.args?.action === 'exec' || chunk.tool?.args?.action === 'EXEC');
+
+      if (!isSandboxExec && !isCodeExec && !isBash && !isComputerUseExec) {
+        continue;
+      }
+
+      // 重建终端输入命令
+      let cmdStr = '';
+      if (isCodeExec) {
+        const rawCode = chunk.tool?.args?.code || '';
+        cmdStr = `python3 << 'EOF'\n${rawCode}\nEOF`;
+      } else {
+        cmdStr = chunk.tool?.args?.command || chunk.tool?.args?.code || '';
+      }
+
+      // 写入命令提示符与命令输入
+      terminalLines.push(`flock-sandbox:/workspace$ ${cmdStr}`);
+
+      if (chunk.status === 'running') {
+        terminalLines.push('正在执行命令...');
+      } else if (chunk.status === 'done') {
+        const cleaned = cleanOutput(chunk.result || '');
+        if (cleaned) {
+          terminalLines.push(cleaned);
+        }
+        // 增加空行间隔，让界面清爽
+        terminalLines.push('');
+      } else if (chunk.status === 'cancelled') {
+        terminalLines.push('命令已取消。\n');
+      } else if (chunk.status === 'denied') {
+        terminalLines.push('命令被拒绝执行。\n');
+      }
+    }
+  }
+
+  // 提取最后一个沙盒执行块以辅助渲染最后的激活 Prompt
+  const lastChunk = messages
+    .flatMap((m) => m.chunks || [])
+    .filter((c) => {
+      if (c.kind !== 'tool_request') return false;
+      const lower = (c.tool?.name || '').toLowerCase();
+      const isSandboxExec = lower.includes('sandboxexec') || lower.includes('sandbox_exec');
+      const isCodeExec = lower.includes('code_execution');
+      const isBash = lower.includes('bash') || lower.includes('python');
+      const isComputerUseExec = (lower.includes('computer_use') || lower.includes('computeruse')) && 
+        (c.tool?.args?.action === 'exec' || c.tool?.args?.action === 'EXEC');
+      return isSandboxExec || isCodeExec || isBash || isComputerUseExec;
+    })
+    .pop();
+
+  if (!lastChunk || lastChunk.status === 'done' || lastChunk.status === 'cancelled' || lastChunk.status === 'denied') {
+    terminalLines.push('flock-sandbox:/workspace$ ');
+  }
+
+  return terminalLines.join('\n');
 }
 
 export function ConsoleTerminalView({ content }: ConsoleTerminalViewProps) {
   const viewportRef = useRef<HTMLDivElement>(null);
   const theme = useUiStore((s) => s.theme);
   const isDark = theme === 'dark';
+  
+  const previewFile = useUiStore((s) => s.previewFile);
+  const isLiveTerminal = previewFile?.path === '.flock/sandbox/code_result.log';
+
+  const messages = useAgentStore((s) => s.messages);
+  // 智能区分：实时沙盒终端则重构全局历史流，静态普通 .log 文件则直出
+  const liveContent = isLiveTerminal ? buildLiveTerminalContent(messages) : content;
 
   const [displayedContent, setDisplayedContent] = useState('');
   const queueRef = useRef<string[]>([]);
@@ -17,13 +121,13 @@ export function ConsoleTerminalView({ content }: ConsoleTerminalViewProps) {
   const lastProcessedContentRef = useRef('');
 
   useEffect(() => {
-    if (content === lastProcessedContentRef.current) {
+    if (liveContent === lastProcessedContentRef.current) {
       return;
     }
     const prevContent = lastProcessedContentRef.current;
-    lastProcessedContentRef.current = content;
+    lastProcessedContentRef.current = liveContent;
 
-    if (!content) {
+    if (!liveContent) {
       setDisplayedContent('');
       queueRef.current = [];
       if (timerRef.current) {
@@ -33,9 +137,9 @@ export function ConsoleTerminalView({ content }: ConsoleTerminalViewProps) {
       return;
     }
 
-    // 等待和正在执行的状态，无需加打字机，直接显示
-    if (content === '正在执行沙盒命令...' || content.startsWith('正在执行') || content.startsWith('等待命令')) {
-      setDisplayedContent(content);
+    // 处理正在执行或等待状态
+    if (liveContent === '正在执行沙盒命令...' || liveContent.startsWith('正在执行') || liveContent.startsWith('等待命令')) {
+      setDisplayedContent(liveContent);
       queueRef.current = [];
       if (timerRef.current) {
         cancelAnimationFrame(timerRef.current);
@@ -44,15 +148,15 @@ export function ConsoleTerminalView({ content }: ConsoleTerminalViewProps) {
       return;
     }
 
-  
-    if (prevContent && content.startsWith(prevContent)) {
-      const extra = content.substring(prevContent.length);
+    // 智能打字机：仅对增量流式追加部分起效，历史前序命令直接瞬间渲染
+    if (prevContent && liveContent.startsWith(prevContent)) {
+      const extra = liveContent.substring(prevContent.length);
       if (extra) {
         const newLines = extra.split('\n');
         queueRef.current.push(...newLines);
       }
     } else {
-      const newLines = content.split('\n');
+      const newLines = liveContent.split('\n');
       setDisplayedContent('');
       queueRef.current = newLines;
     }
@@ -83,7 +187,7 @@ export function ConsoleTerminalView({ content }: ConsoleTerminalViewProps) {
         timerRef.current = null;
       }
     };
-  }, [content]);
+  }, [liveContent]);
 
   // displayedContent 改变时触发，使终端滚屏极速且流畅
   useEffect(() => {
@@ -143,7 +247,7 @@ export function ConsoleTerminalView({ content }: ConsoleTerminalViewProps) {
             color: isDark ? '#a9b7c6' : '#18181b', // 经典的 IDE/Terminal 文字颜色
           }}
         >
-          {displayedContent || '等待命令执行...'}
+          {displayedContent || 'flock-sandbox:/workspace$ '}
           {/* 光标闪烁效果 */}
           <span className="blinking-cursor">_</span>
         </Box>
