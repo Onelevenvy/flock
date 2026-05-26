@@ -8,3 +8,12 @@ description:
   zh: OpenAI GPT 系列模型提供商，支持 GPT-4o、GPT-4o-mini 等官方大语言模型
   en: OpenAI GPT model provider, supporting official large language models like GPT-4o and GPT-4o-mini.
 test_model: gpt-4o-mini
+models:
+  - id: openai:gpt-4o
+    model_name: gpt-4o
+    categories: ["chat"]
+    capabilities: ["vision"]
+  - id: openai:gpt-4o-mini
+    model_name: gpt-4o-mini
+    categories: ["chat"]
+    capabilities: ["vision"]

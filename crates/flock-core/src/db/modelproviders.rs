@@ -111,9 +111,9 @@ impl super::DbManager {
                         capabilities = EXCLUDED.capabilities,
                         updated_at = datetime('now')"
                 )
-                    .bind(ms.id)
+                    .bind(&ms.id)
                     .bind(&provider.id)
-                    .bind(ms.model_name)
+                    .bind(&ms.model_name)
                     .bind(&categories)
                     .bind(&capabilities)
                     .execute(self.pool())

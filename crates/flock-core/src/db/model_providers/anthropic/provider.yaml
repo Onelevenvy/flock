@@ -8,3 +8,16 @@ description:
   zh: Anthropic Claude 系列模型提供商，提供高性能推理模型
   en: Anthropic Claude model provider, offering high-performance reasoning models.
 test_model: claude-haiku-4-20250514
+models:
+  - id: anthropic:claude-sonnet-4-20250514
+    model_name: claude-sonnet-4-20250514
+    categories: ["chat"]
+    capabilities: []
+  - id: anthropic:claude-haiku-4-20250514
+    model_name: claude-haiku-4-20250514
+    categories: ["chat"]
+    capabilities: []
+  - id: anthropic:claude-opus-4-20250514
+    model_name: claude-opus-4-20250514
+    categories: ["chat"]
+    capabilities: []
