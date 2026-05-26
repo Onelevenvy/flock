@@ -8,11 +8,11 @@ import { type Assistant, type UpsertAssistant } from '../../types/assistant';
 import { IconPicker } from './IconPicker';
 import { MarkdownRenderer } from '../../components/chat/MarkdownRenderer';
 import ToolManager from '../../components/Common/ToolManager';
+import { parseMultiLang } from '../../utils/i18n';
 
-
-interface ModelProvider { id: string; provider_name: string; }
+interface ModelProvider { id: string; provider_name: any; }
 interface Model { id: string; provider_id: string; model_name: string; categories: string[]; is_online: boolean; }
-interface ToolProvider { id: string; provider_name: string; is_available: boolean; }
+interface ToolProvider { id: string; provider_name: any; is_available: boolean; }
 interface SkillInfo { name: string; display_name?: string; }
 
 export function AssistantFormModal({
@@ -84,7 +84,7 @@ export function AssistantFormModal({
           const ms = await invoke<Model[]>('list_models', { providerId: p.id });
           const chat = ms.filter(m => m.categories.includes('chat') && m.is_online);
           if (chat.length > 0) {
-            grouped[p.provider_name] = chat.map(m => ({
+            grouped[parseMultiLang(p.provider_name)] = chat.map(m => ({
               value: `${p.id}:${m.model_name}`,
               label: m.model_name,
             }));

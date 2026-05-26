@@ -55,8 +55,17 @@ export const DynamicIcon: React.FC<DynamicIconProps> = ({
   const handleError = () => {
     if (retryCount === 0) {
       if (category === 'models' && fallbackName) {
-        const normalizedFallback = fallbackName.trim().toLowerCase();
-        setImgSrc(`/icons/providers/${normalizedFallback}.svg`);
+        const normalizedFallback = fallbackName.trim();
+        if (
+          normalizedFallback.startsWith('data:') ||
+          normalizedFallback.startsWith('http:') ||
+          normalizedFallback.startsWith('https:') ||
+          normalizedFallback.startsWith('asset:')
+        ) {
+          setImgSrc(normalizedFallback);
+        } else {
+          setImgSrc(`/icons/providers/${normalizedFallback.toLowerCase()}.svg`);
+        }
         setRetryCount(1);
       } else if (category === 'tools') {
         const normalizedName = name.trim().toLowerCase();

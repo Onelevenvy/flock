@@ -23,6 +23,7 @@ import {
 import { TFunction } from 'i18next';
 import { ModelProvider, ModelItem } from '../types';
 import { ModelIcon, ProviderIcon } from '../../../Common/Icons';
+import { parseMultiLang } from '../../../../utils/i18n';
 
 interface ProviderCardProps {
   provider: ModelProvider;
@@ -95,13 +96,13 @@ export function ProviderCard({
                 flexShrink: 0,
               }}
             >
-              <ProviderIcon name={provider.id} size={32} />
+              <ProviderIcon name={provider.icon || provider.id} size={32} />
             </Box>
             <Box>
               <Group gap="xs" align="center">
                 <Group gap={6} align="center">
                   <Text fw={700} size="lg" style={{ letterSpacing: '0.3px' }}>
-                    {provider.provider_name}
+                    {parseMultiLang(provider.provider_name)}
                   </Text>
                   {connectedProviders.has(provider.id) && (
                     <Tooltip label={t('settings.model.connectionOk')}>
@@ -255,7 +256,7 @@ export function ProviderCard({
                       boxShadow: '0 2px 6px rgba(0,0,0,0.02)',
                     }}
                   >
-                    <ModelIcon name={model.model_name} provider={provider.id} size={20} />
+                    <ModelIcon name={model.model_name} provider={provider.icon || provider.id} size={20} />
                   </Box>
                   <Box>
                     <Text size="sm" fw={600} style={{ color: model.is_online ? 'var(--flock-text-primary)' : 'var(--flock-text-dim)' }}>
