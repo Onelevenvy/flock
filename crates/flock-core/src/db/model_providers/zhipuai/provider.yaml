@@ -1,0 +1,15 @@
+id: zhipuai
+provider_name:
+  zh: 智谱 AI
+  en: ZhipuAI
+provider_type: openai
+base_url: https://open.bigmodel.cn/api/paas/v4
+description:
+  zh: 智谱 AI GLM 大模型系列提供商，支持 GLM-4 等国产前沿语言模型
+  en: ZhipuAI GLM model series provider, supporting state-of-the-art Chinese language models like GLM-4.
+test_model: glm-4.7-flash
+models:
+  - id: zhipuai:glm-4.7-flash
+    model_name: glm-4.7-flash
+    categories: ["chat"]
+    capabilities: []

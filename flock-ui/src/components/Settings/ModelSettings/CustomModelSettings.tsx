@@ -17,6 +17,7 @@ interface ModelProvider {
   id: string;
   provider_name: string;
   provider_type: string;
+  icon?: string | null;
 }
 
 interface Props {
@@ -87,7 +88,7 @@ export default function CustomModelSettings({ provider, onClose, onSaved }: Prop
       onClose={onClose}
       title={
         <Group gap="xs">
-          <ProviderIcon name={provider.id} size={20} />
+          <ProviderIcon name={provider.icon || provider.id} size={20} />
           <Text fw={600} size="md">
             Add Custom Model
           </Text>

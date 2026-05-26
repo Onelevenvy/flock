@@ -13,16 +13,17 @@ import { notifications } from '@mantine/notifications';
 import { IconCheck, IconX } from '@tabler/icons-react';
 import { useTranslation } from 'react-i18next';
 import { ProviderIcon } from '../../Common/Icons';
+import { parseMultiLang } from '../../../utils/i18n';
 
 interface ModelProvider {
   id: string;
-  provider_name: string;
+  provider_name: any;
   provider_type: string;
   base_url: string | null;
   api_key: string | null;
   test_model: string | null;
   icon: string | null;
-  description: string | null;
+  description: any;
   is_available: boolean;
   created_at: string;
   updated_at: string;
@@ -59,7 +60,7 @@ export default function ProviderSettings({ provider, onClose, onSaved }: Props) 
         notifications.show({
           id: 'activating-provider',
           title: t('settings.provider.activatingTitle'),
-          message: t('settings.provider.activatingMsg', { name: provider.provider_name }),
+          message: t('settings.provider.activatingMsg', { name: parseMultiLang(provider.provider_name) }),
           loading: true,
           autoClose: false,
           withCloseButton: false,
@@ -115,9 +116,9 @@ export default function ProviderSettings({ provider, onClose, onSaved }: Props) 
       onClose={onClose}
       title={
         <Group gap="xs">
-          <ProviderIcon name={provider.id} size={20} />
+          <ProviderIcon name={provider.icon || provider.id} size={20} />
           <Text fw={600} size="md">
-            {t('settings.provider.settingsTitle', { name: provider.provider_name })}
+            {t('settings.provider.settingsTitle', { name: parseMultiLang(provider.provider_name) })}
           </Text>
         </Group>
       }

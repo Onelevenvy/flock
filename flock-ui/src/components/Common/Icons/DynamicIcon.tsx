@@ -8,18 +8,31 @@ export interface DynamicIconProps extends React.ImgHTMLAttributes<HTMLImageEleme
   size?: number | string;
 }
 
-const getInitialSrc = (category: string, name: string): string => {
-  if (!name) return '/icons/models/default-fallback.svg';
-  const trimmedName = name.trim();
+const normalizeIconName = (name: string): string => {
+  const trimmed = name.trim();
   if (
-    trimmedName.startsWith('data:') ||
-    trimmedName.startsWith('http:') ||
-    trimmedName.startsWith('https:') ||
-    trimmedName.startsWith('asset:')
+    trimmed.startsWith('data:') ||
+    trimmed.startsWith('http:') ||
+    trimmed.startsWith('https:') ||
+    trimmed.startsWith('asset:')
   ) {
-    return trimmedName;
+    return trimmed;
   }
-  return `/icons/${category}/${trimmedName.toLowerCase()}.svg`;
+  return trimmed.toLowerCase();
+};
+
+const getInitialSrc = (category: string, name: string): string => {
+  if (!name) return '';
+  const normalized = normalizeIconName(name);
+  if (
+    normalized.startsWith('data:') ||
+    normalized.startsWith('http:') ||
+    normalized.startsWith('https:') ||
+    normalized.startsWith('asset:')
+  ) {
+    return normalized;
+  }
+  return `/icons/${category}/${normalized}.svg`;
 };
 
 export const DynamicIcon: React.FC<DynamicIconProps> = ({
@@ -42,19 +55,28 @@ export const DynamicIcon: React.FC<DynamicIconProps> = ({
   const handleError = () => {
     if (retryCount === 0) {
       if (category === 'models' && fallbackName) {
-        const normalizedFallback = fallbackName.trim().toLowerCase();
-        setImgSrc(`/icons/providers/${normalizedFallback}.svg`);
+        const normalizedFallback = fallbackName.trim();
+        if (
+          normalizedFallback.startsWith('data:') ||
+          normalizedFallback.startsWith('http:') ||
+          normalizedFallback.startsWith('https:') ||
+          normalizedFallback.startsWith('asset:')
+        ) {
+          setImgSrc(normalizedFallback);
+        } else {
+          setImgSrc(`/icons/providers/${normalizedFallback.toLowerCase()}.svg`);
+        }
         setRetryCount(1);
       } else if (category === 'tools') {
         const normalizedName = name.trim().toLowerCase();
         setImgSrc(`/icons/providers/${normalizedName}.svg`);
         setRetryCount(1);
       } else {
-        setImgSrc('/icons/models/default-fallback.svg');
+        setImgSrc('');
         setRetryCount(2);
       }
     } else if (retryCount === 1) {
-      setImgSrc('/icons/models/default-fallback.svg');
+      setImgSrc('');
       setRetryCount(2);
     }
   };
@@ -116,7 +138,7 @@ export const ProviderIcon: React.FC<ProviderIconProps & React.ImgHTMLAttributes<
   size = 24,
   ...props
 }) => {
-  const matchedKey = name.toLowerCase().trim();
+  const matchedKey = normalizeIconName(name);
   return <DynamicIcon category="providers" name={matchedKey} size={size} {...props} />;
 };
 
@@ -125,7 +147,7 @@ export const ProviderIconLong: React.FC<ProviderIconProps & React.ImgHTMLAttribu
   size = 24,
   ...props
 }) => {
-  const matchedKey = name.toLowerCase().trim();
+  const matchedKey = normalizeIconName(name);
   const matchedLabel = name.trim().toUpperCase();
   return <LongIconWrapper name={matchedKey} label={matchedLabel} size={size} />;
 };
@@ -144,7 +166,13 @@ export const ModelIcon: React.FC<ModelIconProps & React.ImgHTMLAttributes<HTMLIm
   ...props
 }) => {
   const modelName = name.toLowerCase().trim();
-  const providerName = provider.toLowerCase().trim();
+  const trimmed = provider.trim();
+  const providerName = (
+    trimmed.startsWith('data:') ||
+    trimmed.startsWith('http:') ||
+    trimmed.startsWith('https:') ||
+    trimmed.startsWith('asset:')
+  ) ? trimmed : trimmed.toLowerCase();
 
   return (
     <DynamicIcon
@@ -166,6 +194,6 @@ export const ToolsIcon: React.FC<ToolsIconProps & React.ImgHTMLAttributes<HTMLIm
   size = 24,
   ...props
 }) => {
-  const normalizedKey = name.toLowerCase().trim();
+  const normalizedKey = normalizeIconName(name);
   return <DynamicIcon category="tools" name={normalizedKey} size={size} {...props} />;
 };

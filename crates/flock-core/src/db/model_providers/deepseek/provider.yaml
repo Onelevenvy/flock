@@ -1,0 +1,19 @@
+id: deepseek
+provider_name:
+  zh: 深度求索 (DeepSeek)
+  en: DeepSeek
+provider_type: openai
+base_url: https://api.deepseek.com
+description:
+  zh: 深度求索（DeepSeek）大语言模型提供商，提供超高性价比的 DeepSeek-Chat/Reasoner 推理服务
+  en: DeepSeek language model provider, offering highly cost-effective DeepSeek-Chat and Reasoner inference services.
+test_model: deepseek-chat
+models:
+  - id: deepseek:deepseek-chat
+    model_name: deepseek-chat
+    categories: ["chat"]
+    capabilities: []
+  - id: deepseek:deepseek-reasoner
+    model_name: deepseek-reasoner
+    categories: ["chat"]
+    capabilities: []

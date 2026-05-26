@@ -1,14 +1,15 @@
 import { useState, useEffect, useCallback } from 'react';
 import { invoke } from '@tauri-apps/api/core';
+import { parseMultiLang } from '../utils/i18n';
 
 export interface ModelProvider {
   id: string;
-  provider_name: string;
+  provider_name: any;
   provider_type: string;
   base_url: string | null;
   api_key: string | null;
   icon: string | null;
-  description: string | null;
+  description: any;
   is_available: boolean;
 }
 
@@ -47,7 +48,7 @@ export function useAvailableModels() {
           const filtered = ms.filter(m => m.categories.includes('chat') && m.is_online);
           allModels.push(...filtered);
         } catch (e) {
-          console.warn(`Failed to load models for provider ${p.provider_name}:`, e);
+          console.warn(`Failed to load models for provider ${parseMultiLang(p.provider_name)}:`, e);
         }
       }
       setModels(allModels);
@@ -69,9 +70,9 @@ export function useAvailableModels() {
 
   models.forEach((m) => {
     const provider = providers.find((p) => p.id === m.provider_id);
-    const providerName = provider?.provider_name || m.provider_id;
-    // 用 provider.id 匹配图标文件（如 openai.svg, deepseek.svg, openai_compatible.svg）
-    const providerIconKey = provider?.id || m.provider_id;
+    const providerName = provider ? parseMultiLang(provider.provider_name) : m.provider_id;
+    // 用 provider.icon (base64 SVG) 或 provider.id 匹配图标文件
+    const providerIconKey = provider?.icon || provider?.id || m.provider_id;
     if (!groupedMap[providerName]) {
       groupedMap[providerName] = [];
     }

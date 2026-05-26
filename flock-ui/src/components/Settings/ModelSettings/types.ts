@@ -1,12 +1,12 @@
 export interface ModelProvider {
   id: string;
-  provider_name: string;
+  provider_name: any;
   provider_type: string;
   base_url: string | null;
   api_key: string | null;
   test_model: string | null;
   icon: string | null;
-  description: string | null;
+  description: any;
   is_available: boolean;
   created_at: string;
   updated_at: string;

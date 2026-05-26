@@ -23,6 +23,7 @@ import CustomModelSettings from './CustomModelSettings';
 import { reconnectCurrentAgent } from '../../../lib/agentConnection';
 import { useWorkspacesQuery } from '../../../hooks/useWorkspaces';
 import { ModelSelect } from '../../Common/ModelSelect';
+import { parseMultiLang } from '../../../utils/i18n';
 
 import { ModelProvider, ModelItem, DefaultConfig, SummaryModelConfig } from './types';
 import { ProviderCard } from './components/ProviderCard';
@@ -229,7 +230,8 @@ export default function ModelProviderPage() {
   };
 
   const onlineModels = Object.entries(modelsMap).flatMap(([pid, models]) => {
-    const providerName = providers.find((p) => p.id === pid)?.provider_name || pid;
+    const p = providers.find((prov) => prov.id === pid);
+    const providerName = p ? parseMultiLang(p.provider_name) : pid;
     return models
       .filter((m) => m.is_online)
       .map((m) => ({

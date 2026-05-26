@@ -2,14 +2,14 @@ use serde::{Deserialize, Serialize};
 use sqlx::Row;
 
 use crate::crypto;
-use crate::types::tool::ToolDef;
+use crate::types::tool::{ToolDef, I18nString};
 
 /// Tool provider stored in the `tool_provider` table.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ToolProvider {
     pub id: String,
-    pub provider_name: String,
-    pub description: Option<String>,
+    pub provider_name: I18nString,
+    pub description: Option<I18nString>,
     pub icon: Option<String>,
     /// Decrypted credentials JSON (not stored directly; encrypted form is in DB).
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -20,6 +20,8 @@ pub struct ToolProvider {
     pub is_available: bool,
     pub created_at: String,
     pub updated_at: String,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub tools_i18n: Option<serde_json::Value>,
 }
 
 /// Decrypt credentials from a DB row.
@@ -71,21 +73,26 @@ impl super::DbManager {
             let is_available = info.credentials_schema.is_none();
             let provider_name_json = serde_json::to_string(&info.provider_name).unwrap_or_default();
             let description_json = serde_json::to_string(&info.description).unwrap_or_default();
+            let tools_i18n_json = info.tools.as_ref().map(|v| serde_json::to_string(v).unwrap_or_default());
             
             sqlx::query(
-                "INSERT INTO tool_provider (id, provider_name, description, credentials_schema, is_available, created_at, updated_at)
-                 VALUES (?1, ?2, ?3, ?4, ?5, datetime('now'), datetime('now'))
+                "INSERT INTO tool_provider (id, provider_name, description, icon, credentials_schema, is_available, tools_i18n, created_at, updated_at)
+                 VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, datetime('now'), datetime('now'))
                  ON CONFLICT(id) DO UPDATE SET
                     provider_name = EXCLUDED.provider_name,
                     description = EXCLUDED.description,
+                    icon = EXCLUDED.icon,
                     credentials_schema = COALESCE(EXCLUDED.credentials_schema, credentials_schema),
+                    tools_i18n = EXCLUDED.tools_i18n,
                     updated_at = datetime('now')"
             )
                 .bind(&info.provider_id)
                 .bind(&provider_name_json)
                 .bind(&description_json)
+                .bind(&info.icon)
                 .bind(&schema_json)
                 .bind(is_available as i64)
+                .bind(&tools_i18n_json)
                 .execute(self.pool())
                 .await?;
         }
@@ -115,20 +122,27 @@ impl super::DbManager {
                     .and_then(|p| p.credentials_schema.as_ref())
                     .map(|v| v.to_string());
                 let is_available = info.map(|p| p.credentials_schema.is_none()).unwrap_or(true);
+                let tools_i18n_json = info
+                    .and_then(|p| p.tools.as_ref())
+                    .map(|v| serde_json::to_string(v).unwrap_or_default());
                 sqlx::query(
-                    "INSERT INTO tool_provider (id, provider_name, description, credentials_schema, is_available, created_at, updated_at)
-                     VALUES (?1, ?2, ?3, ?4, ?5, datetime('now'), datetime('now'))
+                    "INSERT INTO tool_provider (id, provider_name, description, icon, credentials_schema, is_available, tools_i18n, created_at, updated_at)
+                     VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, datetime('now'), datetime('now'))
                      ON CONFLICT(id) DO UPDATE SET
                         provider_name = EXCLUDED.provider_name,
                         description = EXCLUDED.description,
+                        icon = EXCLUDED.icon,
                         credentials_schema = COALESCE(EXCLUDED.credentials_schema, credentials_schema),
+                        tools_i18n = EXCLUDED.tools_i18n,
                         updated_at = datetime('now')"
                 )
                     .bind(&def.provider_id)
                     .bind(&provider_name)
                     .bind(&desc)
+                    .bind(&info.and_then(|p| p.icon.clone()))
                     .bind(&schema_json)
                     .bind(is_available as i64)
+                    .bind(&tools_i18n_json)
                     .execute(self.pool())
                     .await?;
             }
@@ -165,7 +179,7 @@ impl super::DbManager {
     pub async fn list_tool_providers(&self) -> anyhow::Result<Vec<ToolProvider>> {
         let rows = sqlx::query(
             "SELECT id, provider_name, description, icon, credentials_encrypted, credentials_nonce,
-                    credentials_schema, is_available, created_at, updated_at
+                    credentials_schema, is_available, tools_i18n, created_at, updated_at
              FROM tool_provider ORDER BY provider_name",
         )
             .fetch_all(self.pool())
@@ -176,16 +190,29 @@ impl super::DbManager {
         let mut providers = Vec::new();
         for r in rows {
             let credentials = decrypt_credentials_from_row(&r, &salt);
+            let provider_name_str: String = r.get("provider_name");
+            let provider_name: I18nString = serde_json::from_str(&provider_name_str)
+                .unwrap_or_else(|_| I18nString::single(provider_name_str));
+
+            let description_str: Option<String> = r.try_get("description").ok();
+            let description = description_str.and_then(|s| {
+                serde_json::from_str(&s).ok().or_else(|| Some(I18nString::single(s)))
+            });
+
+            let tools_i18n_str: Option<String> = r.try_get("tools_i18n").ok();
+            let tools_i18n = tools_i18n_str.and_then(|s| serde_json::from_str(&s).ok());
+
             providers.push(ToolProvider {
                 id: r.get("id"),
-                provider_name: r.get("provider_name"),
-                description: r.try_get("description").ok(),
+                provider_name,
+                description,
                 icon: r.try_get("icon").ok(),
                 credentials,
                 credentials_schema: r.try_get("credentials_schema").ok(),
                 is_available: r.get::<i64, _>("is_available") != 0,
                 created_at: r.get("created_at"),
                 updated_at: r.get("updated_at"),
+                tools_i18n,
             });
         }
         Ok(providers)

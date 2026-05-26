@@ -30,16 +30,8 @@ impl MathTool {
 }
 
 pub fn provider_info() -> ProviderInfo {
-    ProviderInfo {
-        provider_id: "math".to_string(),
-        provider_name: I18nString::new("数学计算器", "Math Calculator"),
-        description: I18nString::new(
-            "数学表达式计算工具，支持基本运算、函数和常量",
-            "Mathematical expression calculator tool supporting basic operations, functions, and constants."
-        ),
-        icon: None,
-        credentials_schema: None,
-        test_input: None,
-    }
+    crate::parse_provider_info_from_yaml(
+        include_str!("provider.yaml"),
+        Some(include_str!("icon.svg")),
+    )
 }
-

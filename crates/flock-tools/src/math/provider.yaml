@@ -1,0 +1,21 @@
+identity:
+  id: math
+  name:
+    zh: 数学计算器
+    en: Math Calculator
+  description:
+    zh: 提供数学表达式计算能力的内置工具插件
+    en: Built-in tool plugin providing mathematical expression evaluation.
+
+tools:
+  Math Calculator:
+    name:
+      zh: 数学计算器
+      en: Math Calculator
+    description:
+      zh: 评估并计算给定的数学表达式，支持基础的加减乘除、括号以及常见数学函数。
+      en: Evaluate mathematical expressions with support for basic arithmetic, parentheses, and common math functions.
+    params:
+      expression:
+        zh: 要进行计算的数学表达式（例如 "3 * (5 + 2)"）
+        en: The mathematical expression to evaluate (e.g., "3 * (5 + 2)")

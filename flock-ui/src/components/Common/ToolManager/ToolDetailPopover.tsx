@@ -4,7 +4,7 @@ import { IconInfoCircle } from '@tabler/icons-react';
 import { useTranslation } from 'react-i18next';
 import type { Tool, ToolProvider } from '../../../hooks/useAvailableTools';
 import { ToolsIcon } from '../Icons';
-import { getProviderName } from '../../../pages/Skills/helpers';
+import { getProviderName, getToolName, getToolDescription, getToolParamDescription } from '../../../pages/Skills/helpers';
 
 
 interface ToolDetailPopoverProps {
@@ -74,7 +74,7 @@ export function ToolDetailPopover({ tool, provider }: ToolDetailPopoverProps) {
               flexShrink: 0,
             }}
           >
-            <ToolsIcon name={tool.provider_id} size={18} />
+            <ToolsIcon name={provider?.icon || tool.provider_id} size={18} />
           </Box>
           <Box style={{ flex: 1, minWidth: 0 }}>
             {provider && (
@@ -89,7 +89,7 @@ export function ToolDetailPopover({ tool, provider }: ToolDetailPopoverProps) {
               size="sm" fw={600}
               style={{ color: 'var(--flock-text-bright)', fontFamily: 'var(--mantine-font-family-monospace)' }}
             >
-              {tool.name}
+              {getToolName(tool, provider, t)}
             </Text>
           </Box>
         </Group>
@@ -98,7 +98,7 @@ export function ToolDetailPopover({ tool, provider }: ToolDetailPopoverProps) {
 
         <Box p="md" style={{ flex: 1, overflowY: 'auto' }}>
           <Text size="xs" c="dimmed" mb={Object.keys(params).length > 0 ? 'md' : 0} style={{ lineHeight: 1.5 }}>
-            {tool.description || t('workflow.properties.agent.noDescription')}
+            {getToolDescription(tool, provider, t) || t('workflow.properties.agent.noDescription')}
           </Text>
 
           {Object.keys(params).length > 0 && (
@@ -130,7 +130,7 @@ export function ToolDetailPopover({ tool, provider }: ToolDetailPopoverProps) {
                     </Group>
                     {param.description && (
                       <Text size="xs" c="dimmed" style={{ wordBreak: 'break-word', lineHeight: 1.4 }}>
-                        {param.description}
+                        {getToolParamDescription(name, param.description, tool, provider, t)}
                       </Text>
                     )}
                   </Box>

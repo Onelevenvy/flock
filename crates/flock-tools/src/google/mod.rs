@@ -61,15 +61,8 @@ impl GoogleTool {
 }
 
 pub fn provider_info() -> ProviderInfo {
-    ProviderInfo {
-        provider_id: "google".to_string(),
-        provider_name: I18nString::new("谷歌", "Google"),
-        description: I18nString::new("Google 工具集合", "Google toolset."),
-        icon: Some("google".to_string()),
-        credentials_schema: None,
-        test_input: Some(serde_json::json!({
-            "content": "Hello, world!",
-            "dest": "zh-CN"
-        })),
-    }
+    crate::parse_provider_info_from_yaml(
+        include_str!("provider.yaml"),
+        Some(include_str!("icon.svg")),
+    )
 }

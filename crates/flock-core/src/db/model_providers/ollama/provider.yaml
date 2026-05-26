@@ -1,0 +1,23 @@
+id: ollama
+provider_name:
+  zh: Ollama
+  en: Ollama
+provider_type: openai
+base_url: http://localhost:11434
+description:
+  zh: 本地大语言模型运行框架 Ollama，支持运行各种开源本地模型
+  en: Local large language model execution framework, supporting various open-source offline models.
+test_model: llama3.1:8b
+models:
+  - id: ollama:qwen2.5:32b
+    model_name: qwen2.5:32b
+    categories: ["chat"]
+    capabilities: []
+  - id: ollama:llama3.1:8b
+    model_name: llama3.1:8b
+    categories: ["chat"]
+    capabilities: []
+  - id: ollama:deepseek-r1:8b
+    model_name: deepseek-r1:8b
+    categories: ["chat"]
+    capabilities: []

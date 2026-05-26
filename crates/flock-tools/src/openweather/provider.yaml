@@ -1,0 +1,27 @@
+identity:
+  id: openweather
+  name:
+    zh: Open Weather
+    en: Open Weather
+  description:
+    zh: OpenWeather 提供的天气查询工具，支持全球城市的天气信息查询，包括温度、湿度、风速等数据
+    en: Weather query tool provided by OpenWeather, supporting weather queries for global cities including temperature, humidity, wind speed, and more.
+credentials_schema:
+  OPEN_WEATHER_API_KEY:
+    type: string
+    description: API key for OpenWeather service, you can get the api key from https://openweathermap.org/
+test_input:
+  city: Beijing
+
+tools:
+  Open Weather:
+    name:
+      zh: 天气查询
+      en: Open Weather
+    description:
+      zh: 通过 OpenWeather 服务获取全球特定城市当前的实时天气详情信息。
+      en: Retrieve real-time weather information for any city globally via OpenWeather service.
+    params:
+      city:
+        zh: 目标城市的拼音或英文名称（例如 "Beijing", "Shanghai", "New York"）
+        en: The pinyin or English name of the target city (e.g., "Beijing", "Shanghai", "New York")

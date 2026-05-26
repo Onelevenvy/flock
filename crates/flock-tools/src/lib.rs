@@ -172,6 +172,45 @@ pub async fn resolve_provider_credentials(provider_id: &str) -> Option<String> {
     provider.credentials.clone()
 }
 
+#[derive(serde::Deserialize)]
+struct YamlProviderInfo {
+    identity: YamlProviderIdentity,
+    #[serde(default)]
+    credentials_schema: Option<serde_json::Value>,
+    #[serde(default)]
+    test_input: Option<serde_json::Value>,
+    #[serde(default)]
+    tools: Option<serde_json::Value>,
+}
+
+#[derive(serde::Deserialize)]
+struct YamlProviderIdentity {
+    id: String,
+    name: flock_core::types::tool::I18nString,
+    description: flock_core::types::tool::I18nString,
+    icon: Option<String>,
+}
+
+pub fn parse_provider_info_from_yaml(yaml_str: &str, icon_svg: Option<&str>) -> flock_core::types::tool::ProviderInfo {
+    let parsed: YamlProviderInfo = serde_yaml::from_str(yaml_str)
+        .unwrap_or_else(|e| panic!("Failed to parse provider YAML. Error: {}\nYAML:\n{}", e, yaml_str));
+
+    let icon = icon_svg.map(|svg| {
+        use base64::{Engine as _, engine::general_purpose};
+        format!("data:image/svg+xml;base64,{}", general_purpose::STANDARD.encode(svg))
+    }).or(parsed.identity.icon);
+
+    flock_core::types::tool::ProviderInfo {
+        provider_id: parsed.identity.id,
+        provider_name: parsed.identity.name,
+        description: parsed.identity.description,
+        icon,
+        credentials_schema: parsed.credentials_schema,
+        test_input: parsed.test_input,
+        tools: parsed.tools,
+    }
+}
+
 use async_trait::async_trait;
 use serde_json::Value;
 

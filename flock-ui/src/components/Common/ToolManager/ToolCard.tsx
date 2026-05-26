@@ -49,7 +49,7 @@ export function ToolCard({ tool, provider, enabled, onToggle, onRemove, disabled
           flexShrink: 0,
         }}
       >
-        <ToolsIcon name={tool.provider_id} size={15} />
+        <ToolsIcon name={provider?.icon || tool.provider_id} size={15} />
       </Box>
 
       {/* 名称 + Provider 标签 */}

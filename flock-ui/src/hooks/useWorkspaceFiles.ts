@@ -3,6 +3,7 @@ import { invoke } from '@tauri-apps/api/core';
 import { notifications } from '@mantine/notifications';
 import { useTranslation } from 'react-i18next';
 import { useUiStore } from '../store/uiStore';
+import { formatError } from '../utils/error';
 
 export interface FileEntry {
   path: string;
@@ -68,7 +69,7 @@ export function useWorkspaceFiles(workspaceId: string | null) {
     } catch (err: unknown) {
       notifications.show({
         title: t('chat.workspace.createFailed'),
-        message: String(err),
+        message: formatError(err),
         color: 'red',
       });
     }
@@ -91,7 +92,7 @@ export function useWorkspaceFiles(workspaceId: string | null) {
     } catch (err: unknown) {
       notifications.show({
         title: t('chat.workspace.createFailed'),
-        message: String(err),
+        message: formatError(err),
         color: 'red',
       });
     }
@@ -123,7 +124,7 @@ export function useWorkspaceFiles(workspaceId: string | null) {
       } catch (err: unknown) {
         notifications.show({
           title: t('chat.workspace.uploadFailed'),
-          message: String(err),
+          message: formatError(err),
           color: 'red',
         });
       }
@@ -151,7 +152,7 @@ export function useWorkspaceFiles(workspaceId: string | null) {
       } catch (err: unknown) {
         notifications.show({
           title: t('chat.workspace.deleteFailed'),
-          message: String(err),
+          message: formatError(err),
           color: 'red',
         });
       }

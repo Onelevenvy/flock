@@ -69,6 +69,6 @@ pub async fn test_tool_provider(
     if result.is_error {
         Err(result.content)
     } else {
-        Ok(format!("{} 连通测试成功", provider.provider_name))
+        Ok(format!("{} 连通测试成功", provider.provider_name.zh))
     }
 }

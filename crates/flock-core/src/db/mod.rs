@@ -4,6 +4,7 @@ pub mod mcpserver;
 pub mod migrations;
 pub mod modelproviders;
 pub mod modelprovider_seed;
+pub mod model_providers;
 pub mod sessions;
 pub mod toolproviders;
 pub mod cron;

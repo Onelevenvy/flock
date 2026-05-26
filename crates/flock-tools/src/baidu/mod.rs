@@ -86,24 +86,8 @@ impl BaiduTool {
 }
 
 pub fn provider_info() -> ProviderInfo {
-    ProviderInfo {
-        provider_id: "baidu".to_string(),
-        provider_name: I18nString::new("百度", "Baidu"),
-        description: I18nString::new("百度工具集合，提供翻译等功能", "Baidu toolset, provides translation and other functions."),
-        icon: Some("baidu".to_string()),
-        credentials_schema: Some(serde_json::json!({
-            "BAIDU_APPID": {
-                "type": "string",
-                "description": "App ID for Baidu service"
-            },
-            "BAIDU_SECRETKEY": {
-                "type": "string",
-                "description": "Secret Key for Baidu service"
-            }
-        })),
-        test_input: Some(serde_json::json!({
-            "content": "Hello, world!",
-            "dest": "zh"
-        })),
-    }
+    crate::parse_provider_info_from_yaml(
+        include_str!("provider.yaml"),
+        Some(include_str!("icon.svg")),
+    )
 }

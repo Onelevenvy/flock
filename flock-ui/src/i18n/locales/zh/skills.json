@@ -96,5 +96,130 @@
     "noMatches": "没有匹配的 skills",
     "noSkills": "暂无 skills",
     "invocableBadge": "可调用"
+  },
+  "tools_i18n": {
+    "Read": {
+      "name": "读取文件",
+      "description": "从本地文件系统读取指定文件的内容，并为文本类型文件自动附加行号。",
+      "params": {
+        "file_path": "要读取的文件的绝对路径",
+        "offset": "读取的起始行号（0-based，可选）",
+        "limit": "最大读取行数（可选）"
+      }
+    },
+    "Write": {
+      "name": "写入文件",
+      "description": "向本地文件系统写入文件内容。如果文件已存在，则会完全覆盖其原有内容；如果不存在，则会自动创建新文件。",
+      "params": {
+        "file_path": "要写入的文件的绝对路径",
+        "content": "写入文件内的文本内容"
+      }
+    },
+    "Edit": {
+      "name": "修改文件",
+      "description": "精确修改本地文件。通过指定唯一的原代码块，将其替换为新的代码块。必须确保替换的目标块在文件中唯一存在。",
+      "params": {
+        "file_path": "要编辑的文件的绝对路径",
+        "target_content": "文件中需要被替换的精确原内容（包含前导空格或换行，必须唯一）",
+        "replacement_content": "用于替换原内容的新文本内容"
+      }
+    },
+    "Bash": {
+      "name": "终端执行 (Bash)",
+      "description": "在本地系统的工作区上下文下执行命令。请使用该工具编译项目、安装依赖、运行测试等。",
+      "params": {
+        "command": "要运行的 shell 命令行指令"
+      }
+    },
+    "Grep": {
+      "name": "文本搜索 (Grep)",
+      "description": "类似于 grep / ripgrep 工具，根据指定的关键词模式，在文件或目录中搜索匹配的行。",
+      "params": {
+        "pattern": "要搜索的文本模式（根据 is_regex 支持正则表达式或普通字符串）",
+        "path": "搜索的目标文件或文件夹绝对路径",
+        "is_regex": "是否将 pattern 视为正则表达式（可选，默认 false）"
+      }
+    },
+    "Glob": {
+      "name": "文件检索 (Glob)",
+      "description": "在指定的目录树中检索匹配 Glob 模式（例如 src/**/*.rs）的所有文件列表。",
+      "params": {
+        "pattern": "Glob 文件过滤模式",
+        "path": "开始检索的目录绝对路径"
+      }
+    },
+    "Browser": {
+      "name": "浏览器控制 (Browser)",
+      "description": "控制沙盒内的 Chromium 浏览器实例，用于查看网页、点击页面元素、输入文本和滚动等自动化操作。",
+      "params": {
+        "action": "要执行的浏览器操作：navigate (导航), click (点击), type (输入), scroll (滚动), back (后退), key_combo (按键组合)",
+        "url": "需要导航访问的网址（仅在 action 为 navigate 时必填）",
+        "selector": "目标元素的 CSS 选择器（在 click、type、scroll 时必填）",
+        "text": "要输入的文本内容（仅在 action 为 type 时必填）",
+        "key": "待按下的键盘按键组合（仅在 action 为 key_combo 时必填）"
+      }
+    },
+    "ComputerUse": {
+      "name": "系统控制 (ComputerUse)",
+      "description": "对沙盒系统进行完全控制的工具，包括鼠标移动、点击、拖拽、键盘按键输入、截图以及延时等待等。",
+      "params": {
+        "action": "要执行的操作动作（例如 mouse_move, left_click, type, screenshot 等）",
+        "text": "需要输入的文本内容（仅在 action 为 type 时必填）",
+        "coordinate": "操作对应的屏幕坐标 [x, y]"
+      }
+    },
+    "CodeExecution": {
+      "name": "沙盒代码执行 (CodeExecution)",
+      "description": "在安全的独立沙盒容器中执行 python 脚本或 bash shell 命令，避免对本地主机产生副作用。",
+      "params": {
+        "code": "准备运行的完整 Python 或 Bash 脚本代码",
+        "language": "代码所用的脚本语言，支持 'python' 或 'bash'"
+      }
+    },
+    "SandboxExec": {
+      "name": "沙盒命令行 (SandboxExec)",
+      "description": "在沙盒容器的隔离环境内运行指定的 shell 命令行指令。",
+      "params": {
+        "command": "需要执行的命令行内容"
+      }
+    },
+    "Google Translate": {
+      "name": "谷歌翻译 (Google Translate)",
+      "description": "使用谷歌翻译进行快速、多语种的文本翻译。",
+      "params": {
+        "content": "需要翻译的文本内容",
+        "dest": "目标语言代码（例如 \"zh-CN\", \"en\"）"
+      }
+    },
+    "Baidu Translate": {
+      "name": "百度翻译 (Baidu Translate)",
+      "description": "使用百度翻译 API 将指定文本翻译成目标语言。",
+      "params": {
+        "query": "需要翻译的文本内容",
+        "from": "源语言代码（如 \"zh\", \"en\"，可选 \"auto\" 自动检测）",
+        "to": "目标翻译语言代码（如 \"zh\", \"en\"）"
+      }
+    },
+    "Math Calculator": {
+      "name": "数学计算器 (Math)",
+      "description": "评估并计算给定的数学表达式，支持基础的加减乘除、括号以及常见数学函数。",
+      "params": {
+        "expression": "要进行计算的数学表达式（例如 \"3 * (5 + 2)\"）"
+      }
+    },
+    "Open Weather": {
+      "name": "天气查询 (Open Weather)",
+      "description": "通过 OpenWeather 服务获取全球特定城市当前的实时天气详情信息。",
+      "params": {
+        "city": "目标城市的拼音或英文名称（例如 \"Beijing\", \"Shanghai\", \"New York\"）"
+      }
+    },
+    "Serper Search": {
+      "name": "Serper 网络检索 (Serper Search)",
+      "description": "通过 Google Serper API 对互联网进行网络检索，寻找最新的实时信息、新闻和网页内容。",
+      "params": {
+        "query": "搜索查询关键字或短语"
+      }
+    }
   }
 }

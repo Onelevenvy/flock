@@ -2,19 +2,20 @@ use serde::{Deserialize, Serialize};
 use sqlx::Row;
 
 use crate::crypto;
+use crate::types::tool::I18nString;
 
 /// Model provider stored in the `model_provider` table.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ModelProvider {
     pub id: String,
-    pub provider_name: String,
+    pub provider_name: I18nString,
     pub provider_type: String,
     pub base_url: Option<String>,
     /// Decrypted api_key (not stored directly; encrypted form is in DB).
     #[serde(skip_serializing_if = "Option::is_none")]
     pub api_key: Option<String>,
     pub icon: Option<String>,
-    pub description: Option<String>,
+    pub description: Option<I18nString>,
     pub test_model: Option<String>,
     pub is_available: bool,
     pub created_at: String,
@@ -62,6 +63,11 @@ impl super::DbManager {
             // We do NOT update api_key fields here to preserve user-entered keys.
             // We also DO NOT update is_available here (unless we want to force reset,
             // but usually we want to keep user activation status).
+            let provider_name_json = serde_json::to_string(&provider.provider_name)?;
+            let description_json = provider.description.as_ref()
+                .map(|d| serde_json::to_string(d))
+                .transpose()?;
+
             sqlx::query(
                 "INSERT INTO model_provider
                     (id, provider_name, provider_type, base_url, api_key_encrypted, api_key_nonce,
@@ -77,11 +83,11 @@ impl super::DbManager {
                     updated_at = datetime('now')"
             )
                 .bind(&provider.id)
-                .bind(&provider.provider_name)
+                .bind(&provider_name_json)
                 .bind(&provider.provider_type)
                 .bind(&provider.base_url)
                 .bind(&provider.icon)
-                .bind(&provider.description)
+                .bind(&description_json)
                 .bind(&provider.test_model)
                 .bind(provider.is_available as i64)
                 .execute(self.pool())
@@ -105,9 +111,9 @@ impl super::DbManager {
                         capabilities = EXCLUDED.capabilities,
                         updated_at = datetime('now')"
                 )
-                    .bind(ms.id)
+                    .bind(&ms.id)
                     .bind(&provider.id)
-                    .bind(ms.model_name)
+                    .bind(&ms.model_name)
                     .bind(&categories)
                     .bind(&capabilities)
                     .execute(self.pool())
@@ -152,14 +158,23 @@ impl super::DbManager {
         let mut providers = Vec::new();
         for r in rows {
             let api_key = decrypt_api_key_from_row(&r, &salt);
+            let provider_name_str: String = r.get("provider_name");
+            let provider_name: I18nString = serde_json::from_str(&provider_name_str)
+                .unwrap_or_else(|_| I18nString::single(provider_name_str));
+
+            let description_str: Option<String> = r.try_get("description").ok();
+            let description = description_str.and_then(|s| {
+                serde_json::from_str(&s).ok().or_else(|| Some(I18nString::single(s)))
+            });
+
             providers.push(ModelProvider {
                 id: r.get("id"),
-                provider_name: r.get("provider_name"),
+                provider_name,
                 provider_type: r.get("provider_type"),
                 base_url: r.try_get("base_url").ok(),
                 api_key,
                 icon: r.try_get("icon").ok(),
-                description: r.try_get("description").ok(),
+                description,
                 test_model: r.try_get("test_model").ok(),
                 is_available: r.get::<i64, _>("is_available") != 0,
                 created_at: r.get("created_at"),
@@ -183,14 +198,23 @@ impl super::DbManager {
         let salt = self.get_or_create_salt().await?;
         let api_key = decrypt_api_key_from_row(&r, &salt);
 
+        let provider_name_str: String = r.get("provider_name");
+        let provider_name: I18nString = serde_json::from_str(&provider_name_str)
+            .unwrap_or_else(|_| I18nString::single(provider_name_str));
+
+        let description_str: Option<String> = r.try_get("description").ok();
+        let description = description_str.and_then(|s| {
+            serde_json::from_str(&s).ok().or_else(|| Some(I18nString::single(s)))
+        });
+
         Ok(Some(ModelProvider {
             id: r.get("id"),
-            provider_name: r.get("provider_name"),
+            provider_name,
             provider_type: r.get("provider_type"),
             base_url: r.try_get("base_url").ok(),
             api_key,
             icon: r.try_get("icon").ok(),
-            description: r.try_get("description").ok(),
+            description,
             test_model: r.try_get("test_model").ok(),
             is_available: r.get::<i64, _>("is_available") != 0,
             created_at: r.get("created_at"),
@@ -212,6 +236,11 @@ impl super::DbManager {
             (None, None)
         };
 
+        let provider_name_json = serde_json::to_string(&provider.provider_name)?;
+        let description_json = provider.description.as_ref()
+            .map(|d| serde_json::to_string(d))
+            .transpose()?;
+
         sqlx::query(
             "INSERT INTO model_provider
                 (id, provider_name, provider_type, base_url, api_key_encrypted, api_key_nonce,
@@ -225,13 +254,13 @@ impl super::DbManager {
                 updated_at = datetime('now')",
         )
             .bind(&provider.id)
-            .bind(&provider.provider_name)
+            .bind(&provider_name_json)
             .bind(&provider.provider_type)
             .bind(&provider.base_url)
             .bind(&enc_key)
             .bind(&nonce)
             .bind(&provider.icon)
-            .bind(&provider.description)
+            .bind(&description_json)
             .bind(&provider.test_model)
             .bind(provider.is_available as i64)
             .execute(self.pool())

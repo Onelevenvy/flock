@@ -68,21 +68,9 @@ impl OpenWeatherTool {
 }
 
 pub fn provider_info() -> ProviderInfo {
-    ProviderInfo {
-        provider_id: "openweather".to_string(),
-        provider_name: I18nString::new("Open Weather", "Open Weather"),
-        description: I18nString::new(
-            "OpenWeather 提供的天气查询工具，支持全球城市的天气信息查询，包括温度、湿度、风速等数据",
-            "Weather query tool provided by OpenWeather, supporting weather queries for global cities including temperature, humidity, wind speed, and more."
-        ),
-        icon: Some("openweather".to_string()),
-        credentials_schema: Some(serde_json::json!({
-            "OPEN_WEATHER_API_KEY": {
-                "type": "string",
-                "description": "API key for OpenWeather service, you can get the api key from https://openweathermap.org/"
-            }
-        })),
-        test_input: Some(serde_json::json!({"city": "Beijing"})),
-    }
+    crate::parse_provider_info_from_yaml(
+        include_str!("provider.yaml"),
+        Some(include_str!("icon.svg")),
+    )
 }
 

@@ -27,6 +27,7 @@ glob.workspace       = true
 sqlx.workspace   = true
 ring.workspace   = true
 base64.workspace = true
+serde_yaml.workspace = true
 uuid.workspace   = true
 log.workspace    = true
 

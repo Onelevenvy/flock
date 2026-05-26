@@ -1,0 +1,28 @@
+identity:
+  id: serper
+  name:
+    zh: Serper 搜索
+    en: Serper Search
+  description:
+    zh: Serper 提供的互联网搜索工具，支持全球网页搜索。
+    en: Serper internet search tool, supporting global web search.
+
+credentials_schema:
+  SERPER_API_KEY:
+    type: string
+    description: API key for Serper service, you can get it from https://serper.dev/
+test_input:
+  search_query: "What is the latest news of China?"
+
+tools:
+  Serper Search:
+    name:
+      zh: Serper 网络检索
+      en: Serper Search
+    description:
+      zh: 通过 Google Serper API 对互联网进行网络检索，寻找最新的实时信息、新闻和网页内容。
+      en: Search the internet using Google Serper API.
+    params:
+      search_query:
+        zh: 搜索查询关键字或短语
+        en: The search query keywords or phrases
