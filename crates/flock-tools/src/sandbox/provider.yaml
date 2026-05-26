@@ -50,8 +50,8 @@ tools:
         en: Keyboard key combination to press (required only when action is key_combo)
   ComputerUse:
     name:
-      zh: 系统控制 (OSWorld)
-      en: OS Control (Computer Use)
+      zh: 电脑使用
+      en: Computer Use
     description:
       zh: 对沙盒系统进行完全控制的工具，包括鼠标移动、点击、拖拽、键盘按键输入、截图以及延时等待等。
       en: Take complete control of the sandboxed OS, including mouse movement, clicks, typing, and screenshot capturing.
