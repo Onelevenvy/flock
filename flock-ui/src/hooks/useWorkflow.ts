@@ -3,6 +3,7 @@ import { invoke } from '@tauri-apps/api/core';
 import { notifications } from '@mantine/notifications';
 import { useTranslation } from 'react-i18next';
 import type { WorkflowRecord } from '../store/workflowStore';
+import { formatError } from '../utils/error';
 
 export type { WorkflowRecord };
 
@@ -49,7 +50,7 @@ export function useCreateWorkflow() {
     },
     onError: (e) => {
       notifications.show({
-        message: String(e),
+        message: formatError(e),
         color: 'red',
       });
     },
@@ -73,7 +74,7 @@ export function useUpdateWorkflow() {
     },
     onError: (e) => {
       notifications.show({
-        message: String(e),
+        message: formatError(e),
         color: 'red',
       });
     },
@@ -95,7 +96,7 @@ export function useDeleteWorkflow() {
     },
     onError: (e) => {
       notifications.show({
-        message: String(e),
+        message: formatError(e),
         color: 'red',
       });
     },

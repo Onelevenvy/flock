@@ -156,21 +156,33 @@ pub async fn browser(
         let proxy_url = match crate::daytona::get_sandbox_vnc_url(&db, &sandbox_id).await {
             Ok(u) => u,
             Err(e) => {
-                crate::emit_info(&format!("获取动态 VNC URL 失败: {}。使用静态备用 URL...", e));
+                crate::emit_info(&flock_core::tr(
+                    &format!("获取动态 VNC URL 失败: {}。使用静态备用 URL...", e),
+                    &format!("Failed to retrieve dynamic VNC URL: {}. Falling back to static VNC URL...", e)
+                ));
                 format!("https://{}-{}.proxy.app.daytona.io/vnc.html?autoconnect=true&resize=scale", WEBSOCKIFY_PORT, sandbox_id)
             }
         };
         
-        crate::emit_info("正在向云端申请启动桌面服务...");
+        crate::emit_info(&flock_core::tr(
+            "正在向云端申请启动桌面服务...",
+            "Requesting cloud desktop service startup..."
+        ));
         if let Err(e) = start_computer_use_in_sandbox(&db, &sandbox_id).await {
-            crate::emit_info(&format!("启动 Daytona 桌面服务请求失败: {}。尝试备用手动方案...", e));
+            crate::emit_info(&flock_core::tr(
+                &format!("启动 Daytona 桌面服务请求失败: {}。尝试备用手动方案...", e),
+                &format!("Daytona desktop service launch request failed: {}. Attempting fallback manual procedure...", e)
+            ));
         }
 
         // 调用统一的自愈拉起函数，确保 Xvfb, fluxbox, x11vnc, websockify 在 0.0.0.0 运行且 setsid 保活
         let _ = ensure_vnc_running_in_sandbox(&db, &sandbox_id).await;
 
         // 确保有头 Chromium 已拉起且开启了 CDP 调试端口 9222
-        crate::emit_info("正在远程桌面中初始化开启远程调试 (9222) 的浏览器...");
+        crate::emit_info(&flock_core::tr(
+            "正在远程桌面中初始化开启远程调试 (9222) 的浏览器...",
+            "Initializing browser with remote debugging (9222) enabled on remote desktop..."
+        ));
         let check_and_start_cmd = format!(
             "export DISPLAY={display} && \
             if ! python3 -c 'import socket; s = socket.socket(); s.connect((\"127.0.0.1\", 9222))' >/dev/null 2>&1; then \
@@ -190,7 +202,10 @@ pub async fn browser(
 
         // 运行网页 analysis 脚本，并自动跳转
         let target_url = url.clone().unwrap_or_default();
-        crate::emit_info(&format!("正在远程浏览器中打开网页并分析安全要素: {}...", target_url));
+        crate::emit_info(&flock_core::tr(
+            &format!("正在远程浏览器中打开网页并分析安全要素: {}...", target_url),
+            &format!("Opening web page in remote browser and analyzing security elements: {}...", target_url)
+        ));
         let py_check_script_template = include_str!("scripts/browser_security_check.py");
         let url_b64 = general_purpose::STANDARD.encode(target_url.as_bytes());
         let py_check_script = py_check_script_template.replace("###URL_B64###", &url_b64);
@@ -262,7 +277,10 @@ pub async fn browser(
         };
 
         if !need_takeover {
-            crate::emit_info("网页分析完毕：未检测到输入密码、验证码等敏感校验元素。自动跳过人机接管。");
+            crate::emit_info(&flock_core::tr(
+                "网页分析完毕：未检测到输入密码、验证码等敏感校验元素。自动跳过人机接管。",
+                "Page analysis complete: No sensitive verification elements (password inputs, captchas) detected. Skipping human takeover automatically."
+            ));
             return Ok(format!(
                 "人机协同远程桌面已拉起！网页分析完成：未检测到输入密码 (has_password: {})、验证码 (has_captcha: {}) 等敏感验证元素。**为了提高大模型执行效率，已自动跳过人工接管，Agent 继续流式自动运转。**{}\n\n[Remote VNC Link]({})",
                 has_password, has_captcha, image_md, proxy_url
@@ -271,7 +289,10 @@ pub async fn browser(
 
         // 如果检测到了敏感元素，并且有 call_id 且能拿到全局 approval_manager，进行挂起
         if let (Some(cid), Some(mid), Some(app_mgr)) = (call_id.clone(), msg_id, crate::get_global_approval_manager()) {
-            crate::emit_info(&format!("检测到敏感网页元素（密码输入框/验证码），正在通知前端拉起人工接管横幅 (Call ID: {})...", cid));
+            crate::emit_info(&flock_core::tr(
+                &format!("检测到敏感网页元素（密码输入框/验证码），正在通知前端拉起人工接管横幅 (Call ID: {})...", cid),
+                &format!("Sensitive page element detected (password input/captcha), notifying client to display takeover banner (Call ID: {})...", cid)
+            ));
             crate::daytona::emit_human_takeover(
                 &cid,
                 &mid,
@@ -283,18 +304,27 @@ pub async fn browser(
             let rx = app_mgr.request_approval(&cid, &ToolCategory::Exec);
             match rx.await {
                 Ok(flock_core::ipc_interface::approval::ToolApprovalResult::Approved) => {
-                    crate::emit_info("收到前端已完成操作指令，正在恢复 Agent 自动执行。");
+                    crate::emit_info(&flock_core::tr(
+                        "收到前端已完成操作指令，正在恢复 Agent 自动执行。",
+                        "Received completion signal from frontend. Resuming automated Agent execution."
+                    ));
                     return Ok(format!(
                         "人工接管操作已顺利完成，用户已确认！Agent 已经成功从暂停点恢复，并继续自动执行后续流程。{}",
                         image_md
                     ));
                 }
                 Ok(flock_core::ipc_interface::approval::ToolApprovalResult::Denied { reason }) => {
-                    crate::emit_info(&format!("人工接管被用户取消: {}", reason));
+                    crate::emit_info(&flock_core::tr(
+                        &format!("人工接管被用户取消: {}", reason),
+                        &format!("Human takeover cancelled by user: {}", reason)
+                    ));
                     return Err(format!("人工接管被取消，原因为: {}", reason));
                 }
                 Err(e) => {
-                    crate::emit_info(&format!("人工接管等待通道意外中断: {}", e));
+                    crate::emit_info(&flock_core::tr(
+                        &format!("人工接管等待通道意外中断: {}", e),
+                        &format!("Human takeover wait channel interrupted unexpectedly: {}", e)
+                    ));
                 }
             }
         }
@@ -351,7 +381,10 @@ pub async fn browser(
 
 
     let display_url = url.as_deref().unwrap_or("当前页面");
-    crate::emit_info(&format!("正在沙盒中执行网页操作并渲染: {}...", display_url));
+    crate::emit_info(&flock_core::tr(
+        &format!("正在沙盒中执行网页操作并渲染: {}...", display_url),
+        &format!("Executing page actions and rendering in sandbox: {}...", display_url)
+    ));
     let (stdout_stderr, exit_code) = execute_command_in_sandbox(&db, &sandbox_id, &run_cmd).await
         .map_err(|e| format!("浏览器工具执行出错: {}", e))?;
 
@@ -389,7 +422,10 @@ pub async fn browser(
         let _ = std::fs::write(base_dir.join(format!(".flock/sandbox/screenshot_{}.png", session_id)), &bytes);
         let _ = std::fs::write(&ss_path_labeled, &bytes);
         screenshot_saved = true;
-        crate::emit_info("网页截图捕获完成：已保存红框标记图供给用户预览与大模型执行。");
+        crate::emit_info(&flock_core::tr(
+            "网页截图捕获完成：已保存红框标记图供给用户预览与大模型执行。",
+            "Page screenshot captured successfully: Labeled screenshot saved for user preview and LLM execution."
+        ));
     }
 
     // 提取标题信息

@@ -23,6 +23,7 @@ import {
 import { notifications } from '@mantine/notifications';
 import { useTranslation } from 'react-i18next';
 import { type Assistant, type UpsertAssistant } from '../../types/assistant';
+import { formatError } from '../../utils/error';
 import {
   useAssistantsQuery,
   useCreateAssistantMutation,
@@ -59,20 +60,24 @@ export function AssistantPage() {
   const handleOpenEdit = (a: Assistant) => { setEditTarget(a); setFormOpened(true); };
 
   const handleSave = async (data: Omit<UpsertAssistant, 'is_builtin' | 'sort_order'>) => {
-    if (editTarget) {
-      const existing = assistants.find(a => a.id === editTarget.id)!;
-      await updateMutation.mutateAsync({
-        id: editTarget.id,
-        input: {
-          ...data,
-          is_builtin: existing.is_builtin,
-          sort_order: existing.sort_order,
-        },
-      });
-      notifications.show({ title: t('assistant.updatedToast'), message: data.name, color: 'teal', autoClose: 3000 });
-    } else {
-      await createMutation.mutateAsync(data);
-      notifications.show({ title: t('assistant.createdToast'), message: data.name, color: 'teal', autoClose: 3000 });
+    try {
+      if (editTarget) {
+        const existing = assistants.find(a => a.id === editTarget.id)!;
+        await updateMutation.mutateAsync({
+          id: editTarget.id,
+          input: {
+            ...data,
+            is_builtin: existing.is_builtin,
+            sort_order: existing.sort_order,
+          },
+        });
+        notifications.show({ title: t('assistant.updatedToast'), message: data.name, color: 'teal', autoClose: 3000 });
+      } else {
+        await createMutation.mutateAsync(data);
+        notifications.show({ title: t('assistant.createdToast'), message: data.name, color: 'teal', autoClose: 3000 });
+      }
+    } catch (e) {
+      notifications.show({ title: t('common.failed'), message: formatError(e), color: 'red', autoClose: 5000 });
     }
   };
 
@@ -84,6 +89,7 @@ export function AssistantPage() {
       setDeleteTarget(null);
     } catch (e) {
       console.error('Failed to delete assistant:', e);
+      notifications.show({ title: t('common.failed'), message: formatError(e), color: 'red', autoClose: 5000 });
     }
   };
 

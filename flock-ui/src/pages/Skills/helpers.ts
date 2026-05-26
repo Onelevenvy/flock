@@ -1,27 +1,34 @@
 import type { ToolProvider } from './types';
 import i18n from '../../i18n';
 
-function parseMultiLang(fieldVal: string | undefined | null): string {
+function parseMultiLang(fieldVal: any): string {
   if (!fieldVal) return '';
-  const trimmed = fieldVal.trim();
-  if (trimmed.startsWith('{') && trimmed.endsWith('}')) {
-    try {
-      const parsed = JSON.parse(trimmed);
-      const currentLang = (i18n.language || 'zh').split('-')[0];
-      return parsed[currentLang] || parsed['en'] || parsed['zh'] || fieldVal;
-    } catch {
-      return fieldVal;
-    }
+  if (typeof fieldVal === 'object') {
+    const currentLang = (i18n.language || 'zh').split('-')[0];
+    return fieldVal[currentLang] || fieldVal['en'] || fieldVal['zh'] || '';
   }
-  return fieldVal;
+  if (typeof fieldVal === 'string') {
+    const trimmed = fieldVal.trim();
+    if (trimmed.startsWith('{') && trimmed.endsWith('}')) {
+      try {
+        const parsed = JSON.parse(trimmed);
+        const currentLang = (i18n.language || 'zh').split('-')[0];
+        return parsed[currentLang] || parsed['en'] || parsed['zh'] || fieldVal;
+      } catch {
+        return fieldVal;
+      }
+    }
+    return fieldVal;
+  }
+  return '';
 }
 
 
-export function getProviderDescription(provider: ToolProvider): string {
+export function getProviderDescription(provider: any): string {
   return parseMultiLang(provider.description) || '暂无描述';
 }
 
-export function getProviderName(provider: ToolProvider): string {
+export function getProviderName(provider: any): string {
   return parseMultiLang(provider.provider_name);
 }
 

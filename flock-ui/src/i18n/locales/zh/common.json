@@ -20,5 +20,19 @@
   "refresh": "刷新",
   "copied": "已复制到剪贴板",
   "actions": "操作",
-  "copy": "复制"
+  "copy": "复制",
+  "errors": {
+    "dbLocked": "数据库已被锁定，请重试",
+    "uniqueConstraint": "该名称或标识已存在",
+    "assistantNotFound": "指定的助手不存在",
+    "conversationNotFound": "指定的会话不存在",
+    "workspaceNotFound": "指定的工作区不存在",
+    "notFound": "所请求的资源未找到",
+    "permissionDenied": "权限不足，操作被拒绝",
+    "readFailed": "读取文件失败",
+    "writeFailed": "写入文件失败",
+    "timeout": "连接或请求超时，请检查网络",
+    "connRefused": "服务连接失败，请检查服务状态",
+    "unauthorized": "鉴权失败，请检查凭据或 API Key"
+  }
 }

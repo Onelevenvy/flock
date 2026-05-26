@@ -95,7 +95,10 @@ pub async fn computer_use(
     // --- exec action: 直接在沙盒内执行 shell 命令，无需启动 VNC 桌面 ---
     if act == "exec" {
         let cmd = command.ok_or_else(|| "`exec` action 需要提供 `command` 参数。例如：command=\"mkdir /workspace/my_project\"".to_string())?;
-        crate::emit_info(&format!("正在沙盒中执行命令: {}...", cmd));
+        crate::emit_info(&flock_core::tr(
+            &format!("正在沙盒中执行命令: {}...", cmd),
+            &format!("Executing command in sandbox: {}...", cmd)
+        ));
         let (output, exit_code) = execute_command_in_sandbox(&db, &sandbox_id, &cmd).await
             .map_err(|e| format!("沙盒命令执行失败: {}", e))?;
 
@@ -139,28 +142,28 @@ pub async fn computer_use(
     }
 
     if !desktop_ready {
-        crate::emit_info("检测到 VNC 桌面服务尚未启动，正在向云端拉起桌面服务...");
+        crate::emit_info(&flock_core::tr("检测到 VNC 桌面服务尚未启动，正在向云端拉起桌面服务...", "VNC desktop service not started. Initiating startup request to cloud..."));
         if let Err(e) = start_computer_use_in_sandbox(&db, &sandbox_id).await {
-            crate::emit_info(&format!("启动 Daytona 桌面服务请求失败: {}。尝试备用手动方案...", e));
+            crate::emit_info(&flock_core::tr(&format!("启动 Daytona 桌面服务请求失败: {}。尝试备用手动方案...", e), &format!("Daytona desktop launch request failed: {}. Trying backup manual startup...", e)));
         }
 
         // 调用统一的自愈拉起函数，确保 Xvfb, fluxbox, x11vnc, websockify 在 0.0.0.0 运行且 setsid 保活
         let _ = ensure_vnc_running_in_sandbox(&db, &sandbox_id).await;
 
-        crate::emit_info("正在等待远程桌面服务就绪...");
+        crate::emit_info(&flock_core::tr("正在等待远程桌面服务就绪...", "Waiting for remote desktop service to become ready..."));
         for i in 1..=15 {
             tokio::time::sleep(tokio::time::Duration::from_secs(1)).await;
             if let Ok(ready) = check_computer_use_status(&db, &sandbox_id).await {
                 if ready {
                     desktop_ready = true;
-                    crate::emit_info("远程桌面服务已就绪！");
+                    crate::emit_info(&flock_core::tr("远程桌面服务已就绪！", "Remote desktop service is ready!"));
                     break;
                 }
             }
         }
 
         if !desktop_ready {
-            crate::emit_info("警告: 远程桌面未报告就绪状态，继续尝试执行任务。");
+            crate::emit_info(&flock_core::tr("警告: 远程桌面未报告就绪状态，继续尝试执行任务。", "Warning: Remote desktop did not report ready status, proceeding with task."));
         }
     }
 
@@ -176,7 +179,10 @@ pub async fn computer_use(
                 .unwrap_or_else(|_| format!("https://{}-{}.proxy.app.daytona.io/vnc.html?autoconnect=true&resize=scale", crate::daytona::WEBSOCKIFY_PORT, sandbox_id));
             
             if let (Some(cid), Some(mid), Some(app_mgr)) = (call_id.clone(), msg_id, crate::get_global_approval_manager()) {
-                crate::emit_info(&format!("检测到敏感桌面操作（验证码/人工介入），正在通知前端拉起人工接管横幅 (Call ID: {})...", cid));
+                crate::emit_info(&flock_core::tr(
+                    &format!("检测到敏感桌面操作（验证码/人工介入），正在通知前端拉起人工接管横幅 (Call ID: {})...", cid),
+                    &format!("Sensitive desktop action detected (captcha/human verification), notifying client to display takeover banner (Call ID: {})...", cid)
+                ));
                 crate::daytona::emit_human_takeover(
                     &cid,
                     &mid,
@@ -187,15 +193,15 @@ pub async fn computer_use(
                 let rx = app_mgr.request_approval(&cid, &ToolCategory::Exec);
                 match rx.await {
                     Ok(flock_core::ipc_interface::approval::ToolApprovalResult::Approved) => {
-                        crate::emit_info("收到前端已完成操作指令，正在恢复 Agent 自动执行。");
+                        crate::emit_info(&flock_core::tr("收到前端已完成操作指令，正在恢复 Agent 自动执行。", "Received completion instruction from frontend, resuming automated Agent execution."));
                         result_msg = "人工接管操作已顺利完成，用户已确认！Agent 已经成功从暂停点恢复，并继续自动执行后续流程。".to_string();
                     }
                     Ok(flock_core::ipc_interface::approval::ToolApprovalResult::Denied { reason }) => {
-                        crate::emit_info(&format!("人工接管被用户取消: {}", reason));
+                        crate::emit_info(&flock_core::tr(&format!("人工接管被用户取消: {}", reason), &format!("Human takeover cancelled by user: {}", reason)));
                         return Err(format!("人工接管被取消，原因为: {}", reason));
                     }
                     Err(e) => {
-                        crate::emit_info(&format!("人工接管等待通道意外中断: {}", e));
+                        crate::emit_info(&flock_core::tr(&format!("人工接管等待通道意外中断: {}", e), &format!("Human takeover wait channel interrupted unexpectedly: {}", e)));
                         return Err(format!("人工接管等待通道意外中断: {}", e));
                     }
                 }
@@ -288,7 +294,7 @@ pub async fn computer_use(
     }
 
     // 4. 所有操作完成后，自动截取一张当前桌面的最新图片，并保存至 `.flock/sandbox/screenshots/{name_id}.png` 供前端渲染
-    crate::emit_info("正在捕获当前远程桌面截图并渲染预览...");
+    crate::emit_info(&flock_core::tr("正在捕获当前远程桌面截图并渲染预览...", "Capturing current remote desktop screenshot for preview..."));
     let ss_cmd = format!("export DISPLAY={} && scrot -o /tmp/desktop_screenshot.png && cat /tmp/desktop_screenshot.png | base64 -w 0", crate::daytona::DISPLAY_ID);
     let (b64_data, exit_code) = execute_command_in_sandbox(&db, &sandbox_id, &ss_cmd).await
         .unwrap_or_default();
@@ -305,14 +311,14 @@ pub async fn computer_use(
             let _ = std::fs::write(&ss_path, &img_bytes);
             let _ = std::fs::write(base_dir.join(format!(".flock/sandbox/screenshot_{}.png", session_id)), &img_bytes);
             screenshot_saved = true;
-            crate::emit_info("远程桌面最新状态已成功截取并拉回工作区预览！");
+            crate::emit_info(&flock_core::tr("远程桌面最新状态已成功截取并拉回工作区预览！", "Latest remote desktop screenshot captured and synced to workspace!"));
         }
     }
 
     let proxy_url = match crate::daytona::get_sandbox_vnc_url(&db, &sandbox_id).await {
         Ok(u) => u,
         Err(e) => {
-            crate::emit_info(&format!("获取动态 VNC URL 失败: {}。使用静态备用 URL...", e));
+            crate::emit_info(&flock_core::tr(&format!("获取动态 VNC URL 失败: {}。使用静态备用 URL...", e), &format!("Failed to retrieve dynamic VNC URL: {}. Falling back to static VNC URL...", e)));
             format!("https://{}-{}.proxy.app.daytona.io/vnc.html?autoconnect=true&resize=scale", crate::daytona::WEBSOCKIFY_PORT, sandbox_id)
         }
     };

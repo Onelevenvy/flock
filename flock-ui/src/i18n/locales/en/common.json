@@ -20,5 +20,19 @@
   "refresh": "Refresh",
   "copied": "Copied to clipboard",
   "actions": "Actions",
-  "copy": "Copy"
+  "copy": "Copy",
+  "errors": {
+    "dbLocked": "Database is locked, please try again",
+    "uniqueConstraint": "Name or identifier already exists",
+    "assistantNotFound": "Specified assistant not found",
+    "conversationNotFound": "Specified conversation not found",
+    "workspaceNotFound": "Specified workspace not found",
+    "notFound": "Requested resource not found",
+    "permissionDenied": "Permission denied, action rejected",
+    "readFailed": "Failed to read file",
+    "writeFailed": "Failed to write file",
+    "timeout": "Request timed out, please check your network",
+    "connRefused": "Failed to connect to service, please check service status",
+    "unauthorized": "Authentication failed, invalid credentials or API key"
+  }
 }

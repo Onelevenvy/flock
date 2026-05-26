@@ -1,10 +1,16 @@
 import { useState, useEffect, useCallback } from 'react';
 import { invoke } from '@tauri-apps/api/core';
+import i18n from '../i18n';
+
+export interface I18nString {
+  zh: string;
+  en: string;
+}
 
 export interface ToolProvider {
   id: string;
-  provider_name: string;
-  description: string | null;
+  provider_name: I18nString;
+  description: I18nString | null;
   icon: string | null;
   credentials: string | null;
   credentials_schema: string | null;
@@ -61,7 +67,13 @@ export function useAvailableTools() {
   const groupedMap: Record<string, { value: string; label: string }[]> = {};
 
   tools.forEach((t) => {
-    const providerName = providers.find((p) => p.id === t.provider_id)?.provider_name || t.provider_id;
+    const provider = providers.find((p) => p.id === t.provider_id);
+    let providerName = t.provider_id;
+    if (provider) {
+      const currentLang = (i18n.language || 'zh').split('-')[0];
+      const nameObj = provider.provider_name;
+      providerName = nameObj[currentLang as 'zh' | 'en'] || nameObj.en || nameObj.zh || t.provider_id;
+    }
     if (!groupedMap[providerName]) {
       groupedMap[providerName] = [];
     }

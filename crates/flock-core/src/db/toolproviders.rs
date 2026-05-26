@@ -2,14 +2,14 @@ use serde::{Deserialize, Serialize};
 use sqlx::Row;
 
 use crate::crypto;
-use crate::types::tool::ToolDef;
+use crate::types::tool::{ToolDef, I18nString};
 
 /// Tool provider stored in the `tool_provider` table.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ToolProvider {
     pub id: String,
-    pub provider_name: String,
-    pub description: Option<String>,
+    pub provider_name: I18nString,
+    pub description: Option<I18nString>,
     pub icon: Option<String>,
     /// Decrypted credentials JSON (not stored directly; encrypted form is in DB).
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -176,10 +176,19 @@ impl super::DbManager {
         let mut providers = Vec::new();
         for r in rows {
             let credentials = decrypt_credentials_from_row(&r, &salt);
+            let provider_name_str: String = r.get("provider_name");
+            let provider_name: I18nString = serde_json::from_str(&provider_name_str)
+                .unwrap_or_else(|_| I18nString::single(provider_name_str));
+
+            let description_str: Option<String> = r.try_get("description").ok();
+            let description = description_str.and_then(|s| {
+                serde_json::from_str(&s).ok().or_else(|| Some(I18nString::single(s)))
+            });
+
             providers.push(ToolProvider {
                 id: r.get("id"),
-                provider_name: r.get("provider_name"),
-                description: r.try_get("description").ok(),
+                provider_name,
+                description,
                 icon: r.try_get("icon").ok(),
                 credentials,
                 credentials_schema: r.try_get("credentials_schema").ok(),

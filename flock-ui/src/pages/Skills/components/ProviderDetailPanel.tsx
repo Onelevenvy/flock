@@ -27,6 +27,7 @@ import { useTranslation } from 'react-i18next';
 import type { ToolProvider, Tool } from '../types';
 import { getProviderDescription, getProviderName, formatLabel, parseInputSchema } from '../helpers';
 import { ToolsIcon } from '../../../components/Common/Icons';
+import { formatError } from '../../../utils/error';
 
 export function renderTextWithLinks(text: string) {
   if (!text) return null;
@@ -148,7 +149,7 @@ export function ProviderDetailPanel({
         notifications.update({
           id: `testing-${provider.id}`,
           title: t('skills.tools.authFailed'),
-          message: String(e),
+          message: formatError(e),
           color: 'red',
           icon: <IconX size={18} />,
           loading: false,
@@ -161,7 +162,7 @@ export function ProviderDetailPanel({
       console.error('Failed to save credentials:', e);
       notifications.show({
         title: t('common.failed'),
-        message: String(e),
+        message: formatError(e),
         color: 'red',
         autoClose: 5000,
       });
@@ -306,29 +307,35 @@ export function ProviderDetailPanel({
           <Accordion variant="separated" radius="md" chevronPosition="left">
             {tools.map((tool) => {
               const params = parseInputSchema(tool.input_schema);
+              const toolLocKey = `skills.tools_i18n.${tool.name}`;
+              const translatedName = t(`${toolLocKey}.name`, { defaultValue: tool.name });
+              const translatedDesc = t(`${toolLocKey}.description`, { defaultValue: tool.description });
               return (
                 <Accordion.Item key={tool.id} value={tool.id}>
                   <Accordion.Control style={{ borderRadius: 8, background: 'var(--flock-bg-surface)' }}>
-                    <Text size="sm" fw={500}>{tool.name}</Text>
+                    <Text size="sm" fw={500}>{translatedName}</Text>
                   </Accordion.Control>
                   <Accordion.Panel>
                     <Stack gap="sm">
-                      <Text size="xs" c="dimmed">{renderTextWithLinks(tool.description)}</Text>
+                      <Text size="xs" c="dimmed">{renderTextWithLinks(translatedDesc)}</Text>
                       {Object.keys(params).length > 0 && (
                         <Box>
                           <Text size="xs" fw={500} mb={4}>
                             {t('skills.tools.params')}
                           </Text>
                           <Stack gap={4}>
-                            {Object.entries(params).map(([paramName, param]) => (
-                              <Box key={paramName} p={6} style={{ borderRadius: 6, background: 'var(--flock-bg-surface)' }}>
-                                <Group justify="space-between" mb={2}>
-                                  <Text size="xs" fw={500}>{formatLabel(paramName)}</Text>
-                                  <Badge size="xs" variant="filled" color="blue">{param.type || 'any'}</Badge>
-                                </Group>
-                                <Text size="xs" c="dimmed" style={{ wordBreak: 'break-word' }}>{renderTextWithLinks(param.description)}</Text>
-                              </Box>
-                            ))}
+                            {Object.entries(params).map(([paramName, param]) => {
+                              const translatedParamDesc = t(`${toolLocKey}.params.${paramName}`, { defaultValue: param.description });
+                              return (
+                                <Box key={paramName} p={6} style={{ borderRadius: 6, background: 'var(--flock-bg-surface)' }}>
+                                  <Group justify="space-between" mb={2}>
+                                    <Text size="xs" fw={500}>{formatLabel(paramName)}</Text>
+                                    <Badge size="xs" variant="filled" color="blue">{param.type || 'any'}</Badge>
+                                  </Group>
+                                  <Text size="xs" c="dimmed" style={{ wordBreak: 'break-word' }}>{renderTextWithLinks(translatedParamDesc)}</Text>
+                                </Box>
+                              );
+                            })}
                           </Stack>
                         </Box>
                       )}
