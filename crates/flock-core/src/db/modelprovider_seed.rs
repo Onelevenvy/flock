@@ -4,14 +4,14 @@ use super::ModelProvider;
 /// These are seeded into the database on first initialization.
 pub fn builtin_providers() -> Vec<(ModelProvider, Vec<ModelSeed>)> {
     vec![
-        anthropic(),
-        openai(),
-        siliconflow(),
-        zhipuai(),
-        deepseek(),
-        ollama(),
-        openai_compatible(),
-        anthropic_compatible(),
+        super::model_providers::anthropic::seed_data(),
+        super::model_providers::openai::seed_data(),
+        super::model_providers::siliconflow::seed_data(),
+        super::model_providers::zhipuai::seed_data(),
+        super::model_providers::deepseek::seed_data(),
+        super::model_providers::ollama::seed_data(),
+        super::model_providers::openai_compatible::seed_data(),
+        super::model_providers::anthropic_compatible::seed_data(),
     ]
 }
 
@@ -45,7 +45,7 @@ struct YamlModelSeed {
     capabilities: Vec<String>,
 }
 
-fn parse_provider_from_yaml(yaml_str: &str, icon_svg: Option<&str>) -> (ModelProvider, Vec<ModelSeed>) {
+pub fn parse_provider_from_yaml(yaml_str: &str, icon_svg: Option<&str>) -> (ModelProvider, Vec<ModelSeed>) {
     let parsed: YamlModelProvider = serde_yaml::from_str(yaml_str)
         .unwrap_or_else(|e| panic!("Failed to parse model provider YAML. Error: {}\nYAML:\n{}", e, yaml_str));
 
@@ -76,60 +76,4 @@ fn parse_provider_from_yaml(yaml_str: &str, icon_svg: Option<&str>) -> (ModelPro
     }).collect();
 
     (provider, seeds)
-}
-
-fn anthropic() -> (ModelProvider, Vec<ModelSeed>) {
-    parse_provider_from_yaml(
-        include_str!("model_providers/anthropic/provider.yaml"),
-        Some(include_str!("model_providers/anthropic/icon.svg")),
-    )
-}
-
-fn anthropic_compatible() -> (ModelProvider, Vec<ModelSeed>) {
-    parse_provider_from_yaml(
-        include_str!("model_providers/anthropic_compatible/provider.yaml"),
-        Some(include_str!("model_providers/anthropic_compatible/icon.svg")),
-    )
-}
-
-fn openai() -> (ModelProvider, Vec<ModelSeed>) {
-    parse_provider_from_yaml(
-        include_str!("model_providers/openai/provider.yaml"),
-        Some(include_str!("model_providers/openai/icon.svg")),
-    )
-}
-
-fn openai_compatible() -> (ModelProvider, Vec<ModelSeed>) {
-    parse_provider_from_yaml(
-        include_str!("model_providers/openai_compatible/provider.yaml"),
-        Some(include_str!("model_providers/openai_compatible/icon.svg")),
-    )
-}
-
-fn siliconflow() -> (ModelProvider, Vec<ModelSeed>) {
-    parse_provider_from_yaml(
-        include_str!("model_providers/siliconflow/provider.yaml"),
-        Some(include_str!("model_providers/siliconflow/icon.svg")),
-    )
-}
-
-fn zhipuai() -> (ModelProvider, Vec<ModelSeed>) {
-    parse_provider_from_yaml(
-        include_str!("model_providers/zhipuai/provider.yaml"),
-        Some(include_str!("model_providers/zhipuai/icon.svg")),
-    )
-}
-
-fn deepseek() -> (ModelProvider, Vec<ModelSeed>) {
-    parse_provider_from_yaml(
-        include_str!("model_providers/deepseek/provider.yaml"),
-        Some(include_str!("model_providers/deepseek/icon.svg")),
-    )
-}
-
-fn ollama() -> (ModelProvider, Vec<ModelSeed>) {
-    parse_provider_from_yaml(
-        include_str!("model_providers/ollama/provider.yaml"),
-        Some(include_str!("model_providers/ollama/icon.svg")),
-    )
 }
