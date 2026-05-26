@@ -1,0 +1,10 @@
+id: siliconflow
+provider_name:
+  zh: 硅基流动
+  en: SiliconFlow
+provider_type: openai
+base_url: https://api.siliconflow.cn/v1
+description:
+  zh: 硅基流动（SiliconFlow）模型加速提供商，聚合了各种优秀的开源大语言模型
+  en: SiliconFlow model provider, aggregating outstanding open-source LLMs.
+test_model: Pro/zai-org/GLM-4.7

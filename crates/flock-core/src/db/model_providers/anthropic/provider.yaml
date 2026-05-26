@@ -1,0 +1,10 @@
+id: anthropic
+provider_name:
+  zh: Anthropic
+  en: Anthropic
+provider_type: anthropic
+base_url: https://api.anthropic.com
+description:
+  zh: Anthropic Claude 系列模型提供商，提供高性能推理模型
+  en: Anthropic Claude model provider, offering high-performance reasoning models.
+test_model: claude-haiku-4-20250514

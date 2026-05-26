@@ -1,0 +1,10 @@
+id: anthropic_compatible
+provider_name:
+  zh: Anthropic 兼容
+  en: Anthropic Compatible
+provider_type: anthropic
+base_url: ~
+description:
+  zh: 兼容 Anthropic Claude 接口协议的其他模型提供商
+  en: Other model providers compatible with the Anthropic Claude API protocol.
+test_model: ~

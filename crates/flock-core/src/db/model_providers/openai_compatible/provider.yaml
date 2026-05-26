@@ -1,0 +1,10 @@
+id: openai_compatible
+provider_name:
+  zh: OpenAI 兼容
+  en: OpenAI Compatible
+provider_type: openai
+base_url: ~
+description:
+  zh: 兼容 OpenAI 接口规范的自定义或第三方模型提供商
+  en: Custom or third-party model providers compatible with the OpenAI API specification.
+test_model: ~
