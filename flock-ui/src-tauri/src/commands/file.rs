@@ -231,7 +231,30 @@ pub async fn delete_workspace_file_or_dir(
     relative_path: String,
 ) -> Result<(), String> {
     if is_sandbox_active(&db).await {
-        DaytonaFs::delete_path(&db, &relative_path).await.map_err(|e| e.to_string())
+        // 1. 删除沙盒远端文件
+        DaytonaFs::delete_path(&db, &relative_path).await.map_err(|e| e.to_string())?;
+
+        // 2. 必须同步删掉本地文件，防止本地存留的文件在下一次 sync_up 时反向“诈尸”写回沙盒！
+        let base = flock_core::config::db_path::workspace_root().join(&workspace_id);
+        let target = base.join(&relative_path);
+
+        if relative_path.contains("..") {
+            return Err("非法路径访问".to_string());
+        }
+        let canonical_base = std::fs::canonicalize(&base).unwrap_or(base.clone());
+        if target.exists() {
+            let canonical_target = std::fs::canonicalize(&target).unwrap_or(target.clone());
+            if !canonical_target.starts_with(&canonical_base) {
+                return Err("非法路径访问".to_string());
+            }
+
+            if target.is_dir() {
+                std::fs::remove_dir_all(&target).map_err(|e| e.to_string())?;
+            } else {
+                std::fs::remove_file(&target).map_err(|e| e.to_string())?;
+            }
+        }
+        Ok(())
     } else {
         let base = flock_core::config::db_path::workspace_root().join(&workspace_id);
         let target = base.join(&relative_path);

@@ -120,19 +120,7 @@ def main():
         except Exception as e:
             print(f"ACTION_WARNING: {e}", file=sys.stderr)
         
-        try:
-            # Take clean/raw screenshot first
-            try:
-                page.evaluate("() => document.querySelectorAll('.flock-mark-box').forEach(el => el.remove())")
-            except Exception:
-                pass
-            raw_screenshot_bytes = page.screenshot(timeout=5000)
-            print("RAW_SCREENSHOT_B64_START")
-            print(base64.b64encode(raw_screenshot_bytes).decode('utf-8'))
-            print("RAW_SCREENSHOT_B64_END")
-        except Exception as e:
-            print(f"RAW_SCREENSHOT_ERROR: {e}", file=sys.stderr)
-
+        
         dom_markdown = ""
         try:
             page.wait_for_timeout(1000)
@@ -201,6 +189,7 @@ def main():
             print("SCREENSHOT_B64_END")
         except Exception as e:
             print(f"SCREENSHOT_ERROR: {e}", file=sys.stderr)
+
         
         try:
             title = page.title()
@@ -209,7 +198,13 @@ def main():
             pass
             
         if not is_cdp:
-            browser.close()
+            try:
+                browser.close()
+            except Exception:
+                pass
+
+        # 强制正常退出当前进程，避开 with 块清理时 Playwright CDP 连接异常导致的退出码非零问题
+        os._exit(0)
 
 if __name__ == "__main__":
     main()

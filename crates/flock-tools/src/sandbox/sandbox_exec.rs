@@ -60,10 +60,16 @@ pub async fn sandbox_exec(
     let (output, exit_code) = execute_command_in_sandbox(&db, &sandbox_id, &cmd_with_timeout).await
         .map_err(|e| format!("沙盒命令执行失败: {}", e))?;
 
-    // 每次执行后拉取变更到本地
-    if let Some(ws_path) = crate::get_workspace_dir() {
-        if let Err(e) = crate::daytona::sync::sync_down(&db, &sandbox_id, &ws_path).await {
-            crate::emit_info(&format!("自动 Sync Down 失败: {}", e));
+    // 每次执行后拉取变更到本地 (仅在执行可能修改文件系统的命令时，在后台异步执行，以防阻塞瞬间返回)
+    if is_write_command(&command) {
+        if let Some(ws_path) = crate::get_workspace_dir() {
+            let db_clone = db.clone();
+            let sandbox_id_clone = sandbox_id.clone();
+            tokio::spawn(async move {
+                if let Err(e) = crate::daytona::sync::sync_down(&db_clone, &sandbox_id_clone, &ws_path).await {
+                    eprintln!("自动 Sync Down 失败: {}", e);
+                }
+            });
         }
     }
 
@@ -72,6 +78,35 @@ pub async fn sandbox_exec(
     } else {
         Err(format!("命令执行失败 (退出码: {})。\n\n[错误输出]\n{}", exit_code, output))
     }
+}
+
+fn is_write_command(cmd: &str) -> bool {
+    let cmd_lower = cmd.to_lowercase();
+    let readonly_keywords = vec![
+        "pwd", "ls", "cat", "echo", "head", "tail", "grep", "find", 
+        "which", "nproc", "lscpu", "df", "free", "uname", "hostname", "du"
+    ];
+    
+    let has_write_redirect = cmd_lower.contains('>') || cmd_lower.contains("tee");
+    let has_write_tool = cmd_lower.contains("touch") || cmd_lower.contains("mkdir") || 
+                         cmd_lower.contains("rm") || cmd_lower.contains("mv") || 
+                         cmd_lower.contains("cp") || cmd_lower.contains("sed") || 
+                         cmd_lower.contains("write") || cmd_lower.contains("edit") || 
+                         cmd_lower.contains("tar") || cmd_lower.contains("unzip") || 
+                         cmd_lower.contains("zip") || cmd_lower.contains("python") || 
+                         cmd_lower.contains("node") || cmd_lower.contains("cargo") || 
+                         cmd_lower.contains("npm") || cmd_lower.contains("pip") || 
+                         cmd_lower.contains("git");
+
+    if !has_write_redirect && !has_write_tool {
+        if let Some(first_word) = cmd_lower.split_whitespace().next() {
+            let clean_word = first_word.trim_matches(|c: char| !c.is_alphanumeric());
+            if readonly_keywords.contains(&clean_word) {
+                return false;
+            }
+        }
+    }
+    true
 }
 
 pub struct SandboxExecToolImpl;

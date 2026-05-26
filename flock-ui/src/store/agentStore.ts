@@ -226,7 +226,16 @@ export const useAgentStore = create<AgentStore>((set) => ({
             const updatedChunks = m.chunks.map((c) => {
               if (c.kind === 'tool_request' && c.call_id === event.call_id) {
                 updated = true;
-                return { ...c, status: 'running' as const };
+                const existingArgs = c.tool?.args || {};
+                const mergedArgs = event.args ? { ...existingArgs, ...(typeof event.args === 'string' ? JSON.parse(event.args) : event.args) } : existingArgs;
+                return { 
+                  ...c, 
+                  status: 'running' as const,
+                  tool: {
+                    ...c.tool,
+                    args: mergedArgs
+                  }
+                };
               }
               return c;
             });
@@ -237,7 +246,7 @@ export const useAgentStore = create<AgentStore>((set) => ({
                 tool: {
                   name: event.tool_name,
                   category: 'exec' as any,
-                  args: {},
+                  args: event.args || {},
                   description: '',
                 },
                 status: 'running',
@@ -262,9 +271,16 @@ export const useAgentStore = create<AgentStore>((set) => ({
             lowerTool.includes('python') ||
             lowerTool.includes('code_execution')
           ) {
-            // 判断是否是 computer_use 且 action 为 exec
-            let isExec = false;
-            if (lowerTool.includes('computer_use') || lowerTool.includes('computeruse')) {
+            // 判定是否是纯命令行工具（而非 GUI 浏览器或桌面操作），若是，则在执行伊始就应该直接打开终端
+            const isCommandLine = 
+              lowerTool.includes('sandboxexec') || 
+              lowerTool.includes('sandbox_exec') || 
+              lowerTool.includes('bash') || 
+              lowerTool.includes('python') || 
+              lowerTool.includes('code_execution');
+
+            let isExec = isCommandLine;
+            if (!isExec && (lowerTool.includes('computer_use') || lowerTool.includes('computeruse'))) {
               try {
                 // 因为是自动批准（免确认）的，我们需要尽量从 messages 中找一次 arguments
                 const currentMessages = useAgentStore.getState().messages;
@@ -286,15 +302,39 @@ export const useAgentStore = create<AgentStore>((set) => ({
             }
 
             if (isExec) {
-              // 命令行命令，将其直接输出为 log
-              const currentPreview = useUiStore.getState().previewFile;
-              if (!currentPreview || currentPreview.path !== '.flock/sandbox/code_result.log') {
-                useUiStore.getState().openEnvironment('terminal', {
-                  path: '.flock/sandbox/code_result.log',
-                  content: '正在执行沙盒命令...',
-                  extension: 'log',
-                });
-              }
+              // 尝试获取具体命令以增强终端展示体验
+              let cmdStr = '';
+              try {
+                const currentMessages = useAgentStore.getState().messages;
+                let matchedToolInput: any = null;
+                for (const m of currentMessages) {
+                  for (const c of m.chunks) {
+                    if (c.kind === 'tool_request' && c.call_id === event.call_id) {
+                      matchedToolInput = c.tool?.args;
+                      break;
+                    }
+                  }
+                  if (matchedToolInput) break;
+                }
+                const inputObj = typeof matchedToolInput === 'string' ? JSON.parse(matchedToolInput) : matchedToolInput;
+                if (inputObj) {
+                  if (inputObj.command) {
+                    cmdStr = inputObj.command;
+                  } else if (inputObj.code) {
+                    cmdStr = inputObj.code;
+                  } else if (inputObj.script) {
+                    cmdStr = inputObj.script;
+                  }
+                }
+              } catch (e) {}
+
+              const displayContent = cmdStr ? `正在执行沙盒命令: ${cmdStr}` : '正在执行沙盒命令...';
+
+              useUiStore.getState().openEnvironment('terminal', {
+                path: '.flock/sandbox/code_result.log',
+                content: displayContent,
+                extension: 'log',
+              });
             } else {
               invoke<string | null>('get_active_sandbox_vnc_url')
                 .then((vncUrl) => {
@@ -407,14 +447,11 @@ export const useAgentStore = create<AgentStore>((set) => ({
                     } else {
                       if (lowerTool.includes('computer_use') || lowerTool.includes('computeruse')) {
                         // 如果是 computer_use 且没有 VNC 链接（即 exec 动作），则展示日志输出，不报“文件不存在”错误
-                        const currentPreview = useUiStore.getState().previewFile;
-                        if (!currentPreview || currentPreview.path !== '.flock/sandbox/code_result.log') {
-                          useUiStore.getState().openEnvironment('terminal', {
-                            path: '.flock/sandbox/code_result.log',
-                            content: event.output || '',
-                            extension: 'log',
-                          });
-                        }
+                        useUiStore.getState().openEnvironment('terminal', {
+                          path: '.flock/sandbox/code_result.log',
+                          content: event.output || '',
+                          extension: 'log',
+                        });
                       } else {
                         const currentPreview = useUiStore.getState().previewFile;
                         if (!currentPreview || currentPreview.path !== screenshotPath) {
@@ -429,14 +466,11 @@ export const useAgentStore = create<AgentStore>((set) => ({
                   })
                   .catch(() => {
                     if (lowerTool.includes('computer_use') || lowerTool.includes('computeruse')) {
-                      const currentPreview = useUiStore.getState().previewFile;
-                      if (!currentPreview || currentPreview.path !== '.flock/sandbox/code_result.log') {
-                        useUiStore.getState().openEnvironment('terminal', {
-                          path: '.flock/sandbox/code_result.log',
-                          content: event.output || '',
-                          extension: 'log',
-                        });
-                      }
+                      useUiStore.getState().openEnvironment('terminal', {
+                        path: '.flock/sandbox/code_result.log',
+                        content: event.output || '',
+                        extension: 'log',
+                      });
                     } else {
                       const currentPreview = useUiStore.getState().previewFile;
                       if (!currentPreview || currentPreview.path !== screenshotPath) {
@@ -450,14 +484,11 @@ export const useAgentStore = create<AgentStore>((set) => ({
                   });
               }
             } else if (lowerTool.includes('code_execution') || lowerTool.includes('sandboxexec') || lowerTool.includes('sandbox_exec') || lowerTool.includes('bash') || lowerTool.includes('python')) {
-              const currentPreview = useUiStore.getState().previewFile;
-              if (!currentPreview || currentPreview.path !== '.flock/sandbox/code_result.log') {
-                useUiStore.getState().openEnvironment('terminal', {
-                  path: '.flock/sandbox/code_result.log',
-                  content: event.output || '',
-                  extension: 'log',
-                });
-              }
+              useUiStore.getState().openEnvironment('terminal', {
+                path: '.flock/sandbox/code_result.log',
+                content: event.output || '',
+                extension: 'log',
+              });
             }
           }, 300);
         }

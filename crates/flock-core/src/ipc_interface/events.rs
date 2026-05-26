@@ -32,6 +32,8 @@ pub enum ProtocolEvent {
         msg_id: String,
         call_id: String,
         tool_name: String,
+        #[serde(skip_serializing_if = "Option::is_none")]
+        args: Option<Value>,
     },
     ToolResult {
         msg_id: String,

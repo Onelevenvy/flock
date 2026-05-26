@@ -127,5 +127,11 @@
     "deployingDaytona": "Requesting and deploying Daytona sandbox environment...",
     "failedToLoadImage": "Failed to load image",
     "noImageAvailable": "No image path available"
-  }
+  },
+  "sandboxLogs": "Sandbox Execution Logs ({{count}} steps)",
+  "showOutput": "Expand Output",
+  "hideOutput": "Collapse Output",
+  "sandboxLogsSuccess": "All sandbox operations completed",
+  "sandboxLogsRunning": "Executing sandbox operations",
+  "sandboxLogsError": "Sandbox operations failed"
 }
