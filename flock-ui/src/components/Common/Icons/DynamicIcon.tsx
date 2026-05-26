@@ -22,7 +22,7 @@ const normalizeIconName = (name: string): string => {
 };
 
 const getInitialSrc = (category: string, name: string): string => {
-  if (!name) return '/icons/models/default-fallback.svg';
+  if (!name) return '';
   const normalized = normalizeIconName(name);
   if (
     normalized.startsWith('data:') ||
@@ -72,11 +72,11 @@ export const DynamicIcon: React.FC<DynamicIconProps> = ({
         setImgSrc(`/icons/providers/${normalizedName}.svg`);
         setRetryCount(1);
       } else {
-        setImgSrc('/icons/models/default-fallback.svg');
+        setImgSrc('');
         setRetryCount(2);
       }
     } else if (retryCount === 1) {
-      setImgSrc('/icons/models/default-fallback.svg');
+      setImgSrc('');
       setRetryCount(2);
     }
   };
@@ -166,7 +166,13 @@ export const ModelIcon: React.FC<ModelIconProps & React.ImgHTMLAttributes<HTMLIm
   ...props
 }) => {
   const modelName = name.toLowerCase().trim();
-  const providerName = provider.toLowerCase().trim();
+  const trimmed = provider.trim();
+  const providerName = (
+    trimmed.startsWith('data:') ||
+    trimmed.startsWith('http:') ||
+    trimmed.startsWith('https:') ||
+    trimmed.startsWith('asset:')
+  ) ? trimmed : trimmed.toLowerCase();
 
   return (
     <DynamicIcon
