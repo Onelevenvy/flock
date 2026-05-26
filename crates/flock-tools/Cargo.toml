@@ -29,6 +29,7 @@ lru.workspace         = true
 meval.workspace       = true
 md-5.workspace        = true
 base64.workspace      = true
+serde_yaml.workspace  = true
 
 workspace-hack.workspace = true
 ignore = "0.4.25"

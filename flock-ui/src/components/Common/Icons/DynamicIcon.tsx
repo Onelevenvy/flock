@@ -8,18 +8,31 @@ export interface DynamicIconProps extends React.ImgHTMLAttributes<HTMLImageEleme
   size?: number | string;
 }
 
+const normalizeIconName = (name: string): string => {
+  const trimmed = name.trim();
+  if (
+    trimmed.startsWith('data:') ||
+    trimmed.startsWith('http:') ||
+    trimmed.startsWith('https:') ||
+    trimmed.startsWith('asset:')
+  ) {
+    return trimmed;
+  }
+  return trimmed.toLowerCase();
+};
+
 const getInitialSrc = (category: string, name: string): string => {
   if (!name) return '/icons/models/default-fallback.svg';
-  const trimmedName = name.trim();
+  const normalized = normalizeIconName(name);
   if (
-    trimmedName.startsWith('data:') ||
-    trimmedName.startsWith('http:') ||
-    trimmedName.startsWith('https:') ||
-    trimmedName.startsWith('asset:')
+    normalized.startsWith('data:') ||
+    normalized.startsWith('http:') ||
+    normalized.startsWith('https:') ||
+    normalized.startsWith('asset:')
   ) {
-    return trimmedName;
+    return normalized;
   }
-  return `/icons/${category}/${trimmedName.toLowerCase()}.svg`;
+  return `/icons/${category}/${normalized}.svg`;
 };
 
 export const DynamicIcon: React.FC<DynamicIconProps> = ({
@@ -116,7 +129,7 @@ export const ProviderIcon: React.FC<ProviderIconProps & React.ImgHTMLAttributes<
   size = 24,
   ...props
 }) => {
-  const matchedKey = name.toLowerCase().trim();
+  const matchedKey = normalizeIconName(name);
   return <DynamicIcon category="providers" name={matchedKey} size={size} {...props} />;
 };
 
@@ -125,7 +138,7 @@ export const ProviderIconLong: React.FC<ProviderIconProps & React.ImgHTMLAttribu
   size = 24,
   ...props
 }) => {
-  const matchedKey = name.toLowerCase().trim();
+  const matchedKey = normalizeIconName(name);
   const matchedLabel = name.trim().toUpperCase();
   return <LongIconWrapper name={matchedKey} label={matchedLabel} size={size} />;
 };
@@ -166,6 +179,6 @@ export const ToolsIcon: React.FC<ToolsIconProps & React.ImgHTMLAttributes<HTMLIm
   size = 24,
   ...props
 }) => {
-  const normalizedKey = name.toLowerCase().trim();
+  const normalizedKey = normalizeIconName(name);
   return <DynamicIcon category="tools" name={normalizedKey} size={size} {...props} />;
 };

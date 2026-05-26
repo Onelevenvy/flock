@@ -164,4 +164,9 @@ pub const MIGRATIONS: &[(i64, &str, &str)] = &[
         "add_assistant_disabled_tools",
         "ALTER TABLE assistant ADD COLUMN disabled_tools TEXT NOT NULL DEFAULT '[]';",
     ),
+    (
+        4,
+        "add_tool_provider_tools_i18n",
+        "ALTER TABLE tool_provider ADD COLUMN tools_i18n TEXT;",
+    ),
 ];

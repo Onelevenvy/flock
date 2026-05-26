@@ -1,0 +1,35 @@
+identity:
+  id: baidu
+  name:
+    zh: 百度
+    en: Baidu
+  description:
+    zh: 百度工具集合，提供高精度的百度多语种翻译能力
+    en: Baidu toolset providing translation and other functions.
+  icon: "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNCAyNCIgd2lkdGg9IjI0IiBoZWlnaHQ9IjI0IiBmaWxsPSJjdXJyZW50Q29sb3IiPjxwYXRoIGQ9Ik0xMiAyQTEwIDEwIDAgMSAwIDIyIDEyQTEwIDEwIDAgMCAwIDEyIDJNMTUgMTUuNU0xMC41IDE1LjVBMS41IDE1LjUgMCAxIDEgOSAxNEExLjUgMS41IDAgMCAxIDEwLjUgMTUuNU0xMi41IDEwLjVBMS41IDE1LjUgMCAxIDEgMTEgOUExLjUgMS41IDAgMCAxIDEyLjUgMTAuNU0xNi41IDExLjVBMS41IDE1LjUgMCAxIDEgMTUgMTBBMS41IDE1LjUgMCAwIDEgMTYuNSAxMS41TTguNSAxMS41QTEuNSAxLjUgMCAxIDEgNyAxMEExLjUgMS41IDAgMCAxIDguNSAxMS41Ij48L3BhdGg+PC9zdmc+"
+credentials_schema:
+  BAIDU_APPID:
+    type: string
+    description: App ID for Baidu service
+  BAIDU_SECRETKEY:
+    type: string
+    description: Secret Key for Baidu service
+test_input:
+  content: "Hello, world!"
+  dest: zh
+
+tools:
+  Baidu Translate:
+    name:
+      zh: 百度翻译
+      en: Baidu Translate
+    description:
+      zh: 使用百度翻译 API 将指定文本翻译成目标语言。
+      en: Translate text using Baidu Translate API.
+    params:
+      content:
+        zh: 需要翻译的文本内容
+        en: The text content to translate
+      dest:
+        zh: 目标翻译语言代码（如 "zh", "en"）
+        en: The destination language code (e.g., "zh", "en")

@@ -15,6 +15,7 @@ export interface ToolProvider {
   is_available: boolean;
   created_at: string;
   updated_at: string;
+  tools_i18n?: Record<string, any> | null;
 }
 
 export interface Tool {

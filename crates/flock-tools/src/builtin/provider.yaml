@@ -1,0 +1,101 @@
+identity:
+  id: builtin
+  name:
+    zh: 内置工具
+    en: Built-in Tools
+  description:
+    zh: 内置控制台工具集，提供文件读写、Shell命令执行、代码搜索等基础开发能力
+    en: Built-in terminal toolset providing basic development capabilities such as file read/write, shell command execution, and code search.
+  icon: "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNCAyNCIgd2lkdGg9IjI0IiBmaWxsPSJub25lIiBzdHJva2U9ImN1cnJlbnRDb2xvciIgc3Ryb2tlLXdpZHRoPSIyIiBzdHJva2UtbGluZWNhcD0icm91bmQiIHN0cm9rZS1saW5lam9pbj0icm91bmQiPjxyZWN0IHg9IjIiIHk9IjMiIHdpZHRoPSIyMCIgaGVpZ2h0PSIxNCIgcng9IjIiIHJ5PSIyIj48L3JlY3Q+PGxpbmUgeDE9IjgiIHkxPSIyMSIgeDI9IjE2IiB5Mj0iMjEiPjwvbGluZT48bGluZSB4MT0iMTIiIHkxPSIxNyIgeDI9IjEyIiB5Mj0iMjEiPjwvbGluZT48L3N2Zz4="
+
+tools:
+  Read:
+    name:
+      zh: 读取文件
+      en: Read File
+    description:
+      zh: 从本地文件系统读取指定文件的内容，并为文本类型文件自动附加行号。
+      en: Read the contents of a specified file from the local filesystem, with line numbers automatically attached for text files.
+    params:
+      file_path:
+        zh: 要读取的文件的绝对路径
+        en: Absolute path of the file to read
+      offset:
+        zh: 读取的起始行号（0-based，可选）
+        en: The starting line number to read (0-based, optional)
+      limit:
+        zh: 最大读取行数（可选）
+        en: Maximum number of lines to read (optional)
+  Write:
+    name:
+      zh: 写入文件
+      en: Write File
+    description:
+      zh: 向本地文件系统写入文件内容。如果文件已存在，则会完全覆盖其原有内容；如果不存在，则会自动创建新文件。
+      en: Write content to a file on the local filesystem. If the file already exists, it will be completely overwritten; if it does not exist, a new file will be created.
+    params:
+      file_path:
+        zh: 要写入的文件的绝对路径
+        en: Absolute path of the file to write
+      content:
+        zh: 写入文件内的文本内容
+        en: The text content to write into the file
+  Edit:
+    name:
+      zh: 修改文件
+      en: Edit File
+    description:
+      zh: 精确修改本地文件。通过指定唯一的原代码块，将其替换为新的代码块。必须确保替换的目标块在文件中唯一存在。
+      en: Make precise edits to a local file by replacing a unique target content block with replacement content.
+    params:
+      file_path:
+        zh: 要编辑的文件的绝对路径
+        en: Absolute path of the file to edit
+      target_content:
+        zh: 文件中需要被替换的精确原内容（包含前导空格或换行，必须唯一）
+        en: The exact target content in the file to be replaced (must be unique)
+      replacement_content:
+        zh: 用于替换原内容的新文本内容
+        en: The new text content to replace the target content
+  Bash:
+    name:
+      zh: 终端执行 (Bash)
+      en: Run Command (Bash)
+    description:
+      zh: 在本地系统的工作区上下文下执行命令。请使用该工具编译项目、安装依赖、运行测试等。
+      en: Execute a bash command in the local workspace directory.
+    params:
+      command:
+        zh: 要运行的 shell 命令行指令
+        en: The shell command line to run
+  Grep:
+    name:
+      zh: 文本搜索 (Grep)
+      en: Text Search (Grep)
+    description:
+      zh: 类似于 grep / ripgrep 工具，根据指定的关键词模式，在文件或目录中搜索匹配 of 的行。
+      en: Search for pattern matches within files or directories.
+    params:
+      pattern:
+        zh: 要搜索的文本模式（根据 is_regex 支持正则表达式或普通字符串）
+        en: The search pattern or regex to look for
+      path:
+        zh: 搜索的目标文件或文件夹绝对路径
+        en: The path to search within (file or directory)
+      is_regex:
+        zh: 是否将 pattern 视为正则表达式（可选，默认 false）
+        en: Whether to treat pattern as a regular expression
+  Glob:
+    name:
+      zh: 文件检索 (Glob)
+      en: File Search (Glob)
+    description:
+      zh: 在指定的目录树中检索匹配 Glob 模式（例如 src/**/*.rs）的所有文件列表。
+      en: Search for file paths matching a glob pattern under a directory.
+    params:
+      pattern:
+        zh: Glob 文件过滤模式
+        en: The glob pattern to match
+      path:
+        zh: 开始检索的目录绝对路径
+        en: The start directory path to search

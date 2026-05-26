@@ -25,7 +25,7 @@ import { invoke } from '@tauri-apps/api/core';
 import { notifications } from '@mantine/notifications';
 import { useTranslation } from 'react-i18next';
 import type { ToolProvider, Tool } from '../types';
-import { getProviderDescription, getProviderName, formatLabel, parseInputSchema } from '../helpers';
+import { getProviderDescription, getProviderName, formatLabel, parseInputSchema, getToolName, getToolDescription, getToolParamDescription } from '../helpers';
 import { ToolsIcon } from '../../../components/Common/Icons';
 import { formatError } from '../../../utils/error';
 
@@ -208,7 +208,7 @@ export function ProviderDetailPanel({
               boxShadow: '0 2px 8px rgba(0,0,0,0.03)',
             }}
           >
-            <ToolsIcon name={provider.id} size={24} />
+            <ToolsIcon name={provider.icon || provider.id} size={24} />
           </Box>
           <Box style={{ flex: 1, minWidth: 0 }}>
             <Text size="sm" fw={600} style={{ color: 'var(--flock-text-bright)' }} truncate>
@@ -307,9 +307,8 @@ export function ProviderDetailPanel({
           <Accordion variant="separated" radius="md" chevronPosition="left">
             {tools.map((tool) => {
               const params = parseInputSchema(tool.input_schema);
-              const toolLocKey = `skills.tools_i18n.${tool.name}`;
-              const translatedName = t(`${toolLocKey}.name`, { defaultValue: tool.name });
-              const translatedDesc = t(`${toolLocKey}.description`, { defaultValue: tool.description });
+              const translatedName = getToolName(tool, provider, t);
+              const translatedDesc = getToolDescription(tool, provider, t);
               return (
                 <Accordion.Item key={tool.id} value={tool.id}>
                   <Accordion.Control style={{ borderRadius: 8, background: 'var(--flock-bg-surface)' }}>
@@ -325,7 +324,7 @@ export function ProviderDetailPanel({
                           </Text>
                           <Stack gap={4}>
                             {Object.entries(params).map(([paramName, param]) => {
-                              const translatedParamDesc = t(`${toolLocKey}.params.${paramName}`, { defaultValue: param.description });
+                              const translatedParamDesc = getToolParamDescription(paramName, param.description, tool, provider, t);
                               return (
                                 <Box key={paramName} p={6} style={{ borderRadius: 6, background: 'var(--flock-bg-surface)' }}>
                                   <Group justify="space-between" mb={2}>

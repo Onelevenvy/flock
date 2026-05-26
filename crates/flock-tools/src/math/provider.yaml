@@ -1,0 +1,9 @@
+identity:
+  id: math
+  name:
+    zh: 数学计算器
+    en: Math Calculator
+  description:
+    zh: 提供数学表达式计算能力的内置工具插件
+    en: Built-in tool plugin providing mathematical expression evaluation.
+  icon: "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNCAyNCIgd2lkdGg9IjI0IiBoZWlnaHQ9IjI0IiBmaWxsPSJub25lIiBzdHJva2U9ImN1cnJlbnRDb2xvciIgc3Ryb2tlLXdpZHRoPSIyIiBzdHJva2UtbGluZWNhcD0icm91bmQiIHN0cm9rZS1saW5lam9pbj0icm91bmQiPjxyZWN0IHg9IjQiIHk9IjIiIHdpZHRoPSIxNiIgaGVpZ2h0PSIyMCIgcng9IjIiIHJ5PSIyIj48L3JlY3Q+PGxpbmUgeDE9IjkiIHkxPSIyMiIgeDI9IjkiIHkyPSIxNiI+PC9saW5lPjxsaW5lIHgxPSI4IiB5MT0iNiIgeDI9IjE2IiB5Mj0iNiI+PC9saW5lPjxsaW5lIHgxPSIxNiIgeTE9IjIyIiB4Mj0iMTYiIHkyPSIxNiI+PC9saW5lPjwvc3ZnPg=="

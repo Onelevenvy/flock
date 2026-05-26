@@ -76,19 +76,5 @@ impl SerperTool {
 }
 
 pub fn provider_info() -> ProviderInfo {
-    ProviderInfo {
-        provider_id: "serper".to_string(),
-        provider_name: I18nString::new("Serper", "Serper"),
-        description: I18nString::new("Serper提供的工具，支持全球的搜索", "Serper tool for global internet search."),
-        icon: Some("serper".to_string()),
-        credentials_schema: Some(serde_json::json!({
-            "SERPER_API_KEY": {
-                "type": "string",
-                "description": "API key for Serper service, you can get it from https://serper.dev/"
-            }
-        })),
-        test_input: Some(serde_json::json!({
-            "search_query": "What is the latest news of China?"
-        })),
-    }
+    crate::parse_provider_info_from_yaml(include_str!("provider.yaml"))
 }

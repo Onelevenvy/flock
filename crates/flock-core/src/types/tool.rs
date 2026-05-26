@@ -83,6 +83,7 @@ pub struct ProviderInfo {
     /// Sample input used to test the tool's connectivity.
     /// If Some, `test_tool_provider` will execute the actual tool with this input.
     pub test_input: Option<serde_json::Value>,
+    pub tools: Option<serde_json::Value>,
 }
 
 /// Result from executing a tool

@@ -252,7 +252,7 @@ export function ToolPickerPopover({
                         <Accordion.Control>
                           <Group justify="space-between" style={{ width: '100%' }}>
                             <Group gap="xs">
-                              <ToolsIcon name={provider.id} size={16} />
+                              <ToolsIcon name={provider.icon || provider.id} size={16} />
                               <Text fw={600} size="xs" style={{ color: 'var(--flock-text-bright)' }}>
                                 {getProviderName(provider)}
                               </Text>

@@ -95,7 +95,7 @@ export function ToolsTab() {
                       boxShadow: '0 2px 8px rgba(0,0,0,0.02)',
                     }}
                   >
-                    <ToolsIcon name={provider.id} size={20} />
+                    <ToolsIcon name={provider.icon || provider.id} size={20} />
                   </Box>
                   <Box style={{ flex: 1, minWidth: 0 }}>
                     <Text size="sm" fw={600} truncate style={{ color: 'var(--flock-text-bright)' }}>{getProviderName(provider)}</Text>

@@ -89,6 +89,7 @@ pub async fn test_mcp_server(
                 icon: None,
                 credentials_schema: None,
                 test_input: None,
+                tools: None,
             };
             let provider_infos = vec![provider_info];
 

@@ -1,0 +1,15 @@
+identity:
+  id: openweather
+  name:
+    zh: Open Weather
+    en: Open Weather
+  description:
+    zh: OpenWeather 提供的天气查询工具，支持全球城市的天气信息查询，包括温度、湿度、风速等数据
+    en: Weather query tool provided by OpenWeather, supporting weather queries for global cities including temperature, humidity, wind speed, and more.
+  icon: "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNCAyNCIgd2lkdGg9IjI0IiBoZWlnaHQ9IjI0IiBmaWxsPSJub25lIiBzdHJva2U9ImN1cnJlbnRDb2xvciIgc3Ryb2tlLXdpZHRoPSIyIiBzdHJva2UtbGluZWNhcD0icm91bmQiIHN0cm9rZS1saW5lam9pbj0icm91bmQiPjxwYXRoIGQ9Ik0xMiAydjJNMTIgMjB2Mk00LjkzIDQuOTNsMS40MSAxLjQxTTE3LjY2IDE3LjY2bDEuNDEgMS40MU0yIDEyaDJNMjAgMTJoMk02LjM0IDE3LjY2bC0xLjQxIDEuNDFNRTE5LjA3IDQuOTNsLTEuNDEgMS40MSI+PC9wYXRoPjxjaXJjbGUgY3g9IjEyIiBjeT0iMTIiIHI9IjQiPjwvY2lyY2xlPjwvc3ZnPg=="
+credentials_schema:
+  OPEN_WEATHER_API_KEY:
+    type: string
+    description: API key for OpenWeather service, you can get the api key from https://openweathermap.org/
+test_input:
+  city: Beijing
