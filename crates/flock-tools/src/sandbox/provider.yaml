@@ -6,7 +6,7 @@ identity:
   description:
     zh: 沙盒环境工具集，提供安全隔离的代码执行、浏览器自动化、计算机操控及沙盒命令执行能力
     en: Sandboxed toolset providing isolated code execution, browser automation, computer use control, and safe command execution in a secure environment.
-  icon: "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNCAyNCIgd2lkdGg9IjI0IiBoZWlnaHQ9IjI0IiBmaWxsPSJub25lIiBzdHJva2U9ImN1cnJlbnRDb2xvciIgc3Ryb2tlLXdpZHRoPSIyIiBzdHJva2UtbGluZWNhcD0icm91bmQiIHN0cm9rZS1saW5lam9pbj0icm91bmQiPjxyZWN0IHg9IjIiIHk9IjIiIHdpZHRoPSIyMCIgaGVpZ2h0PSIyMCIgcng9IjQiIHJ5PSI0Ij48L3JlY3Q+PHBhdGggZD0iTTEyIDh2OE04IDEyaDgiPjwvcGF0aD48L3N2Zz4="
+
 credentials_schema:
   __type: sandbox_settings
 

@@ -68,6 +68,9 @@ impl OpenWeatherTool {
 }
 
 pub fn provider_info() -> ProviderInfo {
-    crate::parse_provider_info_from_yaml(include_str!("provider.yaml"))
+    crate::parse_provider_info_from_yaml(
+        include_str!("provider.yaml"),
+        Some(include_str!("icon.svg")),
+    )
 }
 

@@ -191,14 +191,20 @@ struct YamlProviderIdentity {
     icon: Option<String>,
 }
 
-pub fn parse_provider_info_from_yaml(yaml_str: &str) -> flock_core::types::tool::ProviderInfo {
+pub fn parse_provider_info_from_yaml(yaml_str: &str, icon_svg: Option<&str>) -> flock_core::types::tool::ProviderInfo {
     let parsed: YamlProviderInfo = serde_yaml::from_str(yaml_str)
         .unwrap_or_else(|e| panic!("Failed to parse provider YAML. Error: {}\nYAML:\n{}", e, yaml_str));
+
+    let icon = icon_svg.map(|svg| {
+        use base64::{Engine as _, engine::general_purpose};
+        format!("data:image/svg+xml;base64,{}", general_purpose::STANDARD.encode(svg))
+    }).or(parsed.identity.icon);
+
     flock_core::types::tool::ProviderInfo {
         provider_id: parsed.identity.id,
         provider_name: parsed.identity.name,
         description: parsed.identity.description,
-        icon: parsed.identity.icon,
+        icon,
         credentials_schema: parsed.credentials_schema,
         test_input: parsed.test_input,
         tools: parsed.tools,
