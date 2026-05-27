@@ -193,7 +193,7 @@ export function XiaofPet() {
         </div>
       )}
 
-      {/* Quick approve popup */}
+      {/* Quick approve popup — in flex flow, above widget */}
       {showApprovePopup && firstPending && (
         <div
           className="xiaof-approve-popup"

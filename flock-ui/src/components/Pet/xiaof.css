@@ -167,60 +167,59 @@
   to   { opacity: 1; transform: translateY(0) scale(1); }
 }
 
-/* ── Quick approve popup (on hover) ─────────────────────── */
+/* ── Quick approve popup (click-triggered, flex flow) ────── */
 .xiaof-approve-popup {
-  position: absolute;
-  bottom: 110px; /* Position it above the expanded pet */
-  left: 50%;
-  transform: translateX(-50%);
+  /* Participates in flex column flow — sits above the widget */
+  align-self: center;
+  margin-bottom: 8px;
   background: rgba(15, 23, 42, 0.96);
   backdrop-filter: blur(16px);
   -webkit-backdrop-filter: blur(16px);
   border: 1px solid rgba(255,255,255,0.14);
-  border-radius: 12px;
-  padding: 10px 12px;
+  border-radius: 10px;
+  padding: 8px 10px;
   display: flex;
   flex-direction: column;
-  gap: 8px;
-  width: 190px;
+  gap: 6px;
+  width: 140px;
   box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.5), 0 8px 10px -6px rgba(0, 0, 0, 0.5);
   animation: xiaof-bubble-fade-in 0.2s cubic-bezier(0.34, 1.56, 0.64, 1) both;
   z-index: 9901;
   pointer-events: all;
-  
+
   /* 允许在弹窗内部交互，不触发拖拽 */
   -webkit-app-region: no-drag;
 }
 
 .xiaof-approve-title {
-  font-size: 10px;
+  font-size: 9px;
   font-weight: 600;
   color: rgba(255,255,255,0.5);
   text-transform: uppercase;
   letter-spacing: 0.5px;
-  margin-bottom: 2px;
+  margin-bottom: 1px;
 }
 
 .xiaof-approve-tool-name {
-  font-size: 11px;
+  font-size: 10px;
   font-weight: 600;
   color: rgba(255, 255, 255, 0.9);
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-  max-width: 146px;
+  max-width: 120px;
 }
 
 .xiaof-approve-btns {
   display: flex;
-  gap: 6px;
+  gap: 4px;
 }
 
 .xiaof-approve-btn {
   flex: 1;
-  padding: 4px 8px;
-  border-radius: 6px;
-  font-size: 10px;
+  padding: 3px 6px;
+  border-radius: 4px;
+  font-size: 9px;
   font-weight: 600;
   border: none;
   cursor: pointer;
@@ -228,7 +227,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 4px;
+  gap: 2px;
 }
 
 .xiaof-approve-btn.approve {

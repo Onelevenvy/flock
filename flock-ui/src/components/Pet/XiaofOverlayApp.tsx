@@ -19,6 +19,8 @@ interface PetSyncState {
   enabled: boolean;
   bubbleText: string | null;
   minimized: boolean;
+  pendingTool?: string | null;
+  pendingCallId?: string | null;
 }
 
 const MOOD_DOT_COLOR: Record<string, string> = {
@@ -50,6 +52,7 @@ export function XiaofOverlayApp() {
   const [showPopup, setShowPopup] = useState(false);
   const [pendingTool, setPendingTool] = useState<string | null>(null);
   const [pendingCallId, setPendingCallId] = useState<string | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [isDragging, setIsDragging] = useState(false);
   const bubbleTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const prevBubble = useRef<string | null>(null);
@@ -64,6 +67,15 @@ export function XiaofOverlayApp() {
         setPendingTool(null);
         setPendingCallId(null);
         setShowPopup(false);
+        setIsSubmitting(false);
+      } else {
+        if (evt.payload.pendingTool !== undefined) {
+          setPendingTool(evt.payload.pendingTool);
+        }
+        if (evt.payload.pendingCallId !== undefined) {
+          setPendingCallId(evt.payload.pendingCallId);
+        }
+        setIsSubmitting(false);
       }
     }).then((fn) => { unlisten = fn; });
     return () => { unlisten?.(); };
@@ -72,12 +84,23 @@ export function XiaofOverlayApp() {
   // Listen to pending approval events
   useEffect(() => {
     let unlisten: (() => void) | undefined;
-    listen<{ tool_name: string; call_id: string }>('xiaof-pending-approval', (evt) => {
-      setPendingTool(evt.payload.tool_name);
-      setPendingCallId(evt.payload.call_id);
+    listen<{ tool_name: string; call_id: string } | null>('xiaof-pending-approval', (evt) => {
+      if (evt.payload) {
+        setPendingTool(evt.payload.tool_name);
+        setPendingCallId(evt.payload.call_id);
+      } else {
+        setPendingTool(null);
+        setPendingCallId(null);
+      }
+      setIsSubmitting(false);
     }).then((fn) => { unlisten = fn; });
     return () => { unlisten?.(); };
   }, []);
+
+  // Auto-reset submitting state when pendingCallId changes
+  useEffect(() => {
+    setIsSubmitting(false);
+  }, [pendingCallId]);
 
   // Pull initial state from main window/backend on mount
   useEffect(() => {
@@ -161,20 +184,18 @@ export function XiaofOverlayApp() {
   }, [isDragging]);
 
   const handleApprove = useCallback(async () => {
-    if (!pendingCallId) return;
+    if (!pendingCallId || isSubmitting) return;
+    setIsSubmitting(true);
+    await emit('xiaof-approve-action', { callId: pendingCallId, action: 'approve' });
     await invoke('approve_tool', { callId: pendingCallId, scope: 'once' });
-    setPendingTool(null);
-    setPendingCallId(null);
-    setShowPopup(false);
-  }, [pendingCallId]);
+  }, [pendingCallId, isSubmitting]);
 
   const handleDeny = useCallback(async () => {
-    if (!pendingCallId) return;
+    if (!pendingCallId || isSubmitting) return;
+    setIsSubmitting(true);
+    await emit('xiaof-approve-action', { callId: pendingCallId, action: 'deny' });
     await invoke('deny_tool', { callId: pendingCallId, reason: 'Denied via XiaoF overlay' });
-    setPendingTool(null);
-    setPendingCallId(null);
-    setShowPopup(false);
-  }, [pendingCallId]);
+  }, [pendingCallId, isSubmitting]);
 
   const toggleMinimized = useCallback(() => {
     const nextMin = !state.minimized;
@@ -208,8 +229,8 @@ export function XiaofOverlayApp() {
   return (
     <div
       style={{
-        width: '100vw',
-        height: '100vh',
+        width: '100%',
+        height: '100%',
         background: 'transparent',
         display: 'flex',
         flexDirection: 'column',
@@ -224,7 +245,7 @@ export function XiaofOverlayApp() {
     >
       {/* Bubble (only when not minimized) */}
       {!state.minimized && showBubble && state.bubbleText && (
-        <div className="xiaof-bubble" style={{ marginBottom: 110 }}>
+        <div className="xiaof-bubble">
           {state.bubbleText}
         </div>
       )}
@@ -241,21 +262,23 @@ export function XiaofOverlayApp() {
           <div className="xiaof-approve-btns">
             <button
               className="xiaof-approve-btn approve"
+              disabled={isSubmitting}
               onClick={(e) => {
                 e.stopPropagation();
                 handleApprove();
               }}
             >
-              ✓ 批准
+              {isSubmitting ? '...' : '✓ 批准'}
             </button>
             <button
               className="xiaof-approve-btn deny"
+              disabled={isSubmitting}
               onClick={(e) => {
                 e.stopPropagation();
                 handleDeny();
               }}
             >
-              ✕ 拒绝
+              {isSubmitting ? '...' : '✕ 拒绝'}
             </button>
           </div>
         </div>

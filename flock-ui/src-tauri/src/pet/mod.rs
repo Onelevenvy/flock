@@ -16,7 +16,7 @@ pub fn setup_pet_overlay(app: &mut tauri::App) -> Result<(), Box<dyn std::error:
     };
 
     // Default size & position: bottom-right corner
-    let pet_w = 220u32;
+    let pet_w = 300u32;
     let pet_h = 320u32;
     let pet_x = (screen_w - pet_w - 24) as i32;
     let pet_y = (screen_h - pet_h - 24) as i32;

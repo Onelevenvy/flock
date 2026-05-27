@@ -14,9 +14,11 @@ export function XiaofSyncManager() {
   const { enabled, minimized, setMinimized } = usePetStore();
   const { mood, bubbleText, pendingCount } = useXiaofState();
   const pendingApprovals = useAgentStore((s) => s.pendingApprovals);
+  const removePendingApproval = useAgentStore((s) => s.removePendingApproval);
 
-  // 1. 实时同步基本状态 (mood, pendingCount, enabled, bubbleText, minimized)
+  // 1. 实时同步基本状态 (mood, pendingCount, enabled, bubbleText, minimized, pendingTool, pendingCallId)
   useEffect(() => {
+    const firstPending = pendingApprovals[0];
     invoke('sync_pet_state', {
       state: {
         mood,
@@ -24,9 +26,11 @@ export function XiaofSyncManager() {
         enabled,
         bubbleText,
         minimized,
+        pendingTool: firstPending ? firstPending.tool.name : null,
+        pendingCallId: firstPending ? firstPending.call_id : null,
       }
     }).catch((err) => console.error('[Pet Sync] Failed to sync pet state:', err));
-  }, [mood, pendingCount, enabled, bubbleText, minimized]);
+  }, [mood, pendingCount, enabled, bubbleText, minimized, pendingApprovals]);
 
   // 2. 实时同步待审批的任务信息
   useEffect(() => {
@@ -38,6 +42,10 @@ export function XiaofSyncManager() {
           call_id: firstPending.call_id,
         }
       }).catch((err) => console.error('[Pet Sync] Failed to sync pending approval:', err));
+    } else {
+      invoke('sync_pet_pending_approval', {
+        approval: null
+      }).catch((err) => console.error('[Pet Sync] Failed to clear pending approval:', err));
     }
   }, [pendingApprovals]);
 
@@ -54,6 +62,7 @@ export function XiaofSyncManager() {
   useEffect(() => {
     let unlisten: (() => void) | undefined;
     listen('xiaof-pull-state-request', () => {
+      const firstPending = pendingApprovals[0];
       invoke('sync_pet_state', {
         state: {
           mood,
@@ -61,11 +70,22 @@ export function XiaofSyncManager() {
           enabled,
           bubbleText,
           minimized,
+          pendingTool: firstPending ? firstPending.tool.name : null,
+          pendingCallId: firstPending ? firstPending.call_id : null,
         }
       }).catch((err) => console.error('[Pet Sync] Failed to sync pet state on pull request:', err));
     }).then((fn) => { unlisten = fn; });
     return () => { unlisten?.(); };
-  }, [mood, pendingCount, enabled, bubbleText, minimized]);
+  }, [mood, pendingCount, enabled, bubbleText, minimized, pendingApprovals]);
+
+  // 5. 监听来自桌宠的乐观操作事件，提前在主窗口移除该项以加速同步
+  useEffect(() => {
+    let unlisten: (() => void) | undefined;
+    listen<{ callId: string; action: 'approve' | 'deny' }>('xiaof-approve-action', (evt) => {
+      removePendingApproval(evt.payload.callId);
+    }).then((fn) => { unlisten = fn; });
+    return () => { unlisten?.(); };
+  }, [removePendingApproval]);
 
   return null;
 }
