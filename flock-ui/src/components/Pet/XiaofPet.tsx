@@ -36,24 +36,43 @@ export function XiaofPet() {
   const pendingApprovals = useAgentStore((s) => s.pendingApprovals);
   const removePendingApproval = useAgentStore((s) => s.removePendingApproval);
 
-  // ── Hover: tracked on the outermost container so popup doesn't break it ──
-  const [isHovered, setIsHovered] = useState(false);
-  const hoverLeaveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-
-  const handleRootMouseEnter = useCallback(() => {
-    if (hoverLeaveTimerRef.current) clearTimeout(hoverLeaveTimerRef.current);
-    setIsHovered(true);
-  }, []);
-
-  const handleRootMouseLeave = useCallback(() => {
-    // Small delay prevents flicker when moving between widget and popup
-    hoverLeaveTimerRef.current = setTimeout(() => setIsHovered(false), 80);
-  }, []);
-
+  const [showPopup, setShowPopup] = useState(false);
   const [isDragging, setIsDragging] = useState(false);
   const [showBubble, setShowBubble] = useState(false);
   const bubbleTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const prevBubbleRef = useRef<string | null>(null);
+
+  // Toggle popup on pet click (if we have pending approvals)
+  const handlePetClick = useCallback((e: React.MouseEvent) => {
+    if (isDragging) return;
+    // Don't toggle if double click (which is for minimizing) or clicked close button
+    if (e.detail === 2) return;
+    if ((e.target as HTMLElement).closest('.xiaof-close-btn')) return;
+    
+    if (pendingCount > 0) {
+      setShowPopup(prev => !prev);
+    }
+  }, [pendingCount, isDragging]);
+
+  // Automatically close popup if pendingCount becomes 0
+  useEffect(() => {
+    if (pendingCount === 0) {
+      setShowPopup(false);
+    }
+  }, [pendingCount]);
+
+  // Click outside to close popup
+  useEffect(() => {
+    if (!showPopup) return;
+    const handleOutsideClick = (e: MouseEvent) => {
+      const target = e.target as HTMLElement;
+      if (!target.closest('.xiaof-pet-root')) {
+        setShowPopup(false);
+      }
+    };
+    window.addEventListener('mousedown', handleOutsideClick);
+    return () => window.removeEventListener('mousedown', handleOutsideClick);
+  }, [showPopup]);
 
   // Compute position style (negative = offset from right/bottom)
   const getStyle = (): React.CSSProperties => {
@@ -147,36 +166,34 @@ export function XiaofPet() {
   if (!enabled) return null;
 
   const firstPending = pendingApprovals[0];
-  const showApprovePopup = isHovered && pendingCount > 0 && !isDragging;
-  const showActiveBubble = showBubble && !isHovered && !isDragging && bubbleText;
+  const showApprovePopup = showPopup && pendingCount > 0 && !isDragging;
+  const showActiveBubble = showBubble && !showPopup && !isDragging && bubbleText;
 
   const size = minimized ? 36 : 72;
 
   return (
-    // Outermost container: hover tracked here so popup is inside the hover zone
+    // Outermost container
     <div
       className="xiaof-pet-root"
       style={getStyle()}
-      onMouseEnter={handleRootMouseEnter}
-      onMouseLeave={handleRootMouseLeave}
       onMouseDown={onMouseDown}
     >
-      {/* Speech bubble (only when not hovering) */}
+      {/* Speech bubble (only when popup is not shown) */}
       {showActiveBubble && (
         <div className="xiaof-bubble">
           {bubbleText}
         </div>
       )}
 
-      {/* Quick approve popup — inside root so hover stays active */}
+      {/* Quick approve popup */}
       {showApprovePopup && firstPending && (
         <div className="xiaof-approve-popup">
           <div className="xiaof-approve-title">{t('pet.approval.title')}</div>
-          <div className="xiaof-approve-tool-name">
+          <div className="xiaof-approve-tool-name" title={firstPending.tool.name}>
             🔧 {firstPending.tool.name}
           </div>
           {pendingCount > 1 && (
-            <div style={{ fontSize: 10, color: 'rgba(255,255,255,0.4)', marginTop: -4 }}>
+            <div style={{ fontSize: 10, color: 'rgba(255,255,255,0.4)', marginTop: -2 }}>
               {t('pet.approval.more', { count: pendingCount - 1 })}
             </div>
           )}
@@ -203,6 +220,7 @@ export function XiaofPet() {
       <div
         className={`xiaof-widget mood-${mood} ${minimized ? 'minimized' : ''}`}
         onDoubleClick={() => setMinimized(!minimized)}
+        onClick={handlePetClick}
         style={{ cursor: isDragging ? 'grabbing' : 'grab' }}
       >
         {/* Pending badge */}
