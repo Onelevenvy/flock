@@ -8,6 +8,11 @@
   z-index: 9800;
   user-select: none;
   touch-action: none;
+  /* flex column: popup on top, widget at bottom */
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0;
 }
 
 .xiaof-pet-root * {
@@ -119,10 +124,7 @@
 
 /* ── Speech bubble ──────────────────────────────────────── */
 .xiaof-bubble {
-  position: absolute;
-  bottom: calc(100% + 14px);
-  left: 50%;
-  transform: translateX(-50%);
+  position: relative;
   background: rgba(15, 23, 42, 0.92);
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
@@ -137,10 +139,12 @@
   font-weight: 500;
   color: rgba(255,255,255,0.85);
   pointer-events: none;
-  animation: xiaof-bubble-in 0.25s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+  margin-bottom: 10px;
+  animation: xiaof-bubble-fade-in 0.25s cubic-bezier(0.34, 1.56, 0.64, 1) both;
   z-index: 9900;
 }
 
+/* Tail arrow pointing down toward the widget */
 .xiaof-bubble::after {
   content: '';
   position: absolute;
@@ -151,26 +155,17 @@
   height: 6px;
   background: rgba(15, 23, 42, 0.92);
   clip-path: polygon(0 0, 100% 0, 50% 100%);
-  border-bottom: 1px solid rgba(255,255,255,0.12);
 }
 
-@keyframes xiaof-bubble-in {
-  from {
-    opacity: 0;
-    transform: translateX(-50%) translateY(6px) scale(0.92);
-  }
-  to {
-    opacity: 1;
-    transform: translateX(-50%) translateY(0) scale(1);
-  }
+@keyframes xiaof-bubble-fade-in {
+  from { opacity: 0; transform: translateY(-4px) scale(0.95); }
+  to   { opacity: 1; transform: translateY(0) scale(1); }
 }
 
 /* ── Quick approve popup (on hover) ─────────────────────── */
 .xiaof-approve-popup {
-  position: absolute;
-  bottom: calc(100% + 14px);
-  left: 50%;
-  transform: translateX(-50%);
+  /* No longer absolute — flows above widget in the flex column */
+  position: relative;
   background: rgba(15, 23, 42, 0.95);
   backdrop-filter: blur(16px);
   -webkit-backdrop-filter: blur(16px);
@@ -181,7 +176,8 @@
   flex-direction: column;
   gap: 8px;
   min-width: 200px;
-  animation: xiaof-bubble-in 0.2s ease both;
+  margin-bottom: 10px;
+  animation: xiaof-bubble-fade-in 0.2s ease both;
   z-index: 9901;
   pointer-events: all;
 }

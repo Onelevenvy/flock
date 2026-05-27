@@ -36,13 +36,26 @@ export function XiaofPet() {
   const pendingApprovals = useAgentStore((s) => s.pendingApprovals);
   const removePendingApproval = useAgentStore((s) => s.removePendingApproval);
 
+  // ── Hover: tracked on the outermost container so popup doesn't break it ──
   const [isHovered, setIsHovered] = useState(false);
+  const hoverLeaveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const handleRootMouseEnter = useCallback(() => {
+    if (hoverLeaveTimerRef.current) clearTimeout(hoverLeaveTimerRef.current);
+    setIsHovered(true);
+  }, []);
+
+  const handleRootMouseLeave = useCallback(() => {
+    // Small delay prevents flicker when moving between widget and popup
+    hoverLeaveTimerRef.current = setTimeout(() => setIsHovered(false), 80);
+  }, []);
+
   const [isDragging, setIsDragging] = useState(false);
   const [showBubble, setShowBubble] = useState(false);
   const bubbleTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const prevBubbleRef = useRef<string | null>(null);
 
-  // Compute absolute position (negative = offset from right/bottom)
+  // Compute position style (negative = offset from right/bottom)
   const getStyle = (): React.CSSProperties => {
     if (position.x < 0 && position.y < 0) {
       return { right: Math.abs(position.x), bottom: Math.abs(position.y) };
@@ -73,16 +86,14 @@ export function XiaofPet() {
     };
   }, [bubbleText, bubbleEnabled]);
 
-  // ── Drag logic ────────────────────────────────────────────────────────────────
+  // ── Drag logic ─────────────────────────────────────────────────────────────
   const dragStartRef = useRef<{ mx: number; my: number; px: number; py: number } | null>(null);
-  const posRef = useRef(position);
-  posRef.current = position;
 
   const onMouseDown = useCallback((e: React.MouseEvent) => {
-    if ((e.target as HTMLElement).closest('.xiaof-approve-popup, .xiaof-close-btn')) return;
+    if ((e.target as HTMLElement).closest('.xiaof-approve-popup, .xiaof-close-btn, .xiaof-approve-btn')) return;
     e.preventDefault();
-    const el = (e.currentTarget as HTMLElement).getBoundingClientRect();
-    // Store drag start relative to the element's center
+    const widget = (e.currentTarget as HTMLElement).querySelector('.xiaof-widget') as HTMLElement | null;
+    const el = widget ? widget.getBoundingClientRect() : (e.currentTarget as HTMLElement).getBoundingClientRect();
     dragStartRef.current = {
       mx: e.clientX,
       my: e.clientY,
@@ -102,7 +113,6 @@ export function XiaofPet() {
       const newCy = dragStartRef.current.py + dy;
       const w = window.innerWidth;
       const h = window.innerHeight;
-      // Determine position relative to nearest corner for smart anchoring
       const fromRight = w - newCx;
       const fromBottom = h - newCy;
       setPosition({ x: -(fromRight - 50), y: -(fromBottom - 50) });
@@ -143,9 +153,13 @@ export function XiaofPet() {
   const size = minimized ? 36 : 72;
 
   return (
+    // Outermost container: hover tracked here so popup is inside the hover zone
     <div
       className="xiaof-pet-root"
       style={getStyle()}
+      onMouseEnter={handleRootMouseEnter}
+      onMouseLeave={handleRootMouseLeave}
+      onMouseDown={onMouseDown}
     >
       {/* Speech bubble (only when not hovering) */}
       {showActiveBubble && (
@@ -154,7 +168,7 @@ export function XiaofPet() {
         </div>
       )}
 
-      {/* Quick approve popup (shows on hover when pending) */}
+      {/* Quick approve popup — inside root so hover stays active */}
       {showApprovePopup && firstPending && (
         <div className="xiaof-approve-popup">
           <div className="xiaof-approve-title">{t('pet.approval.title')}</div>
@@ -167,10 +181,18 @@ export function XiaofPet() {
             </div>
           )}
           <div className="xiaof-approve-btns">
-            <button className="xiaof-approve-btn approve" onClick={handleApprove}>
+            <button
+              className="xiaof-approve-btn approve"
+              onMouseDown={(e) => e.stopPropagation()}
+              onClick={handleApprove}
+            >
               ✓ {t('pet.approval.approve')}
             </button>
-            <button className="xiaof-approve-btn deny" onClick={handleDeny}>
+            <button
+              className="xiaof-approve-btn deny"
+              onMouseDown={(e) => e.stopPropagation()}
+              onClick={handleDeny}
+            >
               ✕ {t('pet.approval.deny')}
             </button>
           </div>
@@ -180,19 +202,18 @@ export function XiaofPet() {
       {/* Main widget */}
       <div
         className={`xiaof-widget mood-${mood} ${minimized ? 'minimized' : ''}`}
-        onMouseDown={onMouseDown}
-        onMouseEnter={() => setIsHovered(true)}
-        onMouseLeave={() => setIsHovered(false)}
         onDoubleClick={() => setMinimized(!minimized)}
+        style={{ cursor: isDragging ? 'grabbing' : 'grab' }}
       >
         {/* Pending badge */}
         {pendingCount > 0 && (
           <div className="xiaof-badge">{pendingCount > 9 ? '9+' : pendingCount}</div>
         )}
 
-        {/* Close / minimize button */}
+        {/* Minimize button */}
         <button
           className="xiaof-close-btn"
+          onMouseDown={(e) => e.stopPropagation()}
           onClick={(e) => { e.stopPropagation(); setMinimized(!minimized); }}
           title={minimized ? t('pet.expand') : t('pet.minimize')}
         >
@@ -202,7 +223,7 @@ export function XiaofPet() {
         {/* Character */}
         <XiaofCharacter mood={mood} size={size} />
 
-        {/* Status label (only when not minimized) */}
+        {/* Status label */}
         {!minimized && (
           <div className="xiaof-status-label">
             <span

@@ -7,294 +7,399 @@ interface XiaofCharacterProps {
 }
 
 /**
- * XiaoF — pixel-art fox spirit, rendered in pure SVG.
- * All animation is driven by CSS classes referencing keyframes in xiaof.css.
+ * XiaoF — 赛博像素狐狸精，参考配色：暗海军蓝 + 青色/紫色发光纹路
+ * 全 SVG 实现，CSS 动画驱动
  */
 export function XiaofCharacter({ mood, size = 72 }: XiaofCharacterProps) {
-  // Mood → color palette
-  const palette = MOOD_PALETTE[mood];
-
-  // Body animation class
-  const bodyClass = `xiaof-body-${mood}`;
-  const tailClass = `xiaof-tail-${mood}`;
+  const p = PALETTE[mood];
 
   return (
     <svg
       width={size}
       height={size}
-      viewBox="0 0 64 64"
+      viewBox="0 0 80 80"
       fill="none"
       xmlns="http://www.w3.org/2000/svg"
       style={{ display: 'block', overflow: 'visible' }}
     >
+      <defs>
+        <filter id="glow-cyan" x="-50%" y="-50%" width="200%" height="200%">
+          <feGaussianBlur stdDeviation="2" result="blur" />
+          <feMerge><feMergeNode in="blur" /><feMergeNode in="SourceGraphic" /></feMerge>
+        </filter>
+        <filter id="glow-strong" x="-80%" y="-80%" width="260%" height="260%">
+          <feGaussianBlur stdDeviation="3.5" result="blur" />
+          <feMerge><feMergeNode in="blur" /><feMergeNode in="SourceGraphic" /></feMerge>
+        </filter>
+        <linearGradient id={`tail-grad-${mood}`} x1="0%" y1="0%" x2="100%" y2="100%">
+          <stop offset="0%" stopColor={p.tailBase} />
+          <stop offset="100%" stopColor={p.tailTip} />
+        </linearGradient>
+        <linearGradient id={`body-grad-${mood}`} x1="0%" y1="0%" x2="0%" y2="100%">
+          <stop offset="0%" stopColor={p.bodyTop} />
+          <stop offset="100%" stopColor={p.bodyBot} />
+        </linearGradient>
+      </defs>
+
       <style>{`
-        .xiaof-body-sleeping  { animation: xiaof-breathe 3s ease-in-out infinite; transform-origin: 50% 60%; }
-        .xiaof-body-waking    { animation: xiaof-wake-spin 1.2s linear infinite; transform-origin: 50% 50%; }
-        .xiaof-body-idle      { animation: xiaof-breathe 4s ease-in-out infinite; transform-origin: 50% 60%; }
-        .xiaof-body-thinking  { animation: xiaof-think-bob 1s ease-in-out infinite; }
-        .xiaof-body-working   { animation: xiaof-work-lean 0.4s ease-in-out infinite; transform-origin: 50% 70%; }
-        .xiaof-body-waiting   { animation: xiaof-wait-jump 0.7s cubic-bezier(0.36, 0.07, 0.19, 0.97) infinite; }
-        .xiaof-body-takeover  { animation: xiaof-takeover-pulse 1.2s ease-in-out infinite; }
-        .xiaof-body-error     { animation: xiaof-error-shake 0.5s ease infinite; }
-        .xiaof-tail-idle      { animation: xiaof-tail-sway 2s ease-in-out infinite; transform-origin: 48px 44px; }
-        .xiaof-tail-thinking  { animation: xiaof-tail-sway 0.8s ease-in-out infinite; transform-origin: 48px 44px; }
-        .xiaof-tail-working   { animation: xiaof-tail-sway 0.3s ease-in-out infinite; transform-origin: 48px 44px; }
-        .xiaof-tail-waiting   { animation: xiaof-tail-sway 0.5s ease-in-out infinite; transform-origin: 48px 44px; }
-        .xiaof-tail-sleeping  { animation: none; }
-        .xiaof-tail-waking    { animation: xiaof-tail-sway 0.6s ease-in-out infinite; transform-origin: 48px 44px; }
-        .xiaof-tail-takeover  { animation: xiaof-tail-sway 0.5s ease-in-out infinite; transform-origin: 48px 44px; }
-        .xiaof-tail-error     { animation: none; }
-        .xiaof-eye            { animation: xiaof-blink 4s ease-in-out infinite; transform-origin: center; }
+        /* Body animations per mood */
+        .xf-body-sleeping  { animation: xiaof-breathe 3.5s ease-in-out infinite; transform-origin: 40px 50px; }
+        .xf-body-waking    { animation: xiaof-think-bob 0.6s ease-in-out infinite; }
+        .xf-body-idle      { animation: xiaof-breathe 5s ease-in-out infinite; transform-origin: 40px 50px; }
+        .xf-body-thinking  { animation: xiaof-think-bob 1s ease-in-out infinite; }
+        .xf-body-working   { animation: xiaof-work-lean 0.35s ease-in-out infinite; transform-origin: 40px 60px; }
+        .xf-body-waiting   { animation: xiaof-wait-jump 0.65s cubic-bezier(0.36,0.07,0.19,0.97) infinite; }
+        .xf-body-takeover  { animation: xiaof-takeover-pulse 1.1s ease-in-out infinite; }
+        .xf-body-error     { animation: xiaof-error-shake 0.45s ease infinite; }
+
+        /* Tail animations */
+        .xf-tail-idle      { animation: xiaof-tail-sway 2.2s ease-in-out infinite; transform-origin: 54px 48px; }
+        .xf-tail-thinking  { animation: xiaof-tail-sway 0.9s ease-in-out infinite; transform-origin: 54px 48px; }
+        .xf-tail-working   { animation: xiaof-tail-sway 0.28s ease-in-out infinite; transform-origin: 54px 48px; }
+        .xf-tail-waiting   { animation: xiaof-tail-sway 0.5s ease-in-out infinite; transform-origin: 54px 48px; }
+        .xf-tail-sleeping  { animation: none; }
+        .xf-tail-waking    { animation: xiaof-tail-sway 0.7s ease-in-out infinite; transform-origin: 54px 48px; }
+        .xf-tail-takeover  { animation: xiaof-tail-sway 0.5s ease-in-out infinite; transform-origin: 54px 48px; }
+        .xf-tail-error     { animation: xiaof-error-shake 0.45s ease infinite; transform-origin: 54px 48px; }
+
+        /* Eye blink */
+        .xf-eye { animation: xiaof-blink 4.5s ease-in-out infinite; transform-origin: center; }
+        .xf-eye2 { animation: xiaof-blink 4.5s ease-in-out infinite 0.15s; transform-origin: center; }
+
+        /* Glow pulse on markings */
+        .xf-marking { animation: xiaof-marking-pulse 2s ease-in-out infinite; }
+        @keyframes xiaof-marking-pulse {
+          0%, 100% { opacity: 0.7; }
+          50%       { opacity: 1; filter: brightness(1.4); }
+        }
       `}</style>
 
-      {/* ── Tail ─────────────────────────────── */}
-      <g className={tailClass}>
-        <ellipse cx="48" cy="46" rx="10" ry="7" fill={palette.tail} />
-        <ellipse cx="50" cy="43" rx="5" ry="4" fill={palette.tailTip} opacity="0.9" />
-        {/* Pixel accent dots on tail */}
-        <rect x="46" y="44" width="2" height="2" fill={palette.accent} opacity="0.6" />
-        <rect x="50" y="42" width="2" height="2" fill={palette.accent} opacity="0.5" />
+      {/* ── TAIL ──────────────────────────────────────────────── */}
+      <g className={`xf-tail-${mood}`}>
+        {/* Tail base shape: large fluffy sweep curving to the right */}
+        <ellipse cx="58" cy="50" rx="14" ry="10" fill={`url(#tail-grad-${mood})`} />
+        <ellipse cx="62" cy="45" rx="9" ry="7" fill={p.tailTip} opacity="0.9" />
+        <ellipse cx="65" cy="41" rx="5" ry="4" fill={p.tailTip} />
+        {/* Tail tip glow stripe */}
+        <ellipse cx="66" cy="40" rx="3" ry="2.5" fill={p.accent} opacity="0.8" filter="url(#glow-cyan)" />
+        {/* Tail markings */}
+        <path d="M 54 52 Q 58 46 63 42" stroke={p.marking} strokeWidth="1.2" strokeLinecap="round" opacity="0.7" />
+        <path d="M 56 55 Q 61 49 65 44" stroke={p.marking} strokeWidth="0.8" strokeLinecap="round" opacity="0.5" />
       </g>
 
-      {/* ── Body ─────────────────────────────── */}
-      <g className={bodyClass}>
-        {/* Main body block (pixel-art rounded rectangle) */}
-        <rect x="18" y="26" width="28" height="24" rx="6" fill={palette.body} />
-        {/* Body shading */}
-        <rect x="18" y="26" width="28" height="8" rx="6" fill={palette.bodyTop} />
-        {/* Pixel belly patch */}
-        <rect x="24" y="34" width="16" height="10" rx="4" fill={palette.belly} opacity="0.7" />
-        {/* Accent stripe on body */}
-        <rect x="20" y="30" width="2" height="6" rx="1" fill={palette.accent} opacity="0.7" />
-        <rect x="42" y="30" width="2" height="6" rx="1" fill={palette.accent} opacity="0.7" />
+      {/* ── BODY GROUP ─────────────────────────────────────────── */}
+      <g className={`xf-body-${mood}`}>
 
-        {/* ── Ears ─── */}
+        {/* Body main — fox sitting upright */}
+        {/* Hindquarters / haunches */}
+        <ellipse cx="38" cy="60" rx="16" ry="12" fill={`url(#body-grad-${mood})`} />
+        {/* Lower legs */}
+        <rect x="24" y="65" width="8" height="10" rx="4" fill={p.bodyBot} />
+        <rect x="46" y="65" width="8" height="10" rx="4" fill={p.bodyBot} />
+        {/* Paw accent */}
+        <ellipse cx="28" cy="74" rx="4" ry="2" fill={p.accent} opacity="0.5" />
+        <ellipse cx="50" cy="74" rx="4" ry="2" fill={p.accent} opacity="0.5" />
+
+        {/* Chest / belly — lighter oval */}
+        <ellipse cx="38" cy="52" rx="10" ry="13" fill={p.chest} />
+
+        {/* Upper body */}
+        <rect x="26" y="38" width="24" height="22" rx="8" fill={`url(#body-grad-${mood})`} />
+
+        {/* Body circuit markings */}
+        <g className="xf-marking" filter="url(#glow-cyan)">
+          {/* Left shoulder rune */}
+          <path d="M 29 44 L 31 44 L 31 47 L 33 47" stroke={p.marking} strokeWidth="1.2" strokeLinecap="square" fill="none" opacity="0.8" />
+          {/* Right shoulder rune */}
+          <path d="M 47 44 L 45 44 L 45 47 L 43 47" stroke={p.marking} strokeWidth="1.2" strokeLinecap="square" fill="none" opacity="0.8" />
+          {/* Center diamond */}
+          <polygon points="38,47 41,50 38,53 35,50" stroke={p.marking} strokeWidth="1" fill="none" opacity="0.9" />
+        </g>
+
+        {/* ── EARS ── */}
         {mood === 'error' || mood === 'sleeping' ? (
-          /* Drooping ears for error/sleeping */
+          /* Drooping / flat ears */
           <>
-            <polygon points="20,26 14,34 22,32" fill={palette.body} />
-            <polygon points="20,26 14,34 21,31" fill={palette.earInner} opacity="0.8" />
-            <polygon points="44,26 50,34 42,32" fill={palette.body} />
-            <polygon points="44,26 50,34 43,31" fill={palette.earInner} opacity="0.8" />
+            <polygon points="28,38 20,44 30,42" fill={p.bodyTop} />
+            <polygon points="28,38 21,43 29,41" fill={p.earInner} opacity="0.8" />
+            <polygon points="48,38 56,44 46,42" fill={p.bodyTop} />
+            <polygon points="48,38 55,43 47,41" fill={p.earInner} opacity="0.8" />
           </>
         ) : (
-          /* Perky ears */
+          /* Tall pointed fox ears */
           <>
-            <polygon points="20,26 15,14 26,22" fill={palette.body} />
-            <polygon points="20,26 16,16 25,22" fill={palette.earInner} opacity="0.8" />
-            <polygon points="44,26 49,14 38,22" fill={palette.body} />
-            <polygon points="44,26 48,16 39,22" fill={palette.earInner} opacity="0.8" />
+            {/* Left ear */}
+            <polygon points="29,38 22,18 36,30" fill={p.bodyTop} />
+            <polygon points="29,38 23,20 35,30" fill={p.earInner} opacity="0.85" />
+            {/* Left ear tip glow */}
+            <circle cx="23" cy="20" r="2" fill={p.accent} opacity="0.6" filter="url(#glow-cyan)" />
+            {/* Right ear */}
+            <polygon points="47,38 54,18 40,30" fill={p.bodyTop} />
+            <polygon points="47,38 53,20 41,30" fill={p.earInner} opacity="0.85" />
+            {/* Right ear tip glow */}
+            <circle cx="53" cy="20" r="2" fill={p.accent} opacity="0.6" filter="url(#glow-cyan)" />
           </>
         )}
 
-        {/* ── Head ─── */}
-        <rect x="20" y="14" width="24" height="20" rx="8" fill={palette.head} />
-        {/* Head pixel highlight */}
-        <rect x="22" y="15" width="8" height="3" rx="1" fill="rgba(255,255,255,0.12)" />
+        {/* ── HEAD ── */}
+        <ellipse cx="38" cy="30" rx="14" ry="13" fill={`url(#body-grad-${mood})`} />
 
-        {/* ── Eyes ─── */}
-        <g className="xiaof-eye">
-          <rect x="25" y="20" width="5" height="5" rx="2" fill={palette.eye} />
-          {/* Eye glow */}
-          <rect x="26" y="21" width="2" height="2" rx="1" fill="rgba(255,255,255,0.8)" />
-        </g>
-        <g className="xiaof-eye" style={{ animationDelay: '0.1s' }}>
-          <rect x="34" y="20" width="5" height="5" rx="2" fill={palette.eye} />
-          <rect x="35" y="21" width="2" height="2" rx="1" fill="rgba(255,255,255,0.8)" />
+        {/* Head highlight */}
+        <ellipse cx="34" cy="23" rx="4" ry="2" fill="rgba(255,255,255,0.08)" />
+
+        {/* Head circuit mark — forehead */}
+        <g className="xf-marking" filter="url(#glow-cyan)">
+          {/* Forehead rune: spiral-like */}
+          <path d="M 35 25 Q 38 22 41 25 Q 38 28 35 25" stroke={p.marking} strokeWidth="1" fill="none" opacity="0.8" />
+          {/* Side dots */}
+          <circle cx="30" cy="29" r="1" fill={p.marking} opacity="0.7" />
+          <circle cx="46" cy="29" r="1" fill={p.marking} opacity="0.7" />
         </g>
 
-        {/* ── Mood-specific overlays ─── */}
-        {mood === 'thinking' && (
+        {/* ── EYES ── */}
+        {mood === 'error' ? (
+          /* X eyes for error */
           <>
-            {/* Spinning circles above head */}
-            <circle cx="32" cy="10" r="3" fill={palette.accent} opacity="0.9" />
-            <circle cx="38" cy="8" r="2" fill={palette.accent} opacity="0.6" />
-            <circle cx="26" cy="8" r="2" fill={palette.accent} opacity="0.6" />
+            <line x1="30" y1="28" x2="35" y2="33" stroke={p.accent} strokeWidth="2" strokeLinecap="round" />
+            <line x1="35" y1="28" x2="30" y2="33" stroke={p.accent} strokeWidth="2" strokeLinecap="round" />
+            <line x1="41" y1="28" x2="46" y2="33" stroke={p.accent} strokeWidth="2" strokeLinecap="round" />
+            <line x1="46" y1="28" x2="41" y2="33" stroke={p.accent} strokeWidth="2" strokeLinecap="round" />
           </>
+        ) : mood === 'sleeping' ? (
+          /* Closed arc eyes */
+          <>
+            <path d="M 30 31 Q 32.5 28 35 31" stroke={p.accent} strokeWidth="1.5" fill="none" strokeLinecap="round" />
+            <path d="M 41 31 Q 43.5 28 46 31" stroke={p.accent} strokeWidth="1.5" fill="none" strokeLinecap="round" />
+          </>
+        ) : (
+          /* Normal glowing cat-slit eyes */
+          <>
+            <g className="xf-eye" filter="url(#glow-strong)">
+              {/* Eye outer glow */}
+              <ellipse cx="32.5" cy="30.5" rx="4" ry="3.5" fill={p.eyeGlow} opacity="0.3" />
+              {/* Eye bg */}
+              <ellipse cx="32.5" cy="30.5" rx="3" ry="3" fill={p.eyeBg} />
+              {/* Vertical slit pupil */}
+              <ellipse cx="32.5" cy="30.5" rx="1" ry="2.5" fill={p.pupil} />
+              {/* Eye shine */}
+              <circle cx="31.5" cy="29" r="0.8" fill="rgba(255,255,255,0.9)" />
+            </g>
+            <g className="xf-eye2" filter="url(#glow-strong)">
+              <ellipse cx="43.5" cy="30.5" rx="4" ry="3.5" fill={p.eyeGlow} opacity="0.3" />
+              <ellipse cx="43.5" cy="30.5" rx="3" ry="3" fill={p.eyeBg} />
+              <ellipse cx="43.5" cy="30.5" rx="1" ry="2.5" fill={p.pupil} />
+              <circle cx="42.5" cy="29" r="0.8" fill="rgba(255,255,255,0.9)" />
+            </g>
+          </>
+        )}
+
+        {/* ── NOSE & MUZZLE ── */}
+        <ellipse cx="38" cy="36" rx="4" ry="2.5" fill={p.muzzle} opacity="0.5" />
+        <ellipse cx="38" cy="35.5" rx="1.5" ry="1" fill={p.accent} opacity="0.8" />
+        {/* Mouth */}
+        {mood === 'error' ? (
+          <path d="M 35 38 Q 38 36 41 38" stroke={p.accent} strokeWidth="1" fill="none" strokeLinecap="round" />
+        ) : (
+          <path d="M 35 38 Q 38 40 41 38" stroke={p.accent} strokeWidth="1" fill="none" strokeLinecap="round" />
+        )}
+
+        {/* ── MOOD OVERLAYS ── */}
+        {mood === 'thinking' && (
+          <g filter="url(#glow-strong)">
+            <text x="44" y="18" fontSize="8" fontWeight="bold" fill={p.accent} opacity="0.9">?</text>
+            <circle cx="38" cy="12" r="2.5" fill={p.accent} opacity="0.7" />
+            <circle cx="44" cy="9" r="1.5" fill={p.accent} opacity="0.5" />
+          </g>
         )}
 
         {mood === 'waiting' && (
-          <>
-            {/* Exclamation marks */}
-            <rect x="29" y="6" width="3" height="6" rx="1" fill="#f97316" />
-            <rect x="29" y="14" width="3" height="3" rx="1" fill="#f97316" />
-          </>
+          <g filter="url(#glow-strong)">
+            {/* Exclamation */}
+            <rect x="36" y="8" width="3" height="7" rx="1.5" fill="#f97316" />
+            <circle cx="37.5" cy="17" r="1.5" fill="#f97316" />
+          </g>
         )}
 
         {mood === 'working' && (
-          <>
-            {/* Speed lines */}
-            <rect x="10" y="28" width="6" height="2" rx="1" fill={palette.accent} opacity="0.5" />
-            <rect x="8" y="32" width="8" height="2" rx="1" fill={palette.accent} opacity="0.35" />
-            <rect x="10" y="36" width="6" height="2" rx="1" fill={palette.accent} opacity="0.25" />
-          </>
+          <g opacity="0.7" filter="url(#glow-cyan)">
+            {/* Speed lines left */}
+            <rect x="6" y="34" width="10" height="2" rx="1" fill={p.marking} />
+            <rect x="4" y="39" width="14" height="2" rx="1" fill={p.marking} opacity="0.6" />
+            <rect x="6" y="44" width="10" height="2" rx="1" fill={p.marking} opacity="0.4" />
+            {/* Tool icons (wrench shape) */}
+            <path d="M 60 30 L 66 24 M 63 27 L 65 25" stroke={p.accent} strokeWidth="1.5" strokeLinecap="round" />
+            <path d="M 62 34 L 68 28" stroke={p.accent} strokeWidth="1.5" strokeLinecap="round" />
+          </g>
         )}
 
         {mood === 'takeover' && (
-          <>
-            {/* Hand raised */}
-            <rect x="46" y="24" width="4" height="8" rx="2" fill={palette.body} />
-            <rect x="45" y="22" width="6" height="4" rx="2" fill={palette.body} />
-            <rect x="45" y="20" width="3" height="3" rx="1" fill={palette.accent} opacity="0.8" />
-            <rect x="49" y="21" width="3" height="3" rx="1" fill={palette.accent} opacity="0.7" />
-          </>
-        )}
-
-        {mood === 'sleeping' && (
-          <>
-            {/* Z Z Z */}
-            <text x="40" y="16" fontSize="6" fontWeight="bold" fill={palette.accent} opacity="0.8">z</text>
-            <text x="44" y="12" fontSize="8" fontWeight="bold" fill={palette.accent} opacity="0.6">z</text>
-            <text x="48" y="8" fontSize="10" fontWeight="bold" fill={palette.accent} opacity="0.4">z</text>
-          </>
+          /* Raised arm / paw */
+          <g>
+            <rect x="50" y="35" width="6" height="10" rx="3" fill={p.bodyTop} />
+            <ellipse cx="53" cy="34" rx="3.5" ry="3" fill={p.bodyTop} />
+            <circle cx="52" cy="32" r="1.2" fill={p.accent} filter="url(#glow-cyan)" />
+            <circle cx="55" cy="33" r="1" fill={p.accent} filter="url(#glow-cyan)" opacity="0.8" />
+          </g>
         )}
 
         {mood === 'waking' && (
-          <>
-            {/* Sparkles */}
-            <circle cx="16" cy="16" r="2" fill={palette.accent} />
-            <circle cx="48" cy="14" r="1.5" fill={palette.accent} opacity="0.8" />
-            <circle cx="20" cy="8" r="1.5" fill={palette.accent} opacity="0.6" />
-          </>
+          <g filter="url(#glow-strong)">
+            <circle cx="18" cy="20" r="2.5" fill={p.accent} opacity="0.8" />
+            <circle cx="58" cy="18" r="1.8" fill={p.accent} opacity="0.6" />
+            <circle cx="22" cy="12" r="1.5" fill={p.marking} opacity="0.7" />
+            <path d="M 55 12 L 57 10 L 59 12 L 57 14 Z" fill={p.marking} opacity="0.7" />
+          </g>
         )}
 
-        {mood === 'error' && (
-          <>
-            {/* X over eyes */}
-            <line x1="25" y1="20" x2="30" y2="25" stroke="#ef4444" strokeWidth="1.5" strokeLinecap="round" />
-            <line x1="30" y1="20" x2="25" y2="25" stroke="#ef4444" strokeWidth="1.5" strokeLinecap="round" />
-            <line x1="34" y1="20" x2="39" y2="25" stroke="#ef4444" strokeWidth="1.5" strokeLinecap="round" />
-            <line x1="39" y1="20" x2="34" y2="25" stroke="#ef4444" strokeWidth="1.5" strokeLinecap="round" />
-          </>
+        {mood === 'sleeping' && (
+          <g filter="url(#glow-cyan)">
+            <text x="50" y="26" fontSize="7" fontWeight="bold" fill={p.accent} opacity="0.7">z</text>
+            <text x="54" y="20" fontSize="9" fontWeight="bold" fill={p.accent} opacity="0.5">z</text>
+            <text x="58" y="14" fontSize="11" fontWeight="bold" fill={p.accent} opacity="0.35">z</text>
+          </g>
         )}
 
-        {/* ── Nose & mouth ─── */}
-        <rect x="30" y="26" width="4" height="3" rx="1.5" fill={palette.nose} />
-        {mood === 'error' ? (
-          <path d="M 28 31 Q 32 28 36 31" stroke={palette.nose} strokeWidth="1.2" fill="none" strokeLinecap="round" />
-        ) : mood === 'waiting' || mood === 'takeover' ? (
-          <path d="M 28 30 Q 32 34 36 30" stroke={palette.nose} strokeWidth="1.2" fill="none" strokeLinecap="round" />
-        ) : (
-          <path d="M 28 30 Q 32 33 36 30" stroke={palette.nose} strokeWidth="1.2" fill="none" strokeLinecap="round" />
+        {/* Stars for success/takeover */}
+        {(mood === 'takeover') && (
+          <g filter="url(#glow-strong)">
+            <path d="M 14 40 L 15.5 37 L 17 40 L 14 38 L 17 38 Z" fill={p.accent} />
+            <path d="M 10 32 L 11 30 L 12 32 L 10 31 L 12 31 Z" fill={p.marking} opacity="0.8" />
+          </g>
         )}
 
-        {/* ── Pixel legs ─── */}
-        <rect x="22" y="46" width="6" height="6" rx="2" fill={palette.body} />
-        <rect x="36" y="46" width="6" height="6" rx="2" fill={palette.body} />
       </g>
     </svg>
   );
 }
 
-// ── Mood palettes ──────────────────────────────────────────────────────────────
-interface MoodPalette {
-  body: string;
-  bodyTop: string;
-  belly: string;
-  head: string;
+// ── Palette definitions ────────────────────────────────────────────────────────
+interface FoxPalette {
+  bodyTop:  string;
+  bodyBot:  string;
+  chest:    string;
   earInner: string;
-  tail: string;
-  tailTip: string;
-  eye: string;
-  nose: string;
-  accent: string;
+  muzzle:   string;
+  tailBase: string;
+  tailTip:  string;
+  eyeBg:    string;
+  eyeGlow:  string;
+  pupil:    string;
+  accent:   string;   // main glow / circuit color
+  marking:  string;   // secondary circuit marks
 }
 
-const MOOD_PALETTE: Record<XiaofMood, MoodPalette> = {
+const PALETTE: Record<XiaofMood, FoxPalette> = {
+  // All moods use the dark navy + cyan base, only accent/glow changes
   sleeping: {
-    body:    '#2d3748',
-    bodyTop: '#374151',
-    belly:   '#4b5563',
-    head:    '#2d3748',
-    earInner:'#6b7280',
-    tail:    '#374151',
-    tailTip: '#6b7280',
-    eye:     '#6b7280',
-    nose:    '#9ca3af',
-    accent:  '#9ca3af',
+    bodyTop:  '#1a2744',
+    bodyBot:  '#0d1b2a',
+    chest:    '#1e2e48',
+    earInner: '#2a4060',
+    muzzle:   '#1e2e48',
+    tailBase: '#152035',
+    tailTip:  '#2a4060',
+    eyeBg:    '#1e2e48',
+    eyeGlow:  '#4b6080',
+    pupil:    '#6b8aaa',
+    accent:   '#4b7aa8',
+    marking:  '#3d6080',
   },
   waking: {
-    body:    '#3b2f7a',
-    bodyTop: '#4c3a9e',
-    belly:   '#6d4fd0',
-    head:    '#3b2f7a',
-    earInner:'#8b5cf6',
-    tail:    '#4c3a9e',
-    tailTip: '#a78bfa',
-    eye:     '#c4b5fd',
-    nose:    '#8b5cf6',
-    accent:  '#a78bfa',
+    bodyTop:  '#1a1e4a',
+    bodyBot:  '#0f1235',
+    chest:    '#1e2260',
+    earInner: '#2e3580',
+    muzzle:   '#1e2260',
+    tailBase: '#1a1e55',
+    tailTip:  '#4040c0',
+    eyeBg:    '#1e2260',
+    eyeGlow:  '#7c6fe0',
+    pupil:    '#a78bfa',
+    accent:   '#8b5cf6',
+    marking:  '#6d4fcc',
   },
   idle: {
-    body:    '#0e3d5e',
-    bodyTop: '#164e73',
-    belly:   '#0ea5e9',
-    head:    '#0e3d5e',
-    earInner:'#38bdf8',
-    tail:    '#0c4a6e',
-    tailTip: '#06b6d4',
-    eye:     '#7dd3fc',
-    nose:    '#0284c7',
-    accent:  '#06b6d4',
+    bodyTop:  '#0d2040',
+    bodyBot:  '#061528',
+    chest:    '#0f2a50',
+    earInner: '#1a3d6e',
+    muzzle:   '#0f2a50',
+    tailBase: '#0a2040',
+    tailTip:  '#06b6d4',
+    eyeBg:    '#0a2040',
+    eyeGlow:  '#06b6d4',
+    pupil:    '#22d3ee',
+    accent:   '#06b6d4',
+    marking:  '#0891b2',
   },
   thinking: {
-    body:    '#4a3000',
-    bodyTop: '#5c3d00',
-    belly:   '#d97706',
-    head:    '#4a3000',
-    earInner:'#f59e0b',
-    tail:    '#5c3d00',
-    tailTip: '#fbbf24',
-    eye:     '#fde68a',
-    nose:    '#b45309',
-    accent:  '#f59e0b',
+    bodyTop:  '#1a1500',
+    bodyBot:  '#100d00',
+    chest:    '#241d00',
+    earInner: '#3d3200',
+    muzzle:   '#241d00',
+    tailBase: '#1a1800',
+    tailTip:  '#d97706',
+    eyeBg:    '#1a1500',
+    eyeGlow:  '#f59e0b',
+    pupil:    '#fbbf24',
+    accent:   '#f59e0b',
+    marking:  '#d97706',
   },
   working: {
-    body:    '#064e3b',
-    bodyTop: '#065f46',
-    belly:   '#10b981',
-    head:    '#064e3b',
-    earInner:'#34d399',
-    tail:    '#065f46',
-    tailTip: '#6ee7b7',
-    eye:     '#a7f3d0',
-    nose:    '#059669',
-    accent:  '#10b981',
+    bodyTop:  '#002820',
+    bodyBot:  '#001810',
+    chest:    '#003828',
+    earInner: '#005c40',
+    muzzle:   '#003828',
+    tailBase: '#002820',
+    tailTip:  '#10b981',
+    eyeBg:    '#002820',
+    eyeGlow:  '#10b981',
+    pupil:    '#34d399',
+    accent:   '#10b981',
+    marking:  '#059669',
   },
   waiting: {
-    body:    '#431407',
-    bodyTop: '#7c2d12',
-    belly:   '#ea580c',
-    head:    '#431407',
-    earInner:'#f97316',
-    tail:    '#7c2d12',
-    tailTip: '#fb923c',
-    eye:     '#fed7aa',
-    nose:    '#c2410c',
-    accent:  '#f97316',
+    bodyTop:  '#1c0f00',
+    bodyBot:  '#100800',
+    chest:    '#2a1500',
+    earInner: '#4a2200',
+    muzzle:   '#2a1500',
+    tailBase: '#1c1000',
+    tailTip:  '#f97316',
+    eyeBg:    '#1c0f00',
+    eyeGlow:  '#f97316',
+    pupil:    '#fb923c',
+    accent:   '#f97316',
+    marking:  '#ea580c',
   },
   takeover: {
-    body:    '#500724',
-    bodyTop: '#831843',
-    belly:   '#db2777',
-    head:    '#500724',
-    earInner:'#ec4899',
-    tail:    '#831843',
-    tailTip: '#f9a8d4',
-    eye:     '#fbcfe8',
-    nose:    '#be185d',
-    accent:  '#ec4899',
+    bodyTop:  '#1e0030',
+    bodyBot:  '#120020',
+    chest:    '#2a0045',
+    earInner: '#480070',
+    muzzle:   '#2a0045',
+    tailBase: '#1e0030',
+    tailTip:  '#ec4899',
+    eyeBg:    '#1e0030',
+    eyeGlow:  '#ec4899',
+    pupil:    '#f472b6',
+    accent:   '#ec4899',
+    marking:  '#db2777',
   },
   error: {
-    body:    '#450a0a',
-    bodyTop: '#7f1d1d',
-    belly:   '#dc2626',
-    head:    '#450a0a',
-    earInner:'#ef4444',
-    tail:    '#7f1d1d',
-    tailTip: '#fca5a5',
-    eye:     '#fca5a5',
-    nose:    '#b91c1c',
-    accent:  '#ef4444',
+    bodyTop:  '#1e0000',
+    bodyBot:  '#120000',
+    chest:    '#2a0000',
+    earInner: '#480000',
+    muzzle:   '#2a0000',
+    tailBase: '#1e0000',
+    tailTip:  '#ef4444',
+    eyeBg:    '#1e0000',
+    eyeGlow:  '#ef4444',
+    pupil:    '#f87171',
+    accent:   '#ef4444',
+    marking:  '#dc2626',
   },
 };
