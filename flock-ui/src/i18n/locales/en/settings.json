@@ -102,7 +102,7 @@
     "snapshotName": "Snapshot Name",
     "snapshotActive": "Active",
     "snapshotTooltip": "Specify an existing Daytona Snapshot name (pre-installed with Playwright etc.). Future sandboxes will use this snapshot directly, no repeated installs needed. Leave empty to use Daytona's default image.",
-    "snapshotHint": "When using the Browser tool for the first time, the default Daytona image needs to install ~300MB of Playwright dependencies. Click the button below to create a pre-built snapshot once — future sandboxes will start in seconds.",
+    "snapshotHint": "When using the Browser tool for the first time, the default Daytona image needs to install ~300MB of Playwright dependencies. You can enter a new name above to create a pre-built snapshot, or choose an existing snapshot template from the list below (click the star icon to set as default and reuse it instantly, without recreating it).",
     "snapshotCreateBtn": "Initialize Playwright Snapshot (~3-5 min)",
     "snapshotCreating": "Creating snapshot, please wait...",
     "snapshotDone": "Snapshot Created",
@@ -132,6 +132,7 @@
     "deleteSuccessMsg": "Sandbox instance destroyed successfully",
     "deleteSnapshotSuccess": "Snapshot template deleted successfully",
     "saveDefaultSuccess": "Default snapshot template updated successfully",
+    "useExistingSnapshot": "Use Existing Snapshot",
     "createSnapshotTitle": "Create New Snapshot Template",
     "snapshots": "Cloud Snapshot Templates"
   }

@@ -102,7 +102,7 @@
     "snapshotName": "Snapshot 快照名称",
     "snapshotActive": "使用中",
     "snapshotTooltip": "指定一个已存在的 Daytona Snapshot 名称（预装了 Playwright 等工具），后续每次创建沙盒将直接使用此快照，无需重复安装依赖。留空则使用 Daytona 默认镜像。",
-    "snapshotHint": "首次使用浏览器工具时，Daytona 默认镜像需要安装约 300MB 的 Playwright 依赖。点击下方按钮可一次性创建预装好的镜像，以后每次启动沙盒都将秒级就绪。",
+    "snapshotHint": "首次使用浏览器工具时，Daytona 默认镜像需要安装约 300MB 的 Playwright 依赖。您可以在上方输入新名称以创建预装镜像，或者从下方已有模板列表中选择已有的快照模板（点击星星图标设为默认即可直接复用，无需重复创建）。",
     "snapshotCreateBtn": "初始化 Playwright 快照（约 3-5 分钟）",
     "snapshotCreating": "正在创建快照，请勿关闭...",
     "snapshotDone": "Snapshot 创建成功",
@@ -132,6 +132,7 @@
     "deleteSuccessMsg": "沙盒已销毁",
     "deleteSnapshotSuccess": "快照模板已删除",
     "saveDefaultSuccess": "默认快照模板已更新",
+    "useExistingSnapshot": "使用已有快照",
     "createSnapshotTitle": "创建新快照模板",
     "snapshots": "云端快照模板"
   }

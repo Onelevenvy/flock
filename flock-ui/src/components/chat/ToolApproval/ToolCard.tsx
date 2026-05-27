@@ -130,20 +130,30 @@ export function ToolCard({ chunk }: ToolCardProps) {
               <Text size="xs" c="dimmed" mb={2}>
                 {t('chat.output')} {chunk.result_status === 'error' && <Badge color="red" size="xs">Error</Badge>}
               </Text>
-              <ScrollArea.Autosize mah={450}>
-                <Code
-                  block
+              <Box
+                style={{
+                  maxHeight: 450,
+                  overflow: 'auto',
+                  background: 'var(--flock-bg-deepest)',
+                  borderRadius: 4,
+                  padding: '8px 12px',
+                }}
+              >
+                <Box
+                  component="pre"
                   style={{
+                    margin: 0,
+                    fontFamily: 'var(--mantine-font-family-monospace)',
                     fontSize: '11px',
-                    background: 'var(--flock-bg-deepest)',
                     color: chunk.result_status === 'error'
                       ? 'var(--mantine-color-red-4)'
                       : 'var(--flock-text-primary)',
+                    whiteSpace: 'pre',
                   }}
                 >
                   {chunk.result}
-                </Code>
-              </ScrollArea.Autosize>
+                </Box>
+              </Box>
             </Box>
           )}
         </Stack>

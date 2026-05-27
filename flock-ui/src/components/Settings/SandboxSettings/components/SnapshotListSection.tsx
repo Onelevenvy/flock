@@ -10,7 +10,7 @@ import {
   Card,
   Button,
   Box,
-  TextInput,
+  Autocomplete,
   Alert,
   Divider,
 } from '@mantine/core';
@@ -123,6 +123,12 @@ export function SnapshotListSection({
 
   const handleCreate = async () => {
     const name = newSnapshotName.trim() || defaultSnapshotName;
+    const existing = snapshots.find((s) => s.name === name);
+    if (existing) {
+      await onSetDefaultSnapshot(name);
+      setNewSnapshotName('');
+      return;
+    }
     await onCreateSnapshot(name);
     setNewSnapshotName('');
     fetchSnapshots();
@@ -141,6 +147,10 @@ export function SnapshotListSection({
       </Badge>
     );
   };
+
+  const isExistingSnapshot = snapshots.some(
+    (s) => s.name === (newSnapshotName.trim() || defaultSnapshotName)
+  );
 
   return (
     <Card
@@ -163,21 +173,26 @@ export function SnapshotListSection({
         </Group>
 
         <Group align="flex-end" mb="md">
-          <TextInput
+          <Autocomplete
             placeholder={defaultSnapshotName}
             value={newSnapshotName}
-            onChange={(e) => setNewSnapshotName(e.currentTarget.value)}
+            onChange={setNewSnapshotName}
+            data={snapshots.map((s) => s.name)}
             style={{ flex: 1 }}
             styles={{ input: { background: 'var(--flock-bg-surface)' } }}
           />
           <Button
             variant="filled"
-            color="blue"
+            color={isExistingSnapshot ? 'teal' : 'blue'}
             onClick={handleCreate}
             loading={creatingSnapshot}
-            leftSection={<IconCamera size={15} />}
+            leftSection={isExistingSnapshot ? <IconCheck size={15} /> : <IconCamera size={15} />}
           >
-            {creatingSnapshot ? t('settings.sandbox.snapshotCreating') : t('settings.sandbox.snapshotCreateBtn')}
+            {isExistingSnapshot
+              ? t('settings.sandbox.useExistingSnapshot')
+              : creatingSnapshot
+              ? t('settings.sandbox.snapshotCreating')
+              : t('settings.sandbox.snapshotCreateBtn')}
           </Button>
         </Group>
 
