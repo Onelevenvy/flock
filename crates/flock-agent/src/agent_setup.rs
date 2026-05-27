@@ -197,7 +197,7 @@ impl AgentBuilder {
             None => true,
             Some(ov) => match &ov.allowed_tool_providers {
                 None => true,
-                Some(v) => !v.is_empty(),
+                Some(v) => v.iter().any(|t| t == "ToolSearch"),
             },
         };
 

@@ -180,11 +180,15 @@ pub fn register_internal_tools(
     provider: Arc<dyn BaseChatModel>,
     cwd: &str,
 ) -> (Arc<AtomicBool>, bool) {
-    let should_register_meta = match assistant_overrides {
-        None => true,
+    let (should_spawn, should_plan, should_tool_search) = match assistant_overrides {
+        None => (true, config.plan.enabled, true),
         Some(ov) => match &ov.allowed_tool_providers {
-            None => true,
-            Some(v) => !v.is_empty(),
+            None => (true, config.plan.enabled, true),
+            Some(v) => (
+                v.iter().any(|t| t == "Spawn"),
+                config.plan.enabled && (v.iter().any(|t| t == "EnterPlanMode") || v.iter().any(|t| t == "ExitPlanMode")),
+                v.iter().any(|t| t == "ToolSearch"),
+            ),
         },
     };
 
@@ -204,24 +208,26 @@ pub fn register_internal_tools(
 
     let plan_active_flag = Arc::new(AtomicBool::new(false));
 
-    if should_register_meta {
+    if should_spawn {
         let spawner = Arc::new(crate::spawner::AgentSpawner::new(
-            provider,
+            provider.clone(),
             config.clone(),
         ));
         registry.register(Box::new(crate::tools::spawn::SpawnTool::new(spawner)));
+    }
 
-        if config.plan.enabled {
-            registry.register(Box::new(crate::tools::plan::EnterPlanModeTool::new(
-                Arc::clone(&plan_active_flag),
-            )));
-            registry.register(Box::new(crate::tools::plan::ExitPlanModeTool::new(
-                Arc::clone(&plan_active_flag),
-            )));
-        }
+    if should_plan {
+        registry.register(Box::new(crate::tools::plan::EnterPlanModeTool::new(
+            Arc::clone(&plan_active_flag),
+        )));
+        registry.register(Box::new(crate::tools::plan::ExitPlanModeTool::new(
+            Arc::clone(&plan_active_flag),
+        )));
+    }
 
+    if should_tool_search {
         registry.register(flock_tools::builtin::tool_search::ToolSearchTool::new());
     }
 
-    (plan_active_flag, should_register_meta)
+    (plan_active_flag, should_tool_search)
 }
