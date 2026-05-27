@@ -161,5 +161,6 @@
     "success": "成功",
     "failed": "失败",
     "toolExecuted": "工具 {{name}} 执行{{status}}"
-  }
+  },
+  "viewStepsPlayback": "查看步骤回放"
 }

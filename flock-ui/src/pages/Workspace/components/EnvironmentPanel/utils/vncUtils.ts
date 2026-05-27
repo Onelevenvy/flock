@@ -87,9 +87,9 @@ export function extractScreenshotsStructured(messages: any[]): ScreenshotInfo[] 
           y =
             typeof parsedArgs.y === 'number'
               ? parsedArgs.y
+              : parsedArgs.y
                 ? parseInt(parsedArgs.y)
-                : undefined
-              : undefined;
+                : undefined;
           text = parsedArgs.text || '';
           key = parsedArgs.key || parsedArgs.button || '';
         } catch {

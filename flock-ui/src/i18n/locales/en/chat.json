@@ -160,5 +160,6 @@
     "success": "Success",
     "failed": "Failed",
     "toolExecuted": "Tool {{name}} execution {{status}}"
-  }
+  },
+  "viewStepsPlayback": "View Steps Playback"
 }

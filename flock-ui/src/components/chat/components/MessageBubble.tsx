@@ -246,6 +246,7 @@ export function MessageBubble({ message }: MessageBubbleProps) {
                       }
                     }
 
+                    useUiStore.getState().setEnvironmentMode('computer');
                     useUiStore.getState().setPreviewFile({
                       path: '.flock/sandbox/screenshot.png',
                       content: '',
