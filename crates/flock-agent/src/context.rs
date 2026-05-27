@@ -27,6 +27,9 @@ pub struct SystemPromptCache {
     pub include_tool_guidance: bool,
     /// Whether to inject AGENTS.md in the system prompt.
     pub inject_agents_md: bool,
+    /// Whether to include the ToolSearch hint in tool guidance.
+    /// Set to false when ToolSearch is not registered for this agent.
+    pub include_tool_search_hint: bool,
 }
 
 impl SystemPromptCache {
@@ -38,6 +41,7 @@ impl SystemPromptCache {
             last_toon_enabled: false,
             include_tool_guidance: true,
             inject_agents_md: true,
+            include_tool_search_hint: true,
         }
     }
 
@@ -81,8 +85,12 @@ dependencies between them, make all independent calls in parallel. \
 However, if one call depends on a previous result, run them sequentially.
  - Prefer Edit over Write for modifying existing files — Edit sends only \
 the diff, which is easier to review.
- - Always Read a file before editing it.
- - Some tools are deferred — only their names are visible. Before calling \
+ - Always Read a file before editing it."
+}
+
+/// The deferred-tool hint is only appended when ToolSearch is actually registered.
+fn tool_search_hint() -> &'static str {
+    " - Some tools are deferred — only their names are visible. Before calling \
 a deferred tool, use ToolSearch to load its full schema first."
 }
 
@@ -137,10 +145,18 @@ pub fn build_system_prompt(
 
     // Section: tool guidance (session permanent)
     if cache.include_tool_guidance {
+        let has_hint = cache.include_tool_search_hint;
         let guidance = cache
             .sections
             .entry("tool_guidance")
-            .or_insert_with(|| tool_usage_guidance().to_string());
+            .or_insert_with(|| {
+                let base = tool_usage_guidance().to_string();
+                if has_hint {
+                    format!("{base}\n{}", tool_search_hint())
+                } else {
+                    base
+                }
+            });
         parts.push(guidance.clone());
     }
 

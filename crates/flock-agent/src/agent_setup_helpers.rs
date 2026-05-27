@@ -11,7 +11,14 @@ use langgraph_prebuilt::BaseChatModel;
 use super::agent_setup::AssistantOverrides;
 use super::sinks::OutputSink;
 
-/// Remove either local or sandbox tools based on sandbox configuration.
+/// Remove sandbox tools when sandbox is not configured.
+///
+/// When sandbox IS configured, both builtin and sandbox tools coexist.
+/// The assistant's `allowed_tool_providers` whitelist determines which
+/// set is actually exposed to the model for a given agent instance.
+/// We never remove builtin tools globally — a "plain" assistant that only
+/// lists builtin tool names in its allowlist should still find them even
+/// when the global sandbox is configured.
 pub async fn filter_sandbox_tools(config: &Config, registry: &mut ToolRegistry) {
     let is_sandbox_configured = if let Some(db) = &config.db_manager {
         flock_tools::daytona::get_sandbox_config(db).await.is_some()
@@ -19,12 +26,9 @@ pub async fn filter_sandbox_tools(config: &Config, registry: &mut ToolRegistry) 
         false
     };
 
-    if is_sandbox_configured {
-        registry.remove("Bash");
-        registry.remove("Read");
-        registry.remove("Write");
-        registry.remove("Edit");
-    } else {
+    if !is_sandbox_configured {
+        // Sandbox not configured — remove sandbox-only tools that require a
+        // live Daytona container to function.
         registry.remove("CodeExecution");
         registry.remove("Browser");
         registry.remove("ComputerUse");
@@ -32,7 +36,10 @@ pub async fn filter_sandbox_tools(config: &Config, registry: &mut ToolRegistry) 
         registry.remove("SandboxRead");
         registry.remove("SandboxWrite");
         registry.remove("SandboxEdit");
+        registry.remove("RequestHumanAssistance");
     }
+    // When sandbox IS configured we keep everything; the assistant allowlist
+    // (retain_by_providers) will narrow down the visible tool set per agent.
 }
 
 /// Connect to MCP servers and register their tools. Returns (managers, manager_option).
@@ -113,12 +120,17 @@ pub async fn load_and_filter_skills(
 }
 
 /// Build the effective system prompt, applying assistant overrides.
+///
+/// `has_tool_search` controls whether the ToolSearch deferred-tool hint is
+/// included in the tool guidance section. Pass `false` for assistants that
+/// do not have ToolSearch registered (e.g. pure-chat or narrow-tool assistants).
 pub fn build_effective_system_prompt(
     config: &mut Config,
     assistant_overrides: &Option<AssistantOverrides>,
     cwd: &str,
     skills: &[SkillMetadata],
     memory_dir: Option<&Path>,
+    has_tool_search: bool,
 ) {
     let assistant_prompt: Option<&str> = assistant_overrides
         .as_ref()
@@ -142,6 +154,7 @@ pub fn build_effective_system_prompt(
     let mut prompt_cache = crate::context::SystemPromptCache::new();
     prompt_cache.include_tool_guidance = include_tool_guidance;
     prompt_cache.inject_agents_md = assistant_overrides.is_none();
+    prompt_cache.include_tool_search_hint = has_tool_search;
     let system_prompt = crate::context::build_system_prompt(
         &mut prompt_cache,
         base_prompt,
@@ -157,6 +170,7 @@ pub fn build_effective_system_prompt(
 }
 
 /// Register internal meta-tools: skill, spawn, plan, tool_search.
+/// Returns `(plan_active_flag, has_tool_search)`.
 pub fn register_internal_tools(
     registry: &mut ToolRegistry,
     config: &Config,
@@ -165,7 +179,7 @@ pub fn register_internal_tools(
     skills: Vec<SkillMetadata>,
     provider: Arc<dyn BaseChatModel>,
     cwd: &str,
-) -> Arc<AtomicBool> {
+) -> (Arc<AtomicBool>, bool) {
     let should_register_meta = match assistant_overrides {
         None => true,
         Some(ov) => match &ov.allowed_tool_providers {
@@ -209,5 +223,5 @@ pub fn register_internal_tools(
         registry.register(flock_tools::builtin::tool_search::ToolSearchTool::new());
     }
 
-    plan_active_flag
+    (plan_active_flag, should_register_meta)
 }
