@@ -10,5 +10,11 @@
   "disclaimer": "{{name}} · {{workspace}} · AI may make mistakes, please double check important info",
   "startDialogHelp": "Select a workspace to start chatting",
   "approval": "Approval",
-  "runMode": "Run Mode"
+  "runMode": "Run Mode",
+  "agentConnectFailed": "Agent connection failed",
+  "retry": "Click to retry",
+  "setWorkspace": "Set Workspace",
+  "selectWorkspace": "Select Workspace",
+  "noWorkspace": "No workspace yet, please create one in the sidebar",
+  "xiaofDescription": "General AI assistant with all tools and skills"
 }

@@ -96,7 +96,7 @@ export function VariableTextInput({ currentNodeId, onChange, value, ...props }: 
           onKeyUp={handleKeyUp}
           rightSection={
             variables.length > 0 && (
-              <Tooltip label={t('workflow.properties.insertVar', { defaultValue: '插入前序变量 (输入 /)' })} position="top">
+              <Tooltip label={t('workflow.properties.insertVar')} position="top">
                 <ActionIcon
                   size="sm"
                   variant="subtle"
@@ -116,7 +116,7 @@ export function VariableTextInput({ currentNodeId, onChange, value, ...props }: 
       </Popover.Target>
       <Popover.Dropdown p="xs" style={{ background: 'var(--flock-bg-surface)', border: '1px solid var(--flock-border-subtle)', minWidth: 220, maxHeight: 250, overflowY: 'auto' }}>
         <Text size="xs" fw={600} mb="xs" c="dimmed">
-          {t('workflow.properties.availableVars', { defaultValue: '选择前序节点输出参数' })}
+          {t('workflow.properties.availableVars')}
         </Text>
         <Stack gap={6}>
           {Object.entries(groupedVars).map(([nodeName, vars]) => (
@@ -242,7 +242,7 @@ export function VariableTextarea({ currentNodeId, onChange, value, ...props }: V
           />
           {variables.length > 0 && (
             <div style={{ position: 'absolute', right: 8, top: 4, zIndex: 2 }}>
-              <Tooltip label={t('workflow.properties.insertVar', { defaultValue: '插入前序变量 (输入 /)' })} position="top">
+              <Tooltip label={t('workflow.properties.insertVar')} position="top">
                 <ActionIcon
                   size="sm"
                   variant="subtle"
@@ -262,7 +262,7 @@ export function VariableTextarea({ currentNodeId, onChange, value, ...props }: V
       </Popover.Target>
       <Popover.Dropdown p="xs" style={{ background: 'var(--flock-bg-surface)', border: '1px solid var(--flock-border-subtle)', minWidth: 220, maxHeight: 250, overflowY: 'auto' }}>
         <Text size="xs" fw={600} mb="xs" c="dimmed">
-          {t('workflow.properties.availableVars', { defaultValue: '选择前序节点输出参数' })}
+          {t('workflow.properties.availableVars')}
         </Text>
         <Stack gap={6}>
           {Object.entries(groupedVars).map(([nodeName, vars]) => (

@@ -156,7 +156,7 @@ export function FileTreeItem({
               </ActionIcon>
             </Tooltip>
           )}
-          <Tooltip label={t('chat.workspace.delete', '删除')} withArrow position="left">
+          <Tooltip label={t('chat.workspace.delete')} withArrow position="left">
             <ActionIcon
               size={16}
               variant="transparent"

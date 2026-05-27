@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Popover, UnstyledButton, Text, Stack } from '@mantine/core';
 import { IconFolder, IconChevronDown, IconCheck } from '@tabler/icons-react';
+import { useTranslation } from 'react-i18next';
 import { useWorkspaceStore } from '../../store/workspaceStore';
 import { useWorkspacesQuery } from '../../hooks/useWorkspaces';
 
@@ -9,6 +10,7 @@ export function WorkspacePicker({
 }: {
   onSelect: (wsId: string, wsPath: string, wsName: string) => void;
 }) {
+  const { t } = useTranslation();
   const { activeWorkspaceId } = useWorkspaceStore();
   const { data: workspaces = [] } = useWorkspacesQuery();
   const [opened, setOpened] = useState(false);
@@ -34,15 +36,15 @@ export function WorkspacePicker({
         >
           <IconFolder size={14} style={{ flexShrink: 0 }} />
           <Text size="xs" style={{ maxWidth: 140, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-            {activeWs ? activeWs.name : '设置工作区'}
+            {activeWs ? activeWs.name : t('home.setWorkspace')}
           </Text>
           <IconChevronDown size={12} style={{ opacity: 0.5, flexShrink: 0 }} />
         </UnstyledButton>
       </Popover.Target>
       <Popover.Dropdown style={{ background: 'var(--flock-bg-raised)', border: '1px solid var(--flock-border-dim)', padding: 8, minWidth: 200 }}>
-        <Text size="xs" c="dimmed" mb={6} px={4} fw={500}>选择工作区</Text>
+        <Text size="xs" c="dimmed" mb={6} px={4} fw={500}>{t('home.selectWorkspace')}</Text>
         {workspaces.length === 0 ? (
-          <Text size="xs" c="dimmed" px={4} py={4}>暂无工作区，请在侧边栏创建</Text>
+          <Text size="xs" c="dimmed" px={4} py={4}>{t('home.noWorkspace')}</Text>
         ) : (
           <Stack gap={2}>
             {workspaces.map(ws => (

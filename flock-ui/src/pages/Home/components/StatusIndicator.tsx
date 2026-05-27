@@ -27,7 +27,7 @@ export function StatusIndicator({
       {status === 'error' && (
         <Group gap={6} mt={12}>
           <Text size="xs" color="red" style={{ opacity: 0.8 }}>
-            Agent 连接失败
+            {t('home.agentConnectFailed')}
           </Text>
           <button
             style={{
@@ -41,7 +41,7 @@ export function StatusIndicator({
             }}
             onClick={onRetry}
           >
-            点击重试
+            {t('home.retry')}
           </button>
         </Group>
       )}

@@ -24,7 +24,7 @@ import { v4 as uuidv4 } from 'uuid';
 import { ActiveModelPicker } from '../Common/ActiveModelPicker';
 
 const MODE_OPTIONS = [
-  { value: 'default', labelKey: 'chat.mode.default', labelDefault: '审批模式', icon: IconShieldCheck, color: 'blue' },
+  { value: 'default', labelKey: 'chat.mode.default', labelDefault: 'Approval Mode', icon: IconShieldCheck, color: 'blue' },
   { value: 'auto_edit', labelKey: 'chat.mode.autoEdit', labelDefault: 'AutoEdit', icon: IconBolt, color: 'teal' },
   { value: 'yolo', labelKey: 'chat.mode.yolo', labelDefault: 'YOLO', icon: IconFlame, color: 'red' },
 ];

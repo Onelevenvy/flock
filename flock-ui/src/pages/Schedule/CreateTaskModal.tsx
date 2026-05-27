@@ -28,7 +28,7 @@ import {
   IconCode,
 } from '@tabler/icons-react';
 import { useTranslation } from 'react-i18next';
-import { useCronForm, WEEKDAY_OPTIONS, type SchedulePreset } from '../../hooks/useCronForm';
+import { useCronForm, getWeekdayOptions, type SchedulePreset } from '../../hooks/useCronForm';
 import type { CronJob } from './types';
 
 interface CreateTaskModalProps {
@@ -257,7 +257,7 @@ export function CreateTaskModal({ opened, onClose, onSuccess, jobToEdit }: Creat
                 label={t('schedule.weeklyDay')}
                 value={form.weeklyDay}
                 onChange={v => form.setWeeklyDay(v || '1')}
-                data={WEEKDAY_OPTIONS}
+                data={getWeekdayOptions()}
                 styles={inputStyle}
               />
               <TextInput

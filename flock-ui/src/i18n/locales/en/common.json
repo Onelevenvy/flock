@@ -1,8 +1,8 @@
 {
   "loading": "Loading...",
   "error": "Error",
-  "success": "Saved successfully",
-  "failed": "Save failed",
+  "success": "Success",
+  "failed": "Failed",
   "confirm": "Confirm",
   "cancel": "Cancel",
   "create": "Create",
@@ -33,6 +33,16 @@
     "writeFailed": "Failed to write file",
     "timeout": "Request timed out, please check your network",
     "connRefused": "Failed to connect to service, please check service status",
-    "unauthorized": "Authentication failed, invalid credentials or API key"
+    "unauthorized": "Authentication failed, invalid credentials or API key",
+    "errorBoundaryTitle": "An Error Occurred",
+    "errorBoundaryDesc": "The application crashed during rendering. This may be caused by a Tauri bridge failure or state initialization error.",
+    "retryLoad": "Retry Loading"
+  },
+  "switchToLight": "Switch to Light Mode",
+  "switchToDark": "Switch to Dark Mode",
+  "model": {
+    "configureFirst": "Please configure API Key and enable a model in Settings",
+    "notConfigured": "No model configured",
+    "selectModel": "Select Model"
   }
 }

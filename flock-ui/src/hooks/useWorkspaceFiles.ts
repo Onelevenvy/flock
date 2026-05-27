@@ -143,7 +143,7 @@ export function useWorkspaceFiles(workspaceId: string | null) {
           relativePath,
         });
         notifications.show({
-          title: t('chat.workspace.delete', '删除') + t('common.success'),
+          title: t('chat.workspace.delete') + t('common.success'),
           message: t('chat.workspace.deleteSuccess', { name }),
           color: 'teal',
         });

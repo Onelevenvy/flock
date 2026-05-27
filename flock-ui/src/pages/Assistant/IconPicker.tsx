@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Box, Text, Avatar, Popover } from '@mantine/core';
 import { IconCheck } from '@tabler/icons-react';
+import { useTranslation } from 'react-i18next';
 
 export const ICON_OPTIONS = [
   '🤖', '💻', '✍️', '📊', '🔍', '🎨', '📚', '🧠', '⚡', '🌐',
@@ -15,6 +16,7 @@ export function IconPicker({
   value: string;
   onChange: (v: string) => void;
 }) {
+  const { t } = useTranslation();
   const [opened, setOpened] = useState(false);
   return (
     <Popover
@@ -51,7 +53,7 @@ export function IconPicker({
           maxWidth: 280,
         }}
       >
-        <Text size="xs" c="dimmed" mb={8} fw={500}>选择头像</Text>
+        <Text size="xs" c="dimmed" mb={8} fw={500}>{t('assistant.form.selectIcon')}</Text>
         <Box
           style={{
             display: 'grid',

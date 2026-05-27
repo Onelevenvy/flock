@@ -109,7 +109,7 @@ export default function XiaofSettings() {
         notifications.show({
           id: 'xiaof-autosave-compact',
           title: t('common.success'),
-          message: t('settings.xiaof.autoSaveCompactSuccess', { defaultValue: '压缩配置已自动保存' }),
+          message: t('settings.xiaof.autoSaveCompactSuccess'),
           color: 'teal',
           icon: <IconCheck size={16} />,
           autoClose: 2000,

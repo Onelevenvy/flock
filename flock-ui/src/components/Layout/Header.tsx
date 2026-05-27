@@ -84,7 +84,7 @@ export function Header() {
           </ActionIcon>
         </Tooltip>
 
-        <Tooltip label={t('header.toggleFileTree', { defaultValue: '显示/隐藏工作空间文件树' })} withArrow>
+        <Tooltip label={t('header.toggleFileTree')} withArrow>
           <ActionIcon
             variant="subtle"
             color={isFileTreeOpen ? 'blue' : 'gray'}
@@ -95,7 +95,7 @@ export function Header() {
           </ActionIcon>
         </Tooltip>
 
-        <Tooltip label={t('header.toggleEnvironment', { defaultValue: '显示/隐藏预览面板' })} withArrow>
+        <Tooltip label={t('header.toggleEnvironment')} withArrow>
           <ActionIcon
             variant="subtle"
             color={isEnvironmentOpen ? 'blue' : 'gray'}

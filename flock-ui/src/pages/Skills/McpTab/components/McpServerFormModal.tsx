@@ -118,7 +118,7 @@ export function McpServerFormModal({
       <Stack gap="md">
         <TextInput
           label={t('skills.mcp.serverName')}
-          placeholder="例如: filesystem, github"
+          placeholder={t('skills.mcp.serverNamePlaceholder')}
           value={name}
           onChange={(e) => setName(e.currentTarget.value)}
           required
@@ -132,7 +132,7 @@ export function McpServerFormModal({
           data={[
             { value: 'streamable-http', label: 'Streamable HTTP' },
             { value: 'sse', label: 'SSE (Server-Sent Events)' },
-            { value: 'stdio', label: 'Stdio (本地进程)' },
+            { value: 'stdio', label: t('skills.mcp.stdioLabel') },
           ]}
         />
 
@@ -140,7 +140,7 @@ export function McpServerFormModal({
           <>
             <TextInput
               label={t('skills.mcp.command')}
-              placeholder="例如: npx, node, python"
+              placeholder={t('skills.mcp.commandPlaceholder')}
               value={command}
               onChange={(e) => setCommand(e.currentTarget.value)}
               description={t('skills.mcp.commandDesc')}
@@ -148,14 +148,14 @@ export function McpServerFormModal({
             />
             <TextInput
               label={t('skills.mcp.args')}
-              placeholder='例如: ["-y", "@modelcontextprotocol/server-filesystem", "/path"]'
+              placeholder={t('skills.mcp.argsPlaceholder')}
               value={args}
               onChange={(e) => setArgs(e.currentTarget.value)}
               description={t('skills.mcp.argsDesc')}
             />
             <TextInput
               label={t('skills.mcp.env')}
-              placeholder='例如: {"API_KEY": "xxx"}'
+              placeholder={t('skills.mcp.envPlaceholder')}
               value={env}
               onChange={(e) => setEnv(e.currentTarget.value)}
               description={t('skills.mcp.envDesc')}
@@ -165,7 +165,7 @@ export function McpServerFormModal({
           <>
             <TextInput
               label="URL"
-              placeholder="例如: http://localhost:3000/mcp"
+              placeholder={t('skills.mcp.urlPlaceholder')}
               value={url}
               onChange={(e) => setUrl(e.currentTarget.value)}
               description={t('skills.mcp.urlDesc')}
@@ -173,7 +173,7 @@ export function McpServerFormModal({
             />
             <TextInput
               label={t('skills.mcp.headers')}
-              placeholder='例如: {"Authorization": "Bearer xxx"}'
+              placeholder={t('skills.mcp.headersPlaceholder')}
               value={headers}
               onChange={(e) => setHeaders(e.currentTarget.value)}
               description={t('skills.mcp.headersDesc')}

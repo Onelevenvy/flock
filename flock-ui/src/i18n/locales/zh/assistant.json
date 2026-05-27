@@ -50,6 +50,13 @@
     "removeAllTools": "取消全部",
     "addedCount": "已选择 {{count}} 项",
     "addedTag": "已添加",
-    "confirm": "确定"
+    "confirm": "确定",
+    "toolUnauthorizedTitle": "工具未授权",
+    "toolUnauthorizedMsg": "请先在「插件管理」页面配置并成功连通该工具的 API 凭证，方可添加使用。",
+    "batchToolUnauthorizedTitle": "部分工具未授权",
+    "batchToolUnauthorizedMsg": "已为您自动过滤未授权的工具。请先在「插件管理」页面配置它们的 API 凭证。",
+    "unauthorizedTag": "未授权",
+    "deleteSuccess": "模型已移除",
+    "selectIcon": "选择头像"
   }
 }

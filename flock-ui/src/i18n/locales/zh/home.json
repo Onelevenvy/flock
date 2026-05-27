@@ -10,5 +10,11 @@
   "disclaimer": "{{name}} · {{workspace}} · AI 可能产生错误，请注意核实重要信息",
   "startDialogHelp": "选择工作区后开始对话",
   "approval": "审批",
-  "runMode": "运行模式"
+  "runMode": "运行模式",
+  "agentConnectFailed": "Agent 连接失败",
+  "retry": "点击重试",
+  "setWorkspace": "设置工作区",
+  "selectWorkspace": "选择工作区",
+  "noWorkspace": "暂无工作区，请在侧边栏创建",
+  "xiaofDescription": "通用 AI 助手，拥有所有工具 and 技能"
 }

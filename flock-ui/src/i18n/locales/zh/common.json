@@ -1,8 +1,8 @@
 {
   "loading": "加载中...",
   "error": "错误",
-  "success": "保存成功",
-  "failed": "保存失败",
+  "success": "成功",
+  "failed": "失败",
   "confirm": "确定",
   "cancel": "取消",
   "create": "创建",
@@ -33,6 +33,16 @@
     "writeFailed": "写入文件失败",
     "timeout": "连接或请求超时，请检查网络",
     "connRefused": "服务连接失败，请检查服务状态",
-    "unauthorized": "鉴权失败，请检查凭据或 API Key"
+    "unauthorized": "鉴权失败，请检查凭据或 API Key",
+    "errorBoundaryTitle": "应用发生了错误",
+    "errorBoundaryDesc": "程序在渲染过程中崩溃了，这可能是由于 Tauri 桥接失败或状态初始化错误引起的。",
+    "retryLoad": "重试加载"
+  },
+  "switchToLight": "切换浅色模式",
+  "switchToDark": "切换深色模式",
+  "model": {
+    "configureFirst": "请在设置中配置 API Key 并启用模型",
+    "notConfigured": "未配置模型",
+    "selectModel": "选择模型"
   }
 }

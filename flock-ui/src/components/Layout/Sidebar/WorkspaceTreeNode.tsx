@@ -80,7 +80,7 @@ export function WorkspaceTreeNode({
             </Menu.Target>
             <Menu.Dropdown>
               <Menu.Item leftSection={<IconTrash size={14} />} color="red" onClick={() => onDeleteWorkspace(ws.id)}>
-                {t('sidebar.deleteWorkspace', { defaultValue: '删除工作空间' })}
+                {t('sidebar.deleteWorkspace')}
               </Menu.Item>
             </Menu.Dropdown>
           </Menu>

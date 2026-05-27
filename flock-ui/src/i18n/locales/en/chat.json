@@ -95,7 +95,8 @@
     "refreshFailed": "Refresh failed",
     "refreshTooltip": "Refresh Content",
     "downloadTooltip": "Download this file",
-    "delete": "Delete"
+    "delete": "Delete",
+    "noResults": "No matching results found"
   },
   "takeover": {
     "title": "Your Action Required",
@@ -126,12 +127,36 @@
     "establishingConnection": "Establishing secure connection, remote screen will appear shortly...",
     "deployingDaytona": "Requesting and deploying Daytona sandbox environment...",
     "failedToLoadImage": "Failed to load image",
-    "noImageAvailable": "No image path available"
+    "noImageAvailable": "No image path available",
+    "inputLabel": "Input: \"{{text}}\"",
+    "offlineReplay": "Offline History",
+    "offlineReplayTotal": "Replay total {{total}} steps"
+  },
+  "console": {
+    "executing": "Executing command...",
+    "cancelled": "Command cancelled.",
+    "denied": "Command execution denied.",
+    "sandboxPrompt": "flock-sandbox:/workspace$ "
+  },
+  "markdown": {
+    "expandAll": "Expand all ({{count}} lines)",
+    "collapse": "Collapse",
+    "screenshotFolded": "Screenshot binary data folded",
+    "base64Folded": "Long binary/Base64 data auto-folded",
+    "charCount": "{{count}} chars",
+    "stepSnapshot": "Step Snapshot",
+    "stepSnapshotLabel": "STEP SNAPSHOT",
+    "webScreenshot": "Web Screenshot"
   },
   "sandboxLogs": "Sandbox Execution Logs ({{count}} steps)",
   "showOutput": "Expand Output",
   "hideOutput": "Collapse Output",
   "sandboxLogsSuccess": "All sandbox operations completed",
   "sandboxLogsRunning": "Executing sandbox operations",
-  "sandboxLogsError": "Sandbox operations failed"
+  "sandboxLogsError": "Sandbox operations failed",
+  "infoGroup": {
+    "success": "Success",
+    "failed": "Failed",
+    "toolExecuted": "Tool {{name}} execution {{status}}"
+  }
 }

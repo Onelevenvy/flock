@@ -94,7 +94,7 @@ export function SandboxListSection() {
   const handleCopyId = (id: string) => {
     navigator.clipboard.writeText(id);
     notifications.show({
-      message: t('common.copied', { defaultValue: '已复制到剪贴板' }),
+      message: t('common.copied'),
       color: 'teal',
       autoClose: 1500,
     });
@@ -106,7 +106,7 @@ export function SandboxListSection() {
       await invoke('delete_daytona_sandbox', { id });
       notifications.show({
         title: t('common.success'),
-        message: t('settings.sandbox.deleteSuccessMsg', { defaultValue: '沙盒已销毁' }),
+        message: t('settings.sandbox.deleteSuccessMsg'),
         color: 'teal',
         icon: <IconCheck size={18} />,
       });
@@ -150,7 +150,7 @@ export function SandboxListSection() {
         <Group gap="xs">
           <IconCpu size={20} color="var(--flock-accent)" />
           <Text fw={700} size="md">
-            {t('settings.sandbox.activeInstances', { defaultValue: '运行中的沙盒实例' })}
+            {t('settings.sandbox.activeInstances')}
           </Text>
         </Group>
         <Group gap="xs">
@@ -162,7 +162,7 @@ export function SandboxListSection() {
             onClick={handleCleanup}
             loading={cleaningUp}
           >
-            {t('settings.sandbox.cleanupBtn', { defaultValue: '清理所有历史沙盒' })}
+            {t('settings.sandbox.cleanupBtn')}
           </Button>
           <Button
             variant="subtle"
@@ -172,7 +172,7 @@ export function SandboxListSection() {
             disabled={loading}
             size="xs"
           >
-            {t('common.refresh', { defaultValue: '刷新' })}
+            {t('common.refresh')}
           </Button>
         </Group>
       </Group>
@@ -191,7 +191,7 @@ export function SandboxListSection() {
           }}
         >
           <Text c="dimmed" size="sm">
-            {t('settings.sandbox.noActiveInstances', { defaultValue: '暂无活跃中的沙盒实例' })}
+            {t('settings.sandbox.noActiveInstances')}
           </Text>
         </Box>
       ) : (
@@ -199,9 +199,9 @@ export function SandboxListSection() {
           <Table.Thead>
             <Table.Tr style={{ borderColor: 'var(--flock-border-subtle)' }}>
               <Table.Th><Text size="xs" c="dimmed">ID</Text></Table.Th>
-              <Table.Th><Text size="xs" c="dimmed">{t('settings.sandbox.status', { defaultValue: '状态' })}</Text></Table.Th>
-              <Table.Th><Text size="xs" c="dimmed">{t('settings.sandbox.snapshot', { defaultValue: '快照模板' })}</Text></Table.Th>
-              <Table.Th style={{ width: 80 }}><Text size="xs" c="dimmed" ta="right">{t('common.actions', { defaultValue: '操作' })}</Text></Table.Th>
+              <Table.Th><Text size="xs" c="dimmed">{t('settings.sandbox.status')}</Text></Table.Th>
+              <Table.Th><Text size="xs" c="dimmed">{t('settings.sandbox.snapshot')}</Text></Table.Th>
+              <Table.Th style={{ width: 80 }}><Text size="xs" c="dimmed" ta="right">{t('common.actions')}</Text></Table.Th>
             </Table.Tr>
           </Table.Thead>
           <Table.Tbody>
@@ -212,7 +212,7 @@ export function SandboxListSection() {
                     <Text size="sm" style={{ fontFamily: 'var(--mantine-font-family-monospace)' }}>
                       {sb.id.substring(0, 8)}...
                     </Text>
-                    <Tooltip label={t('common.copy', { defaultValue: '复制' })} withArrow>
+                    <Tooltip label={t('common.copy')} withArrow>
                       <ActionIcon variant="subtle" color="gray" size="xs" onClick={() => handleCopyId(sb.id)}>
                         <IconCopy size={12} />
                       </ActionIcon>
@@ -227,7 +227,7 @@ export function SandboxListSection() {
                 </Table.Td>
                 <Table.Td>
                   <Group gap={4} justify="flex-end">
-                    <Tooltip label={t('common.delete', { defaultValue: '销毁' })} withArrow>
+                    <Tooltip label={t('common.delete')} withArrow>
                       <ActionIcon
                         variant="subtle"
                         color="red"

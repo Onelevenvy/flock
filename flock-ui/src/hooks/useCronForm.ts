@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { notifications } from '@mantine/notifications';
+import i18n from '../i18n';
 import { useWorkspacesQuery } from './useWorkspaces';
 import { useAssistantsQuery } from './useAssistants';
 import { useCreateCronJobMutation, useUpdateCronJobMutation } from './useCronJobs';
@@ -10,15 +11,17 @@ import type { Assistant } from '../types/assistant';
 
 export type SchedulePreset = 'manual' | 'hourly' | 'daily' | 'weekdays' | 'weekly' | 'custom';
 
-export const WEEKDAY_OPTIONS = [
-  { value: '1', label: '周一' },
-  { value: '2', label: '周二' },
-  { value: '3', label: '周三' },
-  { value: '4', label: '周四' },
-  { value: '5', label: '周五' },
-  { value: '6', label: '周六' },
-  { value: '0', label: '周日' },
-];
+export function getWeekdayOptions() {
+  return [
+    { value: '1', label: i18n.t('schedule.weekdayMon') },
+    { value: '2', label: i18n.t('schedule.weekdayTue') },
+    { value: '3', label: i18n.t('schedule.weekdayWed') },
+    { value: '4', label: i18n.t('schedule.weekdayThu') },
+    { value: '5', label: i18n.t('schedule.weekdayFri') },
+    { value: '6', label: i18n.t('schedule.weekdaySat') },
+    { value: '0', label: i18n.t('schedule.weekdaySun') },
+  ];
+}
 
 
 // ==================== buildSchedule helper ====================
@@ -184,13 +187,13 @@ export function useCronForm({ opened, jobToEdit, onSuccess, onClose }: UseCronFo
 
   const handleSubmit = async () => {
     if (!workspaceId) {
-      notifications.show({ title: '提交失败', message: '请选择工作空间', color: 'red' }); return;
+      notifications.show({ title: i18n.t('schedule.submitFail'), message: i18n.t('schedule.selectWorkspace'), color: 'red' }); return;
     }
     if (!name.trim()) {
-      notifications.show({ title: '提交失败', message: '请输入任务名称', color: 'red' }); return;
+      notifications.show({ title: i18n.t('schedule.submitFail'), message: i18n.t('schedule.enterTaskName'), color: 'red' }); return;
     }
     if (!prompt.trim()) {
-      notifications.show({ title: '提交失败', message: '请输入执行指令', color: 'red' }); return;
+      notifications.show({ title: i18n.t('schedule.submitFail'), message: i18n.t('schedule.enterPrompt'), color: 'red' }); return;
     }
 
     const { kind, value, desc } = buildSchedule(schedulePreset, dailyTime, weeklyDay, weeklyTime, customCron);
@@ -211,15 +214,15 @@ export function useCronForm({ opened, jobToEdit, onSuccess, onClose }: UseCronFo
     try {
       if (jobToEdit) {
         await updateMutation.mutateAsync({ id: jobToEdit.id, input: payload });
-        notifications.show({ title: '已更新', message: '定时任务配置已保存', color: 'teal' });
+        notifications.show({ title: i18n.t('schedule.updated'), message: i18n.t('schedule.updatedMsg'), color: 'teal' });
       } else {
         await createMutation.mutateAsync(payload);
-        notifications.show({ title: '已创建', message: '定时任务已成功建立', color: 'teal' });
+        notifications.show({ title: i18n.t('schedule.created'), message: i18n.t('schedule.createdMsg'), color: 'teal' });
       }
       onSuccess();
       onClose();
     } catch (e: any) {
-      notifications.show({ title: '操作失败', message: String(e), color: 'red', autoClose: 8000 });
+      notifications.show({ title: i18n.t('schedule.operationFail'), message: String(e), color: 'red', autoClose: 8000 });
     }
   };
 

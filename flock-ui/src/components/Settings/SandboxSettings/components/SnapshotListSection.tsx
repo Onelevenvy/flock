@@ -92,7 +92,7 @@ export function SnapshotListSection({
   const handleCopy = (text: string) => {
     navigator.clipboard.writeText(text);
     notifications.show({
-      message: t('common.copied', { defaultValue: '已复制到剪贴板' }),
+      message: t('common.copied'),
       color: 'teal',
       autoClose: 1500,
     });
@@ -104,7 +104,7 @@ export function SnapshotListSection({
       await invoke('delete_daytona_snapshot', { id });
       notifications.show({
         title: t('common.success'),
-        message: t('settings.sandbox.deleteSnapshotSuccess', { defaultValue: '快照已删除' }),
+        message: t('settings.sandbox.deleteSnapshotSuccess'),
         color: 'teal',
         icon: <IconCheck size={18} />,
       });
@@ -157,7 +157,7 @@ export function SnapshotListSection({
           <Group gap="xs">
             <IconCamera size={20} color="var(--flock-accent)" />
             <Text fw={700} size="md">
-              {t('settings.sandbox.createSnapshotTitle', { defaultValue: '创建新快照模板' })}
+              {t('settings.sandbox.createSnapshotTitle')}
             </Text>
           </Group>
         </Group>
@@ -199,7 +199,7 @@ export function SnapshotListSection({
       <Box>
         <Group justify="space-between" mb="lg">
           <Text fw={700} size="md">
-            {t('settings.sandbox.snapshots', { defaultValue: '云端快照模板' })}
+            {t('settings.sandbox.snapshots')}
           </Text>
           <Button
             variant="subtle"
@@ -209,7 +209,7 @@ export function SnapshotListSection({
             disabled={loading}
             size="xs"
           >
-            {t('common.refresh', { defaultValue: '刷新' })}
+            {t('common.refresh')}
           </Button>
         </Group>
 
@@ -227,16 +227,16 @@ export function SnapshotListSection({
             }}
           >
             <Text c="dimmed" size="sm">
-              {t('settings.sandbox.noSnapshots', { defaultValue: '暂无快照模板' })}
+              {t('settings.sandbox.noSnapshots')}
             </Text>
           </Box>
         ) : (
           <Table verticalSpacing="sm" highlightOnHover>
             <Table.Thead>
               <Table.Tr style={{ borderColor: 'var(--flock-border-subtle)' }}>
-                <Table.Th><Text size="xs" c="dimmed">{t('settings.sandbox.snapshotNameLabel', { defaultValue: '名称' })}</Text></Table.Th>
-                <Table.Th><Text size="xs" c="dimmed">{t('settings.sandbox.status', { defaultValue: '状态' })}</Text></Table.Th>
-                <Table.Th style={{ width: 120 }}><Text size="xs" c="dimmed" ta="right">{t('common.actions', { defaultValue: '操作' })}</Text></Table.Th>
+                <Table.Th><Text size="xs" c="dimmed">{t('settings.sandbox.snapshotNameLabel')}</Text></Table.Th>
+                <Table.Th><Text size="xs" c="dimmed">{t('settings.sandbox.status')}</Text></Table.Th>
+                <Table.Th style={{ width: 120 }}><Text size="xs" c="dimmed" ta="right">{t('common.actions')}</Text></Table.Th>
               </Table.Tr>
             </Table.Thead>
             <Table.Tbody>
@@ -249,14 +249,14 @@ export function SnapshotListSection({
                         <Text size="sm" fw={isDefault ? 600 : 400}>
                           {snap.name}
                         </Text>
-                        <Tooltip label={t('common.copy', { defaultValue: '复制名称' })} withArrow>
+                        <Tooltip label={t('common.copy')} withArrow>
                           <ActionIcon variant="subtle" color="gray" size="xs" onClick={() => handleCopy(snap.name)}>
                             <IconCopy size={12} />
                           </ActionIcon>
                         </Tooltip>
                         {isDefault && (
                           <Badge size="xs" color="blue" variant="dot">
-                            {t('settings.sandbox.default', { defaultValue: '默认' })}
+                            {t('settings.sandbox.default')}
                           </Badge>
                         )}
                       </Group>
@@ -265,7 +265,7 @@ export function SnapshotListSection({
                     <Table.Td>
                       <Group gap={4} justify="flex-end">
                         <Tooltip
-                          label={isDefault ? t('settings.sandbox.isDefault', { defaultValue: '当前已是默认模板' }) : t('settings.sandbox.setAsDefault', { defaultValue: '设为默认模板' })}
+                          label={isDefault ? t('settings.sandbox.isDefault') : t('settings.sandbox.setAsDefault')}
                           withArrow
                         >
                           <ActionIcon
@@ -277,7 +277,7 @@ export function SnapshotListSection({
                             {isDefault ? <IconStarFilled size={14} /> : <IconStar size={14} />}
                           </ActionIcon>
                         </Tooltip>
-                        <Tooltip label={t('common.delete', { defaultValue: '删除' })} withArrow>
+                        <Tooltip label={t('common.delete')} withArrow>
                           <ActionIcon
                             variant="subtle"
                             color="red"
