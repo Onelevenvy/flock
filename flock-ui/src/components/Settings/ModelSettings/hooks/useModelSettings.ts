@@ -199,7 +199,7 @@ export function useModelSettings() {
 
   const onlineModels = Object.entries(modelsMap).flatMap(([pid, models]) => {
     const p = providers.find((prov) => prov.id === pid);
-    const providerIcon = p?.icon || pid;
+    const providerIcon = p?.icon ?? '';
     return models
       .filter((m) => m.is_online)
       .map((m) => ({

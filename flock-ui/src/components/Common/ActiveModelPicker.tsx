@@ -116,8 +116,8 @@ export function ActiveModelPicker() {
   models.forEach((m) => {
     const provider = providers.find((p) => p.id === m.provider_id);
     const groupName = provider?.provider_name || m.provider_id;
-    // 用 provider.id 匹配图标文件（如 openai.svg, deepseek.svg）
-    const providerIconKey = provider?.id || m.provider_id;
+    // icon 由后端 seed 时 base64 编码写入数据库，直接使用
+    const providerIconKey = provider?.icon ?? '';
     if (!groupedModels[groupName]) groupedModels[groupName] = [];
     groupedModels[groupName].push({
       value: `${m.provider_id}:${m.model_name}`,
