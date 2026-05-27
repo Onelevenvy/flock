@@ -21,7 +21,7 @@ export function ChatPanel({ messages }: ChatPanelProps) {
 
   return (
     <ScrollArea style={{ flex: 1 }} px="md" py="md">
-      <Stack gap="lg" pb="lg" style={{ maxWidth: 720, margin: '0 auto' }}>
+      <Stack gap="lg" pb="lg" style={{ maxWidth: 1200, margin: '0 auto' }}>
         {messages.map((msg) => (
           <MessageBubble key={msg.id} message={msg} />
         ))}

@@ -153,7 +153,7 @@ export function MessageBubble({ message }: MessageBubbleProps) {
       )}
 
       {/* 内容区 */}
-      <Box style={{ maxWidth: isUser ? '72%' : '88%', minWidth: 0 }}>
+      <Box style={{ flex: isUser ? '0 1 auto' : '1 1 0%', maxWidth: isUser ? '72%' : '100%', minWidth: 0 }}>
         <Paper
           p="sm"
           radius="lg"

@@ -184,11 +184,11 @@ export function InfoGroupRenderer({ infos, isStreaming }: InfoGroupRendererProps
 
   let summaryTitle = '';
   if (status === 'error') {
-    summaryTitle = t('sandboxLogsError');
+    summaryTitle = t('toolLogsError');
   } else if (status === 'success') {
-    summaryTitle = t('sandboxLogsSuccess');
+    summaryTitle = t('toolLogsSuccess');
   } else {
-    summaryTitle = t('sandboxLogsRunning');
+    summaryTitle = t('toolLogsRunning');
   }
 
   const { summary: latestSummary } = parseInfoMessage(latestMessage, t);
@@ -240,7 +240,7 @@ export function InfoGroupRenderer({ infos, isStreaming }: InfoGroupRendererProps
             minWidth: 0,
           }}
         >
-          {collapsed ? `(${t('sandboxLogs', { count: infos.length })}) ${latestSummary}` : ''}
+          {collapsed ? `(${t('toolLogs', { count: infos.length })}) ${latestSummary}` : ''}
         </Text>
 
         <ActionIcon size="xs" variant="transparent" color="gray">
