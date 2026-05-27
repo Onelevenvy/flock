@@ -23,34 +23,36 @@
 .xiaof-widget {
   width: 100px;
   height: 100px;
-  border-radius: 50%;
-  background: rgba(15, 23, 42, 0.85);
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
-  border: 1.5px solid rgba(255, 255, 255, 0.12);
+  background: transparent; /* 彻底透明背景 */
+  backdrop-filter: none; /* 去除模糊 */
+  -webkit-backdrop-filter: none;
+  border: none; /* 去除边框 */
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
   cursor: grab;
   position: relative;
-  overflow: visible;
-  transition: box-shadow 0.4s ease, border-color 0.4s ease;
+  overflow: visible; /* 必须是 visible，防止裁剪狐狸边缘 */
+  transition: all 0.3s ease;
+  
+  /* 允许整个小部件作为操作系统原生无缝拖拽标题栏 */
+  -webkit-app-region: drag;
 }
 
 .xiaof-widget:active {
   cursor: grabbing;
 }
 
-/* ── Mood glow rings ────────────────────────────────────── */
-.xiaof-widget.mood-sleeping  { box-shadow: 0 0 20px rgba(107, 114, 128, 0.3), 0 8px 32px rgba(0,0,0,0.4); }
-.xiaof-widget.mood-waking    { box-shadow: 0 0 24px rgba(139, 92, 246, 0.5), 0 8px 32px rgba(0,0,0,0.4); }
-.xiaof-widget.mood-idle      { box-shadow: 0 0 24px rgba(6, 182, 212, 0.4), 0 8px 32px rgba(0,0,0,0.4); }
-.xiaof-widget.mood-thinking  { box-shadow: 0 0 24px rgba(245, 158, 11, 0.5), 0 8px 32px rgba(0,0,0,0.4); }
-.xiaof-widget.mood-working   { box-shadow: 0 0 24px rgba(16, 185, 129, 0.5), 0 8px 32px rgba(0,0,0,0.4); }
-.xiaof-widget.mood-waiting   { box-shadow: 0 0 28px rgba(249, 115, 22, 0.7), 0 8px 32px rgba(0,0,0,0.4); border-color: rgba(249, 115, 22, 0.4); }
-.xiaof-widget.mood-takeover  { box-shadow: 0 0 28px rgba(236, 72, 153, 0.6), 0 8px 32px rgba(0,0,0,0.4); }
-.xiaof-widget.mood-error     { box-shadow: 0 0 24px rgba(239, 68, 68, 0.5), 0 8px 32px rgba(0,0,0,0.4); }
+/* ── Mood glow rings (No background shadows since circular frames are removed) ── */
+.xiaof-widget.mood-sleeping  { box-shadow: none; }
+.xiaof-widget.mood-waking    { box-shadow: none; }
+.xiaof-widget.mood-idle      { box-shadow: none; }
+.xiaof-widget.mood-thinking  { box-shadow: none; }
+.xiaof-widget.mood-working   { box-shadow: none; }
+.xiaof-widget.mood-waiting   { box-shadow: none; }
+.xiaof-widget.mood-takeover  { box-shadow: none; }
+.xiaof-widget.mood-error     { box-shadow: none; }
 
 /* ── Minimized mode ─────────────────────────────────────── */
 .xiaof-widget.minimized {
@@ -78,6 +80,9 @@
   transition: opacity 0.2s ease;
   z-index: 10;
   line-height: 1;
+  
+  /* 允许点击按钮，不触发拖拽 */
+  -webkit-app-region: no-drag;
 }
 
 .xiaof-widget:hover .xiaof-close-btn {
@@ -180,6 +185,9 @@
   animation: xiaof-bubble-fade-in 0.2s ease both;
   z-index: 9901;
   pointer-events: all;
+  
+  /* 允许在弹窗内部交互，不触发拖拽 */
+  -webkit-app-region: no-drag;
 }
 
 .xiaof-approve-title {

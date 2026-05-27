@@ -7,59 +7,56 @@ interface XiaofCharacterProps {
 }
 
 /**
- * XiaofCharacter — 顶级高清晰度赛博朋克像素狐狸桌宠
- * 渲染由 AI 完美临摹原图生成的单状态超高保真透明背景 PNG 图像，结合物理动效展现，100%无底色与多余字干扰！
+ * XiaofCharacter — 透明桌宠角色渲染组件
+ * 直接加载 /pet/{mood}.png 目录下的透明图片。
+ * 无任何裁剪或背景圆圈，保证图片完整显示。
  */
 export function XiaofCharacter({ mood, size = 72 }: XiaofCharacterProps) {
-  // 为每个状态匹配对应的物理微动效 class
-  const animClass = 
-    mood === 'sleeping' ? 'cyber-pic-breathe' :
-    mood === 'thinking' ? 'cyber-pic-bob' :
-    mood === 'working' ? 'cyber-pic-run' :
-    mood === 'waiting' ? 'cyber-pic-alert' :
-    mood === 'takeover' ? 'cyber-pic-pulse' :
-    mood === 'success' ? 'cyber-pic-jump' :
-    mood === 'error' ? 'cyber-pic-tremble' : 'cyber-pic-idle';
+  // 映射状态到对应的图片名 (如果有别名映射可以在这里处理，这里假设名称和 mood 一致)
+  let imageName = mood;
+  
+  // 可以在这里处理默认图片，如果有些状态没有单独图片，回退到 idle
+  // 例如： 'waking' -> 'idle'
+  if (mood === 'waking' || mood === 'takeover') {
+    imageName = 'idle'; // 假设没有 waking.png，回退到 idle
+  }
+
+  const imageUrl = `/pet/${imageName}.png`;
 
   return (
-    <div style={{ position: 'relative', width: size, height: size, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-      {/* 霓虹发光光晕背景 */}
-      <div style={{
-        position: 'absolute',
-        width: '100%',
-        height: '100%',
-        borderRadius: '50%',
-        background: `radial-gradient(circle, ${GLOW_COLORS[mood] || '#00f3ff'}2b 0%, transparent 75%)`,
-        animation: mood === 'waiting' || mood === 'takeover' ? 'cyber-glow-pulsate 1.2s ease-in-out infinite' : 'cyber-glow-ambient 3s ease-in-out infinite',
-        zIndex: 0,
-      }} />
-
-      {/* 独立单图透明背景渲染 (完美保留 16-bit 像素边缘，绝无锯齿与模糊) */}
-      <div
-        className={animClass}
+    <div 
+      className="xiaof-character-container"
+      style={{
+        width: size,
+        height: size,
+        position: 'relative',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        overflow: 'visible', // 确保绝对不会裁剪图片
+        // 使图片区域响应拖拽
+        WebkitAppRegion: 'drag',
+      } as any}
+    >
+      {/* 宠物本体图像 */}
+      <img 
+        src={imageUrl} 
+        alt={`Pet state: ${mood}`}
         style={{
-          width: size,
-          height: size,
-          backgroundImage: `url('/pet/${mood}.png')`,
-          backgroundSize: 'contain',
-          backgroundPosition: 'center',
-          backgroundRepeat: 'no-repeat',
-          imageRendering: 'pixelated', // 100% 像素锐利度，还原超高清颗粒感！
-          zIndex: 1,
-          transition: 'transform 0.3s ease',
+          width: '100%',
+          height: '100%',
+          objectFit: 'contain', // 保证图片完整包含在容器内，不被拉伸变形
+          userSelect: 'none',
+          pointerEvents: 'none', // 让拖拽事件穿透给外层
+          filter: 'drop-shadow(0 4px 6px rgba(0, 0, 0, 0.3))', // 稍微加一点投影让它在桌面上更立体
+        }}
+        onError={(e) => {
+          // 如果加载失败，回退到 idle 图片
+          if (e.currentTarget.src !== window.location.origin + '/pet/idle.png') {
+            e.currentTarget.src = '/pet/idle.png';
+          }
         }}
       />
     </div>
   );
 }
-
-const GLOW_COLORS: Record<XiaofMood, string> = {
-  sleeping: '#6b7280',
-  waking:   '#8b5cf6',
-  idle:     '#00f3ff',
-  thinking: '#a855f7',
-  working:  '#00f3ff',
-  waiting:  '#f97316',
-  takeover: '#ff007f',
-  error:    '#ef4444',
-};

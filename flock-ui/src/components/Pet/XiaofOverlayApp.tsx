@@ -7,6 +7,7 @@ import { useEffect, useState, useCallback, useRef } from 'react';
 import { listen, emit } from '@tauri-apps/api/event';
 import { invoke } from '@tauri-apps/api/core';
 import { getCurrentWindow } from '@tauri-apps/api/window';
+import { PhysicalPosition } from '@tauri-apps/api/dpi';
 import { XiaofCharacter } from './XiaofCharacter';
 import type { XiaofMood } from '../../hooks/useXiaofState';
 import './xiaof.css';
@@ -111,11 +112,7 @@ export function XiaofOverlayApp() {
       
       if (dx !== 0 || dy !== 0) {
         const pos = await win.outerPosition();
-        await win.setPosition({
-          type: 'Physical',
-          x: pos.x + dx,
-          y: pos.y + dy,
-        });
+        await win.setPosition(new PhysicalPosition(pos.x + dx, pos.y + dy));
         
         // Lock drag reference coordinates instantly to the newest screen state
         dragStart.current = { mx: e.screenX, my: e.screenY };
@@ -160,7 +157,7 @@ export function XiaofOverlayApp() {
   if (!state.enabled) return null;
 
   const hasPending = state.pendingCount > 0 && pendingTool;
-  const size = state.minimized ? 36 : 72;
+  const size = state.minimized ? 46 : 96;
 
   return (
     <div
