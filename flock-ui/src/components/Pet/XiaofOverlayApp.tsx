@@ -98,11 +98,29 @@ export function XiaofOverlayApp() {
     }
   }, [state.bubbleText]);
 
+  // Click outside to close popup
+  useEffect(() => {
+    if (!showPopup) return;
+    const handleOutsideClick = (e: MouseEvent) => {
+      const target = e.target as HTMLElement;
+      if (!target.closest('.xiaof-widget') && !target.closest('.xiaof-approve-popup')) {
+        setShowPopup(false);
+      }
+    };
+    const timer = setTimeout(() => {
+      window.addEventListener('click', handleOutsideClick);
+    }, 100);
+    return () => {
+      clearTimeout(timer);
+      window.removeEventListener('click', handleOutsideClick);
+    };
+  }, [showPopup]);
+
   // ── Absolute screen coordinate dragging algorithm ──
   const dragStart = useRef<{ mx: number; my: number } | null>(null);
 
   const onMouseDown = useCallback((e: React.MouseEvent) => {
-    if ((e.target as HTMLElement).closest('.xiaof-approve-btn, .xiaof-close-btn')) return;
+    if ((e.target as HTMLElement).closest('.xiaof-approve-btn, .xiaof-close-btn, .xiaof-approve-popup')) return;
     
     // Lock drag starting point to absolute screen-relative coordinates
     dragStart.current = { mx: e.screenX, my: e.screenY };
@@ -164,10 +182,28 @@ export function XiaofOverlayApp() {
     invoke('sync_pet_minimized', { minimized: nextMin }).catch(console.error);
   }, [state.minimized]);
 
-  if (!state.enabled) return null;
+  const handlePetClick = useCallback((e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (isDragging) return;
+    if (e.detail === 2) return;
+    if ((e.target as HTMLElement).closest('.xiaof-close-btn')) return;
+    
+    if (state.pendingCount > 0 && pendingTool) {
+      setShowPopup(prev => !prev);
+    }
+  }, [state.pendingCount, pendingTool, isDragging]);
 
   const hasPending = state.pendingCount > 0 && pendingTool;
   const size = state.minimized ? 46 : 96;
+
+  // Compute effective mood dynamically to override when sync-lag happens
+  const effectiveMood = (() => {
+    if (state.mood === 'takeover') return 'takeover';
+    if (hasPending) return 'waiting';
+    return state.mood;
+  })();
+
+  if (!state.enabled) return null;
 
   return (
     <div
@@ -182,34 +218,54 @@ export function XiaofOverlayApp() {
         paddingBottom: 8,
         userSelect: 'none',
         WebkitUserSelect: 'none',
+        position: 'relative', // Establish positioning context
       }}
+      onMouseDown={onMouseDown}
     >
       {/* Bubble (only when not minimized) */}
       {!state.minimized && showBubble && state.bubbleText && (
-        <div className="xiaof-bubble" style={{ marginBottom: 8 }}>
+        <div className="xiaof-bubble" style={{ marginBottom: 110 }}>
           {state.bubbleText}
         </div>
       )}
 
       {/* Approval popup */}
       {!state.minimized && hasPending && showPopup && (
-        <div className="xiaof-approve-popup" style={{ marginBottom: 8 }}>
+        <div
+          className="xiaof-approve-popup"
+          onClick={(e) => e.stopPropagation()}
+          onMouseDown={(e) => e.stopPropagation()}
+        >
           <div className="xiaof-approve-title">待审批操作</div>
-          <div className="xiaof-approve-tool-name">🔧 {pendingTool}</div>
+          <div className="xiaof-approve-tool-name" title={pendingTool}>🔧 {pendingTool}</div>
           <div className="xiaof-approve-btns">
-            <button className="xiaof-approve-btn approve" onClick={handleApprove}>✓ 批准</button>
-            <button className="xiaof-approve-btn deny" onClick={handleDeny}>✕ 拒绝</button>
+            <button
+              className="xiaof-approve-btn approve"
+              onClick={(e) => {
+                e.stopPropagation();
+                handleApprove();
+              }}
+            >
+              ✓ 批准
+            </button>
+            <button
+              className="xiaof-approve-btn deny"
+              onClick={(e) => {
+                e.stopPropagation();
+                handleDeny();
+              }}
+            >
+              ✕ 拒绝
+            </button>
           </div>
         </div>
       )}
 
       {/* Main widget */}
       <div
-        className={`xiaof-widget mood-${state.mood} ${state.minimized ? 'minimized' : ''}`}
-        onMouseDown={onMouseDown}
+        className={`xiaof-widget mood-${effectiveMood} ${state.minimized ? 'minimized' : ''}`}
+        onClick={handlePetClick}
         onDoubleClick={toggleMinimized}
-        onMouseEnter={() => !state.minimized && hasPending && setShowPopup(true)}
-        onMouseLeave={() => setShowPopup(false)}
         style={{ cursor: isDragging ? 'grabbing' : 'grab' }}
       >
         {state.pendingCount > 0 && (
@@ -227,13 +283,13 @@ export function XiaofOverlayApp() {
         </button>
 
         {/* Dynamic Glowing Cyber Fox Character */}
-        <XiaofCharacter mood={state.mood} size={size} />
+        <XiaofCharacter mood={effectiveMood} size={size} />
 
         {/* Status label (only when expanded) */}
         {!state.minimized && (
           <div className="xiaof-status-label">
-            <span className="xiaof-status-dot" style={{ background: MOOD_DOT_COLOR[state.mood] }} />
-            {MOOD_STATUS[state.mood] ?? '待命'}
+            <span className="xiaof-status-dot" style={{ background: MOOD_DOT_COLOR[effectiveMood] || '#06b6d4' }} />
+            {MOOD_STATUS[effectiveMood] ?? '待命'}
           </div>
         )}
       </div>

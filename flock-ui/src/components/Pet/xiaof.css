@@ -169,20 +169,22 @@
 
 /* ── Quick approve popup (on hover) ─────────────────────── */
 .xiaof-approve-popup {
-  /* No longer absolute — flows above widget in the flex column */
-  position: relative;
-  background: rgba(15, 23, 42, 0.95);
+  position: absolute;
+  bottom: 110px; /* Position it above the expanded pet */
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(15, 23, 42, 0.96);
   backdrop-filter: blur(16px);
   -webkit-backdrop-filter: blur(16px);
   border: 1px solid rgba(255,255,255,0.14);
-  border-radius: 14px;
+  border-radius: 12px;
   padding: 10px 12px;
   display: flex;
   flex-direction: column;
   gap: 8px;
-  min-width: 170px;
-  margin-bottom: 6px;
-  animation: xiaof-bubble-fade-in 0.2s ease both;
+  width: 190px;
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.5), 0 8px 10px -6px rgba(0, 0, 0, 0.5);
+  animation: xiaof-bubble-fade-in 0.2s cubic-bezier(0.34, 1.56, 0.64, 1) both;
   z-index: 9901;
   pointer-events: all;
   

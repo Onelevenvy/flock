@@ -324,7 +324,9 @@ function handleToolRunning(event: Extract<ProtocolEvent, { type: 'tool_running' 
       }
       return { ...m, chunks: updatedChunks };
     });
-    return { messages: newMessages };
+    // Remove approved tool from pendingApprovals list when it starts running
+    const newPending = s.pendingApprovals.filter((p: any) => p.call_id !== event.call_id);
+    return { messages: newMessages, pendingApprovals: newPending };
   });
 
   setTimeout(() => {
@@ -367,7 +369,9 @@ function handleToolResult(event: Extract<ProtocolEvent, { type: 'tool_result' }>
       }
       return { ...m, chunks: updatedChunks };
     });
-    return { messages: newMessages };
+    // Remove approved/denied tool from pendingApprovals list as fallback safety
+    const newPending = s.pendingApprovals.filter((p: any) => p.call_id !== event.call_id);
+    return { messages: newMessages, pendingApprovals: newPending };
   });
 
   if (event.status === 'success') {
