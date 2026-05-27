@@ -44,6 +44,7 @@ export function XiaofPet() {
 
   // Toggle popup on pet click (if we have pending approvals)
   const handlePetClick = useCallback((e: React.MouseEvent) => {
+    e.stopPropagation(); // Prevent trigger to window click
     if (isDragging) return;
     // Don't toggle if double click (which is for minimizing) or clicked close button
     if (e.detail === 2) return;
@@ -66,12 +67,19 @@ export function XiaofPet() {
     if (!showPopup) return;
     const handleOutsideClick = (e: MouseEvent) => {
       const target = e.target as HTMLElement;
+      // If we clicked outside the root container, close the popup
       if (!target.closest('.xiaof-pet-root')) {
         setShowPopup(false);
       }
     };
-    window.addEventListener('mousedown', handleOutsideClick);
-    return () => window.removeEventListener('mousedown', handleOutsideClick);
+    // Use setTimeout to avoid capturing the click event that opened the popup
+    const timer = setTimeout(() => {
+      window.addEventListener('click', handleOutsideClick);
+    }, 100);
+    return () => {
+      clearTimeout(timer);
+      window.removeEventListener('click', handleOutsideClick);
+    };
   }, [showPopup]);
 
   // Compute position style (negative = offset from right/bottom)
@@ -185,9 +193,13 @@ export function XiaofPet() {
         </div>
       )}
 
-      {/* Quick approve popup */}
+      {/* Quick approve popup — in flex flow, above widget */}
       {showApprovePopup && firstPending && (
-        <div className="xiaof-approve-popup">
+        <div
+          className="xiaof-approve-popup"
+          onMouseDown={(e) => e.stopPropagation()}
+          onClick={(e) => e.stopPropagation()}
+        >
           <div className="xiaof-approve-title">{t('pet.approval.title')}</div>
           <div className="xiaof-approve-tool-name" title={firstPending.tool.name}>
             🔧 {firstPending.tool.name}
@@ -200,15 +212,19 @@ export function XiaofPet() {
           <div className="xiaof-approve-btns">
             <button
               className="xiaof-approve-btn approve"
-              onMouseDown={(e) => e.stopPropagation()}
-              onClick={handleApprove}
+              onClick={(e) => {
+                e.stopPropagation();
+                handleApprove();
+              }}
             >
               ✓ {t('pet.approval.approve')}
             </button>
             <button
               className="xiaof-approve-btn deny"
-              onMouseDown={(e) => e.stopPropagation()}
-              onClick={handleDeny}
+              onClick={(e) => {
+                e.stopPropagation();
+                handleDeny();
+              }}
             >
               ✕ {t('pet.approval.deny')}
             </button>
