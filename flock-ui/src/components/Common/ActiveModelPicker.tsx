@@ -6,10 +6,11 @@ import { useTranslation } from 'react-i18next';
 import { useWorkspacesQuery } from '../../hooks/useWorkspaces';
 import { reconnectCurrentAgent } from '../../lib/agentConnection';
 import { ModelSelect } from './ModelSelect';
+import { parseMultiLang } from '../../utils/i18n';
 
 interface ModelProvider {
   id: string;
-  provider_name: string;
+  provider_name: any;
   provider_type: string;
   base_url: string | null;
   api_key: string | null;
@@ -115,7 +116,7 @@ export function ActiveModelPicker() {
   const groupedModels: Record<string, { value: string; label: string; providerName: string }[]> = {};
   models.forEach((m) => {
     const provider = providers.find((p) => p.id === m.provider_id);
-    const groupName = provider?.provider_name || m.provider_id;
+    const groupName = provider ? parseMultiLang(provider.provider_name) : m.provider_id;
     // icon 由后端 seed 时 base64 编码写入数据库，直接使用
     const providerIconKey = provider?.icon ?? '';
     if (!groupedModels[groupName]) groupedModels[groupName] = [];
