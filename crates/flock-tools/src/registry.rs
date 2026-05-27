@@ -83,22 +83,16 @@ impl ToolRegistry {
             .collect()
     }
 
-    /// Remove all tools whose provider_id is NOT in `allowed`.
-    /// Keeps tools with provider_id "skill", "spawn", "plan", "tool_search"
-    /// (internal tools) regardless of the allowed list.
+    /// Remove all tools whose name is NOT in `allowed`.
     ///
-    /// Used by the assistant system to restrict which external tools are available.
+    /// Used by the assistant system to restrict which tools are available.
     pub fn retain_by_providers(&mut self, allowed: &[String]) {
         let allowed_set: std::collections::HashSet<&str> =
             allowed.iter().map(|s| s.as_str()).collect();
 
-        // Internal provider IDs that are always kept regardless of assistant config.
-        const INTERNAL_PROVIDERS: &[&str] = &["skill", "spawn", "plan", "tool_search"];
-
         self.tools.retain(|t| {
-            let pid = t.provider_id();
             let name = t.name();
-            INTERNAL_PROVIDERS.contains(&pid) || allowed_set.contains(name)
+            allowed_set.contains(name)
         });
     }
 }
