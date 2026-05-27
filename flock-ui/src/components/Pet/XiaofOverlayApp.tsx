@@ -60,6 +60,11 @@ export function XiaofOverlayApp() {
     let unlisten: (() => void) | undefined;
     listen<PetSyncState>('xiaof-state-sync', (evt) => {
       setState(evt.payload);
+      if (evt.payload.pendingCount === 0) {
+        setPendingTool(null);
+        setPendingCallId(null);
+        setShowPopup(false);
+      }
     }).then((fn) => { unlisten = fn; });
     return () => { unlisten?.(); };
   }, []);

@@ -12,16 +12,21 @@ interface XiaofCharacterProps {
  * 无任何裁剪或背景圆圈，保证图片完整显示。
  */
 export function XiaofCharacter({ mood, size = 72 }: XiaofCharacterProps) {
-  // 映射状态到对应的图片名 (如果有别名映射可以在这里处理，这里假设名称和 mood 一致)
-  let imageName = mood;
-  
-  // 可以在这里处理默认图片，如果有些状态没有单独图片，回退到 idle
-  // 例如： 'waking' -> 'idle'
-  if (mood === 'waking' || mood === 'takeover') {
-    imageName = 'idle'; // 假设没有 waking.png，回退到 idle
-  }
+  const imageUrl = `/pet/${mood}.png`;
 
-  const imageUrl = `/pet/${imageName}.png`;
+  // 根据 mood 选择合适的 CSS 动画类名
+  const animClassMap: Record<XiaofMood, string> = {
+    idle: 'cyber-pic-idle',
+    sleeping: 'cyber-pic-breathe',
+    thinking: 'cyber-pic-bob',
+    working: 'cyber-pic-run',
+    waiting: 'cyber-pic-alert',
+    takeover: 'cyber-pic-pulse',
+    waking: 'cyber-pic-breathe', // 刚苏醒时用舒缓的动画
+    error: 'cyber-pic-tremble',
+  };
+
+  const animClass = animClassMap[mood] || 'cyber-pic-idle';
 
   return (
     <div 
@@ -42,6 +47,7 @@ export function XiaofCharacter({ mood, size = 72 }: XiaofCharacterProps) {
       <img 
         src={imageUrl} 
         alt={`Pet state: ${mood}`}
+        className={animClass}
         style={{
           width: '100%',
           height: '100%',

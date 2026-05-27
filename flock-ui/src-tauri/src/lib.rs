@@ -4,7 +4,7 @@ mod workspace;
 mod cron_scheduler;
 
 use std::sync::Arc;
-use tauri::{Manager, Listener};
+use tauri::{Manager, Listener, Emitter};
 use tokio::sync::Mutex;
 
 use agent::AgentState;
@@ -100,16 +100,37 @@ pub fn run() {
                     Ok(pet_win) => {
                         log::info!("Pet overlay window created successfully");
                         
-                        // Set initial visibility according to petStore enabled logic by listening to events
-                        let pet_handle_for_event = pet_win.clone();
+                        // ── Forward events between main window and pet overlay window (Tauri v2 event bridge) ──
+                        let pet_handle_sync = pet_win.clone();
+                        let pet_handle_vis = pet_win.clone();
                         app.listen("xiaof-state-sync", move |event| {
                             if let Ok(payload) = serde_json::from_str::<serde_json::Value>(event.payload()) {
+                                // 1. Forward event to pet-overlay window
+                                let _ = pet_handle_sync.emit("xiaof-state-sync", payload.clone());
+                                
+                                // 2. Show/hide window based on enabled field
                                 if let Some(enabled) = payload.get("enabled").and_then(|v| v.as_bool()) {
                                     if enabled {
-                                        let _ = pet_handle_for_event.show();
+                                        let _ = pet_handle_vis.show();
                                     } else {
-                                        let _ = pet_handle_for_event.hide();
+                                        let _ = pet_handle_vis.hide();
                                     }
+                                }
+                            }
+                        });
+
+                        let pet_handle_approval = pet_win.clone();
+                        app.listen("xiaof-pending-approval", move |event| {
+                            if let Ok(payload) = serde_json::from_str::<serde_json::Value>(event.payload()) {
+                                let _ = pet_handle_approval.emit("xiaof-pending-approval", payload);
+                            }
+                        });
+
+                        let app_handle_min = app.handle().clone();
+                        app.listen("xiaof-minimized-change", move |event| {
+                            if let Ok(payload) = serde_json::from_str::<serde_json::Value>(event.payload()) {
+                                if let Some(main_win) = app_handle_min.get_webview_window("main") {
+                                    let _ = main_win.emit("xiaof-minimized-change", payload);
                                 }
                             }
                         });

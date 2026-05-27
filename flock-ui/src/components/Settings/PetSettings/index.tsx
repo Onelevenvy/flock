@@ -13,6 +13,8 @@ const MOOD_PREVIEWS: { mood: XiaofMood; labelKey: string }[] = [
   { mood: 'waiting',  labelKey: 'pet.status.waiting' },
   { mood: 'error',    labelKey: 'pet.status.error' },
   { mood: 'sleeping', labelKey: 'pet.status.sleeping' },
+  { mood: 'waking',   labelKey: 'pet.status.waking' },
+  { mood: 'takeover', labelKey: 'pet.status.takeover' },
 ];
 
 export default function PetSettings() {
