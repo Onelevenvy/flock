@@ -1,8 +1,10 @@
 pub mod assistants;
 pub mod assistants_seed;
 pub mod conversations;
+pub mod message_parser;
 pub mod mcpserver;
 pub mod migrations;
+pub mod models;
 pub mod modelproviders;
 pub mod modelprovider_seed;
 pub mod model_providers;

@@ -2,6 +2,7 @@
 
 pub mod agents_md;
 pub mod agent_setup;
+pub mod agent_setup_helpers;
 pub mod cache_diagnostics;
 pub mod context_compression;
 pub mod approval;
