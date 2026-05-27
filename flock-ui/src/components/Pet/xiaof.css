@@ -1,0 +1,323 @@
+/* ============================================================
+   XiaoF Pet — CSS Animations
+   ============================================================ */
+
+/* ── Base container ─────────────────────────────────────── */
+.xiaof-pet-root {
+  position: fixed;
+  z-index: 9800;
+  user-select: none;
+  touch-action: none;
+}
+
+.xiaof-pet-root * {
+  box-sizing: border-box;
+}
+
+/* ── Main widget circle ─────────────────────────────────── */
+.xiaof-widget {
+  width: 100px;
+  height: 100px;
+  border-radius: 50%;
+  background: rgba(15, 23, 42, 0.85);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1.5px solid rgba(255, 255, 255, 0.12);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  cursor: grab;
+  position: relative;
+  overflow: visible;
+  transition: box-shadow 0.4s ease, border-color 0.4s ease;
+}
+
+.xiaof-widget:active {
+  cursor: grabbing;
+}
+
+/* ── Mood glow rings ────────────────────────────────────── */
+.xiaof-widget.mood-sleeping  { box-shadow: 0 0 20px rgba(107, 114, 128, 0.3), 0 8px 32px rgba(0,0,0,0.4); }
+.xiaof-widget.mood-waking    { box-shadow: 0 0 24px rgba(139, 92, 246, 0.5), 0 8px 32px rgba(0,0,0,0.4); }
+.xiaof-widget.mood-idle      { box-shadow: 0 0 24px rgba(6, 182, 212, 0.4), 0 8px 32px rgba(0,0,0,0.4); }
+.xiaof-widget.mood-thinking  { box-shadow: 0 0 24px rgba(245, 158, 11, 0.5), 0 8px 32px rgba(0,0,0,0.4); }
+.xiaof-widget.mood-working   { box-shadow: 0 0 24px rgba(16, 185, 129, 0.5), 0 8px 32px rgba(0,0,0,0.4); }
+.xiaof-widget.mood-waiting   { box-shadow: 0 0 28px rgba(249, 115, 22, 0.7), 0 8px 32px rgba(0,0,0,0.4); border-color: rgba(249, 115, 22, 0.4); }
+.xiaof-widget.mood-takeover  { box-shadow: 0 0 28px rgba(236, 72, 153, 0.6), 0 8px 32px rgba(0,0,0,0.4); }
+.xiaof-widget.mood-error     { box-shadow: 0 0 24px rgba(239, 68, 68, 0.5), 0 8px 32px rgba(0,0,0,0.4); }
+
+/* ── Minimized mode ─────────────────────────────────────── */
+.xiaof-widget.minimized {
+  width: 48px;
+  height: 48px;
+}
+
+/* ── Close button ───────────────────────────────────────── */
+.xiaof-close-btn {
+  position: absolute;
+  top: -6px;
+  right: -6px;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: rgba(30, 30, 40, 0.9);
+  border: 1px solid rgba(255,255,255,0.15);
+  color: rgba(255,255,255,0.6);
+  font-size: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  opacity: 0;
+  transition: opacity 0.2s ease;
+  z-index: 10;
+  line-height: 1;
+}
+
+.xiaof-widget:hover .xiaof-close-btn {
+  opacity: 1;
+}
+
+/* ── Status label ───────────────────────────────────────── */
+.xiaof-status-label {
+  position: absolute;
+  bottom: -26px;
+  left: 50%;
+  transform: translateX(-50%);
+  white-space: nowrap;
+  font-size: 10px;
+  font-weight: 600;
+  color: rgba(255,255,255,0.55);
+  letter-spacing: 0.3px;
+  pointer-events: none;
+}
+
+/* ── Pending badge ──────────────────────────────────────── */
+.xiaof-badge {
+  position: absolute;
+  top: -4px;
+  left: -4px;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: #f97316;
+  color: #fff;
+  font-size: 10px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 2px solid rgba(15, 23, 42, 0.9);
+  animation: xiaof-badge-bounce 0.8s ease infinite alternate;
+}
+
+@keyframes xiaof-badge-bounce {
+  from { transform: scale(1); }
+  to   { transform: scale(1.2); }
+}
+
+/* ── Speech bubble ──────────────────────────────────────── */
+.xiaof-bubble {
+  position: absolute;
+  bottom: calc(100% + 14px);
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(15, 23, 42, 0.92);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(255,255,255,0.12);
+  border-radius: 12px;
+  padding: 8px 12px;
+  white-space: nowrap;
+  max-width: 220px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  font-size: 11px;
+  font-weight: 500;
+  color: rgba(255,255,255,0.85);
+  pointer-events: none;
+  animation: xiaof-bubble-in 0.25s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+  z-index: 9900;
+}
+
+.xiaof-bubble::after {
+  content: '';
+  position: absolute;
+  bottom: -6px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 10px;
+  height: 6px;
+  background: rgba(15, 23, 42, 0.92);
+  clip-path: polygon(0 0, 100% 0, 50% 100%);
+  border-bottom: 1px solid rgba(255,255,255,0.12);
+}
+
+@keyframes xiaof-bubble-in {
+  from {
+    opacity: 0;
+    transform: translateX(-50%) translateY(6px) scale(0.92);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0) scale(1);
+  }
+}
+
+/* ── Quick approve popup (on hover) ─────────────────────── */
+.xiaof-approve-popup {
+  position: absolute;
+  bottom: calc(100% + 14px);
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(15, 23, 42, 0.95);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(255,255,255,0.14);
+  border-radius: 14px;
+  padding: 10px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  min-width: 200px;
+  animation: xiaof-bubble-in 0.2s ease both;
+  z-index: 9901;
+  pointer-events: all;
+}
+
+.xiaof-approve-title {
+  font-size: 10px;
+  font-weight: 600;
+  color: rgba(255,255,255,0.5);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: 2px;
+}
+
+.xiaof-approve-tool-name {
+  font-size: 12px;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.9);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  max-width: 176px;
+}
+
+.xiaof-approve-btns {
+  display: flex;
+  gap: 8px;
+}
+
+.xiaof-approve-btn {
+  flex: 1;
+  padding: 6px 10px;
+  border-radius: 8px;
+  font-size: 11px;
+  font-weight: 600;
+  border: none;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+}
+
+.xiaof-approve-btn.approve {
+  background: rgba(16, 185, 129, 0.2);
+  color: #34d399;
+  border: 1px solid rgba(16, 185, 129, 0.3);
+}
+
+.xiaof-approve-btn.approve:hover {
+  background: rgba(16, 185, 129, 0.35);
+}
+
+.xiaof-approve-btn.deny {
+  background: rgba(239, 68, 68, 0.15);
+  color: #f87171;
+  border: 1px solid rgba(239, 68, 68, 0.25);
+}
+
+.xiaof-approve-btn.deny:hover {
+  background: rgba(239, 68, 68, 0.28);
+}
+
+/* ── Character SVG animations ───────────────────────────── */
+
+/* Idle: tail sway */
+@keyframes xiaof-tail-sway {
+  0%, 100% { transform: rotate(-8deg); }
+  50%       { transform: rotate(8deg); }
+}
+
+/* Sleeping: slow breathe */
+@keyframes xiaof-breathe {
+  0%, 100% { transform: scale(1); }
+  50%       { transform: scale(0.96); }
+}
+
+/* Thinking: bounce + question mark */
+@keyframes xiaof-think-bob {
+  0%, 100% { transform: translateY(0); }
+  50%       { transform: translateY(-4px); }
+}
+
+/* Working: forward lean + shake */
+@keyframes xiaof-work-lean {
+  0%, 100% { transform: translateX(0) rotate(0deg); }
+  25%       { transform: translateX(2px) rotate(3deg); }
+  75%       { transform: translateX(-2px) rotate(-3deg); }
+}
+
+/* Waiting: urgent jump */
+@keyframes xiaof-wait-jump {
+  0%, 100% { transform: translateY(0) scale(1); }
+  30%       { transform: translateY(-8px) scale(1.05); }
+  60%       { transform: translateY(-3px) scale(0.98); }
+}
+
+/* Error: droop */
+@keyframes xiaof-error-shake {
+  0%, 100% { transform: translateX(0); }
+  20%       { transform: translateX(-3px); }
+  40%       { transform: translateX(3px); }
+  60%       { transform: translateX(-2px); }
+  80%       { transform: translateX(2px); }
+}
+
+/* Waking: spin sparkle */
+@keyframes xiaof-wake-spin {
+  from { transform: rotate(0deg); }
+  to   { transform: rotate(360deg); }
+}
+
+/* Takeover: pulse */
+@keyframes xiaof-takeover-pulse {
+  0%, 100% { transform: scale(1); filter: brightness(1); }
+  50%       { transform: scale(1.06); filter: brightness(1.2); }
+}
+
+/* Eye blink */
+@keyframes xiaof-blink {
+  0%, 90%, 100% { transform: scaleY(1); }
+  95%           { transform: scaleY(0.1); }
+}
+
+/* Dot pulse for status label */
+@keyframes xiaof-dot-pulse {
+  0%, 100% { opacity: 1; }
+  50%       { opacity: 0.2; }
+}
+
+.xiaof-status-dot {
+  display: inline-block;
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  margin-right: 4px;
+  vertical-align: middle;
+  animation: xiaof-dot-pulse 1.5s ease infinite;
+}

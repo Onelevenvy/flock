@@ -13,6 +13,7 @@ import zhSkills from './locales/zh/skills.json';
 import zhChat from './locales/zh/chat.json';
 import zhSchedule from './locales/zh/schedule.json';
 import zhWorkflow from './locales/zh/workflow.json';
+import zhPet from './locales/zh/pet.json';
 
 import enCommon from './locales/en/common.json';
 import enSidebar from './locales/en/sidebar.json';
@@ -26,6 +27,7 @@ import enSkills from './locales/en/skills.json';
 import enChat from './locales/en/chat.json';
 import enSchedule from './locales/en/schedule.json';
 import enWorkflow from './locales/en/workflow.json';
+import enPet from './locales/en/pet.json';
 
 const savedLang = localStorage.getItem('flock-lang') || 'en';
 
@@ -47,6 +49,7 @@ i18n
           chat: zhChat,
           schedule: zhSchedule,
           workflow: zhWorkflow,
+          pet: zhPet,
         },
       },
       en: {
@@ -63,6 +66,7 @@ i18n
           chat: enChat,
           schedule: enSchedule,
           workflow: enWorkflow,
+          pet: enPet,
         },
       },
     },

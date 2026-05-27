@@ -1,0 +1,33 @@
+{
+  "status": {
+    "sleeping": "休眠中",
+    "waking": "苏醒中...",
+    "idle": "待命",
+    "thinking": "思考中...",
+    "working": "执行中...",
+    "waiting": "需要确认！",
+    "takeover": "需要你来操作！",
+    "error": "出了点问题"
+  },
+  "minimize": "最小化",
+  "expand": "展开",
+  "approval": {
+    "title": "待审批操作",
+    "approve": "批准",
+    "deny": "拒绝",
+    "more": "还有 {{count}} 个"
+  },
+  "settings": {
+    "previewTitle": "XiaoF 预览",
+    "generalTitle": "基本设置",
+    "enableLabel": "显示 XiaoF 宠物",
+    "enableDesc": "在屏幕右下角显示 XiaoF 伴侣宠物",
+    "positionLabel": "重置位置",
+    "positionDesc": "将 XiaoF 移回默认右下角位置",
+    "resetPosition": "恢复默认位置",
+    "bubbleTitle": "状态气泡",
+    "bubbleEnableLabel": "显示状态气泡",
+    "bubbleEnableDesc": "在 XiaoF 头顶显示当前智能体活动状态气泡",
+    "bubbleDurationLabel": "气泡显示时长"
+  }
+}

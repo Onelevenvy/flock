@@ -13,6 +13,7 @@ import { useWorkspaceStore } from '../../store/workspaceStore';
 import { useAgentStore } from '../../store/agentStore';
 import { IconBoxMultiple, IconLego } from '@tabler/icons-react';
 import { useTranslation } from 'react-i18next';
+import { XiaofPet } from '../Pet/XiaofPet';
 
 export function MainLayout() {
   const { t } = useTranslation();
@@ -81,6 +82,9 @@ export function MainLayout() {
           </Box>
         )}
       </Box>
+
+      {/* XiaoF Pet overlay — floats above everything */}
+      <XiaofPet />
     </Box>
   );
 }

@@ -1,0 +1,33 @@
+{
+  "status": {
+    "sleeping": "Sleeping",
+    "waking": "Waking up...",
+    "idle": "Ready",
+    "thinking": "Thinking...",
+    "working": "Working...",
+    "waiting": "Needs approval!",
+    "takeover": "Take over!",
+    "error": "Something went wrong"
+  },
+  "minimize": "Minimize",
+  "expand": "Expand",
+  "approval": {
+    "title": "Pending Approval",
+    "approve": "Approve",
+    "deny": "Deny",
+    "more": "+{{count}} more"
+  },
+  "settings": {
+    "previewTitle": "XiaoF Preview",
+    "generalTitle": "General",
+    "enableLabel": "Show XiaoF Pet",
+    "enableDesc": "Display XiaoF companion in the bottom-right corner of the screen",
+    "positionLabel": "Reset Position",
+    "positionDesc": "Move XiaoF back to the default bottom-right corner",
+    "resetPosition": "Reset to Default",
+    "bubbleTitle": "Status Bubble",
+    "bubbleEnableLabel": "Show Status Bubble",
+    "bubbleEnableDesc": "Display a speech bubble above XiaoF showing current agent activity",
+    "bubbleDurationLabel": "Bubble Display Duration"
+  }
+}
