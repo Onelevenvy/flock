@@ -21,11 +21,13 @@ export function useTypewriterStream(liveContent: string) {
       return;
     }
 
-    // Handle executing/waiting status strings
+    // Handle executing/waiting status strings (both Chinese legacy and new English)
     if (
       liveContent === '正在执行沙盒命令...' ||
       liveContent.startsWith('正在执行') ||
-      liveContent.startsWith('等待命令')
+      liveContent.startsWith('等待命令') ||
+      liveContent === 'Executing sandbox command...' ||
+      liveContent.startsWith('Executing sandbox command:')
     ) {
       setDisplayedContent(liveContent);
       queueRef.current = [];

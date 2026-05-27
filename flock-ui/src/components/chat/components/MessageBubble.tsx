@@ -153,11 +153,22 @@ export function MessageBubble({ message }: MessageBubbleProps) {
       )}
 
       {/* 内容区 */}
-      <Box style={{ maxWidth: isUser ? '72%' : '88%', minWidth: 0 }}>
+      <Box
+        style={{
+          flex: isUser ? '0 1 auto' : '1 1 0%',
+          maxWidth: isUser ? '72%' : '100%',
+          minWidth: 0,
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: isUser ? 'flex-end' : 'flex-start',
+        }}
+      >
         <Paper
           p="sm"
           radius="lg"
           style={{
+            width: 'fit-content',
+            maxWidth: '100%',
             background: isUser
               ? 'var(--flock-accent-soft)'
               : 'var(--flock-bg-raised)',
@@ -235,6 +246,7 @@ export function MessageBubble({ message }: MessageBubbleProps) {
                       }
                     }
 
+                    useUiStore.getState().setEnvironmentMode('computer');
                     useUiStore.getState().setPreviewFile({
                       path: '.flock/sandbox/screenshot.png',
                       content: '',

@@ -151,15 +151,16 @@
     "stepSnapshotLabel": "STEP SNAPSHOT",
     "webScreenshot": "网页截图"
   },
-  "sandboxLogs": "沙盒运行日志 (共 {{count}} 步)",
+  "toolLogs": "工具运行日志 (共 {{count}} 步)",
   "showOutput": "展开输出",
   "hideOutput": "收起输出",
-  "sandboxLogsSuccess": "沙盒操作已全部完成",
-  "sandboxLogsRunning": "正在执行沙盒操作",
-  "sandboxLogsError": "沙盒操作执行失败",
+  "toolLogsSuccess": "工具执行已全部完成",
+  "toolLogsRunning": "正在执行工具操作",
+  "toolLogsError": "工具执行失败",
   "infoGroup": {
     "success": "成功",
     "failed": "失败",
     "toolExecuted": "工具 {{name}} 执行{{status}}"
-  }
+  },
+  "viewStepsPlayback": "查看步骤回放"
 }

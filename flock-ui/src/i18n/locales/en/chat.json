@@ -150,15 +150,16 @@
     "stepSnapshotLabel": "STEP SNAPSHOT",
     "webScreenshot": "Web Screenshot"
   },
-  "sandboxLogs": "Sandbox Execution Logs ({{count}} steps)",
+  "toolLogs": "Tool Execution Logs ({{count}} steps)",
   "showOutput": "Expand Output",
   "hideOutput": "Collapse Output",
-  "sandboxLogsSuccess": "All sandbox operations completed",
-  "sandboxLogsRunning": "Executing sandbox operations",
-  "sandboxLogsError": "Sandbox operations failed",
+  "toolLogsSuccess": "All tool operations completed",
+  "toolLogsRunning": "Executing tool operations",
+  "toolLogsError": "Tool operations failed",
   "infoGroup": {
     "success": "Success",
     "failed": "Failed",
     "toolExecuted": "Tool {{name}} execution {{status}}"
-  }
+  },
+  "viewStepsPlayback": "View Steps Playback"
 }
