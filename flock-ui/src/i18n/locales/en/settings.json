@@ -5,13 +5,15 @@
     "basic": "XIAOF Agent",
     "system": "System",
     "sandbox": "Cloud Sandbox",
-    "tool": "Tools"
+    "tool": "Tools",
+    "pet": "XiaoF Pet"
   },
   "descriptions": {
     "model": "LLM Providers & Model Management",
     "basic": "General Agent XIAOF Configuration Options",
     "system": "Environment & Performance Configuration",
-    "sandbox": "Daytona Cloud Code & Browser Security Sandbox Configurations"
+    "sandbox": "Daytona Cloud Code & Browser Security Sandbox Configurations",
+    "pet": "XiaoF companion pet appearance & behavior settings"
   },
   "developing": "Developing...",
   "version": "Flock CLI v0.1.0",

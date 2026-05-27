@@ -16,11 +16,13 @@ import {
   IconAdjustmentsHorizontal,
   IconDeviceDesktop,
   IconShieldLock,
+  IconPaw,
 } from '@tabler/icons-react';
 import ModelSettings from './ModelSettings';
 import XiaofSettings from './XiaofSettings';
 import SystemSettings from './SystemSettings';
 import SandboxSettings from './SandboxSettings';
+import PetSettings from './PetSettings';
 import { useTranslation } from 'react-i18next';
 
 interface Props {
@@ -44,6 +46,7 @@ export default function SettingsModal({ opened, onClose }: Props) {
     { key: 'basic', label: t('settings.tabs.basic'), icon: IconAdjustmentsHorizontal, description: t('settings.descriptions.basic') },
     { key: 'sandbox', label: t('settings.tabs.sandbox'), icon: IconShieldLock, description: t('settings.descriptions.sandbox') },
     { key: 'system', label: t('settings.tabs.system'), icon: IconDeviceDesktop, description: t('settings.descriptions.system') },
+    { key: 'pet', label: t('settings.tabs.pet'), icon: IconPaw, description: t('settings.descriptions.pet') },
   ];
 
   const currentItem = navItems.find((i) => i.key === activeTab);
@@ -178,6 +181,7 @@ export default function SettingsModal({ opened, onClose }: Props) {
               {activeTab === 'system' && <SystemSettings />}
               {activeTab === 'sandbox' && <SandboxSettings />}
               {activeTab === 'model' && <ModelSettings />}
+              {activeTab === 'pet' && <PetSettings />}
               {activeTab === 'tool' && <PlaceholderPage title={t('settings.tabs.tool')} />}
             </Box>
           </Box>

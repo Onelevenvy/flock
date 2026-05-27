@@ -1,8 +1,11 @@
 {
   "$schema": "../node_modules/@tauri-apps/cli/schema/capabilities.schema.json",
   "identifier": "default",
-  "description": "Capability for the main window",
-  "windows": ["main"],
+  "description": "Capability for the main and pet overlay windows",
+  "windows": [
+    "main",
+    "pet-overlay"
+  ],
   "permissions": [
     "core:default",
     "core:event:default",
@@ -14,6 +17,8 @@
     "core:window:allow-toggle-maximize",
     "core:window:allow-start-dragging",
     "core:window:allow-set-resizable",
+    "core:window:allow-set-position",
+    "core:window:allow-set-size",
     "core:app:default",
     "core:resources:default",
     "core:menu:default",

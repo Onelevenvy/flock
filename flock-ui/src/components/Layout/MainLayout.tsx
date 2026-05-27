@@ -13,6 +13,7 @@ import { useWorkspaceStore } from '../../store/workspaceStore';
 import { useAgentStore } from '../../store/agentStore';
 import { IconBoxMultiple, IconLego } from '@tabler/icons-react';
 import { useTranslation } from 'react-i18next';
+import { XiaofSyncManager } from '../Pet/XiaofSyncManager';
 
 export function MainLayout() {
   const { t } = useTranslation();
@@ -81,6 +82,9 @@ export function MainLayout() {
           </Box>
         )}
       </Box>
+
+      {/* XiaoF Pet State Sync Manager — orchestrates desktop overlay in the background */}
+      <XiaofSyncManager />
     </Box>
   );
 }

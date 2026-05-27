@@ -1,0 +1,434 @@
+/* ============================================================
+   XiaoF Pet — CSS Animations
+   ============================================================ */
+
+/* ── Base container ─────────────────────────────────────── */
+.xiaof-pet-root {
+  position: fixed;
+  z-index: 9800;
+  user-select: none;
+  touch-action: none;
+  /* flex column: popup on top, widget at bottom */
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0;
+}
+
+.xiaof-pet-root * {
+  box-sizing: border-box;
+}
+
+/* ── Main widget circle ─────────────────────────────────── */
+.xiaof-widget {
+  width: 100px;
+  height: 100px;
+  background: transparent; /* 彻底透明背景 */
+  backdrop-filter: none; /* 去除模糊 */
+  -webkit-backdrop-filter: none;
+  border: none; /* 去除边框 */
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  cursor: grab;
+  position: relative;
+  overflow: visible; /* 必须是 visible，防止裁剪狐狸边缘 */
+  transition: all 0.3s ease;
+  
+  /* 允许整个小部件作为操作系统原生无缝拖拽标题栏 */
+  -webkit-app-region: drag;
+}
+
+.xiaof-widget:active {
+  cursor: grabbing;
+}
+
+/* ── Mood glow rings (No background shadows since circular frames are removed) ── */
+.xiaof-widget.mood-sleeping  { box-shadow: none; }
+.xiaof-widget.mood-waking    { box-shadow: none; }
+.xiaof-widget.mood-idle      { box-shadow: none; }
+.xiaof-widget.mood-thinking  { box-shadow: none; }
+.xiaof-widget.mood-working   { box-shadow: none; }
+.xiaof-widget.mood-waiting   { box-shadow: none; }
+.xiaof-widget.mood-takeover  { box-shadow: none; }
+.xiaof-widget.mood-error     { box-shadow: none; }
+
+/* ── Minimized mode ─────────────────────────────────────── */
+.xiaof-widget.minimized {
+  width: 48px;
+  height: 48px;
+}
+
+/* ── Close button ───────────────────────────────────────── */
+.xiaof-close-btn {
+  position: absolute;
+  top: -6px;
+  right: -6px;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: rgba(30, 30, 40, 0.9);
+  border: 1px solid rgba(255,255,255,0.15);
+  color: rgba(255,255,255,0.6);
+  font-size: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  opacity: 0;
+  transition: opacity 0.2s ease;
+  z-index: 10;
+  line-height: 1;
+  
+  /* 允许点击按钮，不触发拖拽 */
+  -webkit-app-region: no-drag;
+}
+
+.xiaof-widget:hover .xiaof-close-btn {
+  opacity: 1;
+}
+
+/* ── Status label ───────────────────────────────────────── */
+.xiaof-status-label {
+  position: absolute;
+  bottom: -26px;
+  left: 50%;
+  transform: translateX(-50%);
+  white-space: nowrap;
+  font-size: 10px;
+  font-weight: 600;
+  color: rgba(255,255,255,0.55);
+  letter-spacing: 0.3px;
+  pointer-events: none;
+}
+
+/* ── Pending badge ──────────────────────────────────────── */
+.xiaof-badge {
+  position: absolute;
+  top: -4px;
+  left: -4px;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: #f97316;
+  color: #fff;
+  font-size: 10px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 2px solid rgba(15, 23, 42, 0.9);
+  animation: xiaof-badge-bounce 0.8s ease infinite alternate;
+}
+
+@keyframes xiaof-badge-bounce {
+  from { transform: scale(1); }
+  to   { transform: scale(1.2); }
+}
+
+/* ── Speech bubble ──────────────────────────────────────── */
+.xiaof-bubble {
+  position: relative;
+  background: rgba(15, 23, 42, 0.92);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(255,255,255,0.12);
+  border-radius: 12px;
+  padding: 8px 12px;
+  white-space: nowrap;
+  max-width: 220px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  font-size: 11px;
+  font-weight: 500;
+  color: rgba(255,255,255,0.85);
+  pointer-events: none;
+  margin-bottom: 10px;
+  animation: xiaof-bubble-fade-in 0.25s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+  z-index: 9900;
+}
+
+/* Tail arrow pointing down toward the widget */
+.xiaof-bubble::after {
+  content: '';
+  position: absolute;
+  bottom: -6px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 10px;
+  height: 6px;
+  background: rgba(15, 23, 42, 0.92);
+  clip-path: polygon(0 0, 100% 0, 50% 100%);
+}
+
+@keyframes xiaof-bubble-fade-in {
+  from { opacity: 0; transform: translateY(-4px) scale(0.95); }
+  to   { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+/* ── Quick approve popup (on hover) ─────────────────────── */
+.xiaof-approve-popup {
+  /* No longer absolute — flows above widget in the flex column */
+  position: relative;
+  background: rgba(15, 23, 42, 0.95);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(255,255,255,0.14);
+  border-radius: 14px;
+  padding: 10px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  min-width: 200px;
+  margin-bottom: 10px;
+  animation: xiaof-bubble-fade-in 0.2s ease both;
+  z-index: 9901;
+  pointer-events: all;
+  
+  /* 允许在弹窗内部交互，不触发拖拽 */
+  -webkit-app-region: no-drag;
+}
+
+.xiaof-approve-title {
+  font-size: 10px;
+  font-weight: 600;
+  color: rgba(255,255,255,0.5);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: 2px;
+}
+
+.xiaof-approve-tool-name {
+  font-size: 12px;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.9);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  max-width: 176px;
+}
+
+.xiaof-approve-btns {
+  display: flex;
+  gap: 8px;
+}
+
+.xiaof-approve-btn {
+  flex: 1;
+  padding: 6px 10px;
+  border-radius: 8px;
+  font-size: 11px;
+  font-weight: 600;
+  border: none;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+}
+
+.xiaof-approve-btn.approve {
+  background: rgba(16, 185, 129, 0.2);
+  color: #34d399;
+  border: 1px solid rgba(16, 185, 129, 0.3);
+}
+
+.xiaof-approve-btn.approve:hover {
+  background: rgba(16, 185, 129, 0.35);
+}
+
+.xiaof-approve-btn.deny {
+  background: rgba(239, 68, 68, 0.15);
+  color: #f87171;
+  border: 1px solid rgba(239, 68, 68, 0.25);
+}
+
+.xiaof-approve-btn.deny:hover {
+  background: rgba(239, 68, 68, 0.28);
+}
+
+/* ── Character SVG animations ───────────────────────────── */
+
+/* Idle: tail sway */
+@keyframes xiaof-tail-sway {
+  0%, 100% { transform: rotate(-8deg); }
+  50%       { transform: rotate(8deg); }
+}
+
+/* Sleeping: slow breathe */
+@keyframes xiaof-breathe {
+  0%, 100% { transform: scale(1); }
+  50%       { transform: scale(0.96); }
+}
+
+/* Thinking: bounce + question mark */
+@keyframes xiaof-think-bob {
+  0%, 100% { transform: translateY(0); }
+  50%       { transform: translateY(-4px); }
+}
+
+/* Working: forward lean + shake */
+@keyframes xiaof-work-lean {
+  0%, 100% { transform: translateX(0) rotate(0deg); }
+  25%       { transform: translateX(2px) rotate(3deg); }
+  75%       { transform: translateX(-2px) rotate(-3deg); }
+}
+
+/* Waiting: urgent jump */
+@keyframes xiaof-wait-jump {
+  0%, 100% { transform: translateY(0) scale(1); }
+  30%       { transform: translateY(-8px) scale(1.05); }
+  60%       { transform: translateY(-3px) scale(0.98); }
+}
+
+/* Error: droop */
+@keyframes xiaof-error-shake {
+  0%, 100% { transform: translateX(0); }
+  20%       { transform: translateX(-3px); }
+  40%       { transform: translateX(3px); }
+  60%       { transform: translateX(-2px); }
+  80%       { transform: translateX(2px); }
+}
+
+/* Waking: spin sparkle */
+@keyframes xiaof-wake-spin {
+  from { transform: rotate(0deg); }
+  to   { transform: rotate(360deg); }
+}
+
+/* Takeover: pulse */
+@keyframes xiaof-takeover-pulse {
+  0%, 100% { transform: scale(1); filter: brightness(1); }
+  50%       { transform: scale(1.06); filter: brightness(1.2); }
+}
+
+/* Eye blink */
+@keyframes xiaof-blink {
+  0%, 90%, 100% { transform: scaleY(1); }
+  95%           { transform: scaleY(0.1); }
+}
+
+/* Dot pulse for status label */
+@keyframes xiaof-dot-pulse {
+  0%, 100% { opacity: 1; }
+  50%       { opacity: 0.2; }
+}
+
+.xiaof-status-dot {
+  display: inline-block;
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  margin-right: 4px;
+  vertical-align: middle;
+  animation: xiaof-dot-pulse 1.5s ease infinite;
+}
+
+/* ── Cyber Spritesheet Fox Picture Animations ──────────────────────────── */
+
+/* 1. 待命 (Idle) - 软萌起伏 */
+.cyber-pic-idle {
+  animation: cyber-pic-breathe-anim 3s ease-in-out infinite;
+  transform-origin: bottom center;
+}
+
+@keyframes cyber-pic-breathe-anim {
+  0%, 100% { transform: translateY(0) scale(1, 1); }
+  50%       { transform: translateY(2px) scale(1.02, 0.96); }
+}
+
+/* 2. 休眠 (Sleeping) - 舒缓呼吸 */
+.cyber-pic-breathe {
+  animation: cyber-pic-sleep-anim 4.5s ease-in-out infinite;
+  transform-origin: bottom center;
+}
+
+@keyframes cyber-pic-sleep-anim {
+  0%, 100% { transform: translateY(0) scale(1, 1); }
+  50%       { transform: translateY(1px) scale(1.01, 0.98); }
+}
+
+/* 3. 思考 (Thinking) - 摇脑呆萌 */
+.cyber-pic-bob {
+  animation: cyber-pic-bob-anim 1.8s ease-in-out infinite;
+  transform-origin: bottom center;
+}
+
+@keyframes cyber-pic-bob-anim {
+  0%, 100% { transform: translateY(0) rotate(0deg) scale(1); }
+  33%      { transform: translateY(-3px) rotate(-3deg) scale(0.98, 1.02); }
+  66%      { transform: translateY(-1px) rotate(3deg) scale(1.01, 0.99); }
+}
+
+/* 4. 执行中 (Working) - 频闪跃动 */
+.cyber-pic-run {
+  animation: cyber-pic-run-anim 0.45s ease-in-out infinite alternate;
+  transform-origin: bottom center;
+}
+
+@keyframes cyber-pic-run-anim {
+  0%   { transform: translateY(0) rotate(-1deg) scale(1, 1); }
+  100% { transform: translateY(-4px) rotate(2deg) scale(0.98, 1.04); }
+}
+
+/* 5. 等待确认 (Waiting) - 警惕微晃 */
+.cyber-pic-alert {
+  animation: cyber-pic-alert-anim 0.8s ease-in-out infinite alternate;
+  transform-origin: bottom center;
+}
+
+@keyframes cyber-pic-alert-anim {
+  0%   { transform: translateY(0) scale(1); }
+  100% { transform: translateY(-3px) scale(0.97, 1.05); }
+}
+
+/* 6. 人工接管 (Takeover) - 荧光脉动 */
+.cyber-pic-pulse {
+  animation: cyber-pic-pulse-anim 1s ease-in-out infinite;
+  transform-origin: bottom center;
+}
+
+@keyframes cyber-pic-pulse-anim {
+  0%, 100% { transform: scale(1); filter: brightness(1); }
+  50%       { transform: scale(1.08); filter: brightness(1.25); }
+}
+
+/* 7. 成功 (Success) - 欢快弹跳 */
+.cyber-pic-jump {
+  animation: cyber-pic-jump-anim 0.75s cubic-bezier(0.25, 0.8, 0.25, 1) infinite alternate;
+  transform-origin: bottom center;
+}
+
+@keyframes cyber-pic-jump-anim {
+  0%   { transform: translateY(3px) scale(1.05, 0.92); }
+  100% { transform: translateY(-12px) scale(0.95, 1.08); }
+}
+
+/* 8. 出错 (Error) - 委屈打颤 */
+.cyber-pic-tremble {
+  animation: cyber-pic-tremble-anim 0.8s ease-in-out infinite;
+  transform-origin: bottom center;
+}
+
+@keyframes cyber-pic-tremble-anim {
+  0%, 100% { transform: translate(0, 0) scale(1); }
+  20%       { transform: translate(-0.8px, 0.4px) scale(0.99, 1.01); }
+  40%       { transform: translate(0.6px, -0.4px); }
+  60%       { transform: translate(-0.6px, -0.4px); }
+  80%       { transform: translate(0.8px, 0.4px) scale(1.01, 0.99); }
+}
+
+/* ── 霓虹环境氛围光晕微动 ── */
+@keyframes cyber-glow-ambient {
+  0%, 100% { transform: scale(1); opacity: 0.75; }
+  50%       { transform: scale(1.06); opacity: 0.95; }
+}
+
+@keyframes cyber-glow-pulsate {
+  0%, 100% { transform: scale(0.96); opacity: 0.65; }
+  50%       { transform: scale(1.15); opacity: 1; }
+}
+
+

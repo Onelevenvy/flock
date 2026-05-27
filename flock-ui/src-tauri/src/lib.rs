@@ -2,6 +2,7 @@ mod agent;
 mod commands;
 mod workspace;
 mod cron_scheduler;
+mod pet;
 
 use std::sync::Arc;
 use tauri::Manager;
@@ -57,6 +58,9 @@ pub fn run() {
             tauri::async_runtime::spawn(async move {
                 cron_scheduler::start(scheduler_db, scheduler_agent, scheduler_app).await;
             });
+
+            // ── Create pet overlay window (transparent, always-on-top, no frame) ──
+            pet::setup_pet_overlay(app)?;
 
             Ok(())
         })
@@ -160,9 +164,12 @@ pub fn run() {
             commands::get_workflow,
             commands::create_workflow,
             commands::update_workflow,
-            commands::delete_workflow,
             commands::run_workflow,
             commands::stop_workflow,
+            pet::sync_pet_state,
+            pet::sync_pet_pending_approval,
+            pet::sync_pet_minimized,
+            pet::pull_pet_state,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

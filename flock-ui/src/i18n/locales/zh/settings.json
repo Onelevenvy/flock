@@ -5,13 +5,15 @@
     "basic": "XIAOF设置",
     "system": "系统设置",
     "sandbox": "云端沙箱",
-    "tool": "工具设置"
+    "tool": "工具设置",
+    "pet": "XiaoF 宠物"
   },
   "descriptions": {
     "model": "LLM 供应商与模型管理",
     "basic": "通用智能体 XIAOF 配置选项",
     "system": "环境与性能配置",
-    "sandbox": "Daytona 云端代码与浏览器安全沙箱配置"
+    "sandbox": "Daytona 云端代码与浏览器安全沙箱配置",
+    "pet": "XiaoF 伴侣宠物外观与行为设置"
   },
   "developing": "功能开发中...",
   "version": "Flock CLI v0.1.0",
