@@ -47,7 +47,7 @@ export function XiaofPet() {
 
   const handleRootMouseLeave = useCallback(() => {
     // Small delay prevents flicker when moving between widget and popup
-    hoverLeaveTimerRef.current = setTimeout(() => setIsHovered(false), 80);
+    hoverLeaveTimerRef.current = setTimeout(() => setIsHovered(false), 350);
   }, []);
 
   const [isDragging, setIsDragging] = useState(false);
@@ -172,11 +172,11 @@ export function XiaofPet() {
       {showApprovePopup && firstPending && (
         <div className="xiaof-approve-popup">
           <div className="xiaof-approve-title">{t('pet.approval.title')}</div>
-          <div className="xiaof-approve-tool-name">
+          <div className="xiaof-approve-tool-name" title={firstPending.tool.name}>
             🔧 {firstPending.tool.name}
           </div>
           {pendingCount > 1 && (
-            <div style={{ fontSize: 10, color: 'rgba(255,255,255,0.4)', marginTop: -4 }}>
+            <div style={{ fontSize: 10, color: 'rgba(255,255,255,0.4)', marginTop: -2 }}>
               {t('pet.approval.more', { count: pendingCount - 1 })}
             </div>
           )}
