@@ -2,9 +2,10 @@ mod agent;
 mod commands;
 mod workspace;
 mod cron_scheduler;
+mod pet;
 
 use std::sync::Arc;
-use tauri::{Manager, Listener, Emitter};
+use tauri::Manager;
 use tokio::sync::Mutex;
 
 use agent::AgentState;
@@ -59,101 +60,7 @@ pub fn run() {
             });
 
             // ── Create pet overlay window (transparent, always-on-top, no frame) ──
-            {
-                use tauri::WebviewWindowBuilder;
-                
-                // Get primary monitor size dynamically to prevent boundary issues
-                let (screen_w, screen_h) = if let Ok(Some(monitor)) = app.primary_monitor() {
-                    let size = monitor.size();
-                    let scale = monitor.scale_factor();
-                    if scale > 0.0 {
-                        ((size.width as f64 / scale) as u32, (size.height as f64 / scale) as u32)
-                    } else {
-                        (size.width, size.height)
-                    }
-                } else {
-                    (1920u32, 1080u32)
-                };
-
-                // Default size & position: bottom-right corner
-                let pet_w = 140u32;
-                let pet_h = 240u32;
-                let pet_x = (screen_w - pet_w - 24) as i32;
-                let pet_y = (screen_h - pet_h - 24) as i32;
-
-                match WebviewWindowBuilder::new(
-                    app,
-                    "pet-overlay",
-                    tauri::WebviewUrl::App("index.html".into()),
-                )
-                .title("XiaoF Pet")
-                .inner_size(pet_w as f64, pet_h as f64)
-                .position(pet_x as f64, pet_y as f64)
-                .decorations(false)
-                .transparent(true)
-                .always_on_top(true)
-                .skip_taskbar(true)
-                .resizable(false)
-                .shadow(false)
-                .build()
-                {
-                    Ok(pet_win) => {
-                        log::info!("Pet overlay window created successfully");
-                        
-                        // ── Forward events between main window and pet overlay window (Tauri v2 event bridge) ──
-                        let pet_handle_sync = pet_win.clone();
-                        let pet_handle_vis = pet_win.clone();
-                        app.listen("xiaof-state-sync", move |event| {
-                            if let Ok(payload) = serde_json::from_str::<serde_json::Value>(event.payload()) {
-                                // 1. Forward event to pet-overlay window
-                                let _ = pet_handle_sync.emit("xiaof-state-sync", payload.clone());
-                                
-                                // 2. Show/hide window based on enabled field
-                                if let Some(enabled) = payload.get("enabled").and_then(|v| v.as_bool()) {
-                                    if enabled {
-                                        let _ = pet_handle_vis.show();
-                                    } else {
-                                        let _ = pet_handle_vis.hide();
-                                    }
-                                }
-                            }
-                        });
-
-                        let pet_handle_approval = pet_win.clone();
-                        app.listen("xiaof-pending-approval", move |event| {
-                            if let Ok(payload) = serde_json::from_str::<serde_json::Value>(event.payload()) {
-                                let _ = pet_handle_approval.emit("xiaof-pending-approval", payload);
-                            }
-                        });
-
-                        let app_handle_min = app.handle().clone();
-                        app.listen("xiaof-minimized-change", move |event| {
-                            if let Ok(payload) = serde_json::from_str::<serde_json::Value>(event.payload()) {
-                                if let Some(main_win) = app_handle_min.get_webview_window("main") {
-                                    let _ = main_win.emit("xiaof-minimized-change", payload);
-                                }
-                            }
-                        });
-
-                        // Bind to main window close requested events to shut down overlay window as well
-                        let main_label = "main";
-                        if let Some(main_win) = app.get_webview_window(main_label) {
-                            let pet_handle = pet_win.clone();
-                            main_win.on_window_event(move |evt| {
-                                match evt {
-                                    tauri::WindowEvent::CloseRequested { .. } => {
-                                        let _ = pet_handle.close();
-                                    }
-                                    _ => {}
-                                }
-                            });
-                        }
-                    }
-                    Err(e) => {
-                        log::warn!("Could not create pet overlay window: {e}");
-                    }
-                }
-            }
+            pet::setup_pet_overlay(app)?;
 
             Ok(())
         })
@@ -257,9 +164,12 @@ pub fn run() {
             commands::get_workflow,
             commands::create_workflow,
             commands::update_workflow,
-            commands::delete_workflow,
             commands::run_workflow,
             commands::stop_workflow,
+            pet::sync_pet_state,
+            pet::sync_pet_pending_approval,
+            pet::sync_pet_minimized,
+            pet::pull_pet_state,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

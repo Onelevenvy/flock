@@ -79,6 +79,11 @@ export function XiaofOverlayApp() {
     return () => { unlisten?.(); };
   }, []);
 
+  // Pull initial state from main window/backend on mount
+  useEffect(() => {
+    invoke('pull_pet_state').catch((err) => console.error('[Pet Sync] Failed to pull initial state:', err));
+  }, []);
+
   // Bubble display logic
   useEffect(() => {
     const text = state.bubbleText;
@@ -156,7 +161,7 @@ export function XiaofOverlayApp() {
   const toggleMinimized = useCallback(() => {
     const nextMin = !state.minimized;
     setState(prev => ({ ...prev, minimized: nextMin }));
-    emit('xiaof-minimized-change', nextMin).catch(console.error);
+    invoke('sync_pet_minimized', { minimized: nextMin }).catch(console.error);
   }, [state.minimized]);
 
   if (!state.enabled) return null;

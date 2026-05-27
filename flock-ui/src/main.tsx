@@ -5,8 +5,10 @@ import { ReactQueryDevtools } from '@tanstack/react-query-devtools'
 import { queryClient } from './lib/queryClient'
 import App from './App'
 import { ErrorBoundary } from './components/Common/ErrorBoundary';
+import { getCurrentWindow } from '@tauri-apps/api/window';
 import './index.css';
 import './i18n';
+import { XiaofOverlayApp } from './components/Pet/XiaofOverlayApp'
 
 // 捕获顶层未捕获的错误
 window.onerror = (msg, url, line, col, error) => {
@@ -18,21 +20,19 @@ window.onunhandledrejection = (event) => {
   console.error('[Unhandled Rejection]', event.reason);
 };
 
-// 判断当前 Tauri 窗口标签（pet-overlay 只渲染宠物组件）
-// Tauri 在 window.__TAURI_INTERNALS__ 里暴露 metadata
-const windowLabel = (window as any).__TAURI_INTERNALS__?.metadata?.currentWindow?.label ?? '';
+// 判断当前 窗口标签（通过 URL query 参数最早期且最安全地辨识，如 ?window=pet-overlay）
+const urlParams = new URLSearchParams(window.location.search);
+const windowLabel = urlParams.get('window') || 'main';
 
 if (windowLabel === 'pet-overlay') {
   // Pet overlay window: 只渲染宠物组件，透明背景，无其他 UI
-  import('./components/Pet/XiaofOverlayApp').then(({ XiaofOverlayApp }) => {
-    ReactDOM.createRoot(document.getElementById('root')!).render(
-      <React.StrictMode>
-        <ErrorBoundary>
-          <XiaofOverlayApp />
-        </ErrorBoundary>
-      </React.StrictMode>
-    );
-  });
+  ReactDOM.createRoot(document.getElementById('root')!).render(
+    <React.StrictMode>
+      <ErrorBoundary>
+        <XiaofOverlayApp />
+      </ErrorBoundary>
+    </React.StrictMode>
+  );
 } else {
   ReactDOM.createRoot(document.getElementById('root')!).render(
     <React.StrictMode>
