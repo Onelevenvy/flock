@@ -94,7 +94,8 @@
     "refreshFailed": "刷新失败",
     "refreshTooltip": "刷新内容",
     "downloadTooltip": "下载此文件",
-    "delete": "删除"
+    "delete": "删除",
+    "noResults": "未搜索到匹配项"
   },
   "takeover": {
     "title": "需要您的操作",
@@ -127,12 +128,36 @@
     "failedToLoadImage": "加载图片失败",
     "noImageAvailable": "暂无可用图片路径",
     "screenshotDataFolded": "截图二进制数据已折叠",
-    "base64FoldedShort": "超长二进制/Base64数据已自动折叠"
+    "base64FoldedShort": "超长二进制/Base64数据已自动折叠",
+    "inputLabel": "输入: \"{{text}}\"",
+    "offlineReplay": "离线历史记录",
+    "offlineReplayTotal": "回放共计 {{total}} 步"
+  },
+  "console": {
+    "executing": "正在执行命令...",
+    "cancelled": "命令已取消。",
+    "denied": "命令被拒绝执行。",
+    "sandboxPrompt": "flock-sandbox:/workspace$ "
+  },
+  "markdown": {
+    "expandAll": "展开全部内容 (共 {{count}} 行)",
+    "collapse": "收起内容",
+    "screenshotFolded": "截图二进制数据已折叠",
+    "base64Folded": "超长二进制/Base64数据已自动折叠",
+    "charCount": "共 {{count}} 字符",
+    "stepSnapshot": "网页操作步骤截图",
+    "stepSnapshotLabel": "STEP SNAPSHOT",
+    "webScreenshot": "网页截图"
   },
   "sandboxLogs": "沙盒运行日志 (共 {{count}} 步)",
   "showOutput": "展开输出",
   "hideOutput": "收起输出",
   "sandboxLogsSuccess": "沙盒操作已全部完成",
   "sandboxLogsRunning": "正在执行沙盒操作",
-  "sandboxLogsError": "沙盒操作执行失败"
+  "sandboxLogsError": "沙盒操作执行失败",
+  "infoGroup": {
+    "success": "成功",
+    "failed": "失败",
+    "toolExecuted": "工具 {{name}} 执行{{status}}"
+  }
 }

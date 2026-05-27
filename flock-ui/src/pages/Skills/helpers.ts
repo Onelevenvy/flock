@@ -25,7 +25,7 @@ function parseMultiLang(fieldVal: any): string {
 
 
 export function getProviderDescription(provider: any): string {
-  return parseMultiLang(provider.description) || '暂无描述';
+  return parseMultiLang(provider.description) || i18n.t('skills.skills.noDescription');
 }
 
 export function getProviderName(provider: any): string {

@@ -1,4 +1,5 @@
 import { Component, ErrorInfo, ReactNode } from 'react';
+import i18n from '../../i18n';
 
 interface Props {
   children: ReactNode;
@@ -28,8 +29,8 @@ export class ErrorBoundary extends Component<Props, State> {
       return (
         <div style={{ height: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#1a1b1e', color: '#c1c2c5', fontFamily: 'sans-serif' }}>
           <div style={{ padding: '24px', background: '#25262b', borderRadius: '8px', border: '1px solid #373a40', maxWidth: '600px', width: '100%' }}>
-            <h2 style={{ color: '#ff6b6b', marginTop: 0 }}>应用发生了错误</h2>
-            <p style={{ fontSize: '14px', color: '#909296' }}>程序在渲染过程中崩溃了，这可能是由于 Tauri 桥接失败或状态初始化错误引起的。</p>
+            <h2 style={{ color: '#ff6b6b', marginTop: 0 }}>{i18n.t('common.errors.errorBoundaryTitle')}</h2>
+            <p style={{ fontSize: '14px', color: '#909296' }}>{i18n.t('common.errors.errorBoundaryDesc')}</p>
             
             <pre style={{ background: '#141517', padding: '12px', borderRadius: '4px', overflowX: 'auto', fontSize: '12px', color: '#ff8787', border: '1px solid #373a40' }}>
               {this.state.error?.stack || this.state.error?.message || String(this.state.error)}
@@ -39,7 +40,7 @@ export class ErrorBoundary extends Component<Props, State> {
               onClick={() => window.location.reload()}
               style={{ background: '#4c6ef5', color: 'white', border: 'none', padding: '8px 16px', borderRadius: '4px', cursor: 'pointer', marginTop: '16px', fontSize: '14px' }}
             >
-              重试加载
+              {i18n.t('common.errors.retryLoad')}
             </button>
           </div>
         </div>

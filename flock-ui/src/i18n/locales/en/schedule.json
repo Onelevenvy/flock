@@ -65,5 +65,21 @@
   "day3": "Wednesday",
   "day4": "Thursday",
   "day5": "Friday",
-  "day6": "Saturday"
+  "day6": "Saturday",
+  "weekdayMon": "Mon",
+  "weekdayTue": "Tue",
+  "weekdayWed": "Wed",
+  "weekdayThu": "Thu",
+  "weekdayFri": "Fri",
+  "weekdaySat": "Sat",
+  "weekdaySun": "Sun",
+  "submitFail": "Submission Failed",
+  "selectWorkspace": "Please select a workspace",
+  "enterTaskName": "Please enter a task name",
+  "enterPrompt": "Please enter a prompt",
+  "updated": "Updated",
+  "updatedMsg": "Task configuration saved",
+  "created": "Created",
+  "createdMsg": "Task created successfully",
+  "operationFail": "Operation Failed"
 }

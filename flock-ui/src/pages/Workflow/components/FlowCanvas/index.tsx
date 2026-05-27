@@ -1,4 +1,4 @@
-import { useCallback, useMemo, useState, useEffect } from 'react';
+import { useCallback, useMemo, useState } from 'react';
 import ReactFlow, {
   Background,
   MiniMap,
@@ -30,6 +30,7 @@ import { useFlowLayout } from './hooks/useFlowLayout';
 import { useNodeInsertion } from './hooks/useNodeInsertion';
 import { useFlowHandlers } from './hooks/useFlowHandlers';
 import { useDropHandler } from './hooks/useDropHandler';
+import { useActiveNodeGlow } from './hooks/useActiveNodeGlow';
 import { LeftToolbar } from './components/LeftToolbar';
 import { EdgeInsertMenu } from './components/EdgeInsertMenu';
 
@@ -69,25 +70,7 @@ export function FlowCanvas({ workflowId, workflowData, onBack }: FlowCanvasProps
   const { layoutAllNodes } = useFlowLayout(nodes, edges, setNodes, setEdges);
 
   // ── Active execution node tracking & glow effect ────────────────────────
-  const activeNodeId = useMemo(() => {
-    if (executionStatus !== 'running') return null;
-    for (let i = executionMessages.length - 1; i >= 0; i--) {
-      if (executionMessages[i].nodeId) return executionMessages[i].nodeId;
-    }
-    return null;
-  }, [executionMessages, executionStatus]);
-
-  useEffect(() => {
-    document.querySelectorAll('.flock-active-node').forEach(el => {
-      el.classList.remove('flock-active-node');
-    });
-    if (activeNodeId) {
-      const nodeEl = document.querySelector(`.react-flow__node[data-id="${activeNodeId}"]`);
-      if (nodeEl) {
-        nodeEl.classList.add('flock-active-node');
-      }
-    }
-  }, [activeNodeId]);
+  const activeNodeId = useActiveNodeGlow(executionMessages, executionStatus);
 
   // ── Node Insertion (edge-click) ─────────────────────────────────────────
   const {

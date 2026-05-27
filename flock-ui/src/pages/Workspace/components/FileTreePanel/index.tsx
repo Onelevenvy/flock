@@ -306,7 +306,7 @@ export function FileTreePanel() {
 
             {displayFiles.length === 0 ? (
               <Box py={24} style={{ textAlign: 'center' }}>
-                <Text size="xs" c="dimmed">{searchQuery ? t('chat.workspace.noResults', '未搜索到匹配项') : t('chat.workspace.workspaceEmpty')}</Text>
+                <Text size="xs" c="dimmed">{searchQuery ? t('chat.workspace.noResults') : t('chat.workspace.workspaceEmpty')}</Text>
               </Box>
             ) : (
               displayFiles.map((entry) => (

@@ -124,7 +124,7 @@ export function InputCard({
           )}
 
           {isStreaming ? (
-            <Tooltip label={t('home.stopGeneration', '停止生成')} withArrow>
+            <Tooltip label={t('home.stopGeneration')} withArrow>
               <ActionIcon size="md" color="red" variant="light" radius="xl" onClick={onStop}>
                 <IconPlayerStop size={15} />
               </ActionIcon>

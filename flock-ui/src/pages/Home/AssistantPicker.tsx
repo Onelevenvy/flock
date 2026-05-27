@@ -1,4 +1,5 @@
 import { Group, UnstyledButton, Avatar, Text, Box } from '@mantine/core';
+import i18next from 'i18next';
 import { type Assistant } from '../../types/assistant';
 import { useAssistantsQuery } from '../../hooks/useAssistants';
 
@@ -7,7 +8,7 @@ export const XIAOF_AGENT: Assistant = {
   id: '__xiaof__',
   name: 'XiaoF',
   icon: '🤖',
-  description: '通用 AI 助手，拥有所有工具 and 技能',
+  description: i18next.t('home:xiaofDescription'),
   model: '',
   system_prompt: '',
   tools: [],

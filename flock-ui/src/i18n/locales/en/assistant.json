@@ -50,6 +50,13 @@
     "removeAllTools": "Deselect All",
     "addedCount": "{{count}} selected",
     "addedTag": "Added",
-    "confirm": "Confirm"
+    "confirm": "Confirm",
+    "toolUnauthorizedTitle": "Tool Unauthorized",
+    "toolUnauthorizedMsg": "Please configure and connect the tool's API credentials in the Plugin Management page first.",
+    "batchToolUnauthorizedTitle": "Some Tools Unauthorized",
+    "batchToolUnauthorizedMsg": "Unauthorized tools have been automatically filtered. Please configure their API credentials in the Plugin Management page.",
+    "unauthorizedTag": "Unauthorized",
+    "deleteSuccess": "Model removed successfully",
+    "selectIcon": "Select Icon"
   }
 }

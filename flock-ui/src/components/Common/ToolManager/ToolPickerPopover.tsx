@@ -80,10 +80,8 @@ export function ToolPickerPopover({
       const isUnauthorized = provider?.credentials_schema && !provider.is_available;
       if (isUnauthorized && !tempValue.includes(toolName)) {
         notifications.show({
-          title: t('assistant.form.toolUnauthorizedTitle', { defaultValue: '工具未授权' }),
-          message: t('assistant.form.toolUnauthorizedMsg', { 
-            defaultValue: '请先在「插件管理」页面配置并成功连通该工具的 API 凭证，方可添加使用。' 
-          }),
+          title: t('assistant.form.toolUnauthorizedTitle'),
+          message: t('assistant.form.toolUnauthorizedMsg'),
           color: 'red',
           autoClose: 5000,
         });
@@ -115,10 +113,8 @@ export function ToolPickerPopover({
       const unauthorizedCount = names.length - allowedNames.length;
       if (unauthorizedCount > 0) {
         notifications.show({
-          title: t('assistant.form.toolUnauthorizedTitle', { defaultValue: '部分工具未授权' }),
-          message: t('assistant.form.batchToolUnauthorizedMsg', { 
-            defaultValue: '已为您自动过滤未授权的工具。请先在「插件管理」页面配置它们的 API 凭证。' 
-          }),
+          title: t('assistant.form.batchToolUnauthorizedTitle'),
+          message: t('assistant.form.batchToolUnauthorizedMsg'),
           color: 'orange',
           autoClose: 5000,
         });
@@ -304,7 +300,7 @@ export function ToolPickerPopover({
                                       </Text>
                                       {isUnauthorized && (
                                         <Text size="9px" fw={600} style={{ color: 'var(--mantine-color-red-6)' }}>
-                                          🔒 {t('assistant.form.unauthorizedTag', { defaultValue: '未授权' })}
+                                          🔒 {t('assistant.form.unauthorizedTag')}
                                         </Text>
                                       )}
                                     </Group>

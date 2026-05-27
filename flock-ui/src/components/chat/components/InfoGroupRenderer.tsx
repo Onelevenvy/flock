@@ -29,14 +29,14 @@ export function groupContinuousInfoChunks(chunks: MessageChunk[]): RenderChunk[]
   return result;
 }
 
-export function parseInfoMessage(message: string): { summary: string; output?: string } {
+export function parseInfoMessage(message: string, t: (key: string, opts?: any) => string): { summary: string; output?: string } {
   const outputIndex = message.indexOf('[输出]');
   if (outputIndex !== -1) {
     const summary = message.substring(0, outputIndex).trim();
     const output = message.substring(outputIndex + 4).trim().replace(/^[:：\s]+/, '');
     return { summary, output };
   }
-  
+
   if (message.length > 150 && message.includes('\n')) {
     const lines = message.split('\n');
     const summary = lines[0].trim();
@@ -50,7 +50,7 @@ export function parseInfoMessage(message: string): { summary: string; output?: s
     const name = match[1];
     const status = match[2];
     const content = match[3].trim();
-    
+
     const innerOutputIndex = content.indexOf('[输出]');
     if (innerOutputIndex !== -1) {
       const summary = `[${name} ${status}] ${content.substring(0, innerOutputIndex).trim()}`;
@@ -59,8 +59,8 @@ export function parseInfoMessage(message: string): { summary: string; output?: s
     }
 
     if (content.length > 120 || content.includes('\n')) {
-      const statusText = status === 'success' ? '成功' : '失败';
-      const summary = `工具 ${name} 执行${statusText}`;
+      const statusText = status === 'success' ? t('common.success') : t('common.failed');
+      const summary = t('chat.infoGroup.toolExecuted', { name, status: statusText });
       return { summary, output: content };
     }
   }
@@ -69,11 +69,13 @@ export function parseInfoMessage(message: string): { summary: string; output?: s
 }
 
 export function InfoItem({ info }: { info: InfoChunk }) {
-  const { summary, output } = parseInfoMessage(info.message);
-  const [outputCollapsed, setOutputCollapsed] = useState(true);
   const { t } = useTranslation();
-  
+  const { summary, output } = parseInfoMessage(info.message, t);
+  const [outputCollapsed, setOutputCollapsed] = useState(true);
+
+  // Matches backend Chinese output strings
   const isSuccess = info.message.includes('已就绪') || info.message.includes('成功') || info.message.includes('完成');
+  // Matches backend Chinese output strings
   const isError = info.message.includes('失败') || info.message.includes('出错') || info.message.includes('健康状态') || info.message.includes('失效');
 
   return (
@@ -158,7 +160,8 @@ export function InfoGroupRenderer({ infos, isStreaming }: InfoGroupRendererProps
 
   if (infos.length === 0) return null;
 
-  const hasError = infos.some(info => 
+  // Matches backend Chinese output strings
+  const hasError = infos.some(info =>
     info.message.includes('失败') || info.message.includes('出错') || info.message.includes('健康状态') || info.message.includes('失效')
   );
   
@@ -188,7 +191,7 @@ export function InfoGroupRenderer({ infos, isStreaming }: InfoGroupRendererProps
     summaryTitle = t('sandboxLogsRunning');
   }
 
-  const { summary: latestSummary } = parseInfoMessage(latestMessage);
+  const { summary: latestSummary } = parseInfoMessage(latestMessage, t);
 
   return (
     <Paper

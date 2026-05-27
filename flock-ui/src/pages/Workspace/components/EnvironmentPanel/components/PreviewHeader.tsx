@@ -82,8 +82,8 @@ export function PreviewHeader({
             value={viewMode}
             onChange={(val) => onViewModeChange(val as 'code' | 'preview')}
             data={[
-              { label: t('chat.workspace.tabPreview', '预览'), value: 'preview' },
-              { label: t('chat.workspace.tabCode', '代码'), value: 'code' },
+              { label: t('chat.workspace.tabPreview'), value: 'preview' },
+              { label: t('chat.workspace.tabCode'), value: 'code' },
             ]}
             styles={{
               root: {
@@ -117,7 +117,7 @@ export function PreviewHeader({
           </CopyButton>
         )}
 
-        <Tooltip label={t('chat.workspace.refreshTooltip', '刷新内容')} withArrow>
+        <Tooltip label={t('chat.workspace.refreshTooltip')} withArrow>
           <ActionIcon
             size="sm"
             variant="subtle"
@@ -128,7 +128,7 @@ export function PreviewHeader({
           </ActionIcon>
         </Tooltip>
 
-        <Tooltip label={t('chat.workspace.downloadTooltip', '下载此文件')} withArrow>
+        <Tooltip label={t('chat.workspace.downloadTooltip')} withArrow>
           <ActionIcon
             size="sm"
             variant="subtle"

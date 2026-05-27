@@ -71,8 +71,8 @@ export function useAvailableModels() {
   models.forEach((m) => {
     const provider = providers.find((p) => p.id === m.provider_id);
     const providerName = provider ? parseMultiLang(provider.provider_name) : m.provider_id;
-    // 用 provider.icon (base64 SVG) 或 provider.id 匹配图标文件
-    const providerIconKey = provider?.icon || provider?.id || m.provider_id;
+    // icon 由后端 seed 时 base64 编码写入数据库，直接使用
+    const providerIconKey = provider?.icon ?? '';
     if (!groupedMap[providerName]) {
       groupedMap[providerName] = [];
     }

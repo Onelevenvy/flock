@@ -83,10 +83,8 @@ export default function ToolManager({
         const isUnauthorized = provider?.credentials_schema && !provider.is_available;
         if (isUnauthorized) {
           notifications.show({
-            title: t('assistant.form.toolUnauthorizedTitle', { defaultValue: '工具未授权' }),
-            message: t('assistant.form.toolUnauthorizedMsg', { 
-              defaultValue: '请先在「插件管理」页面配置并成功连通该工具的 API 凭证，方可添加使用。' 
-            }),
+            title: t('assistant.form.toolUnauthorizedTitle'),
+            message: t('assistant.form.toolUnauthorizedMsg'),
             color: 'red',
             autoClose: 5000,
           });

@@ -16,7 +16,7 @@ export function BottomBar() {
       <Group justify="space-between" align="center" gap="xs" wrap="nowrap">
         <Group gap={6} wrap="nowrap">
           {/* 设置按钮 */}
-          <Tooltip label={t('common.settings') || '设置'} withArrow>
+          <Tooltip label={t('common.settings')} withArrow>
             <ActionIcon
               variant="subtle"
               color="gray"

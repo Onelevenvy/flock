@@ -65,5 +65,21 @@
   "day3": "周三",
   "day4": "周四",
   "day5": "周五",
-  "day6": "周六"
+  "day6": "周六",
+  "weekdayMon": "周一",
+  "weekdayTue": "周二",
+  "weekdayWed": "周三",
+  "weekdayThu": "周四",
+  "weekdayFri": "周五",
+  "weekdaySat": "周六",
+  "weekdaySun": "周日",
+  "submitFail": "提交失败",
+  "selectWorkspace": "请选择工作空间",
+  "enterTaskName": "请输入任务名称",
+  "enterPrompt": "请输入执行指令",
+  "updated": "已更新",
+  "updatedMsg": "定时任务配置已保存",
+  "created": "已创建",
+  "createdMsg": "定时任务已成功建立",
+  "operationFail": "操作失败"
 }

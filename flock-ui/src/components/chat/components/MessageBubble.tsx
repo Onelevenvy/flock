@@ -242,7 +242,7 @@ export function MessageBubble({ message }: MessageBubbleProps) {
                     });
                   }}
                 >
-                  {t('chat.viewStepsPlayback', { defaultValue: '查看此步骤屏幕回放' })}
+                  {t('chat.viewStepsPlayback')}
                 </Button>
               </Group>
             )}

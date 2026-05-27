@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { Group, Text, Tooltip, Loader } from '@mantine/core';
 import { IconCube, IconCheck } from '@tabler/icons-react';
 import { invoke } from '@tauri-apps/api/core';
+import { useTranslation } from 'react-i18next';
 import { useWorkspacesQuery } from '../../hooks/useWorkspaces';
 import { reconnectCurrentAgent } from '../../lib/agentConnection';
 import { ModelSelect } from './ModelSelect';
@@ -38,6 +39,7 @@ interface ActiveModel {
  * 纯 UI 展示用 ModelSelect (通用组件)。
  */
 export function ActiveModelPicker() {
+  const { t } = useTranslation();
   const [providers, setProviders] = useState<ModelProvider[]>([]);
   const [models, setModels] = useState<Model[]>([]);
   const [activeModel, setActiveModelState] = useState<ActiveModel | null>(null);
@@ -114,8 +116,8 @@ export function ActiveModelPicker() {
   models.forEach((m) => {
     const provider = providers.find((p) => p.id === m.provider_id);
     const groupName = provider?.provider_name || m.provider_id;
-    // 用 provider.id 匹配图标文件（如 openai.svg, deepseek.svg）
-    const providerIconKey = provider?.id || m.provider_id;
+    // icon 由后端 seed 时 base64 编码写入数据库，直接使用
+    const providerIconKey = provider?.icon ?? '';
     if (!groupedModels[groupName]) groupedModels[groupName] = [];
     groupedModels[groupName].push({
       value: `${m.provider_id}:${m.model_name}`,
@@ -131,10 +133,10 @@ export function ActiveModelPicker() {
 
   if (selectData.length === 0) {
     return (
-      <Tooltip label="请在设置中配置 API Key 并启用模型" withArrow>
+      <Tooltip label={t('common.model.configureFirst')} withArrow>
         <Group gap={4} style={{ cursor: 'pointer' }} onClick={() => loadData()}>
           <IconCube size={14} color="var(--flock-text-dim)" />
-          <Text size="xs" c="dimmed">未配置模型</Text>
+          <Text size="xs" c="dimmed">{t('common.model.notConfigured')}</Text>
         </Group>
       </Tooltip>
     );
@@ -148,7 +150,7 @@ export function ActiveModelPicker() {
       onDropdownOpen={loadData}
       size="xs"
       w={180}
-      placeholder="选择模型"
+      placeholder={t('common.model.selectModel')}
       searchable
       rightSection={
         loading ? (

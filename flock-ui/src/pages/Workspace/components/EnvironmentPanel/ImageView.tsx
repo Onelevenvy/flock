@@ -164,10 +164,10 @@ export function ImageView({ absPath, workspaceId, relativePath, fileName, refres
 
           <Box style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '6px', textAlign: 'center' }}>
             <Text size="sm" fw={600} style={{ color: 'var(--flock-text-base)' }}>
-              {t('chat.vnc.waitingForAction', { defaultValue: '沙盒屏幕快照未生成' })}
+              {t('chat.vnc.waitingForAction')}
             </Text>
             <Text size="xs" c="dimmed" style={{ maxWidth: '340px', lineHeight: 1.5 }}>
-              {t('chat.vnc.noActionTip', { defaultValue: '这是一个全新或重置的工作区，当前尚未执行过任何浏览器或电脑操作。当大模型启动任务或在下方执行浏览器指令时，系统将在此自动呈现最精美的操作步骤快照与历史回放！' })}
+              {t('chat.vnc.noActionTip')}
             </Text>
           </Box>
 
