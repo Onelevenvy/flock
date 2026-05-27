@@ -127,6 +127,8 @@
     "establishingConnection": "Establishing secure connection, remote screen will appear shortly...",
     "deployingDaytona": "Requesting and deploying Daytona sandbox environment...",
     "failedToLoadImage": "Failed to load image",
+    "waitingForAction": "Sandbox screenshot not generated",
+    "noActionTip": "This is a new or reset workspace, and no browser or computer operations have been executed yet. When the agent starts tasks or runs browser commands below, the system will automatically display the screenshots and history replay here!",
     "noImageAvailable": "No image path available",
     "inputLabel": "Input: \"{{text}}\"",
     "offlineReplay": "Offline History",

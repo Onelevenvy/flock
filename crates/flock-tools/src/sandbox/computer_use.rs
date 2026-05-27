@@ -2,12 +2,70 @@ use crate::adapter::LangGraphToolAdapter;
 use crate::Tool;
 use crate::daytona::{
     get_or_create_active_sandbox, execute_command_in_sandbox,
-    start_computer_use_in_sandbox, check_computer_use_status, ensure_vnc_running_in_sandbox
+    start_computer_use_in_sandbox, check_computer_use_status, ensure_vnc_running_in_sandbox,
+    DISPLAY_ID,
 };
+use flock_core::db::DbManager;
 use flock_core::ipc_interface::events::ToolCategory;
 use langgraph_derive::tool;
-use std::path::Path;
 use base64::{Engine as _, engine::general_purpose};
+
+/// Execute an xdotool command in the sandbox desktop environment.
+async fn run_xdotool(
+    db: &DbManager,
+    sandbox_id: &str,
+    xdotool_args: &str,
+    action_name: &str,
+) -> Result<(), String> {
+    let cmd = format!("export DISPLAY={} && xdotool {}", DISPLAY_ID, xdotool_args);
+    let (out, code) = execute_command_in_sandbox(db, sandbox_id, &cmd)
+        .await
+        .map_err(|e| format!("执行{}指令失败: {}", action_name, e))?;
+    if code != 0 {
+        return Err(format!("{}操作失败: {}", action_name, out));
+    }
+    Ok(())
+}
+
+/// Capture a desktop screenshot and save it to the workspace.
+/// Returns (image_markdown, screenshot_saved).
+async fn capture_desktop_screenshot(
+    db: &DbManager,
+    sandbox_id: &str,
+    session_id: &str,
+    name_id: &str,
+) -> (String, bool) {
+    let ss_cmd = format!(
+        "export DISPLAY={} && scrot -o /tmp/desktop_screenshot.png && cat /tmp/desktop_screenshot.png | base64 -w 0",
+        DISPLAY_ID
+    );
+    let (b64_data, exit_code) = execute_command_in_sandbox(db, sandbox_id, &ss_cmd)
+        .await
+        .unwrap_or_default();
+
+    if exit_code == 0 && !b64_data.is_empty() {
+        if let Ok(img_bytes) = general_purpose::STANDARD.decode(b64_data.trim()) {
+            let base_dir = crate::get_workspace_dir()
+                .unwrap_or_else(|| std::env::current_dir().unwrap_or_default());
+            let ss_dir = base_dir.join(".flock/sandbox/screenshots").join(session_id);
+            let ss_path = ss_dir.join(format!("{}.png", name_id));
+            let _ = std::fs::create_dir_all(&ss_dir);
+            let _ = std::fs::write(&ss_path, &img_bytes);
+            let _ = std::fs::write(
+                base_dir.join(format!(".flock/sandbox/screenshot_{}.png", session_id)),
+                &img_bytes,
+            );
+
+            let abs_path_str = ss_path.to_string_lossy().to_string();
+            crate::emit_info(&flock_core::tr(
+                "远程桌面最新状态已成功截取并拉回工作区预览！",
+                "Latest remote desktop screenshot captured and synced to workspace!",
+            ));
+            return (format!("\n\n![桌面截图](file:///{})", abs_path_str), true);
+        }
+    }
+    (String::new(), false)
+}
 
 /// A cloud-based GUI Computer Use tool for interacting with the sandbox desktop environment.
 ///
@@ -107,22 +165,8 @@ pub async fn computer_use(
         let mut image_md = String::new();
         if let Ok(ready) = check_computer_use_status(&db, &sandbox_id).await {
             if ready {
-                let ss_cmd = format!("export DISPLAY={} && scrot -o /tmp/desktop_screenshot.png && cat /tmp/desktop_screenshot.png | base64 -w 0", crate::daytona::DISPLAY_ID);
-                if let Ok((b64_data, exit_code)) = execute_command_in_sandbox(&db, &sandbox_id, &ss_cmd).await {
-                    if exit_code == 0 && !b64_data.is_empty() {
-                        if let Ok(img_bytes) = general_purpose::STANDARD.decode(b64_data.trim()) {
-                            let base_dir = crate::get_workspace_dir().unwrap_or_else(|| std::env::current_dir().unwrap_or_default());
-                            let ss_dir = base_dir.join(".flock/sandbox/screenshots").join(&session_id);
-                            let ss_path = ss_dir.join(format!("{}.png", name_id));
-                            let _ = std::fs::create_dir_all(&ss_dir);
-                            let _ = std::fs::write(&ss_path, &img_bytes);
-                            let _ = std::fs::write(base_dir.join(format!(".flock/sandbox/screenshot_{}.png", session_id)), &img_bytes);
-                            
-                            let abs_path_str = ss_path.to_string_lossy().to_string();
-                            image_md = format!("\n\n![桌面截图](file:///{})", abs_path_str);
-                        }
-                    }
-                }
+                let (md, _) = capture_desktop_screenshot(&db, &sandbox_id, &session_id, &name_id).await;
+                image_md = md;
             }
         }
 
@@ -221,68 +265,38 @@ pub async fn computer_use(
                 "middle" => "2",
                 _ => "1",
             };
-            let cmd = format!("export DISPLAY={} && xdotool mousemove {} {} click {}", crate::daytona::DISPLAY_ID, px, py, click_btn);
-            let (out, code) = execute_command_in_sandbox(&db, &sandbox_id, &cmd).await
-                .map_err(|e| format!("执行鼠标点击指令失败: {}", e))?;
-            if code != 0 {
-                return Err(format!("鼠标点击操作失败: {}", out));
-            }
+            run_xdotool(&db, &sandbox_id, &format!("mousemove {} {} click {}", px, py, click_btn), "鼠标点击").await?;
             result_msg = format!("成功在 ({}, {}) 处执行了鼠标 {} 键点击操作。", px, py, btn);
         }
         "move" => {
             let px = x.unwrap_or(0);
             let py = y.unwrap_or(0);
-            let cmd = format!("export DISPLAY={} && xdotool mousemove {} {}", crate::daytona::DISPLAY_ID, px, py);
-            let (out, code) = execute_command_in_sandbox(&db, &sandbox_id, &cmd).await
-                .map_err(|e| format!("执行鼠标移动指令失败: {}", e))?;
-            if code != 0 {
-                return Err(format!("鼠标移动操作失败: {}", out));
-            }
+            run_xdotool(&db, &sandbox_id, &format!("mousemove {} {}", px, py), "鼠标移动").await?;
             result_msg = format!("成功将鼠标移动至坐标 ({}, {})。", px, py);
         }
         "drag" => {
             let px = x.unwrap_or(0);
             let py = y.unwrap_or(0);
-            let cmd = format!("export DISPLAY={} && xdotool mousedown 1 mousemove {} {} mouseup 1", crate::daytona::DISPLAY_ID, px, py);
-            let (out, code) = execute_command_in_sandbox(&db, &sandbox_id, &cmd).await
-                .map_err(|e| format!("执行鼠标拖拽指令失败: {}", e))?;
-            if code != 0 {
-                return Err(format!("鼠标拖拽操作失败: {}", out));
-            }
+            run_xdotool(&db, &sandbox_id, &format!("mousedown 1 mousemove {} {} mouseup 1", px, py), "鼠标拖拽").await?;
             result_msg = format!("成功将元素拖拽移动至坐标 ({}, {})。", px, py);
         }
         "scroll" => {
             let btn = button.unwrap_or_else(|| "down".to_string());
             let scroll_btn = match btn.as_str() {
                 "up" => "4",
-                _ => "5", // down
+                _ => "5",
             };
-            let cmd = format!("export DISPLAY={} && xdotool click {}", crate::daytona::DISPLAY_ID, scroll_btn);
-            let (out, code) = execute_command_in_sandbox(&db, &sandbox_id, &cmd).await
-                .map_err(|e| format!("执行鼠标滚动指令失败: {}", e))?;
-            if code != 0 {
-                return Err(format!("鼠标滚动操作失败: {}", out));
-            }
+            run_xdotool(&db, &sandbox_id, &format!("click {}", scroll_btn), "鼠标滚动").await?;
             result_msg = format!("成功执行了鼠标向上/下滚动 ({}) 操作。", btn);
         }
         "type" => {
             let t = text.ok_or_else(|| "键盘输入操作缺少必需的 'text' 参数。".to_string())?;
-            let cmd = format!("export DISPLAY={} && xdotool type --delay 10 '{}'", crate::daytona::DISPLAY_ID, t.replace("'", "'\\''"));
-            let (out, code) = execute_command_in_sandbox(&db, &sandbox_id, &cmd).await
-                .map_err(|e| format!("执行键盘输入指令失败: {}", e))?;
-            if code != 0 {
-                return Err(format!("键盘输入操作失败: {}", out));
-            }
+            run_xdotool(&db, &sandbox_id, &format!("type --delay 10 '{}'", t.replace("'", "'\\''")), "键盘输入").await?;
             result_msg = format!("成功向当前聚焦的文本框输入了内容: '{}'。", t);
         }
         "press" => {
             let k = key.ok_or_else(|| "键盘按键操作缺少必需的 'key' 参数。".to_string())?;
-            let cmd = format!("export DISPLAY={} && xdotool key '{}'", crate::daytona::DISPLAY_ID, k);
-            let (out, code) = execute_command_in_sandbox(&db, &sandbox_id, &cmd).await
-                .map_err(|e| format!("执行键盘按键指令失败: {}", e))?;
-            if code != 0 {
-                return Err(format!("键盘按键操作失败: {}", out));
-            }
+            run_xdotool(&db, &sandbox_id, &format!("key '{}'", k), "键盘按键").await?;
             result_msg = format!("成功触发了按键指令: '{}'。", k);
         }
         "screenshot" => {
@@ -293,27 +307,9 @@ pub async fn computer_use(
         }
     }
 
-    // 4. 所有操作完成后，自动截取一张当前桌面的最新图片，并保存至 `.flock/sandbox/screenshots/{name_id}.png` 供前端渲染
+    // 4. Capture desktop screenshot after action
     crate::emit_info(&flock_core::tr("正在捕获当前远程桌面截图并渲染预览...", "Capturing current remote desktop screenshot for preview..."));
-    let ss_cmd = format!("export DISPLAY={} && scrot -o /tmp/desktop_screenshot.png && cat /tmp/desktop_screenshot.png | base64 -w 0", crate::daytona::DISPLAY_ID);
-    let (b64_data, exit_code) = execute_command_in_sandbox(&db, &sandbox_id, &ss_cmd).await
-        .unwrap_or_default();
-
-    let mut screenshot_saved = false;
-    if exit_code == 0 && !b64_data.is_empty() {
-        if let Ok(img_bytes) = general_purpose::STANDARD.decode(b64_data.trim()) {
-            let base_dir = crate::get_workspace_dir().unwrap_or_else(|| std::env::current_dir().unwrap_or_default());
-            let ss_dir = base_dir.join(".flock/sandbox/screenshots").join(&session_id);
-            let ss_path = ss_dir.join(format!("{}.png", name_id));
-            if let Some(parent) = ss_path.parent() {
-                let _ = std::fs::create_dir_all(parent);
-            }
-            let _ = std::fs::write(&ss_path, &img_bytes);
-            let _ = std::fs::write(base_dir.join(format!(".flock/sandbox/screenshot_{}.png", session_id)), &img_bytes);
-            screenshot_saved = true;
-            crate::emit_info(&flock_core::tr("远程桌面最新状态已成功截取并拉回工作区预览！", "Latest remote desktop screenshot captured and synced to workspace!"));
-        }
-    }
+    let (image_md, _screenshot_saved) = capture_desktop_screenshot(&db, &sandbox_id, &session_id, &name_id).await;
 
     let proxy_url = match crate::daytona::get_sandbox_vnc_url(&db, &sandbox_id).await {
         Ok(u) => u,
@@ -321,16 +317,6 @@ pub async fn computer_use(
             crate::emit_info(&flock_core::tr(&format!("获取动态 VNC URL 失败: {}。使用静态备用 URL...", e), &format!("Failed to retrieve dynamic VNC URL: {}. Falling back to static VNC URL...", e)));
             format!("https://{}-{}.proxy.app.daytona.io/vnc.html?autoconnect=true&resize=scale", crate::daytona::WEBSOCKIFY_PORT, sandbox_id)
         }
-    };
-
-    let base_dir = crate::get_workspace_dir().unwrap_or_else(|| std::env::current_dir().unwrap_or_default());
-    let abs_screenshot_path = base_dir.join(".flock/sandbox/screenshots").join(&session_id).join(format!("{}.png", name_id));
-    let abs_path_str = abs_screenshot_path.to_string_lossy().to_string();
-
-    let image_md = if screenshot_saved {
-        format!("\n\n![桌面截图](file:///{})", abs_path_str)
-    } else {
-        String::new()
     };
 
     let final_res = format!(

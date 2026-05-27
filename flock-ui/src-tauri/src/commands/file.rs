@@ -7,6 +7,43 @@ async fn is_sandbox_active(db: &crate::SharedDbManager) -> bool {
     get_active_sandbox_id().await.is_some()
 }
 
+/// Resolve and validate a workspace-relative path, preventing directory traversal.
+/// Returns the canonical target path if valid, or an error message.
+fn resolve_safe_path(workspace_id: &str, relative_path: &str) -> Result<PathBuf, String> {
+    if relative_path.contains("..") {
+        return Err("非法路径访问".to_string());
+    }
+    let base = flock_core::config::db_path::workspace_root().join(workspace_id);
+    let target = base.join(relative_path);
+    let canonical_base = std::fs::canonicalize(&base).unwrap_or(base);
+    if target.exists() {
+        let canonical_target = std::fs::canonicalize(&target).unwrap_or(target.clone());
+        if !canonical_target.starts_with(&canonical_base) {
+            return Err("非法路径访问".to_string());
+        }
+    }
+    Ok(target)
+}
+
+/// Resolve a workspace-relative path without existence check (for create operations).
+fn resolve_parent_safe_path(workspace_id: &str, relative_path: &str) -> Result<(PathBuf, PathBuf), String> {
+    if relative_path.contains("..") {
+        return Err("非法路径访问".to_string());
+    }
+    let base = flock_core::config::db_path::workspace_root().join(workspace_id);
+    let target = base.join(relative_path);
+    let canonical_base = std::fs::canonicalize(&base).unwrap_or(base.clone());
+    if let Some(parent) = target.parent() {
+        if parent.exists() {
+            let canonical_parent = std::fs::canonicalize(parent).unwrap_or(parent.to_path_buf());
+            if !canonical_parent.starts_with(&canonical_base) {
+                return Err("非法路径访问".to_string());
+            }
+        }
+    }
+    Ok((target, canonical_base))
+}
+
 /// 列出工作空间文件
 #[tauri::command]
 pub async fn list_workspace_files(
@@ -137,23 +174,10 @@ pub async fn create_workspace_file(
     if is_sandbox_active(&db).await {
         DaytonaFs::write_file(&db, &relative_path, &content).await.map_err(|e| e.to_string())
     } else {
-        let base = flock_core::config::db_path::workspace_root().join(&workspace_id);
-        let target = base.join(&relative_path);
-
-        if relative_path.contains("..") {
-            return Err("非法路径访问".to_string());
-        }
-        let canonical_base = std::fs::canonicalize(&base).unwrap_or(base.clone());
+        let (target, _) = resolve_parent_safe_path(&workspace_id, &relative_path)?;
         if let Some(parent) = target.parent() {
-            if parent.exists() {
-                let canonical_parent = std::fs::canonicalize(parent).unwrap_or(parent.to_path_buf());
-                if !canonical_parent.starts_with(&canonical_base) {
-                    return Err("非法路径访问".to_string());
-                }
-            }
             std::fs::create_dir_all(parent).map_err(|e| e.to_string())?;
         }
-
         std::fs::write(&target, content).map_err(|e| e.to_string())?;
         Ok(())
     }
@@ -169,22 +193,7 @@ pub async fn create_workspace_directory(
     if is_sandbox_active(&db).await {
         DaytonaFs::create_dir(&db, &relative_path).await.map_err(|e| e.to_string())
     } else {
-        let base = flock_core::config::db_path::workspace_root().join(&workspace_id);
-        let target = base.join(&relative_path);
-
-        if relative_path.contains("..") {
-            return Err("非法路径访问".to_string());
-        }
-        let canonical_base = std::fs::canonicalize(&base).unwrap_or(base.clone());
-        if let Some(parent) = target.parent() {
-            if parent.exists() {
-                let canonical_parent = std::fs::canonicalize(parent).unwrap_or(parent.to_path_buf());
-                if !canonical_parent.starts_with(&canonical_base) {
-                    return Err("非法路径访问".to_string());
-                }
-            }
-        }
-
+        let (target, _) = resolve_parent_safe_path(&workspace_id, &relative_path)?;
         std::fs::create_dir_all(&target).map_err(|e| e.to_string())?;
         Ok(())
     }
@@ -201,23 +210,10 @@ pub async fn upload_workspace_file(
     if is_sandbox_active(&db).await {
         DaytonaFs::upload_file(&db, &relative_path, &content).await.map_err(|e| e.to_string())
     } else {
-        let base = flock_core::config::db_path::workspace_root().join(&workspace_id);
-        let target = base.join(&relative_path);
-
-        if relative_path.contains("..") {
-            return Err("非法路径访问".to_string());
-        }
-        let canonical_base = std::fs::canonicalize(&base).unwrap_or(base.clone());
+        let (target, _) = resolve_parent_safe_path(&workspace_id, &relative_path)?;
         if let Some(parent) = target.parent() {
-            if parent.exists() {
-                let canonical_parent = std::fs::canonicalize(parent).unwrap_or(parent.to_path_buf());
-                if !canonical_parent.starts_with(&canonical_base) {
-                    return Err("非法路径访问".to_string());
-                }
-            }
             std::fs::create_dir_all(parent).map_err(|e| e.to_string())?;
         }
-
         std::fs::write(&target, content).map_err(|e| e.to_string())?;
         Ok(())
     }
@@ -233,50 +229,18 @@ pub async fn delete_workspace_file_or_dir(
     if is_sandbox_active(&db).await {
         // 1. 删除沙盒远端文件
         DaytonaFs::delete_path(&db, &relative_path).await.map_err(|e| e.to_string())?;
-
-        // 2. 必须同步删掉本地文件，防止本地存留的文件在下一次 sync_up 时反向“诈尸”写回沙盒！
-        let base = flock_core::config::db_path::workspace_root().join(&workspace_id);
-        let target = base.join(&relative_path);
-
-        if relative_path.contains("..") {
-            return Err("非法路径访问".to_string());
-        }
-        let canonical_base = std::fs::canonicalize(&base).unwrap_or(base.clone());
-        if target.exists() {
-            let canonical_target = std::fs::canonicalize(&target).unwrap_or(target.clone());
-            if !canonical_target.starts_with(&canonical_base) {
-                return Err("非法路径访问".to_string());
-            }
-
-            if target.is_dir() {
-                std::fs::remove_dir_all(&target).map_err(|e| e.to_string())?;
-            } else {
-                std::fs::remove_file(&target).map_err(|e| e.to_string())?;
-            }
-        }
-        Ok(())
-    } else {
-        let base = flock_core::config::db_path::workspace_root().join(&workspace_id);
-        let target = base.join(&relative_path);
-
-        if relative_path.contains("..") {
-            return Err("非法路径访问".to_string());
-        }
-        let canonical_base = std::fs::canonicalize(&base).unwrap_or(base.clone());
-        if target.exists() {
-            let canonical_target = std::fs::canonicalize(&target).unwrap_or(target.clone());
-            if !canonical_target.starts_with(&canonical_base) {
-                return Err("非法路径访问".to_string());
-            }
-
-            if target.is_dir() {
-                std::fs::remove_dir_all(&target).map_err(|e| e.to_string())?;
-            } else {
-                std::fs::remove_file(&target).map_err(|e| e.to_string())?;
-            }
-        }
-        Ok(())
     }
+
+    // Always validate and delete local copy (prevents “zombie” files syncing back to sandbox)
+    let target = resolve_safe_path(&workspace_id, &relative_path)?;
+    if target.exists() {
+        if target.is_dir() {
+            std::fs::remove_dir_all(&target).map_err(|e| e.to_string())?;
+        } else {
+            std::fs::remove_file(&target).map_err(|e| e.to_string())?;
+        }
+    }
+    Ok(())
 }
 
 /// 下载/导出文件到本地其他目录
@@ -294,22 +258,10 @@ pub async fn download_workspace_file(
         std::fs::write(&local_dest_path, bytes).map_err(|e| e.to_string())?;
         Ok(())
     } else {
-        let base = flock_core::config::db_path::workspace_root().join(&workspace_id);
-        let target = base.join(&relative_path);
-
+        let target = resolve_safe_path(&workspace_id, &relative_path)?;
         if !target.exists() {
             return Err("源文件不存在".to_string());
         }
-
-        if relative_path.contains("..") {
-            return Err("非法路径访问".to_string());
-        }
-        let canonical_base = std::fs::canonicalize(&base).unwrap_or(base.clone());
-        let canonical_target = std::fs::canonicalize(&target).unwrap_or(target.clone());
-        if !canonical_target.starts_with(&canonical_base) {
-            return Err("非法路径访问".to_string());
-        }
-
         std::fs::copy(&target, &local_dest_path).map_err(|e| e.to_string())?;
         Ok(())
     }
@@ -324,35 +276,16 @@ pub async fn read_workspace_file_as_base64(
 ) -> Result<String, String> {
     // 对于截屏等已经在宿主机缓存的文件，直接从宿主机读取
     let is_screenshot = relative_path.starts_with(".flock/sandbox/screenshot");
-    
+
     if is_sandbox_active(&db).await && !is_screenshot {
         DaytonaFs::read_file_base64(&db, &relative_path).await.map_err(|e| e.to_string())
     } else {
         use base64::{Engine as _, engine::general_purpose};
-        
-        let base = flock_core::config::db_path::workspace_root().join(&workspace_id);
-        let target = base.join(&relative_path);
 
-        if relative_path.contains("..") {
-            return Err("非法路径访问".to_string());
-        }
-        
-        let base_exists = base.exists();
-        let canonical_base = if base_exists {
-            std::fs::canonicalize(&base).unwrap_or(base.clone())
-        } else {
-            base.clone()
-        };
-        
+        let target = resolve_safe_path(&workspace_id, &relative_path)?;
         if target.exists() {
-            let canonical_target = std::fs::canonicalize(&target).unwrap_or(target.clone());
-            if base_exists && !canonical_target.starts_with(&canonical_base) {
-                return Err("非法路径访问".to_string());
-            }
-
             let bytes = std::fs::read(&target).map_err(|e| e.to_string())?;
-            let base64_str = general_purpose::STANDARD.encode(bytes);
-            Ok(base64_str)
+            Ok(general_purpose::STANDARD.encode(bytes))
         } else {
             Err("文件不存在".to_string())
         }

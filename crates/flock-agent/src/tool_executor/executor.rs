@@ -8,11 +8,11 @@ use flock_core::types::message::ContentBlock;
 use flock_core::types::skill_types::ContextModifier;
 use flock_core::types::tool::ToolResult;
 use flock_tools::registry::ToolRegistry;
-use base64::Engine;
 
 use super::types::{ToolCallOutcome, ExecutionControl};
 use super::helpers::{group_calls, truncate_result, maybe_append_deferred_hint};
 use super::approval::{request_approval, update_plugin_hooks, block_is_error};
+use super::image_extract::extract_images_from_tool_result;
 
 /// Partition tool calls and execute them with optional confirmation and hooks
 pub async fn run_tools(
@@ -92,43 +92,6 @@ pub async fn run_tools(
     }
 
     Ok(ToolCallOutcome { results, modifiers })
-}
-
-fn extract_images_from_tool_result(
-    content: String,
-    tool_use_id: String,
-    is_error: bool,
-) -> Vec<ContentBlock> {
-    let mut blocks = Vec::new();
-    blocks.push(ContentBlock::ToolResult {
-        tool_use_id,
-        content: content.clone(),
-        is_error,
-    });
-
-    let re = regex::Regex::new(r"!\[.*?\]\((file://(.*?))\)").unwrap();
-    for cap in re.captures_iter(&content) {
-        if let Some(path_match) = cap.get(2) {
-            let path = path_match.as_str();
-            if let Ok(bytes) = std::fs::read(path) {
-                let base64 = base64::engine::general_purpose::STANDARD.encode(&bytes);
-                let ext = path.split('.').last().unwrap_or("").to_lowercase();
-                let mime = match ext.as_str() {
-                    "png" => "image/png",
-                    "jpeg" | "jpg" => "image/jpeg",
-                    "gif" => "image/gif",
-                    "webp" => "image/webp",
-                    _ => "image/png",
-                }.to_string();
-                
-                blocks.push(ContentBlock::Image {
-                    media_type: mime,
-                    data: base64,
-                });
-            }
-        }
-    }
-    blocks
 }
 
 pub async fn execute_single(

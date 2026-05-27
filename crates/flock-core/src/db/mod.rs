@@ -1,7 +1,10 @@
 pub mod assistants;
+pub mod assistants_seed;
 pub mod conversations;
+pub mod message_parser;
 pub mod mcpserver;
 pub mod migrations;
+pub mod models;
 pub mod modelproviders;
 pub mod modelprovider_seed;
 pub mod model_providers;
@@ -80,7 +83,7 @@ impl DbManager {
         let mgr = Self { pool, db_path };
         mgr.run_migrations().await?;
         mgr.seed_builtin_providers().await?;
-        mgr.seed_builtin_assistants(&assistants::builtin_assistants()).await?;
+        mgr.seed_builtin_assistants(&assistants_seed::builtin_assistants()).await?;
         mgr.seed_default_app_config().await?;
         Ok(mgr)
     }

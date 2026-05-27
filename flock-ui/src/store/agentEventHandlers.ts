@@ -84,19 +84,22 @@ function openTerminal(content: string) {
 }
 
 function openVncOrScreenshot(vncUrl: string | null, screenshotPath: string) {
+  const uiStore = useUiStore.getState();
+  const isCurrentlyOpen = uiStore.isPreviewOpen && uiStore.environmentMode === 'computer';
+
   if (vncUrl) {
-    const currentPreview = useUiStore.getState().previewFile;
-    if (!currentPreview || currentPreview.path !== vncUrl) {
-      useUiStore.getState().openEnvironment('computer', {
+    const currentPreview = uiStore.previewFile;
+    if (!isCurrentlyOpen || !currentPreview || currentPreview.path !== vncUrl) {
+      uiStore.openEnvironment('computer', {
         path: vncUrl,
         content: '',
         extension: 'vnc',
       });
     }
   } else {
-    const currentPreview = useUiStore.getState().previewFile;
-    if (!currentPreview || currentPreview.path !== screenshotPath) {
-      useUiStore.getState().openEnvironment('computer', {
+    const currentPreview = uiStore.previewFile;
+    if (!isCurrentlyOpen || !currentPreview || currentPreview.path !== screenshotPath) {
+      uiStore.openEnvironment('computer', {
         path: screenshotPath,
         content: '',
         extension: 'png',
@@ -105,16 +108,16 @@ function openVncOrScreenshot(vncUrl: string | null, screenshotPath: string) {
   }
 }
 
-async function openVncForTool(screenshotPath: string, toolName: string, output: string, callId?: string) {
-  const lowerTool = toolName.toLowerCase();
-
+async function openVncForTool(screenshotPath: string, toolName: string, output: string) {
   if (isComputerUseTool(toolName)) {
     const vncRegex = /(https:\/\/6080-[^\s)]+)/;
     const match = output.match(vncRegex);
     if (match && match[1]) {
-      const currentPreview = useUiStore.getState().previewFile;
-      if (!currentPreview || currentPreview.path !== match[1]) {
-        useUiStore.getState().openEnvironment('computer', {
+      const uiStore = useUiStore.getState();
+      const isCurrentlyOpen = uiStore.isPreviewOpen && uiStore.environmentMode === 'computer';
+      const currentPreview = uiStore.previewFile;
+      if (!isCurrentlyOpen || !currentPreview || currentPreview.path !== match[1]) {
+        uiStore.openEnvironment('computer', {
           path: match[1],
           content: '',
           extension: 'vnc',
@@ -127,9 +130,11 @@ async function openVncForTool(screenshotPath: string, toolName: string, output: 
   try {
     const vncUrl = await invoke<string | null>('get_active_sandbox_vnc_url');
     if (vncUrl) {
-      const currentPreview = useUiStore.getState().previewFile;
-      if (!currentPreview || currentPreview.path !== vncUrl) {
-        useUiStore.getState().openEnvironment('computer', {
+      const uiStore = useUiStore.getState();
+      const isCurrentlyOpen = uiStore.isPreviewOpen && uiStore.environmentMode === 'computer';
+      const currentPreview = uiStore.previewFile;
+      if (!isCurrentlyOpen || !currentPreview || currentPreview.path !== vncUrl) {
+        uiStore.openEnvironment('computer', {
           path: vncUrl,
           content: '',
           extension: 'vnc',
@@ -159,7 +164,18 @@ function handleToolRunningPreview(
 ) {
   if (!isToolRequiringPreview(toolName)) return;
 
-  const isCmdLine = isCommandLineTool(toolName);
+  let isCmdLine = isCommandLineTool(toolName);
+
+  if (!isCmdLine && isComputerUseTool(toolName)) {
+    try {
+      const args = parseArgs(findToolArgs(get().messages, callId));
+      if (args && (args.action === 'exec' || args.action === 'EXEC')) {
+        isCmdLine = true;
+      }
+    } catch {
+      // ignore
+    }
+  }
 
   if (isCmdLine) {
     let cmdStr = '';
