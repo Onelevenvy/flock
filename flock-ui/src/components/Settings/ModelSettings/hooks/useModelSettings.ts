@@ -5,7 +5,6 @@ import { useTranslation } from 'react-i18next';
 import { IconCheck } from '@tabler/icons-react';
 import { reconnectCurrentAgent } from '../../../../lib/agentConnection';
 import { useWorkspacesQuery } from '../../../../hooks/useWorkspaces';
-import { parseMultiLang } from '../../../../utils/i18n';
 import type { ModelProvider, ModelItem, DefaultConfig, SummaryModelConfig } from '../types';
 import React from 'react';
 
@@ -200,13 +199,13 @@ export function useModelSettings() {
 
   const onlineModels = Object.entries(modelsMap).flatMap(([pid, models]) => {
     const p = providers.find((prov) => prov.id === pid);
-    const providerName = p ? parseMultiLang(p.provider_name) : pid;
+    const providerIcon = p?.icon || pid;
     return models
       .filter((m) => m.is_online)
       .map((m) => ({
         value: `${pid}:${m.model_name}`,
         label: m.model_name,
-        providerName,
+        providerName: providerIcon,
       }));
   });
 
