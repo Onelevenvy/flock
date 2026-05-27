@@ -190,6 +190,17 @@ impl AgentBuilder {
         ).await;
 
 
+        // Pre-compute whether ToolSearch will be registered so the system
+        // prompt can include (or omit) the deferred-tool hint accordingly.
+        // Logic mirrors `should_register_meta` inside register_internal_tools.
+        let has_tool_search = match &self.assistant_overrides {
+            None => true,
+            Some(ov) => match &ov.allowed_tool_providers {
+                None => true,
+                Some(v) => !v.is_empty(),
+            },
+        };
+
         // --- Determine the effective system prompt ---
         build_effective_system_prompt(
             &mut self.config,
@@ -197,6 +208,7 @@ impl AgentBuilder {
             cwd,
             &skills,
             memory_dir.as_deref(),
+            has_tool_search,
         );
 
         // --- Apply tool provider allowlist BEFORE registering internal tools ---
@@ -207,8 +219,8 @@ impl AgentBuilder {
             }
         }
 
-        // --- Register internal tools (skill, spawn, plan) ---
-        let plan_active_flag = register_internal_tools(
+        // --- Register internal tools (skill, spawn, plan, tool_search) ---
+        let (plan_active_flag, _) = register_internal_tools(
             &mut registry,
             &self.config,
             &self.assistant_overrides,
