@@ -317,3 +317,110 @@
   vertical-align: middle;
   animation: xiaof-dot-pulse 1.5s ease infinite;
 }
+
+/* ── Cyber Spritesheet Fox Picture Animations ──────────────────────────── */
+
+/* 1. 待命 (Idle) - 软萌起伏 */
+.cyber-pic-idle {
+  animation: cyber-pic-breathe-anim 3s ease-in-out infinite;
+  transform-origin: bottom center;
+}
+
+@keyframes cyber-pic-breathe-anim {
+  0%, 100% { transform: translateY(0) scale(1, 1); }
+  50%       { transform: translateY(2px) scale(1.02, 0.96); }
+}
+
+/* 2. 休眠 (Sleeping) - 舒缓呼吸 */
+.cyber-pic-breathe {
+  animation: cyber-pic-sleep-anim 4.5s ease-in-out infinite;
+  transform-origin: bottom center;
+}
+
+@keyframes cyber-pic-sleep-anim {
+  0%, 100% { transform: translateY(0) scale(1, 1); }
+  50%       { transform: translateY(1px) scale(1.01, 0.98); }
+}
+
+/* 3. 思考 (Thinking) - 摇脑呆萌 */
+.cyber-pic-bob {
+  animation: cyber-pic-bob-anim 1.8s ease-in-out infinite;
+  transform-origin: bottom center;
+}
+
+@keyframes cyber-pic-bob-anim {
+  0%, 100% { transform: translateY(0) rotate(0deg) scale(1); }
+  33%      { transform: translateY(-3px) rotate(-3deg) scale(0.98, 1.02); }
+  66%      { transform: translateY(-1px) rotate(3deg) scale(1.01, 0.99); }
+}
+
+/* 4. 执行中 (Working) - 频闪跃动 */
+.cyber-pic-run {
+  animation: cyber-pic-run-anim 0.45s ease-in-out infinite alternate;
+  transform-origin: bottom center;
+}
+
+@keyframes cyber-pic-run-anim {
+  0%   { transform: translateY(0) rotate(-1deg) scale(1, 1); }
+  100% { transform: translateY(-4px) rotate(2deg) scale(0.98, 1.04); }
+}
+
+/* 5. 等待确认 (Waiting) - 警惕微晃 */
+.cyber-pic-alert {
+  animation: cyber-pic-alert-anim 0.8s ease-in-out infinite alternate;
+  transform-origin: bottom center;
+}
+
+@keyframes cyber-pic-alert-anim {
+  0%   { transform: translateY(0) scale(1); }
+  100% { transform: translateY(-3px) scale(0.97, 1.05); }
+}
+
+/* 6. 人工接管 (Takeover) - 荧光脉动 */
+.cyber-pic-pulse {
+  animation: cyber-pic-pulse-anim 1s ease-in-out infinite;
+  transform-origin: bottom center;
+}
+
+@keyframes cyber-pic-pulse-anim {
+  0%, 100% { transform: scale(1); filter: brightness(1); }
+  50%       { transform: scale(1.08); filter: brightness(1.25); }
+}
+
+/* 7. 成功 (Success) - 欢快弹跳 */
+.cyber-pic-jump {
+  animation: cyber-pic-jump-anim 0.75s cubic-bezier(0.25, 0.8, 0.25, 1) infinite alternate;
+  transform-origin: bottom center;
+}
+
+@keyframes cyber-pic-jump-anim {
+  0%   { transform: translateY(3px) scale(1.05, 0.92); }
+  100% { transform: translateY(-12px) scale(0.95, 1.08); }
+}
+
+/* 8. 出错 (Error) - 委屈打颤 */
+.cyber-pic-tremble {
+  animation: cyber-pic-tremble-anim 0.8s ease-in-out infinite;
+  transform-origin: bottom center;
+}
+
+@keyframes cyber-pic-tremble-anim {
+  0%, 100% { transform: translate(0, 0) scale(1); }
+  20%       { transform: translate(-0.8px, 0.4px) scale(0.99, 1.01); }
+  40%       { transform: translate(0.6px, -0.4px); }
+  60%       { transform: translate(-0.6px, -0.4px); }
+  80%       { transform: translate(0.8px, 0.4px) scale(1.01, 0.99); }
+}
+
+/* ── 霓虹环境氛围光晕微动 ── */
+@keyframes cyber-glow-ambient {
+  0%, 100% { transform: scale(1); opacity: 0.75; }
+  50%       { transform: scale(1.06); opacity: 0.95; }
+}
+
+@keyframes cyber-glow-pulsate {
+  0%, 100% { transform: scale(0.96); opacity: 0.65; }
+  50%       { transform: scale(1.15); opacity: 1; }
+}
+
+
