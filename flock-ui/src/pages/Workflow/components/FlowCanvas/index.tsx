@@ -71,7 +71,7 @@ export function FlowCanvas({ workflowId, workflowData, onBack }: FlowCanvasProps
   const [showMinimap, setShowMinimap] = useState(false);
   const [showNodePalette, setShowNodePalette] = useState(false);
   const [showEnvVars, setShowEnvVars] = useState(false);
-  const [isPanMode, setIsPanMode] = useState(false);
+  const [isPanMode, setIsPanMode] = useState(true);
 
   // ── Topological Auto Layout Hook ───────────────────────────────────────
   const { layoutAllNodes } = useFlowLayout(nodes, edges, setNodes, setEdges);

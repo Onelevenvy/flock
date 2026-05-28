@@ -12,6 +12,7 @@ import {
   Switch,
   Select,
   Stack,
+  Textarea,
 } from '@mantine/core';
 import {
   IconX,
@@ -214,6 +215,34 @@ export function ExecutionPanel({
                   checked={!!formInputs[v.name]}
                   onChange={(e) => setFormInputs({ ...formInputs, [v.name]: e.currentTarget.checked })}
                   size="xs"
+                />
+              );
+            }
+            if (v.type === 'paragraph') {
+              return (
+                <Textarea
+                  key={v.name}
+                  label={label}
+                  value={formInputs[v.name] ?? ''}
+                  onChange={(e) => setFormInputs({ ...formInputs, [v.name]: e.target.value })}
+                  size="xs"
+                  minRows={3}
+                  required={v.required}
+                />
+              );
+            }
+            if (v.type === 'select') {
+              const selectOptions = (v.options as string[]) ?? [];
+              return (
+                <Select
+                  key={v.name}
+                  label={label}
+                  data={selectOptions.map((o) => ({ value: o, label: o }))}
+                  value={formInputs[v.name] ?? ''}
+                  onChange={(val) => setFormInputs({ ...formInputs, [v.name]: val })}
+                  size="xs"
+                  required={v.required}
+                  clearable
                 />
               );
             }

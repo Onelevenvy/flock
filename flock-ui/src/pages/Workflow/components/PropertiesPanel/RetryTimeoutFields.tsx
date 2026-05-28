@@ -1,6 +1,4 @@
-import { useState } from 'react';
-import { NumberInput, Stack, Group, Collapse, ActionIcon, Text } from '@mantine/core';
-import { IconChevronDown, IconChevronRight } from '@tabler/icons-react';
+import { NumberInput, Stack, Group, Switch, Slider, Box, Text } from '@mantine/core';
 import { useTranslation } from 'react-i18next';
 
 interface RetryTimeoutFieldsProps {
@@ -10,61 +8,98 @@ interface RetryTimeoutFieldsProps {
 
 export function RetryTimeoutFields({ node, onDataChange }: RetryTimeoutFieldsProps) {
   const { t } = useTranslation();
-  const [opened, setOpened] = useState(false);
+  
+  // Check if retry is active
+  const retryEnabled = node.data.max_retries !== undefined && node.data.max_retries > 0;
+
+  const handleToggleRetry = (checked: boolean) => {
+    if (checked) {
+      onDataChange(node.id, 'max_retries', 3);
+      onDataChange(node.id, 'retry_delay_ms', 1000);
+    } else {
+      onDataChange(node.id, 'max_retries', undefined);
+      onDataChange(node.id, 'retry_delay_ms', undefined);
+    }
+  };
 
   return (
-    <>
-      <Group
-        gap={4}
-        style={{ cursor: 'pointer', userSelect: 'none' }}
-        onClick={() => setOpened((o) => !o)}
-      >
-        <ActionIcon variant="transparent" size="xs" color="gray">
-          {opened ? <IconChevronDown size={12} /> : <IconChevronRight size={12} />}
-        </ActionIcon>
-        <Text size="xs" fw={500} c="dimmed">
-          {t('workflow.properties.advanced.title', 'Advanced Settings')}
+    <Stack gap="xs">
+      <Group justify="space-between" align="center">
+        <Text size="xs" fw={600} style={{ color: 'var(--flock-text-bright)' }}>
+          {t('workflow.properties.advanced.retryOnFailure', 'Retry on Failure')}
         </Text>
+        <Switch
+          checked={retryEnabled}
+          onChange={(e) => handleToggleRetry(e.currentTarget.checked)}
+          size="xs"
+        />
       </Group>
-      <Collapse in={opened}>
-        <Stack gap="xs" pt={4}>
-          <NumberInput
-            label={t('workflow.properties.advanced.maxRetries', 'Max Retries')}
-            value={node.data.max_retries != null ? Number(node.data.max_retries) : 0}
-            onChange={(v) => onDataChange(node.id, 'max_retries', v)}
-            min={0}
-            max={10}
-            step={1}
-            size="xs"
-          />
-          <NumberInput
-            label={t('workflow.properties.advanced.retryDelay', 'Retry Delay (ms)')}
-            value={node.data.retry_delay_ms != null ? Number(node.data.retry_delay_ms) : 1000}
-            onChange={(v) => onDataChange(node.id, 'retry_delay_ms', v)}
-            min={100}
-            step={500}
-            size="xs"
-          />
-          <NumberInput
-            label={t('workflow.properties.advanced.backoffMultiplier', 'Backoff Multiplier')}
-            value={node.data.backoff_multiplier != null ? Number(node.data.backoff_multiplier) : 2.0}
-            onChange={(v) => onDataChange(node.id, 'backoff_multiplier', v)}
-            min={1}
-            max={10}
-            step={0.5}
-            decimalScale={1}
-            size="xs"
-          />
-          <NumberInput
-            label={t('workflow.properties.advanced.timeout', 'Timeout (ms)')}
-            value={node.data.timeout_ms != null ? Number(node.data.timeout_ms) : 120000}
-            onChange={(v) => onDataChange(node.id, 'timeout_ms', v)}
-            min={1000}
-            step={10000}
-            size="xs"
-          />
-        </Stack>
-      </Collapse>
-    </>
-  );
-}
+
+      {retryEnabled && (
+        <Stack gap="xs">
+          {/* Max Retries */}
+          <Stack gap={4}>
+            <Group justify="space-between" align="center">
+              <Text size="xs" fw={500} c="dimmed">
+                {t('workflow.properties.advanced.maxRetries', 'Max Retries')}
+              </Text>
+              <NumberInput
+                value={node.data.max_retries ?? 3}
+                onChange={(v) => onDataChange(node.id, 'max_retries', Number(v))}
+                min={1}
+                max={10}
+                size="xs"
+                style={{ width: 90 }}
+                variant="filled"
+                suffix={t('workflow.properties.advanced.times', ' Times')}
+                styles={{ input: { textAlign: 'center', padding: 0 } }}
+              />
+            </Group>
+            <Box px={6}>
+              <Slider
+                value={node.data.max_retries ?? 3}
+                onChange={(v) => onDataChange(node.id, 'max_retries', v)}
+                min={1}
+                max={10}
+                step={1}
+                label={null}
+                size="xs"
+              />
+              </Box>
+            </Stack>
+
+            {/* Retry Delay */}
+            <Stack gap={4}>
+              <Group justify="space-between" align="center">
+                <Text size="xs" fw={500} c="dimmed">
+                  {t('workflow.properties.advanced.retryDelay', 'Retry Delay')}
+                </Text>
+                <NumberInput
+                  value={node.data.retry_delay_ms ?? 1000}
+                  onChange={(v) => onDataChange(node.id, 'retry_delay_ms', Number(v))}
+                  min={100}
+                  max={10000}
+                  size="xs"
+                  style={{ width: 90 }}
+                  variant="filled"
+                  suffix=" ms"
+                  styles={{ input: { textAlign: 'center', padding: 0 } }}
+                />
+              </Group>
+              <Box px={6}>
+                <Slider
+                  value={node.data.retry_delay_ms ?? 1000}
+                  onChange={(v) => onDataChange(node.id, 'retry_delay_ms', v)}
+                  min={100}
+                  max={10000}
+                  step={100}
+                  label={null}
+                  size="xs"
+                />
+              </Box>
+            </Stack>
+          </Stack>
+        )}
+      </Stack>
+    );
+  }

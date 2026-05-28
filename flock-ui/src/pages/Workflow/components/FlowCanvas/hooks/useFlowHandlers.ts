@@ -12,6 +12,7 @@ import {
   MarkerType,
 } from 'reactflow';
 import { nodeConfig, type NodeType } from '../../../nodeConfig';
+import { useWorkflowStore } from '../../../../../store/workflowStore';
 
 
 /**
@@ -26,6 +27,9 @@ export function useFlowHandlers(
   setSelectedNodeId: (id: string | null) => void,
   setShowNodePalette: (v: boolean) => void,
 ) {
+  const debugTarget = useWorkflowStore((s) => s.debugTarget);
+  const setDebugTarget = useWorkflowStore((s) => s.setDebugTarget);
+
   const onNodesChange: OnNodesChange = useCallback(
     (changes) => setNodes((nds) => applyNodeChanges(changes, nds)),
     [setNodes]
@@ -64,7 +68,7 @@ export function useFlowHandlers(
       const tgtCfg = nodeConfig[tgt.type as NodeType];
       if (!srcCfg || !tgtCfg) return true;
 
-      if (src.type === 'classifier' || src.type === 'ifelse') {
+      if (src.type === 'classifier' || src.type === 'ifelse' || src.type === 'human') {
         return tgtCfg.allowedConnections.targets.length > 0;
       }
       const srcOk = !connection.sourceHandle || srcCfg.allowedConnections.sources.includes(connection.sourceHandle);
@@ -78,8 +82,11 @@ export function useFlowHandlers(
     (_: React.MouseEvent, node: Node) => {
       setSelectedNodeId(node.id);
       setShowNodePalette(false);
+      if (debugTarget && node.type !== 'start' && node.type !== 'end') {
+        setDebugTarget({ nodeId: node.id });
+      }
     },
-    [setSelectedNodeId, setShowNodePalette]
+    [setSelectedNodeId, setShowNodePalette, debugTarget, setDebugTarget]
   );
 
   const onPaneClick = useCallback(() => {

@@ -50,7 +50,10 @@ export function useWorkflowExecution() {
               payload = event.payload as WorkflowTauriEvent;
             }
 
-            if (payload.workflow_id !== store.activeWorkflowId) {
+            const isActiveWf = payload.workflow_id === store.activeWorkflowId;
+            const isDebugOfActiveWf = !!(store.activeWorkflowId && payload.workflow_id.startsWith(`${store.activeWorkflowId}:debug:`));
+
+            if (!isActiveWf && !isDebugOfActiveWf) {
               // 如果不是当前活跃的工作流，忽略
               return;
             }

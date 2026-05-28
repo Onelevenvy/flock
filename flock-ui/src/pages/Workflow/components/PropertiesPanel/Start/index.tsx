@@ -9,12 +9,13 @@ export interface StartFieldsProps {
 }
 
 export interface VariableConfig {
-  type: string;
+  type: string; // 'string' | 'paragraph' | 'number' | 'boolean' | 'select'
   name: string;
   label: string;
   max_length?: number;
   default_value?: string;
   required: boolean;
+  options?: string[]; // Used for select dropdown options
 }
 
 export function StartFields({ node, onDataChange }: StartFieldsProps) {
@@ -32,17 +33,28 @@ export function StartFields({ node, onDataChange }: StartFieldsProps) {
   const [displayName, setDisplayName] = useState('');
   const [maxLength, setMaxLength] = useState<number | undefined>(undefined);
   const [defaultValue, setDefaultValue] = useState('');
+  const [optionsStr, setOptionsStr] = useState(''); // Comma-separated options
   const [required, setRequired] = useState(true);
 
   const handleSaveVariable = () => {
     if (!varName.trim()) return;
+
+    let parsedOptions: string[] | undefined = undefined;
+    if (fieldType === 'select') {
+      parsedOptions = optionsStr
+        .split(',')
+        .map((o) => o.trim())
+        .filter((o) => o.length > 0);
+    }
+
     const newVar: VariableConfig = {
       type: fieldType,
       name: varName.trim(),
       label: displayName.trim() || varName.trim(),
-      max_length: maxLength,
+      max_length: fieldType === 'string' ? maxLength : undefined,
       default_value: defaultValue.trim() || undefined,
       required,
+      options: parsedOptions,
     };
     
     // Add or replace existing
@@ -71,6 +83,7 @@ export function StartFields({ node, onDataChange }: StartFieldsProps) {
     setDisplayName('');
     setMaxLength(undefined);
     setDefaultValue('');
+    setOptionsStr('');
     setRequired(true);
   };
 
@@ -136,9 +149,11 @@ export function StartFields({ node, onDataChange }: StartFieldsProps) {
           <Select
             label={t('workflow.properties.start.fieldType', 'Field Type')}
             data={[
-              { value: 'string', label: t('workflow.properties.start.text', 'Text') },
+              { value: 'string', label: t('workflow.properties.start.text', 'Text (Single Line)') },
+              { value: 'paragraph', label: t('workflow.properties.start.paragraph', 'Paragraph (Multi Line)') },
               { value: 'number', label: t('workflow.properties.start.number', 'Number') },
               { value: 'boolean', label: t('workflow.properties.start.boolean', 'Boolean') },
+              { value: 'select', label: t('workflow.properties.start.select', 'Options (Dropdown Select)') },
             ]}
             value={fieldType}
             onChange={(v) => setFieldType(v ?? 'string')}
@@ -169,6 +184,17 @@ export function StartFields({ node, onDataChange }: StartFieldsProps) {
               onChange={(v) => setMaxLength(v ? Number(v) : undefined)}
               min={1}
               size="xs"
+            />
+          )}
+
+          {fieldType === 'select' && (
+            <TextInput
+              label={t('workflow.properties.start.optionsList', 'Options (Comma separated)')}
+              placeholder="e.g. Option A, Option B, Option C"
+              value={optionsStr}
+              onChange={(e) => setOptionsStr(e.target.value)}
+              size="xs"
+              required
             />
           )}
 
