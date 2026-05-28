@@ -285,12 +285,27 @@ pub async fn run_workflow(
             }
         }
 
+        let start_node_id = wf_record.config
+            .get("nodes")
+            .and_then(|v| v.as_array())
+            .and_then(|arr| {
+                arr.iter()
+                    .find(|n| n.get("type").and_then(|t| t.as_str()) == Some("start"))
+                    .and_then(|n| n.get("id").and_then(|i| i.as_str()))
+            })
+            .unwrap_or("start")
+            .to_string();
+
+        let mut node_outputs = serde_json::json!({});
+        node_outputs[&start_node_id] = start_outputs.clone();
+        if start_node_id != "start" {
+            node_outputs["start"] = start_outputs;
+        }
+
         serde_json::json!({
             "input_msg": input_msg,
             "messages": [],
-            "node_outputs": {
-                "start": start_outputs
-            },
+            "node_outputs": node_outputs,
             "current_node": "",
             "quit_requested": false,
             "env_vars": {},
