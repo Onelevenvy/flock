@@ -53,7 +53,7 @@ export const DynamicIcon: React.FC<DynamicIconProps> = ({
   useEffect(() => {
     setImgSrc(getInitialSrc(category, name));
     setRetryCount(0);
-  }, [category, name]);
+  }, [category, name, fallbackName]);
 
   const handleError = () => {
     if (retryCount === 0) {
@@ -83,6 +83,8 @@ export const DynamicIcon: React.FC<DynamicIconProps> = ({
       setRetryCount(2);
     }
   };
+
+  if (!imgSrc) return null;
 
   return (
     <img

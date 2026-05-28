@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Handle, Position, type NodeProps } from 'reactflow';
 import { Box, Text, ActionIcon, Tooltip } from '@mantine/core';
 import { IconPlus, IconBug } from '@tabler/icons-react';
@@ -9,7 +9,30 @@ import { type BaseNodeData } from './types';
 import { handleStyle } from './styles';
 import { getNodeSummary } from './helpers';
 
+import { invoke } from '@tauri-apps/api/core';
 import { ModelIcon } from '../../../components/Common/Icons';
+
+let cachedProvidersPromise: Promise<Record<string, string>> | null = null;
+function getCachedProviderIcons(): Promise<Record<string, string>> {
+  if (!cachedProvidersPromise) {
+    cachedProvidersPromise = invoke<any[]>('list_providers')
+      .then((provs) => {
+        const mapping: Record<string, string> = {};
+        provs.forEach((p) => {
+          if (p.id && p.icon) {
+            mapping[p.id] = p.icon;
+          }
+        });
+        return mapping;
+      })
+      .catch((err) => {
+        console.error('Failed to load providers:', err);
+        cachedProvidersPromise = null;
+        return {};
+      });
+  }
+  return cachedProvidersPromise;
+}
 
 function getProviderFromModel(model: string): string {
   const m = model.toLowerCase();
@@ -36,6 +59,26 @@ export function BaseWorkflowNode({ id, type, data, selected }: BaseWorkflowNodeP
   const Icon = cfg.icon;
   const summary = getNodeSummary(type, data, t);
   const canDebug = type !== 'start' && type !== 'end';
+
+  const [providerIcons, setProviderIcons] = useState<Record<string, string>>({});
+  useEffect(() => {
+    getCachedProviderIcons().then(setProviderIcons);
+  }, []);
+
+  let providerIcon = '';
+  if (data.model) {
+    if (data.provider) {
+      const pStr = String(data.provider);
+      if (pStr.startsWith('data:')) {
+        providerIcon = pStr;
+      } else {
+        providerIcon = providerIcons[pStr] || pStr;
+      }
+    } else {
+      const inferred = getProviderFromModel(String(data.model));
+      providerIcon = providerIcons[inferred] || inferred;
+    }
+  }
 
   return (
     <Box
@@ -109,7 +152,7 @@ export function BaseWorkflowNode({ id, type, data, selected }: BaseWorkflowNodeP
             <Box style={{ display: 'flex', alignItems: 'center', gap: 6, width: '100%' }}>
               <ModelIcon
                 name={String(data.model)}
-                provider={data.provider ? String(data.provider) : getProviderFromModel(String(data.model))}
+                provider={providerIcon}
                 size={14}
                 style={{ flexShrink: 0 }}
               />

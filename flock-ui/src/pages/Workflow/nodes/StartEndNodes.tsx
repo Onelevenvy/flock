@@ -14,6 +14,7 @@ export const StartNode = memo(({ id, data, selected }: NodeProps<BaseNodeData>) 
   const variables = (data.variables as any[]) ?? [
     { type: 'string', name: 'query', label: 'Query', required: true }
   ];
+  const customVariables = variables.filter(v => v.name !== 'query');
 
   return (
     <Box
@@ -42,7 +43,7 @@ export const StartNode = memo(({ id, data, selected }: NodeProps<BaseNodeData>) 
           display: 'flex',
           alignItems: 'center',
           gap: 8,
-          borderBottom: variables.length > 0 ? '1px solid var(--flock-border-subtle)' : 'none',
+          borderBottom: customVariables.length > 0 ? '1px solid var(--flock-border-subtle)' : 'none',
         }}
       >
         <Box
@@ -65,9 +66,9 @@ export const StartNode = memo(({ id, data, selected }: NodeProps<BaseNodeData>) 
       </Box>
 
       {/* Variables List */}
-      {variables.length > 0 && (
+      {customVariables.length > 0 && (
         <Box style={{ padding: '6px 12px', display: 'flex', flexDirection: 'column', gap: 4 }}>
-          {variables.map((v) => (
+          {customVariables.map((v) => (
             <Box
               key={v.name}
               style={{
@@ -86,7 +87,7 @@ export const StartNode = memo(({ id, data, selected }: NodeProps<BaseNodeData>) 
               <Box style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
                 {v.required && (
                   <Text size="10px" c="red" fw={500}>
-                    {t('workflow.properties.start.requiredLabel', 'Required')}
+                    {t('workflow.properties.start.required', 'Required')}
                   </Text>
                 )}
                 <Text size="10px" c="dimmed">
