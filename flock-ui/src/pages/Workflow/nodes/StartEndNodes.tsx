@@ -18,28 +18,13 @@ export const StartNode = memo(({ id, data, selected }: NodeProps<BaseNodeData>) 
 
   return (
     <Box
-      style={{
-        width: 220,
-        borderRadius: 12,
-        border: selected 
-          ? `2px solid var(--flock-accent)` 
-          : `1px solid var(--flock-accent)`,
-        background: 'var(--flock-bg-surface)',
-        boxShadow: selected 
-          ? `0 0 0 3px rgba(21, 90, 239, 0.25)` 
-          : '0 4px 10px rgba(0,0,0,0.03)',
-        display: 'flex',
-        flexDirection: 'column',
-        position: 'relative',
-        cursor: 'pointer',
-        transition: 'all 0.15s ease',
-      }}
+      className={`flock-workflow-node ${selected ? 'selected' : ''}`}
     >
       <style dangerouslySetInnerHTML={{ __html: handleStyle }} />
       {/* Node Header */}
       <Box
         style={{
-          padding: '8px 12px',
+          padding: '10px 12px',
           display: 'flex',
           alignItems: 'center',
           gap: 8,
@@ -47,20 +32,14 @@ export const StartNode = memo(({ id, data, selected }: NodeProps<BaseNodeData>) 
         }}
       >
         <Box
+          className="flock-node-icon-container"
           style={{
-            width: 22,
-            height: 22,
-            borderRadius: 6,
-            background: 'var(--flock-accent-soft)',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            flexShrink: 0,
+            background: `${cfg.colorHex}15`,
           }}
         >
-          <Icon size={12} stroke={2.5} style={{ color: cfg.colorHex }} />
+          <Icon size={14} stroke={2.5} style={{ color: cfg.colorHex }} />
         </Box>
-        <Text size="xs" fw={700} style={{ color: 'var(--flock-text-bright)', fontSize: 11, flex: 1 }}>
+        <Text size="xs" fw={700} style={{ color: 'var(--flock-text-bright)', fontSize: 12, flex: 1 }}>
           {data.label || t('workflow.nodes.start.label', 'Start')}
         </Text>
       </Box>
@@ -157,39 +136,23 @@ export const EndNode = memo(({ data, selected }: NodeProps<BaseNodeData>) => {
   const { t } = useTranslation();
   return (
     <Box
+      className={`flock-workflow-node ${selected ? 'selected' : ''}`}
       style={{
-        padding: '8px 12px',
-        borderRadius: 12,
-        background: 'var(--flock-bg-surface)',
-        border: selected 
-          ? `2px solid var(--flock-accent)` 
-          : `1px solid var(--flock-accent)`,
-        boxShadow: selected 
-          ? `0 0 0 3px rgba(21, 90, 239, 0.25)` 
-          : '0 4px 10px rgba(0,0,0,0.03)',
+        padding: '10px 12px',
         display: 'flex',
         alignItems: 'center',
         gap: 8,
-        cursor: 'pointer',
-        width: 220,
-        transition: 'all 0.15s ease',
       }}
     >
       <Box
+        className="flock-node-icon-container"
         style={{
-          width: 22,
-          height: 22,
-          borderRadius: 6,
-          background: 'var(--flock-accent-soft)',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          flexShrink: 0,
+          background: `${cfg.colorHex}15`,
         }}
       >
-        <Icon size={12} stroke={2.5} style={{ color: cfg.colorHex }} />
+        <Icon size={14} stroke={2.5} style={{ color: cfg.colorHex }} />
       </Box>
-      <Text size="xs" fw={700} style={{ color: 'var(--flock-text-bright)', fontSize: 11, flex: 1 }}>
+      <Text size="xs" fw={700} style={{ color: 'var(--flock-text-bright)', fontSize: 12, flex: 1 }}>
         {data.label || t('workflow.nodes.end.label', 'End')}
       </Text>
       <Handle

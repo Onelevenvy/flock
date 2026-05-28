@@ -51,12 +51,13 @@ export function PropertiesPanel({ node, onClose, onDataChange }: PropertiesPanel
   return (
     <Box
       style={{
-        width: 320,
-        borderLeft: '1px solid var(--flock-border-subtle)',
-        background: 'var(--flock-bg-surface)',
+        width: 380,
+        borderLeft: '1px solid var(--flock-border-dim)',
+        background: 'var(--flock-bg-base)',
         display: 'flex',
         flexDirection: 'column',
         flexShrink: 0,
+        boxShadow: '-4px 0 16px rgba(0,0,0,0.02)',
       }}
     >
       {/* Header */}
@@ -67,17 +68,17 @@ export function PropertiesPanel({ node, onClose, onDataChange }: PropertiesPanel
         style={{ borderBottom: '1px solid var(--flock-border-subtle)', flexShrink: 0 }}
       >
         <Group gap="xs">
-          <ThemeIcon size={28} radius="md" style={{ background: 'var(--flock-accent-soft)', color: cfg.colorHex }}>
-            <Icon size={14} stroke={2} />
+          <ThemeIcon size={32} radius="lg" style={{ background: `${cfg.colorHex}15`, color: cfg.colorHex }}>
+            <Icon size={16} stroke={2.5} />
           </ThemeIcon>
           <Box>
-            <Text size="sm" fw={600} style={{ color: 'var(--flock-text-bright)' }}>
+            <Text size="sm" fw={700} style={{ color: 'var(--flock-text-bright)' }}>
               {t(cfg.displayKey, { defaultValue: cfg.display })}
             </Text>
-            <Text size="xs" c="dimmed">{node.id}</Text>
+            <Text size="xs" c="dimmed" style={{ fontFamily: 'var(--mantine-font-family-monospace)' }}>{node.id}</Text>
           </Box>
         </Group>
-        <ActionIcon variant="subtle" onClick={onClose}>
+        <ActionIcon variant="subtle" color="gray" onClick={onClose} className="hover-rotate-close">
           <IconX size={16} />
         </ActionIcon>
       </Group>

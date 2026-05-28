@@ -17,26 +17,13 @@ export const ClassifierNode = memo(({ id, data, selected }: NodeProps<BaseNodeDa
 
   return (
     <Box
-      style={{
-        width: 220,
-        borderRadius: 12,
-        border: selected 
-          ? `2px solid var(--flock-accent)` 
-          : `1px solid var(--flock-accent)`,
-        background: 'var(--flock-bg-surface)',
-        boxShadow: selected 
-          ? `0 0 0 3px rgba(21, 90, 239, 0.25)` 
-          : '0 4px 12px rgba(0,0,0,0.03)',
-        overflow: 'visible',
-        cursor: 'pointer',
-        position: 'relative',
-        transition: 'all 0.15s ease',
-      }}
+      className={`flock-workflow-node ${selected ? 'selected' : ''}`}
+      style={{ overflow: 'visible' }}
     >
       <style dangerouslySetInnerHTML={{ __html: handleStyle }} />
       <Box
         style={{
-          padding: '8px 12px',
+          padding: '10px 12px',
           display: 'flex',
           alignItems: 'center',
           gap: 8,
@@ -44,20 +31,14 @@ export const ClassifierNode = memo(({ id, data, selected }: NodeProps<BaseNodeDa
         }}
       >
         <Box
+          className="flock-node-icon-container"
           style={{
-            width: 22,
-            height: 22,
-            borderRadius: 6,
-            background: 'var(--flock-accent-soft)',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            flexShrink: 0,
+            background: `${cfg.colorHex}15`,
           }}
         >
-          <Icon size={13} stroke={2.5} style={{ color: cfg.colorHex }} />
+          <Icon size={14} stroke={2.5} style={{ color: cfg.colorHex }} />
         </Box>
-        <Text size="xs" fw={700} style={{ color: 'var(--flock-text-bright)', flex: 1, fontSize: 11, lineHeight: 1.2 }} lineClamp={1}>
+        <Text size="xs" fw={700} style={{ color: 'var(--flock-text-bright)', flex: 1, fontSize: 12, lineHeight: 1.2 }} lineClamp={1}>
           {data.label || t(cfg.displayKey, { defaultValue: cfg.display })}
         </Text>
       </Box>
@@ -163,26 +144,13 @@ export const IfElseNode = memo(({ id, data, selected }: NodeProps<BaseNodeData>)
 
   return (
     <Box
-      style={{
-        width: 220,
-        borderRadius: 12,
-        border: selected 
-          ? `2px solid var(--flock-accent)` 
-          : `1px solid var(--flock-accent)`,
-        background: 'var(--flock-bg-surface)',
-        boxShadow: selected 
-          ? `0 0 0 3px rgba(21, 90, 239, 0.25)` 
-          : '0 4px 12px rgba(0,0,0,0.03)',
-        overflow: 'visible',
-        cursor: 'pointer',
-        position: 'relative',
-        transition: 'all 0.15s ease',
-      }}
+      className={`flock-workflow-node ${selected ? 'selected' : ''}`}
+      style={{ overflow: 'visible' }}
     >
       <style dangerouslySetInnerHTML={{ __html: handleStyle }} />
       <Box
         style={{
-          padding: '8px 12px',
+          padding: '10px 12px',
           display: 'flex',
           alignItems: 'center',
           gap: 8,
@@ -190,20 +158,14 @@ export const IfElseNode = memo(({ id, data, selected }: NodeProps<BaseNodeData>)
         }}
       >
         <Box
+          className="flock-node-icon-container"
           style={{
-            width: 22,
-            height: 22,
-            borderRadius: 6,
-            background: 'var(--flock-accent-soft)',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            flexShrink: 0,
+            background: `${cfg.colorHex}15`,
           }}
         >
-          <Icon size={13} stroke={2.5} style={{ color: cfg.colorHex }} />
+          <Icon size={14} stroke={2.5} style={{ color: cfg.colorHex }} />
         </Box>
-        <Text size="xs" fw={700} style={{ color: 'var(--flock-text-bright)', flex: 1, fontSize: 11, lineHeight: 1.2 }} lineClamp={1}>
+        <Text size="xs" fw={700} style={{ color: 'var(--flock-text-bright)', flex: 1, fontSize: 12, lineHeight: 1.2 }} lineClamp={1}>
           {data.label || cfg.display}
         </Text>
       </Box>
@@ -310,26 +272,13 @@ export const HumanNode = memo(({ id, data, selected }: NodeProps<BaseNodeData>) 
 
   return (
     <Box
-      style={{
-        width: 220,
-        borderRadius: 12,
-        border: selected 
-          ? `2px solid var(--flock-accent)` 
-          : `1px solid var(--flock-accent)`,
-        background: 'var(--flock-bg-surface)',
-        boxShadow: selected 
-          ? `0 0 0 3px rgba(21, 90, 239, 0.25)` 
-          : '0 4px 12px rgba(0,0,0,0.03)',
-        overflow: 'visible',
-        cursor: 'pointer',
-        position: 'relative',
-        transition: 'all 0.15s ease',
-      }}
+      className={`flock-workflow-node ${selected ? 'selected' : ''}`}
+      style={{ overflow: 'visible' }}
     >
       <style dangerouslySetInnerHTML={{ __html: handleStyle }} />
       <Box
         style={{
-          padding: '8px 12px',
+          padding: '10px 12px',
           display: 'flex',
           alignItems: 'center',
           gap: 8,
@@ -337,20 +286,14 @@ export const HumanNode = memo(({ id, data, selected }: NodeProps<BaseNodeData>) 
         }}
       >
         <Box
+          className="flock-node-icon-container"
           style={{
-            width: 22,
-            height: 22,
-            borderRadius: 6,
-            background: 'var(--flock-accent-soft)',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            flexShrink: 0,
+            background: `${cfg.colorHex}15`,
           }}
         >
-          <Icon size={13} stroke={2.5} style={{ color: cfg.colorHex }} />
+          <Icon size={14} stroke={2.5} style={{ color: cfg.colorHex }} />
         </Box>
-        <Text size="xs" fw={700} style={{ color: 'var(--flock-text-bright)', flex: 1, fontSize: 11, lineHeight: 1.2 }} lineClamp={1}>
+        <Text size="xs" fw={700} style={{ color: 'var(--flock-text-bright)', flex: 1, fontSize: 12, lineHeight: 1.2 }} lineClamp={1}>
           {data.label || t(cfg.displayKey, { defaultValue: cfg.display })}
         </Text>
       </Box>
