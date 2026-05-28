@@ -4,7 +4,7 @@ use langgraph::prelude::RunnableConfig;
 use langgraph::runnable::RunnableError;
 use tokio_stream::StreamExt;
 use langgraph_prebuilt::types::Message as LgMessage;
-use super::common::{WorkflowNodeContext, parse_state, interpolate_string};
+use super::common::{WorkflowNodeContext, parse_state, interpolate_string_with_context, resolve_model, parse_retry_config, parse_timeout_config, execute_with_retry};
 
 pub fn make_agent_workflow_node(
     node_id: String,
@@ -20,129 +20,142 @@ pub fn make_agent_workflow_node(
         let node_data = node_data.clone();
         Box::pin(async move {
             ctx.sink.emit_node_start(&node_id);
-            let state = parse_state(&input);
+            let retry_cfg = parse_retry_config(&node_data);
+            let timeout_cfg = parse_timeout_config(&node_data);
 
-            let sys_template = node_data.get("systemMessage").and_then(|v| v.as_str()).unwrap_or("");
-            let user_template = node_data.get("userMessage").and_then(|v| v.as_str()).unwrap_or("");
+            let result = execute_with_retry(&retry_cfg, &timeout_cfg, || {
+                let ctx = ctx.clone();
+                let node_id = node_id.clone();
+                let node_data = node_data.clone();
+                let input = input.clone();
+                let config = config.clone();
+                async move {
+                    let state = parse_state(&input);
 
-            let sys_prompt = interpolate_string(sys_template, &state);
-            let user_prompt = interpolate_string(user_template, &state);
+                    let sys_template = node_data.get("systemMessage").and_then(|v| v.as_str()).unwrap_or("");
+                    let user_template = node_data.get("userMessage").and_then(|v| v.as_str()).unwrap_or("");
 
-            let tool_names: Vec<String> = node_data.get("tools")
-                .and_then(|v| v.as_array())
-                .map(|arr| arr.iter().filter_map(|t| t.as_str().map(|s| s.to_string())).collect())
-                .unwrap_or_default();
+                    let sys_prompt = interpolate_string_with_context(sys_template, &state, &ctx, &ctx.workflow_id);
+                    let user_prompt = interpolate_string_with_context(user_template, &state, &ctx, &ctx.workflow_id);
 
-            // Bind tools
-            let tool_defs = ctx.tools.to_tool_defs_filtered(|t| tool_names.contains(&t.name().to_string()));
-            let bound_tools: Vec<_> = tool_defs.into_iter().map(|t| langgraph_prebuilt::ToolDef {
-                name: t.name,
-                description: t.description,
-                parameters: t.input_schema,
-            }).collect();
+                    let tool_names: Vec<String> = node_data.get("tools")
+                        .and_then(|v| v.as_array())
+                        .map(|arr| arr.iter().filter_map(|t| t.as_str().map(|s| s.to_string())).collect())
+                        .unwrap_or_default();
 
-            let provider = ctx.provider.bind_tools(bound_tools);
+                    let tool_defs = ctx.tools.to_tool_defs_filtered(|t| tool_names.contains(&t.name().to_string()));
+                    let bound_tools: Vec<_> = tool_defs.into_iter().map(|t| langgraph_prebuilt::ToolDef {
+                        name: t.name,
+                        description: t.description,
+                        parameters: t.input_schema,
+                    }).collect();
 
-            let mut local_messages = Vec::new();
-            if !sys_prompt.is_empty() {
-                local_messages.push(LgMessage::system(sys_prompt));
-            }
-            for m in &state.messages {
-                if let Ok(lg_msg) = serde_json::from_value::<LgMessage>(m.clone()) {
-                    local_messages.push(lg_msg);
-                }
-            }
+                    let model = resolve_model(&node_data, &ctx);
+                    let provider = model.bind_tools(bound_tools);
 
-            let mut run_messages = Vec::new();
-            if !user_prompt.is_empty() {
-                let human_msg = LgMessage::human(user_prompt.clone());
-                local_messages.push(human_msg.clone());
-                run_messages.push(human_msg);
-            }
-
-            let mut loop_count = 0;
-            let max_loops = 10;
-            let mut final_response = String::new();
-
-            loop {
-                loop_count += 1;
-                if loop_count > max_loops {
-                    return Err(RunnableError::Node("Max tool loop count exceeded".to_string()));
-                }
-
-                let mut rx = provider.astream(&local_messages[..], &config);
-                let mut assistant_text = String::new();
-                let mut thinking_text = String::new();
-                let mut tool_calls = Vec::new();
-
-                while let Some(msg_res) = rx.next().await {
-                    let msg = msg_res.map_err(|e| RunnableError::Node(e.to_string()))?;
-                    if let Some(thinking) = msg.thinking() {
-                        if !thinking.is_empty() {
-                            ctx.sink.emit_thinking(&node_id, thinking);
-                            thinking_text.push_str(thinking);
+                    let mut local_messages = Vec::new();
+                    if !sys_prompt.is_empty() {
+                        local_messages.push(LgMessage::system(sys_prompt));
+                    }
+                    for m in &state.messages {
+                        if let Ok(lg_msg) = serde_json::from_value::<LgMessage>(m.clone()) {
+                            local_messages.push(lg_msg);
                         }
                     }
-                    if let Some(content) = msg.text() {
-                        if !content.is_empty() {
-                            ctx.sink.emit_text_delta(&node_id, content);
-                            assistant_text.push_str(content);
+
+                    let mut run_messages = Vec::new();
+                    if !user_prompt.is_empty() {
+                        let human_msg = LgMessage::human(user_prompt.clone());
+                        local_messages.push(human_msg.clone());
+                        run_messages.push(human_msg);
+                    }
+
+                    let mut loop_count = 0;
+                    let max_loops = 10;
+                    let mut final_response = String::new();
+
+                    loop {
+                        loop_count += 1;
+                        if loop_count > max_loops {
+                            return Err("Max tool loop count exceeded".to_string());
+                        }
+
+                        let mut rx = provider.astream(&local_messages[..], &config);
+                        let mut assistant_text = String::new();
+                        let mut thinking_text = String::new();
+                        let mut tool_calls = Vec::new();
+
+                        while let Some(msg_res) = rx.next().await {
+                            let msg = msg_res.map_err(|e| format!("{}", e))?;
+                            if let Some(thinking) = msg.thinking() {
+                                if !thinking.is_empty() {
+                                    ctx.sink.emit_thinking(&node_id, thinking);
+                                    thinking_text.push_str(thinking);
+                                }
+                            }
+                            if let Some(content) = msg.text() {
+                                if !content.is_empty() {
+                                    ctx.sink.emit_text_delta(&node_id, content);
+                                    assistant_text.push_str(content);
+                                }
+                            }
+                            for tc in msg.tool_calls() {
+                                tool_calls.push(tc.clone());
+                            }
+                        }
+                        drop(rx);
+
+                        final_response = assistant_text.clone();
+
+                        let ai_msg = LgMessage::ai_with_tool_calls(assistant_text.clone(), tool_calls.clone());
+                        local_messages.push(ai_msg.clone());
+                        run_messages.push(ai_msg);
+
+                        if tool_calls.is_empty() {
+                            break;
+                        }
+
+                        for tc in tool_calls {
+                            ctx.sink.emit_text_delta(&node_id, &format!("\n\n*🔧 调用工具 `{}`...*\n", tc.name));
+                            let tool = ctx.tools.get(&tc.name).ok_or_else(|| {
+                                format!("Tool not found: {}", tc.name)
+                            })?;
+
+                            let tool_res = tool.execute(tc.args.clone()).await;
+                            ctx.sink.emit_text_delta(&node_id, &format!("*工具 `{}` 返回结果: {}*\n\n", tc.name, tool_res.content));
+
+                            let tool_msg = LgMessage::Tool {
+                                tool_call_id: tc.id.clone().unwrap_or_default(),
+                                content: langgraph_prebuilt::types::MessageContent::Text(tool_res.content.clone()),
+                                name: None,
+                                id: None,
+                                status: "success".to_string(),
+                            };
+                            local_messages.push(tool_msg.clone());
+                            run_messages.push(tool_msg);
                         }
                     }
-                    for tc in msg.tool_calls() {
-                        tool_calls.push(tc.clone());
+
+                    let mut outputs = state.node_outputs.clone();
+                    if !outputs.is_object() {
+                        outputs = json!({});
                     }
+                    let node_output = json!({
+                        "response": final_response
+                    });
+                    outputs[&node_id] = node_output.clone();
+
+                    ctx.sink.emit_node_done(&node_id, &node_output);
+
+                    Ok::<JsonValue, String>(json!({
+                        "node_outputs": outputs,
+                        "current_node": node_id,
+                        "messages": run_messages,
+                    }))
                 }
-                drop(rx);
+            }).await;
 
-                final_response = assistant_text.clone();
-
-                let ai_msg = LgMessage::ai_with_tool_calls(assistant_text.clone(), tool_calls.clone());
-                local_messages.push(ai_msg.clone());
-                run_messages.push(ai_msg);
-
-                if tool_calls.is_empty() {
-                    break;
-                }
-
-                // Execute tool calls
-                for tc in tool_calls {
-                    ctx.sink.emit_text_delta(&node_id, &format!("\n\n*🔧 调用工具 `{}`...*\n", tc.name));
-                    let tool = ctx.tools.get(&tc.name).ok_or_else(|| {
-                        RunnableError::Node(format!("Tool not found: {}", tc.name))
-                    })?;
-
-                    let tool_res = tool.execute(tc.args.clone()).await;
-                    ctx.sink.emit_text_delta(&node_id, &format!("*工具 `{}` 返回结果: {}*\n\n", tc.name, tool_res.content));
-
-                    let tool_msg = LgMessage::Tool {
-                        tool_call_id: tc.id.clone().unwrap_or_default(),
-                        content: langgraph_prebuilt::types::MessageContent::Text(tool_res.content.clone()),
-                        name: None,
-                        id: None,
-                        status: "success".to_string(),
-                    };
-                    local_messages.push(tool_msg.clone());
-                    run_messages.push(tool_msg);
-                }
-            }
-
-            let mut outputs = state.node_outputs.clone();
-            if !outputs.is_object() {
-                outputs = json!({});
-            }
-            let node_output = json!({
-                "response": final_response
-            });
-            outputs[&node_id] = node_output.clone();
-
-            ctx.sink.emit_node_done(&node_id, &node_output);
-
-            Ok(json!({
-                "node_outputs": outputs,
-                "current_node": node_id,
-                "messages": run_messages,
-            }))
+            result.map_err(|e| RunnableError::Node(e))
         })
     }
 }

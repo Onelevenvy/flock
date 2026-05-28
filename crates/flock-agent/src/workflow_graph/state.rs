@@ -28,4 +28,8 @@ pub struct WorkflowState {
     /// Shutdown requested
     #[channel]
     pub quit_requested: bool,
+
+    /// Environment variables defined at workflow level
+    #[channel]
+    pub env_vars: JsonValue,
 }

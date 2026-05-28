@@ -2547,7 +2547,6 @@ dependencies = [
 [[package]]
 name = "langgraph"
 version = "0.1.0"
-source = "git+https://github.com/Onelevenvy/langgraph-rust#d8d9257bab1dde587465215858e52db8485fce96"
 dependencies = [
  "async-trait",
  "chrono",
@@ -2565,7 +2564,6 @@ dependencies = [
 [[package]]
 name = "langgraph-checkpoint"
 version = "0.1.0"
-source = "git+https://github.com/Onelevenvy/langgraph-rust#d8d9257bab1dde587465215858e52db8485fce96"
 dependencies = [
  "async-trait",
  "chrono",
@@ -2583,7 +2581,6 @@ dependencies = [
 [[package]]
 name = "langgraph-checkpoint-sqlite"
 version = "0.1.0"
-source = "git+https://github.com/Onelevenvy/langgraph-rust#d8d9257bab1dde587465215858e52db8485fce96"
 dependencies = [
  "async-trait",
  "langgraph-checkpoint",
@@ -2598,7 +2595,6 @@ dependencies = [
 [[package]]
 name = "langgraph-derive"
 version = "0.1.0"
-source = "git+https://github.com/Onelevenvy/langgraph-rust#d8d9257bab1dde587465215858e52db8485fce96"
 dependencies = [
  "proc-macro2",
  "quote",
@@ -2608,7 +2604,6 @@ dependencies = [
 [[package]]
 name = "langgraph-prebuilt"
 version = "0.1.0"
-source = "git+https://github.com/Onelevenvy/langgraph-rust#d8d9257bab1dde587465215858e52db8485fce96"
 dependencies = [
  "async-stream",
  "async-trait",
@@ -2625,7 +2620,6 @@ dependencies = [
 [[package]]
 name = "langgraph-providers"
 version = "0.1.0"
-source = "git+https://github.com/Onelevenvy/langgraph-rust#d8d9257bab1dde587465215858e52db8485fce96"
 dependencies = [
  "async-stream",
  "async-trait",

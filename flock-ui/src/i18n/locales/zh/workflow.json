@@ -10,6 +10,14 @@
   "unsaved": "未保存",
   "minimap": "小地图",
   "debug": "调试执行",
+  "debugNode": "调试节点",
+  "debugPanel": {
+    "badge": "调试",
+    "input": "测试输入",
+    "inputPlaceholder": "输入此节点的测试数据...",
+    "run": "运行节点",
+    "hint": "输出将显示在执行面板中。点击工具栏的播放按钮打开。"
+  },
   "insertNode": "在此处插入节点",
   "autoLayout": "画布整理",
   "createModal": {
@@ -43,6 +51,17 @@
       "model": "模型",
       "modelPlaceholder": "选择一个模型...",
       "temperature": "温度",
+      "topP": "Top P",
+      "topPPlaceholder": "默认",
+      "frequencyPenalty": "频率惩罚",
+      "presencePenalty": "存在惩罚",
+      "penaltyPlaceholder": "默认",
+      "maxTokens": "最大 Token 数",
+      "maxTokensPlaceholder": "默认",
+      "jsonMode": "JSON 模式",
+      "jsonModeDesc": "强制输出为有效 JSON",
+      "jsonSchema": "JSON Schema",
+      "jsonSchemaPlaceholder": "{\"type\":\"object\",\"properties\":{...}}",
       "systemPrompt": "系统提示词",
       "systemPromptPlaceholder": "你是一个...",
       "userPrompt": "用户消息模板"
@@ -91,7 +110,23 @@
       "parameters": "参数列表",
       "paramName": "参数名",
       "addParam": "添加参数"
+    },
+    "advanced": {
+      "title": "高级设置",
+      "maxRetries": "最大重试次数",
+      "retryDelay": "重试延迟 (ms)",
+      "backoffMultiplier": "退避倍数",
+      "timeout": "超时时间 (ms)"
     }
+  },
+  "envVars": {
+    "title": "环境变量",
+    "toggle": "环境变量",
+    "empty": "尚未定义环境变量",
+    "addNew": "添加新变量",
+    "namePlaceholder": "变量名",
+    "valuePlaceholder": "值",
+    "add": "添加"
   },
   "execution": {
     "title": "调试输出",

@@ -17,6 +17,7 @@ export interface WorkflowConfig {
   edges: Edge[];
   metadata?: {
     viewport?: { x: number; y: number; zoom: number };
+    env_vars?: Record<string, { value: string; type: string }>;
     [key: string]: unknown;
   };
 }
@@ -26,6 +27,11 @@ export interface WorkflowExecutionMessage {
   content: string;
   nodeId?: string;
   timestamp: number;
+}
+
+export interface EnvVar {
+  value: string;
+  type: 'string' | 'number' | 'boolean' | 'object' | 'array';
 }
 
 interface WorkflowStore {
@@ -42,6 +48,10 @@ interface WorkflowStore {
   activeExecutionThreadId: string | null;
   // 当前选中的节点 ID（属性面板用）
   selectedNodeId: string | null;
+  // 单节点调试目标
+  debugTarget: { nodeId: string } | null;
+  // 环境变量
+  environmentVariables: Record<string, EnvVar>;
 
   // Actions
   setActiveWorkflowId: (id: string | null) => void;
@@ -55,6 +65,10 @@ interface WorkflowStore {
   setExecutionStatus: (status: 'idle' | 'running' | 'done' | 'error') => void;
   updateNodeData: (nodeId: string, key: string, value: unknown) => void;
   setActiveExecutionThreadId: (id: string | null) => void;
+  setDebugTarget: (target: { nodeId: string } | null) => void;
+  setEnvironmentVariable: (key: string, value: string, type: EnvVar['type']) => void;
+  removeEnvironmentVariable: (key: string) => void;
+  setEnvironmentVariables: (vars: Record<string, EnvVar>) => void;
 }
 
 export const useWorkflowStore = create<WorkflowStore>()(
@@ -68,6 +82,8 @@ export const useWorkflowStore = create<WorkflowStore>()(
       executionMessages: [],
       activeExecutionThreadId: null,
       selectedNodeId: null,
+      debugTarget: null,
+      environmentVariables: {},
 
       setActiveWorkflowId: (id) => set({ activeWorkflowId: id }),
 
@@ -136,10 +152,13 @@ export const useWorkflowStore = create<WorkflowStore>()(
 
       setSelectedNodeId: (id) => set({ selectedNodeId: id }),
 
+      setDebugTarget: (target) => set({ debugTarget: target }),
+
       loadWorkflowConfig: (config) =>
         set({
           nodes: config.nodes ?? [],
           edges: config.edges ?? [],
+          environmentVariables: config.metadata?.env_vars ?? {},
           isDirty: false,
         }),
 
@@ -164,6 +183,22 @@ export const useWorkflowStore = create<WorkflowStore>()(
         })),
 
       setActiveExecutionThreadId: (id) => set({ activeExecutionThreadId: id }),
+
+      setEnvironmentVariable: (key, value, type) =>
+        set((s) => ({
+          environmentVariables: { ...s.environmentVariables, [key]: { value, type } },
+          isDirty: true,
+        })),
+
+      removeEnvironmentVariable: (key) =>
+        set((s) => {
+          const rest = Object.fromEntries(
+            Object.entries(s.environmentVariables).filter(([k]) => k !== key)
+          );
+          return { environmentVariables: rest, isDirty: true };
+        }),
+
+      setEnvironmentVariables: (vars) => set({ environmentVariables: vars }),
     }),
     {
       name: 'flock-workflow-store',

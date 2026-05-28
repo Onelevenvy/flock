@@ -15,6 +15,7 @@ import {
   IconDeviceFloppy,
   IconPlayerPlay,
   IconRoute,
+  IconKey,
 } from '@tabler/icons-react';
 import { useTranslation } from 'react-i18next';
 import { workflowNodeTypes } from '../../nodes/nodeTypesMap';
@@ -24,6 +25,8 @@ import { NodePalette } from '../NodePalette';
 import { CustomStepEdge } from '../CustomStepEdge';
 import { PropertiesPanel } from '../PropertiesPanel';
 import { ExecutionPanel } from '../ExecutionPanel';
+import { EnvironmentVarsPanel } from '../EnvironmentVarsPanel';
+import { NodeDebugPanel } from '../NodeDebugPanel';
 import { useWorkflowExecution } from '../../../../hooks/useWorkflowExecution';
 
 import { useFlowLayout } from './hooks/useFlowLayout';
@@ -57,6 +60,9 @@ export function FlowCanvas({ workflowId, workflowData, onBack }: FlowCanvasProps
     updateNodeData,
     executionStatus,
     executionMessages,
+    environmentVariables,
+    debugTarget,
+    setDebugTarget,
   } = useWorkflowStore();
 
   const { startWorkflow, resumeWorkflow, stopWorkflow } = useWorkflowExecution();
@@ -64,6 +70,7 @@ export function FlowCanvas({ workflowId, workflowData, onBack }: FlowCanvasProps
   const [showExecution, setShowExecution] = useState(false);
   const [showMinimap, setShowMinimap] = useState(false);
   const [showNodePalette, setShowNodePalette] = useState(false);
+  const [showEnvVars, setShowEnvVars] = useState(false);
   const [isPanMode, setIsPanMode] = useState(false);
 
   // ── Topological Auto Layout Hook ───────────────────────────────────────
@@ -95,17 +102,21 @@ export function FlowCanvas({ workflowId, workflowData, onBack }: FlowCanvasProps
 
   // ── Save ────────────────────────────────────────────────────────────────
   const handleSave = useCallback(async () => {
+    const metadata = {
+      ...(workflowData.config.metadata ?? {}),
+      env_vars: environmentVariables,
+    };
     await updateMutation.mutateAsync({
       id: workflowId,
       input: {
         name: workflowData.name,
         description: workflowData.description,
         is_active: workflowData.is_active,
-        config: { nodes, edges, metadata: workflowData.config.metadata ?? {} },
+        config: { nodes, edges, metadata },
       },
     });
     setDirty(false);
-  }, [workflowId, workflowData, nodes, edges, updateMutation, setDirty]);
+  }, [workflowId, workflowData, nodes, edges, environmentVariables, updateMutation, setDirty]);
 
   // ── Selected node ───────────────────────────────────────────────────────
   const selectedNode = useMemo(
@@ -193,6 +204,16 @@ export function FlowCanvas({ workflowId, workflowData, onBack }: FlowCanvasProps
         </Group>
 
         <Group gap="xs">
+          <Tooltip label={t('workflow.envVars.toggle', 'Environment Variables')} withArrow openDelay={300}>
+            <ActionIcon
+              variant={showEnvVars ? 'filled' : 'subtle'}
+              color={showEnvVars ? 'blue' : 'gray'}
+              size="sm"
+              onClick={() => setShowEnvVars((v) => !v)}
+            >
+              <IconKey size={15} />
+            </ActionIcon>
+          </Tooltip>
           <Tooltip label={t('workflow.debug')} withArrow openDelay={300}>
             <ActionIcon
               variant={showExecution ? 'filled' : 'subtle'}
@@ -304,7 +325,18 @@ export function FlowCanvas({ workflowId, workflowData, onBack }: FlowCanvasProps
           </ReactFlow>
         </Box>
 
-        {selectedNode && (
+        {showEnvVars && (
+          <EnvironmentVarsPanel onClose={() => setShowEnvVars(false)} />
+        )}
+
+        {debugTarget && !showEnvVars && (
+          <NodeDebugPanel
+            nodeId={debugTarget.nodeId}
+            onClose={() => setDebugTarget(null)}
+          />
+        )}
+
+        {selectedNode && !showEnvVars && !debugTarget && (
           <PropertiesPanel
             node={selectedNode}
             onClose={() => setSelectedNodeId(null)}

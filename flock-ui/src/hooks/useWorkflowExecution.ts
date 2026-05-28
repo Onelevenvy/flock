@@ -15,7 +15,11 @@ interface WorkflowTauriEvent {
     | 'node_done'
     | 'text_delta'
     | 'thinking'
-    | 'error';
+    | 'error'
+    | 'debug_start'
+    | 'debug_progress'
+    | 'debug_done'
+    | 'debug_error';
   workflow_id: string;
   node_id?: string;
   text?: string;
@@ -152,6 +156,35 @@ export function useWorkflowExecution() {
                   timestamp,
                 });
                 break;
+
+              case 'debug_start':
+                store.setExecutionStatus('running');
+                store.appendExecutionMessage({
+                  type: 'info',
+                  content: `🔍 Debugging node [${payload.node_id}]...`,
+                  nodeId: payload.node_id,
+                  timestamp,
+                });
+                break;
+
+              case 'debug_done':
+                store.setExecutionStatus('done');
+                store.appendExecutionMessage({
+                  type: 'info',
+                  content: `✅ Debug done. Output: ${JSON.stringify(payload.output)}`,
+                  nodeId: payload.node_id,
+                  timestamp,
+                });
+                break;
+
+              case 'debug_error':
+                store.setExecutionStatus('error');
+                store.appendExecutionMessage({
+                  type: 'error',
+                  content: `❌ Debug error: ${payload.error || 'Unknown error'}`,
+                  timestamp,
+                });
+                break;
             }
           } catch (e) {
             console.error('Failed to parse workflow event payload:', e);
@@ -258,10 +291,39 @@ export function useWorkflowExecution() {
     }
   };
 
+  const debugNode = async (nodeId: string, input?: string) => {
+    if (!store.activeWorkflowId) return;
+
+    store.clearExecution();
+    store.setExecutionStatus('running');
+    store.appendExecutionMessage({
+      type: 'info',
+      content: `🔍 Starting debug for node [${nodeId}]...`,
+      nodeId,
+      timestamp: Date.now(),
+    });
+
+    try {
+      await invoke('debug_node', {
+        workflowId: store.activeWorkflowId,
+        nodeId,
+        input: input ?? '',
+      });
+    } catch (e) {
+      store.setExecutionStatus('error');
+      store.appendExecutionMessage({
+        type: 'error',
+        content: `Failed to debug node: ${e}`,
+        timestamp: Date.now(),
+      });
+    }
+  };
+
   return {
     startWorkflow,
     resumeWorkflow,
     stopWorkflow,
+    debugNode,
   };
 }
 

@@ -27,6 +27,7 @@ import { AgentFields } from './Agent';
 import { ClassifierFields } from './Classifier';
 import { IfElseFields } from './IfElse';
 import { ParameterExtractorFields } from './ParameterExtractor';
+import { RetryTimeoutFields } from './RetryTimeoutFields';
 
 export interface PropertiesPanelProps {
   node: Node;
@@ -101,6 +102,14 @@ export function PropertiesPanel({ node, onClose, onDataChange }: PropertiesPanel
             toolOptions={toolOptions}
             toolsLoading={toolsLoading}
           />
+
+          {/* Retry & timeout config (not for start/end nodes) */}
+          {type !== 'start' && type !== 'end' && (
+            <>
+              <Divider />
+              <RetryTimeoutFields node={node} onDataChange={onDataChange} />
+            </>
+          )}
         </Stack>
       </ScrollArea>
     </Box>

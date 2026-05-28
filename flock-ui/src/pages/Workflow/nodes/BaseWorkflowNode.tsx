@@ -1,9 +1,10 @@
 import React from 'react';
 import { Handle, Position, type NodeProps } from 'reactflow';
-import { Box, Text, ActionIcon } from '@mantine/core';
-import { IconPlus } from '@tabler/icons-react';
+import { Box, Text, ActionIcon, Tooltip } from '@mantine/core';
+import { IconPlus, IconBug } from '@tabler/icons-react';
 import { useTranslation } from 'react-i18next';
 import { nodeConfig, type NodeType } from '../nodeConfig';
+import { useWorkflowStore } from '../../../store/workflowStore';
 import { type BaseNodeData } from './types';
 import { handleStyle } from './styles';
 import { getNodeSummary } from './helpers';
@@ -14,10 +15,12 @@ interface BaseWorkflowNodeProps extends NodeProps<BaseNodeData> {
 
 export function BaseWorkflowNode({ id, type, data, selected }: BaseWorkflowNodeProps) {
   const { t } = useTranslation();
+  const setDebugTarget = useWorkflowStore((s) => s.setDebugTarget);
   const cfg = nodeConfig[type];
   if (!cfg) return null;
   const Icon = cfg.icon;
   const summary = getNodeSummary(type, data, t);
+  const canDebug = type !== 'start' && type !== 'end';
 
   return (
     <Box
@@ -66,6 +69,22 @@ export function BaseWorkflowNode({ id, type, data, selected }: BaseWorkflowNodeP
         <Text size="xs" fw={700} style={{ color: 'var(--flock-text-bright)', flex: 1, fontSize: 11, lineHeight: 1.2 }} lineClamp={1}>
           {data.label || t(cfg.displayKey, { defaultValue: cfg.display })}
         </Text>
+        {canDebug && (
+          <Tooltip label={t('workflow.debugNode', 'Debug')} position="top" withArrow>
+            <ActionIcon
+              size="xs"
+              variant="subtle"
+              color="teal"
+              onClick={(e) => {
+                e.stopPropagation();
+                setDebugTarget({ nodeId: id });
+              }}
+              style={{ opacity: 0.6 }}
+            >
+              <IconBug size={10} />
+            </ActionIcon>
+          </Tooltip>
+        )}
       </Box>
 
       {/* Node Content/Summary */}

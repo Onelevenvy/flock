@@ -2,7 +2,7 @@ use std::sync::Arc;
 use serde_json::{json, Value as JsonValue};
 use langgraph::prelude::RunnableConfig;
 use langgraph::runnable::RunnableError;
-use super::common::{WorkflowNodeContext, parse_state, interpolate_string};
+use super::common::{WorkflowNodeContext, parse_state, interpolate_string_with_context};
 
 pub fn make_ifelse_node(
     node_id: String,
@@ -44,8 +44,8 @@ pub fn make_ifelse_node(
                                 let cmp_op = cond.get("operator").and_then(|v| v.as_str()).unwrap_or("equals");
                                 let cmp_val_template = cond.get("value").and_then(|v| v.as_str()).unwrap_or("");
 
-                                let variable = interpolate_string(variable_template, &state);
-                                let cmp_val = interpolate_string(cmp_val_template, &state);
+                                let variable = interpolate_string_with_context(variable_template, &state, &ctx, &ctx.workflow_id);
+                                let cmp_val = interpolate_string_with_context(cmp_val_template, &state, &ctx, &ctx.workflow_id);
 
                                 let cond_result = match cmp_op {
                                     "equals" | "eq" | "==" => variable == cmp_val,

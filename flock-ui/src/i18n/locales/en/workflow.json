@@ -10,6 +10,14 @@
   "unsaved": "Unsaved",
   "minimap": "Minimap",
   "debug": "Debug Run",
+  "debugNode": "Debug Node",
+  "debugPanel": {
+    "badge": "DEBUG",
+    "input": "Test Input",
+    "inputPlaceholder": "Enter test input for this node...",
+    "run": "Run Node",
+    "hint": "Output will appear in the execution panel. Open it via the play button in the toolbar."
+  },
   "insertNode": "Insert Node Here",
   "autoLayout": "Auto Layout",
   "createModal": {
@@ -43,6 +51,17 @@
       "model": "Model",
       "modelPlaceholder": "Select a model...",
       "temperature": "Temperature",
+      "topP": "Top P",
+      "topPPlaceholder": "Default",
+      "frequencyPenalty": "Frequency Penalty",
+      "presencePenalty": "Presence Penalty",
+      "penaltyPlaceholder": "Default",
+      "maxTokens": "Max Tokens",
+      "maxTokensPlaceholder": "Default",
+      "jsonMode": "JSON Mode",
+      "jsonModeDesc": "Force output to valid JSON",
+      "jsonSchema": "JSON Schema",
+      "jsonSchemaPlaceholder": "{\"type\":\"object\",\"properties\":{...}}",
       "systemPrompt": "System Prompt",
       "systemPromptPlaceholder": "You are a...",
       "userPrompt": "User Message Template"
@@ -91,7 +110,23 @@
       "parameters": "Parameters",
       "paramName": "Parameter Name",
       "addParam": "Add Parameter"
+    },
+    "advanced": {
+      "title": "Advanced Settings",
+      "maxRetries": "Max Retries",
+      "retryDelay": "Retry Delay (ms)",
+      "backoffMultiplier": "Backoff Multiplier",
+      "timeout": "Timeout (ms)"
     }
+  },
+  "envVars": {
+    "title": "Environment Variables",
+    "toggle": "Environment Variables",
+    "empty": "No environment variables defined",
+    "addNew": "Add New",
+    "namePlaceholder": "Variable name",
+    "valuePlaceholder": "Value",
+    "add": "Add"
   },
   "execution": {
     "title": "Debug Output",

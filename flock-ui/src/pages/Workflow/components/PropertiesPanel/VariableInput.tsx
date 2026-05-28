@@ -9,11 +9,13 @@ import {
   Popover,
   Tooltip,
   Stack,
+  Badge,
 } from '@mantine/core';
 import { IconBolt } from '@tabler/icons-react';
 import { useTranslation } from 'react-i18next';
 import { useWorkflowStore } from '../../../../store/workflowStore';
 import { getAvailableVariables } from './helper';
+import { TYPE_BADGES, TYPE_COLORS, type VariableType } from '../../../../types/workflowVariables';
 
 export interface VariableTextInputProps extends Omit<React.ComponentPropsWithoutRef<typeof TextInput>, 'onChange'> {
   currentNodeId: string;
@@ -27,10 +29,11 @@ export function VariableTextInput({ currentNodeId, onChange, value, ...props }: 
 
   const nodes = useWorkflowStore((s) => s.nodes);
   const edges = useWorkflowStore((s) => s.edges);
+  const environmentVariables = useWorkflowStore((s) => s.environmentVariables);
 
   const variables = useMemo(
-    () => getAvailableVariables(currentNodeId, nodes, edges),
-    [currentNodeId, nodes, edges]
+    () => getAvailableVariables(currentNodeId, nodes, edges, environmentVariables),
+    [currentNodeId, nodes, edges, environmentVariables]
   );
 
   const insertVariable = (varValue: string) => {
@@ -144,9 +147,14 @@ export function VariableTextInput({ currentNodeId, onChange, value, ...props }: 
                       }
                     }}
                   >
-                    <Text size="xs" style={{ fontFamily: 'var(--mantine-font-family-monospace)' }}>
+                    <Text size="xs" style={{ fontFamily: 'var(--mantine-font-family-monospace)', flex: 1 }}>
                       {v.value.substring(2, v.value.length - 1).split('.')[1]}
                     </Text>
+                    {v.varType && (
+                      <Badge size="xs" variant="light" color={TYPE_COLORS[v.varType]} radius="sm" ml={4}>
+                        {TYPE_BADGES[v.varType]}
+                      </Badge>
+                    )}
                   </Button>
                 ))}
               </Stack>
@@ -170,10 +178,11 @@ export function VariableTextarea({ currentNodeId, onChange, value, ...props }: V
 
   const nodes = useWorkflowStore((s) => s.nodes);
   const edges = useWorkflowStore((s) => s.edges);
+  const environmentVariables = useWorkflowStore((s) => s.environmentVariables);
 
   const variables = useMemo(
-    () => getAvailableVariables(currentNodeId, nodes, edges),
-    [currentNodeId, nodes, edges]
+    () => getAvailableVariables(currentNodeId, nodes, edges, environmentVariables),
+    [currentNodeId, nodes, edges, environmentVariables]
   );
 
   const insertVariable = (varValue: string) => {
@@ -290,9 +299,14 @@ export function VariableTextarea({ currentNodeId, onChange, value, ...props }: V
                       }
                     }}
                   >
-                    <Text size="xs" style={{ fontFamily: 'var(--mantine-font-family-monospace)' }}>
+                    <Text size="xs" style={{ fontFamily: 'var(--mantine-font-family-monospace)', flex: 1 }}>
                       {v.value.substring(2, v.value.length - 1).split('.')[1]}
                     </Text>
+                    {v.varType && (
+                      <Badge size="xs" variant="light" color={TYPE_COLORS[v.varType]} radius="sm" ml={4}>
+                        {TYPE_BADGES[v.varType]}
+                      </Badge>
+                    )}
                   </Button>
                 ))}
               </Stack>

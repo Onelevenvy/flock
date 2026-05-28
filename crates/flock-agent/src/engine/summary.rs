@@ -80,6 +80,11 @@ pub(crate) async fn run_background_summary(
                         api_key: p.api_key.unwrap_or_default(),
                         base_url: p.base_url,
                         max_tokens: None,
+                        temperature: None,
+                        top_p: None,
+                        frequency_penalty: None,
+                        presence_penalty: None,
+                        response_format: None,
                     };
                     if let Ok(m) = flock_core::model_factory::create_model(params) {
                         summary_provider = Some(m);

@@ -2,7 +2,7 @@ use std::sync::Arc;
 use serde_json::{json, Value as JsonValue};
 use langgraph::prelude::RunnableConfig;
 use langgraph::runnable::RunnableError;
-use super::common::{WorkflowNodeContext, parse_state, interpolate_string};
+use super::common::{WorkflowNodeContext, parse_state, interpolate_string_with_context};
 
 pub fn make_plugin_node(
     node_id: String,
@@ -22,7 +22,7 @@ pub fn make_plugin_node(
 
             let tool_name = node_data.get("tool").and_then(|v| v.get("name")).and_then(|v| v.as_str()).unwrap_or("");
             let args_template = node_data.get("args").and_then(|v| v.as_str()).unwrap_or("");
-            let interpolated_args = interpolate_string(args_template, &state);
+            let interpolated_args = interpolate_string_with_context(args_template, &state, &ctx, &ctx.workflow_id);
 
             ctx.sink.emit_text_delta(&node_id, &format!("*🔧 正在调用插件 `{}`...*\n", tool_name));
 
