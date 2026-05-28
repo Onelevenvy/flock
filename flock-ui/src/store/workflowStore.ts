@@ -52,6 +52,8 @@ interface WorkflowStore {
   debugTarget: { nodeId: string } | null;
   // 环境变量
   environmentVariables: Record<string, EnvVar>;
+  // 当前等待用户回复的打断事件数据
+  activeInterrupt: any | null;
 
   // Actions
   setActiveWorkflowId: (id: string | null) => void;
@@ -69,6 +71,7 @@ interface WorkflowStore {
   setEnvironmentVariable: (key: string, value: string, type: EnvVar['type']) => void;
   removeEnvironmentVariable: (key: string) => void;
   setEnvironmentVariables: (vars: Record<string, EnvVar>) => void;
+  setActiveInterrupt: (interrupt: any | null) => void;
 }
 
 export const useWorkflowStore = create<WorkflowStore>()(
@@ -84,8 +87,10 @@ export const useWorkflowStore = create<WorkflowStore>()(
       selectedNodeId: null,
       debugTarget: null,
       environmentVariables: {},
+      activeInterrupt: null,
 
       setActiveWorkflowId: (id) => set({ activeWorkflowId: id }),
+      setActiveInterrupt: (interrupt) => set({ activeInterrupt: interrupt }),
 
       setNodes: (nodes) =>
         set((s) => {
@@ -158,12 +163,12 @@ export const useWorkflowStore = create<WorkflowStore>()(
         set({
           nodes: config.nodes ?? [],
           edges: config.edges ?? [],
-          environmentVariables: config.metadata?.env_vars ?? {},
+          environmentVariables: (config.metadata?.env_vars as any) ?? {},
           isDirty: false,
         }),
 
       clearExecution: () =>
-        set({ executionMessages: [], executionStatus: 'idle', activeExecutionThreadId: null }),
+        set({ executionMessages: [], executionStatus: 'idle', activeExecutionThreadId: null, activeInterrupt: null }),
 
       appendExecutionMessage: (msg) =>
         set((s) => ({

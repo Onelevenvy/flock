@@ -4,8 +4,7 @@ export {
   AgentNode,
   AnswerNode,
   CodeNode,
-  HumanNode,
   ParameterExtractorNode,
   PluginNode,
 } from './StandardNodes';
-export { ClassifierNode, IfElseNode } from './MultiHandleNodes';
+export { ClassifierNode, IfElseNode, HumanNode } from './MultiHandleNodes';

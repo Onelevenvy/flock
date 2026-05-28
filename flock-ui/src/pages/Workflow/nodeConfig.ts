@@ -144,11 +144,16 @@ export const nodeConfig: Record<string, NodeConfigItem> = {
     icon: IconUser,
     color: 'cyan',
     colorHex: '#0891b2',
-    allowedConnections: { sources: ['right'], targets: ['left'] },
+    allowedConnections: { sources: [], targets: ['left'] },
     initialData: {
-      interaction_type: 'tool_review',
-      title: '',
-      routes: { approved: '', rejected: '' },
+      webapp_enabled: true,
+      form_content: '',
+      user_actions: [
+        { key: 'action_1', label: 'Approve' },
+        { key: 'action_2', label: 'Reject' },
+      ],
+      timeout_num: 3,
+      timeout_unit: 'hours',
     },
   },
   parameterExtractor: {

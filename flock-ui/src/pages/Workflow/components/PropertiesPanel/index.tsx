@@ -26,6 +26,8 @@ import { LLMFields } from './LLM';
 import { AgentFields } from './Agent';
 import { ClassifierFields } from './Classifier';
 import { IfElseFields } from './IfElse';
+import { HumanFields } from './Human';
+import { StartFields } from './Start';
 import { ParameterExtractorFields } from './ParameterExtractor';
 import { RetryTimeoutFields } from './RetryTimeoutFields';
 
@@ -138,6 +140,8 @@ function NodeSpecificFields({
 
   switch (type) {
     case 'start':
+      return <StartFields node={node} onDataChange={onDataChange} />;
+
     case 'end':
       return (
         <Text size="xs" c="dimmed" ta="center" py="sm">
@@ -227,16 +231,12 @@ function NodeSpecificFields({
 
     case 'human':
       return (
-        <VariableTextarea
-          label={t('workflow.properties.human.title')}
-          placeholder={t('workflow.properties.human.titlePlaceholder')}
-          value={String(node.data.title ?? '')}
-          currentNodeId={node.id}
-          onChange={(val) => onDataChange(node.id, 'title', val)}
-          minRows={2}
-          size="xs"
+        <HumanFields
+          node={node}
+          onDataChange={onDataChange}
         />
       );
+
 
     case 'plugin':
       return (

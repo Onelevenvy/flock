@@ -7,6 +7,5 @@ export const LLMNode = memo((props: NodeProps<BaseNodeData>) => <BaseWorkflowNod
 export const AgentNode = memo((props: NodeProps<BaseNodeData>) => <BaseWorkflowNode {...props} type="agent" />);
 export const AnswerNode = memo((props: NodeProps<BaseNodeData>) => <BaseWorkflowNode {...props} type="answer" />);
 export const CodeNode = memo((props: NodeProps<BaseNodeData>) => <BaseWorkflowNode {...props} type="code" />);
-export const HumanNode = memo((props: NodeProps<BaseNodeData>) => <BaseWorkflowNode {...props} type="human" />);
 export const ParameterExtractorNode = memo((props: NodeProps<BaseNodeData>) => <BaseWorkflowNode {...props} type="parameterExtractor" />);
 export const PluginNode = memo((props: NodeProps<BaseNodeData>) => <BaseWorkflowNode {...props} type="plugin" />);

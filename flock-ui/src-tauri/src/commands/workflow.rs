@@ -265,10 +265,32 @@ pub async fn run_workflow(
         let cmd = langgraph::types::Command::resume(res_val);
         serde_json::to_value(cmd).map_err(|e| e.to_string())?
     } else {
+        let mut input_msg = String::new();
+        let mut start_outputs = serde_json::json!({});
+
+        if let Some(ref inp_str) = input {
+            if let Ok(parsed_json) = serde_json::from_str::<serde_json::Value>(inp_str) {
+                if parsed_json.is_object() {
+                    start_outputs = parsed_json.clone();
+                    if let Some(q) = parsed_json.get("query").and_then(|v| v.as_str()) {
+                        input_msg = q.to_string();
+                    }
+                } else {
+                    input_msg = inp_str.clone();
+                    start_outputs["query"] = serde_json::Value::String(inp_str.clone());
+                }
+            } else {
+                input_msg = inp_str.clone();
+                start_outputs["query"] = serde_json::Value::String(inp_str.clone());
+            }
+        }
+
         serde_json::json!({
-            "input_msg": input.unwrap_or_default(),
+            "input_msg": input_msg,
             "messages": [],
-            "node_outputs": {},
+            "node_outputs": {
+                "start": start_outputs
+            },
             "current_node": "",
             "quit_requested": false,
             "env_vars": {},
@@ -468,14 +490,34 @@ pub async fn debug_node(
         serde_json::json!({ "thread_id": format!("debug:{}:{}", workflow_id, node_id) }),
     );
 
-    let initial_input = serde_json::json!({
-        "input_msg": input.unwrap_or_default(),
+    let mut initial_input = serde_json::json!({
+        "input_msg": "",
         "messages": [],
         "node_outputs": {},
         "current_node": "",
         "quit_requested": false,
         "env_vars": {},
     });
+
+    if let Some(ref inp_str) = input {
+        if let Ok(parsed_json) = serde_json::from_str::<serde_json::Value>(inp_str) {
+            if parsed_json.is_object() {
+                if let Some(msg) = parsed_json.get("input_msg") {
+                    initial_input["input_msg"] = msg.clone();
+                }
+                if let Some(outputs) = parsed_json.get("node_outputs") {
+                    initial_input["node_outputs"] = outputs.clone();
+                }
+                if let Some(envs) = parsed_json.get("env_vars") {
+                    initial_input["env_vars"] = envs.clone();
+                }
+            } else {
+                initial_input["input_msg"] = serde_json::Value::String(inp_str.clone());
+            }
+        } else {
+            initial_input["input_msg"] = serde_json::Value::String(inp_str.clone());
+        }
+    }
 
     let app_clone = app.clone();
     let debug_id = format!("{}:debug:{}", workflow_id, node_id);

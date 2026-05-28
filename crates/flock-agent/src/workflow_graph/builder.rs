@@ -58,6 +58,7 @@ pub fn build_workflow_graph(
     let mut start_node_id = None;
     let mut end_node_id = None;
     let mut conditional_node_ids = Vec::new();
+    let mut node_types = HashMap::new();
 
     for node in nodes {
         let id = node.get("id")
@@ -67,6 +68,7 @@ pub fn build_workflow_graph(
 
         let ntype = node.get("type").and_then(|v| v.as_str()).unwrap_or("llm");
         let data = node.get("data").cloned().unwrap_or_else(|| serde_json::json!({}));
+        node_types.insert(id.clone(), ntype.to_string());
 
         match ntype {
             "start" => {
@@ -108,6 +110,7 @@ pub fn build_workflow_graph(
                 graph.add_node(&id, make_code_node(id.clone(), data, ctx.clone()))?;
             }
             "human" => {
+                conditional_node_ids.push(id.clone());
                 graph.add_node(&id, make_human_node(id.clone(), data, ctx.clone()))?;
             }
             "plugin" => {
@@ -151,9 +154,18 @@ pub fn build_workflow_graph(
                 .unwrap_or(true); // check classifier vs ifelse
 
             let source_clone = source.clone();
+            let node_types_clone = node_types.clone();
             let route_fn = RoutingFn(move |input: &JsonValue| {
                 let state = parse_state(input);
                 if let Some(node_out) = state.node_outputs.get(&source_clone) {
+                    if let Some(ntype) = node_types_clone.get(&source_clone) {
+                        if ntype == "human" {
+                            if let Some(choice) = node_out.get("choice").and_then(|v| v.as_str()) {
+                                return choice.to_string();
+                            }
+                            return "TIMEOUT".to_string();
+                        }
+                    }
                     if is_ifelse {
                         if let Some(c) = node_out.get("case_id").and_then(|v| v.as_str()) {
                             return c.to_string();

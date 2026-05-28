@@ -294,3 +294,160 @@ export const IfElseNode = memo(({ id, data, selected }: NodeProps<BaseNodeData>)
     </Box>
   );
 });
+
+export const HumanNode = memo(({ id, data, selected }: NodeProps<BaseNodeData>) => {
+  const cfg = nodeConfig['human'];
+  const Icon = cfg.icon;
+  const { t } = useTranslation();
+  const actions = (data.user_actions as { key: string; label: string }[]) ?? [
+    { key: 'action_1', label: 'Approve' },
+    { key: 'action_2', label: 'Reject' },
+  ];
+
+  // We append TIMEOUT action
+  const allActions = [
+    ...actions,
+    { key: 'TIMEOUT', label: t('workflow.properties.human.timeoutAction', 'TIMEOUT') }
+  ];
+
+  return (
+    <Box
+      style={{
+        width: 220,
+        borderRadius: 12,
+        border: selected 
+          ? `2px solid var(--flock-accent)` 
+          : `1px solid var(--flock-accent)`,
+        background: 'var(--flock-bg-surface)',
+        boxShadow: selected 
+          ? `0 0 0 3px rgba(21, 90, 239, 0.25)` 
+          : '0 4px 12px rgba(0,0,0,0.03)',
+        overflow: 'visible',
+        cursor: 'pointer',
+        position: 'relative',
+        transition: 'all 0.15s ease',
+      }}
+    >
+      <style dangerouslySetInnerHTML={{ __html: handleStyle }} />
+      <Box
+        style={{
+          padding: '8px 12px',
+          display: 'flex',
+          alignItems: 'center',
+          gap: 8,
+          borderBottom: '1px solid var(--flock-border-subtle)',
+          background: 'var(--flock-bg-surface)',
+        }}
+      >
+        <Box
+          style={{
+            width: 22,
+            height: 22,
+            borderRadius: 6,
+            background: 'var(--flock-accent-soft)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            flexShrink: 0,
+          }}
+        >
+          <Icon size={13} stroke={2.5} style={{ color: cfg.colorHex }} />
+        </Box>
+        <Text size="xs" fw={700} style={{ color: 'var(--flock-text-bright)', flex: 1, fontSize: 11, lineHeight: 1.2 }} lineClamp={1}>
+          {data.label || t(cfg.displayKey, { defaultValue: cfg.display })}
+        </Text>
+      </Box>
+      <Box style={{ padding: '8px 12px', background: 'var(--flock-bg-surface)' }}>
+        {allActions.map((act) => {
+          const isTimeout = act.key === 'TIMEOUT';
+          return (
+            <Box key={act.key} style={{ position: 'relative', marginBottom: 6 }}>
+              <Box
+                style={{
+                  padding: '6px 10px',
+                  borderRadius: 8,
+                  background: 'var(--flock-bg-raised, rgba(0, 0, 0, 0.02))',
+                  border: '1px solid var(--flock-border-subtle)',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  gap: 2,
+                  marginRight: 6,
+                  overflow: 'hidden',
+                }}
+              >
+                <Text size="xs" fw={700} style={{ fontSize: 10, color: isTimeout ? 'var(--mantine-color-red-6)' : 'var(--flock-text-bright)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                  {act.key.toUpperCase()}
+                </Text>
+                {act.label && (
+                  <Text size="xs" c="dimmed" style={{ fontSize: 10, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                    {act.label}
+                  </Text>
+                )}
+              </Box>
+              <div 
+                className="flock-handle-container"
+                style={{
+                  position: 'absolute',
+                  top: '50%',
+                  right: -40,
+                  transform: 'translateY(-50%)',
+                  width: 32,
+                  height: 20,
+                  zIndex: 10,
+                }}
+              >
+                <Handle
+                  type="source"
+                  position={Position.Right}
+                  id={act.key}
+                  style={{
+                    background: 'var(--flock-bg-surface)',
+                    border: `2px solid var(--flock-accent)`,
+                    width: 8,
+                    height: 8,
+                    top: '50%',
+                    left: 0,
+                    transform: 'translateY(-50%)',
+                  }}
+                />
+                <div className="flock-handle-plus">
+                  <ActionIcon
+                    size="16px"
+                    radius="xl"
+                    variant="filled"
+                    style={{
+                      boxShadow: '0 2px 6px rgba(0,0,0,0.15)',
+                      cursor: 'pointer',
+                      background: 'var(--flock-accent, #155aef)',
+                    }}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      e.preventDefault();
+                      if (data.onHandlePlusClick) {
+                        data.onHandlePlusClick(id, act.key, e.clientX, e.clientY);
+                      }
+                    }}
+                  >
+                    <IconPlus size={10} stroke={3} />
+                  </ActionIcon>
+                </div>
+              </div>
+            </Box>
+          );
+        })}
+      </Box>
+      <Handle
+        type="target"
+        position={Position.Left}
+        id="left"
+        style={{
+          background: 'var(--flock-bg-surface)',
+          border: `2px solid var(--flock-accent)`,
+          width: 8,
+          height: 8,
+        }}
+      />
+    </Box>
+  );
+});
+

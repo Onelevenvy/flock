@@ -21,9 +21,13 @@ pub fn make_start_node(
             if !outputs.is_object() {
                 outputs = json!({});
             }
-            outputs["start"] = json!({
-                "query": state.input_msg
-            });
+            if !outputs.get("start").is_some() {
+                outputs["start"] = json!({
+                    "query": state.input_msg
+                });
+            } else if !outputs["start"].get("query").is_some() {
+                outputs["start"]["query"] = json!(state.input_msg);
+            }
             ctx.sink.emit_node_done(&node_id, &outputs["start"]);
             Ok(json!({
                 "node_outputs": outputs,

@@ -7,6 +7,11 @@ import {
   Badge,
   TextInput,
   Button,
+  Modal,
+  NumberInput,
+  Switch,
+  Select,
+  Stack,
 } from '@mantine/core';
 import {
   IconX,
@@ -15,6 +20,7 @@ import {
   IconCheck,
   IconSend,
   IconPlus,
+  IconPlayerPlay,
 } from '@tabler/icons-react';
 import { useTranslation } from 'react-i18next';
 import { ChatPanel } from '../../../components/chat/ChatPanel';
@@ -48,6 +54,14 @@ export function ExecutionPanel({
   const { t } = useTranslation();
   const { clearExecution } = useWorkflowStore();
   const [inputVal, setInputVal] = useState('');
+
+  const startNode = useWorkflowStore((s) => s.nodes.find((n) => n.type === 'start'));
+  const startVariables = (startNode?.data?.variables as any[]) ?? [
+    { type: 'string', name: 'query', label: 'Query', required: true }
+  ];
+
+  const [inputsModalOpened, setInputsModalOpened] = useState(false);
+  const [formInputs, setFormInputs] = useState<Record<string, any>>({});
 
   // 1. 转换并聚合出 ChatPanel 可识别的 ChatMessage 数组
   const chatMessages = useMemo<ChatMessage[]>(() => {
@@ -140,9 +154,27 @@ export function ExecutionPanel({
     : status === 'error' ? 'red'
     : 'gray';
 
+  const activeInterrupt = useWorkflowStore((s) => s.activeInterrupt);
+
   const handleStart = () => {
-    if (!inputVal.trim()) return;
-    startWorkflow(inputVal);
+    const customVars = startVariables.filter(v => v.name !== 'query');
+    if (customVars.length > 0) {
+      const initialFormValues: Record<string, any> = {};
+      startVariables.forEach((v) => {
+        initialFormValues[v.name] = v.default_value ?? '';
+      });
+      initialFormValues['query'] = inputVal;
+      setFormInputs(initialFormValues);
+      setInputsModalOpened(true);
+    } else {
+      startWorkflow(JSON.stringify({ query: inputVal }));
+      setInputVal('');
+    }
+  };
+
+  const handleModalSubmit = () => {
+    startWorkflow(JSON.stringify(formInputs));
+    setInputsModalOpened(false);
     setInputVal('');
   };
 
@@ -160,6 +192,66 @@ export function ExecutionPanel({
         boxShadow: '-2px 0 12px rgba(0, 0, 0, 0.08)',
       }}
     >
+      <Modal
+        opened={inputsModalOpened}
+        onClose={() => setInputsModalOpened(false)}
+        title={t('workflow.execution.startInputs', 'Workflow Start Parameters')}
+        size="sm"
+        centered
+        styles={{
+          header: { backgroundColor: 'var(--flock-bg-surface)' },
+          content: { backgroundColor: 'var(--flock-bg-surface)' },
+        }}
+      >
+        <Stack gap="sm">
+          {startVariables.map((v) => {
+            const label = `${v.label} (${v.name})`;
+            if (v.type === 'boolean') {
+              return (
+                <Switch
+                  key={v.name}
+                  label={label}
+                  checked={!!formInputs[v.name]}
+                  onChange={(e) => setFormInputs({ ...formInputs, [v.name]: e.currentTarget.checked })}
+                  size="xs"
+                />
+              );
+            }
+            if (v.type === 'number') {
+              return (
+                <NumberInput
+                  key={v.name}
+                  label={label}
+                  value={formInputs[v.name]}
+                  onChange={(val) => setFormInputs({ ...formInputs, [v.name]: Number(val) })}
+                  size="xs"
+                  required={v.required}
+                />
+              );
+            }
+            return (
+              <TextInput
+                key={v.name}
+                label={label}
+                value={formInputs[v.name] ?? ''}
+                onChange={(e) => setFormInputs({ ...formInputs, [v.name]: e.target.value })}
+                size="xs"
+                required={v.required}
+              />
+            );
+          })}
+
+          <Group justify="flex-end" gap="xs" mt="md">
+            <Button variant="light" size="xs" color="gray" onClick={() => setInputsModalOpened(false)}>
+              {t('common.cancel', 'Cancel')}
+            </Button>
+            <Button size="xs" leftSection={<IconPlayerPlay size={12} />} onClick={handleModalSubmit}>
+              {t('workflow.execution.run', 'Run')}
+            </Button>
+          </Group>
+        </Stack>
+      </Modal>
+
       {/* Panel header */}
       <Group
         px="sm"
@@ -256,25 +348,40 @@ export function ExecutionPanel({
               }}
             >
               <Text size="xs" fw={600} mb="xs" style={{ color: 'var(--flock-text-bright)' }}>
-                🧑‍💻 {t('workflow.execution.humanReview', 'Human Review Required')}
+                🧑‍💻 {activeInterrupt?.title || t('workflow.execution.humanReview', 'Human Review Required')}
               </Text>
               <Group gap="sm">
-                <Button
-                  size="xs"
-                  color="teal"
-                  leftSection={<IconCheck size={12} />}
-                  onClick={() => resumeWorkflow({ choice: 'approved' })}
-                >
-                  {t('workflow.execution.approve', 'Approve')}
-                </Button>
-                <Button
-                  size="xs"
-                  color="red"
-                  leftSection={<IconX size={12} />}
-                  onClick={() => resumeWorkflow({ choice: 'denied' })}
-                >
-                  {t('workflow.execution.deny', 'Deny')}
-                </Button>
+                {activeInterrupt?.actions && Array.isArray(activeInterrupt.actions) ? (
+                  activeInterrupt.actions.map((act: any) => (
+                    <Button
+                      key={act.key}
+                      size="xs"
+                      color="blue"
+                      onClick={() => resumeWorkflow({ choice: act.key })}
+                    >
+                      {act.label || act.key}
+                    </Button>
+                  ))
+                ) : (
+                  <>
+                    <Button
+                      size="xs"
+                      color="teal"
+                      leftSection={<IconCheck size={12} />}
+                      onClick={() => resumeWorkflow({ choice: 'approved' })}
+                    >
+                      {t('workflow.execution.approve', 'Approve')}
+                    </Button>
+                    <Button
+                      size="xs"
+                      color="red"
+                      leftSection={<IconX size={12} />}
+                      onClick={() => resumeWorkflow({ choice: 'denied' })}
+                    >
+                      {t('workflow.execution.deny', 'Deny')}
+                    </Button>
+                  </>
+                )}
               </Group>
             </Box>
           ) : (

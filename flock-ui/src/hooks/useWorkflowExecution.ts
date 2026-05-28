@@ -60,6 +60,7 @@ export function useWorkflowExecution() {
             switch (payload.type) {
               case 'workflow_start':
                 store.setExecutionStatus('running');
+                store.setActiveInterrupt(null);
                 store.appendExecutionMessage({
                   type: 'info',
                   content: `🚀 Workflow ${payload.workflow_id} execution started...`,
@@ -131,6 +132,7 @@ export function useWorkflowExecution() {
 
               case 'workflow_interrupted':
                 store.setExecutionStatus('idle'); // 暂停等待 HITL 输入
+                store.setActiveInterrupt(payload.interrupt);
                 store.appendExecutionMessage({
                   type: 'info',
                   content: `⏳ Interrupt hit! Waiting for user input... Detail: ${JSON.stringify(payload.interrupt)}`,
@@ -140,6 +142,7 @@ export function useWorkflowExecution() {
 
               case 'workflow_done':
                 store.setExecutionStatus('done');
+                store.setActiveInterrupt(null);
                 store.appendExecutionMessage({
                   type: 'info',
                   content: `🎉 Workflow execution completed successfully.`,
@@ -150,6 +153,7 @@ export function useWorkflowExecution() {
               case 'workflow_error':
               case 'error':
                 store.setExecutionStatus('error');
+                store.setActiveInterrupt(null);
                 store.appendExecutionMessage({
                   type: 'error',
                   content: `❌ Execution error: ${payload.error || payload.text || 'Unknown error'}`,
@@ -225,10 +229,23 @@ export function useWorkflowExecution() {
 
     store.setExecutionStatus('running');
 
-    // 记录用户消息，以便 Chat 控制台能还原真实的多轮问答结构
+    let userMsgContent = input;
+    try {
+      if (input.trim().startsWith('{')) {
+        const parsed = JSON.parse(input);
+        if (parsed.query) {
+          userMsgContent = parsed.query;
+        } else {
+          userMsgContent = Object.entries(parsed)
+            .map(([k, v]) => `${k}: ${v}`)
+            .join('\n');
+        }
+      }
+    } catch (_) {}
+
     store.appendExecutionMessage({
       type: 'user',
-      content: input,
+      content: userMsgContent,
       timestamp: Date.now(),
     });
 
