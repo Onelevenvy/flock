@@ -133,7 +133,14 @@ export function ModelSettingsPopover({
             data={modelOptions}
             disabled={modelsLoading}
             value={String(node.data.model ?? '')}
-            onChange={(v) => onDataChange(node.id, 'model', v)}
+            onChange={(v) => {
+              onDataChange(node.id, 'model', v);
+              const allItems = modelOptions.flatMap((d: any) => d.items ? d.items : [d]);
+              const matched = allItems.find(item => item.value === v);
+              if (matched?.providerName) {
+                onDataChange(node.id, 'provider', matched.providerName);
+              }
+            }}
             searchable
             clearable
             size="xs"

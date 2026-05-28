@@ -11,45 +11,93 @@ export const StartNode = memo(({ id, data, selected }: NodeProps<BaseNodeData>) 
   const cfg = nodeConfig['start'];
   const Icon = cfg.icon;
   const { t } = useTranslation();
+  const variables = (data.variables as any[]) ?? [
+    { type: 'string', name: 'query', label: 'Query', required: true }
+  ];
+
   return (
     <Box
       style={{
-        padding: '8px 12px',
+        width: 220,
         borderRadius: 12,
-        background: 'var(--flock-bg-surface)',
         border: selected 
           ? `2px solid var(--flock-accent)` 
           : `1px solid var(--flock-accent)`,
+        background: 'var(--flock-bg-surface)',
         boxShadow: selected 
           ? `0 0 0 3px rgba(21, 90, 239, 0.25)` 
           : '0 4px 10px rgba(0,0,0,0.03)',
         display: 'flex',
-        alignItems: 'center',
-        gap: 8,
-        cursor: 'pointer',
-        width: 220,
+        flexDirection: 'column',
         position: 'relative',
+        cursor: 'pointer',
         transition: 'all 0.15s ease',
       }}
     >
       <style dangerouslySetInnerHTML={{ __html: handleStyle }} />
+      {/* Node Header */}
       <Box
         style={{
-          width: 22,
-          height: 22,
-          borderRadius: 6,
-          background: 'var(--flock-accent-soft)',
+          padding: '8px 12px',
           display: 'flex',
           alignItems: 'center',
-          justifyContent: 'center',
-          flexShrink: 0,
+          gap: 8,
+          borderBottom: variables.length > 0 ? '1px solid var(--flock-border-subtle)' : 'none',
         }}
       >
-        <Icon size={12} stroke={2.5} style={{ color: cfg.colorHex }} />
+        <Box
+          style={{
+            width: 22,
+            height: 22,
+            borderRadius: 6,
+            background: 'var(--flock-accent-soft)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            flexShrink: 0,
+          }}
+        >
+          <Icon size={12} stroke={2.5} style={{ color: cfg.colorHex }} />
+        </Box>
+        <Text size="xs" fw={700} style={{ color: 'var(--flock-text-bright)', fontSize: 11, flex: 1 }}>
+          {data.label || t('workflow.nodes.start.label', 'Start')}
+        </Text>
       </Box>
-      <Text size="xs" fw={700} style={{ color: 'var(--flock-text-bright)', fontSize: 11, flex: 1 }}>
-        {data.label || t('workflow.nodes.start.label', 'Start')}
-      </Text>
+
+      {/* Variables List */}
+      {variables.length > 0 && (
+        <Box style={{ padding: '6px 12px', display: 'flex', flexDirection: 'column', gap: 4 }}>
+          {variables.map((v) => (
+            <Box
+              key={v.name}
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+                padding: '4px 8px',
+                borderRadius: 6,
+                background: 'var(--flock-bg-raised, rgba(0, 0, 0, 0.02))',
+                fontSize: 10,
+              }}
+            >
+              <Text size="xs" fw={500} style={{ color: 'var(--flock-text-bright)', textOverflow: 'ellipsis', overflow: 'hidden', whiteSpace: 'nowrap', maxWidth: 120 }}>
+                {v.name}
+              </Text>
+              <Box style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+                {v.required && (
+                  <Text size="10px" c="red" fw={500}>
+                    {t('workflow.properties.start.requiredLabel', 'Required')}
+                  </Text>
+                )}
+                <Text size="10px" c="dimmed">
+                  ({v.type})
+                </Text>
+              </Box>
+            </Box>
+          ))}
+        </Box>
+      )}
+
       <div 
         className="flock-handle-container"
         style={{

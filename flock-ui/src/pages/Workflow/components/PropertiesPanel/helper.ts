@@ -62,13 +62,31 @@ export function getAvailableVariables(
     const nodeType = node.type;
 
     if (nodeType === 'start') {
-      vars.push({
-        label: `${nodeLabel} (query)`,
-        value: `\${${node.id}.query}`,
-        nodeId: node.id,
-        nodeName: nodeLabel,
-        varType: 'string',
-      });
+      const startVars = (node.data?.variables as any[]) || [];
+      if (startVars.length > 0) {
+        startVars.forEach((v) => {
+          const mapFieldTypeToVariableType = (t: string): any => {
+            if (t === 'number') return 'number';
+            if (t === 'boolean') return 'boolean';
+            return 'string';
+          };
+          vars.push({
+            label: `${nodeLabel} (${v.name})`,
+            value: `\${${node.id}.${v.name}}`,
+            nodeId: node.id,
+            nodeName: nodeLabel,
+            varType: mapFieldTypeToVariableType(v.type),
+          });
+        });
+      } else {
+        vars.push({
+          label: `${nodeLabel} (query)`,
+          value: `\${${node.id}.query}`,
+          nodeId: node.id,
+          nodeName: nodeLabel,
+          varType: 'string',
+        });
+      }
     } else if (nodeType === 'classifier') {
       vars.push({
         label: `${nodeLabel} (category_id)`,

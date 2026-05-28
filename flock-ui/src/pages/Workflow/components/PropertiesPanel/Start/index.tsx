@@ -21,6 +21,7 @@ export interface VariableConfig {
 export function StartFields({ node, onDataChange }: StartFieldsProps) {
   const { t } = useTranslation();
   const [modalOpened, setModalOpened] = useState(false);
+  const [editingVarName, setEditingVarName] = useState<string | null>(null);
 
   // Default variables list
   const variables = (node.data.variables as VariableConfig[]) ?? [
@@ -33,7 +34,7 @@ export function StartFields({ node, onDataChange }: StartFieldsProps) {
   const [displayName, setDisplayName] = useState('');
   const [maxLength, setMaxLength] = useState<number | undefined>(undefined);
   const [defaultValue, setDefaultValue] = useState('');
-  const [optionsStr, setOptionsStr] = useState(''); // Comma-separated options
+  const [options, setOptions] = useState<string[]>([]);
   const [required, setRequired] = useState(true);
 
   const handleSaveVariable = () => {
@@ -41,8 +42,7 @@ export function StartFields({ node, onDataChange }: StartFieldsProps) {
 
     let parsedOptions: string[] | undefined = undefined;
     if (fieldType === 'select') {
-      parsedOptions = optionsStr
-        .split(',')
+      parsedOptions = options
         .map((o) => o.trim())
         .filter((o) => o.length > 0);
     }
@@ -57,14 +57,17 @@ export function StartFields({ node, onDataChange }: StartFieldsProps) {
       options: parsedOptions,
     };
     
-    // Add or replace existing
-    const existsIdx = variables.findIndex(v => v.name === newVar.name);
     let next: VariableConfig[];
-    if (existsIdx >= 0) {
-      next = [...variables];
-      next[existsIdx] = newVar;
+    if (editingVarName !== null) {
+      next = variables.map(v => v.name === editingVarName ? newVar : v);
     } else {
-      next = [...variables, newVar];
+      const existsIdx = variables.findIndex(v => v.name === newVar.name);
+      if (existsIdx >= 0) {
+        next = [...variables];
+        next[existsIdx] = newVar;
+      } else {
+        next = [...variables, newVar];
+      }
     }
     
     onDataChange(node.id, 'variables', next);
@@ -77,13 +80,26 @@ export function StartFields({ node, onDataChange }: StartFieldsProps) {
     onDataChange(node.id, 'variables', next);
   };
 
+  const handleEditVariable = (v: VariableConfig) => {
+    setEditingVarName(v.name);
+    setFieldType(v.type);
+    setVarName(v.name);
+    setDisplayName(v.label);
+    setMaxLength(v.max_length);
+    setDefaultValue(v.default_value || '');
+    setOptions(v.options || []);
+    setRequired(v.required);
+    setModalOpened(true);
+  };
+
   const resetForm = () => {
+    setEditingVarName(null);
     setFieldType('string');
     setVarName('');
     setDisplayName('');
     setMaxLength(undefined);
     setDefaultValue('');
-    setOptionsStr('');
+    setOptions([]);
     setRequired(true);
   };
 
@@ -104,10 +120,12 @@ export function StartFields({ node, onDataChange }: StartFieldsProps) {
             key={v.name}
             justify="space-between"
             p="xs"
+            onClick={() => handleEditVariable(v)}
             style={{
               borderRadius: '8px',
               border: '1px solid var(--flock-border-subtle)',
-              background: 'var(--flock-bg-raised, rgba(0, 0, 0, 0.02))'
+              background: 'var(--flock-bg-raised, rgba(0, 0, 0, 0.02))',
+              cursor: 'pointer'
             }}
           >
             <Stack gap={2} style={{ flex: 1 }}>
@@ -126,7 +144,15 @@ export function StartFields({ node, onDataChange }: StartFieldsProps) {
               </Text>
             </Stack>
             {v.name !== 'query' && (
-              <ActionIcon variant="subtle" color="red" size="xs" onClick={() => handleRemoveVariable(v.name)}>
+              <ActionIcon
+                variant="subtle"
+                color="red"
+                size="xs"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handleRemoveVariable(v.name);
+                }}
+              >
                 <IconTrash size={12} />
               </ActionIcon>
             )}
@@ -137,7 +163,7 @@ export function StartFields({ node, onDataChange }: StartFieldsProps) {
       <Modal
         opened={modalOpened}
         onClose={() => setModalOpened(false)}
-        title={t('workflow.properties.start.addVarTitle', 'Add Variable')}
+        title={editingVarName ? t('workflow.properties.start.editVarTitle', 'Edit Variable') : t('workflow.properties.start.addVarTitle', 'Add Variable')}
         size="sm"
         centered
         styles={{
@@ -158,6 +184,7 @@ export function StartFields({ node, onDataChange }: StartFieldsProps) {
             value={fieldType}
             onChange={(v) => setFieldType(v ?? 'string')}
             size="xs"
+            disabled={editingVarName === 'query'}
           />
 
           <TextInput
@@ -167,6 +194,7 @@ export function StartFields({ node, onDataChange }: StartFieldsProps) {
             onChange={(e) => setVarName(e.target.value)}
             size="xs"
             required
+            disabled={editingVarName !== null}
           />
 
           <TextInput
@@ -188,14 +216,37 @@ export function StartFields({ node, onDataChange }: StartFieldsProps) {
           )}
 
           {fieldType === 'select' && (
-            <TextInput
-              label={t('workflow.properties.start.optionsList', 'Options (Comma separated)')}
-              placeholder="e.g. Option A, Option B, Option C"
-              value={optionsStr}
-              onChange={(e) => setOptionsStr(e.target.value)}
-              size="xs"
-              required
-            />
+            <Stack gap="xs">
+              <Text size="xs" fw={500}>{t('workflow.properties.start.optionsList', 'Options')}</Text>
+              {options.map((option, idx) => (
+                <Group key={idx} gap="xs">
+                  <TextInput
+                    value={option}
+                    onChange={(e) => {
+                      const next = [...options];
+                      next[idx] = e.target.value;
+                      setOptions(next);
+                    }}
+                    size="xs"
+                    style={{ flex: 1 }}
+                    placeholder={`Option ${idx + 1}`}
+                  />
+                  <ActionIcon variant="subtle" color="red" size="sm" onClick={() => {
+                    setOptions(options.filter((_, i) => i !== idx));
+                  }}>
+                    <IconTrash size={14} />
+                  </ActionIcon>
+                </Group>
+              ))}
+              <Button
+                variant="outline"
+                size="xs"
+                leftSection={<IconPlus size={12} />}
+                onClick={() => setOptions([...options, ''])}
+              >
+                {t('workflow.properties.start.addOption', 'Add Option')}
+              </Button>
+            </Stack>
           )}
 
           <TextInput
@@ -210,6 +261,7 @@ export function StartFields({ node, onDataChange }: StartFieldsProps) {
             checked={required}
             onChange={(e) => setRequired(e.currentTarget.checked)}
             size="xs"
+            disabled={editingVarName === 'query'}
           />
 
           <Group justify="flex-end" gap="xs" mt="md">
@@ -225,3 +277,4 @@ export function StartFields({ node, onDataChange }: StartFieldsProps) {
     </Stack>
   );
 }
+

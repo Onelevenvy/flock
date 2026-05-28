@@ -9,6 +9,21 @@ import { type BaseNodeData } from './types';
 import { handleStyle } from './styles';
 import { getNodeSummary } from './helpers';
 
+import { ModelIcon } from '../../../components/Common/Icons';
+
+function getProviderFromModel(model: string): string {
+  const m = model.toLowerCase();
+  if (m.includes('gpt') || m.startsWith('o1') || m.startsWith('o3')) return 'openai';
+  if (m.includes('claude')) return 'anthropic';
+  if (m.includes('deepseek')) return 'deepseek';
+  if (m.includes('gemini')) return 'google';
+  if (m.includes('glm')) return 'zhipu';
+  if (m.includes('qwen')) return 'qwen';
+  if (m.includes('llama')) return 'meta';
+  if (m.includes('mimo')) return 'mimo';
+  return '';
+}
+
 interface BaseWorkflowNodeProps extends NodeProps<BaseNodeData> {
   type: NodeType;
 }
@@ -90,9 +105,23 @@ export function BaseWorkflowNode({ id, type, data, selected }: BaseWorkflowNodeP
       {/* Node Content/Summary */}
       {summary && (
         <Box style={{ padding: '8px 12px', minHeight: 38, display: 'flex', alignItems: 'center' }}>
-          <Text size="xs" c="dimmed" lineClamp={2} style={{ fontSize: 10 }}>
-            {summary}
-          </Text>
+          {(type === 'llm' || type === 'agent') && data.model ? (
+            <Box style={{ display: 'flex', alignItems: 'center', gap: 6, width: '100%' }}>
+              <ModelIcon
+                name={String(data.model)}
+                provider={data.provider ? String(data.provider) : getProviderFromModel(String(data.model))}
+                size={14}
+                style={{ flexShrink: 0 }}
+              />
+              <Text size="xs" c="dimmed" lineClamp={1} style={{ fontSize: 10, flex: 1 }}>
+                {summary}
+              </Text>
+            </Box>
+          ) : (
+            <Text size="xs" c="dimmed" lineClamp={2} style={{ fontSize: 10 }}>
+              {summary}
+            </Text>
+          )}
         </Box>
       )}
 
