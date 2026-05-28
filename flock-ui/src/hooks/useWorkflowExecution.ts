@@ -72,61 +72,96 @@ export function useWorkflowExecution() {
                 break;
 
               case 'node_start':
-                store.appendExecutionMessage({
-                  type: 'info',
-                  content: `▶️ Running node: [${payload.node_id}]`,
-                  nodeId: payload.node_id,
-                  timestamp,
-                });
+                if (!isDebugOfActiveWf) {
+                  store.appendExecutionMessage({
+                    type: 'info',
+                    content: `▶️ Running node: [${payload.node_id}]`,
+                    nodeId: payload.node_id,
+                    timestamp,
+                  });
+                }
                 break;
 
               case 'text_delta':
                 if (payload.text) {
-                  store.appendExecutionMessage({
-                    type: 'text_delta',
-                    content: payload.text,
-                    nodeId: payload.node_id,
-                    timestamp,
-                  });
+                  if (isDebugOfActiveWf) {
+                    const targetId = store.debugTarget?.nodeId;
+                    if (targetId) {
+                      const prev = store.debugResults[targetId];
+                      if (prev) {
+                        const currentOutput = (prev.output && typeof prev.output === 'object') ? { ...prev.output } : {};
+                        const currentResponse = (currentOutput.response || '') + payload.text;
+                        currentOutput.response = currentResponse;
+                        store.setDebugResult(targetId, {
+                          ...prev,
+                          output: currentOutput,
+                        });
+                      }
+                    }
+                  } else {
+                    store.appendExecutionMessage({
+                      type: 'text_delta',
+                      content: payload.text,
+                      nodeId: payload.node_id,
+                      timestamp,
+                    });
+                  }
                 }
                 break;
 
               case 'thinking':
                 if (payload.text) {
-                  store.appendExecutionMessage({
-                    type: 'thinking',
-                    content: payload.text,
-                    nodeId: payload.node_id,
-                    timestamp,
-                  });
+                  if (isDebugOfActiveWf) {
+                    const targetId = store.debugTarget?.nodeId;
+                    if (targetId) {
+                      const prev = store.debugResults[targetId];
+                      if (prev) {
+                        const currentOutput = (prev.output && typeof prev.output === 'object') ? { ...prev.output } : {};
+                        const currentThinking = (currentOutput.thinking || '') + payload.text;
+                        currentOutput.thinking = currentThinking;
+                        store.setDebugResult(targetId, {
+                          ...prev,
+                          output: currentOutput,
+                        });
+                      }
+                    }
+                  } else {
+                    store.appendExecutionMessage({
+                      type: 'thinking',
+                      content: payload.text,
+                      nodeId: payload.node_id,
+                      timestamp,
+                    });
+                  }
                 }
                 break;
 
               case 'node_done': {
-                store.appendExecutionMessage({
-                  type: 'info',
-                  content: `✅ Node [${payload.node_id}] finished. Output: ${JSON.stringify(payload.output)}`,
-                  nodeId: payload.node_id,
-                  timestamp,
-                });
+                if (!isDebugOfActiveWf) {
+                  store.appendExecutionMessage({
+                    type: 'info',
+                    content: `✅ Node [${payload.node_id}] finished. Output: ${JSON.stringify(payload.output)}`,
+                    nodeId: payload.node_id,
+                    timestamp,
+                  });
 
-                // 补偿非流式返回：如果期间没有任何 text_delta 产生，在此一次性补偿以供 UI 聊天气泡显示
-                if (payload.output && typeof payload.output === 'object') {
-                  const outputObj = payload.output as Record<string, unknown>;
-                  const responseText = outputObj.response || outputObj.answer;
-                  if (typeof responseText === 'string' && responseText.trim()) {
-                    // 使用 getState() 获取最新的 state，彻底解决 React 闭包捕获 stale closure 导致的重复补偿 Bug
-                    const currentMessages = useWorkflowStore.getState().executionMessages;
-                    const hasDeltas = currentMessages.some(
-                      (m) => m.nodeId === payload.node_id && m.type === 'text_delta'
-                    );
-                    if (!hasDeltas) {
-                      store.appendExecutionMessage({
-                        type: 'text_delta',
-                        content: responseText,
-                        nodeId: payload.node_id,
-                        timestamp,
-                      });
+                  // 补偿非流式返回：如果期间没有任何 text_delta 产生，在此一次性补偿以供 UI 聊天气泡显示
+                  if (payload.output && typeof payload.output === 'object') {
+                    const outputObj = payload.output as Record<string, unknown>;
+                    const responseText = outputObj.response || outputObj.answer;
+                    if (typeof responseText === 'string' && responseText.trim()) {
+                      const currentMessages = useWorkflowStore.getState().executionMessages;
+                      const hasDeltas = currentMessages.some(
+                        (m) => m.nodeId === payload.node_id && m.type === 'text_delta'
+                      );
+                      if (!hasDeltas) {
+                        store.appendExecutionMessage({
+                          type: 'text_delta',
+                          content: responseText,
+                          nodeId: payload.node_id,
+                          timestamp,
+                        });
+                      }
                     }
                   }
                 }
