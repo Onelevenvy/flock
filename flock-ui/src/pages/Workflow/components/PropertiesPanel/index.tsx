@@ -52,12 +52,15 @@ export function PropertiesPanel({ node, onClose, onDataChange }: PropertiesPanel
     <Box
       style={{
         width: 380,
-        borderLeft: '1px solid var(--flock-border-dim)',
+        margin: '12px 8px 8px 0',
+        borderRadius: 12,
+        border: '1px solid var(--flock-border-dim)',
         background: 'var(--flock-bg-base)',
         display: 'flex',
         flexDirection: 'column',
         flexShrink: 0,
-        boxShadow: '-4px 0 16px rgba(0,0,0,0.02)',
+        boxShadow: '0 8px 24px rgba(0, 0, 0, 0.05), 0 2px 6px rgba(0, 0, 0, 0.02)',
+        overflow: 'hidden',
       }}
     >
       {/* Header */}

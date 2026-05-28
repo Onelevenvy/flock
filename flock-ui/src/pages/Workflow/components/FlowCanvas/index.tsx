@@ -244,7 +244,7 @@ export function FlowCanvas({ workflowId, workflowData, onBack }: FlowCanvasProps
       </Group>
 
       {/* ── Canvas area ─────────────────────────────────────────────────── */}
-      <Box style={{ flex: 1, display: 'flex', overflow: 'hidden' }}>
+      <Box style={{ flex: 1, display: 'flex', overflow: 'hidden', background: 'var(--flock-bg-deepest)' }}>
         <Box style={{ flex: 1, position: 'relative' }}>
           {/* ── Left Floating Toolbar ── */}
           <LeftToolbar
@@ -303,7 +303,7 @@ export function FlowCanvas({ workflowId, workflowData, onBack }: FlowCanvasProps
             }}
             fitView
             fitViewOptions={{ padding: 0.25 }}
-            style={{ background: 'var(--flock-bg-base)' }}
+            style={{ background: 'var(--flock-bg-deepest)' }}
             proOptions={{ hideAttribution: true }}
           >
             <Background
