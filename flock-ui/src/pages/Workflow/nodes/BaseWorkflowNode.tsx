@@ -12,51 +12,45 @@ import { getNodeSummary } from './helpers';
 import { invoke } from '@tauri-apps/api/core';
 import { ModelIcon } from '../../../components/Common/Icons';
 
-let cachedModelToIconPromise: Promise<Record<string, string>> | null = null;
-function getModelToIconMapping(): Promise<Record<string, string>> {
-  if (cachedModelToIconPromise) return cachedModelToIconPromise;
-
-  cachedModelToIconPromise = (async () => {
-    try {
-      const provList = await invoke<any[]>('list_providers');
-      const mapping: Record<string, string> = {};
-
-      const provMap: Record<string, string> = {};
-      provList.forEach((p) => {
-        if (p.icon) {
-          if (p.id) {
-            provMap[p.id] = p.icon;
+let cachedProvidersPromise: Promise<Record<string, string>> | null = null;
+function getCachedProviderIcons(): Promise<Record<string, string>> {
+  if (!cachedProvidersPromise) {
+    cachedProvidersPromise = invoke<any[]>('list_providers')
+      .then((provs) => {
+        const mapping: Record<string, string> = {};
+        provs.forEach((p) => {
+          if (p.icon) {
+            if (p.id) {
+              mapping[p.id] = p.icon;
+            }
+            if (p.provider_type) {
+              mapping[p.provider_type] = p.icon;
+              mapping[p.provider_type.toLowerCase()] = p.icon;
+            }
           }
-          if (p.provider_type) {
-            provMap[p.provider_type] = p.icon;
-            provMap[p.provider_type.toLowerCase()] = p.icon;
-          }
-        }
+        });
+        return mapping;
+      })
+      .catch((err) => {
+        console.error('Failed to load providers:', err);
+        cachedProvidersPromise = null;
+        return {};
       });
+  }
+  return cachedProvidersPromise;
+}
 
-      await Promise.all(
-        provList.map(async (p) => {
-          try {
-            const ms = await invoke<any[]>('list_models', { providerId: p.id });
-            ms.forEach((m) => {
-              if (m.model_name && p.icon) {
-                mapping[m.model_name] = p.icon;
-                mapping[m.model_name.toLowerCase()] = p.icon;
-              }
-            });
-          } catch { /* ignore single error */ }
-        })
-      );
-
-      return { ...provMap, ...mapping };
-    } catch (e) {
-      console.error('Failed to build model-to-icon mapping from backend:', e);
-      cachedModelToIconPromise = null;
-      return {};
-    }
-  })();
-
-  return cachedModelToIconPromise;
+function getProviderFromModel(model: string): string {
+  const m = model.toLowerCase();
+  if (m.includes('gpt') || m.startsWith('o1') || m.startsWith('o3')) return 'openai';
+  if (m.includes('claude')) return 'anthropic';
+  if (m.includes('deepseek')) return 'deepseek';
+  if (m.includes('gemini')) return 'google';
+  if (m.includes('glm')) return 'zhipu';
+  if (m.includes('qwen')) return 'qwen';
+  if (m.includes('llama')) return 'meta';
+  if (m.includes('mimo')) return 'mimo';
+  return '';
 }
 
 interface BaseWorkflowNodeProps extends NodeProps<BaseNodeData> {
@@ -72,24 +66,23 @@ export function BaseWorkflowNode({ id, type, data, selected }: BaseWorkflowNodeP
   const summary = getNodeSummary(type, data, t);
   const canDebug = type !== 'start' && type !== 'end';
 
-  const [iconMapping, setIconMapping] = useState<Record<string, string>>({});
+  const [providerIcons, setProviderIcons] = useState<Record<string, string>>({});
   useEffect(() => {
-    getModelToIconMapping().then(setIconMapping);
+    getCachedProviderIcons().then(setProviderIcons);
   }, []);
 
   let providerIcon = '';
   if (data.model) {
-    const modelName = String(data.model);
-    const providerVal = data.provider ? String(data.provider) : '';
-    if (providerVal.startsWith('data:')) {
-      providerIcon = providerVal;
+    if (data.provider) {
+      const pStr = String(data.provider);
+      if (pStr.startsWith('data:')) {
+        providerIcon = pStr;
+      } else {
+        providerIcon = providerIcons[pStr] || pStr;
+      }
     } else {
-      providerIcon =
-        iconMapping[providerVal] ||
-        iconMapping[providerVal.toLowerCase()] ||
-        iconMapping[modelName] ||
-        iconMapping[modelName.toLowerCase()] ||
-        providerVal;
+      const inferred = getProviderFromModel(String(data.model));
+      providerIcon = providerIcons[inferred] || inferred;
     }
   }
 
