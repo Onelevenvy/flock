@@ -20,7 +20,7 @@ export function ClassifierFields({ node, onDataChange, modelOptions, modelsLoadi
     <>
       <VariableTextInput
         label={t('workflow.properties.classifier.input')}
-        placeholder="${start.query}"
+        placeholder=""
         value={String(node.data.input ?? '')}
         currentNodeId={node.id}
         onChange={(val) => onDataChange(node.id, 'input', val)}

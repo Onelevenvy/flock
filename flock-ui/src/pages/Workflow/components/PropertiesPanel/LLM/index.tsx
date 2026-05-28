@@ -76,7 +76,7 @@ export function LLMFields({ node, onDataChange, modelOptions, modelsLoading }: M
 
       <VariableTextarea
         label={t('workflow.properties.llm.userPrompt')}
-        placeholder="${start.query}"
+        placeholder=""
         value={String(node.data.userMessage ?? '')}
         currentNodeId={node.id}
         onChange={(val) => onDataChange(node.id, 'userMessage', val)}
