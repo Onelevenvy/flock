@@ -32,7 +32,7 @@ serde_json.workspace = true
 serde.workspace = true
 reqwest.workspace = true
 log = "0.4"
-tauri = { version = "2.11.1", features = [] }
+tauri = { version = "2.11.1", features = ["macos-private-api"] }
 tauri-plugin-log = "2"
 tauri-plugin-shell = "2"
 tauri-plugin-dialog = "2"
@@ -41,3 +41,4 @@ anyhow.workspace = true
 chrono.workspace = true
 workspace-hack.workspace = true
 base64.workspace = true
+
