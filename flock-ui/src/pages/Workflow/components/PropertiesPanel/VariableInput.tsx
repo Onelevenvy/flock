@@ -1,31 +1,95 @@
-import { useRef, useState, useMemo } from 'react';
+import { useRef, useState, useMemo, useEffect } from 'react';
 import {
   Box,
   Text,
   ActionIcon,
-  TextInput,
-  Textarea,
-  Button,
   Popover,
   Tooltip,
   Stack,
-  Badge,
   Group,
+  Button,
+  TextInput,
+  Textarea,
 } from '@mantine/core';
 import { IconBolt } from '@tabler/icons-react';
 import { useTranslation } from 'react-i18next';
 import { useWorkflowStore } from '../../../../store/workflowStore';
 import { getAvailableVariables } from './helper';
-import { TYPE_BADGES, TYPE_COLORS, type VariableType } from '../../../../types/workflowVariables';
 
-export interface VariableTextInputProps extends Omit<React.ComponentPropsWithoutRef<typeof TextInput>, 'onChange'> {
-  currentNodeId: string;
-  onChange: (val: string) => void;
+// --- HTML/Plain text conversion helpers ---
+function htmlToPlain(html: string): string {
+  const div = document.createElement('div');
+  div.innerHTML = html;
+  
+  // Replace styled variable tags with their original plain-text representation
+  const tags = div.querySelectorAll('.variable-tag');
+  tags.forEach(tag => {
+    const val = tag.getAttribute('data-val') || '';
+    tag.replaceWith(document.createTextNode(val));
+  });
+  
+  // Replace block element tags with newlines to preserve formatting
+  const blocks = div.querySelectorAll('p, div, br');
+  blocks.forEach(block => {
+    if (block.tagName === 'BR') {
+      block.replaceWith(document.createTextNode('\n'));
+    } else {
+      // Append a newline at the end of block elements
+      const val = block.innerHTML;
+      block.replaceWith(document.createTextNode((block.textContent || '') + '\n'));
+    }
+  });
+
+  return div.innerText || div.textContent || '';
 }
 
-export function VariableTextInput({ currentNodeId, onChange, value, ...props }: VariableTextInputProps) {
+function plainToHtml(text: string, variablesList: any[]): string {
+  // Safe HTML escape
+  let html = text
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/\n/g, '<br/>');
+  
+  const regex = /\$\{[^}]+\}/g;
+  html = html.replace(regex, (match) => {
+    const matchedVar = variablesList.find(v => v.value === match);
+    const varPath = match.substring(2, match.length - 1);
+    const varName = varPath.split('.')[1] || varPath;
+    
+    // Resolve node group name
+    let groupName = 'Start';
+    if (match.startsWith('${sys.')) {
+      groupName = 'SYSTEM';
+    } else if (matchedVar) {
+      groupName = matchedVar.nodeName;
+    }
+    
+    const isInvalid = !matchedVar && !match.startsWith('${sys.');
+    const bgColor = isInvalid ? 'var(--mantine-color-red-light, #fff0f0)' : 'var(--mantine-color-blue-light, #e8f4fd)';
+    const borderColor = isInvalid ? 'var(--mantine-color-red-outline, #ffa8a8)' : 'var(--mantine-color-blue-outline, #cbe4fb)';
+    const textColor = isInvalid ? 'var(--mantine-color-red-filled, #fa5252)' : 'var(--mantine-color-blue-filled, #155aef)';
+    const icon = isInvalid ? '⚠️' : '🏠';
+    
+    return `<span class="variable-tag" contenteditable="false" data-val="${match}" style="display: inline-flex; align-items: center; background: ${bgColor}; border: 1px solid ${borderColor}; color: ${textColor}; border-radius: 4px; padding: 1px 6px; font-size: 11px; font-weight: 500; margin: 0 2px; user-select: none; font-family: system-ui; vertical-align: middle;">${icon} ${groupName} / (x) ${varName}</span>`;
+  });
+  
+  return html;
+}
+
+// --- Premium Shared Contenteditable Prompt Editor ---
+interface VariablePromptEditorProps {
+  currentNodeId: string;
+  value: string;
+  onChange: (val: string) => void;
+  placeholder?: string;
+  minRows?: number;
+  label?: React.ReactNode;
+}
+
+export function VariablePromptEditor({ currentNodeId, value, onChange, placeholder, minRows = 3, label }: VariablePromptEditorProps) {
   const { t } = useTranslation();
-  const inputRef = useRef<HTMLInputElement>(null);
+  const editorRef = useRef<HTMLDivElement>(null);
   const [popoverOpened, setPopoverOpened] = useState(false);
 
   const nodes = useWorkflowStore((s) => s.nodes);
@@ -37,40 +101,76 @@ export function VariableTextInput({ currentNodeId, onChange, value, ...props }: 
     [currentNodeId, nodes, edges, environmentVariables]
   );
 
-  const insertVariable = (varValue: string) => {
-    const input = inputRef.current;
-    if (!input) return;
-
-    const start = input.selectionStart ?? 0;
-    const end = input.selectionEnd ?? 0;
-    const currentText = String(value ?? '');
-
-    const textToInsert = varValue;
-    let newStart = start;
-    if (start > 0 && currentText[start - 1] === '/') {
-      newStart = start - 1;
+  // Sync database state to html content only when content diverges
+  useEffect(() => {
+    if (editorRef.current) {
+      const currentPlain = htmlToPlain(editorRef.current.innerHTML);
+      // Strip trailing newline added by browsers in innerText
+      const cleanedPlain = currentPlain.endsWith('\n') ? currentPlain.slice(0, -1) : currentPlain;
+      if (cleanedPlain !== value) {
+        editorRef.current.innerHTML = plainToHtml(value || '', variables);
+      }
     }
+  }, [value, variables]);
 
-    const nextText = currentText.substring(0, newStart) + textToInsert + currentText.substring(end);
-
-    onChange(nextText);
-    setPopoverOpened(false);
-
-    setTimeout(() => {
-      input.focus();
-      const nextCursorPos = newStart + textToInsert.length;
-      input.setSelectionRange(nextCursorPos, nextCursorPos);
-    }, 50);
+  const handleInput = () => {
+    if (editorRef.current) {
+      const currentPlain = htmlToPlain(editorRef.current.innerHTML);
+      const cleanedPlain = currentPlain.endsWith('\n') ? currentPlain.slice(0, -1) : currentPlain;
+      onChange(cleanedPlain);
+    }
   };
 
-  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (props.onKeyDown) props.onKeyDown(e);
-  };
-
-  const handleKeyUp = (e: React.KeyboardEvent<HTMLInputElement>) => {
+  const handleKeyUp = (e: React.KeyboardEvent<HTMLDivElement>) => {
     if (e.key === '/') {
       setPopoverOpened(true);
     }
+  };
+
+  const insertVariable = (varValue: string) => {
+    const editor = editorRef.current;
+    if (!editor) return;
+
+    editor.focus();
+    
+    const matchedVar = variables.find(v => v.value === varValue);
+    const varPath = varValue.substring(2, varValue.length - 1);
+    const varName = varPath.split('.')[1] || varPath;
+    
+    let groupName = 'Start';
+    if (varValue.startsWith('${sys.')) {
+      groupName = 'SYSTEM';
+    } else if (matchedVar) {
+      groupName = matchedVar.nodeName;
+    }
+    
+    const tagHtml = `<span class="variable-tag" contenteditable="false" data-val="${varValue}" style="display: inline-flex; align-items: center; background: var(--mantine-color-blue-light, #e8f4fd); border: 1px solid var(--mantine-color-blue-outline, #cbe4fb); color: var(--mantine-color-blue-filled, #155aef); border-radius: 4px; padding: 1px 6px; font-size: 11px; font-weight: 500; margin: 0 2px; user-select: none; font-family: system-ui; vertical-align: middle;">🏠 ${groupName} / (x) ${varName}</span>&nbsp;`;
+
+    // Modern browser selection insertion
+    const sel = window.getSelection();
+    if (sel && sel.rangeCount > 0) {
+      const range = sel.getRangeAt(0);
+      range.deleteContents();
+      
+      const el = document.createElement('div');
+      el.innerHTML = tagHtml;
+      const frag = document.createDocumentFragment();
+      let node;
+      while ((node = el.firstChild)) {
+        frag.appendChild(node);
+      }
+      range.insertNode(frag);
+      
+      // Move caret after inserted node
+      range.collapse(false);
+      sel.removeAllRanges();
+      sel.addRange(range);
+    } else {
+      editor.innerHTML += tagHtml;
+    }
+    
+    handleInput();
+    setPopoverOpened(false);
   };
 
   const groupedVars = useMemo(() => {
@@ -82,109 +182,167 @@ export function VariableTextInput({ currentNodeId, onChange, value, ...props }: 
   }, [variables]);
 
   return (
-    <Popover
-      opened={popoverOpened && variables.length > 0}
-      onChange={setPopoverOpened}
-      position="bottom-end"
-      withArrow
-      shadow="md"
-      withinPortal
-    >
-      <Popover.Target>
-        <TextInput
-          {...props}
-          ref={inputRef}
-          value={value}
-          onChange={(e) => onChange(e.target.value)}
-          onKeyDown={handleKeyDown}
-          onKeyUp={handleKeyUp}
-          rightSection={
-            variables.length > 0 && (
-              <Tooltip label={t('workflow.properties.insertVar')} position="top">
-                <ActionIcon
-                  size="sm"
-                  variant="subtle"
-                  color="blue"
-                  onClick={() => setPopoverOpened((o) => !o)}
-                  style={{
-                    color: popoverOpened ? 'var(--flock-accent)' : 'var(--mantine-color-dimmed)',
-                    transition: 'all 0.2s',
-                  }}
-                >
-                  <IconBolt size={14} />
-                </ActionIcon>
-              </Tooltip>
-            )
-          }
-        />
-      </Popover.Target>
-      <Popover.Dropdown p="xs" style={{ background: 'var(--flock-bg-surface)', border: '1px solid var(--flock-border-subtle)', minWidth: 260, maxHeight: 280, overflowY: 'auto' }}>
-        <Text size="xs" fw={500} mb="xs" c="dimmed" style={{ paddingLeft: 6 }}>
-          {t('workflow.properties.selectParameter', 'Select antecedent output parameter')}
+    <Stack gap={3} style={{ width: '100%' }}>
+      {label && (
+        <Text size="xs" fw={500} style={{ color: 'var(--flock-text-bright)' }}>
+          {label}
         </Text>
-        <Stack gap="sm">
-          {Object.entries(groupedVars).map(([nodeName, vars]) => (
-            <Box key={nodeName}>
-              <Text size="xs" fw={600} c="dimmed" mb={4} style={{ paddingLeft: 6, fontSize: 10, textTransform: 'uppercase' }}>
-                {nodeName}
+      )}
+      <Popover
+        opened={popoverOpened && variables.length > 0}
+        onChange={setPopoverOpened}
+        position="bottom-end"
+        withArrow
+        shadow="md"
+        withinPortal
+      >
+        <Popover.Target>
+          <Box style={{ position: 'relative', width: '100%' }}>
+            <div
+              ref={editorRef}
+              contentEditable
+              onInput={handleInput}
+              onKeyUp={handleKeyUp}
+              style={{
+                width: '100%',
+                minHeight: minRows * 24,
+                padding: '8px 32px 8px 8px',
+                borderRadius: '8px',
+                border: '1px solid var(--flock-border-dim, #ced4da)',
+                background: 'var(--flock-bg-surface, #fff)',
+                color: 'var(--flock-text-primary, #212529)',
+                fontSize: '12px',
+                lineHeight: '1.6',
+                outline: 'none',
+                overflowY: 'auto',
+                wordBreak: 'break-word',
+                whiteSpace: 'pre-wrap',
+                cursor: 'text',
+              }}
+            />
+            {!value && placeholder && (
+              <Text
+                size="xs"
+                c="dimmed"
+                style={{
+                  position: 'absolute',
+                  left: 10,
+                  top: 8,
+                  pointerEvents: 'none',
+                  userSelect: 'none',
+                  opacity: 0.6,
+                }}
+              >
+                {placeholder}
               </Text>
-              <Stack gap={1}>
-                {vars.map((v) => {
-                  const varPath = v.value.substring(2, v.value.length - 1);
-                  const displayVarName = v.nodeId === 'sys' ? varPath : varPath.split('.')[1] || varPath;
-                  
-                  let prefixSymbol = <span style={{ color: '#228be6', marginRight: 6, fontWeight: 600, fontSize: 11, fontFamily: 'monospace' }}>(x)</span>;
-                  if (v.varType === 'number') {
-                    prefixSymbol = <span style={{ color: '#0ca678', marginRight: 6, fontWeight: 600, fontSize: 11, fontFamily: 'monospace' }}>[#]</span>;
-                  } else if (v.varType === 'boolean') {
-                    prefixSymbol = <span style={{ color: '#fd7e14', marginRight: 6, fontWeight: 600, fontSize: 11, fontFamily: 'monospace' }}>[?]</span>;
-                  } else if (v.nodeId === 'sys') {
-                    prefixSymbol = <span style={{ color: '#fd7e14', marginRight: 6, fontWeight: 600, fontSize: 11, fontFamily: 'monospace' }}>{`{x}`}</span>;
-                  }
-                  
-                  const typeLabel = v.varType ? v.varType.charAt(0).toUpperCase() + v.varType.slice(1) : '';
+            )}
+            {variables.length > 0 && (
+              <div style={{ position: 'absolute', right: 8, top: 6, zIndex: 2 }}>
+                <Tooltip label={t('workflow.properties.insertVar')} position="top">
+                  <ActionIcon
+                    size="sm"
+                    variant="subtle"
+                    color="blue"
+                    onClick={() => setPopoverOpened((o) => !o)}
+                    style={{
+                      color: popoverOpened ? 'var(--flock-accent)' : 'var(--mantine-color-dimmed)',
+                      transition: 'all 0.2s',
+                    }}
+                  >
+                    <IconBolt size={14} />
+                  </ActionIcon>
+                </Tooltip>
+              </div>
+            )}
+          </Box>
+        </Popover.Target>
+        <Popover.Dropdown p="xs" style={{ background: 'var(--flock-bg-surface)', border: '1px solid var(--flock-border-subtle)', minWidth: 260, maxHeight: 280, overflowY: 'auto' }}>
+          <Text size="xs" fw={500} mb="xs" c="dimmed" style={{ paddingLeft: 6 }}>
+            {t('workflow.properties.selectParameter', 'Select antecedent output parameter')}
+          </Text>
+          <Stack gap="sm">
+            {Object.entries(groupedVars).map(([nodeName, vars]) => (
+              <Box key={nodeName}>
+                <Text size="xs" fw={600} c="dimmed" mb={4} style={{ paddingLeft: 6, fontSize: 10, textTransform: 'uppercase' }}>
+                  {nodeName}
+                </Text>
+                <Stack gap={1}>
+                  {vars.map((v) => {
+                    const varPath = v.value.substring(2, v.value.length - 1);
+                    const displayVarName = v.nodeId === 'sys' ? varPath : varPath.split('.')[1] || varPath;
+                    
+                    let prefixSymbol = <span style={{ color: '#228be6', marginRight: 6, fontWeight: 600, fontSize: 11, fontFamily: 'monospace' }}>(x)</span>;
+                    if (v.varType === 'number') {
+                      prefixSymbol = <span style={{ color: '#0ca678', marginRight: 6, fontWeight: 600, fontSize: 11, fontFamily: 'monospace' }}>[#]</span>;
+                    } else if (v.varType === 'boolean') {
+                      prefixSymbol = <span style={{ color: '#fd7e14', marginRight: 6, fontWeight: 600, fontSize: 11, fontFamily: 'monospace' }}>[?]</span>;
+                    } else if (v.nodeId === 'sys') {
+                      prefixSymbol = <span style={{ color: '#fd7e14', marginRight: 6, fontWeight: 600, fontSize: 11, fontFamily: 'monospace' }}>{`{x}`}</span>;
+                    }
+                    
+                    const typeLabel = v.varType ? v.varType.charAt(0).toUpperCase() + v.varType.slice(1) : '';
 
-                  return (
-                    <Button
-                      key={v.value}
-                      size="xs"
-                      variant="subtle"
-                      justify="flex-start"
-                      onClick={() => insertVariable(v.value)}
-                      styles={{
-                        root: {
-                          height: 28,
-                          padding: '4px 8px',
-                          color: 'var(--flock-text-bright)',
-                          borderRadius: 6,
-                          '&:hover': {
-                            backgroundColor: 'var(--flock-bg-raised, rgba(0,0,0,0.05))',
+                    return (
+                      <Button
+                        key={v.value}
+                        size="xs"
+                        variant="subtle"
+                        justify="flex-start"
+                        onClick={() => insertVariable(v.value)}
+                        styles={{
+                          root: {
+                            height: 28,
+                            padding: '4px 8px',
+                            color: 'var(--flock-text-bright)',
+                            borderRadius: 6,
+                            '&:hover': {
+                              backgroundColor: 'var(--flock-bg-raised, rgba(0,0,0,0.05))',
+                            }
+                          },
+                          inner: {
+                            justifyContent: 'flex-start',
+                            width: '100%',
                           }
-                        },
-                        inner: {
-                          justifyContent: 'flex-start',
-                          width: '100%',
-                        }
-                      }}
-                    >
-                      <Group gap={0} style={{ width: '100%' }} align="center">
-                        {prefixSymbol}
-                        <Text size="xs" fw={500} style={{ color: 'var(--flock-text-bright)' }}>
-                          {displayVarName}
-                        </Text>
-                        <Text size="10px" c="dimmed" ml="auto" style={{ fontSize: 10 }}>
-                          {typeLabel}
-                        </Text>
-                      </Group>
-                    </Button>
-                  );
-                })}
-              </Stack>
-            </Box>
-          ))}
-        </Stack>
-      </Popover.Dropdown>
-    </Popover>
+                        }}
+                      >
+                        <Group gap={0} style={{ width: '100%' }} align="center">
+                          {prefixSymbol}
+                          <Text size="xs" fw={500} style={{ color: 'var(--flock-text-bright)' }}>
+                            {displayVarName}
+                          </Text>
+                          <Text size="10px" c="dimmed" ml="auto" style={{ fontSize: 10 }}>
+                            {typeLabel}
+                          </Text>
+                        </Group>
+                      </Button>
+                    );
+                  })}
+                </Stack>
+              </Box>
+            ))}
+          </Stack>
+        </Popover.Dropdown>
+      </Popover>
+    </Stack>
+  );
+}
+
+// --- Wrappers maintaining exact compatibility ---
+export interface VariableTextInputProps extends Omit<React.ComponentPropsWithoutRef<typeof TextInput>, 'onChange'> {
+  currentNodeId: string;
+  onChange: (val: string) => void;
+}
+
+export function VariableTextInput({ currentNodeId, onChange, value, label, placeholder, ...props }: VariableTextInputProps) {
+  return (
+    <VariablePromptEditor
+      currentNodeId={currentNodeId}
+      value={String(value ?? '')}
+      onChange={onChange}
+      placeholder={placeholder}
+      minRows={1}
+      label={label}
+    />
   );
 }
 
@@ -193,170 +351,16 @@ export interface VariableTextareaProps extends Omit<React.ComponentPropsWithoutR
   onChange: (val: string) => void;
 }
 
-export function VariableTextarea({ currentNodeId, onChange, value, ...props }: VariableTextareaProps) {
-  const { t } = useTranslation();
-  const textareaRef = useRef<HTMLTextAreaElement>(null);
-  const [popoverOpened, setPopoverOpened] = useState(false);
-
-  const nodes = useWorkflowStore((s) => s.nodes);
-  const edges = useWorkflowStore((s) => s.edges);
-  const environmentVariables = useWorkflowStore((s) => s.environmentVariables);
-
-  const variables = useMemo(
-    () => getAvailableVariables(currentNodeId, nodes, edges, environmentVariables),
-    [currentNodeId, nodes, edges, environmentVariables]
-  );
-
-  const insertVariable = (varValue: string) => {
-    const textarea = textareaRef.current;
-    if (!textarea) return;
-
-    const start = textarea.selectionStart ?? 0;
-    const end = textarea.selectionEnd ?? 0;
-    const currentText = String(value ?? '');
-
-    const textToInsert = varValue;
-    let newStart = start;
-    if (start > 0 && currentText[start - 1] === '/') {
-      newStart = start - 1;
-    }
-
-    const nextText = currentText.substring(0, newStart) + textToInsert + currentText.substring(end);
-
-    onChange(nextText);
-    setPopoverOpened(false);
-
-    setTimeout(() => {
-      textarea.focus();
-      const nextCursorPos = newStart + textToInsert.length;
-      textarea.setSelectionRange(nextCursorPos, nextCursorPos);
-    }, 50);
-  };
-
-  const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
-    if (props.onKeyDown) props.onKeyDown(e);
-  };
-
-  const handleKeyUp = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
-    if (e.key === '/') {
-      setPopoverOpened(true);
-    }
-  };
-
-  const groupedVars = useMemo(() => {
-    const acc: Record<string, typeof variables> = {};
-    variables.forEach((v) => {
-      (acc[v.nodeName] = acc[v.nodeName] || []).push(v);
-    });
-    return acc;
-  }, [variables]);
-
+export function VariableTextarea({ currentNodeId, onChange, value, label, placeholder, minRows = 3, ...props }: VariableTextareaProps) {
   return (
-    <Popover
-      opened={popoverOpened && variables.length > 0}
-      onChange={setPopoverOpened}
-      position="bottom-end"
-      withArrow
-      shadow="md"
-      withinPortal
-    >
-      <Popover.Target>
-        <Box style={{ position: 'relative' }}>
-          <Textarea
-            {...props}
-            ref={textareaRef}
-            value={value}
-            onChange={(e) => onChange(e.target.value)}
-            onKeyDown={handleKeyDown}
-            onKeyUp={handleKeyUp}
-            style={{ width: '100%' }}
-          />
-          {variables.length > 0 && (
-            <div style={{ position: 'absolute', right: 8, top: 4, zIndex: 2 }}>
-              <Tooltip label={t('workflow.properties.insertVar')} position="top">
-                <ActionIcon
-                  size="sm"
-                  variant="subtle"
-                  color="blue"
-                  onClick={() => setPopoverOpened((o) => !o)}
-                  style={{
-                    color: popoverOpened ? 'var(--flock-accent)' : 'var(--mantine-color-dimmed)',
-                    transition: 'all 0.2s',
-                  }}
-                >
-                  <IconBolt size={14} />
-                </ActionIcon>
-              </Tooltip>
-            </div>
-          )}
-        </Box>
-      </Popover.Target>
-      <Popover.Dropdown p="xs" style={{ background: 'var(--flock-bg-surface)', border: '1px solid var(--flock-border-subtle)', minWidth: 260, maxHeight: 280, overflowY: 'auto' }}>
-        <Text size="xs" fw={500} mb="xs" c="dimmed" style={{ paddingLeft: 6 }}>
-          {t('workflow.properties.selectParameter', 'Select antecedent output parameter')}
-        </Text>
-        <Stack gap="sm">
-          {Object.entries(groupedVars).map(([nodeName, vars]) => (
-            <Box key={nodeName}>
-              <Text size="xs" fw={600} c="dimmed" mb={4} style={{ paddingLeft: 6, fontSize: 10, textTransform: 'uppercase' }}>
-                {nodeName}
-              </Text>
-              <Stack gap={1}>
-                {vars.map((v) => {
-                  const varPath = v.value.substring(2, v.value.length - 1);
-                  const displayVarName = v.nodeId === 'sys' ? varPath : varPath.split('.')[1] || varPath;
-                  
-                  let prefixSymbol = <span style={{ color: '#228be6', marginRight: 6, fontWeight: 600, fontSize: 11, fontFamily: 'monospace' }}>(x)</span>;
-                  if (v.varType === 'number') {
-                    prefixSymbol = <span style={{ color: '#0ca678', marginRight: 6, fontWeight: 600, fontSize: 11, fontFamily: 'monospace' }}>[#]</span>;
-                  } else if (v.varType === 'boolean') {
-                    prefixSymbol = <span style={{ color: '#fd7e14', marginRight: 6, fontWeight: 600, fontSize: 11, fontFamily: 'monospace' }}>[?]</span>;
-                  } else if (v.nodeId === 'sys') {
-                    prefixSymbol = <span style={{ color: '#fd7e14', marginRight: 6, fontWeight: 600, fontSize: 11, fontFamily: 'monospace' }}>{`{x}`}</span>;
-                  }
-                  
-                  const typeLabel = v.varType ? v.varType.charAt(0).toUpperCase() + v.varType.slice(1) : '';
-
-                  return (
-                    <Button
-                      key={v.value}
-                      size="xs"
-                      variant="subtle"
-                      justify="flex-start"
-                      onClick={() => insertVariable(v.value)}
-                      styles={{
-                        root: {
-                          height: 28,
-                          padding: '4px 8px',
-                          color: 'var(--flock-text-bright)',
-                          borderRadius: 6,
-                          '&:hover': {
-                            backgroundColor: 'var(--flock-bg-raised, rgba(0,0,0,0.05))',
-                          }
-                        },
-                        inner: {
-                          justifyContent: 'flex-start',
-                          width: '100%',
-                        }
-                      }}
-                    >
-                      <Group gap={0} style={{ width: '100%' }} align="center">
-                        {prefixSymbol}
-                        <Text size="xs" fw={500} style={{ color: 'var(--flock-text-bright)' }}>
-                          {displayVarName}
-                        </Text>
-                        <Text size="10px" c="dimmed" ml="auto" style={{ fontSize: 10 }}>
-                          {typeLabel}
-                        </Text>
-                      </Group>
-                    </Button>
-                  );
-                })}
-              </Stack>
-            </Box>
-          ))}
-        </Stack>
-      </Popover.Dropdown>
-    </Popover>
+    <VariablePromptEditor
+      currentNodeId={currentNodeId}
+      value={String(value ?? '')}
+      onChange={onChange}
+      placeholder={placeholder}
+      minRows={minRows}
+      label={label}
+    />
   );
 }
+
