@@ -310,6 +310,20 @@ body {
 /* ---- Active node glowing animations ---- */
 .react-flow__node {
   transition: box-shadow 0.3s ease, border-color 0.3s ease;
+  border-radius: 12px !important;
+  border: none !important;
+  background: transparent !important;
+  box-shadow: none !important;
+  padding: 0 !important;
+}
+
+.react-flow__node.selected,
+.react-flow__node.selected:hover,
+.react-flow__node:focus,
+.react-flow__node:focus-visible {
+  box-shadow: none !important;
+  outline: none !important;
+  border: none !important;
 }
 
 .flock-active-node {

@@ -41,7 +41,6 @@ export const ClassifierNode = memo(({ id, data, selected }: NodeProps<BaseNodeDa
           alignItems: 'center',
           gap: 8,
           borderBottom: '1px solid var(--flock-border-subtle)',
-          background: 'var(--flock-bg-surface)',
         }}
       >
         <Box
@@ -62,7 +61,7 @@ export const ClassifierNode = memo(({ id, data, selected }: NodeProps<BaseNodeDa
           {data.label || t(cfg.displayKey, { defaultValue: cfg.display })}
         </Text>
       </Box>
-      <Box style={{ padding: '8px 12px', background: 'var(--flock-bg-surface)' }}>
+      <Box style={{ padding: '8px 12px' }}>
         {categories.map((cat) => {
           const isOthers = cat.category_id === 'others_category';
           const displayIndex = isOthers ? 0 : ++classIdx;
@@ -188,7 +187,6 @@ export const IfElseNode = memo(({ id, data, selected }: NodeProps<BaseNodeData>)
           alignItems: 'center',
           gap: 8,
           borderBottom: '1px solid var(--flock-border-subtle)',
-          background: 'var(--flock-bg-surface)',
         }}
       >
         <Box
@@ -209,7 +207,7 @@ export const IfElseNode = memo(({ id, data, selected }: NodeProps<BaseNodeData>)
           {data.label || cfg.display}
         </Text>
       </Box>
-      <Box style={{ padding: '8px 12px', background: 'var(--flock-bg-surface)' }}>
+      <Box style={{ padding: '8px 12px' }}>
         {cases.map((c, idx) => {
           const isElse = c.case_id === 'false_else';
           return (
@@ -336,7 +334,6 @@ export const HumanNode = memo(({ id, data, selected }: NodeProps<BaseNodeData>) 
           alignItems: 'center',
           gap: 8,
           borderBottom: '1px solid var(--flock-border-subtle)',
-          background: 'var(--flock-bg-surface)',
         }}
       >
         <Box
@@ -357,7 +354,7 @@ export const HumanNode = memo(({ id, data, selected }: NodeProps<BaseNodeData>) 
           {data.label || t(cfg.displayKey, { defaultValue: cfg.display })}
         </Text>
       </Box>
-      <Box style={{ padding: '8px 12px', background: 'var(--flock-bg-surface)' }}>
+      <Box style={{ padding: '8px 12px' }}>
         {allActions.map((act) => {
           const isTimeout = act.key === 'TIMEOUT';
           return (
