@@ -159,13 +159,21 @@ export const useWorkflowStore = create<WorkflowStore>()(
 
       setDebugTarget: (target) => set({ debugTarget: target }),
 
-      loadWorkflowConfig: (config) =>
+      loadWorkflowConfig: (config) => {
+        const nextNodes = (config.nodes ?? []).filter((n) => n.type !== 'end');
+        const endNodeIds = new Set(
+          (config.nodes ?? []).filter((n) => n.type === 'end').map((n) => n.id)
+        );
+        const nextEdges = (config.edges ?? []).filter(
+          (e) => !endNodeIds.has(e.source) && !endNodeIds.has(e.target)
+        );
         set({
-          nodes: config.nodes ?? [],
-          edges: config.edges ?? [],
+          nodes: nextNodes,
+          edges: nextEdges,
           environmentVariables: (config.metadata?.env_vars as any) ?? {},
           isDirty: false,
-        }),
+        });
+      },
 
       clearExecution: () =>
         set({ executionMessages: [], executionStatus: 'idle', activeExecutionThreadId: null, activeInterrupt: null }),

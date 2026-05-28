@@ -333,6 +333,7 @@ export function FlowCanvas({ workflowId, workflowData, onBack }: FlowCanvasProps
           <NodeDebugPanel
             nodeId={debugTarget.nodeId}
             onClose={() => setDebugTarget(null)}
+            onRunStart={() => setShowExecution(true)}
           />
         )}
 

@@ -8,9 +8,10 @@ import { useWorkflowExecution } from '../../../hooks/useWorkflowExecution';
 interface NodeDebugPanelProps {
   nodeId: string;
   onClose: () => void;
+  onRunStart?: () => void;
 }
 
-export function NodeDebugPanel({ nodeId, onClose }: NodeDebugPanelProps) {
+export function NodeDebugPanel({ nodeId, onClose, onRunStart }: NodeDebugPanelProps) {
   const { t } = useTranslation();
   const [input, setInput] = useState('');
   const [mockInputs, setMockInputs] = useState<Record<string, string>>({});
@@ -74,6 +75,9 @@ export function NodeDebugPanel({ nodeId, onClose }: NodeDebugPanelProps) {
       }
     }
     
+    if (onRunStart) {
+      onRunStart();
+    }
     await debugNode(nodeId, JSON.stringify(payload));
   };
 
