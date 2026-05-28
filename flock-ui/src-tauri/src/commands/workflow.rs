@@ -541,11 +541,22 @@ pub async fn debug_node(
 
         match graph.get_state(&config) {
             Ok(snapshot) => {
+                let node_outputs = snapshot.values.get("node_outputs");
+                let mut specific_output = serde_json::Value::Null;
+                if let Some(outputs) = node_outputs.and_then(|o| o.as_object()) {
+                    let debug_key = format!("__debug_{}", node_id);
+                    if let Some(out) = outputs.get(&debug_key) {
+                        specific_output = out.clone();
+                    } else if let Some(out) = outputs.get(&node_id) {
+                        specific_output = out.clone();
+                    }
+                }
                 let _ = app_clone.emit("workflow-event", serde_json::json!({
                     "type": "debug_done",
                     "workflow_id": workflow_id,
                     "node_id": node_id,
-                    "node_outputs": snapshot.values.get("node_outputs"),
+                    "output": specific_output,
+                    "node_outputs": node_outputs,
                 }));
             }
             Err(e) => {

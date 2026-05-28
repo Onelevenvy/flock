@@ -174,8 +174,21 @@ export function useWorkflowExecution() {
                 });
                 break;
 
-              case 'debug_done':
+              case 'debug_done': {
                 store.setExecutionStatus('done');
+                const targetId = payload.node_id || store.debugTarget?.nodeId || '';
+                const prev = targetId ? store.debugResults[targetId] : null;
+                const startTime = prev?.startTime || Date.now();
+                const duration = Date.now() - startTime;
+                if (targetId) {
+                  store.setDebugResult(targetId, {
+                    status: 'done',
+                    input: prev?.input || null,
+                    output: payload.output,
+                    startTime,
+                    duration,
+                  });
+                }
                 store.appendExecutionMessage({
                   type: 'info',
                   content: `✅ Debug done. Output: ${JSON.stringify(payload.output)}`,
@@ -183,15 +196,29 @@ export function useWorkflowExecution() {
                   timestamp,
                 });
                 break;
+              }
 
-              case 'debug_error':
+              case 'debug_error': {
                 store.setExecutionStatus('error');
+                const targetId = payload.node_id || store.debugTarget?.nodeId || '';
+                const prev = targetId ? store.debugResults[targetId] : null;
+                if (targetId) {
+                  store.setDebugResult(targetId, {
+                    status: 'error',
+                    input: prev?.input || null,
+                    output: null,
+                    error: payload.error || 'Unknown error',
+                    startTime: prev?.startTime || Date.now(),
+                    duration: prev ? Date.now() - prev.startTime : undefined,
+                  });
+                }
                 store.appendExecutionMessage({
                   type: 'error',
                   content: `❌ Debug error: ${payload.error || 'Unknown error'}`,
                   timestamp,
                 });
                 break;
+              }
             }
           } catch (e) {
             console.error('Failed to parse workflow event payload:', e);
@@ -316,6 +343,19 @@ export function useWorkflowExecution() {
 
     store.clearExecution();
     store.setExecutionStatus('running');
+    
+    let parsedInput = null;
+    try {
+      if (input) parsedInput = JSON.parse(input);
+    } catch {}
+
+    store.setDebugResult(nodeId, {
+      status: 'running',
+      input: parsedInput,
+      output: null,
+      startTime: Date.now(),
+    });
+
     store.appendExecutionMessage({
       type: 'info',
       content: `🔍 Starting debug for node [${nodeId}]...`,
@@ -331,6 +371,13 @@ export function useWorkflowExecution() {
       });
     } catch (e) {
       store.setExecutionStatus('error');
+      store.setDebugResult(nodeId, {
+        status: 'error',
+        input: parsedInput,
+        output: null,
+        error: String(e),
+        startTime: Date.now(),
+      });
       store.appendExecutionMessage({
         type: 'error',
         content: `Failed to debug node: ${e}`,

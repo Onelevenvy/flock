@@ -50,6 +50,16 @@ interface WorkflowStore {
   selectedNodeId: string | null;
   // 单节点调试目标
   debugTarget: { nodeId: string } | null;
+  // 调试结果记录 (nodeId -> debugResult)
+  debugResults: Record<string, {
+    status: 'running' | 'done' | 'error';
+    input: any;
+    output: any;
+    error?: string;
+    startTime: number;
+    duration?: number;
+    tokens?: number;
+  }>;
   // 环境变量
   environmentVariables: Record<string, EnvVar>;
   // 当前等待用户回复的打断事件数据
@@ -68,6 +78,7 @@ interface WorkflowStore {
   updateNodeData: (nodeId: string, key: string, value: unknown) => void;
   setActiveExecutionThreadId: (id: string | null) => void;
   setDebugTarget: (target: { nodeId: string } | null) => void;
+  setDebugResult: (nodeId: string, result: WorkflowStore['debugResults'][string]) => void;
   setEnvironmentVariable: (key: string, value: string, type: EnvVar['type']) => void;
   removeEnvironmentVariable: (key: string) => void;
   setEnvironmentVariables: (vars: Record<string, EnvVar>) => void;
@@ -86,11 +97,15 @@ export const useWorkflowStore = create<WorkflowStore>()(
       activeExecutionThreadId: null,
       selectedNodeId: null,
       debugTarget: null,
+      debugResults: {},
       environmentVariables: {},
       activeInterrupt: null,
 
       setActiveWorkflowId: (id) => set({ activeWorkflowId: id }),
       setActiveInterrupt: (interrupt) => set({ activeInterrupt: interrupt }),
+      setDebugResult: (nodeId, result) => set((s) => ({
+        debugResults: { ...s.debugResults, [nodeId]: result }
+      })),
 
       setNodes: (nodes) =>
         set((s) => {
