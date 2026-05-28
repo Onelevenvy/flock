@@ -32,19 +32,21 @@ function getModelToIconMapping(): Promise<Record<string, string>> {
         }
       });
 
-      // 完全动态地从后端拉取所有模型列表，将其 model_name 直接映射到对应的 provider.icon (Base64)！
+      // 完全动态地从后端拉取已启用服务商的模型列表，将其 model_name 直接映射到对应的 provider.icon (Base64)！
       await Promise.all(
-        provList.map(async (p) => {
-          try {
-            const ms = await invoke<any[]>('list_models', { providerId: p.id });
-            ms.forEach((m) => {
-              if (m.model_name && p.icon) {
-                mapping[m.model_name] = p.icon;
-                mapping[m.model_name.toLowerCase()] = p.icon;
-              }
-            });
-          } catch { /* ignore single error */ }
-        })
+        provList
+          .filter((p) => p.is_available)
+          .map(async (p) => {
+            try {
+              const ms = await invoke<any[]>('list_models', { providerId: p.id });
+              ms.forEach((m) => {
+                if (m.model_name && p.icon) {
+                  mapping[m.model_name] = p.icon;
+                  mapping[m.model_name.toLowerCase()] = p.icon;
+                }
+              });
+            } catch { /* ignore single error */ }
+          })
       );
 
       return { ...provMap, ...mapping };
