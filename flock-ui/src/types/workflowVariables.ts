@@ -21,14 +21,6 @@ export interface VariableOption {
 /** System variables available in all workflow nodes */
 export const SYSTEM_VARIABLES: VariableOption[] = [
   {
-    label: 'User Query',
-    value: '${sys.query}',
-    nodeId: 'sys',
-    nodeName: 'System',
-    varType: 'string',
-    group: 'system',
-  },
-  {
     label: 'Workflow ID',
     value: '${sys.workflow_id}',
     nodeId: 'sys',

@@ -10,6 +10,7 @@ import {
   Tooltip,
   Stack,
   Badge,
+  Group,
 } from '@mantine/core';
 import { IconBolt } from '@tabler/icons-react';
 import { useTranslation } from 'react-i18next';
@@ -117,46 +118,67 @@ export function VariableTextInput({ currentNodeId, onChange, value, ...props }: 
           }
         />
       </Popover.Target>
-      <Popover.Dropdown p="xs" style={{ background: 'var(--flock-bg-surface)', border: '1px solid var(--flock-border-subtle)', minWidth: 220, maxHeight: 250, overflowY: 'auto' }}>
-        <Text size="xs" fw={600} mb="xs" c="dimmed">
-          {t('workflow.properties.availableVars')}
+      <Popover.Dropdown p="xs" style={{ background: 'var(--flock-bg-surface)', border: '1px solid var(--flock-border-subtle)', minWidth: 260, maxHeight: 280, overflowY: 'auto' }}>
+        <Text size="xs" fw={500} mb="xs" c="dimmed" style={{ paddingLeft: 6 }}>
+          {t('workflow.properties.selectParameter', 'Select antecedent output parameter')}
         </Text>
-        <Stack gap={6}>
+        <Stack gap="sm">
           {Object.entries(groupedVars).map(([nodeName, vars]) => (
             <Box key={nodeName}>
-              <Text size="10px" fw={700} c="dimmed" mb={4} style={{ letterSpacing: '0.5px' }}>
+              <Text size="xs" fw={600} c="dimmed" mb={4} style={{ paddingLeft: 6, fontSize: 10, textTransform: 'uppercase' }}>
                 {nodeName}
               </Text>
-              <Stack gap={2}>
-                {vars.map((v) => (
-                  <Button
-                    key={v.value}
-                    size="xs"
-                    variant="subtle"
-                    justify="flex-start"
-                    onClick={() => insertVariable(v.value)}
-                    styles={{
-                      root: {
-                        height: 'auto',
-                        padding: '4px 6px',
-                        textAlign: 'left',
-                        color: 'var(--flock-text-bright)',
-                      },
-                      inner: {
-                        justifyContent: 'flex-start',
-                      }
-                    }}
-                  >
-                    <Text size="xs" style={{ fontFamily: 'var(--mantine-font-family-monospace)', flex: 1 }}>
-                      {v.value.substring(2, v.value.length - 1).split('.')[1]}
-                    </Text>
-                    {v.varType && (
-                      <Badge size="xs" variant="light" color={TYPE_COLORS[v.varType]} radius="sm" ml={4}>
-                        {TYPE_BADGES[v.varType]}
-                      </Badge>
-                    )}
-                  </Button>
-                ))}
+              <Stack gap={1}>
+                {vars.map((v) => {
+                  const varPath = v.value.substring(2, v.value.length - 1);
+                  const displayVarName = v.nodeId === 'sys' ? varPath : varPath.split('.')[1] || varPath;
+                  
+                  let prefixSymbol = <span style={{ color: '#228be6', marginRight: 6, fontWeight: 600, fontSize: 11, fontFamily: 'monospace' }}>(x)</span>;
+                  if (v.varType === 'number') {
+                    prefixSymbol = <span style={{ color: '#0ca678', marginRight: 6, fontWeight: 600, fontSize: 11, fontFamily: 'monospace' }}>[#]</span>;
+                  } else if (v.varType === 'boolean') {
+                    prefixSymbol = <span style={{ color: '#fd7e14', marginRight: 6, fontWeight: 600, fontSize: 11, fontFamily: 'monospace' }}>[?]</span>;
+                  } else if (v.nodeId === 'sys') {
+                    prefixSymbol = <span style={{ color: '#fd7e14', marginRight: 6, fontWeight: 600, fontSize: 11, fontFamily: 'monospace' }}>{`{x}`}</span>;
+                  }
+                  
+                  const typeLabel = v.varType ? v.varType.charAt(0).toUpperCase() + v.varType.slice(1) : '';
+
+                  return (
+                    <Button
+                      key={v.value}
+                      size="xs"
+                      variant="subtle"
+                      justify="flex-start"
+                      onClick={() => insertVariable(v.value)}
+                      styles={{
+                        root: {
+                          height: 28,
+                          padding: '4px 8px',
+                          color: 'var(--flock-text-bright)',
+                          borderRadius: 6,
+                          '&:hover': {
+                            backgroundColor: 'var(--flock-bg-raised, rgba(0,0,0,0.05))',
+                          }
+                        },
+                        inner: {
+                          justifyContent: 'flex-start',
+                          width: '100%',
+                        }
+                      }}
+                    >
+                      <Group gap={0} style={{ width: '100%' }} align="center">
+                        {prefixSymbol}
+                        <Text size="xs" fw={500} style={{ color: 'var(--flock-text-bright)' }}>
+                          {displayVarName}
+                        </Text>
+                        <Text size="10px" c="dimmed" ml="auto" style={{ fontSize: 10 }}>
+                          {typeLabel}
+                        </Text>
+                      </Group>
+                    </Button>
+                  );
+                })}
               </Stack>
             </Box>
           ))}
@@ -269,46 +291,67 @@ export function VariableTextarea({ currentNodeId, onChange, value, ...props }: V
           )}
         </Box>
       </Popover.Target>
-      <Popover.Dropdown p="xs" style={{ background: 'var(--flock-bg-surface)', border: '1px solid var(--flock-border-subtle)', minWidth: 220, maxHeight: 250, overflowY: 'auto' }}>
-        <Text size="xs" fw={600} mb="xs" c="dimmed">
-          {t('workflow.properties.availableVars')}
+      <Popover.Dropdown p="xs" style={{ background: 'var(--flock-bg-surface)', border: '1px solid var(--flock-border-subtle)', minWidth: 260, maxHeight: 280, overflowY: 'auto' }}>
+        <Text size="xs" fw={500} mb="xs" c="dimmed" style={{ paddingLeft: 6 }}>
+          {t('workflow.properties.selectParameter', 'Select antecedent output parameter')}
         </Text>
-        <Stack gap={6}>
+        <Stack gap="sm">
           {Object.entries(groupedVars).map(([nodeName, vars]) => (
             <Box key={nodeName}>
-              <Text size="10px" fw={700} c="dimmed" mb={4} style={{ letterSpacing: '0.5px' }}>
+              <Text size="xs" fw={600} c="dimmed" mb={4} style={{ paddingLeft: 6, fontSize: 10, textTransform: 'uppercase' }}>
                 {nodeName}
               </Text>
-              <Stack gap={2}>
-                {vars.map((v) => (
-                  <Button
-                    key={v.value}
-                    size="xs"
-                    variant="subtle"
-                    justify="flex-start"
-                    onClick={() => insertVariable(v.value)}
-                    styles={{
-                      root: {
-                        height: 'auto',
-                        padding: '4px 6px',
-                        textAlign: 'left',
-                        color: 'var(--flock-text-bright)',
-                      },
-                      inner: {
-                        justifyContent: 'flex-start',
-                      }
-                    }}
-                  >
-                    <Text size="xs" style={{ fontFamily: 'var(--mantine-font-family-monospace)', flex: 1 }}>
-                      {v.value.substring(2, v.value.length - 1).split('.')[1]}
-                    </Text>
-                    {v.varType && (
-                      <Badge size="xs" variant="light" color={TYPE_COLORS[v.varType]} radius="sm" ml={4}>
-                        {TYPE_BADGES[v.varType]}
-                      </Badge>
-                    )}
-                  </Button>
-                ))}
+              <Stack gap={1}>
+                {vars.map((v) => {
+                  const varPath = v.value.substring(2, v.value.length - 1);
+                  const displayVarName = v.nodeId === 'sys' ? varPath : varPath.split('.')[1] || varPath;
+                  
+                  let prefixSymbol = <span style={{ color: '#228be6', marginRight: 6, fontWeight: 600, fontSize: 11, fontFamily: 'monospace' }}>(x)</span>;
+                  if (v.varType === 'number') {
+                    prefixSymbol = <span style={{ color: '#0ca678', marginRight: 6, fontWeight: 600, fontSize: 11, fontFamily: 'monospace' }}>[#]</span>;
+                  } else if (v.varType === 'boolean') {
+                    prefixSymbol = <span style={{ color: '#fd7e14', marginRight: 6, fontWeight: 600, fontSize: 11, fontFamily: 'monospace' }}>[?]</span>;
+                  } else if (v.nodeId === 'sys') {
+                    prefixSymbol = <span style={{ color: '#fd7e14', marginRight: 6, fontWeight: 600, fontSize: 11, fontFamily: 'monospace' }}>{`{x}`}</span>;
+                  }
+                  
+                  const typeLabel = v.varType ? v.varType.charAt(0).toUpperCase() + v.varType.slice(1) : '';
+
+                  return (
+                    <Button
+                      key={v.value}
+                      size="xs"
+                      variant="subtle"
+                      justify="flex-start"
+                      onClick={() => insertVariable(v.value)}
+                      styles={{
+                        root: {
+                          height: 28,
+                          padding: '4px 8px',
+                          color: 'var(--flock-text-bright)',
+                          borderRadius: 6,
+                          '&:hover': {
+                            backgroundColor: 'var(--flock-bg-raised, rgba(0,0,0,0.05))',
+                          }
+                        },
+                        inner: {
+                          justifyContent: 'flex-start',
+                          width: '100%',
+                        }
+                      }}
+                    >
+                      <Group gap={0} style={{ width: '100%' }} align="center">
+                        {prefixSymbol}
+                        <Text size="xs" fw={500} style={{ color: 'var(--flock-text-bright)' }}>
+                          {displayVarName}
+                        </Text>
+                        <Text size="10px" c="dimmed" ml="auto" style={{ fontSize: 10 }}>
+                          {typeLabel}
+                        </Text>
+                      </Group>
+                    </Button>
+                  );
+                })}
               </Stack>
             </Box>
           ))}
