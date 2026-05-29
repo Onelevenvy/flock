@@ -21,7 +21,7 @@ const normalizeIconName = (name: string): string => {
   return trimmed.toLowerCase();
 };
 
-const getInitialSrc = (category: string, name: string): string => {
+const getInitialSrc = (category: string, name: string, fallbackName?: string): string => {
   if (!name) return '';
   const normalized = normalizeIconName(name);
   if (
@@ -35,6 +35,20 @@ const getInitialSrc = (category: string, name: string): string => {
   if (normalized === 'follow') {
     return `data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="%23228be6" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3a6 6 0 0 0 9 9 9 9 0 0 1-9-9z"/><path d="M19 3a3 3 0 0 0 3 3 3 3 0 0 1-3-3z"/><path d="M14 14a3 3 0 0 0 3 3 3 3 0 0 1-3-3z"/></svg>`;
   }
+
+  // Directly fallback if the main name is not a URL but fallbackName is
+  if (fallbackName) {
+    const normalizedFallback = fallbackName.trim();
+    if (
+      normalizedFallback.startsWith('data:') ||
+      normalizedFallback.startsWith('http:') ||
+      normalizedFallback.startsWith('https:') ||
+      normalizedFallback.startsWith('asset:')
+    ) {
+      return normalizedFallback;
+    }
+  }
+
   return '';
 };
 
@@ -47,13 +61,13 @@ export const DynamicIcon: React.FC<DynamicIconProps> = ({
   className,
   ...props
 }) => {
-  const [imgSrc, setImgSrc] = useState<string>(() => getInitialSrc(category, name));
+  const [imgSrc, setImgSrc] = useState<string>(() => getInitialSrc(category, name, fallbackName));
   const [retryCount, setRetryCount] = useState(0);
 
   useEffect(() => {
-    setImgSrc(getInitialSrc(category, name));
+    setImgSrc(getInitialSrc(category, name, fallbackName));
     setRetryCount(0);
-  }, [category, name]);
+  }, [category, name, fallbackName]);
 
   const handleError = () => {
     if (retryCount === 0) {
