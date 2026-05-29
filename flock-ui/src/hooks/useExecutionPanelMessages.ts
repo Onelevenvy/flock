@@ -1,6 +1,7 @@
 import { useMemo, useEffect } from 'react';
-import { ChatMessage } from '../types/protocol';
-import { ExecutionMessage, InterruptData, HumanAction } from '../pages/Workflow/components/ExecutionPanel/types';
+import { ExecutionMessage, WorkflowStep, InterruptData, HumanAction } from '../pages/Workflow/components/ExecutionPanel/types';
+import { nodeConfig } from '../pages/Workflow/nodeConfig';
+import type { Node } from 'reactflow';
 
 interface UseExecutionPanelMessagesProps {
   messages: ExecutionMessage[];
@@ -8,6 +9,25 @@ interface UseExecutionPanelMessagesProps {
   isInterrupted: boolean;
   activeInterrupt: InterruptData | null;
   handleResume: (choice: string, feedback?: string) => void;
+  /** ReactFlow nodes，用于解析友好名称 */
+  nodes: Node[];
+}
+
+/** 从 nodeId 解析友好显示名 */
+function resolveNodeDisplayName(nodeId: string, nodes: Node[]): { displayName: string; nodeType: string } {
+  const node = nodes.find((n) => n.id === nodeId);
+  const nodeType = node?.type ?? nodeId.split('-')[0] ?? 'unknown';
+  // 1. 用户自定义 label
+  if (node?.data?.label && typeof node.data.label === 'string') {
+    return { displayName: node.data.label, nodeType };
+  }
+  // 2. nodeConfig 类型名
+  const cfg = nodeConfig[nodeType as keyof typeof nodeConfig];
+  if (cfg) {
+    return { displayName: cfg.display, nodeType };
+  }
+  // 3. 兜底：把 "answer-1780021304116" 变成 "answer"
+  return { displayName: nodeType, nodeType };
 }
 
 export function useExecutionPanelMessages({
@@ -16,6 +36,7 @@ export function useExecutionPanelMessages({
   isInterrupted,
   activeInterrupt,
   handleResume,
+  nodes,
 }: UseExecutionPanelMessagesProps) {
   // 键盘数字键快速选择 action（仅无 feedback pending 时生效）
   useEffect(() => {
@@ -37,115 +58,137 @@ export function useExecutionPanelMessages({
     return () => window.removeEventListener('keydown', handleKey);
   }, [isInterrupted, activeInterrupt, handleResume]);
 
-  // 1. 把 raw messages 转换成 ChatPanel 可识别的 ChatMessage[]
-  //    遇到 type==='interrupt' 时，在 chatMessages 里记录一个带 interruptData 的特殊消息
-  const { chatMessages, interruptIndices } = useMemo(() => {
-    const result: ChatMessage[] = [];
-    const interruptMap: Record<number, { data: InterruptData; resolved: boolean }> = {};
-    let currentAssistantMsg: ChatMessage | null = null;
+  /**
+   * 把 raw messages 转换为 WorkflowStep[]
+   * 规则：
+   *  - 每个 nodeId 对应一个 step（按首次出现创建）
+   *  - text_delta / thinking 追加到对应 step 的文本
+   *  - interrupt 类型 → isInterrupt=true 的 step
+   *  - user 消息 → 将所有 interrupt step 标记为 resolved
+   */
+  const steps = useMemo<WorkflowStep[]>(() => {
+    const result: WorkflowStep[] = [];
+    // nodeId -> step index in result
+    const nodeStepIndex: Record<string, number> = {};
+    // interrupt step indices（用于 user 消息时批量 resolve）
+    const interruptIndices: number[] = [];
 
     for (const msg of messages) {
+      // ---- interrupt 事件 ----
       if ((msg as any).type === 'interrupt') {
-        // Flush previous assistant msg
-        if (currentAssistantMsg) {
-          currentAssistantMsg.streaming = false;
-          result.push(currentAssistantMsg);
-          currentAssistantMsg = null;
-        }
-        // Parse interrupt data from content
         let interruptData: InterruptData = {};
         try { interruptData = JSON.parse(msg.content); } catch (_) {}
-        // Insert a placeholder assistant message at this index
-        const msgIdx = result.length;
-        result.push({
+        const rawNodeId = interruptData.node_id ?? msg.nodeId ?? 'human';
+        const { displayName, nodeType } = resolveNodeDisplayName(rawNodeId, nodes);
+        const step: WorkflowStep = {
           id: `interrupt-${msg.timestamp}`,
-          role: 'assistant',
-          chunks: [{ kind: 'text', text: '' }],
-          streaming: false,
-          timestamp: msg.timestamp,
-        });
-        // Mark resolved if activeInterrupt is now null (already answered)
-        interruptMap[msgIdx] = { data: interruptData, resolved: false };
+          nodeId: rawNodeId,
+          nodeType,
+          displayName,
+          status: 'waiting',
+          outputText: '',
+          thinkingText: '',
+          startTs: msg.timestamp,
+          isInterrupt: true,
+          interruptData,
+          interruptResolved: false,
+        };
+        interruptIndices.push(result.length);
+        result.push(step);
+        // 中断不建立 nodeStepIndex，避免后续消息追加到错误 step
         continue;
       }
 
+      // ---- user 消息 → 将待处理 interrupt 全部标记 resolved ----
       if (msg.type === 'user') {
-        if (currentAssistantMsg) {
-          result.push(currentAssistantMsg);
-          currentAssistantMsg = null;
-        }
-        // Mark all previous interrupts as resolved when user resumes
-        Object.keys(interruptMap).forEach((k) => {
-          const ki = Number(k);
-          interruptMap[ki] = { ...interruptMap[ki], resolved: true };
+        interruptIndices.forEach((idx) => {
+          result[idx] = { ...result[idx], interruptResolved: true, status: 'done' };
         });
-        result.push({
-          id: `user-${msg.timestamp}`,
-          role: 'user',
-          chunks: [{ kind: 'text', text: msg.content }],
-          streaming: false,
-          timestamp: msg.timestamp,
-        });
-      } else if (msg.type === 'text_delta' || msg.type === 'thinking') {
-        const nodeId = msg.nodeId || 'assistant';
-        const displayNodeName = `**[${nodeId}]**\n`;
+        // user 消息不生成 step，直接跳过
+        continue;
+      }
 
-        if (!currentAssistantMsg || currentAssistantMsg.id !== `assistant-${nodeId}`) {
-          if (currentAssistantMsg) {
-            currentAssistantMsg.streaming = false;
-            result.push(currentAssistantMsg);
-          }
-          currentAssistantMsg = {
-            id: `assistant-${nodeId}`,
-            role: 'assistant',
-            chunks: [],
-            streaming: status === 'running',
-            timestamp: msg.timestamp,
+      // ---- text_delta / thinking ----
+      if (msg.type === 'text_delta' || msg.type === 'thinking') {
+        const rawNodeId = msg.nodeId ?? 'assistant';
+        let idx = nodeStepIndex[rawNodeId];
+        if (idx === undefined) {
+          const { displayName, nodeType } = resolveNodeDisplayName(rawNodeId, nodes);
+          const step: WorkflowStep = {
+            id: `step-${rawNodeId}`,
+            nodeId: rawNodeId,
+            nodeType,
+            displayName,
+            status: 'running',
+            outputText: '',
+            thinkingText: '',
+            startTs: msg.timestamp,
+            isInterrupt: false,
+            interruptResolved: false,
           };
+          idx = result.length;
+          nodeStepIndex[rawNodeId] = idx;
+          result.push(step);
         }
-
+        const step = { ...result[idx] };
         if (msg.type === 'thinking') {
-          let lastChunk = currentAssistantMsg.chunks[currentAssistantMsg.chunks.length - 1];
-          if (!lastChunk || lastChunk.kind !== 'thinking') {
-            lastChunk = { kind: 'thinking', text: msg.content, collapsed: false };
-            currentAssistantMsg.chunks.push(lastChunk);
-          } else {
-            lastChunk.text += msg.content;
-          }
+          step.thinkingText += msg.content;
         } else {
-          let lastChunk = currentAssistantMsg.chunks[currentAssistantMsg.chunks.length - 1];
-          if (!lastChunk || lastChunk.kind !== 'text') {
-            const prefix = currentAssistantMsg.chunks.length === 0 ? displayNodeName : '';
-            lastChunk = { kind: 'text', text: prefix + msg.content };
-            currentAssistantMsg.chunks.push(lastChunk);
-          } else {
-            lastChunk.text += msg.content;
+          step.outputText += msg.content;
+        }
+        result[idx] = step;
+        continue;
+      }
+
+      // ---- info / done / error ----
+      if (msg.type === 'done' || msg.type === 'error') {
+        // 把当前所有 running step 标记完成
+        for (let i = 0; i < result.length; i++) {
+          if (result[i].status === 'running') {
+            result[i] = { ...result[i], status: msg.type === 'error' ? 'error' : 'done' };
           }
         }
       }
     }
 
-    if (currentAssistantMsg) {
-      if (status !== 'running') currentAssistantMsg.streaming = false;
-      result.push(currentAssistantMsg);
+    // 运行中时，最后一个 running step 保持 streaming 状态
+    // done/error 时全部 resolve
+    if (status !== 'running') {
+      for (let i = 0; i < result.length; i++) {
+        if (result[i].status === 'running') {
+          result[i] = { ...result[i], status: status === 'error' ? 'error' : 'done' };
+        }
+      }
     }
 
-    return { chatMessages: result, interruptIndices: interruptMap };
-  }, [messages, status]);
-
-  // 当 activeInterrupt 变为 null，说明中断已解决，标记最后一个 interrupt 为 resolved
-  const resolvedInterrupts = useMemo(() => {
-    const copy = { ...interruptIndices };
+    // 如果 activeInterrupt 已消失（resolved），把所有 waiting step 标记 done
     if (!isInterrupted) {
-      Object.keys(copy).forEach((k) => {
-        copy[Number(k)] = { ...copy[Number(k)], resolved: true };
-      });
+      for (let i = 0; i < result.length; i++) {
+        if (result[i].isInterrupt && !result[i].interruptResolved) {
+          result[i] = { ...result[i], interruptResolved: true, status: 'done' };
+        }
+      }
     }
-    return copy;
-  }, [interruptIndices, isInterrupted]);
 
-  return {
-    chatMessages,
-    resolvedInterrupts,
-  };
+    return result;
+  }, [messages, status, isInterrupted, nodes]);
+
+  /**
+   * 当 activeInterrupt 存在时，找到最后一个 waiting interrupt step，注入 activeInterrupt 数据
+   * （因为 interrupt 数据来自 workflowStore，步骤里的 interruptData 可能需要补全）
+   */
+  const stepsWithActiveInterrupt = useMemo<WorkflowStep[]>(() => {
+    if (!isInterrupted || !activeInterrupt) return steps;
+    const result = [...steps];
+    // 从后往前找第一个 waiting interrupt
+    for (let i = result.length - 1; i >= 0; i--) {
+      if (result[i].isInterrupt && result[i].status === 'waiting') {
+        result[i] = { ...result[i], interruptData: activeInterrupt };
+        break;
+      }
+    }
+    return result;
+  }, [steps, isInterrupted, activeInterrupt]);
+
+  return { steps: stepsWithActiveInterrupt };
 }

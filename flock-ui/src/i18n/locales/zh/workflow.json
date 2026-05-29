@@ -162,7 +162,13 @@
     "feedbackOptional": "可选填写说明",
     "confirmAction": "确认",
     "waitingHint": "请在上方作出选择继续执行...",
-    "resolved": "已处理"
+    "resolved": "已处理",
+    "triggered": "已触发",
+    "triggeredAction": "已触发操作",
+    "workflowGroup": "工作流",
+    "thinking": "思考过程",
+    "missingParams": "缺少必填参数: {{names}}",
+    "run": "发送"
   },
   "nodes": {
     "start": { "label": "开始" },

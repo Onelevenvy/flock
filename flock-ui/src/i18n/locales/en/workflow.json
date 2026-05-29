@@ -162,7 +162,13 @@
     "feedbackOptional": "Optional comment",
     "confirmAction": "Confirm",
     "waitingHint": "Select an option above to continue...",
-    "resolved": "Resolved"
+    "resolved": "Resolved",
+    "triggered": "Triggered",
+    "triggeredAction": "Triggered action",
+    "workflowGroup": "Workflow",
+    "thinking": "Thinking",
+    "missingParams": "Missing required parameter(s): {{names}}",
+    "run": "Send"
   },
   "nodes": {
     "start": { "label": "Start" },

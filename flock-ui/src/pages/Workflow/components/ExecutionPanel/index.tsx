@@ -1,4 +1,4 @@
-import { useState, useMemo, useEffect, useCallback, useRef } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import {
   Box,
   Text,
@@ -9,6 +9,7 @@ import {
   Button,
   ScrollArea,
   Stack,
+  Collapse,
 } from '@mantine/core';
 import {
   IconX,
@@ -16,13 +17,15 @@ import {
   IconPlayerStop,
   IconSend,
   IconPlus,
+  IconChevronDown,
+  IconChevronRight,
+  IconCheck,
 } from '@tabler/icons-react';
 import { useTranslation } from 'react-i18next';
-import { MessageBubble } from '../../../../components/chat/components/MessageBubble';
 import { useWorkflowStore } from '../../../../store/workflowStore';
 import { useUiStore } from '../../../../store/uiStore';
-import { ExecutionPanelProps, HumanAction, InterruptData } from './types';
-import { HumanReviewCard } from './HumanReviewCard';
+import { ExecutionPanelProps } from './types';
+import { WorkflowStepItem } from './WorkflowStepItem';
 import { StartParametersForm } from './StartParametersForm';
 import { useExecutionPanelMessages } from '../../../../hooks/useExecutionPanelMessages';
 
@@ -40,6 +43,7 @@ export function ExecutionPanel({
   const { clearExecution } = useWorkflowStore();
   const [inputVal, setInputVal] = useState('');
   const bottomRef = useRef<HTMLDivElement>(null);
+  const nodes = useWorkflowStore((s) => s.nodes);
 
   const startNode = useWorkflowStore((s) => s.nodes.find((n) => n.type === 'start'));
   const startVariables = (startNode?.data?.variables as any[]) ?? [
@@ -74,18 +78,19 @@ export function ExecutionPanel({
     resumeWorkflow(payload);
   }, [resumeWorkflow]);
 
-  const { chatMessages, resolvedInterrupts } = useExecutionPanelMessages({
+  const { steps } = useExecutionPanelMessages({
     messages,
     status,
     isInterrupted,
     activeInterrupt,
     handleResume,
+    nodes,
   });
 
-  // 新消息时自动滚到底
+  // 新步骤时自动滚到底
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
-  }, [chatMessages.length]);
+  }, [steps.length]);
 
   const handleStart = () => {
     const missing = customVars.filter((v: any) => v.required && (formInputs[v.name] === undefined || formInputs[v.name] === ''));
@@ -101,6 +106,11 @@ export function ExecutionPanel({
     startWorkflow(JSON.stringify(payload));
     setInputVal('');
   };
+
+  // 整体折叠控制
+  const [workflowExpanded, setWorkflowExpanded] = useState(true);
+  const isDone = status === 'done' || status === 'error';
+  const allDone = steps.length > 0 && steps.every((s) => s.status === 'done' || s.status === 'error');
 
   return (
     <Box
@@ -170,7 +180,7 @@ export function ExecutionPanel({
         </Group>
       </Group>
 
-      {/* Main chat layout */}
+      {/* Main content */}
       <Box
         style={{
           flex: 1,
@@ -180,72 +190,116 @@ export function ExecutionPanel({
           minHeight: 0,
         }}
       >
-        <Box style={{ flex: 1, overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
-          {chatMessages.length === 0 ? (
-            customVars.length > 0 ? (
-              <ScrollArea style={{ flex: 1 }} p="md">
-                <Stack gap="md" style={{ padding: 12 }}>
-                  <Box>
-                    <Text size="xs" fw={700} style={{ color: 'var(--flock-text-bright)' }}>
-                      ✨ {t('workflow.execution.inputsTitle', 'Start Parameters')}
-                    </Text>
-                    <Text size="xs" c="dimmed" style={{ fontSize: 10 }}>
-                      {t('workflow.execution.inputsDesc', 'Please configure initial parameters for the workflow before running.')}
-                    </Text>
-                  </Box>
-
-                  <StartParametersForm
-                    customVars={customVars}
-                    formInputs={formInputs}
-                    setFormInputs={setFormInputs}
-                  />
-                </Stack>
-              </ScrollArea>
-            ) : (
-              <Box
-                style={{
-                  flex: 1,
-                  display: 'flex',
-                  flexDirection: 'column',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  opacity: 0.6,
-                  padding: 20,
-                }}
-              >
-                <Text size="xs" c="dimmed" ta="center">
-                  🤖 {t('workflow.execution.noOutput', 'No active execution. Enter initial query below to run.')}
-                </Text>
-              </Box>
-            )
-          ) : (
-            // 自定义渲染：所有消息 + HumanReviewCard 在同一 ScrollArea 里
-            <ScrollArea style={{ flex: 1 }} px="md" py="md">
-              <Stack gap="lg" pb="lg" style={{ width: '100%' }}>
-                {chatMessages.map((msg, idx) => {
-                  const interruptInfo = resolvedInterrupts[idx];
-                  if (interruptInfo) {
-                    return (
-                      <Box key={msg.id}>
-                        <HumanReviewCard
-                          interruptData={interruptInfo.data}
-                          onResume={handleResume}
-                          isDark={isDark}
-                          isResolved={interruptInfo.resolved}
-                        />
-                      </Box>
-                    );
-                  }
-                  // 空内容的消息（如 interrupt 占位消息）不渲染
-                  const hasContent = msg.chunks.some(c => c.kind !== 'text' || c.text.trim().length > 0);
-                  if (!hasContent) return null;
-                  return <MessageBubble key={msg.id} message={msg} />;
-                })}
-                <div ref={bottomRef as any} />
+        {steps.length === 0 ? (
+          customVars.length > 0 ? (
+            <ScrollArea style={{ flex: 1 }} p="md">
+              <Stack gap="md" style={{ padding: 12 }}>
+                <Box>
+                  <Text size="xs" fw={700} style={{ color: 'var(--flock-text-bright)' }}>
+                    ✨ {t('workflow.execution.inputsTitle', 'Start Parameters')}
+                  </Text>
+                  <Text size="xs" c="dimmed" style={{ fontSize: 10 }}>
+                    {t('workflow.execution.inputsDesc', 'Please configure initial parameters for the workflow before running.')}
+                  </Text>
+                </Box>
+                <StartParametersForm
+                  customVars={customVars}
+                  formInputs={formInputs}
+                  setFormInputs={setFormInputs}
+                />
               </Stack>
             </ScrollArea>
-          )}
-        </Box>
+          ) : (
+            <Box
+              style={{
+                flex: 1,
+                display: 'flex',
+                flexDirection: 'column',
+                alignItems: 'center',
+                justifyContent: 'center',
+                opacity: 0.6,
+                padding: 20,
+              }}
+            >
+              <Text size="xs" c="dimmed" ta="center">
+                🤖 {t('workflow.execution.noOutput', 'No active execution. Enter initial query below to run.')}
+              </Text>
+            </Box>
+          )
+        ) : (
+          <ScrollArea style={{ flex: 1 }} px="sm" py="sm">
+            {/* Dify 风格：工作流折叠组 */}
+            <Box
+              style={{
+                borderRadius: 10,
+                border: '1px solid var(--flock-border-subtle)',
+                overflow: 'hidden',
+                background: 'var(--flock-bg-surface)',
+                marginBottom: 8,
+              }}
+            >
+              {/* 组标题行 */}
+              <Box
+                onClick={() => setWorkflowExpanded((v) => !v)}
+                style={{
+                  padding: '8px 12px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 8,
+                  cursor: 'pointer',
+                  userSelect: 'none',
+                  background: isDark ? 'rgba(255,255,255,0.03)' : 'rgba(0,0,0,0.02)',
+                  borderBottom: workflowExpanded ? '1px solid var(--flock-border-subtle)' : 'none',
+                }}
+              >
+                {/* 完成状态图标 */}
+                {allDone ? (
+                  <Box
+                    style={{
+                      width: 16, height: 16, borderRadius: '50%',
+                      background: '#10b981',
+                      display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    }}
+                  >
+                    <IconCheck size={10} color="#fff" stroke={3} />
+                  </Box>
+                ) : (
+                  <Box
+                    style={{
+                      width: 16, height: 16, borderRadius: '50%',
+                      border: '2px solid #3b82f6',
+                      animation: status === 'running' ? 'pulse 1.5s ease-in-out infinite' : 'none',
+                    }}
+                  />
+                )}
+
+                <Text size="xs" fw={600} style={{ flex: 1, color: 'var(--flock-text-bright)' }}>
+                  {t('workflow.execution.workflowGroup', '工作流')}
+                </Text>
+
+                <ActionIcon size="xs" variant="transparent" color="gray">
+                  {workflowExpanded ? <IconChevronDown size={13} /> : <IconChevronRight size={13} />}
+                </ActionIcon>
+              </Box>
+
+              {/* 步骤列表 */}
+              <Collapse in={workflowExpanded}>
+                <Stack gap={4} p="xs">
+                  {steps.map((step) => (
+                    <WorkflowStepItem
+                      key={step.id}
+                      step={step}
+                      isDark={isDark}
+                      onResume={handleResume}
+                    />
+                  ))}
+                </Stack>
+              </Collapse>
+            </Box>
+
+            <div ref={bottomRef as any} />
+          </ScrollArea>
+        )}
 
         {/* Bottom input area */}
         <Box p="xs" style={{ borderTop: '1px solid var(--flock-border-subtle)', background: 'var(--flock-bg-surface)' }}>
