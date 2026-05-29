@@ -2,7 +2,7 @@ use std::sync::Arc;
 use serde_json::{json, Value as JsonValue};
 use langgraph::prelude::RunnableConfig;
 use langgraph::runnable::RunnableError;
-use super::common::{WorkflowNodeContext, parse_state, interpolate_string};
+use super::common::{WorkflowNodeContext, parse_state, interpolate_string_with_context};
 
 pub fn make_answer_node(
     node_id: String,
@@ -21,7 +21,7 @@ pub fn make_answer_node(
             let state = parse_state(&input);
 
             let answer_template = node_data.get("answer").and_then(|v| v.as_str()).unwrap_or("");
-            let final_answer = interpolate_string(answer_template, &state);
+            let final_answer = interpolate_string_with_context(answer_template, &state, &ctx, &ctx.workflow_id);
 
             ctx.sink.emit_text_delta(&node_id, &final_answer);
 

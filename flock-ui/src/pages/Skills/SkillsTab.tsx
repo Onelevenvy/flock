@@ -25,24 +25,15 @@ import { SOURCE_COLORS } from './helpers';
 import { SkillDetailPanel } from './components/SkillDetailPanel';
 import { ExtraDirsModal } from './components/ExtraDirsModal';
 
+import { useSkillsQuery } from '../../hooks/useToolQueries';
+
 export function SkillsTab() {
   const { t } = useTranslation();
-  const [skills, setSkills] = useState<SkillInfo[]>([]);
-  const [loading, setLoading] = useState(true);
+  const { data: skills = [], isLoading: loading, refetch: fetchSkills } = useSkillsQuery();
   const [selectedSkill, setSelectedSkill] = useState<SkillInfo | null>(null);
   const [searchKey, setSearchKey] = useState('');
   const [sourceFilter, setSourceFilter] = useState('all');
   const [showImportModal, setShowImportModal] = useState(false);
-
-  const fetchSkills = useCallback(() => {
-    setLoading(true);
-    invoke<SkillInfo[]>('list_skills')
-      .then(setSkills)
-      .catch(console.error)
-      .finally(() => setLoading(false));
-  }, []);
-
-  useEffect(() => { fetchSkills(); }, [fetchSkills]);
 
   const filteredSkills = skills.filter((s) => {
     const matchesSearch =

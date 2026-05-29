@@ -17,25 +17,12 @@ import { getProviderDescription, getProviderName } from './helpers';
 import { ToolsIcon } from '../../components/Common/Icons';
 import { ProviderDetailPanel } from './components/ProviderDetailPanel';
 
+import { useAvailableTools } from '../../hooks/useAvailableTools';
+
 export function ToolsTab() {
   const { t } = useTranslation();
-  const [providers, setProviders] = useState<ToolProvider[]>([]);
-  const [tools, setTools] = useState<Tool[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [selectedProvider, setSelectedProvider] = useState<ToolProvider | null>(null);
-
-  const fetchData = useCallback(() => {
-    setLoading(true);
-    Promise.all([
-      invoke<ToolProvider[]>('list_tool_providers'),
-      invoke<Tool[]>('list_tools'),
-    ])
-      .then(([p, t]) => { setProviders(p); setTools(t); })
-      .catch(console.error)
-      .finally(() => setLoading(false));
-  }, []);
-
-  useEffect(() => { fetchData(); }, [fetchData]);
+  const { providers, tools, loading, reload } = useAvailableTools();
+  const [selectedProvider, setSelectedProvider] = useState<any | null>(null);
 
   useEffect(() => {
     if (selectedProvider) {
@@ -134,7 +121,7 @@ export function ToolsTab() {
           provider={selectedProvider}
           tools={selectedTools}
           onClose={() => setSelectedProvider(null)}
-          onCredentialsSaved={fetchData}
+          onCredentialsSaved={reload}
         />
       )}
     </Box>

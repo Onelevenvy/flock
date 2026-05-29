@@ -11,45 +11,73 @@ export const StartNode = memo(({ id, data, selected }: NodeProps<BaseNodeData>) 
   const cfg = nodeConfig['start'];
   const Icon = cfg.icon;
   const { t } = useTranslation();
+  const variables = (data.variables as any[]) ?? [
+    { type: 'string', name: 'query', label: 'Query', required: true }
+  ];
+  const customVariables = variables.filter(v => v.name !== 'query');
+
   return (
     <Box
-      style={{
-        padding: '8px 12px',
-        borderRadius: 12,
-        background: 'var(--flock-bg-surface)',
-        border: selected 
-          ? `2px solid var(--flock-accent)` 
-          : `1px solid var(--flock-accent)`,
-        boxShadow: selected 
-          ? `0 0 0 3px rgba(21, 90, 239, 0.25)` 
-          : '0 4px 10px rgba(0,0,0,0.03)',
-        display: 'flex',
-        alignItems: 'center',
-        gap: 8,
-        cursor: 'pointer',
-        width: 220,
-        position: 'relative',
-        transition: 'all 0.15s ease',
-      }}
+      className={`flock-workflow-node ${selected ? 'selected' : ''}`}
     >
       <style dangerouslySetInnerHTML={{ __html: handleStyle }} />
+      {/* Node Header */}
       <Box
         style={{
-          width: 22,
-          height: 22,
-          borderRadius: 6,
-          background: 'var(--flock-accent-soft)',
+          padding: '10px 12px',
           display: 'flex',
           alignItems: 'center',
-          justifyContent: 'center',
-          flexShrink: 0,
+          gap: 8,
+          borderBottom: customVariables.length > 0 ? '1px solid var(--flock-border-subtle)' : 'none',
         }}
       >
-        <Icon size={12} stroke={2.5} style={{ color: cfg.colorHex }} />
+        <Box
+          className="flock-node-icon-container"
+          style={{
+            background: `${cfg.colorHex}15`,
+          }}
+        >
+          <Icon size={14} stroke={2.5} style={{ color: cfg.colorHex }} />
+        </Box>
+        <Text size="xs" fw={700} style={{ color: 'var(--flock-text-bright)', fontSize: 12, flex: 1 }}>
+          {data.label || t('workflow.nodes.start.label', 'Start')}
+        </Text>
       </Box>
-      <Text size="xs" fw={700} style={{ color: 'var(--flock-text-bright)', fontSize: 11, flex: 1 }}>
-        {data.label || t('workflow.nodes.start.label', 'Start')}
-      </Text>
+
+      {/* Variables List */}
+      {customVariables.length > 0 && (
+        <Box style={{ padding: '6px 12px', display: 'flex', flexDirection: 'column', gap: 4 }}>
+          {customVariables.map((v) => (
+            <Box
+              key={v.name}
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+                padding: '4px 8px',
+                borderRadius: 6,
+                background: 'var(--flock-bg-raised, rgba(0, 0, 0, 0.02))',
+                fontSize: 10,
+              }}
+            >
+              <Text size="xs" fw={500} style={{ color: 'var(--flock-text-bright)', textOverflow: 'ellipsis', overflow: 'hidden', whiteSpace: 'nowrap', maxWidth: 120 }}>
+                {v.name}
+              </Text>
+              <Box style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+                {v.required && (
+                  <Text size="10px" c="red" fw={500}>
+                    {t('workflow.properties.start.required', 'Required')}
+                  </Text>
+                )}
+                <Text size="10px" c="dimmed">
+                  ({v.type})
+                </Text>
+              </Box>
+            </Box>
+          ))}
+        </Box>
+      )}
+
       <div 
         className="flock-handle-container"
         style={{
@@ -108,39 +136,23 @@ export const EndNode = memo(({ data, selected }: NodeProps<BaseNodeData>) => {
   const { t } = useTranslation();
   return (
     <Box
+      className={`flock-workflow-node ${selected ? 'selected' : ''}`}
       style={{
-        padding: '8px 12px',
-        borderRadius: 12,
-        background: 'var(--flock-bg-surface)',
-        border: selected 
-          ? `2px solid var(--flock-accent)` 
-          : `1px solid var(--flock-accent)`,
-        boxShadow: selected 
-          ? `0 0 0 3px rgba(21, 90, 239, 0.25)` 
-          : '0 4px 10px rgba(0,0,0,0.03)',
+        padding: '10px 12px',
         display: 'flex',
         alignItems: 'center',
         gap: 8,
-        cursor: 'pointer',
-        width: 220,
-        transition: 'all 0.15s ease',
       }}
     >
       <Box
+        className="flock-node-icon-container"
         style={{
-          width: 22,
-          height: 22,
-          borderRadius: 6,
-          background: 'var(--flock-accent-soft)',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          flexShrink: 0,
+          background: `${cfg.colorHex}15`,
         }}
       >
-        <Icon size={12} stroke={2.5} style={{ color: cfg.colorHex }} />
+        <Icon size={14} stroke={2.5} style={{ color: cfg.colorHex }} />
       </Box>
-      <Text size="xs" fw={700} style={{ color: 'var(--flock-text-bright)', fontSize: 11, flex: 1 }}>
+      <Text size="xs" fw={700} style={{ color: 'var(--flock-text-bright)', fontSize: 12, flex: 1 }}>
         {data.label || t('workflow.nodes.end.label', 'End')}
       </Text>
       <Handle

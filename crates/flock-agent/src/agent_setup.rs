@@ -140,6 +140,11 @@ impl AgentBuilder {
                 api_key: self.config.api_key.clone(),
                 base_url: if self.config.base_url.is_empty() { None } else { Some(self.config.base_url.clone()) },
                 max_tokens: None,
+                temperature: None,
+                top_p: None,
+                frequency_penalty: None,
+                presence_penalty: None,
+                response_format: None,
             }).map_err(|e| anyhow::anyhow!(e))?)
         };
 

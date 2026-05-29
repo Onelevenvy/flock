@@ -65,21 +65,81 @@ export function useFlowLayout(
       rankGroups[r].push(n.id);
     });
 
-    const HORIZONTAL_GAP = 280;
-    const VERTICAL_GAP = 140;
+    const HORIZONTAL_GAP = 350;
+    const VERTICAL_GAP = 180;
+
+    const nodePositions: Record<string, { x: number; y: number }> = {};
+    const maxRank = Math.max(...Object.values(rank), 0);
+
+    // Position column-by-column, sorting nodes inside each column based on incoming connection handles
+    for (let r = 0; r <= maxRank; r++) {
+      const group = rankGroups[r] || [];
+      if (group.length === 0) continue;
+
+      const weights = group.map((nodeId) => {
+        const node = targetNodes.find((n) => n.id === nodeId)!;
+        const incoming = targetEdges.filter((e) => e.target === nodeId);
+        
+        let totalWeight = 0;
+        let count = 0;
+
+        incoming.forEach((edge) => {
+          const parentId = edge.source;
+          const parentPos = nodePositions[parentId];
+          if (parentPos) {
+            const parentNode = targetNodes.find((n) => n.id === parentId);
+            let handleIdx = 0;
+            if (parentNode) {
+              const pType = parentNode.type;
+              const pData = parentNode.data || {};
+              if (pType === 'human') {
+                const actions = pData.user_actions || [];
+                const keys = [...actions.map((a: any) => a.key), 'TIMEOUT'];
+                const sHandle = (edge.sourceHandle || '').toLowerCase();
+                handleIdx = keys.findIndex(k => String(k).toLowerCase() === sHandle);
+                if (handleIdx < 0) handleIdx = 0;
+              } else if (pType === 'classifier') {
+                const cats = pData.categories || [];
+                const sHandle = (edge.sourceHandle || '').toLowerCase();
+                handleIdx = cats.findIndex((c: any) => String(c.category_id).toLowerCase() === sHandle);
+                if (handleIdx < 0) handleIdx = 0;
+              } else if (pType === 'ifelse') {
+                const cases = pData.cases || [];
+                const sHandle = (edge.sourceHandle || '').toLowerCase();
+                handleIdx = cases.findIndex((c: any) => String(c.case_id).toLowerCase() === sHandle);
+                if (handleIdx < 0) handleIdx = 0;
+              }
+            }
+            // Give vertical weight based on parent Y position and its handle order index
+            totalWeight += parentPos.y + handleIdx * 1000;
+            count++;
+          }
+        });
+
+        // Fallback to original array order if no parent is positioned yet
+        const weight = count > 0 ? totalWeight / count : targetNodes.indexOf(node) * 10000;
+        return { nodeId, weight };
+      });
+
+      // Sort nodes in this rank group by weight
+      weights.sort((a, b) => a.weight - b.weight);
+      const sortedGroup = weights.map((w) => w.nodeId);
+      rankGroups[r] = sortedGroup;
+
+      // Position all nodes in this rank group
+      const count = sortedGroup.length;
+      sortedGroup.forEach((nodeId, index) => {
+        const x = r * HORIZONTAL_GAP + 50;
+        const y = (index - (count - 1) / 2) * VERTICAL_GAP + 200;
+        nodePositions[nodeId] = { x, y };
+      });
+    }
 
     const nextNodes = targetNodes.map(n => {
-      const r = rank[n.id] || 0;
-      const group = rankGroups[r];
-      const index = group.indexOf(n.id);
-      const count = group.length;
-
-      const x = r * HORIZONTAL_GAP + 50;
-      const y = (index - (count - 1) / 2) * VERTICAL_GAP + 200;
-
+      const pos = nodePositions[n.id] || { x: 50, y: 200 };
       return {
         ...n,
-        position: { x, y }
+        position: pos
       };
     });
 

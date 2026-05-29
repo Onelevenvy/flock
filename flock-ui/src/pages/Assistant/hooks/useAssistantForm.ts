@@ -18,6 +18,9 @@ interface Model {
   is_online: boolean;
 }
 
+import { useAvailableModels } from '../../../hooks/useAvailableModels';
+import { useSkillsQuery } from '../../../hooks/useToolQueries';
+
 interface SkillInfo {
   name: string;
   display_name?: string;
@@ -30,6 +33,8 @@ export function useAssistantForm(
   onClose: () => void,
 ) {
   const { t } = useTranslation();
+  const { providers, models, loading: loadingModels, reload: reloadModels } = useAvailableModels();
+  const { data: skills = [], isLoading: loadingSkills } = useSkillsQuery();
 
   const [name, setName] = useState('');
   const [icon, setIcon] = useState('🤖');
@@ -71,31 +76,25 @@ export function useAssistantForm(
       setSelectedSkills([]);
     }
     loadOptions();
-  }, [opened, initial]);
+  }, [opened, initial, providers, models, skills]);
 
   const loadOptions = useCallback(async () => {
     setLoadingOptions(true);
     try {
-      const [providers, skills] = await Promise.all([
-        invoke<ModelProvider[]>('list_providers'),
-        invoke<SkillInfo[]>('list_skills'),
-      ]);
-
+      // Group models from cached hook
       const grouped: Record<string, { value: string; label: string }[]> = {};
-      for (const p of providers) {
-        try {
-          const ms = await invoke<Model[]>('list_models', { providerId: p.id });
-          const chat = ms.filter((m) => m.categories.includes('chat') && m.is_online);
-          if (chat.length > 0) {
-            grouped[parseMultiLang(p.provider_name)] = chat.map((m) => ({
-              value: `${p.id}:${m.model_name}`,
-              label: m.model_name,
-            }));
-          }
-        } catch {
-          /* ignore */
+      models.forEach((m) => {
+        const p = providers.find((prov) => prov.id === m.provider_id);
+        const groupName = p ? parseMultiLang(p.provider_name) : m.provider_id;
+        if (!grouped[groupName]) {
+          grouped[groupName] = [];
         }
-      }
+        grouped[groupName].push({
+          value: `${m.provider_id}:${m.model_name}`,
+          label: m.model_name,
+        });
+      });
+
       setModelSelectData(Object.entries(grouped).map(([group, items]) => ({ group, items })));
       setSkillSelectData(
         skills.map((s) => ({
@@ -108,7 +107,7 @@ export function useAssistantForm(
     } finally {
       setLoadingOptions(false);
     }
-  }, []);
+  }, [providers, models, skills]);
 
   const handleSave = async () => {
     if (!name.trim()) {

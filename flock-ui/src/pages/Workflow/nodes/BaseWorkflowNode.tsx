@@ -1,12 +1,17 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { Handle, Position, type NodeProps } from 'reactflow';
-import { Box, Text, ActionIcon } from '@mantine/core';
-import { IconPlus } from '@tabler/icons-react';
+import { Box, Text, ActionIcon, Tooltip } from '@mantine/core';
+import { IconPlus, IconBug } from '@tabler/icons-react';
 import { useTranslation } from 'react-i18next';
 import { nodeConfig, type NodeType } from '../nodeConfig';
+import { useWorkflowStore } from '../../../store/workflowStore';
 import { type BaseNodeData } from './types';
 import { handleStyle } from './styles';
 import { getNodeSummary } from './helpers';
+
+import { invoke } from '@tauri-apps/api/core';
+import { ModelIcon } from '../../../components/Common/Icons';
+import { useAvailableModels } from '../../../hooks/useAvailableModels';
 
 interface BaseWorkflowNodeProps extends NodeProps<BaseNodeData> {
   type: NodeType;
@@ -14,35 +19,63 @@ interface BaseWorkflowNodeProps extends NodeProps<BaseNodeData> {
 
 export function BaseWorkflowNode({ id, type, data, selected }: BaseWorkflowNodeProps) {
   const { t } = useTranslation();
+  const setDebugTarget = useWorkflowStore((s) => s.setDebugTarget);
+  const { providers, models } = useAvailableModels();
+
+  const iconMapping = useMemo(() => {
+    const mapping: Record<string, string> = {};
+    providers.forEach((p) => {
+      if (p.icon) {
+        if (p.id) mapping[p.id] = p.icon;
+        if (p.provider_type) {
+          mapping[p.provider_type] = p.icon;
+          mapping[p.provider_type.toLowerCase()] = p.icon;
+        }
+      }
+    });
+    models.forEach((m) => {
+      const p = providers.find((prov) => prov.id === m.provider_id);
+      if (p && p.icon) {
+        mapping[m.model_name] = p.icon;
+        mapping[m.model_name.toLowerCase()] = p.icon;
+      }
+    });
+    return mapping;
+  }, [providers, models]);
+
   const cfg = nodeConfig[type];
   if (!cfg) return null;
   const Icon = cfg.icon;
   const summary = getNodeSummary(type, data, t);
+  const canDebug = type !== 'start' && type !== 'end';
+
+  let providerIcon = '';
+  if (data.model) {
+    const modelName = String(data.model);
+    const providerVal = data.provider ? String(data.provider) : '';
+    if (providerVal.startsWith('data:')) {
+      providerIcon = providerVal;
+    } else {
+      // 动态匹配：如果节点上的 provider 有值，从后端字典中查出对应的 Base64 图标；
+      // 如果 provider 缺失为空，则直接使用节点的 data.model 从后端模型字典中匹配出正确的 Base64 图标！
+      providerIcon =
+        iconMapping[providerVal] ||
+        iconMapping[providerVal.toLowerCase()] ||
+        iconMapping[modelName] ||
+        iconMapping[modelName.toLowerCase()] ||
+        providerVal;
+    }
+  }
 
   return (
     <Box
-      style={{
-        width: 220,
-        borderRadius: 12,
-        border: selected 
-          ? `2px solid var(--flock-accent)` 
-          : `1px solid var(--flock-accent)`, // 统一使用主题色蓝色外圈
-        background: 'var(--flock-bg-surface)',
-        boxShadow: selected 
-          ? `0 0 0 3px rgba(21, 90, 239, 0.25)` 
-          : '0 4px 10px rgba(0,0,0,0.03)',
-        display: 'flex',
-        flexDirection: 'column',
-        position: 'relative',
-        cursor: 'pointer',
-        transition: 'all 0.15s ease',
-      }}
+      className={`flock-workflow-node ${selected ? 'selected' : ''}`}
     >
       <style dangerouslySetInnerHTML={{ __html: handleStyle }} />
       {/* Node Header */}
       <Box
         style={{
-          padding: '8px 12px',
+          padding: '10px 12px',
           display: 'flex',
           alignItems: 'center',
           gap: 8,
@@ -50,30 +83,54 @@ export function BaseWorkflowNode({ id, type, data, selected }: BaseWorkflowNodeP
         }}
       >
         <Box
+          className="flock-node-icon-container"
           style={{
-            width: 22,
-            height: 22,
-            borderRadius: 6,
-            background: 'var(--flock-accent-soft)',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            flexShrink: 0,
+            background: `${cfg.colorHex}15`,
           }}
         >
-          <Icon size={12} stroke={2.5} style={{ color: cfg.colorHex }} />
+          <Icon size={14} stroke={2.5} style={{ color: cfg.colorHex }} />
         </Box>
-        <Text size="xs" fw={700} style={{ color: 'var(--flock-text-bright)', flex: 1, fontSize: 11, lineHeight: 1.2 }} lineClamp={1}>
+        <Text size="xs" fw={700} style={{ color: 'var(--flock-text-bright)', flex: 1, fontSize: 12, lineHeight: 1.2 }} lineClamp={1}>
           {data.label || t(cfg.displayKey, { defaultValue: cfg.display })}
         </Text>
+        {canDebug && (
+          <Tooltip label={t('workflow.debugNode', 'Debug')} position="top" withArrow>
+            <ActionIcon
+              size="xs"
+              variant="subtle"
+              color="teal"
+              onClick={(e) => {
+                e.stopPropagation();
+                setDebugTarget({ nodeId: id });
+              }}
+              style={{ opacity: 0.6 }}
+            >
+              <IconBug size={10} />
+            </ActionIcon>
+          </Tooltip>
+        )}
       </Box>
 
       {/* Node Content/Summary */}
       {summary && (
         <Box style={{ padding: '8px 12px', minHeight: 38, display: 'flex', alignItems: 'center' }}>
-          <Text size="xs" c="dimmed" lineClamp={2} style={{ fontSize: 10 }}>
-            {summary}
-          </Text>
+          {(type === 'llm' || type === 'agent') && data.model ? (
+            <Box style={{ display: 'flex', alignItems: 'center', gap: 6, width: '100%' }}>
+              <ModelIcon
+                name={String(data.model)}
+                provider={providerIcon}
+                size={14}
+                style={{ flexShrink: 0 }}
+              />
+              <Text size="xs" c="dimmed" lineClamp={1} style={{ fontSize: 10, flex: 1 }}>
+                {summary}
+              </Text>
+            </Box>
+          ) : (
+            <Text size="xs" c="dimmed" lineClamp={2} style={{ fontSize: 10 }}>
+              {summary}
+            </Text>
+          )}
         </Box>
       )}
 

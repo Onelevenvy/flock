@@ -1,5 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
-import { invoke } from '@tauri-apps/api/core';
+import { useToolProvidersQuery, useToolsQuery } from './useToolQueries';
 import i18n from '../i18n';
 
 export interface I18nString {
@@ -36,32 +35,18 @@ export interface GroupedToolOption {
 }
 
 export function useAvailableTools() {
-  const [providers, setProviders] = useState<ToolProvider[]>([]);
-  const [tools, setTools] = useState<Tool[]>([]);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const { data: providers = [], isLoading: loadingProviders, error: errorProviders, refetch: refetchProviders } = useToolProvidersQuery();
+  const { data: tools = [], isLoading: loadingTools, error: errorTools, refetch: refetchTools } = useToolsQuery();
 
-  const loadData = useCallback(async () => {
-    setLoading(true);
-    setError(null);
-    try {
-      const [provList, toolList] = await Promise.all([
-        invoke<ToolProvider[]>('list_tool_providers'),
-        invoke<Tool[]>('list_tools'),
-      ]);
-      setProviders(provList);
-      setTools(toolList);
-    } catch (e) {
-      console.error('Failed to load available tools:', e);
-      setError(String(e));
-    } finally {
-      setLoading(false);
-    }
-  }, []);
+  const loading = loadingProviders || loadingTools;
+  const hasError = errorProviders || errorTools;
 
-  useEffect(() => {
-    loadData();
-  }, [loadData]);
+  const reloadData = async () => {
+    await Promise.all([
+      refetchProviders(),
+      refetchTools()
+    ]);
+  };
 
   // 构建按服务商/插件分组的下拉框数据
   const groupedOptions: GroupedToolOption[] = [];
@@ -95,8 +80,8 @@ export function useAvailableTools() {
     providers,
     tools,
     loading,
-    error,
+    error: hasError ? 'Failed to load available tools' : null,
     groupedOptions,
-    reload: loadData,
+    reload: reloadData,
   };
 }

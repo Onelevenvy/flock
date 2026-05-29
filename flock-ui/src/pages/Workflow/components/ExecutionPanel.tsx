@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import {
   Box,
   Text,
@@ -7,6 +7,13 @@ import {
   Badge,
   TextInput,
   Button,
+  Modal,
+  NumberInput,
+  Switch,
+  Select,
+  Stack,
+  Textarea,
+  ScrollArea,
 } from '@mantine/core';
 import {
   IconX,
@@ -15,6 +22,7 @@ import {
   IconCheck,
   IconSend,
   IconPlus,
+  IconPlayerPlay,
 } from '@tabler/icons-react';
 import { useTranslation } from 'react-i18next';
 import { ChatPanel } from '../../../components/chat/ChatPanel';
@@ -49,6 +57,21 @@ export function ExecutionPanel({
   const { clearExecution } = useWorkflowStore();
   const [inputVal, setInputVal] = useState('');
 
+  const startNode = useWorkflowStore((s) => s.nodes.find((n) => n.type === 'start'));
+  const startVariables = (startNode?.data?.variables as any[]) ?? [
+    { type: 'string', name: 'query', label: 'Query', required: true }
+  ];
+
+  const [formInputs, setFormInputs] = useState<Record<string, any>>({});
+
+  useEffect(() => {
+    const initial: Record<string, any> = {};
+    startVariables.forEach((v) => {
+      initial[v.name] = v.default_value ?? '';
+    });
+    setFormInputs(initial);
+  }, [startVariables]);
+
   // 1. 转换并聚合出 ChatPanel 可识别的 ChatMessage 数组
   const chatMessages = useMemo<ChatMessage[]>(() => {
     const result: ChatMessage[] = [];
@@ -75,7 +98,7 @@ export function ExecutionPanel({
         const nodeId = msg.nodeId || 'assistant';
         const displayNodeName = `**[${nodeId}]**\n`;
 
-        // 如果还没有当前正在构建的 assistant 消息，或者虽然有但 nodeId 发生了变化，我们开启一条新的 assistant 消息
+        // 如果还没有当前正在构建的 assistant 消息，或者虽然有则 nodeId 发生变化，开启新消息
         if (!currentAssistantMsg || currentAssistantMsg.id !== `assistant-${nodeId}`) {
           if (currentAssistantMsg) {
             currentAssistantMsg.streaming = false;
@@ -140,9 +163,23 @@ export function ExecutionPanel({
     : status === 'error' ? 'red'
     : 'gray';
 
+  const activeInterrupt = useWorkflowStore((s) => s.activeInterrupt);
+  const customVars = startVariables.filter(v => v.name !== 'query');
+
   const handleStart = () => {
-    if (!inputVal.trim()) return;
-    startWorkflow(inputVal);
+    // Validate required fields
+    const missing = customVars.filter(v => v.required && (formInputs[v.name] === undefined || formInputs[v.name] === ''));
+    if (missing.length > 0) {
+      alert(t('workflow.execution.missingParams', { 
+        defaultValue: `Missing required parameter(s): ${missing.map(m => m.label || m.name).join(', ')}`,
+        names: missing.map(m => m.label || m.name).join(', ')
+      }));
+      return;
+    }
+
+    const payload: Record<string, any> = { ...formInputs };
+    payload['query'] = inputVal;
+    startWorkflow(JSON.stringify(payload));
     setInputVal('');
   };
 
@@ -160,6 +197,8 @@ export function ExecutionPanel({
         boxShadow: '-2px 0 12px rgba(0, 0, 0, 0.08)',
       }}
     >
+
+
       {/* Panel header */}
       <Group
         px="sm"
@@ -224,21 +263,108 @@ export function ExecutionPanel({
       >
         <Box style={{ flex: 1, overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
           {chatMessages.length === 0 ? (
-            <Box
-              style={{
-                flex: 1,
-                display: 'flex',
-                flexDirection: 'column',
-                alignItems: 'center',
-                justifyContent: 'center',
-                opacity: 0.6,
-                padding: 20,
-              }}
-            >
-              <Text size="xs" c="dimmed" ta="center">
-                🤖 {t('workflow.execution.noOutput', 'No active execution. Enter initial query below to run.')}
-              </Text>
-            </Box>
+            customVars.length > 0 ? (
+              <ScrollArea style={{ flex: 1 }} p="md">
+                <Stack gap="md" style={{ padding: 12 }}>
+                  <Box>
+                    <Text size="xs" fw={700} style={{ color: 'var(--flock-text-bright)' }}>
+                      ✨ {t('workflow.execution.inputsTitle', 'Start Parameters')}
+                    </Text>
+                    <Text size="xs" c="dimmed" style={{ fontSize: 10 }}>
+                      {t('workflow.execution.inputsDesc', 'Please configure initial parameters for the workflow before running.')}
+                    </Text>
+                  </Box>
+                  
+                  <Stack gap="sm" style={{ background: 'var(--flock-bg-surface)', padding: 12, borderRadius: 12, border: '1px solid var(--flock-border-subtle)' }}>
+                    {customVars.map((v) => {
+                      const label = `${v.label || v.name} (${v.name})`;
+                      const required = v.required;
+                      if (v.type === 'boolean') {
+                        return (
+                          <Switch
+                            key={v.name}
+                            label={label}
+                            checked={!!formInputs[v.name]}
+                            onChange={(e) => setFormInputs({ ...formInputs, [v.name]: e.currentTarget.checked })}
+                            size="xs"
+                          />
+                        );
+                      }
+                      if (v.type === 'paragraph') {
+                        return (
+                          <Textarea
+                            key={v.name}
+                            label={label}
+                            placeholder={v.default_value ?? ''}
+                            value={formInputs[v.name] ?? ''}
+                            onChange={(e) => setFormInputs({ ...formInputs, [v.name]: e.target.value })}
+                            size="xs"
+                            minRows={2}
+                            required={required}
+                          />
+                        );
+                      }
+                      if (v.type === 'select') {
+                        const selectOptions = (v.options as string[]) ?? [];
+                        return (
+                          <Select
+                            key={v.name}
+                            label={label}
+                            placeholder={v.default_value ?? ''}
+                            data={selectOptions.map((o) => ({ value: o, label: o }))}
+                            value={formInputs[v.name] ?? ''}
+                            onChange={(val) => setFormInputs({ ...formInputs, [v.name]: val })}
+                            size="xs"
+                            required={required}
+                            clearable
+                          />
+                        );
+                      }
+                      if (v.type === 'number') {
+                        return (
+                          <NumberInput
+                            key={v.name}
+                            label={label}
+                            placeholder={String(v.default_value ?? '')}
+                            value={formInputs[v.name]}
+                            onChange={(val) => setFormInputs({ ...formInputs, [v.name]: val !== '' && val !== undefined ? Number(val) : undefined })}
+                            size="xs"
+                            required={required}
+                          />
+                        );
+                      }
+                      return (
+                        <TextInput
+                          key={v.name}
+                          label={label}
+                          placeholder={v.default_value ?? ''}
+                          value={formInputs[v.name] ?? ''}
+                          onChange={(e) => setFormInputs({ ...formInputs, [v.name]: e.target.value })}
+                          size="xs"
+                          required={required}
+                        />
+                      );
+                    })}
+                  </Stack>
+                </Stack>
+              </ScrollArea>
+            ) : (
+              <Box
+                style={{
+                  flex: 1,
+                  display: 'flex',
+                  flexDirection: 'column',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  opacity: 0.6,
+                  padding: 20,
+                }}
+              >
+                <Text size="xs" c="dimmed" ta="center">
+                  🤖 {t('workflow.execution.noOutput', 'No active execution. Enter initial query below to run.')}
+                </Text>
+              </Box>
+            )
           ) : (
             <ChatPanel messages={chatMessages} />
           )}
@@ -256,25 +382,40 @@ export function ExecutionPanel({
               }}
             >
               <Text size="xs" fw={600} mb="xs" style={{ color: 'var(--flock-text-bright)' }}>
-                🧑‍💻 {t('workflow.execution.humanReview', 'Human Review Required')}
+                🧑‍💻 {activeInterrupt?.title || t('workflow.execution.humanReview', 'Human Review Required')}
               </Text>
               <Group gap="sm">
-                <Button
-                  size="xs"
-                  color="teal"
-                  leftSection={<IconCheck size={12} />}
-                  onClick={() => resumeWorkflow({ choice: 'approved' })}
-                >
-                  {t('workflow.execution.approve', 'Approve')}
-                </Button>
-                <Button
-                  size="xs"
-                  color="red"
-                  leftSection={<IconX size={12} />}
-                  onClick={() => resumeWorkflow({ choice: 'denied' })}
-                >
-                  {t('workflow.execution.deny', 'Deny')}
-                </Button>
+                {activeInterrupt?.actions && Array.isArray(activeInterrupt.actions) ? (
+                  activeInterrupt.actions.map((act: any) => (
+                    <Button
+                      key={act.key}
+                      size="xs"
+                      color="blue"
+                      onClick={() => resumeWorkflow({ choice: act.key })}
+                    >
+                      {act.label || act.key}
+                    </Button>
+                  ))
+                ) : (
+                  <>
+                    <Button
+                      size="xs"
+                      color="teal"
+                      leftSection={<IconCheck size={12} />}
+                      onClick={() => resumeWorkflow({ choice: 'approved' })}
+                    >
+                      {t('workflow.execution.approve', 'Approve')}
+                    </Button>
+                    <Button
+                      size="xs"
+                      color="red"
+                      leftSection={<IconX size={12} />}
+                      onClick={() => resumeWorkflow({ choice: 'denied' })}
+                    >
+                      {t('workflow.execution.deny', 'Deny')}
+                    </Button>
+                  </>
+                )}
               </Group>
             </Box>
           ) : (

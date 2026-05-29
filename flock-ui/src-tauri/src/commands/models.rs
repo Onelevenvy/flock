@@ -103,6 +103,11 @@ pub async fn test_provider_connection(
         api_key: api_key.clone(),
         base_url: Some(base_url.clone()),
         max_tokens: Some(64),
+        temperature: None,
+        top_p: None,
+        frequency_penalty: None,
+        presence_penalty: None,
+        response_format: None,
     }).map_err(|e| format!("创建模型失败: {}", e))?;
 
     let test_msg = langgraph_prebuilt::Message::Human {
@@ -297,6 +302,11 @@ pub async fn test_custom_model_connection(
         api_key,
         base_url: Some(base_url),
         max_tokens: Some(64),
+        temperature: None,
+        top_p: None,
+        frequency_penalty: None,
+        presence_penalty: None,
+        response_format: None,
     }).map_err(|e| format!("创建模型实例失败: {}", e))?;
 
     let test_msg = langgraph_prebuilt::Message::Human {

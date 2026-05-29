@@ -26,7 +26,10 @@ import { LLMFields } from './LLM';
 import { AgentFields } from './Agent';
 import { ClassifierFields } from './Classifier';
 import { IfElseFields } from './IfElse';
+import { HumanFields } from './Human';
+import { StartFields } from './Start';
 import { ParameterExtractorFields } from './ParameterExtractor';
+import { RetryTimeoutFields } from './RetryTimeoutFields';
 
 export interface PropertiesPanelProps {
   node: Node;
@@ -48,12 +51,16 @@ export function PropertiesPanel({ node, onClose, onDataChange }: PropertiesPanel
   return (
     <Box
       style={{
-        width: 320,
-        borderLeft: '1px solid var(--flock-border-subtle)',
-        background: 'var(--flock-bg-surface)',
+        width: 380,
+        margin: '12px 8px 8px 0',
+        borderRadius: 12,
+        border: '1px solid var(--flock-border-dim)',
+        background: 'var(--flock-bg-base)',
         display: 'flex',
         flexDirection: 'column',
         flexShrink: 0,
+        boxShadow: '0 8px 24px rgba(0, 0, 0, 0.05), 0 2px 6px rgba(0, 0, 0, 0.02)',
+        overflow: 'hidden',
       }}
     >
       {/* Header */}
@@ -64,17 +71,17 @@ export function PropertiesPanel({ node, onClose, onDataChange }: PropertiesPanel
         style={{ borderBottom: '1px solid var(--flock-border-subtle)', flexShrink: 0 }}
       >
         <Group gap="xs">
-          <ThemeIcon size={28} radius="md" style={{ background: 'var(--flock-accent-soft)', color: cfg.colorHex }}>
-            <Icon size={14} stroke={2} />
+          <ThemeIcon size={32} radius="lg" style={{ background: `${cfg.colorHex}15`, color: cfg.colorHex }}>
+            <Icon size={16} stroke={2.5} />
           </ThemeIcon>
           <Box>
-            <Text size="sm" fw={600} style={{ color: 'var(--flock-text-bright)' }}>
+            <Text size="sm" fw={700} style={{ color: 'var(--flock-text-bright)' }}>
               {t(cfg.displayKey, { defaultValue: cfg.display })}
             </Text>
-            <Text size="xs" c="dimmed">{node.id}</Text>
+            <Text size="xs" c="dimmed" style={{ fontFamily: 'var(--mantine-font-family-monospace)' }}>{node.id}</Text>
           </Box>
         </Group>
-        <ActionIcon variant="subtle" onClick={onClose}>
+        <ActionIcon variant="subtle" color="gray" onClick={onClose} className="hover-rotate-close">
           <IconX size={16} />
         </ActionIcon>
       </Group>
@@ -101,6 +108,14 @@ export function PropertiesPanel({ node, onClose, onDataChange }: PropertiesPanel
             toolOptions={toolOptions}
             toolsLoading={toolsLoading}
           />
+
+          {/* Retry & timeout config (not for start/end nodes) */}
+          {type !== 'start' && type !== 'end' && (
+            <>
+              <Divider />
+              <RetryTimeoutFields node={node} onDataChange={onDataChange} />
+            </>
+          )}
         </Stack>
       </ScrollArea>
     </Box>
@@ -129,6 +144,8 @@ function NodeSpecificFields({
 
   switch (type) {
     case 'start':
+      return <StartFields node={node} onDataChange={onDataChange} />;
+
     case 'end':
       return (
         <Text size="xs" c="dimmed" ta="center" py="sm">
@@ -218,16 +235,12 @@ function NodeSpecificFields({
 
     case 'human':
       return (
-        <VariableTextarea
-          label={t('workflow.properties.human.title')}
-          placeholder={t('workflow.properties.human.titlePlaceholder')}
-          value={String(node.data.title ?? '')}
-          currentNodeId={node.id}
-          onChange={(val) => onDataChange(node.id, 'title', val)}
-          minRows={2}
-          size="xs"
+        <HumanFields
+          node={node}
+          onDataChange={onDataChange}
         />
       );
+
 
     case 'plugin':
       return (

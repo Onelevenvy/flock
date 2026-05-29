@@ -8,25 +8,7 @@ import { reconnectCurrentAgent } from '../../lib/agentConnection';
 import { ModelSelect } from './ModelSelect';
 import { parseMultiLang } from '../../utils/i18n';
 
-interface ModelProvider {
-  id: string;
-  provider_name: any;
-  provider_type: string;
-  base_url: string | null;
-  api_key: string | null;
-  icon: string | null;
-  description: string | null;
-  is_available: boolean;
-}
-
-interface Model {
-  id: string;
-  provider_id: string;
-  model_name: string;
-  categories: string[];
-  capabilities: string[];
-  is_online: boolean;
-}
+import { useAvailableModels } from '../../hooks/useAvailableModels';
 
 interface ActiveModel {
   provider_id: string;
@@ -41,25 +23,15 @@ interface ActiveModel {
  */
 export function ActiveModelPicker() {
   const { t } = useTranslation();
-  const [providers, setProviders] = useState<ModelProvider[]>([]);
-  const [models, setModels] = useState<Model[]>([]);
+  const { providers, models, loading: modelsLoading, reload: reloadModels } = useAvailableModels();
   const [activeModel, setActiveModelState] = useState<ActiveModel | null>(null);
-  const [loading, setLoading] = useState(false);
+  const [loadingActive, setLoadingActive] = useState(false);
   const { data: workspaces = [] } = useWorkspacesQuery();
 
-  useEffect(() => {
-    loadData();
-  }, []);
-
-  const loadData = async () => {
-    setLoading(true);
+  const loadActiveModel = async () => {
+    setLoadingActive(true);
     try {
-      const [provList, active] = await Promise.all([
-        invoke<ModelProvider[]>('list_providers'),
-        invoke<ActiveModel | null>('get_active_model'),
-      ]);
-      setProviders(provList);
-
+      const active = await invoke<ActiveModel | null>('get_active_model');
       let resolvedActive = active;
       if (!resolvedActive) {
         try {
@@ -74,26 +46,26 @@ export function ActiveModelPicker() {
           console.error('Failed to resolve default model config:', e);
         }
       }
-
       setActiveModelState(resolvedActive);
-
-      // Load models for all providers
-      const allModels: Model[] = [];
-      for (const p of provList) {
-        try {
-          const ms = await invoke<Model[]>('list_models', { providerId: p.id });
-          // Filter: only chat models that are marked online
-          const filtered = ms.filter(m => m.categories.includes('chat') && m.is_online);
-          allModels.push(...filtered);
-        } catch { /* ignore */ }
-      }
-      setModels(allModels);
     } catch (e) {
-      console.error('Failed to load model data:', e);
+      console.error('Failed to load active model:', e);
     } finally {
-      setLoading(false);
+      setLoadingActive(false);
     }
   };
+
+  useEffect(() => {
+    loadActiveModel();
+  }, []);
+
+  const loadData = async () => {
+    await Promise.all([
+      loadActiveModel(),
+      reloadModels()
+    ]);
+  };
+
+  const loading = modelsLoading || loadingActive;
 
   const currentModelId = activeModel
     ? `${activeModel.provider_id}:${activeModel.model_name}`
@@ -117,7 +89,6 @@ export function ActiveModelPicker() {
   models.forEach((m) => {
     const provider = providers.find((p) => p.id === m.provider_id);
     const groupName = provider ? parseMultiLang(provider.provider_name) : m.provider_id;
-    // icon 由后端 seed 时 base64 编码写入数据库，直接使用
     const providerIconKey = provider?.icon ?? '';
     if (!groupedModels[groupName]) groupedModels[groupName] = [];
     groupedModels[groupName].push({

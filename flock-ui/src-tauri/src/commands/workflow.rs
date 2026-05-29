@@ -13,7 +13,8 @@ use langgraph_checkpoint::checkpoint::memory::InMemorySaver;
 use langgraph_checkpoint_sqlite::SqliteSaver;
 use langgraph_prebuilt::BaseChatModel;
 
-use flock_agent::workflow_graph::{build_workflow_graph, WorkflowNodeContext, WorkflowSink};
+use flock_agent::workflow_graph::{build_workflow_graph, build_debug_node_graph, WorkflowNodeContext, WorkflowSink};
+use flock_core::model_factory::{CachedModelFactory, ModelFactory};
 use flock_tools::all_tools;
 use crate::SharedDbManager;
 use flock_core::db::{UpsertWorkflow, WorkflowRecord};
@@ -169,9 +170,46 @@ pub async fn run_workflow(
         api_key: config.api_key.clone(),
         base_url: if config.base_url.is_empty() { None } else { Some(config.base_url.clone()) },
         max_tokens: None,
+        temperature: None,
+        top_p: None,
+        frequency_penalty: None,
+        presence_penalty: None,
+        response_format: None,
     }).map_err(|e| e.to_string())?);
 
-    // 4. 初始化 SQLite Checkpointer
+    // 4. 构建 ModelFactory（支持每节点独立模型选择）
+    let mut model_registry: HashMap<String, (String, String, Option<String>)> = HashMap::new();
+    match db.list_providers().await {
+        Ok(providers) => {
+            for p in &providers {
+                if !p.is_available { continue; }
+                let api_key = p.api_key.clone().unwrap_or_default();
+                if api_key.is_empty() { continue; }
+                match db.list_models(&p.id).await {
+                    Ok(models) => {
+                        for m in &models {
+                            if m.is_online && m.categories.contains(&"chat".to_string()) {
+                                model_registry.insert(
+                                    m.model_name.clone(),
+                                    (p.provider_type.clone(), api_key.clone(), p.base_url.clone()),
+                                );
+                            }
+                        }
+                    }
+                    Err(e) => log::warn!("[workflow] Failed to list models for provider {}: {}", p.id, e),
+                }
+            }
+        }
+        Err(e) => log::warn!("[workflow] Failed to list providers: {}", e),
+    }
+    let model_factory: Arc<dyn ModelFactory> = Arc::new(CachedModelFactory::new(
+        model_registry,
+        config.provider.to_string(),
+        config.api_key.clone(),
+        if config.base_url.is_empty() { None } else { Some(config.base_url.clone()) },
+    ));
+
+    // 5. 初始化 SQLite Checkpointer
     let db_path_str = config.db_path.to_string_lossy().to_string();
     let conn_str = format!("sqlite:{}", db_path_str);
     let checkpointer: Arc<dyn BaseCheckpointSaver> = match SqliteSaver::from_conn_string(&conn_str).await {
@@ -185,18 +223,29 @@ pub async fn run_workflow(
         Err(_) => Arc::new(InMemorySaver::new()),
     };
 
-    // 5. 实例化 Sink & Context
+    // 6. 实例化 Sink & Context
     let sink = Arc::new(TauriWorkflowSink {
         app: app.clone(),
         workflow_id: workflow_id.clone(),
     });
     let tools = Arc::new(all_tools().registry);
+
+    // Extract env_vars from workflow config metadata
+    let env_vars: HashMap<String, JsonValue> = wf_record.config
+        .get("metadata")
+        .and_then(|m| m.get("env_vars"))
+        .and_then(|v| serde_json::from_value(v.clone()).ok())
+        .unwrap_or_default();
+
     let ctx = Arc::new(WorkflowNodeContext {
         provider,
+        model_factory,
         tools,
         db: db.inner().clone(),
         sink: sink.clone(),
         debug_mode: true,
+        env_vars,
+        workflow_id: workflow_id.clone(),
     });
 
     // 6. 构建 Graph
@@ -216,12 +265,50 @@ pub async fn run_workflow(
         let cmd = langgraph::types::Command::resume(res_val);
         serde_json::to_value(cmd).map_err(|e| e.to_string())?
     } else {
+        let mut input_msg = String::new();
+        let mut start_outputs = serde_json::json!({});
+
+        if let Some(ref inp_str) = input {
+            if let Ok(parsed_json) = serde_json::from_str::<serde_json::Value>(inp_str) {
+                if parsed_json.is_object() {
+                    start_outputs = parsed_json.clone();
+                    if let Some(q) = parsed_json.get("query").and_then(|v| v.as_str()) {
+                        input_msg = q.to_string();
+                    }
+                } else {
+                    input_msg = inp_str.clone();
+                    start_outputs["query"] = serde_json::Value::String(inp_str.clone());
+                }
+            } else {
+                input_msg = inp_str.clone();
+                start_outputs["query"] = serde_json::Value::String(inp_str.clone());
+            }
+        }
+
+        let start_node_id = wf_record.config
+            .get("nodes")
+            .and_then(|v| v.as_array())
+            .and_then(|arr| {
+                arr.iter()
+                    .find(|n| n.get("type").and_then(|t| t.as_str()) == Some("start"))
+                    .and_then(|n| n.get("id").and_then(|i| i.as_str()))
+            })
+            .unwrap_or("start")
+            .to_string();
+
+        let mut node_outputs = serde_json::json!({});
+        node_outputs[&start_node_id] = start_outputs.clone();
+        if start_node_id != "start" {
+            node_outputs["start"] = start_outputs;
+        }
+
         serde_json::json!({
-            "input_msg": input.unwrap_or_default(),
+            "input_msg": input_msg,
             "messages": [],
-            "node_outputs": {},
+            "node_outputs": node_outputs,
             "current_node": "",
             "quit_requested": false,
+            "env_vars": {},
         })
     };
 
@@ -298,5 +385,205 @@ pub async fn stop_workflow(
     if let Some(handle) = executions.remove(&workflow_id) {
         handle.abort();
     }
+    Ok(())
+}
+
+/// 调试单个节点（独立执行，不走完整图）
+#[tauri::command]
+pub async fn debug_node(
+    app: AppHandle,
+    db: State<'_, SharedDbManager>,
+    workflow_id: String,
+    node_id: String,
+    input: Option<String>,
+) -> Result<(), String> {
+    let wf_record = db.get_workflow(&workflow_id).await
+        .map_err(|e| e.to_string())?
+        .ok_or_else(|| format!("Workflow {} not found", workflow_id))?;
+
+    let cli_args = flock_core::config::settings::CliArgs {
+        provider: None,
+        api_key: None,
+        base_url: None,
+        model: None,
+        max_tokens: None,
+        max_turns: None,
+        system_prompt: None,
+        auto_approve: false,
+        project_dir: None,
+    };
+    let config = flock_core::config::settings::Config::resolve_from_db(&cli_args, db.inner().clone())
+        .await
+        .map_err(|e| e.to_string())?;
+
+    let provider: Arc<dyn BaseChatModel> = Arc::from(flock_core::model_factory::create_model(flock_core::model_factory::ModelProviderParams {
+        provider_type: config.provider.to_string(),
+        model: config.model.clone(),
+        api_key: config.api_key.clone(),
+        base_url: if config.base_url.is_empty() { None } else { Some(config.base_url.clone()) },
+        max_tokens: None,
+        temperature: None,
+        top_p: None,
+        frequency_penalty: None,
+        presence_penalty: None,
+        response_format: None,
+    }).map_err(|e| e.to_string())?);
+
+    let mut model_registry: HashMap<String, (String, String, Option<String>)> = HashMap::new();
+    match db.list_providers().await {
+        Ok(providers) => {
+            for p in &providers {
+                if !p.is_available { continue; }
+                let api_key = p.api_key.clone().unwrap_or_default();
+                if api_key.is_empty() { continue; }
+                match db.list_models(&p.id).await {
+                    Ok(models) => {
+                        for m in &models {
+                            if m.is_online && m.categories.contains(&"chat".to_string()) {
+                                model_registry.insert(
+                                    m.model_name.clone(),
+                                    (p.provider_type.clone(), api_key.clone(), p.base_url.clone()),
+                                );
+                            }
+                        }
+                    }
+                    Err(e) => log::warn!("[debug_node] Failed to list models for provider {}: {}", p.id, e),
+                }
+            }
+        }
+        Err(e) => log::warn!("[debug_node] Failed to list providers: {}", e),
+    }
+    let model_factory: Arc<dyn ModelFactory> = Arc::new(CachedModelFactory::new(
+        model_registry,
+        config.provider.to_string(),
+        config.api_key.clone(),
+        if config.base_url.is_empty() { None } else { Some(config.base_url.clone()) },
+    ));
+
+    let db_path_str = config.db_path.to_string_lossy().to_string();
+    let conn_str = format!("sqlite:{}", db_path_str);
+    let checkpointer: Arc<dyn BaseCheckpointSaver> = match SqliteSaver::from_conn_string(&conn_str).await {
+        Ok(saver) => {
+            if saver.setup().await.is_ok() {
+                Arc::new(saver)
+            } else {
+                Arc::new(InMemorySaver::new())
+            }
+        }
+        Err(_) => Arc::new(InMemorySaver::new()),
+    };
+
+    let sink = Arc::new(TauriWorkflowSink {
+        app: app.clone(),
+        workflow_id: format!("{}:debug:{}", workflow_id, node_id),
+    });
+    let tools = Arc::new(all_tools().registry);
+
+    let env_vars: HashMap<String, JsonValue> = wf_record.config
+        .get("metadata")
+        .and_then(|m| m.get("env_vars"))
+        .and_then(|v| serde_json::from_value(v.clone()).ok())
+        .unwrap_or_default();
+
+    let ctx = Arc::new(WorkflowNodeContext {
+        provider,
+        model_factory,
+        tools,
+        db: db.inner().clone(),
+        sink: sink.clone(),
+        debug_mode: true,
+        env_vars,
+        workflow_id: workflow_id.clone(),
+    });
+
+    let graph = build_debug_node_graph(&wf_record.config, &node_id, ctx, checkpointer)
+        .map_err(|e| e.to_string())?;
+
+    let mut config = RunnableConfig::default();
+    config.insert(
+        "configurable".to_string(),
+        serde_json::json!({ "thread_id": format!("debug:{}:{}", workflow_id, node_id) }),
+    );
+
+    let mut initial_input = serde_json::json!({
+        "input_msg": "",
+        "messages": [],
+        "node_outputs": {},
+        "current_node": "",
+        "quit_requested": false,
+        "env_vars": {},
+    });
+
+    if let Some(ref inp_str) = input {
+        if let Ok(parsed_json) = serde_json::from_str::<serde_json::Value>(inp_str) {
+            if parsed_json.is_object() {
+                if let Some(msg) = parsed_json.get("input_msg") {
+                    initial_input["input_msg"] = msg.clone();
+                }
+                if let Some(outputs) = parsed_json.get("node_outputs") {
+                    initial_input["node_outputs"] = outputs.clone();
+                }
+                if let Some(envs) = parsed_json.get("env_vars") {
+                    initial_input["env_vars"] = envs.clone();
+                }
+            } else {
+                initial_input["input_msg"] = serde_json::Value::String(inp_str.clone());
+            }
+        } else {
+            initial_input["input_msg"] = serde_json::Value::String(inp_str.clone());
+        }
+    }
+
+    let app_clone = app.clone();
+    let debug_id = format!("{}:debug:{}", workflow_id, node_id);
+
+    tokio::spawn(async move {
+        let _ = app_clone.emit("workflow-event", serde_json::json!({
+            "type": "debug_start",
+            "workflow_id": workflow_id,
+            "node_id": node_id,
+        }));
+
+        let mut astream = graph.astream(&initial_input, &config, vec![StreamMode::Updates]);
+        while let Some(part) = astream.next().await {
+            let _ = app_clone.emit("workflow-event", serde_json::json!({
+                "type": "debug_progress",
+                "workflow_id": workflow_id,
+                "node_id": node_id,
+                "output": part,
+            }));
+        }
+
+        match graph.get_state(&config) {
+            Ok(snapshot) => {
+                let node_outputs = snapshot.values.get("node_outputs");
+                let mut specific_output = serde_json::Value::Null;
+                if let Some(outputs) = node_outputs.and_then(|o| o.as_object()) {
+                    let debug_key = format!("__debug_{}", node_id);
+                    if let Some(out) = outputs.get(&debug_key) {
+                        specific_output = out.clone();
+                    } else if let Some(out) = outputs.get(&node_id) {
+                        specific_output = out.clone();
+                    }
+                }
+                let _ = app_clone.emit("workflow-event", serde_json::json!({
+                    "type": "debug_done",
+                    "workflow_id": workflow_id,
+                    "node_id": node_id,
+                    "output": specific_output,
+                    "node_outputs": node_outputs,
+                }));
+            }
+            Err(e) => {
+                let _ = app_clone.emit("workflow-event", serde_json::json!({
+                    "type": "debug_error",
+                    "workflow_id": workflow_id,
+                    "node_id": node_id,
+                    "error": format!("Failed to retrieve debug snapshot: {}", e),
+                }));
+            }
+        }
+    });
+
     Ok(())
 }

@@ -15,7 +15,11 @@ interface WorkflowTauriEvent {
     | 'node_done'
     | 'text_delta'
     | 'thinking'
-    | 'error';
+    | 'error'
+    | 'debug_start'
+    | 'debug_progress'
+    | 'debug_done'
+    | 'debug_error';
   workflow_id: string;
   node_id?: string;
   text?: string;
@@ -46,7 +50,10 @@ export function useWorkflowExecution() {
               payload = event.payload as WorkflowTauriEvent;
             }
 
-            if (payload.workflow_id !== store.activeWorkflowId) {
+            const isActiveWf = payload.workflow_id === store.activeWorkflowId;
+            const isDebugOfActiveWf = !!(store.activeWorkflowId && payload.workflow_id.startsWith(`${store.activeWorkflowId}:debug:`));
+
+            if (!isActiveWf && !isDebugOfActiveWf) {
               // 如果不是当前活跃的工作流，忽略
               return;
             }
@@ -56,6 +63,7 @@ export function useWorkflowExecution() {
             switch (payload.type) {
               case 'workflow_start':
                 store.setExecutionStatus('running');
+                store.setActiveInterrupt(null);
                 store.appendExecutionMessage({
                   type: 'info',
                   content: `🚀 Workflow ${payload.workflow_id} execution started...`,
@@ -64,61 +72,96 @@ export function useWorkflowExecution() {
                 break;
 
               case 'node_start':
-                store.appendExecutionMessage({
-                  type: 'info',
-                  content: `▶️ Running node: [${payload.node_id}]`,
-                  nodeId: payload.node_id,
-                  timestamp,
-                });
+                if (!isDebugOfActiveWf) {
+                  store.appendExecutionMessage({
+                    type: 'info',
+                    content: `▶️ Running node: [${payload.node_id}]`,
+                    nodeId: payload.node_id,
+                    timestamp,
+                  });
+                }
                 break;
 
               case 'text_delta':
                 if (payload.text) {
-                  store.appendExecutionMessage({
-                    type: 'text_delta',
-                    content: payload.text,
-                    nodeId: payload.node_id,
-                    timestamp,
-                  });
+                  if (isDebugOfActiveWf) {
+                    const targetId = store.debugTarget?.nodeId;
+                    if (targetId) {
+                      const prev = store.debugResults[targetId];
+                      if (prev) {
+                        const currentOutput = (prev.output && typeof prev.output === 'object') ? { ...prev.output } : {};
+                        const currentResponse = (currentOutput.response || '') + payload.text;
+                        currentOutput.response = currentResponse;
+                        store.setDebugResult(targetId, {
+                          ...prev,
+                          output: currentOutput,
+                        });
+                      }
+                    }
+                  } else {
+                    store.appendExecutionMessage({
+                      type: 'text_delta',
+                      content: payload.text,
+                      nodeId: payload.node_id,
+                      timestamp,
+                    });
+                  }
                 }
                 break;
 
               case 'thinking':
                 if (payload.text) {
-                  store.appendExecutionMessage({
-                    type: 'thinking',
-                    content: payload.text,
-                    nodeId: payload.node_id,
-                    timestamp,
-                  });
+                  if (isDebugOfActiveWf) {
+                    const targetId = store.debugTarget?.nodeId;
+                    if (targetId) {
+                      const prev = store.debugResults[targetId];
+                      if (prev) {
+                        const currentOutput = (prev.output && typeof prev.output === 'object') ? { ...prev.output } : {};
+                        const currentThinking = (currentOutput.thinking || '') + payload.text;
+                        currentOutput.thinking = currentThinking;
+                        store.setDebugResult(targetId, {
+                          ...prev,
+                          output: currentOutput,
+                        });
+                      }
+                    }
+                  } else {
+                    store.appendExecutionMessage({
+                      type: 'thinking',
+                      content: payload.text,
+                      nodeId: payload.node_id,
+                      timestamp,
+                    });
+                  }
                 }
                 break;
 
               case 'node_done': {
-                store.appendExecutionMessage({
-                  type: 'info',
-                  content: `✅ Node [${payload.node_id}] finished. Output: ${JSON.stringify(payload.output)}`,
-                  nodeId: payload.node_id,
-                  timestamp,
-                });
+                if (!isDebugOfActiveWf) {
+                  store.appendExecutionMessage({
+                    type: 'info',
+                    content: `✅ Node [${payload.node_id}] finished. Output: ${JSON.stringify(payload.output)}`,
+                    nodeId: payload.node_id,
+                    timestamp,
+                  });
 
-                // 补偿非流式返回：如果期间没有任何 text_delta 产生，在此一次性补偿以供 UI 聊天气泡显示
-                if (payload.output && typeof payload.output === 'object') {
-                  const outputObj = payload.output as Record<string, unknown>;
-                  const responseText = outputObj.response || outputObj.answer;
-                  if (typeof responseText === 'string' && responseText.trim()) {
-                    // 使用 getState() 获取最新的 state，彻底解决 React 闭包捕获 stale closure 导致的重复补偿 Bug
-                    const currentMessages = useWorkflowStore.getState().executionMessages;
-                    const hasDeltas = currentMessages.some(
-                      (m) => m.nodeId === payload.node_id && m.type === 'text_delta'
-                    );
-                    if (!hasDeltas) {
-                      store.appendExecutionMessage({
-                        type: 'text_delta',
-                        content: responseText,
-                        nodeId: payload.node_id,
-                        timestamp,
-                      });
+                  // 补偿非流式返回：如果期间没有任何 text_delta 产生，在此一次性补偿以供 UI 聊天气泡显示
+                  if (payload.output && typeof payload.output === 'object') {
+                    const outputObj = payload.output as Record<string, unknown>;
+                    const responseText = outputObj.response || outputObj.answer;
+                    if (typeof responseText === 'string' && responseText.trim()) {
+                      const currentMessages = useWorkflowStore.getState().executionMessages;
+                      const hasDeltas = currentMessages.some(
+                        (m) => m.nodeId === payload.node_id && m.type === 'text_delta'
+                      );
+                      if (!hasDeltas) {
+                        store.appendExecutionMessage({
+                          type: 'text_delta',
+                          content: responseText,
+                          nodeId: payload.node_id,
+                          timestamp,
+                        });
+                      }
                     }
                   }
                 }
@@ -127,6 +170,7 @@ export function useWorkflowExecution() {
 
               case 'workflow_interrupted':
                 store.setExecutionStatus('idle'); // 暂停等待 HITL 输入
+                store.setActiveInterrupt(payload.interrupt);
                 store.appendExecutionMessage({
                   type: 'info',
                   content: `⏳ Interrupt hit! Waiting for user input... Detail: ${JSON.stringify(payload.interrupt)}`,
@@ -136,6 +180,7 @@ export function useWorkflowExecution() {
 
               case 'workflow_done':
                 store.setExecutionStatus('done');
+                store.setActiveInterrupt(null);
                 store.appendExecutionMessage({
                   type: 'info',
                   content: `🎉 Workflow execution completed successfully.`,
@@ -146,12 +191,69 @@ export function useWorkflowExecution() {
               case 'workflow_error':
               case 'error':
                 store.setExecutionStatus('error');
+                store.setActiveInterrupt(null);
                 store.appendExecutionMessage({
                   type: 'error',
                   content: `❌ Execution error: ${payload.error || payload.text || 'Unknown error'}`,
                   timestamp,
                 });
                 break;
+
+              case 'debug_start':
+                store.setExecutionStatus('running');
+                store.appendExecutionMessage({
+                  type: 'info',
+                  content: `🔍 Debugging node [${payload.node_id}]...`,
+                  nodeId: payload.node_id,
+                  timestamp,
+                });
+                break;
+
+              case 'debug_done': {
+                store.setExecutionStatus('done');
+                const targetId = payload.node_id || store.debugTarget?.nodeId || '';
+                const prev = targetId ? store.debugResults[targetId] : null;
+                const startTime = prev?.startTime || Date.now();
+                const duration = Date.now() - startTime;
+                if (targetId) {
+                  store.setDebugResult(targetId, {
+                    status: 'done',
+                    input: prev?.input || null,
+                    output: payload.output,
+                    startTime,
+                    duration,
+                  });
+                }
+                store.appendExecutionMessage({
+                  type: 'info',
+                  content: `✅ Debug done. Output: ${JSON.stringify(payload.output)}`,
+                  nodeId: payload.node_id,
+                  timestamp,
+                });
+                break;
+              }
+
+              case 'debug_error': {
+                store.setExecutionStatus('error');
+                const targetId = payload.node_id || store.debugTarget?.nodeId || '';
+                const prev = targetId ? store.debugResults[targetId] : null;
+                if (targetId) {
+                  store.setDebugResult(targetId, {
+                    status: 'error',
+                    input: prev?.input || null,
+                    output: null,
+                    error: payload.error || 'Unknown error',
+                    startTime: prev?.startTime || Date.now(),
+                    duration: prev ? Date.now() - prev.startTime : undefined,
+                  });
+                }
+                store.appendExecutionMessage({
+                  type: 'error',
+                  content: `❌ Debug error: ${payload.error || 'Unknown error'}`,
+                  timestamp,
+                });
+                break;
+              }
             }
           } catch (e) {
             console.error('Failed to parse workflow event payload:', e);
@@ -192,10 +294,23 @@ export function useWorkflowExecution() {
 
     store.setExecutionStatus('running');
 
-    // 记录用户消息，以便 Chat 控制台能还原真实的多轮问答结构
+    let userMsgContent = input;
+    try {
+      if (input.trim().startsWith('{')) {
+        const parsed = JSON.parse(input);
+        if (parsed.query) {
+          userMsgContent = parsed.query;
+        } else {
+          userMsgContent = Object.entries(parsed)
+            .map(([k, v]) => `${k}: ${v}`)
+            .join('\n');
+        }
+      }
+    } catch (_) {}
+
     store.appendExecutionMessage({
       type: 'user',
-      content: input,
+      content: userMsgContent,
       timestamp: Date.now(),
     });
 
@@ -258,10 +373,59 @@ export function useWorkflowExecution() {
     }
   };
 
+  const debugNode = async (nodeId: string, input?: string) => {
+    if (!store.activeWorkflowId) return;
+
+    store.clearExecution();
+    store.setExecutionStatus('running');
+    
+    let parsedInput = null;
+    try {
+      if (input) parsedInput = JSON.parse(input);
+    } catch {}
+
+    store.setDebugResult(nodeId, {
+      status: 'running',
+      input: parsedInput,
+      output: null,
+      startTime: Date.now(),
+    });
+
+    store.appendExecutionMessage({
+      type: 'info',
+      content: `🔍 Starting debug for node [${nodeId}]...`,
+      nodeId,
+      timestamp: Date.now(),
+    });
+
+    try {
+      await invoke('debug_node', {
+        workflowId: store.activeWorkflowId,
+        nodeId,
+        input: input ?? '',
+      });
+    } catch (e) {
+      store.setExecutionStatus('error');
+      store.setDebugResult(nodeId, {
+        status: 'error',
+        input: parsedInput,
+        output: null,
+        error: String(e),
+        startTime: Date.now(),
+      });
+      store.appendExecutionMessage({
+        type: 'error',
+        content: `Failed to debug node: ${e}`,
+        timestamp: Date.now(),
+      });
+    }
+  };
+
   return {
     startWorkflow,
     resumeWorkflow,
     stopWorkflow,
+    debugNode,
   };
 }
 

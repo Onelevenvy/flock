@@ -2,7 +2,7 @@ use std::sync::Arc;
 use serde_json::{json, Value as JsonValue};
 use langgraph::prelude::RunnableConfig;
 use langgraph::runnable::RunnableError;
-use super::common::{WorkflowNodeContext, parse_state, interpolate_string};
+use super::common::{WorkflowNodeContext, parse_state, interpolate_string_with_context};
 
 pub fn make_human_node(
     node_id: String,
@@ -20,24 +20,37 @@ pub fn make_human_node(
             ctx.sink.emit_node_start(&node_id);
             let state = parse_state(&input);
 
-            let title_template = node_data.get("title").and_then(|v| v.as_str()).unwrap_or("Waiting for review");
-            let title = interpolate_string(title_template, &state);
+            let title_template = node_data.get("form_content")
+                .or_else(|| node_data.get("title"))
+                .and_then(|v| v.as_str())
+                .unwrap_or("Waiting for review");
+            let title = interpolate_string_with_context(title_template, &state, &ctx, &ctx.workflow_id);
 
             ctx.sink.emit_text_delta(&node_id, &format!("\n\n*⏳ 正在等待人工确认: `{}`...*\n", title));
+
+            let actions = node_data.get("user_actions").cloned().unwrap_or_else(|| json!([
+                { "key": "action_1", "label": "Approve" },
+                { "key": "action_2", "label": "Reject" }
+            ]));
 
             // Call langgraph interrupt
             let resume_val = match langgraph::types::interrupt(
                 json!({
                     "node_id": node_id,
                     "title": title,
-                    "interaction_type": "review"
+                    "interaction_type": "review",
+                    "actions": actions
                 })
             ) {
                 Ok(val) => val,
                 Err(e) => return Err(RunnableError::Interrupt(e.into())),
             };
 
-            let choice = resume_val.get("choice").and_then(|v| v.as_str()).unwrap_or("approved").to_string();
+            let choice = resume_val.get("choice")
+                .or_else(|| resume_val.get("action"))
+                .and_then(|v| v.as_str())
+                .unwrap_or("action_1")
+                .to_string();
             ctx.sink.emit_text_delta(&node_id, &format!("人工确认结果: `{}`", choice));
 
             let mut outputs = state.node_outputs.clone();

@@ -32,19 +32,9 @@ export function CreateWorkflowModal({ opened, onClose, onCreated }: CreateWorkfl
       description: desc.trim(),
       config: {
         nodes: [
-          { id: 'start-1', type: 'start', position: { x: 80, y: 200 }, data: { label: 'Start' } },
-          { id: 'end-1', type: 'end', position: { x: 480, y: 200 }, data: { label: 'End' } },
+          { id: 'start-1', type: 'start', position: { x: 150, y: 200 }, data: { label: 'Start' } },
         ],
-        edges: [
-          {
-            id: 'start-1->end-1',
-            source: 'start-1',
-            target: 'end-1',
-            sourceHandle: 'right',
-            targetHandle: 'left',
-            type: 'smoothstep',
-          },
-        ],
+        edges: [],
         metadata: {},
       },
       is_active: true,

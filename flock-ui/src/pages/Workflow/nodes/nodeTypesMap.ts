@@ -4,11 +4,10 @@ import {
   AgentNode,
   AnswerNode,
   CodeNode,
-  HumanNode,
   ParameterExtractorNode,
   PluginNode,
 } from './StandardNodes';
-import { ClassifierNode, IfElseNode } from './MultiHandleNodes';
+import { ClassifierNode, IfElseNode, HumanNode } from './MultiHandleNodes';
 
 export const workflowNodeTypes = {
   start: StartNode,

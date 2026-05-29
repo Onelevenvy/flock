@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { getSmoothStepPath, type EdgeProps, EdgeLabelRenderer } from 'reactflow';
+import { getBezierPath, type EdgeProps, EdgeLabelRenderer } from 'reactflow';
 import { ActionIcon } from '@mantine/core';
 import { IconPlus } from '@tabler/icons-react';
 
@@ -15,7 +15,7 @@ export function CustomStepEdge({
   markerEnd,
   data,
 }: EdgeProps) {
-  const [edgePath, labelX, labelY] = getSmoothStepPath({
+  const [edgePath, labelX, labelY] = getBezierPath({
     sourceX,
     sourceY,
     sourcePosition,

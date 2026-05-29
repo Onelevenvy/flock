@@ -21,10 +21,18 @@ pub fn make_start_node(
             if !outputs.is_object() {
                 outputs = json!({});
             }
-            outputs["start"] = json!({
-                "query": state.input_msg
-            });
-            ctx.sink.emit_node_done(&node_id, &outputs["start"]);
+            if !outputs.get(&node_id).is_some() {
+                outputs[&node_id] = json!({
+                    "query": state.input_msg
+                });
+            } else if !outputs[&node_id].get("query").is_some() {
+                outputs[&node_id]["query"] = json!(state.input_msg);
+            }
+
+            if node_id != "start" {
+                outputs["start"] = outputs[&node_id].clone();
+            }
+            ctx.sink.emit_node_done(&node_id, &outputs[&node_id]);
             Ok(json!({
                 "node_outputs": outputs,
                 "current_node": node_id,

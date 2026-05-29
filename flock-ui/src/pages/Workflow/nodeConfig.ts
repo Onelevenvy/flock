@@ -59,7 +59,7 @@ export const nodeConfig: Record<string, NodeConfigItem> = {
       model: '',
       temperature: 0.7,
       systemMessage: '',
-      userMessage: '${start.query}',
+      userMessage: '',
     },
   },
   agent: {
@@ -73,7 +73,7 @@ export const nodeConfig: Record<string, NodeConfigItem> = {
       model: '',
       temperature: 0.7,
       systemMessage: '',
-      userMessage: '${start.query}',
+      userMessage: '',
       tools: [],
     },
   },
@@ -90,7 +90,7 @@ export const nodeConfig: Record<string, NodeConfigItem> = {
         { category_id: uuidv4(), category_name: '' },
         { category_id: 'others_category', category_name: 'Others' },
       ],
-      input: '${start.query}',
+      input: '',
     },
   },
   ifelse: {
@@ -144,11 +144,16 @@ export const nodeConfig: Record<string, NodeConfigItem> = {
     icon: IconUser,
     color: 'cyan',
     colorHex: '#0891b2',
-    allowedConnections: { sources: ['right'], targets: ['left'] },
+    allowedConnections: { sources: [], targets: ['left'] },
     initialData: {
-      interaction_type: 'tool_review',
-      title: '',
-      routes: { approved: '', rejected: '' },
+      webapp_enabled: true,
+      form_content: '',
+      user_actions: [
+        { key: 'action_1', label: 'Approve' },
+        { key: 'action_2', label: 'Reject' },
+      ],
+      timeout_num: 3,
+      timeout_unit: 'hours',
     },
   },
   parameterExtractor: {
@@ -162,7 +167,7 @@ export const nodeConfig: Record<string, NodeConfigItem> = {
       model: '',
       parameters: [],
       instruction: '',
-      input: '${start.query}',
+      input: '',
     },
   },
   plugin: {

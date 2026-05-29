@@ -17,6 +17,7 @@ export interface WorkflowConfig {
   edges: Edge[];
   metadata?: {
     viewport?: { x: number; y: number; zoom: number };
+    env_vars?: Record<string, { value: string; type: string }>;
     [key: string]: unknown;
   };
 }
@@ -26,6 +27,11 @@ export interface WorkflowExecutionMessage {
   content: string;
   nodeId?: string;
   timestamp: number;
+}
+
+export interface EnvVar {
+  value: string;
+  type: 'string' | 'number' | 'boolean' | 'object' | 'array';
 }
 
 interface WorkflowStore {
@@ -42,6 +48,22 @@ interface WorkflowStore {
   activeExecutionThreadId: string | null;
   // 当前选中的节点 ID（属性面板用）
   selectedNodeId: string | null;
+  // 单节点调试目标
+  debugTarget: { nodeId: string } | null;
+  // 调试结果记录 (nodeId -> debugResult)
+  debugResults: Record<string, {
+    status: 'running' | 'done' | 'error';
+    input: any;
+    output: any;
+    error?: string;
+    startTime: number;
+    duration?: number;
+    tokens?: number;
+  }>;
+  // 环境变量
+  environmentVariables: Record<string, EnvVar>;
+  // 当前等待用户回复的打断事件数据
+  activeInterrupt: any | null;
 
   // Actions
   setActiveWorkflowId: (id: string | null) => void;
@@ -55,6 +77,12 @@ interface WorkflowStore {
   setExecutionStatus: (status: 'idle' | 'running' | 'done' | 'error') => void;
   updateNodeData: (nodeId: string, key: string, value: unknown) => void;
   setActiveExecutionThreadId: (id: string | null) => void;
+  setDebugTarget: (target: { nodeId: string } | null) => void;
+  setDebugResult: (nodeId: string, result: WorkflowStore['debugResults'][string]) => void;
+  setEnvironmentVariable: (key: string, value: string, type: EnvVar['type']) => void;
+  removeEnvironmentVariable: (key: string) => void;
+  setEnvironmentVariables: (vars: Record<string, EnvVar>) => void;
+  setActiveInterrupt: (interrupt: any | null) => void;
 }
 
 export const useWorkflowStore = create<WorkflowStore>()(
@@ -68,8 +96,16 @@ export const useWorkflowStore = create<WorkflowStore>()(
       executionMessages: [],
       activeExecutionThreadId: null,
       selectedNodeId: null,
+      debugTarget: null,
+      debugResults: {},
+      environmentVariables: {},
+      activeInterrupt: null,
 
       setActiveWorkflowId: (id) => set({ activeWorkflowId: id }),
+      setActiveInterrupt: (interrupt) => set({ activeInterrupt: interrupt }),
+      setDebugResult: (nodeId, result) => set((s) => ({
+        debugResults: { ...s.debugResults, [nodeId]: result }
+      })),
 
       setNodes: (nodes) =>
         set((s) => {
@@ -136,15 +172,26 @@ export const useWorkflowStore = create<WorkflowStore>()(
 
       setSelectedNodeId: (id) => set({ selectedNodeId: id }),
 
-      loadWorkflowConfig: (config) =>
+      setDebugTarget: (target) => set({ debugTarget: target }),
+
+      loadWorkflowConfig: (config) => {
+        const nextNodes = (config.nodes ?? []).filter((n) => n.type !== 'end');
+        const endNodeIds = new Set(
+          (config.nodes ?? []).filter((n) => n.type === 'end').map((n) => n.id)
+        );
+        const nextEdges = (config.edges ?? []).filter(
+          (e) => !endNodeIds.has(e.source) && !endNodeIds.has(e.target)
+        );
         set({
-          nodes: config.nodes ?? [],
-          edges: config.edges ?? [],
+          nodes: nextNodes,
+          edges: nextEdges,
+          environmentVariables: (config.metadata?.env_vars as any) ?? {},
           isDirty: false,
-        }),
+        });
+      },
 
       clearExecution: () =>
-        set({ executionMessages: [], executionStatus: 'idle', activeExecutionThreadId: null }),
+        set({ executionMessages: [], executionStatus: 'idle', activeExecutionThreadId: null, activeInterrupt: null }),
 
       appendExecutionMessage: (msg) =>
         set((s) => ({
@@ -164,6 +211,22 @@ export const useWorkflowStore = create<WorkflowStore>()(
         })),
 
       setActiveExecutionThreadId: (id) => set({ activeExecutionThreadId: id }),
+
+      setEnvironmentVariable: (key, value, type) =>
+        set((s) => ({
+          environmentVariables: { ...s.environmentVariables, [key]: { value, type } },
+          isDirty: true,
+        })),
+
+      removeEnvironmentVariable: (key) =>
+        set((s) => {
+          const rest = Object.fromEntries(
+            Object.entries(s.environmentVariables).filter(([k]) => k !== key)
+          );
+          return { environmentVariables: rest, isDirty: true };
+        }),
+
+      setEnvironmentVariables: (vars) => set({ environmentVariables: vars }),
     }),
     {
       name: 'flock-workflow-store',
