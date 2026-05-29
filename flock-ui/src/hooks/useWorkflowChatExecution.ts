@@ -25,6 +25,15 @@ export function useWorkflowChatExecution(params: {
   useEffect(() => { onStatusChangeRef.current = onStatusChange; }, [onStatusChange]);
   useEffect(() => { onInterruptRef.current = onInterrupt; }, [onInterrupt]);
 
+  // 追踪本次执行已接收的消息（用于 node_done 补偿去重）
+  const execMessagesRef = useRef<import('../store/workflowStore').WorkflowExecutionMessage[]>([]);
+
+  // 包装 onMessage，同时更新 execMessagesRef
+  const dispatchMessage = useCallback((msg: import('../store/workflowStore').WorkflowExecutionMessage) => {
+    execMessagesRef.current = [...execMessagesRef.current, msg];
+    onMessageRef.current(msg);
+  }, []);
+
   useEffect(() => {
     if (!workflowId) return;
 
@@ -55,7 +64,7 @@ export function useWorkflowChatExecution(params: {
                 break;
 
               case 'node_start':
-                onMessageRef.current({
+                dispatchMessage({
                   type: 'info',
                   content: `▶️ Running node: [${payload.node_id}]`,
                   nodeId: payload.node_id,
@@ -65,7 +74,7 @@ export function useWorkflowChatExecution(params: {
 
               case 'text_delta':
                 if (payload.text) {
-                  onMessageRef.current({
+                  dispatchMessage({
                     type: 'text_delta',
                     content: payload.text,
                     nodeId: payload.node_id,
@@ -76,7 +85,7 @@ export function useWorkflowChatExecution(params: {
 
               case 'thinking':
                 if (payload.text) {
-                  onMessageRef.current({
+                  dispatchMessage({
                     type: 'thinking',
                     content: payload.text,
                     nodeId: payload.node_id,
@@ -86,34 +95,41 @@ export function useWorkflowChatExecution(params: {
                 break;
 
               case 'node_done': {
-                onMessageRef.current({
+                dispatchMessage({
                   type: 'info',
                   content: `✅ Node [${payload.node_id}] finished.`,
                   nodeId: payload.node_id,
                   timestamp,
                 });
-                // 补偿非流式返回
+                // 补偿非流式返回：只有在该节点没有收到过任何 text_delta 时才补偿
+                // 通过 execMessagesRef 判断，避免流式场景下重复输出
                 if (payload.output && typeof payload.output === 'object') {
                   const outputObj = payload.output as Record<string, unknown>;
                   const responseText = outputObj.response || outputObj.answer;
                   if (typeof responseText === 'string' && responseText.trim()) {
-                    onMessageRef.current({
-                      type: 'text_delta',
-                      content: responseText,
-                      nodeId: payload.node_id,
-                      timestamp: timestamp + 1,
-                    });
+                    const hasDeltas = execMessagesRef.current.some(
+                      (m) => m.nodeId === payload.node_id && m.type === 'text_delta'
+                    );
+                    if (!hasDeltas) {
+                      dispatchMessage({
+                        type: 'text_delta',
+                        content: responseText,
+                        nodeId: payload.node_id,
+                        timestamp: timestamp + 1,
+                      });
+                    }
                   }
                 }
                 break;
               }
+
 
               case 'workflow_interrupted': {
                 const rawInterrupt = payload.interrupt as any;
                 const interruptData = rawInterrupt?.value ?? rawInterrupt;
                 onStatusChangeRef.current('idle');
                 onInterruptRef.current(interruptData);
-                onMessageRef.current({
+                dispatchMessage({
                   type: 'interrupt' as any,
                   content: JSON.stringify(interruptData),
                   timestamp,
@@ -124,7 +140,7 @@ export function useWorkflowChatExecution(params: {
               case 'workflow_done':
                 onStatusChangeRef.current('done');
                 onInterruptRef.current(null);
-                onMessageRef.current({
+                dispatchMessage({
                   type: 'info',
                   content: `🎉 Workflow execution completed successfully.`,
                   timestamp,
@@ -135,7 +151,7 @@ export function useWorkflowChatExecution(params: {
               case 'error':
                 onStatusChangeRef.current('error');
                 onInterruptRef.current(null);
-                onMessageRef.current({
+                dispatchMessage({
                   type: 'error',
                   content: `❌ Execution error: ${payload.error || payload.text || 'Unknown error'}`,
                   timestamp,
@@ -170,6 +186,8 @@ export function useWorkflowChatExecution(params: {
 
     onStatusChangeRef.current('running');
     onInterruptRef.current(null);
+    // 新轮次：清空 execMessagesRef，重新开始追踪
+    execMessagesRef.current = [];
 
     let userMsgContent = input;
     try {
