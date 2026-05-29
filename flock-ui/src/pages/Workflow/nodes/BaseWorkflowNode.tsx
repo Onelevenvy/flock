@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useMemo } from 'react';
 import { Handle, Position, type NodeProps } from 'reactflow';
 import { Box, Text, ActionIcon, Tooltip } from '@mantine/core';
 import { IconPlus, IconBug } from '@tabler/icons-react';
@@ -11,54 +11,7 @@ import { getNodeSummary } from './helpers';
 
 import { invoke } from '@tauri-apps/api/core';
 import { ModelIcon } from '../../../components/Common/Icons';
-
-let cachedModelToIconPromise: Promise<Record<string, string>> | null = null;
-function getModelToIconMapping(): Promise<Record<string, string>> {
-  if (cachedModelToIconPromise) return cachedModelToIconPromise;
-
-  cachedModelToIconPromise = (async () => {
-    try {
-      const provList = await invoke<any[]>('list_providers');
-      const mapping: Record<string, string> = {};
-
-      const provMap: Record<string, string> = {};
-      provList.forEach((p) => {
-        if (p.icon) {
-          if (p.id) provMap[p.id] = p.icon;
-          if (p.provider_type) {
-            provMap[p.provider_type] = p.icon;
-            provMap[p.provider_type.toLowerCase()] = p.icon;
-          }
-        }
-      });
-
-      // 完全动态地从后端拉取已启用服务商的模型列表，将其 model_name 直接映射到对应的 provider.icon (Base64)！
-      await Promise.all(
-        provList
-          .filter((p) => p.is_available)
-          .map(async (p) => {
-            try {
-              const ms = await invoke<any[]>('list_models', { providerId: p.id });
-              ms.forEach((m) => {
-                if (m.model_name && p.icon) {
-                  mapping[m.model_name] = p.icon;
-                  mapping[m.model_name.toLowerCase()] = p.icon;
-                }
-              });
-            } catch { /* ignore single error */ }
-          })
-      );
-
-      return { ...provMap, ...mapping };
-    } catch (e) {
-      console.error('Failed to build model-to-icon mapping from backend:', e);
-      cachedModelToIconPromise = null;
-      return {};
-    }
-  })();
-
-  return cachedModelToIconPromise;
-}
+import { useAvailableModels } from '../../../hooks/useAvailableModels';
 
 interface BaseWorkflowNodeProps extends NodeProps<BaseNodeData> {
   type: NodeType;
@@ -67,11 +20,28 @@ interface BaseWorkflowNodeProps extends NodeProps<BaseNodeData> {
 export function BaseWorkflowNode({ id, type, data, selected }: BaseWorkflowNodeProps) {
   const { t } = useTranslation();
   const setDebugTarget = useWorkflowStore((s) => s.setDebugTarget);
-  const [iconMapping, setIconMapping] = useState<Record<string, string>>({});
-  
-  useEffect(() => {
-    getModelToIconMapping().then(setIconMapping);
-  }, []);
+  const { providers, models } = useAvailableModels();
+
+  const iconMapping = useMemo(() => {
+    const mapping: Record<string, string> = {};
+    providers.forEach((p) => {
+      if (p.icon) {
+        if (p.id) mapping[p.id] = p.icon;
+        if (p.provider_type) {
+          mapping[p.provider_type] = p.icon;
+          mapping[p.provider_type.toLowerCase()] = p.icon;
+        }
+      }
+    });
+    models.forEach((m) => {
+      const p = providers.find((prov) => prov.id === m.provider_id);
+      if (p && p.icon) {
+        mapping[m.model_name] = p.icon;
+        mapping[m.model_name.toLowerCase()] = p.icon;
+      }
+    });
+    return mapping;
+  }, [providers, models]);
 
   const cfg = nodeConfig[type];
   if (!cfg) return null;

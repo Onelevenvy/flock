@@ -35,7 +35,7 @@ const getInitialSrc = (category: string, name: string): string => {
   if (normalized === 'follow') {
     return `data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="%23228be6" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3a6 6 0 0 0 9 9 9 9 0 0 1-9-9z"/><path d="M19 3a3 3 0 0 0 3 3 3 3 0 0 1-3-3z"/><path d="M14 14a3 3 0 0 0 3 3 3 3 0 0 1-3-3z"/></svg>`;
   }
-  return `/icons/${category}/${normalized}.svg`;
+  return '';
 };
 
 export const DynamicIcon: React.FC<DynamicIconProps> = ({
@@ -67,12 +67,8 @@ export const DynamicIcon: React.FC<DynamicIconProps> = ({
         ) {
           setImgSrc(normalizedFallback);
         } else {
-          setImgSrc(`/icons/providers/${normalizedFallback.toLowerCase()}.svg`);
+          setImgSrc('');
         }
-        setRetryCount(1);
-      } else if (category === 'tools') {
-        const normalizedName = name.trim().toLowerCase();
-        setImgSrc(`/icons/providers/${normalizedName}.svg`);
         setRetryCount(1);
       } else {
         setImgSrc('');

@@ -5,11 +5,13 @@ import { useTranslation } from 'react-i18next';
 import { IconCheck } from '@tabler/icons-react';
 import { reconnectCurrentAgent } from '../../../../lib/agentConnection';
 import { useWorkspacesQuery } from '../../../../hooks/useWorkspaces';
+import { useQueryClient } from '@tanstack/react-query';
 import type { ModelProvider, ModelItem, DefaultConfig, SummaryModelConfig } from '../types';
 import React from 'react';
 
 export function useModelSettings() {
   const { t } = useTranslation();
+  const queryClient = useQueryClient();
   const [providers, setProviders] = useState<ModelProvider[]>([]);
   const [modelsMap, setModelsMap] = useState<Record<string, ModelItem[]>>({});
   const [expanded, setExpanded] = useState<Record<string, boolean>>({});
@@ -45,12 +47,16 @@ export function useModelSettings() {
       }
       setModelsMap(models);
       setConnectedProviders(connected);
+
+      // Invalidate React Query cache when settings data refreshes
+      queryClient.invalidateQueries({ queryKey: ['model_providers'] });
+      queryClient.invalidateQueries({ queryKey: ['models'] });
     } catch (e) {
       console.error('Failed to load providers:', e);
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [queryClient]);
 
   useEffect(() => {
     loadData();
