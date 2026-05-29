@@ -8,7 +8,8 @@ interface UseExecutionPanelMessagesProps {
   status: 'idle' | 'running' | 'done' | 'error';
   isInterrupted: boolean;
   activeInterrupt: InterruptData | null;
-  handleResume: (choice: string, feedback?: string) => void;
+  /** choice: action key, feedback: user comment, actionLabel: human-readable label of the chosen action */
+  handleResume: (choice: string, feedback?: string, actionLabel?: string) => void;
   /** ReactFlow nodes，用于解析友好名称 */
   nodes: Node[];
 }
@@ -246,16 +247,18 @@ export function useExecutionPanelMessages({
     activeInterruptRef.current = activeInterrupt;
   }, [activeInterrupt]);
 
-  // 包装 handleResume：调用时立即记录选择的 action label
+  // 包装 handleResume：调用时立即记录选择的 action label，并将 label 一并传入下游
   const wrappedHandleResume = useMemo(() => {
     return (choice: string, feedback?: string) => {
       const actions = activeInterruptRef.current?.actions ?? [];
       const act = actions.find((a: HumanAction) => a.key === choice);
+      const label = act?.label ?? choice;
       resolvedChoiceRef.current = {
-        actionLabel: act?.label ?? choice,
+        actionLabel: label,
         feedback: feedback || undefined,
       };
-      handleResume(choice, feedback);
+      // 将 label 传递给 handleResume，最终传入 resumeWorkflow 以便 dispatch user 消息时附带
+      handleResume(choice, feedback, label);
     };
   }, [handleResume]);
 

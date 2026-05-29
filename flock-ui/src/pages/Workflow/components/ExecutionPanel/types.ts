@@ -58,7 +58,7 @@ export interface ExecutionPanelProps {
   onClose?: () => void;
   startWorkflow: (input: string) => void | Promise<void>;
   stopWorkflow: () => void | Promise<void>;
-  resumeWorkflow: (choiceValue: any) => void | Promise<void>;
+  resumeWorkflow: (choiceValue: any, actionLabel?: string, resolvedFeedback?: string) => void | Promise<void>;
   isEmbedded?: boolean;
   externalNodes?: any[];
   externalStartVariables?: any[];

@@ -462,7 +462,11 @@ export function useWorkflowRuntime({
   }, [workflowId, threadId, isDebug, store, dispatch]);
 
   // ── resumeWorkflow ──
-  const resumeWorkflow = useCallback(async (choiceValue: unknown) => {
+  const resumeWorkflow = useCallback(async (
+    choiceValue: unknown,
+    actionLabel?: string,
+    resolvedFeedback?: string,
+  ) => {
     if (!workflowId) return;
     const activeTid = isDebug
       ? (store.activeExecutionThreadId ?? `${workflowId}:debug`)
@@ -470,6 +474,19 @@ export function useWorkflowRuntime({
     if (!activeTid) return;
 
     store.setThreadStatus(activeTid, 'running');
+
+    // 将 resume 动作派出为一条 user 消息保入 store，并附带 resolvedActionLabel 平套字段
+    // 这样 save_workflow_messages 能完整保存 Human 节点展示所需的信息
+    const resumeUserMsg: any = {
+      type: 'user',
+      content: typeof choiceValue === 'object' && choiceValue !== null
+        ? JSON.stringify(choiceValue)
+        : String(choiceValue ?? ''),
+      timestamp: Date.now(),
+      resolvedActionLabel: actionLabel,
+      resolvedFeedback: resolvedFeedback,
+    };
+    dispatch(activeTid, resumeUserMsg);
 
     try {
       await invoke('run_workflow', {
