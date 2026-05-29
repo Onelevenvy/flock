@@ -64,6 +64,7 @@ export interface ExecutionPanelProps {
   externalStartVariables?: any[];
   initialQuery?: string;
   workflowName?: string;
+  activeInterrupt?: any | null;
   onClearExecution?: () => void;
 }
 

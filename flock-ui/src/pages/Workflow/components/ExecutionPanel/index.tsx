@@ -46,6 +46,7 @@ export function ExecutionPanel({
   externalStartVariables,
   initialQuery,
   workflowName,
+  activeInterrupt: externalActiveInterrupt,
   onClearExecution,
 }: ExecutionPanelProps) {
   const { t } = useTranslation();
@@ -73,7 +74,8 @@ export function ExecutionPanel({
     setFormInputs(initial);
   }, [startVariables]);
 
-  const activeInterrupt = useWorkflowStore((s) => s.activeInterrupt);
+  const storeActiveInterrupt = useWorkflowStore((s) => s.activeInterrupt);
+  const activeInterrupt = externalActiveInterrupt !== undefined ? externalActiveInterrupt : storeActiveInterrupt;
   const isInterrupted = activeInterrupt !== null;
 
   const statusColor =
@@ -173,7 +175,9 @@ export function ExecutionPanel({
         background: isEmbedded ? 'transparent' : 'var(--flock-bg-deepest)',
         width: isEmbedded ? '100%' : 380,
         height: '100%',
-        flexShrink: 0,
+        flex: isEmbedded ? 1 : undefined,
+        minHeight: isEmbedded ? 0 : undefined,
+        flexShrink: isEmbedded ? undefined : 0,
         display: 'flex',
         flexDirection: 'column',
         overflow: 'hidden',
