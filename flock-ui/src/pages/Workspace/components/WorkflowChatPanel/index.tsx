@@ -74,7 +74,8 @@ export function WorkflowChatPanel({
       currentAssistantMsgIdRef.current = null;
       setMessages((prev) => [...prev, newUserMsg]);
 
-    } else if (msg.type === 'info' || msg.type === 'text_delta' || msg.type === 'thinking') {
+    // info 类型是节点运行日志，工作空间对话模式下只显示纯文本输出，跳过
+    } else if (msg.type === 'text_delta' || msg.type === 'thinking') {
       let runId = currentAssistantMsgIdRef.current;
 
       setMessages((prev) => {
@@ -341,12 +342,10 @@ export function WorkflowChatPanel({
   );
 }
 
-// ── 工具函数：根据消息类型更新 chunks ──
+// ── 工具函数：根据消息类型更新 chunks（仅处理 text_delta 和 thinking） ──
 function buildChunks(existingChunks: any[], msg: any): any[] {
   const chunks = [...existingChunks];
-  if (msg.type === 'info') {
-    chunks.push({ kind: 'info', message: msg.content });
-  } else if (msg.type === 'text_delta') {
+  if (msg.type === 'text_delta') {
     const last = chunks[chunks.length - 1];
     if (last && last.kind === 'text') {
       chunks[chunks.length - 1] = { kind: 'text', text: last.text + msg.content };
