@@ -1,6 +1,8 @@
+import { useMemo } from 'react';
 import { Box } from '@mantine/core';
 import { useAgentStore } from '../../store/agentStore';
 import { useUiStore } from '../../store/uiStore';
+import { useWorkspaceStore } from '../../store/workspaceStore';
 import { Header } from '../../components/Layout/Header';
 import { ChatPanel } from '../../components/chat/ChatPanel';
 import { InputBar } from '../../components/chat/InputBar';
@@ -8,15 +10,72 @@ import { ToolApprovalInline } from '../../components/chat/ToolApproval/ToolAppro
 import { HumanTakeoverBanner } from '../../components/chat/ToolApproval/HumanTakeoverBanner';
 import { FileTreePanel } from './components/FileTreePanel';
 import { EnvironmentPanel } from './components/EnvironmentPanel';
+import { WorkflowChatPanel } from './components/WorkflowChatPanel';
+import { useWorkflowQuery } from '../../hooks/useWorkflow';
 
-export function WorkspaceView() {
-  const { isPreviewOpen } = useUiStore();
+/** 从 conversationAssistants 里解析出工作流 ID（格式：workflow:<id>） */
+function parseWorkflowConvId(assistantId: string | undefined): string | null {
+  if (!assistantId?.startsWith('workflow:')) return null;
+  return assistantId.slice('workflow:'.length) || null;
+}
+
+function AssistantChatContent() {
   const messages = useAgentStore((s) => s.messages);
   const pendingApprovals = useAgentStore((s) => s.pendingApprovals);
   const humanTakeover = useAgentStore((s) => s.humanTakeover);
-
-  // 取队首待审批（每次只处理一个）
   const firstPending = pendingApprovals[0] ?? null;
+
+  return (
+    <Box style={{ display: 'flex', flexDirection: 'column', flex: 1, overflow: 'hidden' }}>
+      <ChatPanel messages={messages} />
+      <ToolApprovalInline approval={firstPending} />
+      {humanTakeover && <HumanTakeoverBanner takeover={humanTakeover} />}
+      <InputBar />
+    </Box>
+  );
+}
+
+function WorkflowChatContent({ workflowId, threadId }: { workflowId: string; threadId: string }) {
+  const { data: workflow } = useWorkflowQuery(workflowId);
+
+  // 解析 start 节点的 variables
+  const startVariables = useMemo(() => {
+    if (!workflow?.config?.nodes) return [{ type: 'string', name: 'query', label: 'Query', required: true }];
+    const startNode = workflow.config.nodes.find((n: any) => n.type === 'start');
+    return (startNode?.data?.variables as any[]) ?? [
+      { type: 'string', name: 'query', label: 'Query', required: true },
+    ];
+  }, [workflow]);
+
+  const nodes = workflow?.config?.nodes ?? [];
+
+  return (
+    <WorkflowChatPanel
+      workflowId={workflowId}
+      workflowName={workflow?.name ?? '工作流'}
+      threadId={threadId}
+      startVariables={startVariables}
+      nodes={nodes}
+    />
+  );
+}
+
+export function WorkspaceView() {
+  const { isPreviewOpen } = useUiStore();
+  const { activeConversationId, conversationAssistants } = useWorkspaceStore();
+
+  // 判断当前对话是否为工作流对话
+  const assistantId = activeConversationId ? conversationAssistants[activeConversationId] : undefined;
+  const workflowId = parseWorkflowConvId(assistantId);
+  const isWorkflowConv = !!workflowId;
+  const threadId = activeConversationId ?? '';
+
+  // 中间主内容区（助手 or 工作流）
+  const mainContent = isWorkflowConv ? (
+    <WorkflowChatContent workflowId={workflowId!} threadId={threadId} />
+  ) : (
+    <AssistantChatContent />
+  );
 
   return (
     <>
@@ -58,16 +117,11 @@ export function WorkspaceView() {
             }}
           >
             <Header />
-            <Box style={{ display: 'flex', flexDirection: 'column', flex: 1, overflow: 'hidden' }}>
-              <ChatPanel messages={messages} />
-              <ToolApprovalInline approval={firstPending} />
-              {humanTakeover && <HumanTakeoverBanner takeover={humanTakeover} />}
-              <InputBar />
-            </Box>
+            {mainContent}
           </Box>
         </>
       ) : (
-        /* 无预览时：Chat 宽版面板占满剩余空间 */
+        /* 无预览时：主面板占满剩余空间 */
         <Box
           style={{
             flex: 1,
@@ -82,11 +136,7 @@ export function WorkspaceView() {
           }}
         >
           <Header />
-          <Box style={{ display: 'flex', flexDirection: 'column', flex: 1, overflow: 'hidden' }}>
-            <ChatPanel messages={messages} />
-            <ToolApprovalInline approval={firstPending} />
-            <InputBar />
-          </Box>
+          {mainContent}
         </Box>
       )}
     </>

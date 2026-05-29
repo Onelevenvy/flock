@@ -54,9 +54,16 @@ export interface WorkflowStep {
 
 export interface ExecutionPanelProps {
   status: 'idle' | 'running' | 'done' | 'error';
-  messages: ExecutionMessage[];
-  onClose: () => void;
-  startWorkflow: (input: string) => Promise<void>;
-  stopWorkflow: () => Promise<void>;
-  resumeWorkflow: (choiceValue: unknown) => Promise<void>;
+  messages: any[];
+  onClose?: () => void;
+  startWorkflow: (input: string) => void | Promise<void>;
+  stopWorkflow: () => void | Promise<void>;
+  resumeWorkflow: (choiceValue: any) => void | Promise<void>;
+  isEmbedded?: boolean;
+  externalNodes?: any[];
+  externalStartVariables?: any[];
+  initialQuery?: string;
+  workflowName?: string;
+  onClearExecution?: () => void;
 }
+

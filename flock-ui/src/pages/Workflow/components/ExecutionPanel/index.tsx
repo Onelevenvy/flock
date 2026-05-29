@@ -41,6 +41,12 @@ export function ExecutionPanel({
   startWorkflow,
   stopWorkflow,
   resumeWorkflow,
+  isEmbedded = false,
+  externalNodes,
+  externalStartVariables,
+  initialQuery,
+  workflowName,
+  onClearExecution,
 }: ExecutionPanelProps) {
   const { t } = useTranslation();
   const theme = useUiStore((s) => s.theme);
@@ -48,10 +54,12 @@ export function ExecutionPanel({
   const { clearExecution } = useWorkflowStore();
   const [inputVal, setInputVal] = useState('');
   const bottomRef = useRef<HTMLDivElement>(null);
-  const nodes = useWorkflowStore((s) => s.nodes);
 
-  const startNode = useWorkflowStore((s) => s.nodes.find((n) => n.type === 'start'));
-  const startVariables = (startNode?.data?.variables as any[]) ?? [
+  const storeNodes = useWorkflowStore((s) => s.nodes);
+  const nodes = externalNodes ?? storeNodes;
+
+  const startNode = nodes.find((n: any) => n.type === 'start');
+  const startVariables = externalStartVariables ?? (startNode?.data?.variables as any[]) ?? [
     { type: 'string', name: 'query', label: 'Query', required: true }
   ];
 
@@ -76,6 +84,31 @@ export function ExecutionPanel({
     : 'gray';
 
   const customVars = startVariables.filter((v: any) => v.name !== 'query');
+
+  // 首页带来的初始 query：在组件挂载后立即执行（优先用 pendingStartQuery，再用 initialQuery prop）
+  const pendingStartQuery = useWorkflowStore((s) => s.pendingStartQuery);
+  const initialQueryFiredRef = useRef(false);
+
+  useEffect(() => {
+    const q = pendingStartQuery ?? initialQuery;
+    if (q && !initialQueryFiredRef.current && status === 'idle' && messages.length === 0) {
+      initialQueryFiredRef.current = true;
+      useWorkflowStore.getState().setPendingStartQuery(null);
+
+      const hasCustomVars = customVars.length > 0;
+      if (hasCustomVars) {
+        // 如果有自定义预置参数，不自动执行，而是把初始 query 填入 formInputs 中的 query 以及 inputVal
+        setInputVal(q);
+        setFormInputs((prev) => ({ ...prev, query: q }));
+      } else {
+        // 如果没有自定义预置参数，可以直接执行
+        const payload: Record<string, any> = { ...formInputs };
+        payload['query'] = q;
+        startWorkflow(JSON.stringify(payload));
+        setInputVal('');
+      }
+    }
+  }, [pendingStartQuery, initialQuery, status, messages.length, customVars.length]);
 
   const handleResume = useCallback((choice: string, feedback?: string) => {
     const payload: Record<string, unknown> = { choice };
@@ -124,18 +157,27 @@ export function ExecutionPanel({
     setWorkflowExpanded(false);
   };
 
+  const handleClear = () => {
+    initialQueryFiredRef.current = false;
+    if (onClearExecution) {
+      onClearExecution();
+    } else {
+      clearExecution();
+    }
+  };
+
   return (
     <Box
       style={{
-        borderLeft: '1px solid var(--flock-border-subtle)',
-        background: 'var(--flock-bg-deepest)',
-        width: 380,
+        borderLeft: isEmbedded ? 'none' : '1px solid var(--flock-border-subtle)',
+        background: isEmbedded ? 'transparent' : 'var(--flock-bg-deepest)',
+        width: isEmbedded ? '100%' : 380,
         height: '100%',
         flexShrink: 0,
         display: 'flex',
         flexDirection: 'column',
         overflow: 'hidden',
-        boxShadow: '-2px 0 12px rgba(0, 0, 0, 0.08)',
+        boxShadow: isEmbedded ? 'none' : '-2px 0 12px rgba(0, 0, 0, 0.08)',
       }}
     >
       {/* Panel header */}
@@ -150,10 +192,18 @@ export function ExecutionPanel({
         }}
       >
         <Group gap="xs">
-          <IconTerminal2 size={14} style={{ color: 'var(--flock-text-muted)' }} />
-          <Text size="xs" fw={600} style={{ color: 'var(--flock-text-dim)', letterSpacing: '0.03em' }}>
-            {t('workflow.execution.title', 'Execution Output')}
-          </Text>
+          {isEmbedded ? (
+            <Text size="xs" fw={600} style={{ color: 'var(--flock-text-dim)' }}>
+              ⚡ {workflowName || t('workflow.execution.title', 'Execution Output')}
+            </Text>
+          ) : (
+            <>
+              <IconTerminal2 size={14} style={{ color: 'var(--flock-text-muted)' }} />
+              <Text size="xs" fw={600} style={{ color: 'var(--flock-text-dim)', letterSpacing: '0.03em' }}>
+                {t('workflow.execution.title', 'Execution Output')}
+              </Text>
+            </>
+          )}
           <Badge size="xs" color={statusColor} variant="light" style={{ fontSize: 9 }}>
             {isInterrupted
               ? t('workflow.execution.waiting', 'WAITING')
@@ -168,7 +218,7 @@ export function ExecutionPanel({
               variant="subtle"
               color="blue"
               leftSection={<IconPlus size={12} />}
-              onClick={clearExecution}
+              onClick={handleClear}
               style={{ height: 24, fontSize: 10, padding: '0 8px' }}
             >
               {t('workflow.execution.newChat', 'New Chat')}
@@ -186,11 +236,14 @@ export function ExecutionPanel({
               {t('common.stop', 'Stop')}
             </Button>
           )}
-          <ActionIcon variant="subtle" size="xs" color="gray" onClick={onClose}>
-            <IconX size={14} />
-          </ActionIcon>
+          {!isEmbedded && onClose && (
+            <ActionIcon variant="subtle" size="xs" color="gray" onClick={onClose}>
+              <IconX size={14} />
+            </ActionIcon>
+          )}
         </Group>
       </Group>
+
 
       {/* Main content */}
       <Box

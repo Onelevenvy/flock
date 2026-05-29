@@ -47,6 +47,7 @@ export function HomeView() {
   const { mutateAsync: createConversation } = useCreateConversationMutation();
   const { data: assistants = [] } = useAssistantsQuery();
   const { data: workflows = [] } = useWorkflowsQuery();
+  // workflowStore 通过 getState() 直接调用，避免解构未使用变量
 
   const MODE_OPTIONS = [
     { value: 'default', label: t('home.approval'), icon: IconShieldCheck, color: 'blue' },
@@ -159,25 +160,20 @@ export function HomeView() {
       try {
         setStatus('connecting');
         if (!convId || isNewOrEmpty) {
-          const conv = await createConversation({ workspaceId: activeWorkspaceId!, title: '' });
+          const conv = await createConversation({ workspaceId: activeWorkspaceId!, title: selectedWorkflow.name });
           convId = conv.id;
           setActiveConversation(convId);
         }
-        clearMessages();
 
-        // Save workflow as the active assistant for this conversation
+        // 标记该对话为工作流对话
         setConversationAssistant(convId, `workflow:${selectedWorkflow.id}`);
-        setStatus('thinking');
 
-        const userUiId = `user-${uuidv4()}`;
+        // 把初始 query 存入 workflowStore，供 WorkflowChatPanel 挂载时读取并执行
+        useWorkflowStore.getState().setPendingStartQuery(content);
+        useWorkflowStore.getState().setActiveExecutionThreadId(convId);
+
         setValue('');
-        addUserMessage(userUiId, content);
-
-        await invoke('run_workflow', {
-          workflowId: selectedWorkflow.id,
-          input: content,
-          threadId: convId,
-        });
+        setStatus('ready');
       } catch (e: any) {
         setStatus('error');
         setError(e.message || String(e));
