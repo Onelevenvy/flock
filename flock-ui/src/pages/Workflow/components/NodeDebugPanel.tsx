@@ -3,7 +3,7 @@ import { Box, Text, Group, ActionIcon, Textarea, TextInput, Button, Stack, Scrol
 import { IconX, IconPlayerPlay, IconSettings, IconHistory } from '@tabler/icons-react';
 import { useTranslation } from 'react-i18next';
 import { useWorkflowStore } from '../../../store/workflowStore';
-import { useWorkflowExecution } from '../../../hooks/useWorkflowExecution';
+import { useWorkflowRuntime } from '../../../hooks/useWorkflowRuntime';
 
 interface NodeDebugPanelProps {
   nodeId: string;
@@ -17,8 +17,15 @@ export function NodeDebugPanel({ nodeId, onClose, onRunStart }: NodeDebugPanelPr
   const [mockInputs, setMockInputs] = useState<Record<string, string>>({});
   const [activeTab, setActiveTab] = useState<string | null>('setup');
 
-  const { debugNode } = useWorkflowExecution();
-  const executionStatus = useWorkflowStore((s) => s.executionStatus);
+  const activeWorkflowId = useWorkflowStore((s) => s.activeWorkflowId);
+  const activeExecutionThreadId = useWorkflowStore((s) => s.activeExecutionThreadId);
+
+  const { debugNode, status: executionStatus } = useWorkflowRuntime({
+    workflowId: activeWorkflowId,
+    threadId: activeExecutionThreadId,
+    isDebug: true,
+  });
+
   const nodes = useWorkflowStore((s) => s.nodes);
   const debugResults = useWorkflowStore((s) => s.debugResults);
 
@@ -35,7 +42,7 @@ export function NodeDebugPanel({ nodeId, onClose, onRunStart }: NodeDebugPanelPr
     if (!node?.data) return;
     const vars: string[] = [];
     const regex = /\$\{([^}]+)\}/g;
-    
+
     const scan = (value: any) => {
       if (typeof value === 'string') {
         let match;
@@ -49,7 +56,7 @@ export function NodeDebugPanel({ nodeId, onClose, onRunStart }: NodeDebugPanelPr
         Object.values(value).forEach(scan);
       }
     };
-    
+
     scan(node.data);
     setDetectedVars(Array.from(new Set(vars)));
   }, [node?.data]);
@@ -60,7 +67,7 @@ export function NodeDebugPanel({ nodeId, onClose, onRunStart }: NodeDebugPanelPr
       node_outputs: {} as Record<string, any>,
       env_vars: {} as Record<string, any>,
     };
-    
+
     for (const [path, val] of Object.entries(mockInputs)) {
       if (path.startsWith('env.')) {
         const varName = path.slice(4);
@@ -79,13 +86,13 @@ export function NodeDebugPanel({ nodeId, onClose, onRunStart }: NodeDebugPanelPr
         }
       }
     }
-    
+
     if (onRunStart) {
       onRunStart();
     }
     // Switch to Last Run tab immediately so user sees progress
     setActiveTab('last-run');
-    await debugNode(nodeId, JSON.stringify(payload));
+    await debugNode?.(nodeId, JSON.stringify(payload));
   };
 
   return (
@@ -209,31 +216,30 @@ export function NodeDebugPanel({ nodeId, onClose, onRunStart }: NodeDebugPanelPr
                   style={{
                     padding: '8px 12px',
                     borderRadius: 8,
-                    background: debugResult.status === 'done' 
-                      ? 'var(--flock-accent-soft, rgba(21, 90, 239, 0.08))' 
-                      : debugResult.status === 'running' 
-                      ? 'rgba(34, 139, 230, 0.08)' 
-                      : 'rgba(250, 82, 82, 0.08)',
-                    border: `1px solid ${
-                      debugResult.status === 'done' 
-                        ? 'var(--flock-accent)' 
-                        : debugResult.status === 'running' 
-                        ? '#228be6' 
-                        : '#fa5252'
-                    }`,
+                    background: debugResult.status === 'done'
+                      ? 'var(--flock-accent-soft, rgba(21, 90, 239, 0.08))'
+                      : debugResult.status === 'running'
+                        ? 'rgba(34, 139, 230, 0.08)'
+                        : 'rgba(250, 82, 82, 0.08)',
+                    border: `1px solid ${debugResult.status === 'done'
+                        ? 'var(--flock-accent)'
+                        : debugResult.status === 'running'
+                          ? '#228be6'
+                          : '#fa5252'
+                      }`,
                     display: 'flex',
                     justifyContent: 'space-between',
                     alignItems: 'center',
                   }}
                 >
                   <Group gap="xs">
-                    <span style={{ 
-                      width: 6, 
-                      height: 6, 
-                      borderRadius: '50%', 
-                      background: debugResult.status === 'done' ? '#40c057' : debugResult.status === 'running' ? '#228be6' : '#fa5252' 
+                    <span style={{
+                      width: 6,
+                      height: 6,
+                      borderRadius: '50%',
+                      background: debugResult.status === 'done' ? '#40c057' : debugResult.status === 'running' ? '#228be6' : '#fa5252'
                     }} />
-                    <Text size="xs" fw={700} style={{ 
+                    <Text size="xs" fw={700} style={{
                       color: debugResult.status === 'done' ? 'var(--flock-accent)' : debugResult.status === 'running' ? '#228be6' : '#fa5252',
                       fontSize: 10,
                     }}>
@@ -286,11 +292,11 @@ export function NodeDebugPanel({ nodeId, onClose, onRunStart }: NodeDebugPanelPr
                     }}
                   >
                     <pre style={{ margin: 0, fontSize: 10, fontFamily: 'monospace', whiteSpace: 'pre-wrap', wordBreak: 'break-all', color: 'var(--flock-text-secondary)' }}>
-                      {debugResult.status === 'running' 
-                        ? 'Running...' 
-                        : debugResult.error 
-                        ? debugResult.error 
-                        : JSON.stringify(debugResult.output, null, 2)}
+                      {debugResult.status === 'running'
+                        ? 'Running...'
+                        : debugResult.error
+                          ? debugResult.error
+                          : JSON.stringify(debugResult.output, null, 2)}
                     </pre>
                   </Box>
                 </Box>

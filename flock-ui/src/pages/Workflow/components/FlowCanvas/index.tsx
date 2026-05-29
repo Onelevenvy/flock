@@ -27,7 +27,7 @@ import { PropertiesPanel } from '../PropertiesPanel';
 import { ExecutionPanel } from '../ExecutionPanel';
 import { EnvironmentVarsPanel } from '../EnvironmentVarsPanel';
 import { NodeDebugPanel } from '../NodeDebugPanel';
-import { useWorkflowExecution } from '../../../../hooks/useWorkflowExecution';
+import { useWorkflowRuntime } from '../../../../hooks/useWorkflowRuntime';
 
 import { useFlowLayout } from './hooks/useFlowLayout';
 import { useNodeInsertion } from './hooks/useNodeInsertion';
@@ -58,16 +58,26 @@ export function FlowCanvas({ workflowId, workflowData, onBack }: FlowCanvasProps
     setDirty,
     setSelectedNodeId,
     updateNodeData,
-    executionStatus,
-    executionMessages,
     environmentVariables,
     debugTarget,
     setDebugTarget,
     pendingStartQuery,
     setPendingStartQuery,
+    activeExecutionThreadId,
   } = useWorkflowStore();
 
-  const { startWorkflow, resumeWorkflow, stopWorkflow } = useWorkflowExecution();
+  const {
+    messages: executionMessages,
+    status: executionStatus,
+    startWorkflow,
+    resumeWorkflow,
+    stopWorkflow,
+    clearExecution,
+  } = useWorkflowRuntime({
+    workflowId,
+    threadId: activeExecutionThreadId,
+    isDebug: true,
+  });
 
   const [showExecution, setShowExecution] = useState(false);
   const [showMinimap, setShowMinimap] = useState(false);
@@ -376,6 +386,7 @@ export function FlowCanvas({ workflowId, workflowData, onBack }: FlowCanvasProps
             }}
             stopWorkflow={stopWorkflow}
             resumeWorkflow={resumeWorkflow}
+            onClearExecution={clearExecution}
           />
         )}
       </Box>
