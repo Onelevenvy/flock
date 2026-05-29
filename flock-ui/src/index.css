@@ -332,6 +332,49 @@ body {
   animation: flock-pulse 1.8s infinite alternate ease-in-out !important;
 }
 
+/* ---- Spin animation for loading icons ---- */
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+/* ---- Workflow step expanded markdown ---- */
+.workflow-step-markdown {
+  font-size: 12px;
+  color: var(--flock-text-secondary);
+  line-height: 1.65;
+  word-break: break-word;
+}
+.workflow-step-markdown p { margin: 0.25em 0; }
+.workflow-step-markdown p:first-child { margin-top: 0; }
+.workflow-step-markdown p:last-child { margin-bottom: 0; }
+.workflow-step-markdown code {
+  font-family: 'JetBrains Mono', Consolas, monospace;
+  font-size: 11px;
+  background: var(--flock-bg-deepest);
+  border: 1px solid var(--flock-border-dim);
+  border-radius: 3px;
+  padding: 1px 4px;
+  color: var(--flock-accent);
+}
+.workflow-step-markdown pre {
+  background: var(--flock-bg-deepest);
+  border: 1px solid var(--flock-border-subtle);
+  border-radius: 6px;
+  padding: 8px 10px;
+  overflow-x: auto;
+  margin: 4px 0;
+}
+.workflow-step-markdown pre code {
+  background: transparent; border: none; padding: 0;
+  color: var(--flock-text-primary); font-size: 11px;
+}
+.workflow-step-markdown ul, .workflow-step-markdown ol {
+  padding-left: 1.2em; margin: 0.25em 0;
+}
+.workflow-step-markdown li { margin: 0.1em 0; }
+.workflow-step-markdown strong { color: var(--flock-text-bright); font-weight: 600; }
+
 @keyframes flock-pulse {
   0% {
     box-shadow: 0 0 8px rgba(34, 139, 230, 0.4);

@@ -135,6 +135,23 @@ export function getAvailableVariables(
           varType: 'number',
         },
       );
+    } else if (nodeType === 'human') {
+      vars.push(
+        {
+          label: `${nodeLabel} (choice)`,
+          value: `\${${node.id}.choice}`,
+          nodeId: node.id,
+          nodeName: nodeLabel,
+          varType: 'string',
+        },
+        {
+          label: `${nodeLabel} (feedback)`,
+          value: `\${${node.id}.feedback}`,
+          nodeId: node.id,
+          nodeName: nodeLabel,
+          varType: 'string',
+        }
+      );
     } else {
       vars.push({
         label: `${nodeLabel} (response)`,

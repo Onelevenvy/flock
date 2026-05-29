@@ -16,6 +16,8 @@
     "input": "测试输入",
     "inputPlaceholder": "输入此节点的测试数据...",
     "run": "运行节点",
+    "steps": "步骤",
+    "generating": "生成中...",
     "hint": "输出将显示在执行面板中。点击工具栏的播放按钮打开。"
   },
   "insertNode": "在此处插入节点",
@@ -99,7 +101,23 @@
     },
     "human": {
       "title": "审查提示",
-      "titlePlaceholder": "请审查以下内容..."
+      "titlePlaceholder": "请审查以下内容...",
+      "submissionMethod": "提交方式",
+      "formContent": "表单内容",
+      "formDescription": "请为用户填写说明或表单内容",
+      "formPlaceholder": "请审查已起草的内容",
+      "feedbackSettings": "反馈设置",
+      "enableFeedback": "允许用户补充信息",
+      "enableFeedbackDesc": "用户在选择操作时可选择性附加文字说明",
+      "userActions": "用户操作",
+      "approve": "批准",
+      "reject": "拒绝",
+      "addAction": "添加操作",
+      "timeoutSettings": "超时设置",
+      "minutes": "分钟",
+      "hours": "小时",
+      "days": "天",
+      "timeoutAction": "超时"
     },
     "plugin": {
       "args": "工具参数（JSON）"
@@ -134,13 +152,27 @@
     "running": "运行中",
     "done": "完成",
     "error": "错误",
+    "waiting": "等待确认",
     "noOutput": "尚无输出，点击运行按钮开始执行",
     "newChat": "新建会话",
     "humanReview": "需要人工确认",
     "approve": "批准",
     "deny": "拒绝",
     "inputPlaceholder": "输入初始查询...",
-    "send": "发送"
+    "send": "发送",
+    "feedbackPlaceholder": "添加可选备注...",
+    "feedbackOptional": "可选填写说明",
+    "confirmAction": "确认",
+    "waitingHint": "请在上方作出选择继续执行...",
+    "resolved": "已处理",
+    "triggered": "已触发",
+    "triggeredAction": "已触发操作",
+    "workflowGroup": "工作流",
+    "thinking": "思考过程",
+    "missingParams": "缺少必填参数: {{names}}",
+    "run": "发送",
+    "steps": "步",
+    "generating": "生成中..."
   },
   "nodes": {
     "start": { "label": "开始" },
