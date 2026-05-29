@@ -27,13 +27,13 @@ flock-tools     = { path = "crates/flock-tools" }
 flock-skills    = { path = "crates/flock-skills" }
 flock-agent     = { path = "crates/flock-agent" }
 
-# LangGraph (local path for development)
-langgraph                    = { path = "../langgraph-rust/crates/langgraph" }
-langgraph-derive             = { path = "../langgraph-rust/crates/langgraph-derive" }
-langgraph-checkpoint         = { path = "../langgraph-rust/crates/langgraph-checkpoint" }
-langgraph-checkpoint-sqlite  = { path = "../langgraph-rust/crates/langgraph-checkpoint-sqlite" }
-langgraph-prebuilt           = { path = "../langgraph-rust/crates/langgraph-prebuilt" }
-langgraph-providers          = { path = "../langgraph-rust/crates/langgraph-providers", features = ["openai", "anthropic"] }
+# LangGraph (github path to Rust reimplementation)
+langgraph                    = { git = "https://github.com/Onelevenvy/langgraph-rust" }
+langgraph-derive             = { git = "https://github.com/Onelevenvy/langgraph-rust" }
+langgraph-checkpoint         = { git = "https://github.com/Onelevenvy/langgraph-rust" }
+langgraph-checkpoint-sqlite  = { git = "https://github.com/Onelevenvy/langgraph-rust" }
+langgraph-prebuilt           = { git = "https://github.com/Onelevenvy/langgraph-rust" }
+langgraph-providers          = { git = "https://github.com/Onelevenvy/langgraph-rust", features = ["openai", "anthropic"] }
 
 # Async runtime
 tokio   = { version = "1", features = ["full"] }
