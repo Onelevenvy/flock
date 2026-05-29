@@ -158,7 +158,11 @@
     "deny": "Deny",
     "inputPlaceholder": "Enter initial query...",
     "send": "Send",
-    "feedbackPlaceholder": "Add optional comment (Enter to skip)..."
+    "feedbackPlaceholder": "Add optional comment...",
+    "feedbackOptional": "Optional comment",
+    "confirmAction": "Confirm",
+    "waitingHint": "Select an option above to continue...",
+    "resolved": "Resolved"
   },
   "nodes": {
     "start": { "label": "Start" },

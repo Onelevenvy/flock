@@ -4,7 +4,7 @@ import { useWorkflowStore } from '../store/workflowStore';
 import { invoke } from '@tauri-apps/api/core';
 
 // 定义 Tauri 传过来的事件接口
-interface WorkflowTauriEvent {
+export interface WorkflowTauriEvent {
   type:
     | 'workflow_start'
     | 'workflow_progress'
@@ -25,7 +25,7 @@ interface WorkflowTauriEvent {
   text?: string;
   output?: unknown;
   error?: string;
-  interrupt?: unknown;
+  interrupt?: { value?: unknown; [key: string]: unknown };
 }
 
 export function useWorkflowExecution() {
@@ -168,15 +168,20 @@ export function useWorkflowExecution() {
                 break;
               }
 
-              case 'workflow_interrupted':
-                store.setExecutionStatus('idle'); // 暂停等待 HITL 输入
-                store.setActiveInterrupt(payload.interrupt);
+              case 'workflow_interrupted': {
+                // langgraph Interrupt 结构是 { value: {...} }，解包取内部真正的 interrupt 数据
+                const rawInterrupt = payload.interrupt as any;
+                const interruptData = rawInterrupt?.value ?? rawInterrupt;
+                store.setExecutionStatus('idle');
+                store.setActiveInterrupt(interruptData);
+                // 在消息流中插入一条 interrupt 类型的消息，供 ExecutionPanel 在消息气泡处渲染按钮
                 store.appendExecutionMessage({
-                  type: 'info',
-                  content: `⏳ Interrupt hit! Waiting for user input... Detail: ${JSON.stringify(payload.interrupt)}`,
+                  type: 'interrupt' as any,
+                  content: JSON.stringify(interruptData),
                   timestamp,
                 });
                 break;
+              }
 
               case 'workflow_done':
                 store.setExecutionStatus('done');

@@ -158,7 +158,11 @@
     "deny": "拒绝",
     "inputPlaceholder": "输入初始查询...",
     "send": "发送",
-    "feedbackPlaceholder": "添加可选备注（按 Enter 跳过）..."
+    "feedbackPlaceholder": "添加可选备注...",
+    "feedbackOptional": "可选填写说明",
+    "confirmAction": "确认",
+    "waitingHint": "请在上方作出选择继续执行...",
+    "resolved": "已处理"
   },
   "nodes": {
     "start": { "label": "开始" },

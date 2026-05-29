@@ -1,7 +1,13 @@
-import { Group, Stack, Text, TextInput, ActionIcon, Button, Divider, Switch, NumberInput, Select } from '@mantine/core';
-import { IconTrash, IconPlus } from '@tabler/icons-react';
+import { Group, Stack, Text, TextInput, ActionIcon, Button, Divider, Switch, NumberInput, Select, Tooltip } from '@mantine/core';
+import { IconTrash, IconPlus, IconMessage } from '@tabler/icons-react';
 import { useTranslation } from 'react-i18next';
 import { VariableTextarea } from '../VariableInput';
+
+export interface HumanAction {
+  key: string;
+  label: string;
+  enable_feedback?: boolean;
+}
 
 export interface HumanFieldsProps {
   node: any;
@@ -14,25 +20,28 @@ export function HumanFields({ node, onDataChange }: HumanFieldsProps) {
   // Submission types (default to true for Webapp)
   const isWebapp = node.data.webapp_enabled !== false;
 
-  // Actions list, defaults to action_1: Approve, action_2: Reject
-  const actions = (node.data.user_actions as { key: string; label: string }[]) ?? [
-    { key: 'action_1', label: t('workflow.properties.human.approve', 'Approve') },
-    { key: 'action_2', label: t('workflow.properties.human.reject', 'Reject') },
+  // Actions list with per-action enable_feedback
+  const actions = (node.data.user_actions as HumanAction[]) ?? [
+    { key: 'action_1', label: t('workflow.properties.human.approve', 'Approve'), enable_feedback: false },
+    { key: 'action_2', label: t('workflow.properties.human.reject', 'Reject'), enable_feedback: true },
   ];
 
   // Timeout settings
   const timeoutNum = node.data.timeout_num ?? 3;
   const timeoutUnit = node.data.timeout_unit ?? 'hours';
 
-  const handleActionChange = (index: number, label: string) => {
+  const handleActionChange = (index: number, patch: Partial<HumanAction>) => {
     const next = [...actions];
-    next[index] = { ...next[index], label };
+    next[index] = { ...next[index], ...patch };
     onDataChange(node.id, 'user_actions', next);
   };
 
   const handleAddAction = () => {
     const nextKey = `action_${actions.length + 1}`;
-    onDataChange(node.id, 'user_actions', [...actions, { key: nextKey, label: '' }]);
+    onDataChange(node.id, 'user_actions', [
+      ...actions,
+      { key: nextKey, label: '', enable_feedback: false },
+    ]);
   };
 
   const handleRemoveAction = (index: number) => {
@@ -65,48 +74,51 @@ export function HumanFields({ node, onDataChange }: HumanFieldsProps) {
         currentNodeId={node.id}
         onChange={(val) => {
           onDataChange(node.id, 'form_content', val);
-          onDataChange(node.id, 'title', val); // Keep title synchronized for backward compatibility
+          onDataChange(node.id, 'title', val);
         }}
         minRows={4}
         size="xs"
       />
 
-      {/* Enable Feedback Toggle */}
-      <Divider label={t('workflow.properties.human.feedbackSettings', 'Feedback Settings')} labelPosition="center" />
-      <Group justify="space-between" align="flex-start">
-        <Stack gap={2} style={{ flex: 1 }}>
-          <Text size="xs" fw={500}>{t('workflow.properties.human.enableFeedback', 'Allow User Feedback')}</Text>
-          <Text size="xs" c="dimmed">{t('workflow.properties.human.enableFeedbackDesc', 'User can optionally add a text comment when selecting an action')}</Text>
-        </Stack>
-        <Switch
-          checked={node.data.enable_feedback === true}
-          onChange={(e) => onDataChange(node.id, 'enable_feedback', e.currentTarget.checked)}
-          size="xs"
-        />
-      </Group>
-
-      {/* User Actions Buttons */}
+      {/* User Actions Buttons — each with its own enable_feedback toggle */}
       <Divider label={t('workflow.properties.human.userActions', 'User Actions')} labelPosition="center" />
-      <Stack gap={4}>
+      <Stack gap={6}>
         {actions.map((act, i) => (
-          <Group key={act.key} gap={4}>
-            <TextInput
-              placeholder={act.key}
-              value={act.label}
-              onChange={(e) => handleActionChange(i, e.target.value)}
-              size="xs"
-              style={{ flex: 1 }}
-            />
-            <ActionIcon
-              size="xs"
-              variant="subtle"
-              color="red"
-              onClick={() => handleRemoveAction(i)}
-              disabled={actions.length <= 1}
-            >
-              <IconTrash size={12} />
-            </ActionIcon>
-          </Group>
+          <Stack key={act.key} gap={4} style={{ background: 'var(--flock-bg-raised)', borderRadius: 8, padding: '6px 8px', border: '1px solid var(--flock-border-subtle)' }}>
+            <Group gap={4}>
+              <TextInput
+                placeholder={act.key}
+                value={act.label}
+                onChange={(e) => handleActionChange(i, { label: e.target.value })}
+                size="xs"
+                style={{ flex: 1 }}
+              />
+              <ActionIcon
+                size="xs"
+                variant="subtle"
+                color="red"
+                onClick={() => handleRemoveAction(i)}
+                disabled={actions.length <= 1}
+              >
+                <IconTrash size={12} />
+              </ActionIcon>
+            </Group>
+            <Group justify="space-between" gap={4}>
+              <Tooltip label={t('workflow.properties.human.enableFeedbackDesc', 'User can optionally add a comment when clicking this action')} withinPortal position="top" multiline maw={200}>
+                <Group gap={4} style={{ cursor: 'default' }}>
+                  <IconMessage size={11} style={{ color: 'var(--flock-text-muted)' }} />
+                  <Text size="xs" c="dimmed" style={{ fontSize: 10 }}>
+                    {t('workflow.properties.human.enableFeedback', 'Allow feedback')}
+                  </Text>
+                </Group>
+              </Tooltip>
+              <Switch
+                checked={act.enable_feedback === true}
+                onChange={(e) => handleActionChange(i, { enable_feedback: e.currentTarget.checked })}
+                size="xs"
+              />
+            </Group>
+          </Stack>
         ))}
         <Button
           size="xs"

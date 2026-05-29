@@ -29,13 +29,9 @@ pub fn make_human_node(
             ctx.sink.emit_text_delta(&node_id, &format!("\n\n*⏳ 正在等待人工确认: `{}`...*\n", title));
 
             let actions = node_data.get("user_actions").cloned().unwrap_or_else(|| json!([
-                { "key": "action_1", "label": "Approve" },
-                { "key": "action_2", "label": "Reject" }
+                { "key": "action_1", "label": "Approve", "enable_feedback": false },
+                { "key": "action_2", "label": "Reject", "enable_feedback": true }
             ]));
-
-            let enable_feedback = node_data.get("enable_feedback")
-                .and_then(|v| v.as_bool())
-                .unwrap_or(false);
 
             // Call langgraph interrupt
             let resume_val = match langgraph::types::interrupt(
@@ -44,7 +40,6 @@ pub fn make_human_node(
                     "title": title,
                     "interaction_type": "review",
                     "actions": actions,
-                    "enable_feedback": enable_feedback
                 })
             ) {
                 Ok(val) => val,
