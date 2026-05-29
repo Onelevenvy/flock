@@ -11,7 +11,7 @@ import { type Assistant } from '../../types/assistant';
 import { AssistantPicker, XIAOF_AGENT } from './AssistantPicker';
 import { useUiStore } from '../../store/uiStore';
 import { useWorkflowStore } from '../../store/workflowStore';
-import { type WorkflowRecord } from '../../hooks/useWorkflow';
+import { useWorkflowsQuery, type WorkflowRecord } from '../../hooks/useWorkflow';
 
 import { useAssistantsQuery } from '../../hooks/useAssistants';
 import { useTranslation } from 'react-i18next';
@@ -46,6 +46,7 @@ export function HomeView() {
   const { data: workspaces = [] } = useWorkspacesQuery();
   const { mutateAsync: createConversation } = useCreateConversationMutation();
   const { data: assistants = [] } = useAssistantsQuery();
+  const { data: workflows = [] } = useWorkflowsQuery();
 
   const MODE_OPTIONS = [
     { value: 'default', label: t('home.approval'), icon: IconShieldCheck, color: 'blue' },
@@ -73,6 +74,13 @@ export function HomeView() {
       }
     }
   }, [selectedHomeAssistantId, activeConversationId, conversationAssistants, selectedAssistant.id, assistants, setSelectedHomeAssistantId]);
+
+  // Synchronize default workflow when workflows load
+  useEffect(() => {
+    if (selectedType === 'workflow' && !selectedWorkflow && workflows.length > 0) {
+      setSelectedWorkflow(workflows[0]);
+    }
+  }, [selectedType, selectedWorkflow, workflows]);
 
   const activeWs = workspaces.find(w => w.id === activeWorkspaceId);
   const isStreaming = !!activeConversationId && status === 'thinking';
@@ -140,21 +148,42 @@ export function HomeView() {
       setSelectedWorkflow(item as WorkflowRecord);
     }
   }, [activeWs, status, activeConversationId, setConversationAssistant, setStatus]);
-
   const handleSend = async () => {
     if (!canSend || !activeWs) return;
     const content = value.trim();
 
-    if (selectedType === 'workflow' && selectedWorkflow) {
-      useWorkflowStore.getState().setActiveWorkflowId(selectedWorkflow.id);
-      useWorkflowStore.getState().setPendingStartQuery(content);
-      useUiStore.getState().setCurrentView('workflow');
-      setValue('');
-      return;
-    }
-
     let convId = activeConversationId;
     const isNewOrEmpty = !convId || messages.length === 0;
+
+    if (selectedType === 'workflow' && selectedWorkflow) {
+      try {
+        setStatus('connecting');
+        if (!convId || isNewOrEmpty) {
+          const conv = await createConversation({ workspaceId: activeWorkspaceId!, title: '' });
+          convId = conv.id;
+          setActiveConversation(convId);
+        }
+        clearMessages();
+
+        // Save workflow as the active assistant for this conversation
+        setConversationAssistant(convId, `workflow:${selectedWorkflow.id}`);
+        setStatus('thinking');
+
+        const userUiId = `user-${uuidv4()}`;
+        setValue('');
+        addUserMessage(userUiId, content);
+
+        await invoke('run_workflow', {
+          workflowId: selectedWorkflow.id,
+          input: content,
+          threadId: convId,
+        });
+      } catch (e: any) {
+        setStatus('error');
+        setError(e.message || String(e));
+      }
+      return;
+    }
 
     // 如果当前是没有消息的新对话，先进行创建（如果需要）并初始化 Agent
     if (isNewOrEmpty) {

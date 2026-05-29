@@ -44,13 +44,95 @@ export function useEventStream() {
           }
         });
 
+        const workflowUnlisten = await listen<unknown>('workflow-event', (event) => {
+          if (cancelled) return;
+          try {
+            let payload: {
+              type: string;
+              workflow_id: string;
+              node_id?: string;
+              text?: string;
+              error?: string;
+              interrupt?: unknown;
+            };
+            if (typeof event.payload === 'string') {
+              payload = JSON.parse(event.payload);
+            } else {
+              payload = event.payload as typeof payload;
+            }
+
+            const msgId = payload.workflow_id;
+
+            switch (payload.type) {
+              case 'workflow_start':
+                setStatus('thinking');
+                handleEvent({ type: 'stream_start', msg_id: msgId });
+                break;
+
+              case 'text_delta':
+                if (payload.text) {
+                  handleEvent({ type: 'text_delta', text: payload.text, msg_id: msgId });
+                }
+                break;
+
+              case 'thinking':
+                if (payload.text) {
+                  handleEvent({ type: 'thinking', text: payload.text, msg_id: msgId });
+                }
+                break;
+
+              case 'node_start':
+                handleEvent({
+                  type: 'info',
+                  msg_id: msgId,
+                  message: `▶️ Running node: [${payload.node_id}]`,
+                });
+                break;
+
+              case 'workflow_done':
+                setStatus('ready');
+                handleEvent({ type: 'stream_end', msg_id: msgId });
+                break;
+
+              case 'workflow_error':
+              case 'error':
+                setStatus('ready');
+                handleEvent({
+                  type: 'error',
+                  msg_id: msgId,
+                  error: {
+                    code: 'WORKFLOW_ERROR',
+                    message: payload.error || payload.text || 'Unknown error',
+                    retryable: true,
+                  },
+                });
+                break;
+
+              case 'workflow_interrupted':
+                setStatus('ready');
+                const rawInterrupt = payload.interrupt as Record<string, unknown> | null | undefined;
+                const interruptData = rawInterrupt?.value ?? rawInterrupt;
+                handleEvent({
+                  type: 'human_takeover',
+                  call_id: 'workflow_interrupt',
+                  msg_id: msgId,
+                  message: typeof interruptData === 'string' ? interruptData : JSON.stringify(interruptData),
+                });
+                break;
+            }
+          } catch (e) {
+            console.error('[workflow-event] map error:', e, event.payload);
+          }
+        });
+
         if (!cancelled) {
-          unlistenRefs.current = [agentUnlisten, stoppedUnlisten, stderrUnlisten];
+          unlistenRefs.current = [agentUnlisten, stoppedUnlisten, stderrUnlisten, workflowUnlisten];
         } else {
           // 如果组件已经卸载，立刻清理
           agentUnlisten();
           stoppedUnlisten();
           stderrUnlisten();
+          workflowUnlisten();
         }
       } catch (e) {
         // 在非 Tauri 环境（如浏览器 dev）下忽略
