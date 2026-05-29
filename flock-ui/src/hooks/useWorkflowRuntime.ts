@@ -12,6 +12,7 @@ import { useEffect, useRef, useCallback } from 'react';
 import { listen } from '@tauri-apps/api/event';
 import { invoke } from '@tauri-apps/api/core';
 import { useWorkflowStore } from '../store/workflowStore';
+import { useWorkspaceStore } from '../store/workspaceStore';
 import type { WorkflowExecutionMessage } from '../store/workflowStore';
 
 export interface WorkflowTauriEvent {
@@ -99,6 +100,81 @@ export function useWorkflowRuntime({
   useEffect(() => {
     threadIdRef.current = threadId;
   }, [threadId]);
+
+  // ── 首次挂载或 threadId 改变时，从 SQLite 数据库加载历史消息并做格式映射还原 ──
+  useEffect(() => {
+    const activeTid = threadId;
+    if (!activeTid || isDebug) return;
+
+    // 如果该会话已经存在内存消息记录，不再重复拉取
+    const currentExec = store.threadExecutions[activeTid];
+    if (currentExec && currentExec.messages.length > 0) return;
+
+    async function loadHistory(tid: string) {
+      try {
+        const workspaceId = useWorkspaceStore.getState().activeWorkspaceId;
+        if (!workspaceId) return;
+
+        const history = await invoke<any[]>('load_conversation_history', {
+          workspaceId,
+          convId: tid,
+        });
+
+        if (!history || history.length === 0) return;
+
+        const mapped: WorkflowExecutionMessage[] = [];
+        history.forEach((m) => {
+          const timestamp = m.timestamp ? new Date(m.timestamp).getTime() : Date.now();
+          if (m.role === 'user') {
+            let contentStr = '';
+            if (typeof m.content === 'string') {
+              contentStr = m.content;
+            } else if (Array.isArray(m.content)) {
+              contentStr = m.content.map((c: any) => c.text || '').join('\n');
+            }
+            mapped.push({
+              type: 'user',
+              content: contentStr,
+              timestamp,
+            });
+          } else if (m.role === 'assistant') {
+            if (Array.isArray(m.content)) {
+              m.content.forEach((chunk: any) => {
+                if (chunk.type === 'thinking' && chunk.thinking) {
+                  mapped.push({
+                    type: 'thinking',
+                    content: chunk.thinking,
+                    nodeId: 'llm', // 赋予默认 llm nodeId 节点以便渲染折叠组
+                    timestamp,
+                  });
+                } else if (chunk.type === 'text' && chunk.text) {
+                  mapped.push({
+                    type: 'text_delta',
+                    content: chunk.text,
+                    nodeId: 'answer', // 赋予默认 answer 节点以渲染出 Markdown 答案气泡
+                    timestamp: timestamp + 1,
+                  });
+                }
+              });
+            }
+          }
+        });
+
+        if (mapped.length > 0) {
+          store.threadExecutions[tid] = {
+            messages: mapped,
+            status: 'done',
+            interrupt: null,
+          };
+          store.setThreadStatus(tid, 'done');
+        }
+      } catch (e) {
+        console.warn('[WorkflowRuntime] Failed to load history from SQLite:', e);
+      }
+    }
+
+    loadHistory(activeTid);
+  }, [threadId, isDebug, workflowId]);
 
   // ── 事件监听 ──
   useEffect(() => {

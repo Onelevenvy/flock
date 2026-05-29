@@ -234,18 +234,24 @@ pub async fn run_workflow(
         if config.base_url.is_empty() { None } else { Some(config.base_url.clone()) },
     ));
 
-    // 5. 初始化 SQLite Checkpointer
-    let db_path_str = config.db_path.to_string_lossy().to_string();
-    let conn_str = format!("sqlite:{}", db_path_str);
-    let checkpointer: Arc<dyn BaseCheckpointSaver> = match SqliteSaver::from_conn_string(&conn_str).await {
-        Ok(saver) => {
-            if saver.setup().await.is_ok() {
-                Arc::new(saver)
-            } else {
-                Arc::new(InMemorySaver::new())
+    // 5. 初始化 Checkpointer（调试模式下使用 InMemorySaver，普通对话使用 SqliteSaver）
+    let is_debug_run = thread_id.as_ref().map(|tid| tid.contains("_run_") || tid.starts_with("debug:")).unwrap_or(false);
+
+    let checkpointer: Arc<dyn BaseCheckpointSaver> = if is_debug_run {
+        Arc::new(InMemorySaver::new())
+    } else {
+        let db_path_str = config.db_path.to_string_lossy().to_string();
+        let conn_str = format!("sqlite:{}", db_path_str);
+        match SqliteSaver::from_conn_string(&conn_str).await {
+            Ok(saver) => {
+                if saver.setup().await.is_ok() {
+                    Arc::new(saver)
+                } else {
+                    Arc::new(InMemorySaver::new())
+                }
             }
+            Err(_) => Arc::new(InMemorySaver::new()),
         }
-        Err(_) => Arc::new(InMemorySaver::new()),
     };
 
     // 6. 实例化 Sink & Context
@@ -630,18 +636,7 @@ pub async fn debug_node(
         if config.base_url.is_empty() { None } else { Some(config.base_url.clone()) },
     ));
 
-    let db_path_str = config.db_path.to_string_lossy().to_string();
-    let conn_str = format!("sqlite:{}", db_path_str);
-    let checkpointer: Arc<dyn BaseCheckpointSaver> = match SqliteSaver::from_conn_string(&conn_str).await {
-        Ok(saver) => {
-            if saver.setup().await.is_ok() {
-                Arc::new(saver)
-            } else {
-                Arc::new(InMemorySaver::new())
-            }
-        }
-        Err(_) => Arc::new(InMemorySaver::new()),
-    };
+    let checkpointer: Arc<dyn BaseCheckpointSaver> = Arc::new(InMemorySaver::new());
 
     let sink = Arc::new(TauriWorkflowSink {
         app: app.clone(),
