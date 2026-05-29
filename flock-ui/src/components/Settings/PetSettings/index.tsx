@@ -1,4 +1,4 @@
-import { Switch, Slider, Stack, Text, Group, Button, Box, Paper, Divider } from '@mantine/core';
+import { Switch, Slider, Stack, Text, Group, Button, Box, Paper, Divider, SegmentedControl } from '@mantine/core';
 import { IconPaw, IconBubble, IconRefresh } from '@tabler/icons-react';
 import { useTranslation } from 'react-i18next';
 import { usePetStore } from '../../../store/petStore';
@@ -24,6 +24,7 @@ export default function PetSettings() {
     bubbleEnabled, setBubbleEnabled,
     bubbleDuration, setBubbleDuration,
     resetPosition,
+    mode, setMode,
   } = usePetStore();
 
   const [previewMood, setPreviewMood] = useState<XiaofMood>('idle');
@@ -91,7 +92,7 @@ export default function PetSettings() {
 
         <Paper p="md" radius="lg" style={{ background: 'var(--flock-bg-surface)', border: '1px solid var(--flock-border-dim)' }}>
           <Group justify="space-between">
-            <Box>
+            <Box style={{ flex: 1, marginRight: 16 }}>
               <Text size="sm" fw={600}>{t('pet.settings.enableLabel')}</Text>
               <Text size="xs" c="dimmed" mt={2}>{t('pet.settings.enableDesc')}</Text>
             </Box>
@@ -103,6 +104,28 @@ export default function PetSettings() {
             />
           </Group>
         </Paper>
+
+        {/* Mode selector */}
+        {enabled && (
+          <Paper p="md" radius="lg" style={{ background: 'var(--flock-bg-surface)', border: '1px solid var(--flock-border-dim)' }}>
+            <Stack gap={12}>
+              <Box>
+                <Text size="sm" fw={600}>{t('pet.settings.modeLabel')}</Text>
+                <Text size="xs" c="dimmed" mt={2}>{t('pet.settings.modeDesc')}</Text>
+              </Box>
+              <SegmentedControl
+                value={mode}
+                onChange={(val) => setMode(val as 'desktop' | 'in-app')}
+                data={[
+                  { label: t('pet.settings.modeDesktop'), value: 'desktop' },
+                  { label: t('pet.settings.modeInApp'), value: 'in-app' },
+                ]}
+                color="blue"
+                fullWidth
+              />
+            </Stack>
+          </Paper>
+        )}
 
         {/* Reset position */}
         <Paper p="md" radius="lg" style={{ background: 'var(--flock-bg-surface)', border: '1px solid var(--flock-border-dim)' }}>

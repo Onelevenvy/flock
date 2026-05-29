@@ -11,7 +11,7 @@ import { useAgentStore } from '../../store/agentStore';
  * 桌面悬浮宠物窗口 (XiaofOverlayApp) 接收全局事件并完成状态渲染及交互。
  */
 export function XiaofSyncManager() {
-  const { enabled, minimized, setMinimized } = usePetStore();
+  const { enabled, minimized, mode, setMinimized } = usePetStore();
   const { mood, bubbleText, pendingCount } = useXiaofState();
   const pendingApprovals = useAgentStore((s) => s.pendingApprovals);
   const removePendingApproval = useAgentStore((s) => s.removePendingApproval);
@@ -23,14 +23,14 @@ export function XiaofSyncManager() {
       state: {
         mood,
         pendingCount,
-        enabled,
+        enabled: enabled && mode === 'desktop',
         bubbleText,
         minimized,
         pendingTool: firstPending ? firstPending.tool.name : null,
         pendingCallId: firstPending ? firstPending.call_id : null,
       }
     }).catch((err) => console.error('[Pet Sync] Failed to sync pet state:', err));
-  }, [mood, pendingCount, enabled, bubbleText, minimized, pendingApprovals]);
+  }, [mood, pendingCount, enabled, mode, bubbleText, minimized, pendingApprovals]);
 
   // 2. 实时同步待审批的任务信息
   useEffect(() => {
@@ -67,7 +67,7 @@ export function XiaofSyncManager() {
         state: {
           mood,
           pendingCount,
-          enabled,
+          enabled: enabled && mode === 'desktop',
           bubbleText,
           minimized,
           pendingTool: firstPending ? firstPending.tool.name : null,
@@ -76,7 +76,7 @@ export function XiaofSyncManager() {
       }).catch((err) => console.error('[Pet Sync] Failed to sync pet state on pull request:', err));
     }).then((fn) => { unlisten = fn; });
     return () => { unlisten?.(); };
-  }, [mood, pendingCount, enabled, bubbleText, minimized, pendingApprovals]);
+  }, [mood, pendingCount, enabled, mode, bubbleText, minimized, pendingApprovals]);
 
   // 5. 监听来自桌宠的乐观操作事件，提前在主窗口移除该项以加速同步
   useEffect(() => {

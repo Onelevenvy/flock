@@ -11,6 +11,7 @@ interface PetStore {
   bubbleEnabled: boolean;
   bubbleDuration: number; // ms
   position: PetPosition;
+  mode: 'desktop' | 'in-app';
 
   setEnabled: (v: boolean) => void;
   setMinimized: (v: boolean) => void;
@@ -18,6 +19,7 @@ interface PetStore {
   setBubbleDuration: (ms: number) => void;
   setPosition: (pos: PetPosition) => void;
   resetPosition: () => void;
+  setMode: (mode: 'desktop' | 'in-app') => void;
 }
 
 const DEFAULT_POSITION: PetPosition = { x: -24, y: -24 };
@@ -38,6 +40,7 @@ export const usePetStore = create<PetStore>((set) => ({
   bubbleEnabled: loadStored('xiaof-bubble-enabled', true),
   bubbleDuration: loadStored('xiaof-bubble-duration', 3000),
   position: loadStored('xiaof-pet-position', DEFAULT_POSITION),
+  mode: loadStored<'desktop' | 'in-app'>('xiaof-pet-mode', 'desktop'),
 
   setEnabled: (v) => {
     localStorage.setItem('xiaof-pet-enabled', JSON.stringify(v));
@@ -59,5 +62,9 @@ export const usePetStore = create<PetStore>((set) => ({
   resetPosition: () => {
     localStorage.setItem('xiaof-pet-position', JSON.stringify(DEFAULT_POSITION));
     set({ position: DEFAULT_POSITION });
+  },
+  setMode: (mode) => {
+    localStorage.setItem('xiaof-pet-mode', JSON.stringify(mode));
+    set({ mode });
   },
 }));
