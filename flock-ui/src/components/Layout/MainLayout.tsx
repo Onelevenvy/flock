@@ -17,15 +17,24 @@ import { useTranslation } from 'react-i18next';
 import { XiaofSyncManager } from '../Pet/XiaofSyncManager';
 import { XiaofPet } from '../Pet/XiaofPet';
 
+function isWorkflowConversation(assistantId: string | undefined): boolean {
+  return !!assistantId?.startsWith('workflow:');
+}
+
 export function MainLayout() {
   const { t } = useTranslation();
   const { currentView } = useUiStore();
-  const { activeWorkspaceId, activeConversationId } = useWorkspaceStore();
+  const { activeWorkspaceId, activeConversationId, conversationAssistants } = useWorkspaceStore();
   const { mode } = usePetStore();
   const messages = useAgentStore((s) => s.messages);
 
-  // 核心逻辑：在 home 视图下，如果选中了具体对话并且有对话消息，则分发到「工作区视图」，否则展示「主页/欢迎视图」（以便选择助手开始新对话）
-  const showWorkspace = currentView === 'home' && !!activeWorkspaceId && !!activeConversationId && messages.length > 0;
+  // 核心逻辑：在 home 视图下，满足以下任一条件则分发到「工作区视图」：
+  // 1. 助手对话：有 activeConversationId 且 agentStore 有消息
+  // 2. 工作流对话：有 activeConversationId 且对话类型为 workflow（不依赖 agentStore.messages）
+  const assistantId = activeConversationId ? conversationAssistants[activeConversationId] : undefined;
+  const isWorkflowConv = isWorkflowConversation(assistantId);
+  const showWorkspace = currentView === 'home' && !!activeWorkspaceId && !!activeConversationId
+    && (isWorkflowConv || messages.length > 0);
 
   return (
     <Box

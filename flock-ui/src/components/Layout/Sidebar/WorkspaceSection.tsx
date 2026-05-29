@@ -71,6 +71,12 @@ export function WorkspaceSection() {
     const assistants = useWorkspaceStore.getState().conversationAssistants;
     const assistantId = sessionId ? (assistants[sessionId] || null) : null;
 
+    if (assistantId && assistantId.startsWith('workflow:')) {
+      setWorkdir(wsPath);
+      setStatus('ready');
+      return;
+    }
+
     try {
       setWorkdir(wsPath);
       setStatus('connecting');

@@ -118,6 +118,26 @@ export function InputBar() {
     const streamMsgId = uuidv4();
     setValue('');
     addUserMessage(userUiId, content);
+
+    // 🚀 Check if the active conversation is a workflow conversation
+    const assistants = useWorkspaceStore.getState().conversationAssistants;
+    const activeAsst = activeConversationId ? assistants[activeConversationId] : null;
+    if (activeAsst && activeAsst.startsWith('workflow:')) {
+      const workflowId = activeAsst.replace('workflow:', '');
+      setStatus('thinking');
+      try {
+        await invoke('run_workflow', {
+          workflowId,
+          input: content,
+          threadId: activeConversationId,
+        });
+      } catch (e: any) {
+        setStatus('error');
+        setError(e.message || String(e));
+      }
+      return;
+    }
+
     try {
       await invoke('send_message', {
         sessionId: activeConversationId || null,
@@ -131,6 +151,20 @@ export function InputBar() {
   };
 
   const handleStop = async () => {
+    const assistants = useWorkspaceStore.getState().conversationAssistants;
+    const activeAsst = activeConversationId ? assistants[activeConversationId] : null;
+    if (activeAsst && activeAsst.startsWith('workflow:')) {
+      const workflowId = activeAsst.replace('workflow:', '');
+      try {
+        await invoke('stop_workflow', { workflowId });
+        setStatus('ready');
+      } catch (e: any) {
+        console.error('stop_workflow error:', e);
+        setError(e.message || String(e));
+      }
+      return;
+    }
+
     try {
       await invoke('stop_agent', { sessionId: activeConversationId || null });
     } catch (e: any) {

@@ -27,6 +27,200 @@ function resolveNodeDisplayName(nodeId: string, nodes: Node[]): { displayName: s
   return { displayName: nodeType, nodeType };
 }
 
+/** 一问一答的轮次 */
+export interface ExecutionRound {
+  /** 轮次序号（从 0 开始） */
+  index: number;
+  /** 用户发送的文本（可能为空，如首轮无 user 消息的情况） */
+  userText?: string;
+  userTimestamp?: number;
+  /** 该轮对应的工作流步骤 */
+  steps: WorkflowStep[];
+}
+
+/** 构建单个 WorkflowStep 列表的纯函数（不含 rounds 概念，内部复用） */
+function buildSteps(
+  messages: ExecutionMessage[],
+  status: 'idle' | 'running' | 'done' | 'error',
+  isInterrupted: boolean,
+  resolvedChoiceRef: React.MutableRefObject<{ actionLabel: string; feedback?: string } | null>,
+  nodes: Node[],
+): WorkflowStep[] {
+  const result: WorkflowStep[] = [];
+  const nodeStepIndex: Record<string, number> = {};
+  const interruptIndices: number[] = [];
+
+  for (const msg of messages) {
+    // ---- interrupt 事件 ----
+    if ((msg as any).type === 'interrupt') {
+      let interruptData: InterruptData = {};
+      try { interruptData = JSON.parse(msg.content); } catch (_) {}
+      const rawNodeId = interruptData.node_id ?? msg.nodeId ?? 'human';
+
+      const existingIdx = nodeStepIndex[rawNodeId];
+      if (existingIdx !== undefined) {
+        result[existingIdx] = {
+          ...result[existingIdx],
+          isInterrupt: true,
+          interruptData,
+          status: 'waiting',
+        };
+        interruptIndices.push(existingIdx);
+      } else {
+        const { displayName, nodeType } = resolveNodeDisplayName(rawNodeId, nodes);
+        const step: WorkflowStep = {
+          id: `interrupt-${msg.timestamp}`,
+          nodeId: rawNodeId,
+          nodeType,
+          displayName,
+          status: 'waiting',
+          outputText: '',
+          thinkingText: '',
+          startTs: msg.timestamp,
+          isInterrupt: true,
+          interruptData,
+          interruptResolved: false,
+        };
+        interruptIndices.push(result.length);
+        nodeStepIndex[rawNodeId] = result.length;
+        result.push(step);
+      }
+      continue;
+    }
+
+    // ---- user 消息 → 将待处理 interrupt 全部标记 resolved ----
+    if (msg.type === 'user') {
+      const choice = resolvedChoiceRef.current;
+      interruptIndices.forEach((idx) => {
+        result[idx] = {
+          ...result[idx],
+          interruptResolved: true,
+          status: 'done',
+          resolvedActionLabel: choice?.actionLabel,
+          resolvedFeedback: choice?.feedback,
+        };
+      });
+      // user 消息不生成 step
+      continue;
+    }
+
+    // ---- text_delta / thinking ----
+    if (msg.type === 'text_delta' || msg.type === 'thinking') {
+      const rawNodeId = msg.nodeId ?? 'assistant';
+      let idx = nodeStepIndex[rawNodeId];
+      if (idx === undefined) {
+        const { displayName, nodeType } = resolveNodeDisplayName(rawNodeId, nodes);
+        const step: WorkflowStep = {
+          id: `step-${rawNodeId}`,
+          nodeId: rawNodeId,
+          nodeType,
+          displayName,
+          status: 'running',
+          outputText: '',
+          thinkingText: '',
+          startTs: msg.timestamp,
+          isInterrupt: false,
+          interruptResolved: false,
+        };
+        idx = result.length;
+        nodeStepIndex[rawNodeId] = idx;
+        result.push(step);
+      }
+      const step = { ...result[idx] };
+      if (msg.type === 'thinking') {
+        step.thinkingText += msg.content;
+      } else {
+        step.outputText += msg.content;
+      }
+      result[idx] = step;
+      continue;
+    }
+
+    // ---- done / error ----
+    if (msg.type === 'done' || msg.type === 'error') {
+      for (let i = 0; i < result.length; i++) {
+        if (result[i].status === 'running') {
+          result[i] = { ...result[i], status: msg.type === 'error' ? 'error' : 'done' };
+        }
+      }
+    }
+  }
+
+  // done/error 时把所有 running step 标记完成
+  if (status !== 'running') {
+    for (let i = 0; i < result.length; i++) {
+      if (result[i].status === 'running') {
+        result[i] = { ...result[i], status: status === 'error' ? 'error' : 'done' };
+      }
+    }
+  }
+
+  // activeInterrupt 消失时把所有 waiting interrupt 标记 done
+  if (!isInterrupted) {
+    for (let i = 0; i < result.length; i++) {
+      if (result[i].isInterrupt && !result[i].interruptResolved) {
+        const choice = resolvedChoiceRef.current;
+        result[i] = {
+          ...result[i],
+          interruptResolved: true,
+          status: 'done',
+          resolvedActionLabel: result[i].resolvedActionLabel ?? choice?.actionLabel,
+          resolvedFeedback: result[i].resolvedFeedback ?? choice?.feedback,
+        };
+      }
+    }
+  }
+
+  return result;
+}
+
+/** 按照 user 消息边界把 messages 切分成轮次，返回每轮的 {userText, steps} */
+function buildRounds(
+  messages: ExecutionMessage[],
+  status: 'idle' | 'running' | 'done' | 'error',
+  isInterrupted: boolean,
+  resolvedChoiceRef: React.MutableRefObject<{ actionLabel: string; feedback?: string } | null>,
+  nodes: Node[],
+): ExecutionRound[] {
+  // 先把 messages 按 user 消息边界分组
+  const groups: { userMsg?: ExecutionMessage; msgs: ExecutionMessage[] }[] = [];
+  let current: { userMsg?: ExecutionMessage; msgs: ExecutionMessage[] } = { msgs: [] };
+
+  for (const msg of messages) {
+    if (msg.type === 'user') {
+      // 如果当前组已有内容，先保存（前一轮的消息）
+      // 新建本轮：以 user 消息为起点
+      groups.push(current);
+      current = { userMsg: msg, msgs: [] };
+    } else {
+      current.msgs.push(msg);
+    }
+  }
+  groups.push(current);
+
+  // 过滤掉完全空的首组（没有 userMsg 且没有 msgs）
+  const nonEmpty = groups.filter(g => g.userMsg || g.msgs.length > 0);
+
+  return nonEmpty.map((g, i) => {
+    // 给每轮单独构建 steps，传入 user msg 之后的那些消息
+    const roundSteps = buildSteps(
+      g.msgs,
+      // 最后一轮才用真实 status
+      i === nonEmpty.length - 1 ? status : 'done',
+      // 最后一轮才用真实 isInterrupted
+      i === nonEmpty.length - 1 ? isInterrupted : false,
+      resolvedChoiceRef,
+      nodes,
+    );
+    return {
+      index: i,
+      userText: g.userMsg?.content,
+      userTimestamp: g.userMsg?.timestamp,
+      steps: roundSteps,
+    };
+  });
+}
+
 export function useExecutionPanelMessages({
   messages,
   status,
@@ -35,13 +229,7 @@ export function useExecutionPanelMessages({
   handleResume,
   nodes,
 }: UseExecutionPanelMessagesProps) {
-  /**
-   * 记录用户最后一次 resume 的选择
-   * key: interrupt step id (或者 'last')，value: { actionLabel, feedback }
-   * 在 user 消息到来时用于回填 resolvedActionLabel
-   */
   const resolvedChoiceRef = useRef<{ actionLabel: string; feedback?: string } | null>(null);
-  /** 当前 activeInterrupt 的 actions（用于键盘快捷键 + label 查找） */
   const activeInterruptRef = useRef<InterruptData | null>(activeInterrupt);
   useEffect(() => {
     activeInterruptRef.current = activeInterrupt;
@@ -80,140 +268,12 @@ export function useExecutionPanelMessages({
     return () => window.removeEventListener('keydown', handleKey);
   }, [isInterrupted, activeInterrupt, wrappedHandleResume]);
 
+  // ── 扁平 steps（向后兼容，如果某些地方还用 steps） ──
   const steps = useMemo<WorkflowStep[]>(() => {
-    const result: WorkflowStep[] = [];
-    // nodeId -> step index in result
-    const nodeStepIndex: Record<string, number> = {};
-    // interrupt step indices（用于 user 消息时批量 resolve）
-    const interruptIndices: number[] = [];
-
-    for (const msg of messages) {
-      // ---- interrupt 事件 ----
-      if ((msg as any).type === 'interrupt') {
-        let interruptData: InterruptData = {};
-        try { interruptData = JSON.parse(msg.content); } catch (_) {}
-        const rawNodeId = interruptData.node_id ?? msg.nodeId ?? 'human';
-
-        // ★ 关键修复：若该 nodeId 已有 text_delta step，原地升级为 interrupt step
-        const existingIdx = nodeStepIndex[rawNodeId];
-        if (existingIdx !== undefined) {
-          result[existingIdx] = {
-            ...result[existingIdx],
-            isInterrupt: true,
-            interruptData,
-            status: 'waiting',
-          };
-          interruptIndices.push(existingIdx);
-        } else {
-          // 没有已有 step，新建
-          const { displayName, nodeType } = resolveNodeDisplayName(rawNodeId, nodes);
-          const step: WorkflowStep = {
-            id: `interrupt-${msg.timestamp}`,
-            nodeId: rawNodeId,
-            nodeType,
-            displayName,
-            status: 'waiting',
-            outputText: '',
-            thinkingText: '',
-            startTs: msg.timestamp,
-            isInterrupt: true,
-            interruptData,
-            interruptResolved: false,
-          };
-          interruptIndices.push(result.length);
-          nodeStepIndex[rawNodeId] = result.length;
-          result.push(step);
-        }
-        continue;
-      }
-
-      // ---- user 消息 → 将待处理 interrupt 全部标记 resolved，并回填 actionLabel ----
-      if (msg.type === 'user') {
-        const choice = resolvedChoiceRef.current;
-        interruptIndices.forEach((idx) => {
-          result[idx] = {
-            ...result[idx],
-            interruptResolved: true,
-            status: 'done',
-            resolvedActionLabel: choice?.actionLabel,
-            resolvedFeedback: choice?.feedback,
-          };
-        });
-        // user 消息不生成 step
-        continue;
-      }
-
-      // ---- text_delta / thinking ----
-      if (msg.type === 'text_delta' || msg.type === 'thinking') {
-        const rawNodeId = msg.nodeId ?? 'assistant';
-        let idx = nodeStepIndex[rawNodeId];
-        if (idx === undefined) {
-          const { displayName, nodeType } = resolveNodeDisplayName(rawNodeId, nodes);
-          const step: WorkflowStep = {
-            id: `step-${rawNodeId}`,
-            nodeId: rawNodeId,
-            nodeType,
-            displayName,
-            status: 'running',
-            outputText: '',
-            thinkingText: '',
-            startTs: msg.timestamp,
-            isInterrupt: false,
-            interruptResolved: false,
-          };
-          idx = result.length;
-          nodeStepIndex[rawNodeId] = idx;
-          result.push(step);
-        }
-        const step = { ...result[idx] };
-        if (msg.type === 'thinking') {
-          step.thinkingText += msg.content;
-        } else {
-          step.outputText += msg.content;
-        }
-        result[idx] = step;
-        continue;
-      }
-
-      // ---- done / error ----
-      if (msg.type === 'done' || msg.type === 'error') {
-        for (let i = 0; i < result.length; i++) {
-          if (result[i].status === 'running') {
-            result[i] = { ...result[i], status: msg.type === 'error' ? 'error' : 'done' };
-          }
-        }
-      }
-    }
-
-    // done/error 时把所有 running step 标记完成
-    if (status !== 'running') {
-      for (let i = 0; i < result.length; i++) {
-        if (result[i].status === 'running') {
-          result[i] = { ...result[i], status: status === 'error' ? 'error' : 'done' };
-        }
-      }
-    }
-
-    // activeInterrupt 消失时把所有 waiting interrupt 标记 done
-    if (!isInterrupted) {
-      for (let i = 0; i < result.length; i++) {
-        if (result[i].isInterrupt && !result[i].interruptResolved) {
-          const choice = resolvedChoiceRef.current;
-          result[i] = {
-            ...result[i],
-            interruptResolved: true,
-            status: 'done',
-            resolvedActionLabel: result[i].resolvedActionLabel ?? choice?.actionLabel,
-            resolvedFeedback: result[i].resolvedFeedback ?? choice?.feedback,
-          };
-        }
-      }
-    }
-
-    return result;
+    return buildSteps(messages, status, isInterrupted, resolvedChoiceRef, nodes);
   }, [messages, status, isInterrupted, nodes]);
 
-  // 当 activeInterrupt 存在时，注入最新 interruptData 到 waiting step
+  // ── 带 activeInterrupt 注入的 steps ──
   const stepsWithActiveInterrupt = useMemo<WorkflowStep[]>(() => {
     if (!isInterrupted || !activeInterrupt) return steps;
     const result = [...steps];
@@ -226,5 +286,24 @@ export function useExecutionPanelMessages({
     return result;
   }, [steps, isInterrupted, activeInterrupt]);
 
-  return { steps: stepsWithActiveInterrupt, handleResume: wrappedHandleResume };
+  // ── 轮次（rounds）——用于调试面板按轮渲染 ──
+  const rounds = useMemo<ExecutionRound[]>(() => {
+    const rawRounds = buildRounds(messages, status, isInterrupted, resolvedChoiceRef, nodes);
+    // 最后一轮注入 activeInterrupt 到 waiting step
+    if (!isInterrupted || !activeInterrupt || rawRounds.length === 0) return rawRounds;
+    const lastRound = rawRounds[rawRounds.length - 1];
+    const updatedSteps = [...lastRound.steps];
+    for (let i = updatedSteps.length - 1; i >= 0; i--) {
+      if (updatedSteps[i].isInterrupt && updatedSteps[i].status === 'waiting') {
+        updatedSteps[i] = { ...updatedSteps[i], interruptData: activeInterrupt };
+        break;
+      }
+    }
+    return [
+      ...rawRounds.slice(0, -1),
+      { ...lastRound, steps: updatedSteps },
+    ];
+  }, [messages, status, isInterrupted, activeInterrupt, nodes]);
+
+  return { steps: stepsWithActiveInterrupt, rounds, handleResume: wrappedHandleResume };
 }

@@ -1,4 +1,4 @@
-import { useCallback, useMemo, useState } from 'react';
+import { useCallback, useMemo, useState, useEffect } from 'react';
 import ReactFlow, {
   Background,
   MiniMap,
@@ -27,7 +27,7 @@ import { PropertiesPanel } from '../PropertiesPanel';
 import { ExecutionPanel } from '../ExecutionPanel';
 import { EnvironmentVarsPanel } from '../EnvironmentVarsPanel';
 import { NodeDebugPanel } from '../NodeDebugPanel';
-import { useWorkflowExecution } from '../../../../hooks/useWorkflowExecution';
+import { useWorkflowRuntime } from '../../../../hooks/useWorkflowRuntime';
 
 import { useFlowLayout } from './hooks/useFlowLayout';
 import { useNodeInsertion } from './hooks/useNodeInsertion';
@@ -58,20 +58,35 @@ export function FlowCanvas({ workflowId, workflowData, onBack }: FlowCanvasProps
     setDirty,
     setSelectedNodeId,
     updateNodeData,
-    executionStatus,
-    executionMessages,
     environmentVariables,
     debugTarget,
     setDebugTarget,
+    pendingStartQuery,
+    setPendingStartQuery,
+    activeExecutionThreadId,
   } = useWorkflowStore();
 
-  const { startWorkflow, resumeWorkflow, stopWorkflow } = useWorkflowExecution();
+  const {
+    messages: executionMessages,
+    status: executionStatus,
+    activeInterrupt: executionActiveInterrupt,
+    startWorkflow,
+    resumeWorkflow,
+    stopWorkflow,
+    clearExecution,
+  } = useWorkflowRuntime({
+    workflowId,
+    threadId: activeExecutionThreadId,
+    isDebug: true,
+  });
 
   const [showExecution, setShowExecution] = useState(false);
   const [showMinimap, setShowMinimap] = useState(false);
   const [showNodePalette, setShowNodePalette] = useState(false);
   const [showEnvVars, setShowEnvVars] = useState(false);
   const [isPanMode, setIsPanMode] = useState(true);
+
+
 
   // ── Topological Auto Layout Hook ───────────────────────────────────────
   const { layoutAllNodes } = useFlowLayout(nodes, edges, setNodes, setEdges);
@@ -117,6 +132,21 @@ export function FlowCanvas({ workflowId, workflowData, onBack }: FlowCanvasProps
     });
     setDirty(false);
   }, [workflowId, workflowData, nodes, edges, environmentVariables, updateMutation, setDirty]);
+
+  // ── Auto-start workflow if navigated from home page with a query ────────
+  useEffect(() => {
+    if (pendingStartQuery && workflowId) {
+      const runPending = async () => {
+        if (isDirty) {
+          await handleSave();
+        }
+        setShowExecution(true);
+        startWorkflow(JSON.stringify({ query: pendingStartQuery }));
+        setPendingStartQuery(null);
+      };
+      runPending();
+    }
+  }, [pendingStartQuery, workflowId, isDirty, handleSave, startWorkflow, setPendingStartQuery]);
 
   // ── Selected node ───────────────────────────────────────────────────────
   const selectedNode = useMemo(
@@ -357,6 +387,8 @@ export function FlowCanvas({ workflowId, workflowData, onBack }: FlowCanvasProps
             }}
             stopWorkflow={stopWorkflow}
             resumeWorkflow={resumeWorkflow}
+            onClearExecution={clearExecution}
+            activeInterrupt={executionActiveInterrupt}
           />
         )}
       </Box>

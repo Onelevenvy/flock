@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useWorkflowStore } from '../../store/workflowStore';
 import { WorkflowListPage } from './components/WorkflowListPage';
 import { WorkflowEditor } from './components/WorkflowEditor';
 
@@ -7,11 +7,11 @@ import { WorkflowEditor } from './components/WorkflowEditor';
  * Switches between the workflow list and the canvas editor.
  */
 export function WorkflowPage() {
-  const [editingId, setEditingId] = useState<string | null>(null);
+  const { activeWorkflowId, setActiveWorkflowId } = useWorkflowStore();
 
-  if (editingId) {
-    return <WorkflowEditor workflowId={editingId} onBack={() => setEditingId(null)} />;
+  if (activeWorkflowId) {
+    return <WorkflowEditor workflowId={activeWorkflowId} onBack={() => setActiveWorkflowId(null)} />;
   }
 
-  return <WorkflowListPage onOpenEditor={setEditingId} />;
+  return <WorkflowListPage onOpenEditor={setActiveWorkflowId} />;
 }

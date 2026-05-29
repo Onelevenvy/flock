@@ -1,0 +1,623 @@
+/**
+ * useWorkflowRuntime - 统一的工作流执行 Hook
+ *
+ * 同时服务于两种场景：
+ *  - isDebug=true  →  WorkflowEditor 里的调试面板（ExecutionPanel）
+ *  - isDebug=false →  Workspace 里的工作流对话（WorkflowChatPanel）
+ *
+ * 所有执行状态统一存储在 workflowStore.threadExecutions[threadId]，
+ * 通过 threadId 天然隔离，不再有两套数据源。
+ */
+import { useEffect, useRef, useCallback } from 'react';
+import { listen } from '@tauri-apps/api/event';
+import { invoke } from '@tauri-apps/api/core';
+import { useWorkflowStore } from '../store/workflowStore';
+import { useWorkspaceStore } from '../store/workspaceStore';
+import type { WorkflowExecutionMessage } from '../store/workflowStore';
+
+export interface WorkflowTauriEvent {
+  type:
+    | 'workflow_start'
+    | 'workflow_progress'
+    | 'workflow_interrupted'
+    | 'workflow_done'
+    | 'workflow_error'
+    | 'node_start'
+    | 'node_done'
+    | 'text_delta'
+    | 'thinking'
+    | 'error'
+    | 'debug_start'
+    | 'debug_progress'
+    | 'debug_done'
+    | 'debug_error';
+  workflow_id: string;
+  thread_id?: string;
+  node_id?: string;
+  text?: string;
+  output?: unknown;
+  error?: string;
+  interrupt?: { value?: unknown; [key: string]: unknown };
+}
+
+interface UseWorkflowRuntimeOptions {
+  /** 工作流 ID */
+  workflowId: string | null;
+  /**
+   * 线程 ID（用于隔离不同对话或调试会话的执行状态）。
+   * - 调试面板：由调用方传入 workflowStore.activeExecutionThreadId（可为 null，首次运行时生成）
+   * - 工作空间对话：传入 conversationId
+   */
+  threadId: string | null;
+  /**
+   * 是否为调试模式。
+   * true  → 额外处理 debug_start/done/error、debugResults 写入、debug_* 消息过滤
+   * false → 只处理普通工作流执行事件
+   */
+  isDebug?: boolean;
+}
+
+export function useWorkflowRuntime({
+  workflowId,
+  threadId,
+  isDebug = false,
+}: UseWorkflowRuntimeOptions) {
+  const store = useWorkflowStore();
+
+  // ── 当前 threadId 的快捷读取 ──
+  const getThread = useCallback(() => {
+    if (!threadId) return null;
+    return store.threadExecutions[threadId] ?? { messages: [], status: 'idle', interrupt: null };
+  }, [threadId, store.threadExecutions]);
+
+  const messages = threadId
+    ? (store.threadExecutions[threadId]?.messages ?? [])
+    : [];
+  const status = threadId
+    ? (store.threadExecutions[threadId]?.status ?? 'idle')
+    : 'idle';
+  const activeInterrupt = threadId
+    ? (store.threadExecutions[threadId]?.interrupt ?? null)
+    : null;
+
+  // ── 追踪本轮已接收的消息（用于 node_done 补偿去重，不走 store 避免异步问题） ──
+  const sentMessagesRef = useRef<WorkflowExecutionMessage[]>([]);
+
+  // ── 分发消息（同时写 store + 更新 ref） ──
+  const dispatch = useCallback((tid: string, msg: WorkflowExecutionMessage) => {
+    sentMessagesRef.current = [...sentMessagesRef.current, msg];
+    store.appendThreadMessage(tid, msg);
+  }, [store]);
+
+  // ── 切换工作流时清理旧调试数据（仅调试模式） ──
+  useEffect(() => {
+    if (isDebug) {
+      store.clearExecution();
+    }
+  }, [workflowId]);
+
+  // ── 追踪当前的 threadId 动态值，避免监听器 useEffect 因 threadId 变化频繁销毁和异步重建造成事件漏单 ──
+  const threadIdRef = useRef<string | null>(threadId);
+  useEffect(() => {
+    threadIdRef.current = threadId;
+  }, [threadId]);
+
+  // ── 首次挂载或 threadId 改变时，从 SQLite 数据库加载历史消息并做格式映射还原 ──
+  useEffect(() => {
+    const activeTid = threadId;
+    if (!activeTid || isDebug) return;
+
+    // 如果该会话已经存在内存消息记录，不再重复拉取
+    const currentExec = store.threadExecutions[activeTid];
+    if (currentExec && currentExec.messages.length > 0) return;
+
+    async function loadHistory(tid: string) {
+      try {
+        const workspaceId = useWorkspaceStore.getState().activeWorkspaceId;
+        if (!workspaceId) return;
+
+        const history = await invoke<any[]>('load_conversation_history', {
+          workspaceId,
+          convId: tid,
+        });
+
+        if (!history || history.length === 0) return;
+
+        const mapped: WorkflowExecutionMessage[] = [];
+        history.forEach((m) => {
+          const timestamp = m.timestamp ? new Date(m.timestamp).getTime() : Date.now();
+          if (m.role === 'user') {
+            let contentStr = '';
+            if (typeof m.content === 'string') {
+              contentStr = m.content;
+            } else if (Array.isArray(m.content)) {
+              contentStr = m.content.map((c: any) => c.text || '').join('\n');
+            }
+            mapped.push({
+              type: 'user',
+              content: contentStr,
+              timestamp,
+            });
+          } else if (m.role === 'assistant') {
+            if (Array.isArray(m.content)) {
+              m.content.forEach((chunk: any) => {
+                if (chunk.type === 'thinking' && chunk.thinking) {
+                  mapped.push({
+                    type: 'thinking',
+                    content: chunk.thinking,
+                    nodeId: 'llm', // 赋予默认 llm nodeId 节点以便渲染折叠组
+                    timestamp,
+                  });
+                } else if (chunk.type === 'text' && chunk.text) {
+                  mapped.push({
+                    type: 'text_delta',
+                    content: chunk.text,
+                    nodeId: 'answer', // 赋予默认 answer 节点以渲染出 Markdown 答案气泡
+                    timestamp: timestamp + 1,
+                  });
+                }
+              });
+            }
+          }
+        });
+
+        if (mapped.length > 0) {
+          useWorkflowStore.setState((s) => ({
+            threadExecutions: {
+              ...s.threadExecutions,
+              [tid]: {
+                messages: mapped,
+                status: 'done',
+                interrupt: null,
+              },
+            },
+          }));
+        }
+      } catch (e) {
+        console.warn('[WorkflowRuntime] Failed to load history from SQLite:', e);
+      }
+    }
+
+    loadHistory(activeTid);
+  }, [threadId, isDebug, workflowId]);
+
+  // ── 事件监听 ──
+  useEffect(() => {
+    if (!workflowId) return;
+
+    let cancelled = false;
+    let unlisten: (() => void) | null = null;
+
+    async function setup() {
+      try {
+        const fn = await listen<any>('workflow-event', (event) => {
+          if (cancelled) return;
+          try {
+            let payload: WorkflowTauriEvent;
+            if (typeof event.payload === 'string') {
+              payload = JSON.parse(event.payload);
+            } else {
+              payload = event.payload as WorkflowTauriEvent;
+            }
+
+            // 调试模式：接受 workflowId 本身 + debug 子 ID；聊天模式：只接受精确 workflowId
+            const isExactMatch = payload.workflow_id === workflowId;
+            const isDebugSubflow = isDebug && payload.workflow_id.startsWith(`${workflowId}:debug:`);
+            if (!isExactMatch && !isDebugSubflow) return;
+
+            // 计算当前有效 threadId（调试模式从 store 取最新值）
+            const activeTid = isDebug
+              ? (useWorkflowStore.getState().activeExecutionThreadId ?? `${workflowId}:debug`)
+              : threadIdRef.current;
+            if (!activeTid) return;
+
+            // ─── 物理级防串线过滤 ───
+            if (payload.thread_id && payload.thread_id !== activeTid) {
+              return;
+            }
+
+            console.log(`[WorkflowRuntime] Received event type: "${payload.type}" for threadId: "${activeTid}", nodeId: "${payload.node_id ?? ''}"`);
+
+            const timestamp = Date.now();
+
+            switch (payload.type) {
+              case 'workflow_start':
+                store.setThreadStatus(activeTid, 'running');
+                store.setThreadInterrupt(activeTid, null);
+                dispatch(activeTid, {
+                  type: 'info',
+                  content: `🚀 Workflow started...`,
+                  timestamp,
+                });
+                break;
+
+              case 'node_start':
+                if (!isDebugSubflow) {
+                  dispatch(activeTid, {
+                    type: 'info',
+                    content: `▶️ Running node: [${payload.node_id}]`,
+                    nodeId: payload.node_id,
+                    timestamp,
+                  });
+                }
+                break;
+
+              case 'text_delta':
+                if (payload.text) {
+                  if (isDebugSubflow) {
+                    // 调试子流：写入 debugResults
+                    const targetId = store.debugTarget?.nodeId;
+                    if (targetId) {
+                      const prev = store.debugResults[targetId];
+                      if (prev) {
+                        const currentOutput = (prev.output && typeof prev.output === 'object') ? { ...prev.output } : {};
+                        currentOutput.response = (currentOutput.response || '') + payload.text;
+                        store.setDebugResult(targetId, { ...prev, output: currentOutput });
+                      }
+                    }
+                  } else {
+                    dispatch(activeTid, {
+                      type: 'text_delta',
+                      content: payload.text,
+                      nodeId: payload.node_id,
+                      timestamp,
+                    });
+                  }
+                }
+                break;
+
+              case 'thinking':
+                if (payload.text) {
+                  if (isDebugSubflow) {
+                    const targetId = store.debugTarget?.nodeId;
+                    if (targetId) {
+                      const prev = store.debugResults[targetId];
+                      if (prev) {
+                        const currentOutput = (prev.output && typeof prev.output === 'object') ? { ...prev.output } : {};
+                        currentOutput.thinking = (currentOutput.thinking || '') + payload.text;
+                        store.setDebugResult(targetId, { ...prev, output: currentOutput });
+                      }
+                    }
+                  } else {
+                    dispatch(activeTid, {
+                      type: 'thinking',
+                      content: payload.text,
+                      nodeId: payload.node_id,
+                      timestamp,
+                    });
+                  }
+                }
+                break;
+
+              case 'node_done': {
+                if (!isDebugSubflow) {
+                  dispatch(activeTid, {
+                    type: 'info',
+                    content: `✅ Node [${payload.node_id}] finished.`,
+                    nodeId: payload.node_id,
+                    timestamp,
+                  });
+
+                  // 补偿非流式返回：只在该节点还没有 text_delta 时才补偿
+                  if (payload.output && typeof payload.output === 'object') {
+                    const outputObj = payload.output as Record<string, unknown>;
+                    const responseText = outputObj.response || outputObj.answer;
+                    if (typeof responseText === 'string' && responseText.trim()) {
+                      const hasDeltas = sentMessagesRef.current.some(
+                        (m) => m.nodeId === payload.node_id && m.type === 'text_delta'
+                      );
+                      if (!hasDeltas) {
+                        dispatch(activeTid, {
+                          type: 'text_delta',
+                          content: responseText,
+                          nodeId: payload.node_id,
+                          timestamp: timestamp + 1,
+                        });
+                      }
+                    }
+                  }
+                }
+                break;
+              }
+
+              case 'workflow_interrupted': {
+                const rawInterrupt = payload.interrupt as any;
+                const interruptData = rawInterrupt?.value ?? rawInterrupt;
+                console.log(`[WorkflowRuntime] workflow_interrupted event details:`, interruptData);
+                store.setThreadStatus(activeTid, 'idle');
+                store.setThreadInterrupt(activeTid, interruptData);
+                dispatch(activeTid, {
+                  type: 'interrupt' as any,
+                  content: JSON.stringify(interruptData),
+                  timestamp,
+                });
+                break;
+              }
+
+              case 'workflow_done':
+                store.setThreadStatus(activeTid, 'done');
+                store.setThreadInterrupt(activeTid, null);
+                dispatch(activeTid, {
+                  type: 'info',
+                  content: `🎉 Workflow execution completed successfully.`,
+                  timestamp,
+                });
+                break;
+
+              case 'workflow_error':
+              case 'error':
+                store.setThreadStatus(activeTid, 'error');
+                store.setThreadInterrupt(activeTid, null);
+                dispatch(activeTid, {
+                  type: 'error',
+                  content: `❌ Execution error: ${payload.error || payload.text || 'Unknown error'}`,
+                  timestamp,
+                });
+                break;
+
+              // ── 调试专属事件 ──
+              case 'debug_start':
+                if (isDebug) {
+                  store.setThreadStatus(activeTid, 'running');
+                  dispatch(activeTid, {
+                    type: 'info',
+                    content: `🔍 Debugging node [${payload.node_id}]...`,
+                    nodeId: payload.node_id,
+                    timestamp,
+                  });
+                }
+                break;
+
+              case 'debug_done': {
+                if (isDebug) {
+                  store.setThreadStatus(activeTid, 'done');
+                  const targetId = payload.node_id || store.debugTarget?.nodeId || '';
+                  const prev = targetId ? store.debugResults[targetId] : null;
+                  const startTime = prev?.startTime || Date.now();
+                  if (targetId) {
+                    store.setDebugResult(targetId, {
+                      status: 'done',
+                      input: prev?.input || null,
+                      output: payload.output,
+                      startTime,
+                      duration: Date.now() - startTime,
+                    });
+                  }
+                  dispatch(activeTid, {
+                    type: 'info',
+                    content: `✅ Debug done. Output: ${JSON.stringify(payload.output)}`,
+                    nodeId: payload.node_id,
+                    timestamp,
+                  });
+                }
+                break;
+              }
+
+              case 'debug_error': {
+                if (isDebug) {
+                  store.setThreadStatus(activeTid, 'error');
+                  const targetId = payload.node_id || store.debugTarget?.nodeId || '';
+                  const prev = targetId ? store.debugResults[targetId] : null;
+                  if (targetId) {
+                    store.setDebugResult(targetId, {
+                      status: 'error',
+                      input: prev?.input || null,
+                      output: null,
+                      error: payload.error || 'Unknown error',
+                      startTime: prev?.startTime || Date.now(),
+                      duration: prev ? Date.now() - prev.startTime : undefined,
+                    });
+                  }
+                  dispatch(activeTid, {
+                    type: 'error',
+                    content: `❌ Debug error: ${payload.error || 'Unknown error'}`,
+                    timestamp,
+                  });
+                }
+                break;
+              }
+            }
+          } catch (e) {
+            console.error('Failed to parse workflow event payload:', e);
+          }
+        });
+
+        if (!cancelled) {
+          unlisten = fn;
+        } else {
+          fn();
+        }
+      } catch (e) {
+        console.warn('Failed to setup workflow runtime listener:', e);
+      }
+    }
+
+    setup();
+
+    return () => {
+      cancelled = true;
+      unlisten?.();
+    };
+  }, [workflowId, isDebug]);
+
+  // ── startWorkflow ──
+  const startWorkflow = useCallback(async (input: string) => {
+    if (!workflowId) return;
+
+    let activeTid = threadId;
+    if (isDebug && !activeTid) {
+      // 调试模式：无活跃 threadId 时才全新生成并清空
+      activeTid = `${workflowId}_run_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`;
+      store.clearExecution();
+      store.setActiveExecutionThreadId(activeTid);
+    }
+    if (!activeTid) return;
+
+    // 清空本轮消息追踪
+    sentMessagesRef.current = [];
+
+    store.setThreadStatus(activeTid, 'running');
+    store.setThreadInterrupt(activeTid, null);
+
+    // 提取 user 显示文本
+    let userMsgContent = input;
+    try {
+      if (input.trim().startsWith('{')) {
+        const parsed = JSON.parse(input);
+        if (parsed.query) {
+          userMsgContent = parsed.query;
+        } else {
+          userMsgContent = Object.entries(parsed).map(([k, v]) => `${k}: ${v}`).join('\n');
+        }
+      }
+    } catch (_) {}
+
+    dispatch(activeTid, {
+      type: 'user',
+      content: userMsgContent,
+      timestamp: Date.now(),
+    });
+
+    try {
+      await invoke('run_workflow', {
+        workflowId,
+        input,
+        threadId: activeTid,
+        thread_id: activeTid,
+      });
+    } catch (e) {
+      store.setThreadStatus(activeTid, 'error');
+      dispatch(activeTid, {
+        type: 'error',
+        content: `Failed to start workflow: ${e}`,
+        timestamp: Date.now(),
+      });
+    }
+  }, [workflowId, threadId, isDebug, store, dispatch]);
+
+  // ── resumeWorkflow ──
+  const resumeWorkflow = useCallback(async (choiceValue: unknown) => {
+    if (!workflowId) return;
+    const activeTid = isDebug
+      ? (store.activeExecutionThreadId ?? `${workflowId}:debug`)
+      : threadId;
+    if (!activeTid) return;
+
+    store.setThreadStatus(activeTid, 'running');
+
+    try {
+      await invoke('run_workflow', {
+        workflowId,
+        resumeValue: choiceValue,
+        threadId: activeTid,
+        thread_id: activeTid,
+      });
+    } catch (e) {
+      store.setThreadStatus(activeTid, 'error');
+      dispatch(activeTid, {
+        type: 'error',
+        content: `Failed to resume workflow: ${e}`,
+        timestamp: Date.now(),
+      });
+    }
+  }, [workflowId, threadId, isDebug, store, dispatch]);
+
+  // ── stopWorkflow ──
+  const stopWorkflow = useCallback(async () => {
+    if (!workflowId) return;
+    const activeTid = isDebug
+      ? (store.activeExecutionThreadId ?? `${workflowId}:debug`)
+      : threadId;
+    try {
+      await invoke('stop_workflow', { workflowId });
+      if (activeTid) {
+        store.setThreadStatus(activeTid, 'idle');
+        dispatch(activeTid, {
+          type: 'info',
+          content: `🛑 Workflow execution stopped by user.`,
+          timestamp: Date.now(),
+        });
+      }
+    } catch (e) {
+      if (activeTid) {
+        dispatch(activeTid, {
+          type: 'error',
+          content: `Failed to stop workflow: ${e}`,
+          timestamp: Date.now(),
+        });
+      }
+    }
+  }, [workflowId, threadId, isDebug, store, dispatch]);
+
+  // ── debugNode（调试专属） ──
+  const debugNode = useCallback(async (nodeId: string, input?: string) => {
+    if (!workflowId || !isDebug) return;
+    const activeTid = isDebug
+      ? (store.activeExecutionThreadId ?? `${workflowId}:debug`)
+      : threadId;
+    if (!activeTid) return;
+
+    store.clearExecution();
+    store.setThreadStatus(activeTid, 'running');
+
+    let parsedInput = null;
+    try { if (input) parsedInput = JSON.parse(input); } catch {}
+
+    store.setDebugResult(nodeId, {
+      status: 'running',
+      input: parsedInput,
+      output: null,
+      startTime: Date.now(),
+    });
+
+    dispatch(activeTid, {
+      type: 'info',
+      content: `🔍 Starting debug for node [${nodeId}]...`,
+      nodeId,
+      timestamp: Date.now(),
+    });
+
+    try {
+      await invoke('debug_node', {
+        workflowId,
+        nodeId,
+        input: input ?? '',
+      });
+    } catch (e) {
+      store.setThreadStatus(activeTid, 'error');
+      store.setDebugResult(nodeId, {
+        status: 'error',
+        input: parsedInput,
+        output: null,
+        error: String(e),
+        startTime: Date.now(),
+      });
+      dispatch(activeTid, {
+        type: 'error',
+        content: `Failed to debug node: ${e}`,
+        timestamp: Date.now(),
+      });
+    }
+  }, [workflowId, threadId, isDebug, store, dispatch]);
+
+  // ── clearExecution（清理当前 thread） ──
+  const clearExecution = useCallback(() => {
+    if (isDebug) {
+      store.clearExecution(); // 同时重置 activeExecutionThreadId
+    } else if (threadId) {
+      store.clearThreadExecution(threadId);
+    }
+    sentMessagesRef.current = [];
+  }, [isDebug, threadId, store]);
+
+  return {
+    messages,
+    status,
+    activeInterrupt,
+    startWorkflow,
+    resumeWorkflow,
+    stopWorkflow,
+    debugNode: isDebug ? debugNode : undefined,
+    clearExecution,
+  };
+}

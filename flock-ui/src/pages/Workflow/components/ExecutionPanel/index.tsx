@@ -10,6 +10,8 @@ import {
   ScrollArea,
   Stack,
   Collapse,
+  Avatar,
+  Paper,
 } from '@mantine/core';
 import {
   IconX,
@@ -41,6 +43,13 @@ export function ExecutionPanel({
   startWorkflow,
   stopWorkflow,
   resumeWorkflow,
+  isEmbedded = false,
+  externalNodes,
+  externalStartVariables,
+  initialQuery,
+  workflowName,
+  activeInterrupt: externalActiveInterrupt,
+  onClearExecution,
 }: ExecutionPanelProps) {
   const { t } = useTranslation();
   const theme = useUiStore((s) => s.theme);
@@ -48,10 +57,12 @@ export function ExecutionPanel({
   const { clearExecution } = useWorkflowStore();
   const [inputVal, setInputVal] = useState('');
   const bottomRef = useRef<HTMLDivElement>(null);
-  const nodes = useWorkflowStore((s) => s.nodes);
 
-  const startNode = useWorkflowStore((s) => s.nodes.find((n) => n.type === 'start'));
-  const startVariables = (startNode?.data?.variables as any[]) ?? [
+  const storeNodes = useWorkflowStore((s) => s.nodes);
+  const nodes = externalNodes ?? storeNodes;
+
+  const startNode = nodes.find((n: any) => n.type === 'start');
+  const startVariables = externalStartVariables ?? (startNode?.data?.variables as any[]) ?? [
     { type: 'string', name: 'query', label: 'Query', required: true }
   ];
 
@@ -65,7 +76,8 @@ export function ExecutionPanel({
     setFormInputs(initial);
   }, [startVariables]);
 
-  const activeInterrupt = useWorkflowStore((s) => s.activeInterrupt);
+  const storeActiveInterrupt = useWorkflowStore((s) => s.activeInterrupt);
+  const activeInterrupt = externalActiveInterrupt !== undefined ? externalActiveInterrupt : storeActiveInterrupt;
   const isInterrupted = activeInterrupt !== null;
 
   const statusColor =
@@ -77,13 +89,38 @@ export function ExecutionPanel({
 
   const customVars = startVariables.filter((v: any) => v.name !== 'query');
 
+  // 首页带来的初始 query：在组件挂载后立即执行（优先用 pendingStartQuery，再用 initialQuery prop）
+  const pendingStartQuery = useWorkflowStore((s) => s.pendingStartQuery);
+  const initialQueryFiredRef = useRef(false);
+
+  useEffect(() => {
+    const q = pendingStartQuery ?? initialQuery;
+    if (q && !initialQueryFiredRef.current && status === 'idle' && messages.length === 0) {
+      initialQueryFiredRef.current = true;
+      useWorkflowStore.getState().setPendingStartQuery(null);
+
+      const hasCustomVars = customVars.length > 0;
+      if (hasCustomVars) {
+        // 如果有自定义预置参数，不自动执行，而是把初始 query 填入 formInputs 中的 query 以及 inputVal
+        setInputVal(q);
+        setFormInputs((prev) => ({ ...prev, query: q }));
+      } else {
+        // 如果没有自定义预置参数，可以直接执行
+        const payload: Record<string, any> = { ...formInputs };
+        payload['query'] = q;
+        startWorkflow(JSON.stringify(payload));
+        setInputVal('');
+      }
+    }
+  }, [pendingStartQuery, initialQuery, status, messages.length, customVars.length]);
+
   const handleResume = useCallback((choice: string, feedback?: string) => {
     const payload: Record<string, unknown> = { choice };
     if (feedback) payload.feedback = feedback;
     resumeWorkflow(payload);
   }, [resumeWorkflow]);
 
-  const { steps, handleResume: resumeWithTracking } = useExecutionPanelMessages({
+  const { steps, rounds, handleResume: resumeWithTracking } = useExecutionPanelMessages({
     messages,
     status,
     isInterrupted,
@@ -99,13 +136,12 @@ export function ExecutionPanel({
     bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [steps.length]);
 
-  // 工作流大组默认折叠
-  const [workflowExpanded, setWorkflowExpanded] = useState(false);
+  // 每轮折叠状态（key: 轮次 index，value: 是否展开）
+  const [expandedRounds, setExpandedRounds] = useState<Record<number, boolean>>({});
+  const toggleRound = (idx: number) => setExpandedRounds(prev => ({ ...prev, [idx]: !prev[idx] }));
 
   const allDone = steps.length > 0 && steps.every((s) => s.status === 'done' || s.status === 'error');
-
-  // answer 和 human 步骤：在折叠组外额外显示
-  const prominentSteps = steps.filter((s) => s.nodeType === 'answer' || s.isInterrupt);
+  // answer 和 human 步骤：兼容性保留（按轮次已内联渲染，此处备用）
 
   const handleStart = () => {
     const missing = customVars.filter((v: any) => v.required && (formInputs[v.name] === undefined || formInputs[v.name] === ''));
@@ -120,22 +156,33 @@ export function ExecutionPanel({
     payload['query'] = inputVal;
     startWorkflow(JSON.stringify(payload));
     setInputVal('');
-    // 每次新运行时展开工作流组
-    setWorkflowExpanded(false);
+    // 新对话时收起所有轮次折叠组
+    setExpandedRounds({});
+  };
+
+  const handleClear = () => {
+    initialQueryFiredRef.current = false;
+    if (onClearExecution) {
+      onClearExecution();
+    } else {
+      clearExecution();
+    }
   };
 
   return (
     <Box
       style={{
-        borderLeft: '1px solid var(--flock-border-subtle)',
-        background: 'var(--flock-bg-deepest)',
-        width: 380,
+        borderLeft: isEmbedded ? 'none' : '1px solid var(--flock-border-subtle)',
+        background: isEmbedded ? 'transparent' : 'var(--flock-bg-deepest)',
+        width: isEmbedded ? '100%' : 380,
         height: '100%',
-        flexShrink: 0,
+        flex: isEmbedded ? 1 : undefined,
+        minHeight: isEmbedded ? 0 : undefined,
+        flexShrink: isEmbedded ? undefined : 0,
         display: 'flex',
         flexDirection: 'column',
         overflow: 'hidden',
-        boxShadow: '-2px 0 12px rgba(0, 0, 0, 0.08)',
+        boxShadow: isEmbedded ? 'none' : '-2px 0 12px rgba(0, 0, 0, 0.08)',
       }}
     >
       {/* Panel header */}
@@ -150,10 +197,18 @@ export function ExecutionPanel({
         }}
       >
         <Group gap="xs">
-          <IconTerminal2 size={14} style={{ color: 'var(--flock-text-muted)' }} />
-          <Text size="xs" fw={600} style={{ color: 'var(--flock-text-dim)', letterSpacing: '0.03em' }}>
-            {t('workflow.execution.title', 'Execution Output')}
-          </Text>
+          {isEmbedded ? (
+            <Text size="xs" fw={600} style={{ color: 'var(--flock-text-dim)' }}>
+              ⚡ {workflowName || t('workflow.execution.title', 'Execution Output')}
+            </Text>
+          ) : (
+            <>
+              <IconTerminal2 size={14} style={{ color: 'var(--flock-text-muted)' }} />
+              <Text size="xs" fw={600} style={{ color: 'var(--flock-text-dim)', letterSpacing: '0.03em' }}>
+                {t('workflow.execution.title', 'Execution Output')}
+              </Text>
+            </>
+          )}
           <Badge size="xs" color={statusColor} variant="light" style={{ fontSize: 9 }}>
             {isInterrupted
               ? t('workflow.execution.waiting', 'WAITING')
@@ -168,7 +223,7 @@ export function ExecutionPanel({
               variant="subtle"
               color="blue"
               leftSection={<IconPlus size={12} />}
-              onClick={clearExecution}
+              onClick={handleClear}
               style={{ height: 24, fontSize: 10, padding: '0 8px' }}
             >
               {t('workflow.execution.newChat', 'New Chat')}
@@ -186,11 +241,14 @@ export function ExecutionPanel({
               {t('common.stop', 'Stop')}
             </Button>
           )}
-          <ActionIcon variant="subtle" size="xs" color="gray" onClick={onClose}>
-            <IconX size={14} />
-          </ActionIcon>
+          {!isEmbedded && onClose && (
+            <ActionIcon variant="subtle" size="xs" color="gray" onClick={onClose}>
+              <IconX size={14} />
+            </ActionIcon>
+          )}
         </Group>
       </Group>
+
 
       {/* Main content */}
       <Box
@@ -240,157 +298,203 @@ export function ExecutionPanel({
             </Box>
           )
         ) : (
-          /* 有执行记录时 */
+          /* 有执行记录时（按轮次渲染：用户气泡 + 工作流折叠组 + answer/human 卡片） */
           <ScrollArea style={{ flex: 1 }} px="sm" py="sm">
-            <Stack gap={8}>
+            <Stack gap={12}>
 
-              {/* ── 工作流折叠组（默认折叠，包含所有步骤） ── */}
-              <Box
-                style={{
-                  borderRadius: 10,
-                  border: '1px solid var(--flock-border-subtle)',
-                  overflow: 'hidden',
-                  background: 'var(--flock-bg-surface)',
-                }}
-              >
-                {/* 组标题行 */}
-                <Box
-                  onClick={() => setWorkflowExpanded((v) => !v)}
-                  style={{
-                    padding: '8px 12px',
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: 8,
-                    cursor: 'pointer',
-                    userSelect: 'none',
-                    borderBottom: workflowExpanded ? '1px solid var(--flock-border-subtle)' : 'none',
-                  }}
-                >
-                  {/* 完成状态图标 */}
-                  {allDone ? (
-                    <Box
-                      style={{
-                        width: 16, height: 16, borderRadius: '50%',
-                        background: '#10b981',
-                        display: 'flex', alignItems: 'center', justifyContent: 'center',
-                        flexShrink: 0,
-                      }}
-                    >
-                      <IconCheck size={9} color="#fff" stroke={3} />
-                    </Box>
-                  ) : (
-                    <Box
-                      style={{
-                        width: 16, height: 16, borderRadius: '50%',
-                        border: `2px solid ${status === 'running' ? '#3b82f6' : '#6b7280'}`,
-                        flexShrink: 0,
-                        animation: status === 'running' ? 'pulse 1.5s ease-in-out infinite' : 'none',
-                      }}
-                    />
-                  )}
+              {rounds.map((round) => {
+                const isExpanded = !!expandedRounds[round.index];
+                const roundAllDone = round.steps.length > 0 && round.steps.every(s => s.status === 'done' || s.status === 'error');
+                const roundProminentSteps = round.steps.filter(s => s.nodeType === 'answer' || s.isInterrupt);
 
-                  <Text size="xs" fw={600} style={{ flex: 1, color: 'var(--flock-text-bright)' }}>
-                    {t('workflow.execution.workflowGroup', '工作流')}
-                  </Text>
-
-                  {/* 步骤数量 */}
-                  <Text size="xs" c="dimmed" style={{ fontSize: 10 }}>
-                    {steps.length} {t('workflow.execution.steps', '步')}
-                  </Text>
-
-                  <ActionIcon size="xs" variant="transparent" color="gray">
-                    {workflowExpanded ? <IconChevronDown size={13} /> : <IconChevronRight size={13} />}
-                  </ActionIcon>
-                </Box>
-
-                {/* 步骤列表（折叠内容） */}
-                <Collapse in={workflowExpanded}>
-                  <Stack gap={3} p="xs">
-                    {steps.map((step) => (
-                      <WorkflowStepItem
-                        key={step.id}
-                        step={step}
-                        isDark={isDark}
-                      />
-                    ))}
-                  </Stack>
-                </Collapse>
-              </Box>
-
-              {/* ── answer / human 步骤在外面额外显示 ── */}
-              {prominentSteps.map((step) => {
-                /* Human 审查卡片 */
-                if (step.isInterrupt) {
-                  return (
-                  <HumanReviewCard
-                      key={`prominent-${step.id}`}
-                      interruptData={step.interruptData ?? {}}
-                      onResume={trackedResume}
-                      isDark={isDark}
-                      isResolved={step.interruptResolved}
-                      resolvedActionLabel={step.resolvedActionLabel}
-                      resolvedFeedback={step.resolvedFeedback}
-                      displayName={step.displayName}
-                    />
-                  );
-                }
-
-                /* Answer 输出卡片 */
-                const answerCfg = nodeConfig['answer'];
                 return (
-                  <Box
-                    key={`prominent-${step.id}`}
-                    style={{
-                      borderRadius: 10,
-                      border: '1px solid var(--flock-border-subtle)',
-                      overflow: 'hidden',
-                      background: 'var(--flock-bg-surface)',
-                    }}
-                  >
-                    {/* 标题行 */}
-                    <Box
-                      style={{
-                        padding: '7px 12px',
-                        background: isDark ? 'rgba(255,255,255,0.03)' : 'rgba(0,0,0,0.02)',
-                        borderBottom: '1px solid var(--flock-border-subtle)',
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: 7,
-                      }}
-                    >
+                  <Stack key={round.index} gap={8}>
+
+                    {/* 用户输入气泡 */}
+                    {round.userText && (
                       <Box
                         style={{
-                          width: 20, height: 20, borderRadius: 5,
-                          background: answerCfg.colorHex,
-                          display: 'flex', alignItems: 'center', justifyContent: 'center',
-                          flexShrink: 0,
+                          display: 'flex',
+                          flexDirection: 'row-reverse',
+                          alignItems: 'flex-start',
+                          gap: 8,
                         }}
                       >
-                        <IconMessageCircle size={11} color="#fff" />
+                        <Avatar
+                          size={28}
+                          radius="xl"
+                          style={{
+                            background: 'var(--flock-bg-surface)',
+                            border: '1px solid var(--flock-border-dim)',
+                            flexShrink: 0,
+                          }}
+                        >
+                          <IconUser size={14} color="var(--flock-text-dim)" />
+                        </Avatar>
+                        <Paper
+                          p="xs"
+                          radius="lg"
+                          style={{
+                            maxWidth: '80%',
+                            background: 'var(--flock-accent-soft)',
+                            border: '1px solid var(--flock-border-base)',
+                            borderRadius: '18px 4px 18px 18px',
+                          }}
+                        >
+                          <Text size="sm" style={{ color: 'var(--flock-text-primary)', lineHeight: 1.6, whiteSpace: 'pre-wrap', wordBreak: 'break-word' }}>
+                            {round.userText}
+                          </Text>
+                        </Paper>
                       </Box>
-                      <Text size="xs" fw={600} style={{ color: 'var(--flock-text-bright)', flex: 1, fontSize: 12 }}>
-                        {step.displayName}
-                      </Text>
-                      {step.status === 'running' && (
-                        <Box style={{ animation: 'spin 1s linear infinite', display: 'flex' }}>
-                          <IconCheck size={13} style={{ color: '#3b82f6' }} />
-                        </Box>
-                      )}
-                    </Box>
+                    )}
 
-                    {/* 输出内容 */}
-                    <Box style={{ padding: '10px 14px' }}>
-                      {step.outputText ? (
-                        <Box className="markdown-body">
-                          <ReactMarkdown>{step.outputText}</ReactMarkdown>
+                    {/* 工作流折叠组 */}
+                    {round.steps.length > 0 && (
+                      <Box
+                        style={{
+                          borderRadius: 10,
+                          border: '1px solid var(--flock-border-subtle)',
+                          overflow: 'hidden',
+                          background: 'var(--flock-bg-surface)',
+                        }}
+                      >
+                        {/* 组标题行 */}
+                        <Box
+                          onClick={() => toggleRound(round.index)}
+                          style={{
+                            padding: '8px 12px',
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: 8,
+                            cursor: 'pointer',
+                            userSelect: 'none',
+                            borderBottom: isExpanded ? '1px solid var(--flock-border-subtle)' : 'none',
+                          }}
+                        >
+                          {/* 完成状态图标 */}
+                          {roundAllDone ? (
+                            <Box
+                              style={{
+                                width: 16, height: 16, borderRadius: '50%',
+                                background: '#10b981',
+                                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                flexShrink: 0,
+                              }}
+                            >
+                              <IconCheck size={9} color="#fff" stroke={3} />
+                            </Box>
+                          ) : (
+                            <Box
+                              style={{
+                                width: 16, height: 16, borderRadius: '50%',
+                                border: `2px solid ${status === 'running' ? '#3b82f6' : '#6b7280'}`,
+                                flexShrink: 0,
+                                animation: status === 'running' ? 'pulse 1.5s ease-in-out infinite' : 'none',
+                              }}
+                            />
+                          )}
+
+                          <Text size="xs" fw={600} style={{ flex: 1, color: 'var(--flock-text-bright)' }}>
+                            {t('workflow.execution.workflowGroup', '工作流')}
+                          </Text>
+
+                          <Text size="xs" c="dimmed" style={{ fontSize: 10 }}>
+                            {round.steps.length} {t('workflow.execution.steps', '步')}
+                          </Text>
+
+                          <ActionIcon size="xs" variant="transparent" color="gray">
+                            {isExpanded ? <IconChevronDown size={13} /> : <IconChevronRight size={13} />}
+                          </ActionIcon>
                         </Box>
-                      ) : (
-                        <Text size="xs" c="dimmed" style={{ fontStyle: 'italic', fontSize: 11 }}>
-                          {t('workflow.execution.generating', '生成中...')}
-                        </Text>
-                      )}
-                    </Box>
-                  </Box>
+
+                        {/* 步骤列表（折叠内容） */}
+                        <Collapse in={isExpanded}>
+                          <Stack gap={3} p="xs">
+                            {round.steps.map((step) => (
+                              <WorkflowStepItem
+                                key={step.id}
+                                step={step}
+                                isDark={isDark}
+                              />
+                            ))}
+                          </Stack>
+                        </Collapse>
+                      </Box>
+                    )}
+
+                    {/* answer / human 步骤在折叠组外显示 */}
+                    {roundProminentSteps.map((step) => {
+                      if (step.isInterrupt) {
+                        return (
+                          <HumanReviewCard
+                            key={`prominent-${step.id}`}
+                            interruptData={step.interruptData ?? {}}
+                            onResume={trackedResume}
+                            isDark={isDark}
+                            isResolved={step.interruptResolved}
+                            resolvedActionLabel={step.resolvedActionLabel}
+                            resolvedFeedback={step.resolvedFeedback}
+                            displayName={step.displayName}
+                          />
+                        );
+                      }
+
+                      const answerCfg = nodeConfig['answer'];
+                      return (
+                        <Box
+                          key={`prominent-${step.id}`}
+                          style={{
+                            borderRadius: 10,
+                            border: '1px solid var(--flock-border-subtle)',
+                            overflow: 'hidden',
+                            background: 'var(--flock-bg-surface)',
+                          }}
+                        >
+                          <Box
+                            style={{
+                              padding: '7px 12px',
+                              background: isDark ? 'rgba(255,255,255,0.03)' : 'rgba(0,0,0,0.02)',
+                              borderBottom: '1px solid var(--flock-border-subtle)',
+                              display: 'flex',
+                              alignItems: 'center',
+                              gap: 7,
+                            }}
+                          >
+                            <Box
+                              style={{
+                                width: 20, height: 20, borderRadius: 5,
+                                background: answerCfg.colorHex,
+                                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                flexShrink: 0,
+                              }}
+                            >
+                              <IconMessageCircle size={11} color="#fff" />
+                            </Box>
+                            <Text size="xs" fw={600} style={{ color: 'var(--flock-text-bright)', flex: 1, fontSize: 12 }}>
+                              {step.displayName}
+                            </Text>
+                            {step.status === 'running' && (
+                              <Box style={{ animation: 'spin 1s linear infinite', display: 'flex' }}>
+                                <IconCheck size={13} style={{ color: '#3b82f6' }} />
+                              </Box>
+                            )}
+                          </Box>
+                          <Box style={{ padding: '10px 14px' }}>
+                            {step.outputText ? (
+                              <Box className="markdown-body">
+                                <ReactMarkdown>{step.outputText}</ReactMarkdown>
+                              </Box>
+                            ) : (
+                              <Text size="xs" c="dimmed" style={{ fontStyle: 'italic', fontSize: 11 }}>
+                                {t('workflow.execution.generating', '生成中...')}
+                              </Text>
+                            )}
+                          </Box>
+                        </Box>
+                      );
+                    })}
+
+                  </Stack>
                 );
               })}
 

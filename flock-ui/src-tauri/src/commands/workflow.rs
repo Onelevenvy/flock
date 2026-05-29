@@ -1,6 +1,7 @@
 use std::sync::Arc;
 use std::sync::Mutex;
 use std::collections::HashMap;
+use sqlx::Row;
 use tokio::task::JoinHandle;
 use tauri::{AppHandle, State, Emitter};
 use serde_json::Value as JsonValue;
@@ -34,6 +35,9 @@ impl WorkflowExecutionState {
 struct TauriWorkflowSink {
     app: AppHandle,
     workflow_id: String,
+    thread_id: String,
+    accumulated_text: Arc<Mutex<String>>,
+    accumulated_thinking: Arc<Mutex<String>>,
 }
 
 impl WorkflowSink for TauriWorkflowSink {
@@ -41,29 +45,55 @@ impl WorkflowSink for TauriWorkflowSink {
         let _ = self.app.emit("workflow-event", serde_json::json!({
             "type": "node_start",
             "workflow_id": &self.workflow_id,
+            "thread_id": &self.thread_id,
             "node_id": node_id,
         }));
     }
     fn emit_node_done(&self, node_id: &str, output: &JsonValue) {
+        if let Some(obj) = output.as_object() {
+            let response_text = obj.get("response").or_else(|| obj.get("answer")).and_then(|v| v.as_str());
+            if let Some(txt) = response_text {
+                if let Ok(mut lock) = self.accumulated_text.lock() {
+                    if lock.is_empty() {
+                        lock.push_str(txt);
+                    }
+                }
+            }
+        } else if let Some(txt) = output.as_str() {
+            if let Ok(mut lock) = self.accumulated_text.lock() {
+                if lock.is_empty() {
+                    lock.push_str(txt);
+                }
+            }
+        }
         let _ = self.app.emit("workflow-event", serde_json::json!({
             "type": "node_done",
             "workflow_id": &self.workflow_id,
+            "thread_id": &self.thread_id,
             "node_id": node_id,
             "output": output,
         }));
     }
     fn emit_text_delta(&self, node_id: &str, text: &str) {
+        if let Ok(mut lock) = self.accumulated_text.lock() {
+            lock.push_str(text);
+        }
         let _ = self.app.emit("workflow-event", serde_json::json!({
             "type": "text_delta",
             "workflow_id": &self.workflow_id,
+            "thread_id": &self.thread_id,
             "node_id": node_id,
             "text": text,
         }));
     }
     fn emit_thinking(&self, node_id: &str, text: &str) {
+        if let Ok(mut lock) = self.accumulated_thinking.lock() {
+            lock.push_str(text);
+        }
         let _ = self.app.emit("workflow-event", serde_json::json!({
             "type": "thinking",
             "workflow_id": &self.workflow_id,
+            "thread_id": &self.thread_id,
             "node_id": node_id,
             "text": text,
         }));
@@ -72,6 +102,7 @@ impl WorkflowSink for TauriWorkflowSink {
         let _ = self.app.emit("workflow-event", serde_json::json!({
             "type": "error",
             "workflow_id": &self.workflow_id,
+            "thread_id": &self.thread_id,
             "message": msg,
         }));
     }
@@ -209,24 +240,34 @@ pub async fn run_workflow(
         if config.base_url.is_empty() { None } else { Some(config.base_url.clone()) },
     ));
 
-    // 5. 初始化 SQLite Checkpointer
-    let db_path_str = config.db_path.to_string_lossy().to_string();
-    let conn_str = format!("sqlite:{}", db_path_str);
-    let checkpointer: Arc<dyn BaseCheckpointSaver> = match SqliteSaver::from_conn_string(&conn_str).await {
-        Ok(saver) => {
-            if saver.setup().await.is_ok() {
-                Arc::new(saver)
-            } else {
-                Arc::new(InMemorySaver::new())
+    // 5. 初始化 Checkpointer（无论是调试还是普通，都统一使用 SqliteSaver 以持久化和跨调用周期保存状态，实现连续多轮提问和完美的打断恢复）
+    let checkpointer: Arc<dyn BaseCheckpointSaver> = {
+        let db_path_str = config.db_path.to_string_lossy().to_string();
+        let conn_str = format!("sqlite:{}", db_path_str);
+        match SqliteSaver::from_conn_string(&conn_str).await {
+            Ok(saver) => {
+                if saver.setup().await.is_ok() {
+                    Arc::new(saver)
+                } else {
+                    Arc::new(InMemorySaver::new())
+                }
             }
+            Err(_) => Arc::new(InMemorySaver::new()),
         }
-        Err(_) => Arc::new(InMemorySaver::new()),
     };
 
+    let thread_id_val = thread_id.unwrap_or_else(|| workflow_id.clone());
+
     // 6. 实例化 Sink & Context
+    let accumulated_text = Arc::new(Mutex::new(String::new()));
+    let accumulated_thinking = Arc::new(Mutex::new(String::new()));
+
     let sink = Arc::new(TauriWorkflowSink {
         app: app.clone(),
         workflow_id: workflow_id.clone(),
+        thread_id: thread_id_val.clone(),
+        accumulated_text: accumulated_text.clone(),
+        accumulated_thinking: accumulated_thinking.clone(),
     });
     let tools = Arc::new(all_tools().registry);
 
@@ -254,18 +295,52 @@ pub async fn run_workflow(
 
     // 7. 配置 thread_id
     let mut config = RunnableConfig::default();
-    let thread_id_val = thread_id.unwrap_or_else(|| workflow_id.clone());
     config.insert(
         "configurable".to_string(),
         serde_json::json!({ "thread_id": thread_id_val }),
     );
 
+    // 自动为工作流切换至当前激活工作空间的 working directory，解决不能选择工作空间的问题
+    let row = sqlx::query("SELECT workspace_id, cwd FROM session_metadata WHERE thread_id = ?1")
+        .bind(&thread_id_val)
+        .fetch_optional(db.pool())
+        .await
+        .map_err(|e| e.to_string())?;
+
+    if let Some(r) = row {
+        let workspace_id: String = r.get("workspace_id");
+        let cwd: String = r.get("cwd");
+        let workdir = if !cwd.is_empty() {
+            std::path::PathBuf::from(cwd)
+        } else if !workspace_id.is_empty() {
+            flock_core::config::db_path::workspace_root().join(workspace_id)
+        } else {
+            std::path::PathBuf::new()
+        };
+        if workdir.exists() {
+            if let Err(e) = std::env::set_current_dir(&workdir) {
+                log::warn!("Failed to set current dir to {:?}: {}", workdir, e);
+            } else {
+                log::info!("Successfully set current dir to {:?}", workdir);
+            }
+        }
+    }
+
     // 8. 决定初始输入（是全新启动还是 resume）
-    let initial_input = if let Some(res_val) = resume_value {
+    let mut input_msg = String::new();
+    let initial_input = if let Some(res_val) = resume_value.clone() {
+        if let Some(choice) = res_val.get("choice").and_then(|v| v.as_str()) {
+            if let Some(feedback) = res_val.get("feedback").and_then(|v| v.as_str()) {
+                input_msg = format!("Choice: {}\nFeedback: {}", choice, feedback);
+            } else {
+                input_msg = format!("Choice: {}", choice);
+            }
+        } else {
+            input_msg = res_val.to_string();
+        }
         let cmd = langgraph::types::Command::resume(res_val);
         serde_json::to_value(cmd).map_err(|e| e.to_string())?
     } else {
-        let mut input_msg = String::new();
         let mut start_outputs = serde_json::json!({});
 
         if let Some(ref inp_str) = input {
@@ -303,7 +378,7 @@ pub async fn run_workflow(
         }
 
         serde_json::json!({
-            "input_msg": input_msg,
+            "input_msg": input_msg.clone(),
             "messages": [],
             "node_outputs": node_outputs,
             "current_node": "",
@@ -316,11 +391,14 @@ pub async fn run_workflow(
     let app_clone = app.clone();
     let workflow_id_clone = workflow_id.clone();
     let execution_state_clone = execution_state.inner().clone();
+    let db_for_task = db.inner().clone();
+    let thread_id_val_clone = thread_id_val.clone();
 
     let join_handle = tokio::spawn(async move {
         let _ = app_clone.emit("workflow-event", serde_json::json!({
             "type": "workflow_start",
             "workflow_id": workflow_id_clone,
+            "thread_id": thread_id_val_clone.clone(),
         }));
 
         let mut astream = graph.astream(&initial_input, &config, vec![StreamMode::Updates]);
@@ -329,6 +407,7 @@ pub async fn run_workflow(
             let _ = app_clone.emit("workflow-event", serde_json::json!({
                 "type": "workflow_progress",
                 "workflow_id": workflow_id_clone,
+                "thread_id": thread_id_val_clone.clone(),
                 "output": part,
             }));
         }
@@ -342,6 +421,7 @@ pub async fn run_workflow(
                     let _ = app_clone.emit("workflow-event", serde_json::json!({
                         "type": "workflow_interrupted",
                         "workflow_id": workflow_id_clone,
+                        "thread_id": thread_id_val_clone.clone(),
                         "interrupt": first_interrupt,
                     }));
                 } else {
@@ -349,6 +429,7 @@ pub async fn run_workflow(
                     let _ = app_clone.emit("workflow-event", serde_json::json!({
                         "type": "workflow_done",
                         "workflow_id": workflow_id_clone,
+                        "thread_id": thread_id_val_clone.clone(),
                         "node_outputs": snapshot.values.get("node_outputs"),
                     }));
                 }
@@ -357,9 +438,113 @@ pub async fn run_workflow(
                 let _ = app_clone.emit("workflow-event", serde_json::json!({
                     "type": "workflow_error",
                     "workflow_id": workflow_id_clone,
+                    "thread_id": thread_id_val_clone.clone(),
                     "error": format!("Failed to retrieve graph snapshot: {}", e),
                 }));
             }
+        }
+
+        // 保存消息到数据库，以供下次加载历史对话
+        let mut final_text = accumulated_text.lock().unwrap().clone();
+        let final_thinking = accumulated_thinking.lock().unwrap().clone();
+
+        if final_text.is_empty() {
+            if let Ok(snapshot) = graph.get_state(&config) {
+                if let Some(outputs) = snapshot.values.get("node_outputs").and_then(|o| o.as_object()) {
+                    for (node_id, output) in outputs {
+                        if node_id.starts_with("answer") {
+                            if let Some(txt) = output.as_str() {
+                                final_text = txt.to_string();
+                            } else if let Some(txt) = output.get("response").and_then(|v| v.as_str()) {
+                                final_text = txt.to_string();
+                            } else if let Some(txt) = output.get("answer").and_then(|v| v.as_str()) {
+                                final_text = txt.to_string();
+                            }
+                        }
+                    }
+                    if final_text.is_empty() {
+                        for (_node_id, output) in outputs {
+                            if let Some(txt) = output.get("response").and_then(|v| v.as_str()) {
+                                final_text = txt.to_string();
+                                break;
+                            } else if let Some(txt) = output.get("answer").and_then(|v| v.as_str()) {
+                                final_text = txt.to_string();
+                                break;
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        if !input_msg.is_empty() || !final_text.is_empty() {
+            let thread_id_val_clone_inner = thread_id_val_clone.clone();
+            let input_msg_clone = input_msg.clone();
+            let final_text_clone = final_text.clone();
+            let final_thinking_clone = final_thinking.clone();
+
+            tokio::spawn(async move {
+                let existing_messages_str: Option<String> = sqlx::query_scalar(
+                    "SELECT messages FROM session_metadata WHERE thread_id = ?1"
+                )
+                .bind(&thread_id_val_clone_inner)
+                .fetch_optional(db_for_task.pool())
+                .await
+                .unwrap_or(None);
+
+                let mut db_messages: Vec<serde_json::Value> = existing_messages_str
+                    .as_deref()
+                    .and_then(|s| serde_json::from_str(s).ok())
+                    .unwrap_or_default();
+
+                if !input_msg_clone.is_empty() {
+                    db_messages.push(serde_json::json!({
+                        "role": "user",
+                        "content": [
+                            {
+                                "type": "text",
+                                "text": input_msg_clone
+                            }
+                        ],
+                        "timestamp": chrono::Utc::now().to_rfc3339()
+                    }));
+                }
+
+                if !final_text_clone.is_empty() || !final_thinking_clone.is_empty() {
+                    let mut content_blocks = Vec::new();
+                    if !final_thinking_clone.is_empty() {
+                        content_blocks.push(serde_json::json!({
+                            "type": "thinking",
+                            "thinking": final_thinking_clone
+                        }));
+                    }
+                    if !final_text_clone.is_empty() {
+                        content_blocks.push(serde_json::json!({
+                            "type": "text",
+                            "text": final_text_clone
+                        }));
+                    }
+                    db_messages.push(serde_json::json!({
+                        "role": "assistant",
+                        "content": content_blocks,
+                        "timestamp": chrono::Utc::now().to_rfc3339()
+                    }));
+                }
+
+                let messages_json = serde_json::to_string(&db_messages).unwrap_or_else(|_| "[]".to_string());
+                let msg_count = db_messages.len();
+                let updated_at = chrono::Utc::now().to_rfc3339();
+
+                let _ = sqlx::query(
+                    "UPDATE session_metadata SET messages = ?1, msg_count = ?2, updated_at = ?3 WHERE thread_id = ?4"
+                )
+                .bind(&messages_json)
+                .bind(msg_count as i64)
+                .bind(&updated_at)
+                .bind(&thread_id_val_clone_inner)
+                .execute(db_for_task.pool())
+                .await;
+            });
         }
 
         let mut executions = execution_state_clone.executions.lock().unwrap();
@@ -460,22 +645,14 @@ pub async fn debug_node(
         if config.base_url.is_empty() { None } else { Some(config.base_url.clone()) },
     ));
 
-    let db_path_str = config.db_path.to_string_lossy().to_string();
-    let conn_str = format!("sqlite:{}", db_path_str);
-    let checkpointer: Arc<dyn BaseCheckpointSaver> = match SqliteSaver::from_conn_string(&conn_str).await {
-        Ok(saver) => {
-            if saver.setup().await.is_ok() {
-                Arc::new(saver)
-            } else {
-                Arc::new(InMemorySaver::new())
-            }
-        }
-        Err(_) => Arc::new(InMemorySaver::new()),
-    };
+    let checkpointer: Arc<dyn BaseCheckpointSaver> = Arc::new(InMemorySaver::new());
 
     let sink = Arc::new(TauriWorkflowSink {
         app: app.clone(),
         workflow_id: format!("{}:debug:{}", workflow_id, node_id),
+        thread_id: format!("debug:{}:{}", workflow_id, node_id),
+        accumulated_text: Arc::new(Mutex::new(String::new())),
+        accumulated_thinking: Arc::new(Mutex::new(String::new())),
     });
     let tools = Arc::new(all_tools().registry);
 
