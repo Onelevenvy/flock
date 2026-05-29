@@ -26,7 +26,7 @@ pub fn make_human_node(
                 .unwrap_or("Waiting for review");
             let title = interpolate_string_with_context(title_template, &state, &ctx, &ctx.workflow_id);
 
-            ctx.sink.emit_text_delta(&node_id, &format!("\n\n*⏳ 正在等待人工确认: **{}**...*\n", title));
+            ctx.sink.emit_text_delta(&node_id, &format!("\n\n*⏳: **{}**...*\n", title));
 
             let actions = node_data.get("user_actions").cloned().unwrap_or_else(|| json!([
                 { "key": "action_1", "label": "Approve", "enable_feedback": false },

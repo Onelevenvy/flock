@@ -91,13 +91,17 @@ function buildSteps(
     // ---- user 消息 → 将待处理 interrupt 全部标记 resolved ----
     if (msg.type === 'user') {
       const choice = resolvedChoiceRef.current;
+      // 兼容历史加载：消息本身可能携带扩展字段 resolvedActionLabel（从数据库恢复时注入）
+      const msgAny = msg as any;
+      const actionLabel = choice?.actionLabel ?? msgAny.resolvedActionLabel;
+      const feedbackText = choice?.feedback ?? msgAny.resolvedFeedback;
       interruptIndices.forEach((idx) => {
         result[idx] = {
           ...result[idx],
           interruptResolved: true,
           status: 'done',
-          resolvedActionLabel: choice?.actionLabel,
-          resolvedFeedback: choice?.feedback,
+          resolvedActionLabel: actionLabel,
+          resolvedFeedback: feedbackText,
         };
       });
       // user 消息不生成 step
@@ -188,6 +192,13 @@ function buildRounds(
 
   for (const msg of messages) {
     if (msg.type === 'user') {
+      // resume 类型的 user 消息（由历史加载注入，携带 resolvedActionLabel 扩展字段）
+      // 不作为新轮次的起点，而是并入当前组的 msgs，让 buildSteps 正确处理 interrupt resolved
+      const msgAny = msg as any;
+      if (msgAny.resolvedActionLabel !== undefined) {
+        current.msgs.push(msg);
+        continue;
+      }
       // 如果当前组已有内容，先保存（前一轮的消息）
       // 新建本轮：以 user 消息为起点
       groups.push(current);

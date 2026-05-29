@@ -167,6 +167,8 @@ pub fn run() {
             commands::run_workflow,
             commands::stop_workflow,
             commands::debug_node,
+            commands::save_workflow_messages,
+            commands::load_workflow_messages,
             pet::sync_pet_state,
             pet::sync_pet_pending_approval,
             pet::sync_pet_minimized,
