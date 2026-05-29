@@ -16,6 +16,8 @@
     "input": "测试输入",
     "inputPlaceholder": "输入此节点的测试数据...",
     "run": "运行节点",
+    "steps": "步骤",
+    "generating": "生成中...",
     "hint": "输出将显示在执行面板中。点击工具栏的播放按钮打开。"
   },
   "insertNode": "在此处插入节点",
@@ -168,7 +170,9 @@
     "workflowGroup": "工作流",
     "thinking": "思考过程",
     "missingParams": "缺少必填参数: {{names}}",
-    "run": "发送"
+    "run": "发送",
+    "steps": "步",
+    "generating": "生成中..."
   },
   "nodes": {
     "start": { "label": "开始" },

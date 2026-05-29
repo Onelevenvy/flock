@@ -168,7 +168,9 @@
     "workflowGroup": "Workflow",
     "thinking": "Thinking",
     "missingParams": "Missing required parameter(s): {{names}}",
-    "run": "Send"
+    "run": "Send",
+    "steps": "steps",
+    "generating": "Generating..."
   },
   "nodes": {
     "start": { "label": "Start" },
