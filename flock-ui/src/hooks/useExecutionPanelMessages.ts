@@ -1,4 +1,4 @@
-import { useMemo, useEffect } from 'react';
+import { useMemo, useEffect, useRef } from 'react';
 import { ExecutionMessage, WorkflowStep, InterruptData, HumanAction } from '../pages/Workflow/components/ExecutionPanel/types';
 import { nodeConfig } from '../pages/Workflow/nodeConfig';
 import type { Node } from 'reactflow';
@@ -17,16 +17,13 @@ interface UseExecutionPanelMessagesProps {
 function resolveNodeDisplayName(nodeId: string, nodes: Node[]): { displayName: string; nodeType: string } {
   const node = nodes.find((n) => n.id === nodeId);
   const nodeType = node?.type ?? nodeId.split('-')[0] ?? 'unknown';
-  // 1. 用户自定义 label
   if (node?.data?.label && typeof node.data.label === 'string') {
     return { displayName: node.data.label, nodeType };
   }
-  // 2. nodeConfig 类型名
   const cfg = nodeConfig[nodeType as keyof typeof nodeConfig];
   if (cfg) {
     return { displayName: cfg.display, nodeType };
   }
-  // 3. 兜底：把 "answer-1780021304116" 变成 "answer"
   return { displayName: nodeType, nodeType };
 }
 
@@ -38,7 +35,32 @@ export function useExecutionPanelMessages({
   handleResume,
   nodes,
 }: UseExecutionPanelMessagesProps) {
-  // 键盘数字键快速选择 action（仅无 feedback pending 时生效）
+  /**
+   * 记录用户最后一次 resume 的选择
+   * key: interrupt step id (或者 'last')，value: { actionLabel, feedback }
+   * 在 user 消息到来时用于回填 resolvedActionLabel
+   */
+  const resolvedChoiceRef = useRef<{ actionLabel: string; feedback?: string } | null>(null);
+  /** 当前 activeInterrupt 的 actions（用于键盘快捷键 + label 查找） */
+  const activeInterruptRef = useRef<InterruptData | null>(activeInterrupt);
+  useEffect(() => {
+    activeInterruptRef.current = activeInterrupt;
+  }, [activeInterrupt]);
+
+  // 包装 handleResume：调用时立即记录选择的 action label
+  const wrappedHandleResume = useMemo(() => {
+    return (choice: string, feedback?: string) => {
+      const actions = activeInterruptRef.current?.actions ?? [];
+      const act = actions.find((a: HumanAction) => a.key === choice);
+      resolvedChoiceRef.current = {
+        actionLabel: act?.label ?? choice,
+        feedback: feedback || undefined,
+      };
+      handleResume(choice, feedback);
+    };
+  }, [handleResume]);
+
+  // 键盘数字键快速选择 action
   useEffect(() => {
     if (!isInterrupted || !activeInterrupt?.actions) return;
     const actions = activeInterrupt.actions as HumanAction[];
@@ -50,22 +72,14 @@ export function useExecutionPanelMessages({
         const act = actions[idx];
         if (!act.enable_feedback) {
           e.preventDefault();
-          handleResume(act.key);
+          wrappedHandleResume(act.key);
         }
       }
     };
     window.addEventListener('keydown', handleKey);
     return () => window.removeEventListener('keydown', handleKey);
-  }, [isInterrupted, activeInterrupt, handleResume]);
+  }, [isInterrupted, activeInterrupt, wrappedHandleResume]);
 
-  /**
-   * 把 raw messages 转换为 WorkflowStep[]
-   * 规则：
-   *  - 每个 nodeId 对应一个 step（按首次出现创建）
-   *  - text_delta / thinking 追加到对应 step 的文本
-   *  - interrupt 类型 → isInterrupt=true 的 step
-   *  - user 消息 → 将所有 interrupt step 标记为 resolved
-   */
   const steps = useMemo<WorkflowStep[]>(() => {
     const result: WorkflowStep[] = [];
     // nodeId -> step index in result
@@ -79,32 +93,53 @@ export function useExecutionPanelMessages({
         let interruptData: InterruptData = {};
         try { interruptData = JSON.parse(msg.content); } catch (_) {}
         const rawNodeId = interruptData.node_id ?? msg.nodeId ?? 'human';
-        const { displayName, nodeType } = resolveNodeDisplayName(rawNodeId, nodes);
-        const step: WorkflowStep = {
-          id: `interrupt-${msg.timestamp}`,
-          nodeId: rawNodeId,
-          nodeType,
-          displayName,
-          status: 'waiting',
-          outputText: '',
-          thinkingText: '',
-          startTs: msg.timestamp,
-          isInterrupt: true,
-          interruptData,
-          interruptResolved: false,
-        };
-        interruptIndices.push(result.length);
-        result.push(step);
-        // 中断不建立 nodeStepIndex，避免后续消息追加到错误 step
+
+        // ★ 关键修复：若该 nodeId 已有 text_delta step，原地升级为 interrupt step
+        const existingIdx = nodeStepIndex[rawNodeId];
+        if (existingIdx !== undefined) {
+          result[existingIdx] = {
+            ...result[existingIdx],
+            isInterrupt: true,
+            interruptData,
+            status: 'waiting',
+          };
+          interruptIndices.push(existingIdx);
+        } else {
+          // 没有已有 step，新建
+          const { displayName, nodeType } = resolveNodeDisplayName(rawNodeId, nodes);
+          const step: WorkflowStep = {
+            id: `interrupt-${msg.timestamp}`,
+            nodeId: rawNodeId,
+            nodeType,
+            displayName,
+            status: 'waiting',
+            outputText: '',
+            thinkingText: '',
+            startTs: msg.timestamp,
+            isInterrupt: true,
+            interruptData,
+            interruptResolved: false,
+          };
+          interruptIndices.push(result.length);
+          nodeStepIndex[rawNodeId] = result.length;
+          result.push(step);
+        }
         continue;
       }
 
-      // ---- user 消息 → 将待处理 interrupt 全部标记 resolved ----
+      // ---- user 消息 → 将待处理 interrupt 全部标记 resolved，并回填 actionLabel ----
       if (msg.type === 'user') {
+        const choice = resolvedChoiceRef.current;
         interruptIndices.forEach((idx) => {
-          result[idx] = { ...result[idx], interruptResolved: true, status: 'done' };
+          result[idx] = {
+            ...result[idx],
+            interruptResolved: true,
+            status: 'done',
+            resolvedActionLabel: choice?.actionLabel,
+            resolvedFeedback: choice?.feedback,
+          };
         });
-        // user 消息不生成 step，直接跳过
+        // user 消息不生成 step
         continue;
       }
 
@@ -140,9 +175,8 @@ export function useExecutionPanelMessages({
         continue;
       }
 
-      // ---- info / done / error ----
+      // ---- done / error ----
       if (msg.type === 'done' || msg.type === 'error') {
-        // 把当前所有 running step 标记完成
         for (let i = 0; i < result.length; i++) {
           if (result[i].status === 'running') {
             result[i] = { ...result[i], status: msg.type === 'error' ? 'error' : 'done' };
@@ -151,8 +185,7 @@ export function useExecutionPanelMessages({
       }
     }
 
-    // 运行中时，最后一个 running step 保持 streaming 状态
-    // done/error 时全部 resolve
+    // done/error 时把所有 running step 标记完成
     if (status !== 'running') {
       for (let i = 0; i < result.length; i++) {
         if (result[i].status === 'running') {
@@ -161,11 +194,18 @@ export function useExecutionPanelMessages({
       }
     }
 
-    // 如果 activeInterrupt 已消失（resolved），把所有 waiting step 标记 done
+    // activeInterrupt 消失时把所有 waiting interrupt 标记 done
     if (!isInterrupted) {
       for (let i = 0; i < result.length; i++) {
         if (result[i].isInterrupt && !result[i].interruptResolved) {
-          result[i] = { ...result[i], interruptResolved: true, status: 'done' };
+          const choice = resolvedChoiceRef.current;
+          result[i] = {
+            ...result[i],
+            interruptResolved: true,
+            status: 'done',
+            resolvedActionLabel: result[i].resolvedActionLabel ?? choice?.actionLabel,
+            resolvedFeedback: result[i].resolvedFeedback ?? choice?.feedback,
+          };
         }
       }
     }
@@ -173,14 +213,10 @@ export function useExecutionPanelMessages({
     return result;
   }, [messages, status, isInterrupted, nodes]);
 
-  /**
-   * 当 activeInterrupt 存在时，找到最后一个 waiting interrupt step，注入 activeInterrupt 数据
-   * （因为 interrupt 数据来自 workflowStore，步骤里的 interruptData 可能需要补全）
-   */
+  // 当 activeInterrupt 存在时，注入最新 interruptData 到 waiting step
   const stepsWithActiveInterrupt = useMemo<WorkflowStep[]>(() => {
     if (!isInterrupted || !activeInterrupt) return steps;
     const result = [...steps];
-    // 从后往前找第一个 waiting interrupt
     for (let i = result.length - 1; i >= 0; i--) {
       if (result[i].isInterrupt && result[i].status === 'waiting') {
         result[i] = { ...result[i], interruptData: activeInterrupt };
@@ -190,5 +226,5 @@ export function useExecutionPanelMessages({
     return result;
   }, [steps, isInterrupted, activeInterrupt]);
 
-  return { steps: stepsWithActiveInterrupt };
+  return { steps: stepsWithActiveInterrupt, handleResume: wrappedHandleResume };
 }

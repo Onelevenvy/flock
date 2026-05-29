@@ -48,6 +48,8 @@ export interface WorkflowStep {
   interruptResolved: boolean;
   /** 用户已选的 action label（已处理时显示） */
   resolvedActionLabel?: string;
+  /** 用户填写的 feedback（已处理时显示） */
+  resolvedFeedback?: string;
 }
 
 export interface ExecutionPanelProps {

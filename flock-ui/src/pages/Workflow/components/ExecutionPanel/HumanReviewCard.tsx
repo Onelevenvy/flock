@@ -26,6 +26,8 @@ interface HumanReviewCardProps {
   isResolved: boolean;
   /** 已处理时触发的动作 label */
   resolvedActionLabel?: string;
+  /** 已处理时用户填写的 feedback */
+  resolvedFeedback?: string;
   /** 节点显示名 */
   displayName?: string;
 }
@@ -37,6 +39,7 @@ export function HumanReviewCard({
   isDark,
   isResolved,
   resolvedActionLabel,
+  resolvedFeedback,
   displayName,
 }: HumanReviewCardProps) {
   const { t } = useTranslation();
@@ -132,13 +135,39 @@ export function HumanReviewCard({
             </Text>
           )}
 
-          {/* 已处理时：只显示已触发提示 */}
+          {/* 已处理时：显示用户选择的 action + feedback */}
           {isResolved ? (
-            <Text size="xs" c="dimmed" style={{ fontStyle: 'italic' }}>
-              {resolvedActionLabel
-                ? `${t('workflow.execution.triggeredAction', '已触发操作')}: ${resolvedActionLabel}`
-                : t('workflow.execution.resolved', '已处理')}
-            </Text>
+            <Box style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+              {resolvedActionLabel ? (
+                <Box style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                  <Box
+                    style={{
+                      width: 14, height: 14, borderRadius: '50%',
+                      background: '#10b981',
+                      display: 'flex', alignItems: 'center', justifyContent: 'center',
+                      flexShrink: 0,
+                    }}
+                  >
+                    {/* check icon via CSS */}
+                    <svg width="8" height="8" viewBox="0 0 8 8" fill="none">
+                      <path d="M1.5 4L3 5.5L6.5 2" stroke="white" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                    </svg>
+                  </Box>
+                  <Text size="xs" fw={600} style={{ color: 'var(--flock-text-bright)', fontSize: 12 }}>
+                    {resolvedActionLabel}
+                  </Text>
+                </Box>
+              ) : (
+                <Text size="xs" c="dimmed" style={{ fontStyle: 'italic' }}>
+                  {t('workflow.execution.resolved', '已处理')}
+                </Text>
+              )}
+              {resolvedFeedback && (
+                <Text size="xs" c="dimmed" style={{ fontSize: 11, paddingLeft: 20 }}>
+                  {resolvedFeedback}
+                </Text>
+              )}
+            </Box>
           ) : (
             /* 未处理时：渲染操作按钮 */
             <Box style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>

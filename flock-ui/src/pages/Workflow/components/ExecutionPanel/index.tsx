@@ -83,7 +83,7 @@ export function ExecutionPanel({
     resumeWorkflow(payload);
   }, [resumeWorkflow]);
 
-  const { steps } = useExecutionPanelMessages({
+  const { steps, handleResume: resumeWithTracking } = useExecutionPanelMessages({
     messages,
     status,
     isInterrupted,
@@ -91,6 +91,8 @@ export function ExecutionPanel({
     handleResume,
     nodes,
   });
+  // 用 hook 内部 wrapped 版本（会在调用前记录 action label）
+  const trackedResume = resumeWithTracking;
 
   // 新步骤时自动滚到底
   useEffect(() => {
@@ -320,13 +322,14 @@ export function ExecutionPanel({
                 /* Human 审查卡片 */
                 if (step.isInterrupt) {
                   return (
-                    <HumanReviewCard
+                  <HumanReviewCard
                       key={`prominent-${step.id}`}
                       interruptData={step.interruptData ?? {}}
-                      onResume={handleResume}
+                      onResume={trackedResume}
                       isDark={isDark}
                       isResolved={step.interruptResolved}
                       resolvedActionLabel={step.resolvedActionLabel}
+                      resolvedFeedback={step.resolvedFeedback}
                       displayName={step.displayName}
                     />
                   );
