@@ -69,6 +69,7 @@ export function FlowCanvas({ workflowId, workflowData, onBack }: FlowCanvasProps
   const {
     messages: executionMessages,
     status: executionStatus,
+    activeInterrupt: executionActiveInterrupt,
     startWorkflow,
     resumeWorkflow,
     stopWorkflow,
@@ -387,6 +388,7 @@ export function FlowCanvas({ workflowId, workflowData, onBack }: FlowCanvasProps
             stopWorkflow={stopWorkflow}
             resumeWorkflow={resumeWorkflow}
             onClearExecution={clearExecution}
+            activeInterrupt={executionActiveInterrupt}
           />
         )}
       </Box>

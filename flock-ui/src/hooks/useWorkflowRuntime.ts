@@ -94,6 +94,12 @@ export function useWorkflowRuntime({
     }
   }, [workflowId]);
 
+  // ── 追踪当前的 threadId 动态值，避免监听器 useEffect 因 threadId 变化频繁销毁和异步重建造成事件漏单 ──
+  const threadIdRef = useRef<string | null>(threadId);
+  useEffect(() => {
+    threadIdRef.current = threadId;
+  }, [threadId]);
+
   // ── 事件监听 ──
   useEffect(() => {
     if (!workflowId) return;
@@ -121,8 +127,10 @@ export function useWorkflowRuntime({
             // 计算当前有效 threadId（调试模式从 store 取最新值）
             const activeTid = isDebug
               ? (useWorkflowStore.getState().activeExecutionThreadId ?? `${workflowId}:debug`)
-              : threadId;
+              : threadIdRef.current;
             if (!activeTid) return;
+
+            console.log(`[WorkflowRuntime] Received event type: "${payload.type}" for threadId: "${activeTid}", nodeId: "${payload.node_id ?? ''}"`);
 
             const timestamp = Date.now();
 
@@ -229,6 +237,7 @@ export function useWorkflowRuntime({
               case 'workflow_interrupted': {
                 const rawInterrupt = payload.interrupt as any;
                 const interruptData = rawInterrupt?.value ?? rawInterrupt;
+                console.log(`[WorkflowRuntime] workflow_interrupted event details:`, interruptData);
                 store.setThreadStatus(activeTid, 'idle');
                 store.setThreadInterrupt(activeTid, interruptData);
                 dispatch(activeTid, {
@@ -350,8 +359,8 @@ export function useWorkflowRuntime({
     if (!workflowId) return;
 
     let activeTid = threadId;
-    if (isDebug) {
-      // 调试模式：每次 start 生成新 threadId
+    if (isDebug && !activeTid) {
+      // 调试模式：无活跃 threadId 时才全新生成并清空
       activeTid = `${workflowId}_run_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`;
       store.clearExecution();
       store.setActiveExecutionThreadId(activeTid);
@@ -384,7 +393,12 @@ export function useWorkflowRuntime({
     });
 
     try {
-      await invoke('run_workflow', { workflowId, input, threadId: activeTid });
+      await invoke('run_workflow', {
+        workflowId,
+        input,
+        threadId: activeTid,
+        thread_id: activeTid,
+      });
     } catch (e) {
       store.setThreadStatus(activeTid, 'error');
       dispatch(activeTid, {
@@ -410,6 +424,7 @@ export function useWorkflowRuntime({
         workflowId,
         resumeValue: choiceValue,
         threadId: activeTid,
+        thread_id: activeTid,
       });
     } catch (e) {
       store.setThreadStatus(activeTid, 'error');
