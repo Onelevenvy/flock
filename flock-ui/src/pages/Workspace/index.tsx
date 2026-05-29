@@ -71,8 +71,9 @@ export function WorkspaceView() {
   const threadId = activeConversationId ?? '';
 
   // 中间主内容区（助手 or 工作流）
+  // key={threadId} 确保切换对话时组件完全重置，消息状态隔离
   const mainContent = isWorkflowConv ? (
-    <WorkflowChatContent workflowId={workflowId!} threadId={threadId} />
+    <WorkflowChatContent key={threadId} workflowId={workflowId!} threadId={threadId} />
   ) : (
     <AssistantChatContent />
   );
@@ -116,7 +117,8 @@ export function WorkspaceView() {
               boxShadow: '0 4px 20px rgba(0, 0, 0, 0.03)',
             }}
           >
-            <Header />
+            {/* 工作流对话有自己的 header，助手对话才需要外层 Header */}
+            {!isWorkflowConv && <Header />}
             {mainContent}
           </Box>
         </>
@@ -135,7 +137,8 @@ export function WorkspaceView() {
             boxShadow: '0 4px 20px rgba(0, 0, 0, 0.03)',
           }}
         >
-          <Header />
+          {/* 工作流对话有自己的 header，助手对话才需要外层 Header */}
+          {!isWorkflowConv && <Header />}
           {mainContent}
         </Box>
       )}

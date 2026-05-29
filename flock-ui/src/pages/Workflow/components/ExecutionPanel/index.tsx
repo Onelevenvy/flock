@@ -10,6 +10,8 @@ import {
   ScrollArea,
   Stack,
   Collapse,
+  Avatar,
+  Paper,
 } from '@mantine/core';
 import {
   IconX,
@@ -300,6 +302,45 @@ export function ExecutionPanel({
           /* 有执行记录时 */
           <ScrollArea style={{ flex: 1 }} px="sm" py="sm">
             <Stack gap={8}>
+
+              {/* ── 用户输入气泡（显示当前轮用户输入） ── */}
+              {messages.filter((m: any) => m.type === 'user').map((m: any, i: number) => (
+                <Box
+                  key={`user-msg-${i}`}
+                  style={{
+                    display: 'flex',
+                    flexDirection: 'row-reverse',
+                    alignItems: 'flex-start',
+                    gap: 8,
+                  }}
+                >
+                  <Avatar
+                    size={28}
+                    radius="xl"
+                    style={{
+                      background: 'var(--flock-bg-surface)',
+                      border: '1px solid var(--flock-border-dim)',
+                      flexShrink: 0,
+                    }}
+                  >
+                    <IconUser size={14} color="var(--flock-text-dim)" />
+                  </Avatar>
+                  <Paper
+                    p="xs"
+                    radius="lg"
+                    style={{
+                      maxWidth: '80%',
+                      background: 'var(--flock-accent-soft)',
+                      border: '1px solid var(--flock-border-base)',
+                      borderRadius: '18px 4px 18px 18px',
+                    }}
+                  >
+                    <Text size="sm" style={{ color: 'var(--flock-text-primary)', lineHeight: 1.6, whiteSpace: 'pre-wrap', wordBreak: 'break-word' }}>
+                      {m.content}
+                    </Text>
+                  </Paper>
+                </Box>
+              ))}
 
               {/* ── 工作流折叠组（默认折叠，包含所有步骤） ── */}
               <Box

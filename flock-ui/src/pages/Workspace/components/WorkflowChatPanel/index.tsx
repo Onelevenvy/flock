@@ -7,7 +7,6 @@ import { useWorkflowChatExecution } from '../../../../hooks/useWorkflowChatExecu
 import { ChatPanel } from '../../../../components/chat/ChatPanel';
 import { StartParametersForm } from '../../../Workflow/components/ExecutionPanel/StartParametersForm';
 import { HumanReviewCard } from '../../../Workflow/components/ExecutionPanel/HumanReviewCard';
-import { useAgentStore } from '../../../../store/agentStore';
 import { useUiStore } from '../../../../store/uiStore';
 import { useWorkflowStore } from '../../../../store/workflowStore';
 import { ChatMessage } from '../../../../types/protocol';
@@ -36,11 +35,11 @@ export function WorkflowChatPanel({
   const theme = useUiStore((s) => s.theme);
   const isDark = theme === 'dark';
 
+  // ── 本地消息状态（与 agentStore 完全隔离，按 threadId 独立） ──
+  const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [status, setStatus] = useState<'idle' | 'running' | 'done' | 'error'>('idle');
   const [activeInterrupt, setActiveInterrupt] = useState<any>(null);
   const [inputVal, setInputVal] = useState('');
-
-  const agentMessages = useAgentStore((s) => s.messages);
 
   const startNode = nodes.find((n: any) => n.type === 'start');
   const vars = startVariables ?? (startNode?.data?.variables as any[]) ?? [
@@ -56,13 +55,10 @@ export function WorkflowChatPanel({
       initial[v.name] = v.default_value ?? '';
     });
     setFormInputs(initial);
-  }, [vars]);
+  }, []);
 
+  // 当前正在流式输出的 assistant 消息 ID
   const currentAssistantMsgIdRef = useRef<string | null>(null);
-
-  useEffect(() => {
-    currentAssistantMsgIdRef.current = null;
-  }, [threadId]);
 
   const appendMessage = useCallback((msg: any) => {
     const now = Date.now();
@@ -76,56 +72,39 @@ export function WorkflowChatPanel({
         timestamp: msg.timestamp || now,
       };
       currentAssistantMsgIdRef.current = null;
-      useAgentStore.setState((s) => ({
-        messages: [...s.messages, newUserMsg],
-      }));
+      setMessages((prev) => [...prev, newUserMsg]);
+
     } else if (msg.type === 'info' || msg.type === 'text_delta' || msg.type === 'thinking') {
       let runId = currentAssistantMsgIdRef.current;
-      const existingMessages = [...useAgentStore.getState().messages];
-      let assistantMsg = runId ? existingMessages.find((m) => m.id === runId) : null;
 
-      if (!assistantMsg) {
-        runId = `assistant-wf-${now}`;
-        currentAssistantMsgIdRef.current = runId;
-        assistantMsg = {
-          id: runId,
-          role: 'assistant',
-          chunks: [],
-          streaming: true,
-          timestamp: msg.timestamp || now,
-        };
-        existingMessages.push(assistantMsg);
-      }
+      setMessages((prev) => {
+        let existingMsg = runId ? prev.find((m) => m.id === runId) : null;
 
-      const chunks = [...assistantMsg.chunks];
-
-      if (msg.type === 'info') {
-        chunks.push({ kind: 'info', message: msg.content });
-      } else if (msg.type === 'text_delta') {
-        const last = chunks[chunks.length - 1];
-        if (last && last.kind === 'text') {
-          chunks[chunks.length - 1] = { kind: 'text', text: last.text + msg.content };
-        } else {
-          chunks.push({ kind: 'text', text: msg.content });
+        if (!existingMsg) {
+          runId = `assistant-wf-${now}-${Math.random().toString(36).slice(2)}`;
+          currentAssistantMsgIdRef.current = runId;
+          existingMsg = {
+            id: runId,
+            role: 'assistant',
+            chunks: [],
+            streaming: true,
+            timestamp: msg.timestamp || now,
+          };
+          const chunks = buildChunks(existingMsg.chunks, msg);
+          return [...prev, { ...existingMsg, chunks }];
         }
-      } else if (msg.type === 'thinking') {
-        const last = chunks[chunks.length - 1];
-        if (last && last.kind === 'thinking') {
-          chunks[chunks.length - 1] = { kind: 'thinking', text: last.text + msg.content, collapsed: last.collapsed };
-        } else {
-          chunks.push({ kind: 'thinking', text: msg.content, collapsed: false });
-        }
-      }
 
-      const updatedMessages = existingMessages.map((m) =>
-        m.id === runId ? { ...m, chunks } : m
-      );
-      useAgentStore.setState({ messages: updatedMessages });
+        const updatedChunks = buildChunks(existingMsg.chunks, msg);
+        return prev.map((m) =>
+          m.id === runId ? { ...m, chunks: updatedChunks } : m
+        );
+      });
+
     } else if (msg.type === 'done' || msg.type === 'error') {
       const runId = currentAssistantMsgIdRef.current;
       if (runId) {
-        useAgentStore.setState((s) => ({
-          messages: s.messages.map((m) =>
+        setMessages((prev) =>
+          prev.map((m) =>
             m.id === runId
               ? {
                   ...m,
@@ -135,8 +114,8 @@ export function WorkflowChatPanel({
                   ),
                 }
               : m
-          ),
-        }));
+          )
+        );
       }
       currentAssistantMsgIdRef.current = null;
     }
@@ -151,18 +130,19 @@ export function WorkflowChatPanel({
   });
 
   const handleClearExecution = useCallback(() => {
-    useAgentStore.getState().clearMessages();
+    setMessages([]);
     setStatus('idle');
     setActiveInterrupt(null);
+    currentAssistantMsgIdRef.current = null;
   }, []);
 
-  // 首页带来的初始 query：在组件挂载后立即执行（优先用 pendingStartQuery，再用 initialQuery prop）
+  // 首页带来的初始 query：组件挂载后立即执行
   const pendingStartQuery = useWorkflowStore((s) => s.pendingStartQuery);
   const initialQueryFiredRef = useRef(false);
 
   useEffect(() => {
     const q = pendingStartQuery ?? initialQuery;
-    if (q && !initialQueryFiredRef.current && status === 'idle' && agentMessages.length === 0) {
+    if (q && !initialQueryFiredRef.current && status === 'idle' && messages.length === 0) {
       initialQueryFiredRef.current = true;
       useWorkflowStore.getState().setPendingStartQuery(null);
 
@@ -177,7 +157,7 @@ export function WorkflowChatPanel({
         setInputVal('');
       }
     }
-  }, [pendingStartQuery, initialQuery, status, agentMessages.length, customVars.length, formInputs, startWorkflow]);
+  }, [pendingStartQuery, initialQuery, status, messages.length, customVars.length, formInputs, startWorkflow]);
 
   const handleStart = () => {
     const missing = customVars.filter((v: any) => v.required && (formInputs[v.name] === undefined || formInputs[v.name] === ''));
@@ -235,7 +215,7 @@ export function WorkflowChatPanel({
         </Group>
 
         <Group gap="xs">
-          {status !== 'running' && activeInterrupt === null && agentMessages.length > 0 && (
+          {status !== 'running' && activeInterrupt === null && messages.length > 0 && (
             <Button
               size="xs"
               variant="subtle"
@@ -272,7 +252,7 @@ export function WorkflowChatPanel({
           background: 'var(--flock-bg-base)',
         }}
       >
-        {agentMessages.length === 0 && customVars.length > 0 ? (
+        {messages.length === 0 && customVars.length > 0 ? (
           <ScrollArea style={{ flex: 1 }} p="md">
             <Stack gap="md" style={{ padding: 12 }}>
               <Box>
@@ -291,7 +271,7 @@ export function WorkflowChatPanel({
             </Stack>
           </ScrollArea>
         ) : (
-          <ChatPanel messages={agentMessages} />
+          <ChatPanel messages={messages} />
         )}
 
         {/* Human review card */}
@@ -308,9 +288,7 @@ export function WorkflowChatPanel({
                   streaming: false,
                   timestamp: Date.now(),
                 };
-                useAgentStore.setState((s) => ({
-                  messages: [...s.messages, newUserMsg],
-                }));
+                setMessages((prev) => [...prev, newUserMsg]);
                 resumeWorkflow({ choice, feedback });
                 setActiveInterrupt(null);
               }}
@@ -361,4 +339,27 @@ export function WorkflowChatPanel({
       </Box>
     </Box>
   );
+}
+
+// ── 工具函数：根据消息类型更新 chunks ──
+function buildChunks(existingChunks: any[], msg: any): any[] {
+  const chunks = [...existingChunks];
+  if (msg.type === 'info') {
+    chunks.push({ kind: 'info', message: msg.content });
+  } else if (msg.type === 'text_delta') {
+    const last = chunks[chunks.length - 1];
+    if (last && last.kind === 'text') {
+      chunks[chunks.length - 1] = { kind: 'text', text: last.text + msg.content };
+    } else {
+      chunks.push({ kind: 'text', text: msg.content });
+    }
+  } else if (msg.type === 'thinking') {
+    const last = chunks[chunks.length - 1];
+    if (last && last.kind === 'thinking') {
+      chunks[chunks.length - 1] = { kind: 'thinking', text: last.text + msg.content, collapsed: last.collapsed };
+    } else {
+      chunks.push({ kind: 'thinking', text: msg.content, collapsed: false });
+    }
+  }
+  return chunks;
 }
