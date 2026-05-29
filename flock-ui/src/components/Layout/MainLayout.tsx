@@ -11,14 +11,17 @@ import { WorkflowPage } from '../../pages/Workflow';
 import { useUiStore } from '../../store/uiStore';
 import { useWorkspaceStore } from '../../store/workspaceStore';
 import { useAgentStore } from '../../store/agentStore';
+import { usePetStore } from '../../store/petStore';
 import { IconBoxMultiple, IconLego } from '@tabler/icons-react';
 import { useTranslation } from 'react-i18next';
 import { XiaofSyncManager } from '../Pet/XiaofSyncManager';
+import { XiaofPet } from '../Pet/XiaofPet';
 
 export function MainLayout() {
   const { t } = useTranslation();
   const { currentView } = useUiStore();
   const { activeWorkspaceId, activeConversationId } = useWorkspaceStore();
+  const { mode } = usePetStore();
   const messages = useAgentStore((s) => s.messages);
 
   // 核心逻辑：在 home 视图下，如果选中了具体对话并且有对话消息，则分发到「工作区视图」，否则展示「主页/欢迎视图」（以便选择助手开始新对话）
@@ -85,6 +88,9 @@ export function MainLayout() {
 
       {/* XiaoF Pet State Sync Manager — orchestrates desktop overlay in the background */}
       <XiaofSyncManager />
+
+      {/* Render the inline React pet component only when pet mode is in-app */}
+      {mode === 'in-app' && <XiaofPet />}
     </Box>
   );
 }
