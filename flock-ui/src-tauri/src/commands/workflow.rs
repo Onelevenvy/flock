@@ -35,6 +35,7 @@ impl WorkflowExecutionState {
 struct TauriWorkflowSink {
     app: AppHandle,
     workflow_id: String,
+    thread_id: String,
     accumulated_text: Arc<Mutex<String>>,
     accumulated_thinking: Arc<Mutex<String>>,
 }
@@ -44,6 +45,7 @@ impl WorkflowSink for TauriWorkflowSink {
         let _ = self.app.emit("workflow-event", serde_json::json!({
             "type": "node_start",
             "workflow_id": &self.workflow_id,
+            "thread_id": &self.thread_id,
             "node_id": node_id,
         }));
     }
@@ -67,6 +69,7 @@ impl WorkflowSink for TauriWorkflowSink {
         let _ = self.app.emit("workflow-event", serde_json::json!({
             "type": "node_done",
             "workflow_id": &self.workflow_id,
+            "thread_id": &self.thread_id,
             "node_id": node_id,
             "output": output,
         }));
@@ -78,6 +81,7 @@ impl WorkflowSink for TauriWorkflowSink {
         let _ = self.app.emit("workflow-event", serde_json::json!({
             "type": "text_delta",
             "workflow_id": &self.workflow_id,
+            "thread_id": &self.thread_id,
             "node_id": node_id,
             "text": text,
         }));
@@ -89,6 +93,7 @@ impl WorkflowSink for TauriWorkflowSink {
         let _ = self.app.emit("workflow-event", serde_json::json!({
             "type": "thinking",
             "workflow_id": &self.workflow_id,
+            "thread_id": &self.thread_id,
             "node_id": node_id,
             "text": text,
         }));
@@ -97,6 +102,7 @@ impl WorkflowSink for TauriWorkflowSink {
         let _ = self.app.emit("workflow-event", serde_json::json!({
             "type": "error",
             "workflow_id": &self.workflow_id,
+            "thread_id": &self.thread_id,
             "message": msg,
         }));
     }
@@ -261,6 +267,7 @@ pub async fn run_workflow(
     let sink = Arc::new(TauriWorkflowSink {
         app: app.clone(),
         workflow_id: workflow_id.clone(),
+        thread_id: thread_id_val.clone(),
         accumulated_text: accumulated_text.clone(),
         accumulated_thinking: accumulated_thinking.clone(),
     });
@@ -641,6 +648,7 @@ pub async fn debug_node(
     let sink = Arc::new(TauriWorkflowSink {
         app: app.clone(),
         workflow_id: format!("{}:debug:{}", workflow_id, node_id),
+        thread_id: format!("debug:{}:{}", workflow_id, node_id),
         accumulated_text: Arc::new(Mutex::new(String::new())),
         accumulated_thinking: Arc::new(Mutex::new(String::new())),
     });

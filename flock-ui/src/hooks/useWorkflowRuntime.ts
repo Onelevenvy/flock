@@ -32,6 +32,7 @@ export interface WorkflowTauriEvent {
     | 'debug_done'
     | 'debug_error';
   workflow_id: string;
+  thread_id?: string;
   node_id?: string;
   text?: string;
   output?: unknown;
@@ -161,12 +162,16 @@ export function useWorkflowRuntime({
         });
 
         if (mapped.length > 0) {
-          store.threadExecutions[tid] = {
-            messages: mapped,
-            status: 'done',
-            interrupt: null,
-          };
-          store.setThreadStatus(tid, 'done');
+          useWorkflowStore.setState((s) => ({
+            threadExecutions: {
+              ...s.threadExecutions,
+              [tid]: {
+                messages: mapped,
+                status: 'done',
+                interrupt: null,
+              },
+            },
+          }));
         }
       } catch (e) {
         console.warn('[WorkflowRuntime] Failed to load history from SQLite:', e);
@@ -205,6 +210,11 @@ export function useWorkflowRuntime({
               ? (useWorkflowStore.getState().activeExecutionThreadId ?? `${workflowId}:debug`)
               : threadIdRef.current;
             if (!activeTid) return;
+
+            // ─── 物理级防串线过滤 ───
+            if (payload.thread_id && payload.thread_id !== activeTid) {
+              return;
+            }
 
             console.log(`[WorkflowRuntime] Received event type: "${payload.type}" for threadId: "${activeTid}", nodeId: "${payload.node_id ?? ''}"`);
 
