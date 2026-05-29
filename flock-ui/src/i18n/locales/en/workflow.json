@@ -99,7 +99,23 @@
     },
     "human": {
       "title": "Review Prompt",
-      "titlePlaceholder": "Please review the following..."
+      "titlePlaceholder": "Please review the following...",
+      "submissionMethod": "Submission Method",
+      "formContent": "Form Content",
+      "formDescription": "Please write instructions or form content for the user",
+      "formPlaceholder": "Please approve the drafted content",
+      "feedbackSettings": "Feedback Settings",
+      "enableFeedback": "Allow User Feedback",
+      "enableFeedbackDesc": "User can optionally add a text comment when selecting an action",
+      "userActions": "User Actions",
+      "approve": "Approve",
+      "reject": "Reject",
+      "addAction": "Add Action",
+      "timeoutSettings": "Timeout Settings",
+      "minutes": "Minutes",
+      "hours": "Hours",
+      "days": "Days",
+      "timeoutAction": "TIMEOUT"
     },
     "plugin": {
       "args": "Tool Arguments (JSON)"
@@ -134,13 +150,15 @@
     "running": "Running",
     "done": "Done",
     "error": "Error",
+    "waiting": "Waiting",
     "noOutput": "No output yet. Click the run button to start.",
     "newChat": "New Chat",
     "humanReview": "Human Review Required",
     "approve": "Approve",
     "deny": "Deny",
     "inputPlaceholder": "Enter initial query...",
-    "send": "Send"
+    "send": "Send",
+    "feedbackPlaceholder": "Add optional comment (Enter to skip)..."
   },
   "nodes": {
     "start": { "label": "Start" },

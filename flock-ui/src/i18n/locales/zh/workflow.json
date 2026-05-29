@@ -99,7 +99,23 @@
     },
     "human": {
       "title": "审查提示",
-      "titlePlaceholder": "请审查以下内容..."
+      "titlePlaceholder": "请审查以下内容...",
+      "submissionMethod": "提交方式",
+      "formContent": "表单内容",
+      "formDescription": "请为用户填写说明或表单内容",
+      "formPlaceholder": "请审查已起草的内容",
+      "feedbackSettings": "反馈设置",
+      "enableFeedback": "允许用户补充信息",
+      "enableFeedbackDesc": "用户在选择操作时可选择性附加文字说明",
+      "userActions": "用户操作",
+      "approve": "批准",
+      "reject": "拒绝",
+      "addAction": "添加操作",
+      "timeoutSettings": "超时设置",
+      "minutes": "分钟",
+      "hours": "小时",
+      "days": "天",
+      "timeoutAction": "超时"
     },
     "plugin": {
       "args": "工具参数（JSON）"
@@ -134,13 +150,15 @@
     "running": "运行中",
     "done": "完成",
     "error": "错误",
+    "waiting": "等待确认",
     "noOutput": "尚无输出，点击运行按钮开始执行",
     "newChat": "新建会话",
     "humanReview": "需要人工确认",
     "approve": "批准",
     "deny": "拒绝",
     "inputPlaceholder": "输入初始查询...",
-    "send": "发送"
+    "send": "发送",
+    "feedbackPlaceholder": "添加可选备注（按 Enter 跳过）..."
   },
   "nodes": {
     "start": { "label": "开始" },

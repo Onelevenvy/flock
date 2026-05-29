@@ -1,4 +1,4 @@
-import { Group, Stack, TextInput, ActionIcon, Button, Divider, Switch, NumberInput, Select } from '@mantine/core';
+import { Group, Stack, Text, TextInput, ActionIcon, Button, Divider, Switch, NumberInput, Select } from '@mantine/core';
 import { IconTrash, IconPlus } from '@tabler/icons-react';
 import { useTranslation } from 'react-i18next';
 import { VariableTextarea } from '../VariableInput';
@@ -70,6 +70,20 @@ export function HumanFields({ node, onDataChange }: HumanFieldsProps) {
         minRows={4}
         size="xs"
       />
+
+      {/* Enable Feedback Toggle */}
+      <Divider label={t('workflow.properties.human.feedbackSettings', 'Feedback Settings')} labelPosition="center" />
+      <Group justify="space-between" align="flex-start">
+        <Stack gap={2} style={{ flex: 1 }}>
+          <Text size="xs" fw={500}>{t('workflow.properties.human.enableFeedback', 'Allow User Feedback')}</Text>
+          <Text size="xs" c="dimmed">{t('workflow.properties.human.enableFeedbackDesc', 'User can optionally add a text comment when selecting an action')}</Text>
+        </Stack>
+        <Switch
+          checked={node.data.enable_feedback === true}
+          onChange={(e) => onDataChange(node.id, 'enable_feedback', e.currentTarget.checked)}
+          size="xs"
+        />
+      </Group>
 
       {/* User Actions Buttons */}
       <Divider label={t('workflow.properties.human.userActions', 'User Actions')} labelPosition="center" />

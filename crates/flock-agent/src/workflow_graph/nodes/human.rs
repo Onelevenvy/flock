@@ -33,13 +33,18 @@ pub fn make_human_node(
                 { "key": "action_2", "label": "Reject" }
             ]));
 
+            let enable_feedback = node_data.get("enable_feedback")
+                .and_then(|v| v.as_bool())
+                .unwrap_or(false);
+
             // Call langgraph interrupt
             let resume_val = match langgraph::types::interrupt(
                 json!({
                     "node_id": node_id,
                     "title": title,
                     "interaction_type": "review",
-                    "actions": actions
+                    "actions": actions,
+                    "enable_feedback": enable_feedback
                 })
             ) {
                 Ok(val) => val,
@@ -51,14 +56,23 @@ pub fn make_human_node(
                 .and_then(|v| v.as_str())
                 .unwrap_or("action_1")
                 .to_string();
-            ctx.sink.emit_text_delta(&node_id, &format!("人工确认结果: `{}`", choice));
+            let feedback = resume_val.get("feedback")
+                .and_then(|v| v.as_str())
+                .unwrap_or("")
+                .to_string();
+            if feedback.is_empty() {
+                ctx.sink.emit_text_delta(&node_id, &format!("人工确认结果: `{}`", choice));
+            } else {
+                ctx.sink.emit_text_delta(&node_id, &format!("人工确认结果: `{}` — {}", choice, feedback));
+            }
 
             let mut outputs = state.node_outputs.clone();
             if !outputs.is_object() {
                 outputs = json!({});
             }
             let node_output = json!({
-                "choice": choice
+                "choice": choice,
+                "feedback": feedback
             });
             outputs[&node_id] = node_output.clone();
 

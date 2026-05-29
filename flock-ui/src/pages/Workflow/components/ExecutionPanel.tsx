@@ -1,4 +1,4 @@
-import { useState, useMemo, useEffect } from 'react';
+import { useState, useMemo, useEffect, useCallback } from 'react';
 import {
   Box,
   Text,
@@ -14,20 +14,21 @@ import {
   Stack,
   Textarea,
   ScrollArea,
+  Input,
 } from '@mantine/core';
 import {
   IconX,
   IconTerminal2,
   IconPlayerStop,
-  IconCheck,
   IconSend,
   IconPlus,
-  IconPlayerPlay,
+  IconUser,
 } from '@tabler/icons-react';
 import { useTranslation } from 'react-i18next';
 import { ChatPanel } from '../../../components/chat/ChatPanel';
 import { ChatMessage } from '../../../types/protocol';
 import { useWorkflowStore } from '../../../store/workflowStore';
+import { useUiStore } from '../../../store/uiStore';
 
 export interface ExecutionMessage {
   type: 'user' | 'text_delta' | 'thinking' | 'info' | 'error' | 'done';
@@ -54,8 +55,11 @@ export function ExecutionPanel({
   resumeWorkflow,
 }: ExecutionPanelProps) {
   const { t } = useTranslation();
+  const theme = useUiStore((s) => s.theme);
+  const isDark = theme === 'dark';
   const { clearExecution } = useWorkflowStore();
   const [inputVal, setInputVal] = useState('');
+  const [feedback, setFeedback] = useState('');
 
   const startNode = useWorkflowStore((s) => s.nodes.find((n) => n.type === 'start'));
   const startVariables = (startNode?.data?.variables as any[]) ?? [
@@ -152,19 +156,48 @@ export function ExecutionPanel({
     return result;
   }, [messages, status]);
 
-  const isInterrupted =
-    messages.length > 0 &&
-    (messages[messages.length - 1].content.includes('⏳ 正在等待人工确认') ||
-     messages[messages.length - 1].content.includes('⏳ Waiting for human review'));
+  const activeInterrupt = useWorkflowStore((s) => s.activeInterrupt);
+  const isInterrupted = activeInterrupt !== null;
 
   const statusColor =
     status === 'running' ? 'blue'
     : status === 'done' ? 'teal'
     : status === 'error' ? 'red'
+    : isInterrupted ? 'orange'
     : 'gray';
 
-  const activeInterrupt = useWorkflowStore((s) => s.activeInterrupt);
   const customVars = startVariables.filter(v => v.name !== 'query');
+
+  // 中断后清空 feedback
+  useEffect(() => {
+    if (activeInterrupt) setFeedback('');
+  }, [activeInterrupt]);
+
+  const handleResume = useCallback((choiceKey: string) => {
+    const payload: Record<string, unknown> = { choice: choiceKey };
+    if (activeInterrupt?.enable_feedback && feedback.trim()) {
+      payload.feedback = feedback.trim();
+    }
+    resumeWorkflow(payload);
+    setFeedback('');
+  }, [activeInterrupt, feedback, resumeWorkflow]);
+
+  // 键盘快捷键：数字键快速选择 action
+  useEffect(() => {
+    if (!isInterrupted || !activeInterrupt?.actions) return;
+    const actions = activeInterrupt.actions as { key: string; label: string }[];
+    const handleKey = (e: KeyboardEvent) => {
+      const tag = (e.target as HTMLElement)?.tagName?.toLowerCase();
+      if (tag === 'input' || tag === 'textarea') return;
+      const idx = parseInt(e.key) - 1;
+      if (!isNaN(idx) && idx >= 0 && idx < actions.length) {
+        e.preventDefault();
+        handleResume(actions[idx].key);
+      }
+    };
+    window.addEventListener('keydown', handleKey);
+    return () => window.removeEventListener('keydown', handleKey);
+  }, [isInterrupted, activeInterrupt, handleResume]);
 
   const handleStart = () => {
     // Validate required fields
@@ -216,7 +249,9 @@ export function ExecutionPanel({
             {t('workflow.execution.title', 'Execution Output')}
           </Text>
           <Badge size="xs" color={statusColor} variant="light" style={{ fontSize: 9 }}>
-            {t(`workflow.execution.${status}`, status.toUpperCase())}
+            {isInterrupted
+              ? t('workflow.execution.waiting', 'WAITING')
+              : t(`workflow.execution.${status}`, status.toUpperCase())}
           </Badge>
         </Group>
 
@@ -374,49 +409,114 @@ export function ExecutionPanel({
         <Box p="xs" style={{ borderTop: '1px solid var(--flock-border-subtle)', background: 'var(--flock-bg-surface)' }}>
           {isInterrupted ? (
             <Box
-              p="xs"
               style={{
+                borderRadius: 10,
                 background: 'var(--flock-bg-raised)',
-                border: '1px solid var(--flock-border-subtle)',
-                borderRadius: 8,
+                border: '1px solid var(--flock-border-dim)',
+                overflow: 'hidden',
+                animation: 'fadeIn 0.2s ease-out',
               }}
             >
-              <Text size="xs" fw={600} mb="xs" style={{ color: 'var(--flock-text-bright)' }}>
-                🧑‍💻 {activeInterrupt?.title || t('workflow.execution.humanReview', 'Human Review Required')}
-              </Text>
-              <Group gap="sm">
-                {activeInterrupt?.actions && Array.isArray(activeInterrupt.actions) ? (
-                  activeInterrupt.actions.map((act: any) => (
-                    <Button
-                      key={act.key}
-                      size="xs"
-                      color="blue"
-                      onClick={() => resumeWorkflow({ choice: act.key })}
-                    >
-                      {act.label || act.key}
-                    </Button>
-                  ))
+              {/* 标题行 */}
+              <Box
+                style={{
+                  padding: '8px 12px',
+                  background: 'var(--flock-bg-surface)',
+                  borderBottom: '1px solid var(--flock-border-dim)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 6,
+                }}
+              >
+                <IconUser size={13} style={{ color: 'var(--flock-accent)' }} />
+                <Text size="xs" fw={600} c={isDark ? 'orange.3' : 'orange.8'}>
+                  {activeInterrupt?.title || t('workflow.execution.humanReview', 'Human Review Required')}
+                </Text>
+              </Box>
+
+              {/* 操作区 */}
+              <Box
+                style={{
+                  padding: '8px 12px',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  gap: 6,
+                }}
+              >
+                {/* Action 按钮列表 */}
+                {Array.isArray(activeInterrupt?.actions) && activeInterrupt.actions.length > 0 ? (
+                  activeInterrupt.actions.map((act: any, idx: number) => {
+                    const colors = ['teal', 'blue', 'violet', 'grape', 'pink', 'red'];
+                    const color = colors[idx % colors.length];
+                    return (
+                      <Group
+                        key={act.key}
+                        gap={6}
+                        style={{ cursor: 'pointer' }}
+                        onClick={() => handleResume(act.key)}
+                        className="approval-btn"
+                      >
+                        <Box
+                          style={{
+                            width: 20,
+                            height: 20,
+                            borderRadius: 4,
+                            background: 'var(--flock-bg-surface)',
+                            border: '1px solid var(--flock-border-dim)',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            flexShrink: 0,
+                          }}
+                        >
+                          <Text size="xs" fw={700} style={{ fontSize: 10 }}>{idx + 1}</Text>
+                        </Box>
+                        <Text size="xs" c={isDark ? `${color}.4` : `${color}.8`} fw={600}>
+                          {act.label || act.key}
+                        </Text>
+                      </Group>
+                    );
+                  })
                 ) : (
-                  <>
-                    <Button
-                      size="xs"
-                      color="teal"
-                      leftSection={<IconCheck size={12} />}
-                      onClick={() => resumeWorkflow({ choice: 'approved' })}
-                    >
+                  <Group gap={6} style={{ cursor: 'pointer' }} onClick={() => handleResume('approved')} className="approval-btn">
+                    <Box style={{ width: 20, height: 20, borderRadius: 4, background: 'var(--flock-bg-surface)', border: '1px solid var(--flock-border-dim)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                      <Text size="xs" fw={700} style={{ fontSize: 10 }}>1</Text>
+                    </Box>
+                    <Text size="xs" c={isDark ? 'teal.4' : 'teal.8'} fw={600}>
                       {t('workflow.execution.approve', 'Approve')}
-                    </Button>
-                    <Button
-                      size="xs"
-                      color="red"
-                      leftSection={<IconX size={12} />}
-                      onClick={() => resumeWorkflow({ choice: 'denied' })}
-                    >
-                      {t('workflow.execution.deny', 'Deny')}
-                    </Button>
-                  </>
+                    </Text>
+                  </Group>
                 )}
-              </Group>
+
+                {/* 补充信息输入框（enable_feedback 时显示） */}
+                {activeInterrupt?.enable_feedback && (
+                  <Input
+                    placeholder={t('workflow.execution.feedbackPlaceholder', 'Add optional comment (Enter to skip)...')}
+                    value={feedback}
+                    onChange={(e) => setFeedback(e.currentTarget.value)}
+                    size="xs"
+                    mt={2}
+                    styles={{
+                      input: {
+                        height: 26,
+                        fontSize: '11px',
+                        backgroundColor: 'var(--flock-bg-deepest)',
+                        border: '1px solid var(--flock-border-dim)',
+                        color: 'var(--flock-text-primary)',
+                        borderRadius: '4px',
+                      },
+                    }}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter') {
+                        e.preventDefault();
+                        // Enter 在输入框里代表确认选第一个 action
+                        const acts = activeInterrupt?.actions as { key: string }[] | undefined;
+                        if (acts && acts.length > 0) handleResume(acts[0].key);
+                      }
+                    }}
+                  />
+                )}
+              </Box>
             </Box>
           ) : (
             <Group gap="xs">
