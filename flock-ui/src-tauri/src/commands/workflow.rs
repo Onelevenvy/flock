@@ -240,12 +240,8 @@ pub async fn run_workflow(
         if config.base_url.is_empty() { None } else { Some(config.base_url.clone()) },
     ));
 
-    // 5. 初始化 Checkpointer（调试模式下使用 InMemorySaver，普通对话使用 SqliteSaver）
-    let is_debug_run = thread_id.as_ref().map(|tid| tid.contains("_run_") || tid.starts_with("debug:")).unwrap_or(false);
-
-    let checkpointer: Arc<dyn BaseCheckpointSaver> = if is_debug_run {
-        Arc::new(InMemorySaver::new())
-    } else {
+    // 5. 初始化 Checkpointer（无论是调试还是普通，都统一使用 SqliteSaver 以持久化和跨调用周期保存状态，实现连续多轮提问和完美的打断恢复）
+    let checkpointer: Arc<dyn BaseCheckpointSaver> = {
         let db_path_str = config.db_path.to_string_lossy().to_string();
         let conn_str = format!("sqlite:{}", db_path_str);
         match SqliteSaver::from_conn_string(&conn_str).await {
@@ -259,6 +255,8 @@ pub async fn run_workflow(
             Err(_) => Arc::new(InMemorySaver::new()),
         }
     };
+
+    let thread_id_val = thread_id.unwrap_or_else(|| workflow_id.clone());
 
     // 6. 实例化 Sink & Context
     let accumulated_text = Arc::new(Mutex::new(String::new()));
@@ -297,7 +295,6 @@ pub async fn run_workflow(
 
     // 7. 配置 thread_id
     let mut config = RunnableConfig::default();
-    let thread_id_val = thread_id.unwrap_or_else(|| workflow_id.clone());
     config.insert(
         "configurable".to_string(),
         serde_json::json!({ "thread_id": thread_id_val }),
@@ -401,6 +398,7 @@ pub async fn run_workflow(
         let _ = app_clone.emit("workflow-event", serde_json::json!({
             "type": "workflow_start",
             "workflow_id": workflow_id_clone,
+            "thread_id": thread_id_val_clone.clone(),
         }));
 
         let mut astream = graph.astream(&initial_input, &config, vec![StreamMode::Updates]);
@@ -409,6 +407,7 @@ pub async fn run_workflow(
             let _ = app_clone.emit("workflow-event", serde_json::json!({
                 "type": "workflow_progress",
                 "workflow_id": workflow_id_clone,
+                "thread_id": thread_id_val_clone.clone(),
                 "output": part,
             }));
         }
@@ -422,6 +421,7 @@ pub async fn run_workflow(
                     let _ = app_clone.emit("workflow-event", serde_json::json!({
                         "type": "workflow_interrupted",
                         "workflow_id": workflow_id_clone,
+                        "thread_id": thread_id_val_clone.clone(),
                         "interrupt": first_interrupt,
                     }));
                 } else {
@@ -429,6 +429,7 @@ pub async fn run_workflow(
                     let _ = app_clone.emit("workflow-event", serde_json::json!({
                         "type": "workflow_done",
                         "workflow_id": workflow_id_clone,
+                        "thread_id": thread_id_val_clone.clone(),
                         "node_outputs": snapshot.values.get("node_outputs"),
                     }));
                 }
@@ -437,6 +438,7 @@ pub async fn run_workflow(
                 let _ = app_clone.emit("workflow-event", serde_json::json!({
                     "type": "workflow_error",
                     "workflow_id": workflow_id_clone,
+                    "thread_id": thread_id_val_clone.clone(),
                     "error": format!("Failed to retrieve graph snapshot: {}", e),
                 }));
             }
