@@ -4,12 +4,11 @@ import {
   Text,
   Badge,
   Button,
-  Textarea,
+  TextInput,
   Group,
 } from '@mantine/core';
 import {
   IconUser,
-  IconCheck,
 } from '@tabler/icons-react';
 import { useTranslation } from 'react-i18next';
 import { HumanAction, InterruptData } from './types';
@@ -29,7 +28,6 @@ export function HumanReviewCard({
   isResolved,
 }: HumanReviewCardProps) {
   const { t } = useTranslation();
-  const [pendingAction, setPendingAction] = useState<HumanAction | null>(null);
   const [feedback, setFeedback] = useState('');
 
   const actions = interruptData.actions ?? [
@@ -41,25 +39,7 @@ export function HumanReviewCard({
 
   const handleActionClick = (act: HumanAction) => {
     if (isResolved) return;
-    if (act.enable_feedback) {
-      // 先展开 feedback 输入框
-      setPendingAction(act);
-      setFeedback('');
-    } else {
-      onResume(act.key);
-    }
-  };
-
-  const handleConfirmWithFeedback = () => {
-    if (!pendingAction) return;
-    onResume(pendingAction.key, feedback.trim() || undefined);
-    setPendingAction(null);
-    setFeedback('');
-  };
-
-  const handleCancelFeedback = () => {
-    setPendingAction(null);
-    setFeedback('');
+    onResume(act.key, act.enable_feedback ? feedback.trim() || undefined : undefined);
   };
 
   return (
@@ -97,69 +77,64 @@ export function HumanReviewCard({
         )}
       </Box>
 
-      {/* 操作按钮 */}
-      {!isResolved && !pendingAction && (
+      {/* 操作内容及输入区域 */}
+      {!isResolved && (
         <Box style={{ padding: '8px 12px', display: 'flex', flexDirection: 'column', gap: 6 }}>
-          {actions.map((act, idx) => (
-            <Button
-              key={act.key}
-              size="xs"
-              variant={idx === 0 ? 'filled' : 'default'}
-              color={idx === 0 ? actionColors[0] : undefined}
-              onClick={() => handleActionClick(act)}
-              style={{ justifyContent: 'flex-start', fontWeight: 600 }}
-              leftSection={act.enable_feedback ? <IconUser size={11} /> : undefined}
-            >
-              {act.label || act.key}
-            </Button>
-          ))}
-        </Box>
-      )}
+          {actions.map((act, idx) => {
+            const isFirst = idx === 0;
+            const btnColor = isFirst ? actionColors[0] : undefined;
+            const btnVariant = isFirst ? 'filled' : 'default';
 
-      {/* Feedback 输入区（点击某个 enable_feedback 的 action 后展示） */}
-      {!isResolved && pendingAction && (
-        <Box style={{ padding: '8px 12px', display: 'flex', flexDirection: 'column', gap: 8 }}>
-          <Text size="xs" c="dimmed">
-            {pendingAction.label} — {t('workflow.execution.feedbackOptional', 'Add optional comment:')}
-          </Text>
-          <Textarea
-            placeholder={t('workflow.execution.feedbackPlaceholder', 'Add optional comment...')}
-            value={feedback}
-            onChange={(e) => setFeedback(e.currentTarget.value)}
-            size="xs"
-            minRows={2}
-            autoFocus
-            styles={{
-              input: {
-                fontSize: '12px',
-                backgroundColor: 'var(--flock-bg-deepest)',
-                border: '1px solid var(--flock-border-dim)',
-              },
-            }}
-            onKeyDown={(e) => {
-              if (e.key === 'Enter' && !e.shiftKey) {
-                e.preventDefault();
-                handleConfirmWithFeedback();
-              }
-              if (e.key === 'Escape') {
-                handleCancelFeedback();
-              }
-            }}
-          />
-          <Group gap="xs">
-            <Button
-              size="xs"
-              color="blue"
-              leftSection={<IconCheck size={11} />}
-              onClick={handleConfirmWithFeedback}
-              style={{ flex: 1 }}
-            >
-              {t('workflow.execution.confirmAction', 'Confirm')} — {pendingAction.label}
-            </Button>
-            <Button size="xs" variant="subtle" color="gray" onClick={handleCancelFeedback}>
-              {t('common.cancel', 'Cancel')}
-            </Button>
-          </Group>
+            if (act.enable_feedback) {
+              return (
+                <Group key={act.key} gap="xs" style={{ width: '100%' }} wrap="nowrap">
+                  <Button
+                    size="xs"
+                    variant={btnVariant}
+                    color={btnColor}
+                    onClick={() => handleActionClick(act)}
+                    style={{ fontWeight: 600, flexShrink: 0 }}
+                  >
+                    {act.label || act.key}
+                  </Button>
+                  <TextInput
+                    placeholder={t('workflow.execution.feedbackPlaceholder', 'Add optional comment...')}
+                    value={feedback}
+                    onChange={(e) => setFeedback(e.currentTarget.value)}
+                    size="xs"
+                    styles={{
+                      input: {
+                        fontSize: '11px',
+                        backgroundColor: 'var(--flock-bg-deepest)',
+                        border: '1px solid var(--flock-border-dim)',
+                        height: '30px',
+                      },
+                    }}
+                    style={{ flex: 1 }}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter') {
+                        e.preventDefault();
+                        handleActionClick(act);
+                      }
+                    }}
+                  />
+                </Group>
+              );
+            }
+
+            return (
+              <Button
+                key={act.key}
+                size="xs"
+                variant={btnVariant}
+                color={btnColor}
+                onClick={() => handleActionClick(act)}
+                style={{ justifyContent: 'flex-start', fontWeight: 600, width: '100%' }}
+              >
+                {act.label || act.key}
+              </Button>
+            );
+          })}
         </Box>
       )}
     </Box>
