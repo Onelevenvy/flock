@@ -1,4 +1,4 @@
-import { useCallback, useMemo, useState } from 'react';
+import { useCallback, useMemo, useState, useEffect } from 'react';
 import ReactFlow, {
   Background,
   MiniMap,
@@ -63,6 +63,8 @@ export function FlowCanvas({ workflowId, workflowData, onBack }: FlowCanvasProps
     environmentVariables,
     debugTarget,
     setDebugTarget,
+    pendingStartQuery,
+    setPendingStartQuery,
   } = useWorkflowStore();
 
   const { startWorkflow, resumeWorkflow, stopWorkflow } = useWorkflowExecution();
@@ -72,6 +74,8 @@ export function FlowCanvas({ workflowId, workflowData, onBack }: FlowCanvasProps
   const [showNodePalette, setShowNodePalette] = useState(false);
   const [showEnvVars, setShowEnvVars] = useState(false);
   const [isPanMode, setIsPanMode] = useState(true);
+
+
 
   // ── Topological Auto Layout Hook ───────────────────────────────────────
   const { layoutAllNodes } = useFlowLayout(nodes, edges, setNodes, setEdges);
@@ -117,6 +121,21 @@ export function FlowCanvas({ workflowId, workflowData, onBack }: FlowCanvasProps
     });
     setDirty(false);
   }, [workflowId, workflowData, nodes, edges, environmentVariables, updateMutation, setDirty]);
+
+  // ── Auto-start workflow if navigated from home page with a query ────────
+  useEffect(() => {
+    if (pendingStartQuery && workflowId) {
+      const runPending = async () => {
+        if (isDirty) {
+          await handleSave();
+        }
+        setShowExecution(true);
+        startWorkflow(JSON.stringify({ query: pendingStartQuery }));
+        setPendingStartQuery(null);
+      };
+      runPending();
+    }
+  }, [pendingStartQuery, workflowId, isDirty, handleSave, startWorkflow, setPendingStartQuery]);
 
   // ── Selected node ───────────────────────────────────────────────────────
   const selectedNode = useMemo(

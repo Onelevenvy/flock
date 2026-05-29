@@ -9,6 +9,9 @@ import { useWorkspacesQuery, useCreateConversationMutation } from '../../hooks/u
 import { type Assistant } from '../../types/assistant';
 
 import { AssistantPicker, XIAOF_AGENT } from './AssistantPicker';
+import { useUiStore } from '../../store/uiStore';
+import { useWorkflowStore } from '../../store/workflowStore';
+import { type WorkflowRecord } from '../../hooks/useWorkflow';
 
 import { useAssistantsQuery } from '../../hooks/useAssistants';
 import { useTranslation } from 'react-i18next';
@@ -19,7 +22,9 @@ import { StatusIndicator } from './components/StatusIndicator';
 export function HomeView() {
   const { t } = useTranslation();
   const [value, setValue] = useState('');
+  const [selectedType, setSelectedType] = useState<'assistant' | 'workflow'>('assistant');
   const [selectedAssistant, setSelectedAssistant] = useState<Assistant>(XIAOF_AGENT);
+  const [selectedWorkflow, setSelectedWorkflow] = useState<WorkflowRecord | null>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
   const status = useAgentStore(s => s.status);
@@ -71,7 +76,7 @@ export function HomeView() {
 
   const activeWs = workspaces.find(w => w.id === activeWorkspaceId);
   const isStreaming = !!activeConversationId && status === 'thinking';
-  const canSend = (status === 'ready' || (status === 'thinking' && !activeConversationId)) && value.trim().length > 0 && !!activeWorkspaceId;
+  const canSend = (status === 'ready' || (status === 'thinking' && !activeConversationId) || selectedType === 'workflow') && value.trim().length > 0 && !!activeWorkspaceId;
 
 
 
@@ -79,7 +84,9 @@ export function HomeView() {
     ? t('home.selectWorkspaceFirst')
     : isStreaming
       ? t('home.thinking')
-      : t('home.sendMessage', { name: selectedAssistant.name });
+      : selectedType === 'workflow'
+        ? t('home.sendMessage', { name: selectedWorkflow?.name ?? '' })
+        : t('home.sendMessage', { name: selectedAssistant.name });
 
   const handleSelectWorkspace = useCallback(async (wsId: string, wsPath: string, _wsName: string) => {
     if (wsId !== activeWorkspaceId) {
@@ -104,33 +111,47 @@ export function HomeView() {
     }
   }, [activeWorkspaceId, selectedAssistant, activeConversationId, setActiveWorkspace, setWorkdir, setStatus]);
 
-  const handleAssistantSelect = useCallback(async (a: Assistant) => {
-    setSelectedAssistant(a);
-    if (activeConversationId) {
-      setConversationAssistant(activeConversationId, a.id);
-    }
-    // If workspace already active, restart agent with new assistant
-    if (activeWs && status === 'ready') {
-      setStatus('connecting');
-      try {
-        await invoke('start_agent', {
-          workdir: activeWs.path,
-          sessionId: activeConversationId || null,
-          assistantId: a.id === '__xiaof__' ? null : a.id,
-          projectDir: null,
-          apiKey: null,
-          extraArgs: null,
-        });
-        setStatus('ready');
-      } catch (e: any) {
-        setStatus('error');
+  const handlePickerSelect = useCallback(async (type: 'assistant' | 'workflow', id: string, item: Assistant | WorkflowRecord | null) => {
+    setSelectedType(type);
+    if (type === 'assistant' && item) {
+      const assistantItem = item as Assistant;
+      setSelectedAssistant(assistantItem);
+      if (activeConversationId) {
+        setConversationAssistant(activeConversationId, assistantItem.id);
       }
+      // If workspace already active, restart agent with new assistant
+      if (activeWs && status === 'ready') {
+        setStatus('connecting');
+        try {
+          await invoke('start_agent', {
+            workdir: activeWs.path,
+            sessionId: activeConversationId || null,
+            assistantId: assistantItem.id === '__xiaof__' ? null : assistantItem.id,
+            projectDir: null,
+            apiKey: null,
+            extraArgs: null,
+          });
+          setStatus('ready');
+        } catch (e: any) {
+          setStatus('error');
+        }
+      }
+    } else if (type === 'workflow') {
+      setSelectedWorkflow(item as WorkflowRecord);
     }
   }, [activeWs, status, activeConversationId, setConversationAssistant, setStatus]);
 
   const handleSend = async () => {
     if (!canSend || !activeWs) return;
     const content = value.trim();
+
+    if (selectedType === 'workflow' && selectedWorkflow) {
+      useWorkflowStore.getState().setActiveWorkflowId(selectedWorkflow.id);
+      useWorkflowStore.getState().setPendingStartQuery(content);
+      useUiStore.getState().setCurrentView('workflow');
+      setValue('');
+      return;
+    }
 
     let convId = activeConversationId;
     const isNewOrEmpty = !convId || messages.length === 0;
@@ -244,7 +265,11 @@ export function HomeView() {
 
       {/* 助手选择器 */}
       <Box mb={16} style={{ width: '100%', maxWidth: 680 }}>
-        <AssistantPicker selected={selectedAssistant} onSelect={handleAssistantSelect} />
+        <AssistantPicker
+          selectedType={selectedType}
+          selectedId={selectedType === 'assistant' ? selectedAssistant.id : (selectedWorkflow?.id ?? '')}
+          onSelect={handlePickerSelect}
+        />
       </Box>
 
       {/* 输入框卡片 */}

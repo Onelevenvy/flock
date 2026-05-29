@@ -64,6 +64,8 @@ interface WorkflowStore {
   environmentVariables: Record<string, EnvVar>;
   // 当前等待用户回复的打断事件数据
   activeInterrupt: any | null;
+  // 从主页跳转启动的待执行初始 Query
+  pendingStartQuery: string | null;
 
   // Actions
   setActiveWorkflowId: (id: string | null) => void;
@@ -83,6 +85,7 @@ interface WorkflowStore {
   removeEnvironmentVariable: (key: string) => void;
   setEnvironmentVariables: (vars: Record<string, EnvVar>) => void;
   setActiveInterrupt: (interrupt: any | null) => void;
+  setPendingStartQuery: (q: string | null) => void;
 }
 
 export const useWorkflowStore = create<WorkflowStore>()(
@@ -100,9 +103,11 @@ export const useWorkflowStore = create<WorkflowStore>()(
       debugResults: {},
       environmentVariables: {},
       activeInterrupt: null,
+      pendingStartQuery: null,
 
       setActiveWorkflowId: (id) => set({ activeWorkflowId: id }),
       setActiveInterrupt: (interrupt) => set({ activeInterrupt: interrupt }),
+      setPendingStartQuery: (q) => set({ pendingStartQuery: q }),
       setDebugResult: (nodeId, result) => set((s) => ({
         debugResults: { ...s.debugResults, [nodeId]: result }
       })),
