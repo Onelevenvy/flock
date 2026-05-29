@@ -19,6 +19,7 @@ interface Model {
 }
 
 import { useAvailableModels } from '../../../hooks/useAvailableModels';
+import { useSkillsQuery } from '../../../hooks/useToolQueries';
 
 interface SkillInfo {
   name: string;
@@ -33,6 +34,7 @@ export function useAssistantForm(
 ) {
   const { t } = useTranslation();
   const { providers, models, loading: loadingModels, reload: reloadModels } = useAvailableModels();
+  const { data: skills = [], isLoading: loadingSkills } = useSkillsQuery();
 
   const [name, setName] = useState('');
   const [icon, setIcon] = useState('🤖');
@@ -74,13 +76,11 @@ export function useAssistantForm(
       setSelectedSkills([]);
     }
     loadOptions();
-  }, [opened, initial, providers, models]);
+  }, [opened, initial, providers, models, skills]);
 
   const loadOptions = useCallback(async () => {
     setLoadingOptions(true);
     try {
-      const skills = await invoke<SkillInfo[]>('list_skills');
-
       // Group models from cached hook
       const grouped: Record<string, { value: string; label: string }[]> = {};
       models.forEach((m) => {
@@ -107,7 +107,7 @@ export function useAssistantForm(
     } finally {
       setLoadingOptions(false);
     }
-  }, [providers, models]);
+  }, [providers, models, skills]);
 
   const handleSave = async () => {
     if (!name.trim()) {
