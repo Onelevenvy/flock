@@ -7,12 +7,8 @@ import {
   Badge,
   TextInput,
   Button,
-  NumberInput,
-  Switch,
-  Select,
-  Stack,
-  Textarea,
   ScrollArea,
+  Stack,
 } from '@mantine/core';
 import {
   IconX,
@@ -20,193 +16,15 @@ import {
   IconPlayerStop,
   IconSend,
   IconPlus,
-  IconUser,
-  IconCheck,
 } from '@tabler/icons-react';
 import { useTranslation } from 'react-i18next';
-import { MessageBubble } from '../../../components/chat/components/MessageBubble';
-import { ChatMessage } from '../../../types/protocol';
-import { useWorkflowStore } from '../../../store/workflowStore';
-import { useUiStore } from '../../../store/uiStore';
-
-export interface ExecutionMessage {
-  type: 'user' | 'text_delta' | 'thinking' | 'info' | 'error' | 'done';
-  content: string;
-  nodeId?: string;
-  timestamp: number;
-}
-
-interface HumanAction {
-  key: string;
-  label: string;
-  enable_feedback?: boolean;
-}
-
-interface InterruptData {
-  node_id?: string;
-  title?: string;
-  actions?: HumanAction[];
-  interaction_type?: string;
-}
-
-interface ExecutionPanelProps {
-  status: 'idle' | 'running' | 'done' | 'error';
-  messages: ExecutionMessage[];
-  onClose: () => void;
-  startWorkflow: (input: string) => Promise<void>;
-  stopWorkflow: () => Promise<void>;
-  resumeWorkflow: (choiceValue: unknown) => Promise<void>;
-}
-
-/** 内联 HITL 操作卡片（渲染在消息气泡下方） */
-function HumanReviewCard({
-  interruptData,
-  onResume,
-  isDark,
-  isResolved,
-}: {
-  interruptData: InterruptData;
-  onResume: (choice: string, feedback?: string) => void;
-  isDark: boolean;
-  isResolved: boolean;
-}) {
-  const { t } = useTranslation();
-  const [pendingAction, setPendingAction] = useState<HumanAction | null>(null);
-  const [feedback, setFeedback] = useState('');
-
-  const actions = interruptData.actions ?? [
-    { key: 'action_1', label: 'Approve', enable_feedback: false },
-    { key: 'action_2', label: 'Reject', enable_feedback: true },
-  ];
-
-  const actionColors = ['blue', 'violet', 'teal', 'grape', 'pink', 'orange'];
-
-  const handleActionClick = (act: HumanAction) => {
-    if (isResolved) return;
-    if (act.enable_feedback) {
-      // 先展开 feedback 输入框
-      setPendingAction(act);
-      setFeedback('');
-    } else {
-      onResume(act.key);
-    }
-  };
-
-  const handleConfirmWithFeedback = () => {
-    if (!pendingAction) return;
-    onResume(pendingAction.key, feedback.trim() || undefined);
-    setPendingAction(null);
-    setFeedback('');
-  };
-
-  const handleCancelFeedback = () => {
-    setPendingAction(null);
-    setFeedback('');
-  };
-
-  return (
-    <Box
-      style={{
-        margin: '4px 0 8px 0',
-        borderRadius: 10,
-        background: isResolved
-          ? 'var(--flock-bg-surface)'
-          : 'var(--flock-bg-raised)',
-        border: `1px solid ${isResolved ? 'var(--flock-border-subtle)' : 'var(--flock-border-dim)'}`,
-        overflow: 'hidden',
-        opacity: isResolved ? 0.7 : 1,
-      }}
-    >
-      {/* 标题行 */}
-      <Box
-        style={{
-          padding: '7px 12px',
-          background: 'var(--flock-bg-surface)',
-          borderBottom: '1px solid var(--flock-border-dim)',
-          display: 'flex',
-          alignItems: 'center',
-          gap: 6,
-        }}
-      >
-        <IconUser size={12} style={{ color: 'var(--flock-accent)', flexShrink: 0 }} />
-        <Text size="xs" fw={600} c={isDark ? 'orange.3' : 'orange.8'} style={{ flex: 1 }}>
-          {interruptData.title || t('workflow.execution.humanReview', 'Human Review Required')}
-        </Text>
-        {isResolved && (
-          <Badge size="xs" color="teal" variant="light">
-            {t('workflow.execution.resolved', 'Resolved')}
-          </Badge>
-        )}
-      </Box>
-
-      {/* 操作按钮 */}
-      {!isResolved && !pendingAction && (
-        <Box style={{ padding: '8px 12px', display: 'flex', flexDirection: 'column', gap: 6 }}>
-          {actions.map((act, idx) => (
-            <Button
-              key={act.key}
-              size="xs"
-              variant={idx === 0 ? 'filled' : 'default'}
-              color={idx === 0 ? actionColors[0] : undefined}
-              onClick={() => handleActionClick(act)}
-              style={{ justifyContent: 'flex-start', fontWeight: 600 }}
-              leftSection={act.enable_feedback ? <IconUser size={11} /> : undefined}
-            >
-              {act.label || act.key}
-            </Button>
-          ))}
-        </Box>
-      )}
-
-      {/* Feedback 输入区（点击某个 enable_feedback 的 action 后展示） */}
-      {!isResolved && pendingAction && (
-        <Box style={{ padding: '8px 12px', display: 'flex', flexDirection: 'column', gap: 8 }}>
-          <Text size="xs" c="dimmed">
-            {pendingAction.label} — {t('workflow.execution.feedbackOptional', 'Add optional comment:')}
-          </Text>
-          <Textarea
-            placeholder={t('workflow.execution.feedbackPlaceholder', 'Add optional comment...')}
-            value={feedback}
-            onChange={(e) => setFeedback(e.currentTarget.value)}
-            size="xs"
-            minRows={2}
-            autoFocus
-            styles={{
-              input: {
-                fontSize: '12px',
-                backgroundColor: 'var(--flock-bg-deepest)',
-                border: '1px solid var(--flock-border-dim)',
-              },
-            }}
-            onKeyDown={(e) => {
-              if (e.key === 'Enter' && !e.shiftKey) {
-                e.preventDefault();
-                handleConfirmWithFeedback();
-              }
-              if (e.key === 'Escape') {
-                handleCancelFeedback();
-              }
-            }}
-          />
-          <Group gap="xs">
-            <Button
-              size="xs"
-              color="blue"
-              leftSection={<IconCheck size={11} />}
-              onClick={handleConfirmWithFeedback}
-              style={{ flex: 1 }}
-            >
-              {t('workflow.execution.confirmAction', 'Confirm')} — {pendingAction.label}
-            </Button>
-            <Button size="xs" variant="subtle" color="gray" onClick={handleCancelFeedback}>
-              {t('common.cancel', 'Cancel')}
-            </Button>
-          </Group>
-        </Box>
-      )}
-    </Box>
-  );
-}
+import { MessageBubble } from '../../../../components/chat/components/MessageBubble';
+import { ChatMessage } from '../../../../types/protocol';
+import { useWorkflowStore } from '../../../../store/workflowStore';
+import { useUiStore } from '../../../../store/uiStore';
+import { ExecutionPanelProps, HumanAction, InterruptData } from './types';
+import { HumanReviewCard } from './HumanReviewCard';
+import { StartParametersForm } from './StartParametersForm';
 
 export function ExecutionPanel({
   status,
@@ -222,8 +40,6 @@ export function ExecutionPanel({
   const { clearExecution } = useWorkflowStore();
   const [inputVal, setInputVal] = useState('');
   const bottomRef = useRef<HTMLDivElement>(null);
-
-  // 自动滚到底的 effect 会在 chatMessages 的 useMemo 之后定义
 
   const startNode = useWorkflowStore((s) => s.nodes.find((n) => n.type === 'start'));
   const startVariables = (startNode?.data?.variables as any[]) ?? [
@@ -497,77 +313,11 @@ export function ExecutionPanel({
                     </Text>
                   </Box>
 
-                  <Stack gap="sm" style={{ background: 'var(--flock-bg-surface)', padding: 12, borderRadius: 12, border: '1px solid var(--flock-border-subtle)' }}>
-                    {customVars.map((v: any) => {
-                      const label = `${v.label || v.name} (${v.name})`;
-                      const required = v.required;
-                      if (v.type === 'boolean') {
-                        return (
-                          <Switch
-                            key={v.name}
-                            label={label}
-                            checked={!!formInputs[v.name]}
-                            onChange={(e) => setFormInputs({ ...formInputs, [v.name]: e.currentTarget.checked })}
-                            size="xs"
-                          />
-                        );
-                      }
-                      if (v.type === 'paragraph') {
-                        return (
-                          <Textarea
-                            key={v.name}
-                            label={label}
-                            placeholder={v.default_value ?? ''}
-                            value={formInputs[v.name] ?? ''}
-                            onChange={(e) => setFormInputs({ ...formInputs, [v.name]: e.target.value })}
-                            size="xs"
-                            minRows={2}
-                            required={required}
-                          />
-                        );
-                      }
-                      if (v.type === 'select') {
-                        const selectOptions = (v.options as string[]) ?? [];
-                        return (
-                          <Select
-                            key={v.name}
-                            label={label}
-                            placeholder={v.default_value ?? ''}
-                            data={selectOptions.map((o) => ({ value: o, label: o }))}
-                            value={formInputs[v.name] ?? ''}
-                            onChange={(val) => setFormInputs({ ...formInputs, [v.name]: val })}
-                            size="xs"
-                            required={required}
-                            clearable
-                          />
-                        );
-                      }
-                      if (v.type === 'number') {
-                        return (
-                          <NumberInput
-                            key={v.name}
-                            label={label}
-                            placeholder={String(v.default_value ?? '')}
-                            value={formInputs[v.name]}
-                            onChange={(val) => setFormInputs({ ...formInputs, [v.name]: val !== '' && val !== undefined ? Number(val) : undefined })}
-                            size="xs"
-                            required={required}
-                          />
-                        );
-                      }
-                      return (
-                        <TextInput
-                          key={v.name}
-                          label={label}
-                          placeholder={v.default_value ?? ''}
-                          value={formInputs[v.name] ?? ''}
-                          onChange={(e) => setFormInputs({ ...formInputs, [v.name]: e.target.value })}
-                          size="xs"
-                          required={required}
-                        />
-                      );
-                    })}
-                  </Stack>
+                  <StartParametersForm
+                    customVars={customVars}
+                    formInputs={formInputs}
+                    setFormInputs={setFormInputs}
+                  />
                 </Stack>
               </ScrollArea>
             ) : (
