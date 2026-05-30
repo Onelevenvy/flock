@@ -29,6 +29,7 @@
     "deny": "拒绝",
     "approveOnce": "本次允许",
     "approveAlways": "始终允许",
+    "btnApprove": "是，允许",
     "btnApproveOnce": "是，允许一次",
     "btnApproveAlways": "是，始终允许",
     "btnDeny": "否，拒绝",

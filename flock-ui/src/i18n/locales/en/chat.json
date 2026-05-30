@@ -30,6 +30,7 @@
     "deny": "Deny",
     "approveOnce": "Allow Once",
     "approveAlways": "Always Allow",
+    "btnApprove": "Yes, allow",
     "btnApproveOnce": "Yes, allow once",
     "btnApproveAlways": "Yes, always allow",
     "btnDeny": "No, deny",

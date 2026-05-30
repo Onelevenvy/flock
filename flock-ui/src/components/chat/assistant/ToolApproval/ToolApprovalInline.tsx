@@ -237,7 +237,7 @@ export function ToolApprovalInline({ approval }: ToolApprovalInlineProps) {
             </Text>
           </Box>
           <Text size="xs" c={isDark ? 'teal.4' : 'teal.8'} fw={600}>
-            {t('chat.approval.btnApproveOnce')}
+            {approval.is_workflow ? t('chat.approval.btnApprove') : t('chat.approval.btnApproveOnce')}
           </Text>
         </Group>
 
