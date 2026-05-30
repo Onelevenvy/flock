@@ -106,13 +106,14 @@ impl WorkflowSink for TauriWorkflowSink {
             "message": msg,
         }));
     }
-    fn emit_tool_request(&self, call_id: &str, tool_name: &str, tool_args: &JsonValue) {
+    fn emit_tool_request(&self, call_id: &str, tool_name: &str, category: &flock_core::ipc_interface::events::ToolCategory, tool_args: &JsonValue) {
         let _ = self.app.emit("workflow-event", serde_json::json!({
             "type": "tool_request",
             "workflow_id": &self.workflow_id,
             "thread_id": &self.thread_id,
             "call_id": call_id,
             "tool_name": tool_name,
+            "category": category,
             "tool_args": tool_args,
         }));
     }

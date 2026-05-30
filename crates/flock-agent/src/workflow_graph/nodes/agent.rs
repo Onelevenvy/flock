@@ -125,13 +125,17 @@ pub fn make_agent_workflow_node(
                                 .unwrap_or_default();
                             log::info!("[workflow agent node] sensitive_tools configuration: {:?}", sensitive_tools);
 
+                            let tool = ctx.tools.get(&tc.name);
+                            let category = tool.as_ref().map(|t| t.category()).unwrap_or(flock_core::ipc_interface::events::ToolCategory::Exec);
+
                             let call_id = tc.id.clone().unwrap_or_else(|| format!("{}_{}", tc.name, chrono::Utc::now().timestamp_nanos_opt().unwrap_or(0)));
-                            let needs_approval = sensitive_tools.contains(&tc.name);
+                            let needs_approval = sensitive_tools.contains(&tc.name)
+                                && !ctx.approval_manager.is_auto_approved(&category.to_string());
                             log::info!("[workflow agent node] tool call needs_approval: {}", needs_approval);
 
                             if needs_approval {
-                                ctx.sink.emit_tool_request(&call_id, &tc.name, &tc.args);
-                                let rx = ctx.approval_manager.request_approval(&call_id, &flock_core::ipc_interface::events::ToolCategory::Exec);
+                                ctx.sink.emit_tool_request(&call_id, &tc.name, &category, &tc.args);
+                                let rx = ctx.approval_manager.request_approval(&call_id, &category);
                                 match rx.await {
                                     Ok(flock_core::ipc_interface::approval::ToolApprovalResult::Approved) => {
                                         ctx.sink.emit_tool_running(&call_id, &tc.name, &tc.args);

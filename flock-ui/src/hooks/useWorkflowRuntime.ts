@@ -45,6 +45,7 @@ export interface WorkflowTauriEvent {
   interrupt?: { value?: unknown; [key: string]: unknown };
   call_id?: string;
   tool_name?: string;
+  category?: string;
   tool_args?: unknown;
 }
 
@@ -337,7 +338,7 @@ export function useWorkflowRuntime({
                     call_id: payload.call_id!,
                     tool: {
                       name: payload.tool_name!,
-                      category: 'exec' as any,
+                      category: (payload.category?.toLowerCase() as any) || 'exec',
                       args: (payload.tool_args as any) || {},
                       description: '',
                     },
