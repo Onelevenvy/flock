@@ -300,6 +300,7 @@ pub async fn run_workflow(
     );
 
     // 自动为工作流切换至当前激活工作空间的 working directory，解决不能选择工作空间的问题
+    let mut final_workdir: Option<std::path::PathBuf> = None;
     let row = sqlx::query("SELECT workspace_id, cwd FROM session_metadata WHERE thread_id = ?1")
         .bind(&thread_id_val)
         .fetch_optional(db.pool())
@@ -317,14 +318,29 @@ pub async fn run_workflow(
             std::path::PathBuf::new()
         };
         if workdir.exists() && workdir.as_os_str().len() > 0 {
-            // 同步助手处理：初始化 tools 的全局工作空间路径，让内置工具正确寻址和识别
-            flock_tools::init_workspace_dir(workdir.clone());
+            final_workdir = Some(workdir);
+        }
+    }
 
-            if let Err(e) = std::env::set_current_dir(&workdir) {
-                log::warn!("Failed to set current dir to {:?}: {}", workdir, e);
-            } else {
-                log::info!("Successfully set current dir and initialized workspace to {:?}", workdir);
-            }
+    // 调试模式或无会话绑定时的绝妙处理：退回到专属的 debug 工作区，确保不污染其他项目
+    let workdir = if let Some(wd) = final_workdir {
+        wd
+    } else {
+        let debug_dir = flock_core::config::db_path::workspace_root().join("debug");
+        if !debug_dir.exists() {
+            let _ = std::fs::create_dir_all(&debug_dir);
+        }
+        debug_dir
+    };
+
+    if workdir.exists() {
+        // 同步助手处理：初始化 tools 的全局工作空间路径，让内置工具正确寻址和识别
+        flock_tools::init_workspace_dir(workdir.clone());
+
+        if let Err(e) = std::env::set_current_dir(&workdir) {
+            log::warn!("Failed to set current dir to {:?}: {}", workdir, e);
+        } else {
+            log::info!("Successfully set current dir and initialized debug/session workspace to {:?}", workdir);
         }
     }
 
