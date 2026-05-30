@@ -26,7 +26,7 @@ pub fn make_human_node(
                 .unwrap_or("Waiting for review");
             let title = interpolate_string_with_context(title_template, &state, &ctx, &ctx.workflow_id);
 
-            ctx.sink.emit_text_delta(&node_id, &format!("\n\n*⏳ 正在等待人工确认: **{}**...*\n", title));
+            ctx.sink.emit_text_delta(&node_id, &format!("\n\n*⏳: **{}**...*\n", title));
 
             let actions = node_data.get("user_actions").cloned().unwrap_or_else(|| json!([
                 { "key": "action_1", "label": "Approve", "enable_feedback": false },
@@ -56,17 +56,6 @@ pub fn make_human_node(
                 .unwrap_or("")
                 .to_string();
 
-            let choice_label = actions.as_array()
-                .and_then(|arr| arr.iter().find(|act| act.get("key").and_then(|k| k.as_str()) == Some(&choice)))
-                .and_then(|act| act.get("label").and_then(|l| l.as_str()))
-                .unwrap_or(&choice)
-                .to_string();
-
-            if feedback.is_empty() {
-                ctx.sink.emit_text_delta(&node_id, &format!("人工确认结果: **{}**", choice_label));
-            } else {
-                ctx.sink.emit_text_delta(&node_id, &format!("人工确认结果: **{}** — {}", choice_label, feedback));
-            }
 
             let mut outputs = state.node_outputs.clone();
             if !outputs.is_object() {

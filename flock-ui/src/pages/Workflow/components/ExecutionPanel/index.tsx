@@ -114,10 +114,10 @@ export function ExecutionPanel({
     }
   }, [pendingStartQuery, initialQuery, status, messages.length, customVars.length]);
 
-  const handleResume = useCallback((choice: string, feedback?: string) => {
+  const handleResume = useCallback((choice: string, feedback?: string, actionLabel?: string) => {
     const payload: Record<string, unknown> = { choice };
     if (feedback) payload.feedback = feedback;
-    resumeWorkflow(payload);
+    resumeWorkflow(payload, actionLabel, feedback);
   }, [resumeWorkflow]);
 
   const { steps, rounds, handleResume: resumeWithTracking } = useExecutionPanelMessages({

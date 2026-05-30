@@ -8,7 +8,8 @@ interface UseExecutionPanelMessagesProps {
   status: 'idle' | 'running' | 'done' | 'error';
   isInterrupted: boolean;
   activeInterrupt: InterruptData | null;
-  handleResume: (choice: string, feedback?: string) => void;
+  /** choice: action key, feedback: user comment, actionLabel: human-readable label of the chosen action */
+  handleResume: (choice: string, feedback?: string, actionLabel?: string) => void;
   /** ReactFlow nodes，用于解析友好名称 */
   nodes: Node[];
 }
@@ -91,13 +92,17 @@ function buildSteps(
     // ---- user 消息 → 将待处理 interrupt 全部标记 resolved ----
     if (msg.type === 'user') {
       const choice = resolvedChoiceRef.current;
+      // 兼容历史加载：消息本身可能携带扩展字段 resolvedActionLabel（从数据库恢复时注入）
+      const msgAny = msg as any;
+      const actionLabel = choice?.actionLabel ?? msgAny.resolvedActionLabel;
+      const feedbackText = choice?.feedback ?? msgAny.resolvedFeedback;
       interruptIndices.forEach((idx) => {
         result[idx] = {
           ...result[idx],
           interruptResolved: true,
           status: 'done',
-          resolvedActionLabel: choice?.actionLabel,
-          resolvedFeedback: choice?.feedback,
+          resolvedActionLabel: actionLabel,
+          resolvedFeedback: feedbackText,
         };
       });
       // user 消息不生成 step
@@ -188,6 +193,13 @@ function buildRounds(
 
   for (const msg of messages) {
     if (msg.type === 'user') {
+      // resume 类型的 user 消息（由历史加载注入，携带 resolvedActionLabel 扩展字段）
+      // 不作为新轮次的起点，而是并入当前组的 msgs，让 buildSteps 正确处理 interrupt resolved
+      const msgAny = msg as any;
+      if (msgAny.resolvedActionLabel !== undefined) {
+        current.msgs.push(msg);
+        continue;
+      }
       // 如果当前组已有内容，先保存（前一轮的消息）
       // 新建本轮：以 user 消息为起点
       groups.push(current);
@@ -235,16 +247,18 @@ export function useExecutionPanelMessages({
     activeInterruptRef.current = activeInterrupt;
   }, [activeInterrupt]);
 
-  // 包装 handleResume：调用时立即记录选择的 action label
+  // 包装 handleResume：调用时立即记录选择的 action label，并将 label 一并传入下游
   const wrappedHandleResume = useMemo(() => {
     return (choice: string, feedback?: string) => {
       const actions = activeInterruptRef.current?.actions ?? [];
       const act = actions.find((a: HumanAction) => a.key === choice);
+      const label = act?.label ?? choice;
       resolvedChoiceRef.current = {
-        actionLabel: act?.label ?? choice,
+        actionLabel: label,
         feedback: feedback || undefined,
       };
-      handleResume(choice, feedback);
+      // 将 label 传递给 handleResume，最终传入 resumeWorkflow 以便 dispatch user 消息时附带
+      handleResume(choice, feedback, label);
     };
   }, [handleResume]);
 

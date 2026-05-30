@@ -102,79 +102,37 @@ export function useWorkflowRuntime({
     threadIdRef.current = threadId;
   }, [threadId]);
 
-  // ── 首次挂载或 threadId 改变时，从 SQLite 数据库加载历史消息并做格式映射还原 ──
+  // ── 首次挂载或 threadId 改变时，从 SQLite 加载原生工作流消息（精确还原历史界面） ──
   useEffect(() => {
     const activeTid = threadId;
     if (!activeTid || isDebug) return;
 
-    // 如果该会话已经存在内存消息记录，不再重复拉取
+    // 如果内存中已有消息记录，不重复加载
     const currentExec = store.threadExecutions[activeTid];
     if (currentExec && currentExec.messages.length > 0) return;
 
     async function loadHistory(tid: string) {
       try {
-        const workspaceId = useWorkspaceStore.getState().activeWorkspaceId;
-        if (!workspaceId) return;
-
-        const history = await invoke<any[]>('load_conversation_history', {
-          workspaceId,
-          convId: tid,
+        // 优先加载工作流原生格式（由 save_workflow_messages 保存，精确还原）
+        const nativeMsgs = await invoke<WorkflowExecutionMessage[] | null>('load_workflow_messages', {
+          threadId: tid,
         });
 
-        if (!history || history.length === 0) return;
-
-        const mapped: WorkflowExecutionMessage[] = [];
-        history.forEach((m) => {
-          const timestamp = m.timestamp ? new Date(m.timestamp).getTime() : Date.now();
-          if (m.role === 'user') {
-            let contentStr = '';
-            if (typeof m.content === 'string') {
-              contentStr = m.content;
-            } else if (Array.isArray(m.content)) {
-              contentStr = m.content.map((c: any) => c.text || '').join('\n');
-            }
-            mapped.push({
-              type: 'user',
-              content: contentStr,
-              timestamp,
-            });
-          } else if (m.role === 'assistant') {
-            if (Array.isArray(m.content)) {
-              m.content.forEach((chunk: any) => {
-                if (chunk.type === 'thinking' && chunk.thinking) {
-                  mapped.push({
-                    type: 'thinking',
-                    content: chunk.thinking,
-                    nodeId: 'llm', // 赋予默认 llm nodeId 节点以便渲染折叠组
-                    timestamp,
-                  });
-                } else if (chunk.type === 'text' && chunk.text) {
-                  mapped.push({
-                    type: 'text_delta',
-                    content: chunk.text,
-                    nodeId: 'answer', // 赋予默认 answer 节点以渲染出 Markdown 答案气泡
-                    timestamp: timestamp + 1,
-                  });
-                }
-              });
-            }
-          }
-        });
-
-        if (mapped.length > 0) {
+        if (nativeMsgs && nativeMsgs.length > 0) {
           useWorkflowStore.setState((s) => ({
             threadExecutions: {
               ...s.threadExecutions,
               [tid]: {
-                messages: mapped,
+                messages: nativeMsgs,
                 status: 'done',
                 interrupt: null,
               },
             },
           }));
         }
+        // 原生格式不存在时不再 fallback，避免因旧格式映射引发的显示错误
       } catch (e) {
-        console.warn('[WorkflowRuntime] Failed to load history from SQLite:', e);
+        console.warn('[WorkflowRuntime] Failed to load workflow messages:', e);
       }
     }
 
@@ -342,6 +300,14 @@ export function useWorkflowRuntime({
                   content: `🎉 Workflow execution completed successfully.`,
                   timestamp,
                 });
+                // 将完整消息数组保存到 SQLite（原生格式），确保重启后历史界面与当前完全一致
+                if (!isDebug) {
+                  const msgs = useWorkflowStore.getState().threadExecutions[activeTid]?.messages ?? [];
+                  invoke('save_workflow_messages', {
+                    threadId: activeTid,
+                    messagesJson: JSON.stringify(msgs),
+                  }).catch((e: unknown) => console.warn('[WorkflowRuntime] Failed to save workflow messages:', e));
+                }
                 break;
 
               case 'workflow_error':
@@ -496,7 +462,11 @@ export function useWorkflowRuntime({
   }, [workflowId, threadId, isDebug, store, dispatch]);
 
   // ── resumeWorkflow ──
-  const resumeWorkflow = useCallback(async (choiceValue: unknown) => {
+  const resumeWorkflow = useCallback(async (
+    choiceValue: unknown,
+    actionLabel?: string,
+    resolvedFeedback?: string,
+  ) => {
     if (!workflowId) return;
     const activeTid = isDebug
       ? (store.activeExecutionThreadId ?? `${workflowId}:debug`)
@@ -504,6 +474,19 @@ export function useWorkflowRuntime({
     if (!activeTid) return;
 
     store.setThreadStatus(activeTid, 'running');
+
+    // 将 resume 动作派出为一条 user 消息保入 store，并附带 resolvedActionLabel 平套字段
+    // 这样 save_workflow_messages 能完整保存 Human 节点展示所需的信息
+    const resumeUserMsg: any = {
+      type: 'user',
+      content: typeof choiceValue === 'object' && choiceValue !== null
+        ? JSON.stringify(choiceValue)
+        : String(choiceValue ?? ''),
+      timestamp: Date.now(),
+      resolvedActionLabel: actionLabel,
+      resolvedFeedback: resolvedFeedback,
+    };
+    dispatch(activeTid, resumeUserMsg);
 
     try {
       await invoke('run_workflow', {
