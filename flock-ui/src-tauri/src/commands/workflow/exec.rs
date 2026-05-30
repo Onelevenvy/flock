@@ -316,11 +316,14 @@ pub async fn run_workflow(
         } else {
             std::path::PathBuf::new()
         };
-        if workdir.exists() {
+        if workdir.exists() && workdir.as_os_str().len() > 0 {
+            // 同步助手处理：初始化 tools 的全局工作空间路径，让内置工具正确寻址和识别
+            flock_tools::init_workspace_dir(workdir.clone());
+
             if let Err(e) = std::env::set_current_dir(&workdir) {
                 log::warn!("Failed to set current dir to {:?}: {}", workdir, e);
             } else {
-                log::info!("Successfully set current dir to {:?}", workdir);
+                log::info!("Successfully set current dir and initialized workspace to {:?}", workdir);
             }
         }
     }
