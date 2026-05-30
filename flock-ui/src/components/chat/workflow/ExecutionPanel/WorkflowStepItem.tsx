@@ -20,7 +20,7 @@ import {
 } from '@tabler/icons-react';
 import ReactMarkdown from 'react-markdown';
 import { WorkflowStep } from './types';
-import { nodeConfig } from '../../nodeConfig';
+import { nodeConfig } from '../../../../pages/Workflow/nodeConfig';
 import { useTranslation } from 'react-i18next';
 
 interface WorkflowStepItemProps {

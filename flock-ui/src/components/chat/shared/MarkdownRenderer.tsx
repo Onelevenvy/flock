@@ -10,9 +10,9 @@ import ReactMarkdown from 'react-markdown';
 import remarkMath from 'remark-math';
 import rehypeMathjax from 'rehype-mathjax';
 import { useTranslation } from 'react-i18next';
-import { useUiStore } from '../../store/uiStore';
+import { useUiStore } from '../../../store/uiStore';
 import { convertFileSrc } from '@tauri-apps/api/core';
-import { CollapsibleCodeBlock } from './components/CollapsibleCodeBlock';
+import { CollapsibleCodeBlock } from '../assistant/components/CollapsibleCodeBlock';
 
 interface MarkdownRendererProps {
   content: string;

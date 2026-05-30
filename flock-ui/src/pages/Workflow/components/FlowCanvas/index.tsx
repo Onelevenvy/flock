@@ -24,7 +24,7 @@ import { useUpdateWorkflow, type WorkflowRecord } from '../../../../hooks/useWor
 import { NodePalette } from '../NodePalette';
 import { CustomStepEdge } from '../CustomStepEdge';
 import { PropertiesPanel } from '../PropertiesPanel';
-import { ExecutionPanel } from '../ExecutionPanel';
+import { ExecutionPanel } from '../../../../components/chat/workflow/ExecutionPanel';
 import { EnvironmentVarsPanel } from '../EnvironmentVarsPanel';
 import { NodeDebugPanel } from '../NodeDebugPanel';
 import { useWorkflowRuntime } from '../../../../hooks/useWorkflowRuntime';

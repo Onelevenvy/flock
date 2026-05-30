@@ -23,9 +23,9 @@ import {
 } from '@tabler/icons-react';
 import { invoke } from '@tauri-apps/api/core';
 import { useTranslation } from 'react-i18next';
-import { PendingApproval, ToolCategory } from '../../../types/protocol';
-import { useAgentStore } from '../../../store/agentStore';
-import { useUiStore } from '../../../store/uiStore';
+import { PendingApproval, ToolCategory } from '../../../../types/protocol';
+import { useAgentStore } from '../../../../store/agentStore';
+import { useUiStore } from '../../../../store/uiStore';
 
 interface ToolApprovalModalProps {
   approval: PendingApproval | null;
@@ -117,7 +117,6 @@ export function ToolApprovalModal({ approval }: ToolApprovalModalProps) {
       }}
     >
       <Stack gap="md" pt="xs">
-        {/* 工具名称和类别 */}
         <Group gap="sm" align="center">
           <Badge
             color={config.color}
@@ -132,7 +131,6 @@ export function ToolApprovalModal({ approval }: ToolApprovalModalProps) {
           </Badge>
         </Group>
 
-        {/* 风险说明 */}
         <Box
           p="xs"
           style={{
@@ -146,7 +144,6 @@ export function ToolApprovalModal({ approval }: ToolApprovalModalProps) {
           </Text>
         </Box>
 
-        {/* 参数预览 */}
         <Stack gap="4">
           <Text size="xs" c="dimmed" tt="uppercase" fw={600}>
             {t('chat.params')}
@@ -165,7 +162,6 @@ export function ToolApprovalModal({ approval }: ToolApprovalModalProps) {
           </ScrollArea.Autosize>
         </Stack>
 
-        {/* 反馈输入框 */}
         <Stack gap="4">
           <Textarea
             placeholder={t('chat.approval.feedbackPlaceholder')}
@@ -191,7 +187,6 @@ export function ToolApprovalModal({ approval }: ToolApprovalModalProps) {
           />
         </Stack>
 
-        {/* 操作按钮 */}
         <Group justify="flex-end" gap="sm" mt="xs">
           <Button
             variant="light"
@@ -222,4 +217,3 @@ export function ToolApprovalModal({ approval }: ToolApprovalModalProps) {
     </Modal>
   );
 }
-

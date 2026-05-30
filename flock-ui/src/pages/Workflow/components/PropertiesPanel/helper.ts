@@ -145,8 +145,22 @@ export function getAvailableVariables(
           varType: 'string',
         },
         {
+          label: `${nodeLabel} (choice_label)`,
+          value: `\${${node.id}.choice_label}`,
+          nodeId: node.id,
+          nodeName: nodeLabel,
+          varType: 'string',
+        },
+        {
           label: `${nodeLabel} (feedback)`,
           value: `\${${node.id}.feedback}`,
+          nodeId: node.id,
+          nodeName: nodeLabel,
+          varType: 'string',
+        },
+        {
+          label: `${nodeLabel} (content)`,
+          value: `\${${node.id}.content}`,
           nodeId: node.id,
           nodeName: nodeLabel,
           varType: 'string',

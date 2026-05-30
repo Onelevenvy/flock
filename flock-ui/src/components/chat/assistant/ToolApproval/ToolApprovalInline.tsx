@@ -17,9 +17,9 @@ import {
 } from '@tabler/icons-react';
 import { invoke } from '@tauri-apps/api/core';
 import { useTranslation } from 'react-i18next';
-import { PendingApproval, ToolCategory } from '../../../types/protocol';
-import { useAgentStore } from '../../../store/agentStore';
-import { useUiStore } from '../../../store/uiStore';
+import { PendingApproval, ToolCategory } from '../../../../types/protocol';
+import { useAgentStore } from '../../../../store/agentStore';
+import { useUiStore } from '../../../../store/uiStore';
 
 interface ToolApprovalInlineProps {
   approval: PendingApproval | null;
@@ -87,7 +87,6 @@ export function ToolApprovalInline({ approval }: ToolApprovalInlineProps) {
     if (!approval) return;
 
     const handleKey = (e: KeyboardEvent) => {
-      // 如果焦点在输入框则忽略
       const tag = (e.target as HTMLElement)?.tagName?.toLowerCase();
       if (tag === 'input' || tag === 'textarea') return;
 
@@ -114,10 +113,8 @@ export function ToolApprovalInline({ approval }: ToolApprovalInlineProps) {
   const riskText = t(config.riskKey);
   const argsStr = JSON.stringify(tool.args, null, 2);
 
-  // 对 args 做人性化展示：取最显眼的字段
   const displayArgs = (() => {
     const args = tool.args as Record<string, unknown>;
-    // 常见字段优先级
     const primary = args.path || args.command || args.content || args.query || args.url;
     if (typeof primary === 'string') {
       return primary.length > 120 ? primary.slice(0, 120) + '...' : primary;

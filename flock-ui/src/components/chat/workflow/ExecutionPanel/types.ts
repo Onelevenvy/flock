@@ -67,4 +67,3 @@ export interface ExecutionPanelProps {
   activeInterrupt?: any | null;
   onClearExecution?: () => void;
 }
-

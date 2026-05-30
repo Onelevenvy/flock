@@ -1,5 +1,5 @@
 import { Box } from '@mantine/core';
-import { MarkdownRenderer } from '../../../../components/chat/MarkdownRenderer';
+import { MarkdownRenderer } from '../../../../components/chat/shared/MarkdownRenderer';
 
 interface MarkdownViewProps {
   content: string;

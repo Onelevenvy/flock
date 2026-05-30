@@ -3,7 +3,7 @@ import { IconEdit, IconPlus, IconCheck } from '@tabler/icons-react';
 import { useTranslation } from 'react-i18next';
 import { type Assistant, type UpsertAssistant } from '../../types/assistant';
 import { IconPicker } from './IconPicker';
-import { MarkdownRenderer } from '../../components/chat/MarkdownRenderer';
+import { MarkdownRenderer } from '../../components/chat/shared/MarkdownRenderer';
 import ToolManager from '../../components/Common/ToolManager';
 import { useAssistantForm } from './hooks/useAssistantForm';
 

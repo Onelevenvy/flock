@@ -17,11 +17,11 @@ import {
 } from '@tabler/icons-react';
 import { invoke } from '@tauri-apps/api/core';
 import { useTranslation } from 'react-i18next';
-import { useAgentStore } from '../../store/agentStore';
-import { useWorkspaceStore } from '../../store/workspaceStore';
-import { useWorkspacesQuery } from '../../hooks/useWorkspaces';
+import { useAgentStore } from '../../../store/agentStore';
+import { useWorkspaceStore } from '../../../store/workspaceStore';
+import { useWorkspacesQuery } from '../../../hooks/useWorkspaces';
 import { v4 as uuidv4 } from 'uuid';
-import { ActiveModelPicker } from '../Common/ActiveModelPicker';
+import { ActiveModelPicker } from '../../Common/ActiveModelPicker';
 
 const MODE_OPTIONS = [
   { value: 'default', labelKey: 'chat.mode.default', labelDefault: 'Approval Mode', icon: IconShieldCheck, color: 'blue' },
@@ -119,7 +119,6 @@ export function InputBar() {
     setValue('');
     addUserMessage(userUiId, content);
 
-    // 🚀 Check if the active conversation is a workflow conversation
     const assistants = useWorkspaceStore.getState().conversationAssistants;
     const activeAsst = activeConversationId ? assistants[activeConversationId] : null;
     if (activeAsst && activeAsst.startsWith('workflow:')) {
@@ -231,7 +230,6 @@ export function InputBar() {
           </button>
         </Group>
       )}
-      {/* 输入框主体 */}
       <Box
         className="input-bar-wrapper"
         style={{
@@ -264,13 +262,9 @@ export function InputBar() {
               outline: 'none',
               boxShadow: 'none',
             },
-            wrapper: {
-              // 不使用伪选择器语法，交由全局 CSS 处理
-            },
           }}
         />
 
-        {/* 底部工具栏 */}
         <Group justify="space-between" mt={6} wrap="nowrap" style={{ width: '100%' }}>
           <Group gap={8} wrap="nowrap" style={{ flexShrink: 1, minWidth: 0 }}>
             <ActiveModelPicker />
@@ -324,7 +318,6 @@ export function InputBar() {
         </Group>
       </Box>
 
-      {/* 底部提示 */}
       <Text size="xs" style={{ color: 'var(--flock-text-dim)', textAlign: 'center', opacity: 0.8, fontSize: 11 }} mt={6}>
         {t('chat.disclaimer')}
       </Text>

@@ -26,8 +26,8 @@ import {
   IconPlug,
 } from '@tabler/icons-react';
 import { useTranslation } from 'react-i18next';
-import { ToolRequestChunk, ToolCategory } from '../../../types/protocol';
-import { MarkdownRenderer } from '../MarkdownRenderer';
+import { ToolRequestChunk, ToolCategory } from '../../../../types/protocol';
+import { MarkdownRenderer } from '../../shared/MarkdownRenderer';
 
 const CATEGORY_COLOR: Record<ToolCategory, string> = {
   info: 'blue',
