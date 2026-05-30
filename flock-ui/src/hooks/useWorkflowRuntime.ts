@@ -343,6 +343,7 @@ export function useWorkflowRuntime({
                       description: '',
                     },
                     msg_id: activeTid,
+                    is_workflow: true,
                   });
                 }
                 break;

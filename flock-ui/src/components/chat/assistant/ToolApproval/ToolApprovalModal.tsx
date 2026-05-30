@@ -204,14 +204,16 @@ export function ToolApprovalModal({ approval }: ToolApprovalModalProps) {
           >
             {t('chat.approval.approveOnce')}
           </Button>
-          <Button
-            variant="filled"
-            color="green"
-            leftSection={<IconShieldCheck size={16} />}
-            onClick={() => handleApprove('always')}
-          >
-            {t('chat.approval.approveAlways')}
-          </Button>
+          {!approval.is_workflow && (
+            <Button
+              variant="filled"
+              color="green"
+              leftSection={<IconShieldCheck size={16} />}
+              onClick={() => handleApprove('always')}
+            >
+              {t('chat.approval.approveAlways')}
+            </Button>
+          )}
         </Group>
       </Stack>
     </Modal>

@@ -129,8 +129,7 @@ pub fn make_agent_workflow_node(
                             let category = tool.as_ref().map(|t| t.category()).unwrap_or(flock_core::ipc_interface::events::ToolCategory::Exec);
 
                             let call_id = tc.id.clone().unwrap_or_else(|| format!("{}_{}", tc.name, chrono::Utc::now().timestamp_nanos_opt().unwrap_or(0)));
-                            let needs_approval = sensitive_tools.contains(&tc.name)
-                                && !ctx.approval_manager.is_auto_approved(&category.to_string());
+                            let needs_approval = sensitive_tools.contains(&tc.name);
                             log::info!("[workflow agent node] tool call needs_approval: {}", needs_approval);
 
                             if needs_approval {
