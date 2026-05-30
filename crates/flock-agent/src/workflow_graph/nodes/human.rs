@@ -2,6 +2,7 @@ use std::sync::Arc;
 use serde_json::{json, Value as JsonValue};
 use langgraph::prelude::RunnableConfig;
 use langgraph::runnable::RunnableError;
+use langgraph_prebuilt::types::Message as LgMessage;
 use super::common::{WorkflowNodeContext, parse_state, interpolate_string_with_context};
 
 pub fn make_human_node(
@@ -56,6 +57,13 @@ pub fn make_human_node(
                 .unwrap_or("")
                 .to_string();
 
+            let choice_label = actions.as_array()
+                .and_then(|arr| {
+                    arr.iter().find(|act| act.get("key").and_then(|k| k.as_str()) == Some(&choice))
+                })
+                .and_then(|act| act.get("label").and_then(|l| l.as_str()))
+                .unwrap_or(&choice)
+                .to_string();
 
             let mut outputs = state.node_outputs.clone();
             if !outputs.is_object() {
@@ -63,15 +71,35 @@ pub fn make_human_node(
             }
             let node_output = json!({
                 "choice": choice,
-                "feedback": feedback
+                "choice_label": choice_label,
+                "feedback": feedback,
+                "content": title.clone()
             });
             outputs[&node_id] = node_output.clone();
 
             ctx.sink.emit_node_done(&node_id, &node_output);
 
+            let user_msg_text = if feedback.is_empty() {
+                format!("User choice: {}", choice_label)
+            } else {
+                format!("User choice: {}. Feedback: {}", choice_label, feedback)
+            };
+
+            let human_msg = serde_json::to_value(LgMessage::human(user_msg_text)).unwrap_or_else(|_| {
+                json!({
+                    "type": "human",
+                    "content": if feedback.is_empty() {
+                        format!("User choice: {}", choice_label)
+                    } else {
+                        format!("User choice: {}. Feedback: {}", choice_label, feedback)
+                    }
+                })
+            });
+
             Ok(json!({
                 "node_outputs": outputs,
                 "current_node": node_id,
+                "messages": [human_msg],
             }))
         })
     }
