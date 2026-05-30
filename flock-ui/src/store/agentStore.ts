@@ -28,6 +28,7 @@ export interface AgentStore {
   addUserMessage: (id: string, content: string) => void;
   handleEvent: (event: ProtocolEvent) => void;
   removePendingApproval: (call_id: string) => void;
+  addPendingApproval: (approval: PendingApproval) => void;
   clearHumanTakeover: () => void;
   clearMessages: () => void;
   loadHistory: (workspaceId: string, convId: string) => Promise<void>;
@@ -71,6 +72,11 @@ export const useAgentStore = create<AgentStore>((set, get) => ({
   removePendingApproval: (call_id) =>
     set((s) => ({
       pendingApprovals: s.pendingApprovals.filter((p) => p.call_id !== call_id),
+    })),
+
+  addPendingApproval: (approval) =>
+    set((s) => ({
+      pendingApprovals: [...s.pendingApprovals, approval],
     })),
 
   clearHumanTakeover: () => set({ humanTakeover: null }),

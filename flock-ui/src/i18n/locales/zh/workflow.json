@@ -74,6 +74,7 @@
       "toolsPlaceholder": "选择要绑定的工具...",
       "addTool": "添加工具",
       "toolsEnabled": "启用",
+      "toolSensitive": "敏感工具",
       "noTools": "暂无工具，点击 + 添加",
       "toolDetail": "查看工具详情",
       "toolRemove": "移除工具",

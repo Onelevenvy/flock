@@ -109,6 +109,10 @@ pub trait WorkflowSink: Send + Sync {
     fn emit_text_delta(&self, node_id: &str, text: &str);
     fn emit_thinking(&self, node_id: &str, text: &str);
     fn emit_error(&self, msg: &str);
+    fn emit_tool_request(&self, _call_id: &str, _tool_name: &str, _category: &flock_core::ipc_interface::events::ToolCategory, _tool_args: &JsonValue) {}
+    fn emit_tool_running(&self, _call_id: &str, _tool_name: &str, _tool_args: &JsonValue) {}
+    fn emit_tool_result(&self, _call_id: &str, _tool_name: &str, _status: &str, _output: &str) {}
+    fn emit_tool_cancelled(&self, _call_id: &str, _tool_name: &str, _reason: &str) {}
 }
 
 /// Node execution context
@@ -123,6 +127,7 @@ pub struct WorkflowNodeContext {
     pub env_vars: HashMap<String, JsonValue>,
     /// Workflow ID for system variable resolution
     pub workflow_id: String,
+    pub approval_manager: Arc<flock_core::ipc_interface::approval::ToolApprovalManager>,
 }
 
 /// Resolve the model for a node: use node-specific model if configured,

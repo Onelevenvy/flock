@@ -104,6 +104,7 @@ pub fn make_agent_workflow_node(
                             }
                         }
                         drop(rx);
+                        log::info!("[workflow agent node] stream finished. assistant_text: '{}', tool_calls count: {}", assistant_text, tool_calls.len());
 
                         final_response = assistant_text.clone();
 
@@ -112,10 +113,49 @@ pub fn make_agent_workflow_node(
                         run_messages.push(ai_msg);
 
                         if tool_calls.is_empty() {
+                            log::info!("[workflow agent node] tool_calls is empty, breaking loop");
                             break;
                         }
 
                         for tc in tool_calls {
+                            log::info!("[workflow agent node] processing tool call: name={}, id={:?}", tc.name, tc.id);
+                            let sensitive_tools: Vec<String> = node_data.get("sensitive_tools")
+                                .and_then(|v| v.as_array())
+                                .map(|arr| arr.iter().filter_map(|t| t.as_str().map(|s| s.to_string())).collect())
+                                .unwrap_or_default();
+                            log::info!("[workflow agent node] sensitive_tools configuration: {:?}", sensitive_tools);
+
+                            let tool = ctx.tools.get(&tc.name);
+                            let category = tool.as_ref().map(|t| t.category()).unwrap_or(flock_core::ipc_interface::events::ToolCategory::Exec);
+
+                            let call_id = tc.id.clone().unwrap_or_else(|| format!("{}_{}", tc.name, chrono::Utc::now().timestamp_nanos_opt().unwrap_or(0)));
+                            let needs_approval = sensitive_tools.contains(&tc.name);
+                            log::info!("[workflow agent node] tool call needs_approval: {}", needs_approval);
+
+                            if needs_approval {
+                                ctx.sink.emit_tool_request(&call_id, &tc.name, &category, &tc.args);
+                                let rx = ctx.approval_manager.request_approval(&call_id, &category);
+                                match rx.await {
+                                    Ok(flock_core::ipc_interface::approval::ToolApprovalResult::Approved) => {
+                                        ctx.sink.emit_tool_running(&call_id, &tc.name, &tc.args);
+                                    }
+                                    Ok(flock_core::ipc_interface::approval::ToolApprovalResult::Denied { reason }) => {
+                                        ctx.sink.emit_tool_cancelled(&call_id, &tc.name, &reason);
+                                        let tool_msg = LgMessage::Tool {
+                                            tool_call_id: call_id,
+                                            content: langgraph_prebuilt::types::MessageContent::Text(format!("Tool execution denied by user: {}", reason)),
+                                            name: None,
+                                            id: None,
+                                            status: "error".to_string(),
+                                        };
+                                        local_messages.push(tool_msg.clone());
+                                        run_messages.push(tool_msg);
+                                        continue;
+                                    }
+                                    Err(_) => return Err("Tool approval communication failed".to_string()),
+                                }
+                            }
+
                             ctx.sink.emit_text_delta(&node_id, &format!("\n\n*🔧 调用工具 `{}`...*\n", tc.name));
                             let tool = ctx.tools.get(&tc.name).ok_or_else(|| {
                                 format!("Tool not found: {}", tc.name)
@@ -124,12 +164,17 @@ pub fn make_agent_workflow_node(
                             let tool_res = tool.execute(tc.args.clone()).await;
                             ctx.sink.emit_text_delta(&node_id, &format!("*工具 `{}` 返回结果: {}*\n\n", tc.name, tool_res.content));
 
+                            if needs_approval {
+                                let status = if tool_res.is_error { "error" } else { "success" };
+                                ctx.sink.emit_tool_result(&call_id, &tc.name, status, &tool_res.content);
+                            }
+
                             let tool_msg = LgMessage::Tool {
-                                tool_call_id: tc.id.clone().unwrap_or_default(),
+                                tool_call_id: call_id,
                                 content: langgraph_prebuilt::types::MessageContent::Text(tool_res.content.clone()),
                                 name: None,
                                 id: None,
-                                status: "success".to_string(),
+                                status: if tool_res.is_error { "error".to_string() } else { "success".to_string() },
                             };
                             local_messages.push(tool_msg.clone());
                             run_messages.push(tool_msg);

@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Box, Text, Group, Switch, ActionIcon, Tooltip } from '@mantine/core';
-import { IconX } from '@tabler/icons-react';
+import { IconX, IconShieldHeart } from '@tabler/icons-react';
 import { useTranslation } from 'react-i18next';
 import type { Tool, ToolProvider } from '../../../hooks/useAvailableTools';
 import { ToolsIcon } from '../Icons';
@@ -16,9 +16,20 @@ export interface ToolCardProps {
   onToggle?: () => void;
   onRemove: () => void;
   disabled?: boolean;
+  sensitive?: boolean;
+  onSensitiveToggle?: (sensitive: boolean) => void;
 }
 
-export function ToolCard({ tool, provider, enabled, onToggle, onRemove, disabled }: ToolCardProps) {
+export function ToolCard({
+  tool,
+  provider,
+  enabled,
+  onToggle,
+  onRemove,
+  disabled,
+  sensitive = false,
+  onSensitiveToggle,
+}: ToolCardProps) {
   const { t } = useTranslation();
   const [hovered, setHovered] = useState(false);
 
@@ -75,7 +86,7 @@ export function ToolCard({ tool, provider, enabled, onToggle, onRemove, disabled
       </Box>
 
       {/* 右侧操作区 */}
-      <Group gap={3} style={{ flexShrink: 0 }}>
+      <Group gap={6} style={{ flexShrink: 0 }}>
         {/* 悬浮时显示：详情按钮 */}
         {hovered && !disabled && (
           <ToolDetailPopover tool={tool} provider={provider} />
@@ -105,6 +116,21 @@ export function ToolCard({ tool, provider, enabled, onToggle, onRemove, disabled
               onClick={(e) => e.stopPropagation()}
               styles={{ track: { cursor: disabled ? 'not-allowed' : 'pointer' } }}
             />
+
+            {/* 敏感工具审批（当工具启用时显示） */}
+            {onSensitiveToggle && enabled && (
+              <Tooltip label={t('workflow.properties.agent.toolSensitive')} withinPortal>
+                <ActionIcon
+                  variant={sensitive ? "filled" : "light"}
+                  color={sensitive ? "red" : "gray"}
+                  size="xs"
+                  onClick={(e) => { e.stopPropagation(); onSensitiveToggle(!sensitive); }}
+                  styles={{ root: { cursor: disabled ? 'not-allowed' : 'pointer' } }}
+                >
+                  <IconShieldHeart size={12} />
+                </ActionIcon>
+              </Tooltip>
+            )}
           </>
         ) : (
           /* 不支持 Toggle 时：直接始终显示删除按钮，无需 hover */
@@ -125,3 +151,4 @@ export function ToolCard({ tool, provider, enabled, onToggle, onRemove, disabled
     </Box>
   );
 }
+

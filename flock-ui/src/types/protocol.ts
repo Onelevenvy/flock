@@ -116,6 +116,7 @@ export interface PendingApproval {
   call_id: string;
   tool: ToolInfo;
   msg_id: string;
+  is_workflow?: boolean;
 }
 
 // --- MCP Server ---

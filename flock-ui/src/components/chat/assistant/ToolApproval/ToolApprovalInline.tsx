@@ -237,37 +237,39 @@ export function ToolApprovalInline({ approval }: ToolApprovalInlineProps) {
             </Text>
           </Box>
           <Text size="xs" c={isDark ? 'teal.4' : 'teal.8'} fw={600}>
-            {t('chat.approval.btnApproveOnce')}
+            {approval.is_workflow ? t('chat.approval.btnApprove') : t('chat.approval.btnApproveOnce')}
           </Text>
         </Group>
 
         {/* 始终允许 */}
-        <Group
-          gap={6}
-          style={{ cursor: 'pointer' }}
-          onClick={() => handleApprove('always')}
-          className="approval-btn"
-        >
-          <Box
-            style={{
-              width: 22,
-              height: 22,
-              borderRadius: 5,
-              background: 'var(--flock-bg-surface)',
-              border: '1px solid var(--flock-border-dim)',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-            }}
+        {!approval.is_workflow && (
+          <Group
+            gap={6}
+            style={{ cursor: 'pointer' }}
+            onClick={() => handleApprove('always')}
+            className="approval-btn"
           >
-            <Text size="xs" fw={700} style={{ fontSize: 11 }}>
-              A
+            <Box
+              style={{
+                width: 22,
+                height: 22,
+                borderRadius: 5,
+                background: 'var(--flock-bg-surface)',
+                border: '1px solid var(--flock-border-dim)',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+              }}
+            >
+              <Text size="xs" fw={700} style={{ fontSize: 11 }}>
+                A
+              </Text>
+            </Box>
+            <Text size="xs" c={isDark ? 'blue.4' : 'blue.8'} fw={600}>
+              {t('chat.approval.btnApproveAlways')}
             </Text>
-          </Box>
-          <Text size="xs" c={isDark ? 'blue.4' : 'blue.8'} fw={600}>
-            {t('chat.approval.btnApproveAlways')}
-          </Text>
-        </Group>
+          </Group>
+        )}
 
         {/* 拒绝和输入反馈 */}
         <Group gap={12} style={{ width: '100%' }} wrap="nowrap">

@@ -3,6 +3,8 @@ import { Box, Text, ScrollArea, Stack } from '@mantine/core';
 import { useTranslation } from 'react-i18next';
 import { useWorkflowStore } from '../../../../store/workflowStore';
 import { useUiStore } from '../../../../store/uiStore';
+import { useAgentStore } from '../../../../store/agentStore';
+import { ToolApprovalInline } from '../../assistant/ToolApproval/ToolApprovalInline';
 import { ExecutionPanelProps } from './types';
 import { StartParametersForm } from './StartParametersForm';
 import { useExecutionPanelMessages } from '../../../../hooks/useExecutionPanelMessages';
@@ -32,6 +34,9 @@ export function ExecutionPanel({
   const [inputVal, setInputVal] = useState('');
   const bottomRef = useRef<HTMLDivElement>(null);
 
+  const pendingApprovals = useAgentStore((s) => s.pendingApprovals);
+  const firstPending = pendingApprovals[0] ?? null;
+
   const storeNodes = useWorkflowStore((s) => s.nodes);
   const nodes = externalNodes ?? storeNodes;
 
@@ -47,7 +52,14 @@ export function ExecutionPanel({
     startVariables.forEach((v) => {
       initial[v.name] = v.default_value ?? '';
     });
-    setFormInputs(initial);
+    setFormInputs((prev) => {
+      const keys = Object.keys(initial);
+      const prevKeys = Object.keys(prev);
+      const isDifferent =
+        keys.length !== prevKeys.length ||
+        keys.some((k) => prev[k] !== initial[k]);
+      return isDifferent ? initial : prev;
+    });
   }, [startVariables]);
 
   const storeActiveInterrupt = useWorkflowStore((s) => s.activeInterrupt);
@@ -226,6 +238,9 @@ export function ExecutionPanel({
             <div ref={bottomRef as any} />
           </ScrollArea>
         )}
+
+        {/* Tool approval card */}
+        <ToolApprovalInline approval={firstPending} />
 
         {/* Bottom input area */}
         <ExecutionBottomBar

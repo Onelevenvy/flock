@@ -18,6 +18,7 @@ use flock_agent::workflow_graph::{build_workflow_graph, WorkflowNodeContext, Wor
 use flock_core::model_factory::{CachedModelFactory, ModelFactory};
 use flock_tools::all_tools;
 use crate::SharedDbManager;
+use crate::commands::agent::SharedAgentState;
 
 pub struct WorkflowExecutionState {
     pub executions: Mutex<HashMap<String, JoinHandle<()>>>,
@@ -105,6 +106,48 @@ impl WorkflowSink for TauriWorkflowSink {
             "message": msg,
         }));
     }
+    fn emit_tool_request(&self, call_id: &str, tool_name: &str, category: &flock_core::ipc_interface::events::ToolCategory, tool_args: &JsonValue) {
+        let _ = self.app.emit("workflow-event", serde_json::json!({
+            "type": "tool_request",
+            "workflow_id": &self.workflow_id,
+            "thread_id": &self.thread_id,
+            "call_id": call_id,
+            "tool_name": tool_name,
+            "category": category,
+            "tool_args": tool_args,
+        }));
+    }
+    fn emit_tool_running(&self, call_id: &str, tool_name: &str, tool_args: &JsonValue) {
+        let _ = self.app.emit("workflow-event", serde_json::json!({
+            "type": "tool_running",
+            "workflow_id": &self.workflow_id,
+            "thread_id": &self.thread_id,
+            "call_id": call_id,
+            "tool_name": tool_name,
+            "tool_args": tool_args,
+        }));
+    }
+    fn emit_tool_result(&self, call_id: &str, tool_name: &str, status: &str, output: &str) {
+        let _ = self.app.emit("workflow-event", serde_json::json!({
+            "type": "tool_result",
+            "workflow_id": &self.workflow_id,
+            "thread_id": &self.thread_id,
+            "call_id": call_id,
+            "tool_name": tool_name,
+            "status": status,
+            "output": output,
+        }));
+    }
+    fn emit_tool_cancelled(&self, call_id: &str, tool_name: &str, reason: &str) {
+        let _ = self.app.emit("workflow-event", serde_json::json!({
+            "type": "tool_cancelled",
+            "workflow_id": &self.workflow_id,
+            "thread_id": &self.thread_id,
+            "call_id": call_id,
+            "tool_name": tool_name,
+            "reason": reason,
+        }));
+    }
 }
 
 /// 运行工作流（支持新运行或 resume 被打断的 review 节点）
@@ -113,6 +156,7 @@ pub async fn run_workflow(
     app: AppHandle,
     db: State<'_, SharedDbManager>,
     execution_state: State<'_, Arc<WorkflowExecutionState>>,
+    agent_state: State<'_, SharedAgentState>,
     workflow_id: String,
     input: Option<String>,
     resume_value: Option<JsonValue>,
@@ -230,6 +274,8 @@ pub async fn run_workflow(
         .and_then(|v| serde_json::from_value(v.clone()).ok())
         .unwrap_or_default();
 
+    let approval_manager = agent_state.lock().await.approval_manager.clone();
+
     let ctx = Arc::new(WorkflowNodeContext {
         provider,
         model_factory,
@@ -239,6 +285,7 @@ pub async fn run_workflow(
         debug_mode: true,
         env_vars,
         workflow_id: workflow_id.clone(),
+        approval_manager,
     });
 
     // 6. 构建 Graph
@@ -253,6 +300,7 @@ pub async fn run_workflow(
     );
 
     // 自动为工作流切换至当前激活工作空间的 working directory，解决不能选择工作空间的问题
+    let mut final_workdir: Option<std::path::PathBuf> = None;
     let row = sqlx::query("SELECT workspace_id, cwd FROM session_metadata WHERE thread_id = ?1")
         .bind(&thread_id_val)
         .fetch_optional(db.pool())
@@ -269,12 +317,30 @@ pub async fn run_workflow(
         } else {
             std::path::PathBuf::new()
         };
-        if workdir.exists() {
-            if let Err(e) = std::env::set_current_dir(&workdir) {
-                log::warn!("Failed to set current dir to {:?}: {}", workdir, e);
-            } else {
-                log::info!("Successfully set current dir to {:?}", workdir);
-            }
+        if workdir.exists() && workdir.as_os_str().len() > 0 {
+            final_workdir = Some(workdir);
+        }
+    }
+
+    // 调试模式或无会话绑定时的绝妙处理：退回到专属的 debug 工作区，确保不污染其他项目
+    let workdir = if let Some(wd) = final_workdir {
+        wd
+    } else {
+        let debug_dir = flock_core::config::db_path::workspace_root().join("debug");
+        if !debug_dir.exists() {
+            let _ = std::fs::create_dir_all(&debug_dir);
+        }
+        debug_dir
+    };
+
+    if workdir.exists() {
+        // 同步助手处理：初始化 tools 的全局工作空间路径，让内置工具正确寻址和识别
+        flock_tools::init_workspace_dir(workdir.clone());
+
+        if let Err(e) = std::env::set_current_dir(&workdir) {
+            log::warn!("Failed to set current dir to {:?}: {}", workdir, e);
+        } else {
+            log::info!("Successfully set current dir and initialized debug/session workspace to {:?}", workdir);
         }
     }
 

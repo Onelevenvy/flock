@@ -72,6 +72,7 @@
       "toolsPlaceholder": "Select tools to bind...",
       "addTool": "Add Tool",
       "toolsEnabled": "enabled",
+      "toolSensitive": "Sensitive Tool",
       "noTools": "No tools yet, click + to add",
       "toolDetail": "View tool details",
       "toolRemove": "Remove tool",
