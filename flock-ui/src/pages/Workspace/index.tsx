@@ -1,17 +1,17 @@
 import { useMemo } from 'react';
 import { Box } from '@mantine/core';
-import { useAgentStore } from '../../store/agentStore';
-import { useUiStore } from '../../store/uiStore';
-import { useWorkspaceStore } from '../../store/workspaceStore';
-import { Header } from '../../components/Layout/Header';
-import { ChatPanel } from '../../components/chat/ChatPanel';
-import { InputBar } from '../../components/chat/InputBar';
-import { ToolApprovalInline } from '../../components/chat/ToolApproval/ToolApprovalInline';
-import { HumanTakeoverBanner } from '../../components/chat/ToolApproval/HumanTakeoverBanner';
+import { useAgentStore } from '@/store/agentStore';
+import { useUiStore } from '@/store/uiStore';
+import { useWorkspaceStore } from '@/store/workspaceStore';
+import { Header } from '@/components/Layout/Header';
+import { ChatPanel } from '@/components/chat/assistant/ChatPanel';
+import { InputBar } from '@/components/chat/assistant/InputBar';
+import { ToolApprovalInline } from '@/components/chat/assistant/ToolApproval/ToolApprovalInline';
+import { HumanTakeoverBanner } from '@/components/chat/assistant/ToolApproval/HumanTakeoverBanner';
 import { FileTreePanel } from './components/FileTreePanel';
 import { EnvironmentPanel } from './components/EnvironmentPanel';
-import { WorkflowChatPanel } from '../../components/chat/workflow/WorkflowChatPanel';
-import { useWorkflowQuery } from '../../hooks/useWorkflow';
+import { WorkflowChatPanel } from '@/components/chat/workflow/WorkflowChatPanel';
+import { useWorkflowQuery } from '@/hooks/useWorkflow';
 
 /** 从 conversationAssistants 里解析出工作流 ID（格式：workflow:<id>） */
 function parseWorkflowConvId(assistantId: string | undefined): string | null {
