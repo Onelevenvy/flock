@@ -15,6 +15,7 @@ use flock_agent::workflow_graph::{build_debug_node_graph, WorkflowNodeContext};
 use flock_core::model_factory::{CachedModelFactory, ModelFactory};
 use flock_tools::all_tools;
 use crate::SharedDbManager;
+use crate::commands::agent::SharedAgentState;
 use super::exec::TauriWorkflowSink;
 
 /// 调试单个节点（独立执行，不走完整图）
@@ -22,6 +23,7 @@ use super::exec::TauriWorkflowSink;
 pub async fn debug_node(
     app: AppHandle,
     db: State<'_, SharedDbManager>,
+    agent_state: State<'_, SharedAgentState>,
     workflow_id: String,
     node_id: String,
     input: Option<String>,
@@ -106,6 +108,8 @@ pub async fn debug_node(
         .and_then(|v| serde_json::from_value(v.clone()).ok())
         .unwrap_or_default();
 
+    let approval_manager = agent_state.lock().await.approval_manager.clone();
+
     let ctx = Arc::new(WorkflowNodeContext {
         provider,
         model_factory,
@@ -115,6 +119,7 @@ pub async fn debug_node(
         debug_mode: true,
         env_vars,
         workflow_id: workflow_id.clone(),
+        approval_manager,
     });
 
     let graph = build_debug_node_graph(&wf_record.config, &node_id, ctx, checkpointer)

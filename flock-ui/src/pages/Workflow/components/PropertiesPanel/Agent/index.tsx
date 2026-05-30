@@ -23,6 +23,7 @@ export function AgentFields({
   const { t } = useTranslation();
   const tools = (node.data.tools as string[]) ?? [];
   const disabledTools = (node.data.disabled_tools as string[]) ?? [];
+  const sensitiveTools = (node.data.sensitive_tools as string[]) ?? [];
 
   return (
     <>
@@ -38,6 +39,8 @@ export function AgentFields({
         onChange={(v) => onDataChange(node.id, 'tools', v)}
         disabledValue={disabledTools}
         onDisabledChange={(v) => onDataChange(node.id, 'disabled_tools', v)}
+        sensitiveValue={sensitiveTools}
+        onSensitiveChange={(v) => onDataChange(node.id, 'sensitive_tools', v)}
         disabled={toolsLoading}
         selectorPosition="bottom-end"
       />

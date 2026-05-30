@@ -18,6 +18,7 @@ use flock_agent::workflow_graph::{build_workflow_graph, WorkflowNodeContext, Wor
 use flock_core::model_factory::{CachedModelFactory, ModelFactory};
 use flock_tools::all_tools;
 use crate::SharedDbManager;
+use crate::commands::agent::SharedAgentState;
 
 pub struct WorkflowExecutionState {
     pub executions: Mutex<HashMap<String, JoinHandle<()>>>,
@@ -105,6 +106,47 @@ impl WorkflowSink for TauriWorkflowSink {
             "message": msg,
         }));
     }
+    fn emit_tool_request(&self, call_id: &str, tool_name: &str, tool_args: &JsonValue) {
+        let _ = self.app.emit("workflow-event", serde_json::json!({
+            "type": "tool_request",
+            "workflow_id": &self.workflow_id,
+            "thread_id": &self.thread_id,
+            "call_id": call_id,
+            "tool_name": tool_name,
+            "tool_args": tool_args,
+        }));
+    }
+    fn emit_tool_running(&self, call_id: &str, tool_name: &str, tool_args: &JsonValue) {
+        let _ = self.app.emit("workflow-event", serde_json::json!({
+            "type": "tool_running",
+            "workflow_id": &self.workflow_id,
+            "thread_id": &self.thread_id,
+            "call_id": call_id,
+            "tool_name": tool_name,
+            "tool_args": tool_args,
+        }));
+    }
+    fn emit_tool_result(&self, call_id: &str, tool_name: &str, status: &str, output: &str) {
+        let _ = self.app.emit("workflow-event", serde_json::json!({
+            "type": "tool_result",
+            "workflow_id": &self.workflow_id,
+            "thread_id": &self.thread_id,
+            "call_id": call_id,
+            "tool_name": tool_name,
+            "status": status,
+            "output": output,
+        }));
+    }
+    fn emit_tool_cancelled(&self, call_id: &str, tool_name: &str, reason: &str) {
+        let _ = self.app.emit("workflow-event", serde_json::json!({
+            "type": "tool_cancelled",
+            "workflow_id": &self.workflow_id,
+            "thread_id": &self.thread_id,
+            "call_id": call_id,
+            "tool_name": tool_name,
+            "reason": reason,
+        }));
+    }
 }
 
 /// 运行工作流（支持新运行或 resume 被打断的 review 节点）
@@ -113,6 +155,7 @@ pub async fn run_workflow(
     app: AppHandle,
     db: State<'_, SharedDbManager>,
     execution_state: State<'_, Arc<WorkflowExecutionState>>,
+    agent_state: State<'_, SharedAgentState>,
     workflow_id: String,
     input: Option<String>,
     resume_value: Option<JsonValue>,
@@ -230,6 +273,8 @@ pub async fn run_workflow(
         .and_then(|v| serde_json::from_value(v.clone()).ok())
         .unwrap_or_default();
 
+    let approval_manager = agent_state.lock().await.approval_manager.clone();
+
     let ctx = Arc::new(WorkflowNodeContext {
         provider,
         model_factory,
@@ -239,6 +284,7 @@ pub async fn run_workflow(
         debug_mode: true,
         env_vars,
         workflow_id: workflow_id.clone(),
+        approval_manager,
     });
 
     // 6. 构建 Graph

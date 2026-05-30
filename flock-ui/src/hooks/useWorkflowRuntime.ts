@@ -13,6 +13,7 @@ import { listen } from '@tauri-apps/api/event';
 import { invoke } from '@tauri-apps/api/core';
 import { useWorkflowStore } from '../store/workflowStore';
 import { useWorkspaceStore } from '../store/workspaceStore';
+import { useAgentStore } from '../store/agentStore';
 import type { WorkflowExecutionMessage } from '../store/workflowStore';
 
 export interface WorkflowTauriEvent {
@@ -27,6 +28,10 @@ export interface WorkflowTauriEvent {
     | 'text_delta'
     | 'thinking'
     | 'error'
+    | 'tool_request'
+    | 'tool_running'
+    | 'tool_result'
+    | 'tool_cancelled'
     | 'debug_start'
     | 'debug_progress'
     | 'debug_done'
@@ -38,6 +43,9 @@ export interface WorkflowTauriEvent {
   output?: unknown;
   error?: string;
   interrupt?: { value?: unknown; [key: string]: unknown };
+  call_id?: string;
+  tool_name?: string;
+  tool_args?: unknown;
 }
 
 interface UseWorkflowRuntimeOptions {
@@ -320,6 +328,38 @@ export function useWorkflowRuntime({
                   timestamp,
                 });
                 break;
+
+              case 'tool_request': {
+                if (payload.call_id && payload.tool_name) {
+                  useAgentStore.setState((s: any) => ({
+                    pendingApprovals: [
+                      ...s.pendingApprovals,
+                      {
+                        call_id: payload.call_id!,
+                        tool: {
+                          name: payload.tool_name!,
+                          category: 'exec' as any,
+                          args: (payload.tool_args as any) || {},
+                          description: '',
+                        },
+                        msg_id: activeTid,
+                      },
+                    ],
+                  }));
+                }
+                break;
+              }
+
+              case 'tool_running':
+              case 'tool_result':
+              case 'tool_cancelled': {
+                if (payload.call_id) {
+                  useAgentStore.setState((s: any) => ({
+                    pendingApprovals: s.pendingApprovals.filter((p: any) => p.call_id !== payload.call_id),
+                  }));
+                }
+                break;
+              }
 
               // ── 调试专属事件 ──
               case 'debug_start':

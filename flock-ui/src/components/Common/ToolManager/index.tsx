@@ -29,6 +29,9 @@ export interface ToolManagerProps {
   /** 禁用（开关关闭）但仍可见的工具 names */
   disabledValue?: string[];
   onDisabledChange?: (v: string[]) => void;
+  /** 敏感工具/需审批的工具 names */
+  sensitiveValue?: string[];
+  onSensitiveChange?: (v: string[]) => void;
   disabled?: boolean;
   selectorPosition?: PopoverProps['position'];
   label?: string;
@@ -39,6 +42,8 @@ export default function ToolManager({
   onChange,
   disabledValue = [],
   onDisabledChange,
+  sensitiveValue = [],
+  onSensitiveChange,
   disabled = false,
   selectorPosition = 'bottom-end',
   label,
@@ -58,7 +63,7 @@ export default function ToolManager({
     [allNames, tools]
   );
 
-  // value/disabledValue 中有但尚未加载的工具名（fallback 显示）
+  // value/disabledValue 中有但尚未加载 of 工具名（fallback 显示）
   const unloadedNames = useMemo(
     () => allNames.filter((name) => !selectedTools.find((t) => t.name === name)),
     [allNames, selectedTools]
@@ -99,11 +104,26 @@ export default function ToolManager({
     }
   };
 
-  // ── 删除：同时从两个列表移除 ──────────────────────────────────
+  // ── 敏感状态切换 ──────────────────────────────────────────────
+  const handleSensitiveToggle = (toolName: string, isSensitive: boolean) => {
+    if (disabled || !onSensitiveChange) return;
+    if (isSensitive) {
+      if (!sensitiveValue.includes(toolName)) {
+        onSensitiveChange([...sensitiveValue, toolName]);
+      }
+    } else {
+      onSensitiveChange(sensitiveValue.filter((n) => n !== toolName));
+    }
+  };
+
+  // ── 删除：同时从所有列表移除 ──────────────────────────────────
   const handleRemove = (toolName: string) => {
     if (disabled) return;
     onChange(value.filter((n) => n !== toolName));
     onDisabledChange?.(disabledValue.filter((n) => n !== toolName));
+    if (onSensitiveChange) {
+      onSensitiveChange(sensitiveValue.filter((n) => n !== toolName));
+    }
   };
 
   // ── 添加（来自 Picker）：新选中的工具全部加入 value，同时从 disabledValue 移除重叠 ──
@@ -164,6 +184,8 @@ export default function ToolManager({
               onToggle={onDisabledChange ? () => handleToggle(tool.name) : undefined}
               onRemove={() => handleRemove(tool.name)}
               disabled={disabled}
+              sensitive={sensitiveValue.includes(tool.name)}
+              onSensitiveToggle={onSensitiveChange ? (isSensitive) => handleSensitiveToggle(tool.name, isSensitive) : undefined}
             />
           ))}
 
