@@ -10,7 +10,7 @@ import { ToolApprovalInline } from '../../components/chat/ToolApproval/ToolAppro
 import { HumanTakeoverBanner } from '../../components/chat/ToolApproval/HumanTakeoverBanner';
 import { FileTreePanel } from './components/FileTreePanel';
 import { EnvironmentPanel } from './components/EnvironmentPanel';
-import { WorkflowChatPanel } from './components/WorkflowChatPanel';
+import { WorkflowChatPanel } from '../../components/chat/workflow/WorkflowChatPanel';
 import { useWorkflowQuery } from '../../hooks/useWorkflow';
 
 /** 从 conversationAssistants 里解析出工作流 ID（格式：workflow:<id>） */

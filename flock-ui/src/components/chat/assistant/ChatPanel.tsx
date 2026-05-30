@@ -1,6 +1,6 @@
 import { useEffect, useRef } from 'react';
 import { ScrollArea, Stack } from '@mantine/core';
-import { ChatMessage } from '../../types/protocol';
+import { ChatMessage } from '../../../types/protocol';
 import { EmptyState } from './components/EmptyState';
 import { MessageBubble } from './components/MessageBubble';
 

@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import { Box, Group, Paper, Text, Loader, ActionIcon, Collapse, Button } from '@mantine/core';
 import { IconChevronRight, IconChevronDown } from '@tabler/icons-react';
 import { useTranslation } from 'react-i18next';
-import { MessageChunk, InfoChunk } from '../../../types/protocol';
+import { MessageChunk, InfoChunk } from '../../../../types/protocol';
 
 export type RenderChunk = MessageChunk | { kind: 'info_group'; infos: InfoChunk[] };
 
@@ -73,9 +73,7 @@ export function InfoItem({ info }: { info: InfoChunk }) {
   const { summary, output } = parseInfoMessage(info.message, t);
   const [outputCollapsed, setOutputCollapsed] = useState(true);
 
-  // Matches backend Chinese output strings
   const isSuccess = info.message.includes('已就绪') || info.message.includes('成功') || info.message.includes('完成');
-  // Matches backend Chinese output strings
   const isError = info.message.includes('失败') || info.message.includes('出错') || info.message.includes('健康状态') || info.message.includes('失效');
 
   return (
@@ -160,7 +158,6 @@ export function InfoGroupRenderer({ infos, isStreaming }: InfoGroupRendererProps
 
   if (infos.length === 0) return null;
 
-  // Matches backend Chinese output strings
   const hasError = infos.some(info =>
     info.message.includes('失败') || info.message.includes('出错') || info.message.includes('健康状态') || info.message.includes('失效')
   );

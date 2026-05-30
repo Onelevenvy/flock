@@ -1,12 +1,3 @@
-/**
- * HumanTakeoverBanner
- *
- * Coze Space 风格的人工接管横幅组件。
- * 当 Agent 在执行浏览器/电脑操作过程中遇到需要人工干预的情况
- * （如登录验证、验证码、MFA 等），此组件会以醒目的横幅形式显示在聊天面板中。
- *
- * 用户完成操作后点击"我已完成操作"，Agent 将从暂停点继续执行。
- */
 import { useCallback } from 'react';
 import { Box, Group, Text, Button, ThemeIcon, Badge } from '@mantine/core';
 import {
@@ -17,9 +8,9 @@ import {
 } from '@tabler/icons-react';
 import { invoke } from '@tauri-apps/api/core';
 import { useTranslation } from 'react-i18next';
-import { useAgentStore } from '../../../store/agentStore';
-import { useUiStore } from '../../../store/uiStore';
-import { HumanTakeoverInfo } from '../../../types/protocol';
+import { useAgentStore } from '../../../../store/agentStore';
+import { useUiStore } from '../../../../store/uiStore';
+import { HumanTakeoverInfo } from '../../../../types/protocol';
 
 interface HumanTakeoverBannerProps {
   takeover: HumanTakeoverInfo;
@@ -32,7 +23,6 @@ export function HumanTakeoverBanner({ takeover }: HumanTakeoverBannerProps) {
 
   const handleContinue = useCallback(async () => {
     clearHumanTakeover();
-    // Resume agent 执行——告诉后端人工操作已完成，继续
     try {
       await invoke('resume_tool', {
         callId: takeover.call_id,
@@ -45,7 +35,6 @@ export function HumanTakeoverBanner({ takeover }: HumanTakeoverBannerProps) {
 
   const handleCancel = useCallback(async () => {
     clearHumanTakeover();
-    // 告诉后端用户取消了接管，让 Agent 以错误状态继续
     try {
       await invoke('deny_tool', {
         callId: takeover.call_id,
@@ -98,7 +87,6 @@ export function HumanTakeoverBanner({ takeover }: HumanTakeoverBannerProps) {
         <Badge size="xs" color="blue" variant="dot" style={{ marginLeft: 4 }}>
           {t('chat.takeover.badge')}
         </Badge>
-        {/* 脉冲动画指示灯 */}
         <Box
           style={{
             marginLeft: 'auto',
@@ -134,7 +122,6 @@ export function HumanTakeoverBanner({ takeover }: HumanTakeoverBannerProps) {
         </Text>
 
         <Group gap={8} wrap="wrap">
-          {/* 主按钮：完成操作，继续 */}
           <Button
             size="xs"
             color="blue"
@@ -151,7 +138,6 @@ export function HumanTakeoverBanner({ takeover }: HumanTakeoverBannerProps) {
             {t('chat.takeover.btnContinue')}
           </Button>
 
-          {/* 次要按钮：在右侧面板打开远程桌面（如果有 URL） */}
           {takeover.remote_url && (
             <Button
               size="xs"
@@ -164,7 +150,6 @@ export function HumanTakeoverBanner({ takeover }: HumanTakeoverBannerProps) {
             </Button>
           )}
 
-          {/* 取消按钮 */}
           <Button
             size="xs"
             color="gray"

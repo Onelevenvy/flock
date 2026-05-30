@@ -1,9 +1,9 @@
 import { Box, Stack, Text, Button } from '@mantine/core';
 import { IconSparkles, IconMessage, IconPlus } from '@tabler/icons-react';
 import { useTranslation } from 'react-i18next';
-import { useWorkspaceStore } from '../../../store/workspaceStore';
-import { useWorkspacesQuery, useCreateConversationMutation } from '../../../hooks/useWorkspaces';
-import { useAgentStore } from '../../../store/agentStore';
+import { useWorkspaceStore } from '../../../../store/workspaceStore';
+import { useWorkspacesQuery, useCreateConversationMutation } from '../../../../hooks/useWorkspaces';
+import { useAgentStore } from '../../../../store/agentStore';
 
 export function EmptyState() {
   const { activeWorkspaceId } = useWorkspaceStore();

@@ -2,7 +2,6 @@ import { useState } from 'react';
 import {
   Box,
   Text,
-  Badge,
   Button,
   TextInput,
   Group,
@@ -17,7 +16,7 @@ import {
 } from '@tabler/icons-react';
 import { useTranslation } from 'react-i18next';
 import { HumanAction, InterruptData } from './types';
-import { nodeConfig } from '../../nodeConfig';
+import { nodeConfig } from '../../../../pages/Workflow/nodeConfig';
 
 interface HumanReviewCardProps {
   interruptData: InterruptData;
