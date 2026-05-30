@@ -104,6 +104,7 @@ pub fn make_agent_workflow_node(
                             }
                         }
                         drop(rx);
+                        log::info!("[workflow agent node] stream finished. assistant_text: '{}', tool_calls count: {}", assistant_text, tool_calls.len());
 
                         final_response = assistant_text.clone();
 
@@ -112,17 +113,21 @@ pub fn make_agent_workflow_node(
                         run_messages.push(ai_msg);
 
                         if tool_calls.is_empty() {
+                            log::info!("[workflow agent node] tool_calls is empty, breaking loop");
                             break;
                         }
 
                         for tc in tool_calls {
+                            log::info!("[workflow agent node] processing tool call: name={}, id={:?}", tc.name, tc.id);
                             let sensitive_tools: Vec<String> = node_data.get("sensitive_tools")
                                 .and_then(|v| v.as_array())
                                 .map(|arr| arr.iter().filter_map(|t| t.as_str().map(|s| s.to_string())).collect())
                                 .unwrap_or_default();
+                            log::info!("[workflow agent node] sensitive_tools configuration: {:?}", sensitive_tools);
 
                             let call_id = tc.id.clone().unwrap_or_else(|| format!("{}_{}", tc.name, chrono::Utc::now().timestamp_nanos_opt().unwrap_or(0)));
                             let needs_approval = sensitive_tools.contains(&tc.name);
+                            log::info!("[workflow agent node] tool call needs_approval: {}", needs_approval);
 
                             if needs_approval {
                                 ctx.sink.emit_tool_request(&call_id, &tc.name, &tc.args);

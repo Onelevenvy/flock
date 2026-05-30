@@ -48,20 +48,15 @@ function WorkflowChatContent({ workflowId, threadId }: { workflowId: string; thr
   }, [workflow]);
 
   const nodes = workflow?.config?.nodes ?? [];
-  const pendingApprovals = useAgentStore((s) => s.pendingApprovals);
-  const firstPending = pendingApprovals[0] ?? null;
 
   return (
-    <Box style={{ display: 'flex', flexDirection: 'column', flex: 1, overflow: 'hidden' }}>
-      <WorkflowChatPanel
-        workflowId={workflowId}
-        workflowName={workflow?.name ?? '工作流'}
-        threadId={threadId}
-        startVariables={startVariables}
-        nodes={nodes}
-      />
-      <ToolApprovalInline approval={firstPending} />
-    </Box>
+    <WorkflowChatPanel
+      workflowId={workflowId}
+      workflowName={workflow?.name ?? '工作流'}
+      threadId={threadId}
+      startVariables={startVariables}
+      nodes={nodes}
+    />
   );
 }
 

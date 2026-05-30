@@ -158,6 +158,7 @@ export function useWorkflowRuntime({
       try {
         const fn = await listen<any>('workflow-event', (event) => {
           if (cancelled) return;
+          console.log("[useWorkflowRuntime] Raw event payload:", event.payload);
           try {
             let payload: WorkflowTauriEvent;
             if (typeof event.payload === 'string') {
@@ -330,22 +331,18 @@ export function useWorkflowRuntime({
                 break;
 
               case 'tool_request': {
+                console.log("[useWorkflowRuntime] tool_request payload:", payload);
                 if (payload.call_id && payload.tool_name) {
-                  useAgentStore.setState((s: any) => ({
-                    pendingApprovals: [
-                      ...s.pendingApprovals,
-                      {
-                        call_id: payload.call_id!,
-                        tool: {
-                          name: payload.tool_name!,
-                          category: 'exec' as any,
-                          args: (payload.tool_args as any) || {},
-                          description: '',
-                        },
-                        msg_id: activeTid,
-                      },
-                    ],
-                  }));
+                  useAgentStore.getState().addPendingApproval({
+                    call_id: payload.call_id!,
+                    tool: {
+                      name: payload.tool_name!,
+                      category: 'exec' as any,
+                      args: (payload.tool_args as any) || {},
+                      description: '',
+                    },
+                    msg_id: activeTid,
+                  });
                 }
                 break;
               }
@@ -354,9 +351,7 @@ export function useWorkflowRuntime({
               case 'tool_result':
               case 'tool_cancelled': {
                 if (payload.call_id) {
-                  useAgentStore.setState((s: any) => ({
-                    pendingApprovals: s.pendingApprovals.filter((p: any) => p.call_id !== payload.call_id),
-                  }));
+                  useAgentStore.getState().removePendingApproval(payload.call_id);
                 }
                 break;
               }
