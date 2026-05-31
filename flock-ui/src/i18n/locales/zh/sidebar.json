@@ -19,5 +19,6 @@
   "rename": "重命名",
   "deleteConversation": "删除对话",
   "noConversation": "暂无对话",
+  "newConversation": "新对话",
   "deleteWorkspace": "删除工作空间"
 }

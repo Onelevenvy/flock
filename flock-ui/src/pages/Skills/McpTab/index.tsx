@@ -92,27 +92,36 @@ export function McpTab() {
                 p="md"
                 onClick={(e) => { e.stopPropagation(); setSelectedServer(server); }}
                 style={{
-                  borderRadius: 12,
+                  borderRadius: 18,
                   border: `1px solid ${selectedServer?.id === server.id ? 'var(--flock-accent)' : 'var(--flock-border-subtle)'}`,
-                  background: selectedServer?.id === server.id ? 'var(--flock-accent-soft)' : 'var(--flock-bg-surface)',
+                  background: selectedServer?.id === server.id ? 'var(--flock-accent-soft)' : 'var(--flock-bg-raised)',
                   cursor: 'pointer',
-                  transition: 'all 0.2s ease',
+                  transition: 'transform 0.18s ease, border-color 0.18s ease, box-shadow 0.18s ease',
+                  boxShadow: '0 8px 24px rgba(15, 23, 42, 0.05)',
                   opacity: server.enabled ? 1 : 0.6,
                 }}
-                className="hover-card-lift"
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.transform = 'translateY(-2px)';
+                  e.currentTarget.style.borderColor = 'var(--flock-accent)';
+                  e.currentTarget.style.boxShadow = '0 14px 36px rgba(21, 90, 239, 0.14)';
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.transform = 'translateY(0)';
+                  e.currentTarget.style.borderColor = selectedServer?.id === server.id ? 'var(--flock-accent)' : 'var(--flock-border-subtle)';
+                  e.currentTarget.style.boxShadow = '0 8px 24px rgba(15, 23, 42, 0.05)';
+                }}
               >
                 <Group gap="sm" mb="sm">
                   <Box
                     style={{
-                      width: 36,
-                      height: 36,
+                      width: 46,
+                      height: 46,
                       display: 'flex',
                       alignItems: 'center',
                       justifyContent: 'center',
-                      borderRadius: 8,
-                      background: 'var(--flock-bg-surface)',
-                      border: '1px solid var(--flock-border-subtle)',
-                      boxShadow: '0 2px 8px rgba(0,0,0,0.02)',
+                      borderRadius: 14,
+                      background: 'var(--flock-accent-soft)',
+                      color: 'var(--flock-accent)',
                     }}
                   >
                     <ToolsIcon name={server.name} size={20} />

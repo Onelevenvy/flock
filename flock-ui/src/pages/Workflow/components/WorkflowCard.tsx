@@ -38,27 +38,38 @@ export function WorkflowCard({ workflow, onOpen }: WorkflowCardProps) {
   return (
     <>
       <Box
-        className="hover-card-lift"
         onClick={onOpen}
         style={{
-          padding: '14px 16px',
-          borderRadius: 14,
+          padding: 18,
+          borderRadius: 18,
           border: '1px solid var(--flock-border-subtle)',
-          background: 'var(--flock-bg-surface)',
+          background: 'var(--flock-bg-raised)',
           cursor: 'pointer',
           position: 'relative',
           overflow: 'hidden',
+          boxShadow: '0 8px 24px rgba(15, 23, 42, 0.05)',
+          transition: 'transform 0.18s ease, border-color 0.18s ease, box-shadow 0.18s ease',
+        }}
+        onMouseEnter={(e) => {
+          e.currentTarget.style.transform = 'translateY(-2px)';
+          e.currentTarget.style.borderColor = 'var(--flock-accent)';
+          e.currentTarget.style.boxShadow = '0 14px 36px rgba(21, 90, 239, 0.14)';
+        }}
+        onMouseLeave={(e) => {
+          e.currentTarget.style.transform = 'translateY(0)';
+          e.currentTarget.style.borderColor = 'var(--flock-border-subtle)';
+          e.currentTarget.style.boxShadow = '0 8px 24px rgba(15, 23, 42, 0.05)';
         }}
       >
 
         {/* Card header */}
         <Group justify="space-between" mb={10} mt={4}>
           <ThemeIcon
-            size={32}
-            radius="md"
+            size={46}
+            radius={14}
             style={{ background: 'var(--flock-accent-soft)', flexShrink: 0 }}
           >
-            <IconRoute size={17} style={{ color: 'var(--flock-accent)' }} />
+            <IconRoute size={22} style={{ color: 'var(--flock-accent)' }} />
           </ThemeIcon>
           <Group gap={4}>
             <ActionIcon

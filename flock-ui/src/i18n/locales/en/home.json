@@ -23,7 +23,7 @@
   "explorer": {
     "eyebrow": "Explore",
     "title": "Explore your agent apps",
-    "subtitle": "Launch assistants or workflows from here. Assistants open ongoing chats; workflows collect Start inputs before entering the execution console.",
+    "subtitle": "Launch assistants or workflows from here. Assistants open ongoing chats; workflows enter chat too, only asking for Start inputs when extra parameters are configured.",
     "assistant": "Assistant",
     "workflow": "Workflow",
     "noDescription": "No description yet",

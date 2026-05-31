@@ -21,28 +21,38 @@ export function AssistantCard({
       p="md"
       onClick={onEdit}
       style={{
-        borderRadius: 14,
+        borderRadius: 18,
         border: '1px solid var(--flock-border-subtle)',
-        background: 'var(--flock-bg-surface)',
+        background: 'var(--flock-bg-raised)',
         display: 'flex',
         flexDirection: 'column',
-        gap: 12,
-        transition: 'all 0.2s ease',
+        gap: 14,
+        transition: 'transform 0.18s ease, border-color 0.18s ease, box-shadow 0.18s ease',
         position: 'relative',
         cursor: 'pointer',
+        boxShadow: '0 8px 24px rgba(15, 23, 42, 0.05)',
       }}
-      className="hover-card-lift"
+      onMouseEnter={(e) => {
+        e.currentTarget.style.transform = 'translateY(-2px)';
+        e.currentTarget.style.borderColor = 'var(--flock-accent)';
+        e.currentTarget.style.boxShadow = '0 14px 36px rgba(21, 90, 239, 0.14)';
+      }}
+      onMouseLeave={(e) => {
+        e.currentTarget.style.transform = 'translateY(0)';
+        e.currentTarget.style.borderColor = 'var(--flock-border-subtle)';
+        e.currentTarget.style.boxShadow = '0 8px 24px rgba(15, 23, 42, 0.05)';
+      }}
     >
       <Group gap="sm" wrap="nowrap" justify="space-between">
         <Group gap="sm" wrap="nowrap" style={{ minWidth: 0 }}>
           <Avatar
             size={40}
-            radius="xl"
+            radius={14}
             style={{
-              background: 'var(--flock-accent)',
+              background: 'var(--flock-accent-soft)',
+              color: 'var(--flock-accent)',
               fontSize: 20,
               flexShrink: 0,
-              boxShadow: '0 2px 6px rgba(21, 90, 239, 0.2)',
             }}
           >
             {assistant.icon}
@@ -121,6 +131,7 @@ export function AssistantCard({
             borderRadius: 10,
             fontWeight: 600,
             transition: 'all 0.2s ease',
+            background: 'var(--flock-accent-soft)',
           }
         }}
       >

@@ -15,13 +15,11 @@ import { ActiveModelPicker } from '../../components/Common/ActiveModelPicker';
 import { XIAOF_AGENT } from './AssistantPicker';
 import { WorkspacePicker } from './WorkspacePicker';
 import { ExplorerAppCard } from './components/ExplorerAppCard';
-import { WorkflowLaunchModal } from './components/WorkflowLaunchModal';
 
 export function HomeView() {
   const { t } = useTranslation();
   const [launchingAssistantId, setLaunchingAssistantId] = useState<string | null>(null);
-  const [selectedWorkflow, setSelectedWorkflow] = useState<WorkflowRecord | null>(null);
-  const [isLaunchingWorkflow, setIsLaunchingWorkflow] = useState(false);
+  const [launchingWorkflowId, setLaunchingWorkflowId] = useState<string | null>(null);
 
   const { data: assistants = [] } = useAssistantsQuery();
   const { data: workflows = [] } = useWorkflowsQuery();
@@ -76,7 +74,7 @@ export function HomeView() {
     try {
       const conversation = await createConversation({
         workspaceId: activeWorkspace.id,
-        title: assistant.name,
+        title: '',
       });
       clearMessages();
       setActiveConversation(conversation.id);
@@ -111,35 +109,29 @@ export function HomeView() {
     setWorkdir,
   ]);
 
-  const handleOpenWorkflow = useCallback((workflow: WorkflowRecord) => {
-    if (!ensureWorkspace()) return;
-    setSelectedWorkflow(workflow);
-  }, [ensureWorkspace]);
-
-  const handleRunWorkflow = useCallback(async (workflow: WorkflowRecord, inputs: Record<string, any>) => {
+  const handleStartWorkflow = useCallback(async (workflow: WorkflowRecord) => {
     if (!ensureWorkspace() || !activeWorkspace) return;
 
-    setIsLaunchingWorkflow(true);
+    setLaunchingWorkflowId(workflow.id);
     try {
       const conversation = await createConversation({
         workspaceId: activeWorkspace.id,
-        title: workflow.name,
+        title: '',
       });
 
       clearMessages();
       setActiveConversation(conversation.id);
       setConversationAssistant(conversation.id, `workflow:${workflow.id}`);
-      useWorkflowStore.getState().setPendingStartInput(inputs);
+      useWorkflowStore.getState().setPendingStartInput(null);
       useWorkflowStore.getState().setPendingStartQuery(null);
       useWorkflowStore.getState().setActiveExecutionThreadId(conversation.id);
       setWorkdir(activeWorkspace.path);
       setStatus('ready');
-      setSelectedWorkflow(null);
     } catch (error: any) {
       setStatus('error');
       setError(error.message || String(error));
     } finally {
-      setIsLaunchingWorkflow(false);
+      setLaunchingWorkflowId(null);
     }
   }, [
     activeWorkspace,
@@ -291,23 +283,14 @@ export function HomeView() {
                   name={workflow.name}
                   description={workflow.description}
                   icon="⚡"
-                  onClick={() => handleOpenWorkflow(workflow)}
+                  disabled={launchingWorkflowId === workflow.id}
+                  onClick={() => handleStartWorkflow(workflow)}
                 />
               ))}
             </SimpleGrid>
           )}
         </Stack>
       </Stack>
-
-      <WorkflowLaunchModal
-        workflow={selectedWorkflow}
-        opened={!!selectedWorkflow}
-        activeWorkspaceName={activeWorkspace?.name}
-        isLaunching={isLaunchingWorkflow}
-        onClose={() => setSelectedWorkflow(null)}
-        onSelectWorkspace={handleSelectWorkspace}
-        onRun={handleRunWorkflow}
-      />
     </Box>
   );
 }
