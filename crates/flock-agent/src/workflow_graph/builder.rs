@@ -148,35 +148,44 @@ pub fn build_workflow_graph(
     for (source, source_edges) in edge_groups {
         if conditional_node_ids.contains(&source) {
             // Conditional routing
-            let is_ifelse = source_edges.first()
-                .and_then(|e| e.get("sourceHandle").and_then(|h| h.as_str()))
-                .map(|h| h != "others_category")
-                .unwrap_or(true); // check classifier vs ifelse
-
             let source_clone = source.clone();
             let node_types_clone = node_types.clone();
             let route_fn = RoutingFn(move |input: &JsonValue| {
                 let state = parse_state(input);
                 if let Some(node_out) = state.node_outputs.get(&source_clone) {
                     if let Some(ntype) = node_types_clone.get(&source_clone) {
-                        if ntype == "human" {
-                            if let Some(choice) = node_out.get("choice").and_then(|v| v.as_str()) {
-                                return choice.to_string();
+                        match ntype.as_str() {
+                            "human" => {
+                                if let Some(choice) = node_out.get("choice").and_then(|v| v.as_str()) {
+                                    return choice.to_string();
+                                }
+                                return "TIMEOUT".to_string();
                             }
-                            return "TIMEOUT".to_string();
-                        }
-                    }
-                    if is_ifelse {
-                        if let Some(c) = node_out.get("case_id").and_then(|v| v.as_str()) {
-                            return c.to_string();
-                        }
-                    } else {
-                        if let Some(cat) = node_out.get("category_id").and_then(|v| v.as_str()) {
-                            return cat.to_string();
+                            "ifelse" => {
+                                if let Some(c) = node_out.get("case_id").and_then(|v| v.as_str()) {
+                                    return c.to_string();
+                                }
+                            }
+                            "classifier" => {
+                                if let Some(cat) = node_out.get("category_id").and_then(|v| v.as_str()) {
+                                    return cat.to_string();
+                                }
+                            }
+                            _ => {}
                         }
                     }
                 }
-                if is_ifelse { "false_else".to_string() } else { "others_category".to_string() }
+                
+                // Fallback based on node type
+                if let Some(ntype) = node_types_clone.get(&source_clone) {
+                    if ntype == "ifelse" {
+                        "false_else".to_string()
+                    } else {
+                        "others_category".to_string()
+                    }
+                } else {
+                    "others_category".to_string()
+                }
             });
 
             let mut path_map = HashMap::new();

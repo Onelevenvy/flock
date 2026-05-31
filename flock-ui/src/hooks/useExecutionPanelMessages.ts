@@ -1,5 +1,5 @@
 import { useMemo, useEffect, useRef } from 'react';
-import { ExecutionMessage, WorkflowStep, InterruptData, HumanAction } from '../pages/Workflow/components/ExecutionPanel/types';
+import { ExecutionMessage, WorkflowStep, InterruptData, HumanAction } from '@/pages/Workflow/components/ExecutionPanel/types';
 import { nodeConfig } from '../pages/Workflow/nodeConfig';
 import type { Node } from 'reactflow';
 
@@ -114,6 +114,13 @@ function buildSteps(
       const rawNodeId = msg.nodeId ?? 'assistant';
       let idx = nodeStepIndex[rawNodeId];
       if (idx === undefined) {
+        // 当全新的节点开始生成输出时，说明上一个处于 running 状态的节点已流转完毕，将其标记为 done
+        for (let i = 0; i < result.length; i++) {
+          if (result[i].status === 'running') {
+            result[i] = { ...result[i], status: 'done' };
+          }
+        }
+
         const { displayName, nodeType } = resolveNodeDisplayName(rawNodeId, nodes);
         const step: WorkflowStep = {
           id: `step-${rawNodeId}`,
@@ -211,11 +218,19 @@ function buildRounds(
   groups.push(current);
 
   // 过滤掉完全空的首组（没有 userMsg 且没有 msgs）
-  const nonEmpty = groups.filter(g => g.userMsg || g.msgs.length > 0);
+  let nonEmpty = groups.filter(g => g.userMsg || g.msgs.length > 0);
+
+  // 如果工作流正在启动/运行中，但由于后端消息尚未送达使得轮次为空，
+  // 我们手动注入一个初始运行轮次，以此实现一点击发送就立刻展示加载栏的白白秒开体验
+  if (nonEmpty.length === 0 && status === 'running') {
+    nonEmpty = [{
+      msgs: []
+    }];
+  }
 
   return nonEmpty.map((g, i) => {
     // 给每轮单独构建 steps，传入 user msg 之后的那些消息
-    const roundSteps = buildSteps(
+    let roundSteps = buildSteps(
       g.msgs,
       // 最后一轮才用真实 status
       i === nonEmpty.length - 1 ? status : 'done',
@@ -224,6 +239,23 @@ function buildRounds(
       resolvedChoiceRef,
       nodes,
     );
+
+    // 刚点击人工发送的启动过渡期，如果当前步骤列表为空，注入一个转圈圈的虚拟步骤，避免空白屏
+    if (i === nonEmpty.length - 1 && status === 'running' && roundSteps.length === 0) {
+      roundSteps = [{
+        id: 'workflow-starting-virtual-step',
+        nodeId: 'starting',
+        nodeType: 'start',
+        displayName: '正在启动工作流...',
+        status: 'running',
+        outputText: '',
+        thinkingText: '',
+        startTs: Date.now(),
+        isInterrupt: false,
+        interruptResolved: false,
+      }];
+    }
+
     return {
       index: i,
       userText: g.userMsg?.content,
