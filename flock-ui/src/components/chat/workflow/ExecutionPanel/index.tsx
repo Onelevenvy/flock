@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
-import { Box, Text, ScrollArea, Stack, Button, Textarea, Divider } from '@mantine/core';
+import { Box, Text, ScrollArea, Stack, Button, Divider } from '@mantine/core';
 import { useTranslation } from 'react-i18next';
-import { IconPlayerPlay } from '@tabler/icons-react';
+import { IconCheck, IconPlayerPlay } from '@tabler/icons-react';
 import { useWorkflowStore } from '../../../../store/workflowStore';
 import { useUiStore } from '../../../../store/uiStore';
 import { useAgentStore } from '../../../../store/agentStore';
@@ -52,6 +52,7 @@ export function ExecutionPanel({
   const initialQueryFiredRef = useRef(false);
 
   const [formInputs, setFormInputs] = useState<Record<string, any>>({});
+  const [startParamsConfirmed, setStartParamsConfirmed] = useState(false);
 
   useEffect(() => {
     const initial: Record<string, any> = {};
@@ -77,6 +78,10 @@ export function ExecutionPanel({
     });
   }, [startVariables, pendingStartQuery, pendingStartInput, initialQuery]);
 
+  useEffect(() => {
+    setStartParamsConfirmed(false);
+  }, [startVariables]);
+
   const storeActiveInterrupt = useWorkflowStore((s) => s.activeInterrupt);
   const activeInterrupt = externalActiveInterrupt !== undefined ? externalActiveInterrupt : storeActiveInterrupt;
   const isInterrupted = activeInterrupt !== null;
@@ -95,7 +100,12 @@ export function ExecutionPanel({
       initialQueryFiredRef.current = true;
       useWorkflowStore.getState().setPendingStartInput(null);
       useWorkflowStore.getState().setPendingStartQuery(null);
-      startWorkflow(JSON.stringify(pendingStartInput));
+      if (typeof pendingStartInput.query === 'string' && pendingStartInput.query.trim()) {
+        startWorkflow(JSON.stringify(pendingStartInput));
+      } else {
+        setFormInputs((prev) => ({ ...prev, ...pendingStartInput }));
+        setStartParamsConfirmed(true);
+      }
       setInputVal('');
       return;
     }
@@ -107,8 +117,8 @@ export function ExecutionPanel({
 
       const hasCustomVars = customVars.length > 0;
       if (hasCustomVars) {
-        // 方案 B：静默填入 formInputs 中的 query，不要填入 inputVal
         setFormInputs((prev) => ({ ...prev, query: q }));
+        setStartParamsConfirmed(true);
         setInputVal('');
       } else {
         // 如果没有自定义预置参数，可以直接执行
@@ -136,8 +146,8 @@ export function ExecutionPanel({
   });
   const trackedResume = resumeWithTracking;
 
-  const showInitialForm = steps.length === 0 && customVars.length > 0;
-  const showEmptyState = steps.length === 0 && customVars.length === 0 && messages.length === 0 && status === 'idle';
+  const showInitialForm = steps.length === 0 && customVars.length > 0 && !startParamsConfirmed;
+  const showEmptyState = steps.length === 0 && messages.length === 0 && status === 'idle' && !showInitialForm;
 
   // 新步骤时自动滚到底
   useEffect(() => {
@@ -147,13 +157,6 @@ export function ExecutionPanel({
   // 从配置表单中直接启动工作流的逻辑
   const handleStartFromForm = () => {
     const missing = customVars.filter((v: any) => v.required && (formInputs[v.name] === undefined || formInputs[v.name] === ''));
-    if (!formInputs['query']?.trim()) {
-      alert(t('workflow.execution.missingParams', {
-        defaultValue: 'Missing required parameter: query',
-        names: 'Query'
-      }));
-      return;
-    }
     if (missing.length > 0) {
       alert(t('workflow.execution.missingParams', {
         defaultValue: `Missing required parameter(s): ${missing.map((m: any) => m.label || m.name).join(', ')}`,
@@ -161,8 +164,7 @@ export function ExecutionPanel({
       }));
       return;
     }
-    const payload: Record<string, any> = { ...formInputs };
-    startWorkflow(JSON.stringify(payload));
+    setStartParamsConfirmed(true);
     setInputVal('');
   };
 
@@ -183,6 +185,7 @@ export function ExecutionPanel({
 
   const handleClear = () => {
     initialQueryFiredRef.current = false;
+    setStartParamsConfirmed(false);
     if (onClearExecution) {
       onClearExecution();
     } else {
@@ -282,7 +285,7 @@ export function ExecutionPanel({
                       {t('workflow.execution.inputsTitle', 'Start Parameters')}
                     </Text>
                     <Text size="xs" c="dimmed" style={{ fontSize: 10, lineHeight: 1.3, marginTop: 2 }}>
-                      {t('workflow.execution.inputsDesc', 'Please configure initial parameters for the workflow before running.')}
+                      {t('workflow.execution.inputsDesc', 'Please configure initial parameters, then continue in the chat input.')}
                     </Text>
                   </div>
                 </div>
@@ -291,30 +294,6 @@ export function ExecutionPanel({
 
                 {/* 变量输入表单区域 */}
                 <Stack gap="md">
-                  {/* 初始 Query 输入框 */}
-                  <Textarea
-                    label={`${t('workflow.execution.inputPlaceholder', 'Initial Query')} (query)`}
-                    placeholder={t('workflow.execution.inputPlaceholder', 'Enter initial query...')}
-                    value={formInputs['query'] ?? ''}
-                    onChange={(e) => setFormInputs({ ...formInputs, query: e.target.value })}
-                    size="xs"
-                    required
-                    rows={3}
-                    styles={{
-                      input: {
-                        background: 'var(--flock-bg-surface)',
-                        border: '1px solid var(--flock-border-dim)',
-                        borderRadius: '8px',
-                        fontSize: 12,
-                      },
-                      label: {
-                        fontWeight: 600,
-                        fontSize: 11,
-                        color: 'var(--flock-text-bright)',
-                        marginBottom: 4,
-                      }
-                    }}
-                  />
                   <StartParametersForm
                     customVars={customVars}
                     formInputs={formInputs}
@@ -328,7 +307,7 @@ export function ExecutionPanel({
                   fullWidth
                   size="md"
                   onClick={handleStartFromForm}
-                  leftSection={<IconPlayerPlay size={16} />}
+                  leftSection={<IconCheck size={16} />}
                   style={{
                     background: 'var(--flock-accent)',
                     borderRadius: '10px',
@@ -345,7 +324,7 @@ export function ExecutionPanel({
                     e.currentTarget.style.boxShadow = '0 4px 12px var(--flock-accent-glow, rgba(0, 102, 255, 0.2))';
                   }}
                 >
-                  {t('workflow.execution.run', 'Run Workflow')}
+                  {t('workflow.execution.confirmParams', 'Confirm Parameters')}
                 </Button>
               </Box>
             </Box>

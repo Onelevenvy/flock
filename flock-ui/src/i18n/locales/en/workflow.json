@@ -170,6 +170,7 @@
     "thinking": "Thinking",
     "missingParams": "Missing required parameter(s): {{names}}",
     "run": "Send",
+    "confirmParams": "Confirm parameters",
     "steps": "steps",
     "generating": "Generating..."
   },
