@@ -11,7 +11,6 @@ import { useAgentStore } from '../../store/agentStore';
 import { useWorkspaceStore } from '../../store/workspaceStore';
 import { useWorkflowStore } from '../../store/workflowStore';
 import type { Assistant } from '../../types/assistant';
-import { ActiveModelPicker } from '../../components/Common/ActiveModelPicker';
 import { XIAOF_AGENT } from './AssistantPicker';
 import { WorkspacePicker } from './WorkspacePicker';
 import { ExplorerAppCard } from './components/ExplorerAppCard';
@@ -173,42 +172,32 @@ export function HomeView() {
           </Stack>
 
           <Stack gap="xs" align="flex-end">
-            <Group gap="xs">
+            <Group gap="xs" align="center">
+              <Text size="xs" fw={600} c="dimmed">{t('home.explorer.workspace')}:</Text>
               <WorkspacePicker onSelect={handleSelectWorkspace} />
-              <ActiveModelPicker />
             </Group>
-            <Group gap={6}>
-              <IconFolder size={14} color="var(--flock-text-dim)" />
-              <Text size="xs" c={activeWorkspace ? 'dimmed' : 'red'}>
-                {activeWorkspace
-                  ? t('home.explorer.activeWorkspace', { name: activeWorkspace.name })
-                  : t('home.pleaseSelectWorkspace')}
-              </Text>
-            </Group>
+            <SegmentedControl
+              value={filter}
+              onChange={(val) => setFilter(val as any)}
+              data={[
+                { value: 'all', label: t('home.explorer.filterAll') },
+                { value: 'assistants', label: t('home.explorer.filterAssistants') },
+                { value: 'workflows', label: t('home.explorer.filterWorkflows') },
+              ]}
+              size="xs"
+              styles={{
+                root: {
+                  background: 'var(--flock-bg-surface)',
+                  border: '1px solid var(--flock-border-dim)',
+                  padding: 2,
+                  borderRadius: 8,
+                },
+                control: {
+                  minWidth: 80,
+                }
+              }}
+            />
           </Stack>
-        </Group>
-
-        <Group justify="flex-start">
-          <SegmentedControl
-            value={filter}
-            onChange={(val) => setFilter(val as any)}
-            data={[
-              { value: 'all', label: t('home.explorer.filterAll') },
-              { value: 'assistants', label: t('home.explorer.filterAssistants') },
-              { value: 'workflows', label: t('home.explorer.filterWorkflows') },
-            ]}
-            styles={{
-              root: {
-                background: 'var(--flock-bg-raised)',
-                border: '1px solid var(--flock-border-subtle)',
-                padding: 4,
-                borderRadius: 12,
-              },
-              control: {
-                minWidth: 110,
-              }
-            }}
-          />
         </Group>
 
         {(filter === 'all' || filter === 'assistants') && (

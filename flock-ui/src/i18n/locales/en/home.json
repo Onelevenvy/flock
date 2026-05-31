@@ -23,7 +23,7 @@
   "explorer": {
     "eyebrow": "Explore",
     "title": "Explore your agent apps",
-    "subtitle": "Launch assistants or workflows from here. Assistants open ongoing chats; workflows enter chat too, only asking for Start inputs when extra parameters are configured.",
+    "subtitle": "Launch assistants or workflows from here. ",
     "filterAll": "All",
     "filterAssistants": "AI Assistants",
     "filterWorkflows": "Workflow Apps",
