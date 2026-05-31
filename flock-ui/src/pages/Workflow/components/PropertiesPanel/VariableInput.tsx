@@ -124,6 +124,38 @@ export function VariablePromptEditor({ currentNodeId, value, onChange, placehold
   const handleKeyUp = (e: React.KeyboardEvent<HTMLDivElement>) => {
     if (e.key === '/') {
       setPopoverOpened(true);
+      return;
+    }
+
+    // 如果参数弹出菜单处于开启状态，我们进行多重智能判定，确保对用户常规打字行为的「零侵入」
+    if (popoverOpened) {
+      // 1. 如果用户输入了空格（如打 '10 / 2'），立刻自动关闭
+      if (e.key === ' ' || e.key === 'Spacebar') {
+        setPopoverOpened(false);
+        return;
+      }
+
+      // 2. 如果按了 Escape，立刻关闭
+      if (e.key === 'Escape') {
+        setPopoverOpened(false);
+        return;
+      }
+
+      // 3. 动态检查光标前方字符：如果光标前面的字符不再是 '/'（说明已被用户删除，或用户在 '/' 后面继续打字如 '/usr'）
+      const sel = window.getSelection();
+      if (sel && sel.rangeCount > 0) {
+        const range = sel.getRangeAt(0);
+        if (range.startOffset > 0 && range.startContainer.nodeType === Node.TEXT_NODE) {
+          const text = range.startContainer.textContent || '';
+          const prevChar = text.substring(range.startOffset - 1, range.startOffset);
+          if (prevChar !== '/') {
+            setPopoverOpened(false);
+          }
+        } else {
+          // 如果当前节点清空，自动关闭
+          setPopoverOpened(false);
+        }
+      }
     }
   };
 
@@ -150,6 +182,17 @@ export function VariablePromptEditor({ currentNodeId, value, onChange, placehold
     const sel = window.getSelection();
     if (sel && sel.rangeCount > 0) {
       const range = sel.getRangeAt(0);
+      
+      // 检查当前光标位置前一个字符是否为触发菜单的 '/'
+      // 如果是，我们将 selection 起点向左扩展 1 位，使其包含 '/'，这样 deleteContents 就会干净利落地把它删掉
+      if (range.startOffset > 0 && range.startContainer.nodeType === Node.TEXT_NODE) {
+        const text = range.startContainer.textContent || '';
+        const prevChar = text.substring(range.startOffset - 1, range.startOffset);
+        if (prevChar === '/') {
+          range.setStart(range.startContainer, range.startOffset - 1);
+        }
+      }
+      
       range.deleteContents();
       
       const el = document.createElement('div');

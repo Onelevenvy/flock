@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
-import { Box, Text, ScrollArea, Stack } from '@mantine/core';
+import { Box, Text, ScrollArea, Stack, Button, Textarea, Divider } from '@mantine/core';
 import { useTranslation } from 'react-i18next';
+import { IconPlayerPlay } from '@tabler/icons-react';
 import { useWorkflowStore } from '../../../../store/workflowStore';
 import { useUiStore } from '../../../../store/uiStore';
 import { useAgentStore } from '../../../../store/agentStore';
@@ -45,6 +46,10 @@ export function ExecutionPanel({
     { type: 'string', name: 'query', label: 'Query', required: true }
   ];
 
+  // 首页带来的初始 query：在组件挂载后立即执行（优先用 pendingStartQuery，再用 initialQuery prop）
+  const pendingStartQuery = useWorkflowStore((s) => s.pendingStartQuery);
+  const initialQueryFiredRef = useRef(false);
+
   const [formInputs, setFormInputs] = useState<Record<string, any>>({});
 
   useEffect(() => {
@@ -52,15 +57,21 @@ export function ExecutionPanel({
     startVariables.forEach((v) => {
       initial[v.name] = v.default_value ?? '';
     });
+    
+    // 方案 B：在计算初始值时，立刻将首页带来的 query 融入，这样哪怕 startVariables 加载更新，query 也绝不会被重置为空
+    const q = pendingStartQuery ?? initialQuery ?? '';
+    if (q) {
+      initial['query'] = q;
+    }
+
     setFormInputs((prev) => {
-      const keys = Object.keys(initial);
-      const prevKeys = Object.keys(prev);
-      const isDifferent =
-        keys.length !== prevKeys.length ||
-        keys.some((k) => prev[k] !== initial[k]);
-      return isDifferent ? initial : prev;
+      const merged = { ...initial, ...prev };
+      if (q && !merged['query']) {
+        merged['query'] = q;
+      }
+      return merged;
     });
-  }, [startVariables]);
+  }, [startVariables, pendingStartQuery, initialQuery]);
 
   const storeActiveInterrupt = useWorkflowStore((s) => s.activeInterrupt);
   const activeInterrupt = externalActiveInterrupt !== undefined ? externalActiveInterrupt : storeActiveInterrupt;
@@ -75,10 +86,6 @@ export function ExecutionPanel({
 
   const customVars = startVariables.filter((v: any) => v.name !== 'query');
 
-  // 首页带来的初始 query：在组件挂载后立即执行（优先用 pendingStartQuery，再用 initialQuery prop）
-  const pendingStartQuery = useWorkflowStore((s) => s.pendingStartQuery);
-  const initialQueryFiredRef = useRef(false);
-
   useEffect(() => {
     const q = pendingStartQuery ?? initialQuery;
     if (q && !initialQueryFiredRef.current && status === 'idle' && messages.length === 0) {
@@ -87,9 +94,9 @@ export function ExecutionPanel({
 
       const hasCustomVars = customVars.length > 0;
       if (hasCustomVars) {
-        // 如果有自定义预置参数，不自动执行，而是把初始 query 填入 formInputs 中的 query 以及 inputVal
-        setInputVal(q);
+        // 方案 B：静默填入 formInputs 中的 query，不要填入 inputVal
         setFormInputs((prev) => ({ ...prev, query: q }));
+        setInputVal('');
       } else {
         // 如果没有自定义预置参数，可以直接执行
         const payload: Record<string, any> = { ...formInputs };
@@ -116,10 +123,35 @@ export function ExecutionPanel({
   });
   const trackedResume = resumeWithTracking;
 
+  const showInitialForm = steps.length === 0 && customVars.length > 0;
+  const showEmptyState = steps.length === 0 && customVars.length === 0 && messages.length === 0 && status === 'idle';
+
   // 新步骤时自动滚到底
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [steps.length]);
+
+  // 从配置表单中直接启动工作流的逻辑
+  const handleStartFromForm = () => {
+    const missing = customVars.filter((v: any) => v.required && (formInputs[v.name] === undefined || formInputs[v.name] === ''));
+    if (!formInputs['query']?.trim()) {
+      alert(t('workflow.execution.missingParams', {
+        defaultValue: 'Missing required parameter: query',
+        names: 'Query'
+      }));
+      return;
+    }
+    if (missing.length > 0) {
+      alert(t('workflow.execution.missingParams', {
+        defaultValue: `Missing required parameter(s): ${missing.map((m: any) => m.label || m.name).join(', ')}`,
+        names: missing.map((m: any) => m.label || m.name).join(', ')
+      }));
+      return;
+    }
+    const payload: Record<string, any> = { ...formInputs };
+    startWorkflow(JSON.stringify(payload));
+    setInputVal('');
+  };
 
   const handleStart = () => {
     const missing = customVars.filter((v: any) => v.required && (formInputs[v.name] === undefined || formInputs[v.name] === ''));
@@ -184,45 +216,146 @@ export function ExecutionPanel({
           minHeight: 0,
         }}
       >
-        {steps.length === 0 ? (
-          /* 无执行记录时 */
-          customVars.length > 0 ? (
-            <ScrollArea style={{ flex: 1 }} p="md">
-              <Stack gap="md" style={{ padding: 12 }}>
-                <Box>
-                  <Text size="xs" fw={700} style={{ color: 'var(--flock-text-bright)' }}>
-                    ✨ {t('workflow.execution.inputsTitle', 'Start Parameters')}
-                  </Text>
-                  <Text size="xs" c="dimmed" style={{ fontSize: 10 }}>
-                    {t('workflow.execution.inputsDesc', 'Please configure initial parameters for the workflow before running.')}
-                  </Text>
-                </Box>
-                <StartParametersForm
-                  customVars={customVars}
-                  formInputs={formInputs}
-                  setFormInputs={setFormInputs}
-                />
-              </Stack>
-            </ScrollArea>
-          ) : (
+        {showInitialForm ? (
+          /* 初始前置参数配置卡片 */
+          <ScrollArea style={{ flex: 1 }} p="md">
             <Box
               style={{
-                flex: 1,
                 display: 'flex',
                 flexDirection: 'column',
                 alignItems: 'center',
                 justifyContent: 'center',
-                opacity: 0.6,
-                padding: 20,
+                padding: '24px 16px',
+                minHeight: '100%',
               }}
             >
-              <Text size="xs" c="dimmed" ta="center">
-                🤖 {t('workflow.execution.noOutput', 'No active execution. Enter initial query below to run.')}
-              </Text>
+              {/* 方案 B：极致高档的悬浮毛玻璃启动卡片 */}
+              <Box
+                style={{
+                  width: '100%',
+                  maxWidth: 420,
+                  background: isDark ? 'rgba(28, 28, 30, 0.75)' : 'rgba(255, 255, 255, 0.85)',
+                  backdropFilter: 'blur(16px)',
+                  border: '1px solid var(--flock-border-subtle)',
+                  boxShadow: isDark 
+                    ? '0 12px 36px rgba(0, 0, 0, 0.4), 0 0 1px rgba(255, 255, 255, 0.15) inset' 
+                    : '0 12px 36px rgba(0, 0, 0, 0.08)',
+                  borderRadius: '20px',
+                  padding: '28px 24px',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  gap: 20,
+                }}
+              >
+                {/* 头部：工作流运行徽章 */}
+                <div style={{ display: 'flex', gap: 12, alignItems: 'center' }}>
+                  <div
+                    style={{
+                      width: 42,
+                      height: 42,
+                      borderRadius: '12px',
+                      background: 'var(--flock-accent-light, rgba(0, 102, 255, 0.1))',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      color: 'var(--flock-accent, #0066ff)',
+                      boxShadow: '0 0 12px var(--flock-accent-glow, rgba(0, 102, 255, 0.15))',
+                    }}
+                  >
+                    <IconPlayerPlay size={20} style={{ transform: 'translateX(1px)' }} />
+                  </div>
+                  <div style={{ flex: 1 }}>
+                    <Text size="sm" fw={700} style={{ color: 'var(--flock-text-bright)' }}>
+                      {t('workflow.execution.inputsTitle', 'Start Parameters')}
+                    </Text>
+                    <Text size="xs" c="dimmed" style={{ fontSize: 10, lineHeight: 1.3, marginTop: 2 }}>
+                      {t('workflow.execution.inputsDesc', 'Please configure initial parameters for the workflow before running.')}
+                    </Text>
+                  </div>
+                </div>
+
+                <Divider color="var(--flock-border-subtle)" style={{ margin: '0 -24px' }} />
+
+                {/* 变量输入表单区域 */}
+                <Stack gap="md">
+                  {/* 初始 Query 输入框 */}
+                  <Textarea
+                    label={`${t('workflow.execution.inputPlaceholder', 'Initial Query')} (query)`}
+                    placeholder={t('workflow.execution.inputPlaceholder', 'Enter initial query...')}
+                    value={formInputs['query'] ?? ''}
+                    onChange={(e) => setFormInputs({ ...formInputs, query: e.target.value })}
+                    size="xs"
+                    required
+                    rows={3}
+                    styles={{
+                      input: {
+                        background: 'var(--flock-bg-surface)',
+                        border: '1px solid var(--flock-border-dim)',
+                        borderRadius: '8px',
+                        fontSize: 12,
+                      },
+                      label: {
+                        fontWeight: 600,
+                        fontSize: 11,
+                        color: 'var(--flock-text-bright)',
+                        marginBottom: 4,
+                      }
+                    }}
+                  />
+                  <StartParametersForm
+                    customVars={customVars}
+                    formInputs={formInputs}
+                    setFormInputs={setFormInputs}
+                  />
+                </Stack>
+
+                {/* 启动按钮 */}
+                <Button
+                  color="blue"
+                  fullWidth
+                  size="md"
+                  onClick={handleStartFromForm}
+                  leftSection={<IconPlayerPlay size={16} />}
+                  style={{
+                    background: 'var(--flock-accent)',
+                    borderRadius: '10px',
+                    fontWeight: 600,
+                    boxShadow: '0 4px 12px var(--flock-accent-glow, rgba(0, 102, 255, 0.2))',
+                    transition: 'transform 0.2s, box-shadow 0.2s',
+                  }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.transform = 'translateY(-1px)';
+                    e.currentTarget.style.boxShadow = '0 6px 16px var(--flock-accent-glow, rgba(0, 102, 255, 0.3))';
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.transform = 'translateY(0)';
+                    e.currentTarget.style.boxShadow = '0 4px 12px var(--flock-accent-glow, rgba(0, 102, 255, 0.2))';
+                  }}
+                >
+                  {t('workflow.execution.run', 'Run Workflow')}
+                </Button>
+              </Box>
             </Box>
-          )
+          </ScrollArea>
+        ) : showEmptyState ? (
+          /* 真正的初始闲置空状态 */
+          <Box
+            style={{
+              flex: 1,
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'center',
+              justifyContent: 'center',
+              opacity: 0.6,
+              padding: 20,
+            }}
+          >
+            <Text size="xs" c="dimmed" ta="center">
+              🤖 {t('workflow.execution.noOutput', 'No active execution. Enter initial query below to run.')}
+            </Text>
+          </Box>
         ) : (
-          /* 有执行记录时（按轮次渲染：用户气泡 + 工作流折叠组 + answer/human 卡片） */
+          /* 有执行记录时或正在启动运行中（按轮次渲染：用户气泡 + 工作流折叠组 + answer/human 卡片） */
           <ScrollArea style={{ flex: 1 }} px="sm" py="sm">
             <Stack gap={12}>
               {rounds.map((round) => (
@@ -243,13 +376,15 @@ export function ExecutionPanel({
         <ToolApprovalInline approval={firstPending} />
 
         {/* Bottom input area */}
-        <ExecutionBottomBar
-          isInterrupted={isInterrupted}
-          status={status}
-          inputVal={inputVal}
-          setInputVal={setInputVal}
-          handleStart={handleStart}
-        />
+        {!showInitialForm && (
+          <ExecutionBottomBar
+            isInterrupted={isInterrupted}
+            status={status}
+            inputVal={inputVal}
+            setInputVal={setInputVal}
+            handleStart={handleStart}
+          />
+        )}
       </Box>
     </Box>
   );
