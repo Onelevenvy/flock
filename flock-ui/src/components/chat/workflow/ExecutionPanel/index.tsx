@@ -48,6 +48,7 @@ export function ExecutionPanel({
 
   // 首页带来的初始 query：在组件挂载后立即执行（优先用 pendingStartQuery，再用 initialQuery prop）
   const pendingStartQuery = useWorkflowStore((s) => s.pendingStartQuery);
+  const pendingStartInput = useWorkflowStore((s) => s.pendingStartInput);
   const initialQueryFiredRef = useRef(false);
 
   const [formInputs, setFormInputs] = useState<Record<string, any>>({});
@@ -63,6 +64,9 @@ export function ExecutionPanel({
     if (q) {
       initial['query'] = q;
     }
+    if (pendingStartInput) {
+      Object.assign(initial, pendingStartInput);
+    }
 
     setFormInputs((prev) => {
       const merged = { ...initial, ...prev };
@@ -71,7 +75,7 @@ export function ExecutionPanel({
       }
       return merged;
     });
-  }, [startVariables, pendingStartQuery, initialQuery]);
+  }, [startVariables, pendingStartQuery, pendingStartInput, initialQuery]);
 
   const storeActiveInterrupt = useWorkflowStore((s) => s.activeInterrupt);
   const activeInterrupt = externalActiveInterrupt !== undefined ? externalActiveInterrupt : storeActiveInterrupt;
@@ -87,6 +91,15 @@ export function ExecutionPanel({
   const customVars = startVariables.filter((v: any) => v.name !== 'query');
 
   useEffect(() => {
+    if (pendingStartInput && !initialQueryFiredRef.current && status === 'idle' && messages.length === 0) {
+      initialQueryFiredRef.current = true;
+      useWorkflowStore.getState().setPendingStartInput(null);
+      useWorkflowStore.getState().setPendingStartQuery(null);
+      startWorkflow(JSON.stringify(pendingStartInput));
+      setInputVal('');
+      return;
+    }
+
     const q = pendingStartQuery ?? initialQuery;
     if (q && !initialQueryFiredRef.current && status === 'idle' && messages.length === 0) {
       initialQueryFiredRef.current = true;
@@ -105,7 +118,7 @@ export function ExecutionPanel({
         setInputVal('');
       }
     }
-  }, [pendingStartQuery, initialQuery, status, messages.length, customVars.length]);
+  }, [pendingStartInput, pendingStartQuery, initialQuery, status, messages.length, customVars.length, startWorkflow]);
 
   const handleResume = useCallback((choice: string, feedback?: string, actionLabel?: string) => {
     const payload: Record<string, unknown> = { choice };

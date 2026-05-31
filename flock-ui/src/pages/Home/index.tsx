@@ -1,333 +1,312 @@
-import { useState, useCallback, useRef, KeyboardEvent, useEffect } from 'react';
-import { Box } from '@mantine/core';
-import { IconShieldCheck, IconBolt, IconFlame, } from '@tabler/icons-react';
+import { useCallback, useMemo, useState } from 'react';
+import { Box, Button, Group, SimpleGrid, Stack, Text, Title } from '@mantine/core';
+import { notifications } from '@mantine/notifications';
+import { IconCompass, IconFolder, IconMessageCircle, IconRoute, IconSparkles } from '@tabler/icons-react';
 import { invoke } from '@tauri-apps/api/core';
-import { v4 as uuidv4 } from 'uuid';
+import { useTranslation } from 'react-i18next';
+import { useAssistantsQuery } from '../../hooks/useAssistants';
+import { useWorkflowsQuery, type WorkflowRecord } from '../../hooks/useWorkflow';
+import { useCreateConversationMutation, useWorkspacesQuery } from '../../hooks/useWorkspaces';
 import { useAgentStore } from '../../store/agentStore';
 import { useWorkspaceStore } from '../../store/workspaceStore';
-import { useWorkspacesQuery, useCreateConversationMutation } from '../../hooks/useWorkspaces';
-import { type Assistant } from '../../types/assistant';
-
-import { AssistantPicker, XIAOF_AGENT } from './AssistantPicker';
-import { useUiStore } from '../../store/uiStore';
 import { useWorkflowStore } from '../../store/workflowStore';
-import { useWorkflowsQuery, type WorkflowRecord } from '../../hooks/useWorkflow';
-
-import { useAssistantsQuery } from '../../hooks/useAssistants';
-import { useTranslation } from 'react-i18next';
-import { WelcomeHeader } from './components/WelcomeHeader';
-import { InputCard } from './components/InputCard';
-import { StatusIndicator } from './components/StatusIndicator';
+import type { Assistant } from '../../types/assistant';
+import { ActiveModelPicker } from '../../components/Common/ActiveModelPicker';
+import { XIAOF_AGENT } from './AssistantPicker';
+import { WorkspacePicker } from './WorkspacePicker';
+import { ExplorerAppCard } from './components/ExplorerAppCard';
+import { WorkflowLaunchModal } from './components/WorkflowLaunchModal';
 
 export function HomeView() {
   const { t } = useTranslation();
-  const [value, setValue] = useState('');
-  const [selectedType, setSelectedType] = useState<'assistant' | 'workflow'>('assistant');
-  const [selectedAssistant, setSelectedAssistant] = useState<Assistant>(XIAOF_AGENT);
+  const [launchingAssistantId, setLaunchingAssistantId] = useState<string | null>(null);
   const [selectedWorkflow, setSelectedWorkflow] = useState<WorkflowRecord | null>(null);
-  const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const [isLaunchingWorkflow, setIsLaunchingWorkflow] = useState(false);
 
-  const status = useAgentStore(s => s.status);
-  const addUserMessage = useAgentStore(s => s.addUserMessage);
-  const setWorkdir = useAgentStore(s => s.setWorkdir);
-  const setStatus = useAgentStore(s => s.setStatus);
-  const clearMessages = useAgentStore(s => s.clearMessages);
-  const messages = useAgentStore(s => s.messages);
-  const capabilities = useAgentStore(s => s.capabilities);
-  const setCapabilities = useAgentStore(s => s.setCapabilities);
-  const setError = useAgentStore(s => s.setError);
-
-  const {
-    activeWorkspaceId, activeConversationId,
-    setActiveWorkspace, setActiveConversation,
-    conversationAssistants, setConversationAssistant,
-    selectedHomeAssistantId, setSelectedHomeAssistantId,
-  } = useWorkspaceStore();
-  const { data: workspaces = [] } = useWorkspacesQuery();
-  const { mutateAsync: createConversation } = useCreateConversationMutation();
   const { data: assistants = [] } = useAssistantsQuery();
   const { data: workflows = [] } = useWorkflowsQuery();
-  // workflowStore 通过 getState() 直接调用，避免解构未使用变量
+  const { data: workspaces = [] } = useWorkspacesQuery();
+  const { mutateAsync: createConversation } = useCreateConversationMutation();
 
-  const MODE_OPTIONS = [
-    { value: 'default', label: t('home.approval'), icon: IconShieldCheck, color: 'blue' },
-    { value: 'auto_edit', label: 'AutoEdit', icon: IconBolt, color: 'teal' },
-    { value: 'yolo', label: 'YOLO', icon: IconFlame, color: 'red' },
-  ];
+  const status = useAgentStore((s) => s.status);
+  const setStatus = useAgentStore((s) => s.setStatus);
+  const setWorkdir = useAgentStore((s) => s.setWorkdir);
+  const clearMessages = useAgentStore((s) => s.clearMessages);
+  const setError = useAgentStore((s) => s.setError);
 
-  // 🚀 Sync the selectedAssistant state with the persisted assistant for the active conversation or direct jump selection
-  useEffect(() => {
-    const allAgents = [XIAOF_AGENT, ...assistants];
-    if (selectedHomeAssistantId) {
-      const match = allAgents.find(a => a.id === selectedHomeAssistantId);
-      if (match) {
-        setSelectedAssistant(match);
-        // Clear it so it won't keep resetting on subsequent renders
-        setSelectedHomeAssistantId(null);
-      }
-    } else if (activeConversationId) {
-      const persistedAsstId = conversationAssistants[activeConversationId];
-      if (persistedAsstId) {
-        const match = allAgents.find(a => a.id === persistedAsstId);
-        if (match && match.id !== selectedAssistant.id) {
-          setSelectedAssistant(match);
-        }
-      }
-    }
-  }, [selectedHomeAssistantId, activeConversationId, conversationAssistants, selectedAssistant.id, assistants, setSelectedHomeAssistantId]);
+  const {
+    activeWorkspaceId,
+    setActiveWorkspace,
+    setActiveConversation,
+    setConversationAssistant,
+  } = useWorkspaceStore();
 
-  // Synchronize default workflow when workflows load
-  useEffect(() => {
-    if (selectedType === 'workflow' && !selectedWorkflow && workflows.length > 0) {
-      setSelectedWorkflow(workflows[0]);
-    }
-  }, [selectedType, selectedWorkflow, workflows]);
+  const activeWorkspace = useMemo(
+    () => workspaces.find((workspace) => workspace.id === activeWorkspaceId),
+    [activeWorkspaceId, workspaces]
+  );
 
-  const activeWs = workspaces.find(w => w.id === activeWorkspaceId);
-  const isStreaming = !!activeConversationId && status === 'thinking';
-  const canSend = (status === 'ready' || (status === 'thinking' && !activeConversationId) || selectedType === 'workflow') && value.trim().length > 0 && !!activeWorkspaceId;
+  const allAssistants = useMemo(() => [XIAOF_AGENT, ...assistants], [assistants]);
+  const featuredAssistants = allAssistants.slice(0, 6);
+  const featuredWorkflows = workflows.slice(0, 6);
 
-
-
-  const placeholder = !activeWorkspaceId
-    ? t('home.selectWorkspaceFirst')
-    : isStreaming
-      ? t('home.thinking')
-      : selectedType === 'workflow'
-        ? t('home.sendMessage', { name: selectedWorkflow?.name ?? '' })
-        : t('home.sendMessage', { name: selectedAssistant.name });
-
-  const handleSelectWorkspace = useCallback(async (wsId: string, wsPath: string, _wsName: string) => {
+  const handleSelectWorkspace = useCallback(async (wsId: string, wsPath: string) => {
     if (wsId !== activeWorkspaceId) {
       setActiveWorkspace(wsId);
     }
     setWorkdir(wsPath);
+    setStatus('ready');
+  }, [activeWorkspaceId, setActiveWorkspace, setStatus, setWorkdir]);
+
+  const ensureWorkspace = useCallback(() => {
+    if (activeWorkspace) return true;
+    notifications.show({
+      title: t('home.explorer.workspaceRequiredTitle'),
+      message: t('home.pleaseSelectWorkspace'),
+      color: 'orange',
+    });
+    return false;
+  }, [activeWorkspace, t]);
+
+  const handleStartAssistant = useCallback(async (assistant: Assistant) => {
+    if (!ensureWorkspace() || !activeWorkspace) return;
+
+    setLaunchingAssistantId(assistant.id);
     setStatus('connecting');
     try {
-      // Start agent for this workspace (will resume or create)
+      const conversation = await createConversation({
+        workspaceId: activeWorkspace.id,
+        title: assistant.name,
+      });
+      clearMessages();
+      setActiveConversation(conversation.id);
+      setConversationAssistant(conversation.id, assistant.id);
+      setWorkdir(activeWorkspace.path);
+
       await invoke('start_agent', {
-        workdir: wsPath,
-        sessionId: activeConversationId || null,
-        assistantId: selectedAssistant.id === '__xiaof__' ? null : selectedAssistant.id,
+        workdir: activeWorkspace.path,
+        sessionId: conversation.id,
+        assistantId: assistant.id === '__xiaof__' ? null : assistant.id,
         projectDir: null,
         apiKey: null,
         extraArgs: null,
       });
+
       setStatus('ready');
-    } catch (e: any) {
+    } catch (error: any) {
       setStatus('error');
-      useAgentStore.getState().setError(String(e));
+      setError(error.message || String(error));
+    } finally {
+      setLaunchingAssistantId(null);
     }
-  }, [activeWorkspaceId, selectedAssistant, activeConversationId, setActiveWorkspace, setWorkdir, setStatus]);
+  }, [
+    activeWorkspace,
+    clearMessages,
+    createConversation,
+    ensureWorkspace,
+    setActiveConversation,
+    setConversationAssistant,
+    setError,
+    setStatus,
+    setWorkdir,
+  ]);
 
-  const handlePickerSelect = useCallback(async (type: 'assistant' | 'workflow', id: string, item: Assistant | WorkflowRecord | null) => {
-    setSelectedType(type);
-    if (type === 'assistant' && item) {
-      const assistantItem = item as Assistant;
-      setSelectedAssistant(assistantItem);
-      if (activeConversationId) {
-        setConversationAssistant(activeConversationId, assistantItem.id);
-      }
-      // If workspace already active, restart agent with new assistant
-      if (activeWs && status === 'ready') {
-        setStatus('connecting');
-        try {
-          await invoke('start_agent', {
-            workdir: activeWs.path,
-            sessionId: activeConversationId || null,
-            assistantId: assistantItem.id === '__xiaof__' ? null : assistantItem.id,
-            projectDir: null,
-            apiKey: null,
-            extraArgs: null,
-          });
-          setStatus('ready');
-        } catch (e: any) {
-          setStatus('error');
-        }
-      }
-    } else if (type === 'workflow') {
-      setSelectedWorkflow(item as WorkflowRecord);
-    }
-  }, [activeWs, status, activeConversationId, setConversationAssistant, setStatus]);
-  const handleSend = async () => {
-    if (!canSend || !activeWs) return;
-    const content = value.trim();
+  const handleOpenWorkflow = useCallback((workflow: WorkflowRecord) => {
+    if (!ensureWorkspace()) return;
+    setSelectedWorkflow(workflow);
+  }, [ensureWorkspace]);
 
-    let convId = activeConversationId;
-    const isNewOrEmpty = !convId || messages.length === 0;
+  const handleRunWorkflow = useCallback(async (workflow: WorkflowRecord, inputs: Record<string, any>) => {
+    if (!ensureWorkspace() || !activeWorkspace) return;
 
-    if (selectedType === 'workflow' && selectedWorkflow) {
-      try {
-        setStatus('connecting');
-        if (!convId || isNewOrEmpty) {
-          const conv = await createConversation({ workspaceId: activeWorkspaceId!, title: selectedWorkflow.name });
-          convId = conv.id;
-          setActiveConversation(convId);
-        }
-
-        // 标记该对话为工作流对话
-        setConversationAssistant(convId, `workflow:${selectedWorkflow.id}`);
-
-        // 把初始 query 存入 workflowStore，供 WorkflowChatPanel 挂载时读取并执行
-        useWorkflowStore.getState().setPendingStartQuery(content);
-        useWorkflowStore.getState().setActiveExecutionThreadId(convId);
-
-        setValue('');
-        setStatus('ready');
-      } catch (e: any) {
-        setStatus('error');
-        setError(e.message || String(e));
-      }
-      return;
-    }
-
-    // 如果当前是没有消息的新对话，先进行创建（如果需要）并初始化 Agent
-    if (isNewOrEmpty) {
-      try {
-        setStatus('connecting');
-        if (!convId) {
-          const conv = await createConversation({ workspaceId: activeWorkspaceId!, title: '' });
-          convId = conv.id;
-          setActiveConversation(convId);
-        }
-        clearMessages();
-
-        // 🚀 Save the chosen assistant to the conversation map!
-        setConversationAssistant(convId, selectedAssistant.id);
-
-        // 启动 Agent 并绑定当前选择的助手
-        await invoke('start_agent', {
-          workdir: activeWs.path,
-          sessionId: convId,
-          assistantId: selectedAssistant.id === '__xiaof__' ? null : selectedAssistant.id,
-          projectDir: null,
-          apiKey: null,
-          extraArgs: null,
-        });
-        setStatus('ready');
-      } catch (e: any) {
-        setStatus('error');
-        console.error('Failed to start conversation:', e);
-        return;
-      }
-    }
-
-    const userUiId = `user-${uuidv4()}`;
-    const streamMsgId = uuidv4();
-    setValue('');
-    addUserMessage(userUiId, content);
+    setIsLaunchingWorkflow(true);
     try {
-      await invoke('send_message', {
-        sessionId: convId || null,
-        msgId: streamMsgId,
-        content
+      const conversation = await createConversation({
+        workspaceId: activeWorkspace.id,
+        title: workflow.name,
       });
-    } catch (e: any) {
-      console.error('send_message error:', e);
-      setError(e.message || String(e));
-    }
-  };
 
-  const handleStop = async () => {
-    try {
-      await invoke('stop_agent', { sessionId: activeConversationId || null });
-    } catch (e: any) {
-      console.error(e);
-      setError(e.message || String(e));
-    }
-  };
-
-  const handleKeyDown = (e: KeyboardEvent<HTMLTextAreaElement>) => {
-    if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleSend(); }
-  };
-
-  const handleModeChange = async (mode: string) => {
-    try {
-      await invoke('set_mode', { mode });
-      if (capabilities) setCapabilities({ ...capabilities, current_mode: mode });
-    } catch (e) { console.error(e); }
-  };
-
-  const currentMode = capabilities?.current_mode ?? 'default';
-  const activeOption = MODE_OPTIONS.find(o => o.value === currentMode) || MODE_OPTIONS[0];
-  const ActiveModeIcon = activeOption.icon;
-
-  const handleRetry = async () => {
-    if (!activeWorkspaceId || !activeWs) return;
-    setStatus('connecting');
-    try {
-      await invoke('start_agent', {
-        workdir: activeWs.path,
-        sessionId: activeConversationId || null,
-        assistantId: selectedAssistant.id === '__xiaof__' ? null : selectedAssistant.id,
-        projectDir: null,
-        apiKey: null,
-        extraArgs: null,
-      });
+      clearMessages();
+      setActiveConversation(conversation.id);
+      setConversationAssistant(conversation.id, `workflow:${workflow.id}`);
+      useWorkflowStore.getState().setPendingStartInput(inputs);
+      useWorkflowStore.getState().setPendingStartQuery(null);
+      useWorkflowStore.getState().setActiveExecutionThreadId(conversation.id);
+      setWorkdir(activeWorkspace.path);
       setStatus('ready');
-    } catch (e: any) {
+      setSelectedWorkflow(null);
+    } catch (error: any) {
       setStatus('error');
-      useAgentStore.getState().setError(String(e));
+      setError(error.message || String(error));
+    } finally {
+      setIsLaunchingWorkflow(false);
     }
-  };
+  }, [
+    activeWorkspace,
+    clearMessages,
+    createConversation,
+    ensureWorkspace,
+    setActiveConversation,
+    setConversationAssistant,
+    setError,
+    setStatus,
+    setWorkdir,
+  ]);
 
   return (
     <Box
       style={{
         flex: 1,
-        display: 'flex',
-        flexDirection: 'column',
-        alignItems: 'center',
-        justifyContent: 'center',
-        overflow: 'hidden',
         minWidth: 0,
-        padding: '24px 32px',
-        gap: 0,
+        overflow: 'auto',
+        padding: '36px 42px',
       }}
     >
-      {/* 欢迎语 */}
-      <WelcomeHeader t={t} />
+      <Stack gap={28} style={{ maxWidth: 1120, margin: '0 auto' }}>
+        <Group justify="space-between" align="flex-start" gap="xl">
+          <Stack gap={10} style={{ maxWidth: 680 }}>
+            <Group gap="xs">
+              <IconCompass size={22} color="var(--flock-accent)" />
+              <Text size="xs" fw={700} tt="uppercase" c="dimmed">
+                {t('home.explorer.eyebrow')}
+              </Text>
+            </Group>
+            <Title order={1} style={{ color: 'var(--flock-text-bright)', letterSpacing: '-0.04em' }}>
+              {t('home.explorer.title')}
+            </Title>
+            <Text size="sm" c="dimmed" style={{ lineHeight: 1.7 }}>
+              {t('home.explorer.subtitle')}
+            </Text>
+          </Stack>
 
-      {/* 助手选择器 */}
-      <Box mb={16} style={{ width: '100%', maxWidth: 680 }}>
-        <AssistantPicker
-          selectedType={selectedType}
-          selectedId={selectedType === 'assistant' ? selectedAssistant.id : (selectedWorkflow?.id ?? '')}
-          onSelect={handlePickerSelect}
-        />
-      </Box>
+          <Stack gap="xs" align="flex-end">
+            <Group gap="xs">
+              <WorkspacePicker onSelect={handleSelectWorkspace} />
+              <ActiveModelPicker />
+            </Group>
+            <Group gap={6}>
+              <IconFolder size={14} color="var(--flock-text-dim)" />
+              <Text size="xs" c={activeWorkspace ? 'dimmed' : 'red'}>
+                {activeWorkspace
+                  ? t('home.explorer.activeWorkspace', { name: activeWorkspace.name })
+                  : t('home.pleaseSelectWorkspace')}
+              </Text>
+            </Group>
+          </Stack>
+        </Group>
 
-      {/* 输入框卡片 */}
-      <InputCard
-        t={t}
-        textareaRef={textareaRef}
-        placeholder={placeholder}
-        value={value}
-        onChange={setValue}
-        onKeyDown={handleKeyDown}
-        disabled={!activeWorkspaceId || status === 'connecting'}
-        activeWorkspaceId={activeWorkspaceId}
-        status={status}
-        capabilities={capabilities}
-        currentMode={currentMode}
-        activeOption={activeOption}
-        modeOptions={MODE_OPTIONS}
-        onModeChange={handleModeChange}
-        isStreaming={isStreaming}
-        canSend={canSend}
-        onSend={handleSend}
-        onStop={handleStop}
+        <Box
+          style={{
+            padding: 18,
+            borderRadius: 22,
+            border: '1px solid var(--flock-border-subtle)',
+            background: 'linear-gradient(135deg, var(--flock-bg-raised), var(--flock-bg-surface))',
+          }}
+        >
+          <Group justify="space-between" align="center">
+            <Group gap="sm">
+              <Box
+                style={{
+                  width: 42,
+                  height: 42,
+                  borderRadius: 14,
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  color: 'var(--flock-accent)',
+                  background: 'var(--flock-accent-soft)',
+                }}
+              >
+                <IconMessageCircle size={20} />
+              </Box>
+              <Stack gap={2}>
+                <Text size="sm" fw={700}>{t('home.explorer.quickStartTitle')}</Text>
+                <Text size="xs" c="dimmed">{t('home.explorer.quickStartDesc')}</Text>
+              </Stack>
+            </Group>
+            <Button
+              variant="light"
+              color="blue"
+              leftSection={<IconSparkles size={15} />}
+              loading={launchingAssistantId === '__xiaof__' || status === 'connecting'}
+              onClick={() => handleStartAssistant(XIAOF_AGENT)}
+            >
+              {t('home.explorer.chatWithXiaof')}
+            </Button>
+          </Group>
+        </Box>
+
+        <Stack gap="md">
+          <Group justify="space-between">
+            <Group gap="xs">
+              <IconSparkles size={18} color="var(--flock-accent)" />
+              <Text size="md" fw={800}>{t('home.explorer.assistantsTitle')}</Text>
+            </Group>
+            <Text size="xs" c="dimmed">{t('home.explorer.assistantsHint')}</Text>
+          </Group>
+
+          <SimpleGrid cols={{ base: 1, sm: 2, lg: 3 }} spacing="md">
+            {featuredAssistants.map((assistant) => (
+              <ExplorerAppCard
+                key={assistant.id}
+                type="assistant"
+                name={assistant.name}
+                description={assistant.description}
+                icon={assistant.icon || '🤖'}
+                disabled={launchingAssistantId === assistant.id}
+                onClick={() => handleStartAssistant(assistant)}
+              />
+            ))}
+          </SimpleGrid>
+        </Stack>
+
+        <Stack gap="md">
+          <Group justify="space-between">
+            <Group gap="xs">
+              <IconRoute size={18} color="var(--flock-accent)" />
+              <Text size="md" fw={800}>{t('home.explorer.workflowsTitle')}</Text>
+            </Group>
+            <Text size="xs" c="dimmed">{t('home.explorer.workflowsHint')}</Text>
+          </Group>
+
+          {featuredWorkflows.length === 0 ? (
+            <Box
+              style={{
+                padding: 28,
+                borderRadius: 18,
+                border: '1px dashed var(--flock-border-dim)',
+                textAlign: 'center',
+                color: 'var(--flock-text-dim)',
+              }}
+            >
+              <Text size="sm" fw={600}>{t('home.explorer.emptyWorkflowsTitle')}</Text>
+              <Text size="xs" mt={6}>{t('home.explorer.emptyWorkflowsDesc')}</Text>
+            </Box>
+          ) : (
+            <SimpleGrid cols={{ base: 1, sm: 2, lg: 3 }} spacing="md">
+              {featuredWorkflows.map((workflow) => (
+                <ExplorerAppCard
+                  key={workflow.id}
+                  type="workflow"
+                  name={workflow.name}
+                  description={workflow.description}
+                  icon="⚡"
+                  onClick={() => handleOpenWorkflow(workflow)}
+                />
+              ))}
+            </SimpleGrid>
+          )}
+        </Stack>
+      </Stack>
+
+      <WorkflowLaunchModal
+        workflow={selectedWorkflow}
+        opened={!!selectedWorkflow}
+        activeWorkspaceName={activeWorkspace?.name}
+        isLaunching={isLaunchingWorkflow}
+        onClose={() => setSelectedWorkflow(null)}
         onSelectWorkspace={handleSelectWorkspace}
-      />
-
-      {/* 状态提示 */}
-      <StatusIndicator
-        t={t as any}
-        status={status}
-        selectedAssistant={selectedAssistant}
-        activeWs={activeWs}
-        activeWorkspaceId={activeWorkspaceId}
-        onRetry={handleRetry}
+        onRun={handleRunWorkflow}
       />
     </Box>
   );

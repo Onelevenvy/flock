@@ -71,6 +71,8 @@ interface WorkflowStore {
   environmentVariables: Record<string, EnvVar>;
   // 从主页跳转启动的待执行初始 Query
   pendingStartQuery: string | null;
+  // 从探索页跳转启动的完整 Start 入参
+  pendingStartInput: Record<string, any> | null;
 
   // ── 派生字段（向后兼容，从 activeExecutionThreadId 的 thread 取值） ──
   // 供 FlowCanvas/NodeDebugPanel 等直接读取调试面板状态
@@ -106,6 +108,7 @@ interface WorkflowStore {
   removeEnvironmentVariable: (key: string) => void;
   setEnvironmentVariables: (vars: Record<string, EnvVar>) => void;
   setPendingStartQuery: (q: string | null) => void;
+  setPendingStartInput: (input: Record<string, any> | null) => void;
 }
 
 /** 获取或初始化一个 thread 的执行状态 */
@@ -130,6 +133,7 @@ export const useWorkflowStore = create<WorkflowStore>()(
       debugResults: {},
       environmentVariables: {},
       pendingStartQuery: null,
+      pendingStartInput: null,
 
       // ── 派生计算属性（调试面板当前 thread 的状态） ──
       get executionMessages() {
@@ -150,6 +154,7 @@ export const useWorkflowStore = create<WorkflowStore>()(
 
       setActiveWorkflowId: (id) => set({ activeWorkflowId: id }),
       setPendingStartQuery: (q) => set({ pendingStartQuery: q }),
+      setPendingStartInput: (input) => set({ pendingStartInput: input }),
 
       setDebugResult: (nodeId, result) => set((s) => ({
         debugResults: { ...s.debugResults, [nodeId]: result }

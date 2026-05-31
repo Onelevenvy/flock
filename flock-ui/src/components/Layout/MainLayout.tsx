@@ -10,31 +10,20 @@ import { SchedulePage } from '../../pages/Schedule';
 import { WorkflowPage } from '../../pages/Workflow';
 import { useUiStore } from '../../store/uiStore';
 import { useWorkspaceStore } from '../../store/workspaceStore';
-import { useAgentStore } from '../../store/agentStore';
 import { usePetStore } from '../../store/petStore';
 import { IconBoxMultiple, IconLego } from '@tabler/icons-react';
 import { useTranslation } from 'react-i18next';
 import { XiaofSyncManager } from '../Pet/XiaofSyncManager';
 import { XiaofPet } from '../Pet/XiaofPet';
 
-function isWorkflowConversation(assistantId: string | undefined): boolean {
-  return !!assistantId?.startsWith('workflow:');
-}
-
 export function MainLayout() {
   const { t } = useTranslation();
   const { currentView } = useUiStore();
-  const { activeWorkspaceId, activeConversationId, conversationAssistants } = useWorkspaceStore();
+  const { activeWorkspaceId, activeConversationId } = useWorkspaceStore();
   const { mode } = usePetStore();
-  const messages = useAgentStore((s) => s.messages);
 
-  // 核心逻辑：在 home 视图下，满足以下任一条件则分发到「工作区视图」：
-  // 1. 助手对话：有 activeConversationId 且 agentStore 有消息
-  // 2. 工作流对话：有 activeConversationId 且对话类型为 workflow（不依赖 agentStore.messages）
-  const assistantId = activeConversationId ? conversationAssistants[activeConversationId] : undefined;
-  const isWorkflowConv = isWorkflowConversation(assistantId);
-  const showWorkspace = currentView === 'home' && !!activeWorkspaceId && !!activeConversationId
-    && (isWorkflowConv || messages.length > 0);
+  // Explorer 启动后直接进入工作区视图；Home 自身只负责发现和启动应用。
+  const showWorkspace = currentView === 'home' && !!activeWorkspaceId && !!activeConversationId;
 
   return (
     <Box
