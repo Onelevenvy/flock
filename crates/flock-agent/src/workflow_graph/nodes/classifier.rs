@@ -167,7 +167,11 @@ Assistant:
                         }
                     };
 
-                    ctx.sink.emit_text_delta(&node_id, &format!("意图分类结果: `{}`", final_matched_id));
+                    let display_name = categories.iter()
+                        .find(|c| c.id == final_matched_id)
+                        .map(|c| c.name.as_str())
+                        .unwrap_or("未知");
+                    ctx.sink.emit_text_delta(&node_id, &format!("意图分类结果: `{}`", display_name));
 
                     let mut outputs = state.node_outputs.clone();
                     if !outputs.is_object() {

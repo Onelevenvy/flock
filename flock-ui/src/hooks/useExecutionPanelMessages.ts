@@ -211,11 +211,19 @@ function buildRounds(
   groups.push(current);
 
   // 过滤掉完全空的首组（没有 userMsg 且没有 msgs）
-  const nonEmpty = groups.filter(g => g.userMsg || g.msgs.length > 0);
+  let nonEmpty = groups.filter(g => g.userMsg || g.msgs.length > 0);
+
+  // 如果工作流正在启动/运行中，但由于后端消息尚未送达使得轮次为空，
+  // 我们手动注入一个初始运行轮次，以此实现一点击发送就立刻展示加载栏的白白秒开体验
+  if (nonEmpty.length === 0 && status === 'running') {
+    nonEmpty = [{
+      msgs: []
+    }];
+  }
 
   return nonEmpty.map((g, i) => {
     // 给每轮单独构建 steps，传入 user msg 之后的那些消息
-    const roundSteps = buildSteps(
+    let roundSteps = buildSteps(
       g.msgs,
       // 最后一轮才用真实 status
       i === nonEmpty.length - 1 ? status : 'done',
@@ -224,6 +232,23 @@ function buildRounds(
       resolvedChoiceRef,
       nodes,
     );
+
+    // 刚点击人工发送的启动过渡期，如果当前步骤列表为空，注入一个转圈圈的虚拟步骤，避免空白屏
+    if (i === nonEmpty.length - 1 && status === 'running' && roundSteps.length === 0) {
+      roundSteps = [{
+        id: 'workflow-starting-virtual-step',
+        nodeId: 'starting',
+        nodeType: 'start',
+        displayName: '正在启动工作流...',
+        status: 'running',
+        outputText: '',
+        thinkingText: '',
+        startTs: Date.now(),
+        isInterrupt: false,
+        interruptResolved: false,
+      }];
+    }
+
     return {
       index: i,
       userText: g.userMsg?.content,
