@@ -1,5 +1,5 @@
 import { useMemo, useEffect, useRef } from 'react';
-import { ExecutionMessage, WorkflowStep, InterruptData, HumanAction } from '../pages/Workflow/components/ExecutionPanel/types';
+import { ExecutionMessage, WorkflowStep, InterruptData, HumanAction } from '@/pages/Workflow/components/ExecutionPanel/types';
 import { nodeConfig } from '../pages/Workflow/nodeConfig';
 import type { Node } from 'reactflow';
 
@@ -114,6 +114,13 @@ function buildSteps(
       const rawNodeId = msg.nodeId ?? 'assistant';
       let idx = nodeStepIndex[rawNodeId];
       if (idx === undefined) {
+        // 当全新的节点开始生成输出时，说明上一个处于 running 状态的节点已流转完毕，将其标记为 done
+        for (let i = 0; i < result.length; i++) {
+          if (result[i].status === 'running') {
+            result[i] = { ...result[i], status: 'done' };
+          }
+        }
+
         const { displayName, nodeType } = resolveNodeDisplayName(rawNodeId, nodes);
         const step: WorkflowStep = {
           id: `step-${rawNodeId}`,
