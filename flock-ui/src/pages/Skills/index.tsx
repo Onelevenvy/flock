@@ -1,5 +1,6 @@
-import { Box, Tabs, Text, Group, ThemeIcon, Divider } from '@mantine/core';
-import { IconBolt, IconTool, IconSparkles, IconPlug } from '@tabler/icons-react';
+import { useState } from 'react';
+import { Box, SegmentedControl, Text, Group, ThemeIcon, Divider } from '@mantine/core';
+import { IconBolt } from '@tabler/icons-react';
 import { useTranslation } from 'react-i18next';
 import { ToolsTab } from './ToolsTab';
 import { McpTab } from './McpTab';
@@ -7,6 +8,7 @@ import { SkillsTab } from './SkillsTab';
 
 export function SkillsPage() {
   const { t } = useTranslation();
+  const [activeTab, setActiveTab] = useState<'tools' | 'mcp' | 'skills'>('tools');
 
   return (
     <Box
@@ -38,35 +40,37 @@ export function SkillsPage() {
             </Text>
           </Box>
         </Group>
+
+        <SegmentedControl
+          value={activeTab}
+          onChange={(val) => setActiveTab(val as any)}
+          data={[
+            { value: 'tools', label: t('skills.tabTools') },
+            { value: 'mcp', label: t('skills.tabMcp') },
+            { value: 'skills', label: t('skills.tabSkills') },
+          ]}
+          size="xs"
+          styles={{
+            root: {
+              background: 'var(--flock-bg-surface)',
+              border: '1px solid var(--flock-border-dim)',
+              padding: 2,
+              borderRadius: 8,
+            },
+            control: {
+              minWidth: 90,
+            }
+          }}
+        />
       </Group>
 
       <Divider color="var(--flock-border-subtle)" />
 
-      <Tabs defaultValue="tools" px="xl" pt="md" style={{ flex: 1, display: 'flex', flexDirection: 'column', minHeight: 0 }}>
-        <Tabs.List>
-          <Tabs.Tab value="tools" leftSection={<IconTool size={14} />}>
-            {t('skills.tabTools')}
-          </Tabs.Tab>
-          <Tabs.Tab value="mcp" leftSection={<IconPlug size={14} />}>
-            {t('skills.tabMcp')}
-          </Tabs.Tab>
-          <Tabs.Tab value="skills" leftSection={<IconSparkles size={14} />}>
-            {t('skills.tabSkills')}
-          </Tabs.Tab>
-        </Tabs.List>
-
-        <Box style={{ flex: 1, overflow: 'hidden', minHeight: 0 }} pt="md" pb="md">
-          <Tabs.Panel value="tools" style={{ height: '100%' }}>
-            <ToolsTab />
-          </Tabs.Panel>
-          <Tabs.Panel value="mcp" style={{ height: '100%' }}>
-            <McpTab />
-          </Tabs.Panel>
-          <Tabs.Panel value="skills" style={{ height: '100%' }}>
-            <SkillsTab />
-          </Tabs.Panel>
-        </Box>
-      </Tabs>
+      <Box style={{ flex: 1, overflow: 'hidden', minHeight: 0 }} px="xl" pt="md" pb="md">
+        {activeTab === 'tools' && <ToolsTab />}
+        {activeTab === 'mcp' && <McpTab />}
+        {activeTab === 'skills' && <SkillsTab />}
+      </Box>
     </Box>
   );
 }
