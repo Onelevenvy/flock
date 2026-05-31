@@ -1,5 +1,5 @@
 import { useCallback, useMemo, useState } from 'react';
-import { Box, Button, Group, SimpleGrid, Stack, Text, Title } from '@mantine/core';
+import { Box, Button, Group, SegmentedControl, SimpleGrid, Stack, Text, Title } from '@mantine/core';
 import { notifications } from '@mantine/notifications';
 import { IconCompass, IconFolder, IconMessageCircle, IconRoute, IconSparkles } from '@tabler/icons-react';
 import { invoke } from '@tauri-apps/api/core';
@@ -18,6 +18,7 @@ import { ExplorerAppCard } from './components/ExplorerAppCard';
 
 export function HomeView() {
   const { t } = useTranslation();
+  const [filter, setFilter] = useState<'all' | 'assistants' | 'workflows'>('all');
   const [launchingAssistantId, setLaunchingAssistantId] = useState<string | null>(null);
   const [launchingWorkflowId, setLaunchingWorkflowId] = useState<string | null>(null);
 
@@ -187,109 +188,138 @@ export function HomeView() {
           </Stack>
         </Group>
 
-        <Box
-          style={{
-            padding: 18,
-            borderRadius: 22,
-            border: '1px solid var(--flock-border-subtle)',
-            background: 'linear-gradient(135deg, var(--flock-bg-raised), var(--flock-bg-surface))',
-          }}
-        >
-          <Group justify="space-between" align="center">
-            <Group gap="sm">
-              <Box
-                style={{
-                  width: 42,
-                  height: 42,
-                  borderRadius: 14,
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  color: 'var(--flock-accent)',
-                  background: 'var(--flock-accent-soft)',
-                }}
+        <Group justify="flex-start">
+          <SegmentedControl
+            value={filter}
+            onChange={(val) => setFilter(val as any)}
+            data={[
+              { value: 'all', label: t('home.explorer.filterAll') },
+              { value: 'assistants', label: t('home.explorer.filterAssistants') },
+              { value: 'workflows', label: t('home.explorer.filterWorkflows') },
+            ]}
+            styles={{
+              root: {
+                background: 'var(--flock-bg-raised)',
+                border: '1px solid var(--flock-border-subtle)',
+                padding: 4,
+                borderRadius: 12,
+              },
+              control: {
+                minWidth: 110,
+              }
+            }}
+          />
+        </Group>
+
+        {(filter === 'all' || filter === 'assistants') && (
+          <Box
+            style={{
+              padding: 18,
+              borderRadius: 22,
+              border: '1px solid var(--flock-border-subtle)',
+              background: 'linear-gradient(135deg, var(--flock-bg-raised), var(--flock-bg-surface))',
+            }}
+          >
+            <Group justify="space-between" align="center">
+              <Group gap="sm">
+                <Box
+                  style={{
+                    width: 42,
+                    height: 42,
+                    borderRadius: 14,
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    color: 'var(--flock-accent)',
+                    background: 'var(--flock-accent-soft)',
+                  }}
+                >
+                  <IconMessageCircle size={20} />
+                </Box>
+                <Stack gap={2}>
+                  <Text size="sm" fw={700}>{t('home.explorer.quickStartTitle')}</Text>
+                  <Text size="xs" c="dimmed">{t('home.explorer.quickStartDesc')}</Text>
+                </Stack>
+              </Group>
+              <Button
+                variant="light"
+                color="blue"
+                leftSection={<IconSparkles size={15} />}
+                loading={launchingAssistantId === '__xiaof__' || status === 'connecting'}
+                onClick={() => handleStartAssistant(XIAOF_AGENT)}
               >
-                <IconMessageCircle size={20} />
-              </Box>
-              <Stack gap={2}>
-                <Text size="sm" fw={700}>{t('home.explorer.quickStartTitle')}</Text>
-                <Text size="xs" c="dimmed">{t('home.explorer.quickStartDesc')}</Text>
-              </Stack>
+                {t('home.explorer.chatWithXiaof')}
+              </Button>
             </Group>
-            <Button
-              variant="light"
-              color="blue"
-              leftSection={<IconSparkles size={15} />}
-              loading={launchingAssistantId === '__xiaof__' || status === 'connecting'}
-              onClick={() => handleStartAssistant(XIAOF_AGENT)}
-            >
-              {t('home.explorer.chatWithXiaof')}
-            </Button>
-          </Group>
-        </Box>
+          </Box>
+        )}
 
-        <Stack gap="md">
-          <Group justify="space-between">
-            <Group gap="xs">
-              <IconSparkles size={18} color="var(--flock-accent)" />
-              <Text size="md" fw={800}>{t('home.explorer.assistantsTitle')}</Text>
+        {(filter === 'all' || filter === 'assistants') && (
+          <Stack gap="md">
+            <Group justify="space-between">
+              <Group gap="xs">
+                <IconSparkles size={18} color="var(--flock-accent)" />
+                <Text size="md" fw={800}>{t('home.explorer.assistantsTitle')}</Text>
+              </Group>
+              <Text size="xs" c="dimmed">{t('home.explorer.assistantsHint')}</Text>
             </Group>
-            <Text size="xs" c="dimmed">{t('home.explorer.assistantsHint')}</Text>
-          </Group>
 
-          <SimpleGrid cols={{ base: 1, sm: 2, lg: 3 }} spacing="md">
-            {featuredAssistants.map((assistant) => (
-              <ExplorerAppCard
-                key={assistant.id}
-                type="assistant"
-                name={assistant.name}
-                description={assistant.description}
-                icon={assistant.icon || '🤖'}
-                disabled={launchingAssistantId === assistant.id}
-                onClick={() => handleStartAssistant(assistant)}
-              />
-            ))}
-          </SimpleGrid>
-        </Stack>
-
-        <Stack gap="md">
-          <Group justify="space-between">
-            <Group gap="xs">
-              <IconRoute size={18} color="var(--flock-accent)" />
-              <Text size="md" fw={800}>{t('home.explorer.workflowsTitle')}</Text>
-            </Group>
-            <Text size="xs" c="dimmed">{t('home.explorer.workflowsHint')}</Text>
-          </Group>
-
-          {featuredWorkflows.length === 0 ? (
-            <Box
-              style={{
-                padding: 28,
-                borderRadius: 18,
-                border: '1px dashed var(--flock-border-dim)',
-                textAlign: 'center',
-                color: 'var(--flock-text-dim)',
-              }}
-            >
-              <Text size="sm" fw={600}>{t('home.explorer.emptyWorkflowsTitle')}</Text>
-              <Text size="xs" mt={6}>{t('home.explorer.emptyWorkflowsDesc')}</Text>
-            </Box>
-          ) : (
             <SimpleGrid cols={{ base: 1, sm: 2, lg: 3 }} spacing="md">
-              {featuredWorkflows.map((workflow) => (
+              {featuredAssistants.map((assistant) => (
                 <ExplorerAppCard
-                  key={workflow.id}
-                  type="workflow"
-                  name={workflow.name}
-                  description={workflow.description}
-                  icon="⚡"
-                  disabled={launchingWorkflowId === workflow.id}
-                  onClick={() => handleStartWorkflow(workflow)}
+                  key={assistant.id}
+                  type="assistant"
+                  name={assistant.name}
+                  description={assistant.description}
+                  icon={assistant.icon || '🤖'}
+                  disabled={launchingAssistantId === assistant.id}
+                  onClick={() => handleStartAssistant(assistant)}
                 />
               ))}
             </SimpleGrid>
-          )}
-        </Stack>
+          </Stack>
+        )}
+
+        {(filter === 'all' || filter === 'workflows') && (
+          <Stack gap="md">
+            <Group justify="space-between">
+              <Group gap="xs">
+                <IconRoute size={18} color="var(--flock-accent)" />
+                <Text size="md" fw={800}>{t('home.explorer.workflowsTitle')}</Text>
+              </Group>
+              <Text size="xs" c="dimmed">{t('home.explorer.workflowsHint')}</Text>
+            </Group>
+
+            {featuredWorkflows.length === 0 ? (
+              <Box
+                style={{
+                  padding: 28,
+                  borderRadius: 18,
+                  border: '1px dashed var(--flock-border-dim)',
+                  textAlign: 'center',
+                  color: 'var(--flock-text-dim)',
+                }}
+              >
+                <Text size="sm" fw={600}>{t('home.explorer.emptyWorkflowsTitle')}</Text>
+                <Text size="xs" mt={6}>{t('home.explorer.emptyWorkflowsDesc')}</Text>
+              </Box>
+            ) : (
+              <SimpleGrid cols={{ base: 1, sm: 2, lg: 3 }} spacing="md">
+                {featuredWorkflows.map((workflow) => (
+                  <ExplorerAppCard
+                    key={workflow.id}
+                    type="workflow"
+                    name={workflow.name}
+                    description={workflow.description}
+                    icon="⚡"
+                    disabled={launchingWorkflowId === workflow.id}
+                    onClick={() => handleStartWorkflow(workflow)}
+                  />
+                ))}
+              </SimpleGrid>
+            )}
+          </Stack>
+        )}
       </Stack>
     </Box>
   );
