@@ -56,21 +56,53 @@ pub fn make_classifier_node(
                         return Err("Classifier node requires categories".to_string());
                     }
 
-                    let categories_desc = categories.iter()
-                        .map(|c| format!("- {} (name: {})", c.id, c.name))
+                    let categories_names = categories.iter()
+                        .map(|c| format!("\"{}\"", c.name))
                         .collect::<Vec<_>>()
-                        .join("\n");
+                        .join(", ");
 
-                    let sys_prompt = format!(
-                        "You are a classification assistant. Your task is to classify the user's input into exactly one of the following categories.\n\
-                         Respond with ONLY the exact category_id of the matching category, and nothing else. Do NOT include any code blocks, markdown, quotes, punctuation or extra text.\n\n\
-                         Categories:\n{}",
-                        categories_desc
+                    let sys_prompt = r#"### Job Description
+You are a text classification engine that analyzes text data and assigns categories based on user input.
+
+### Task
+Your task is to assign exactly ONE category from the provided categories list to the input text. Additionally, you need to extract the key words from the text that are related to the classification.
+
+### Constraint
+You MUST respond with a valid JSON object only. Do NOT include any markdown, code blocks (such as ```json), HTML tags, or extra text outside the JSON.
+
+### Format
+Output format must be a JSON object like:
+{
+  "keywords": ["keyword1", "keyword2"],
+  "category_name": "selected_category_name"
+}
+
+### Example
+User:
+{
+  "input_text": "I recently had a great experience with your company. The service was prompt and the staff was very friendly.",
+  "categories": ["Customer Service", "Satisfaction", "Sales", "Product"]
+}
+Assistant:
+{
+  "keywords": ["recently", "great experience", "service", "prompt", "friendly"],
+  "category_name": "Customer Service"
+}"#.to_string();
+
+                    let user_prompt = format!(
+                        "### Input\n\
+                         input_text: \"{}\"\n\
+                         categories: [{}]\n\n\
+                         ### Assistant Output\n\
+                         Please classify the above input_text into exactly one of the listed categories.\n\
+                         Return the JSON object only.",
+                        input_val,
+                        categories_names
                     );
 
                     let messages = vec![
                         LgMessage::system(sys_prompt),
-                        LgMessage::human(input_val),
+                        LgMessage::human(user_prompt),
                     ];
 
                     let model = resolve_model(&node_data, &ctx);
@@ -86,11 +118,53 @@ pub fn make_classifier_node(
                         }
                     }
 
-                    let matched_id = assistant_text.trim().trim_matches('"').trim_matches('\'').trim().to_string();
-                    let final_matched_id = if categories.iter().any(|c| c.id == matched_id) {
-                        matched_id
+                    let assistant_text_trimmed = assistant_text.trim();
+                    let mut matched_name = String::new();
+
+                    // 1. Try to parse JSON output
+                    let parsed_json: Option<serde_json::Value> = serde_json::from_str(assistant_text_trimmed)
+                        .ok()
+                        .or_else(|| {
+                            // Fallback cleanup if model wraps output in markdown code blocks
+                            let clean_text = assistant_text_trimmed
+                                .trim_start_matches("```json")
+                                .trim_start_matches("```")
+                                .trim_end_matches("```")
+                                .trim();
+                            serde_json::from_str(clean_text).ok()
+                        });
+
+                    if let Some(json_val) = parsed_json {
+                        if let Some(cat_name) = json_val.get("category_name").and_then(|v| v.as_str()) {
+                            matched_name = cat_name.trim().to_string();
+                        }
+                    }
+
+                    // 2. Perform robust matching to find the category ID
+                    let final_matched_id = if !matched_name.is_empty() {
+                        if let Some(found_cat) = categories.iter().find(|c| c.name.eq_ignore_ascii_case(&matched_name)) {
+                            found_cat.id.clone()
+                        } else if let Some(found_cat) = categories.iter().find(|c| {
+                            c.name.to_lowercase().contains(&matched_name.to_lowercase()) || 
+                            matched_name.to_lowercase().contains(&c.name.to_lowercase())
+                        }) {
+                            found_cat.id.clone()
+                        } else {
+                            categories.iter()
+                                .find(|c| c.id == "others_category")
+                                .map(|c| c.id.clone())
+                                .unwrap_or_else(|| categories.last().map(|c| c.id.clone()).unwrap_or_default())
+                        }
                     } else {
-                        categories.last().map(|c| c.id.clone()).unwrap_or_default()
+                        // Fallback: search for category names directly in raw output text
+                        if let Some(found_cat) = categories.iter().find(|c| assistant_text.contains(&c.name)) {
+                            found_cat.id.clone()
+                        } else {
+                            categories.iter()
+                                .find(|c| c.id == "others_category")
+                                .map(|c| c.id.clone())
+                                .unwrap_or_else(|| categories.last().map(|c| c.id.clone()).unwrap_or_default())
+                        }
                     };
 
                     ctx.sink.emit_text_delta(&node_id, &format!("意图分类结果: `{}`", final_matched_id));
