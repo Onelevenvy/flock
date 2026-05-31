@@ -8,11 +8,13 @@ import {
   Divider,
   Modal,
   Button,
+  Menu,
 } from '@mantine/core';
 import {
   IconRoute,
   IconEdit,
   IconTrash,
+  IconDotsVertical,
   IconCalendar,
   IconBolt,
   IconArrowsShuffle,
@@ -71,30 +73,39 @@ export function WorkflowCard({ workflow, onOpen }: WorkflowCardProps) {
           >
             <IconRoute size={22} style={{ color: 'var(--flock-accent)' }} />
           </ThemeIcon>
-          <Group gap={4}>
-            <ActionIcon
-              size="sm"
-              variant="subtle"
-              color="blue"
-              onClick={(e) => {
-                e.stopPropagation();
-                onOpen();
-              }}
-            >
-              <IconEdit size={13} />
-            </ActionIcon>
-            <ActionIcon
-              size="sm"
-              variant="subtle"
-              color="red"
-              onClick={(e) => {
-                e.stopPropagation();
-                setDeleteConfirm(true);
-              }}
-            >
-              <IconTrash size={13} />
-            </ActionIcon>
-          </Group>
+          <Menu shadow="md" position="bottom-end" withinPortal>
+            <Menu.Target>
+              <ActionIcon
+                size="sm"
+                variant="subtle"
+                color="gray"
+                onClick={(e) => e.stopPropagation()}
+              >
+                <IconDotsVertical size={14} />
+              </ActionIcon>
+            </Menu.Target>
+            <Menu.Dropdown>
+              <Menu.Item
+                leftSection={<IconEdit size={14} />}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onOpen();
+                }}
+              >
+                {t('common.edit')}
+              </Menu.Item>
+              <Menu.Item
+                leftSection={<IconTrash size={14} />}
+                color="red"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setDeleteConfirm(true);
+                }}
+              >
+                {t('common.delete')}
+              </Menu.Item>
+            </Menu.Dropdown>
+          </Menu>
         </Group>
 
         {/* Name */}

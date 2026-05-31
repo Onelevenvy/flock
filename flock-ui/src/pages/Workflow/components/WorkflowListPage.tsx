@@ -33,7 +33,7 @@ export function WorkflowListPage({ onOpenEditor }: WorkflowListPageProps) {
         flexDirection: 'column',
         overflow: 'hidden',
         minWidth: 0,
-        background: 'var(--flock-bg-base)',
+        background: 'var(--flock-bg-surface)',
         borderRadius: 16,
         border: '1px solid var(--flock-border-subtle)',
         position: 'relative',
