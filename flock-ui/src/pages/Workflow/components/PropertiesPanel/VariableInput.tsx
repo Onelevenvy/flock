@@ -14,7 +14,7 @@ import {
 import { IconBolt } from '@tabler/icons-react';
 import { useTranslation } from 'react-i18next';
 import { useWorkflowStore } from '@/store/workflowStore';
-import { getAvailableVariables } from './helper';
+import { getAvailableVariables, parseVariableTemplate, resolveVariableDetails } from './helper';
 
 // --- HTML/Plain text conversion helpers ---
 function htmlToPlain(html: string): string {
@@ -44,38 +44,25 @@ function htmlToPlain(html: string): string {
 }
 
 function plainToHtml(text: string, variablesList: any[]): string {
-  // Safe HTML escape
-  let html = text
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/\n/g, '<br/>');
-  
-  const regex = /\$\{[^}]+\}/g;
-  html = html.replace(regex, (match) => {
-    const matchedVar = variablesList.find(v => v.value === match);
-    const varPath = match.substring(2, match.length - 1);
-    const varName = varPath.split('.')[1] || varPath;
-    
-    // Resolve node group name
-    let groupName = 'Start';
-    if (match.startsWith('${sys.')) {
-      groupName = 'SYSTEM';
-    } else if (matchedVar) {
-      groupName = matchedVar.nodeName;
+  const segments = parseVariableTemplate(text, variablesList);
+  return segments.map(seg => {
+    if (seg.type === 'variable') {
+      const match = seg.content;
+      const matchedVar = seg.variable;
+      const { varName, groupName, bgColor, borderColor, textColor, icon } = resolveVariableDetails(match, matchedVar);
+      
+      return `<span class="variable-tag" contenteditable="false" data-val="${match}" style="display: inline-flex; align-items: center; background: ${bgColor}; border: 1px solid ${borderColor}; color: ${textColor}; border-radius: 4px; padding: 1px 6px; font-size: 11px; font-weight: 500; margin: 0 2px; user-select: none; font-family: system-ui; vertical-align: middle;">${icon} ${groupName} / (x) ${varName}</span>`;
+    } else {
+      return seg.content
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/\n/g, '<br/>');
     }
-    
-    const isInvalid = !matchedVar && !match.startsWith('${sys.');
-    const bgColor = isInvalid ? 'var(--mantine-color-red-light, #fff0f0)' : 'var(--mantine-color-blue-light, #e8f4fd)';
-    const borderColor = isInvalid ? 'var(--mantine-color-red-outline, #ffa8a8)' : 'var(--mantine-color-blue-outline, #cbe4fb)';
-    const textColor = isInvalid ? 'var(--mantine-color-red-filled, #fa5252)' : 'var(--mantine-color-blue-filled, #155aef)';
-    const icon = isInvalid ? '⚠️' : '🏠';
-    
-    return `<span class="variable-tag" contenteditable="false" data-val="${match}" style="display: inline-flex; align-items: center; background: ${bgColor}; border: 1px solid ${borderColor}; color: ${textColor}; border-radius: 4px; padding: 1px 6px; font-size: 11px; font-weight: 500; margin: 0 2px; user-select: none; font-family: system-ui; vertical-align: middle;">${icon} ${groupName} / (x) ${varName}</span>`;
-  });
-  
-  return html;
+  }).join('');
 }
+
+
 
 // --- Premium Shared Contenteditable Prompt Editor ---
 interface VariablePromptEditorProps {

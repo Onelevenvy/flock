@@ -179,3 +179,69 @@ export function getAvailableVariables(
 
   return vars;
 }
+
+export interface TextSegment {
+  type: 'text' | 'variable';
+  content: string;
+  variable?: VariableOption;
+}
+
+export function parseVariableTemplate(text: string, variablesList: VariableOption[]): TextSegment[] {
+  if (!text) return [];
+  const regex = /(\$\{[^}]+\})/g;
+  const parts = text.split(regex);
+  return parts.map((part) => {
+    if (part.match(/^\$\{[^}]+\}$/)) {
+      const matchedVar = variablesList.find((v) => v.value === part);
+      return {
+        type: 'variable',
+        content: part,
+        variable: matchedVar,
+      };
+    }
+    return {
+      type: 'text',
+      content: part,
+    };
+  });
+}
+
+export interface VariableDetails {
+  varName: string;
+  groupName: string;
+  isInvalid: boolean;
+  bgColor: string;
+  borderColor: string;
+  textColor: string;
+  icon: string;
+}
+
+export function resolveVariableDetails(match: string, matchedVar?: VariableOption): VariableDetails {
+  const varPath = match.substring(2, match.length - 1);
+  const varName = varPath.split('.')[1] || varPath;
+  
+  let groupName = 'Start';
+  if (match.startsWith('${sys.')) {
+    groupName = 'SYSTEM';
+  } else if (matchedVar) {
+    groupName = matchedVar.nodeName;
+  }
+  
+  const isInvalid = !matchedVar && !match.startsWith('${sys.');
+  const bgColor = isInvalid ? 'var(--mantine-color-red-light, #fff0f0)' : 'var(--mantine-color-blue-light, #e8f4fd)';
+  const borderColor = isInvalid ? 'var(--mantine-color-red-outline, #ffa8a8)' : 'var(--mantine-color-blue-outline, #cbe4fb)';
+  const textColor = isInvalid ? 'var(--mantine-color-red-filled, #fa5252)' : 'var(--mantine-color-blue-filled, #155aef)';
+  const icon = isInvalid ? '⚠️' : '🏠';
+
+  return {
+    varName,
+    groupName,
+    isInvalid,
+    bgColor,
+    borderColor,
+    textColor,
+    icon,
+  };
+}
+
+
