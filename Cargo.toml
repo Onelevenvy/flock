@@ -5,6 +5,7 @@ members = [
     "crates/flock-tools",
     "crates/flock-skills",
     "crates/flock-agent",
+    "crates/flock-workflow",
     "flock-ui/src-tauri",
     "workspace-hack",
 ]
@@ -26,6 +27,7 @@ flock-core      = { path = "crates/flock-core" }
 flock-tools     = { path = "crates/flock-tools" }
 flock-skills    = { path = "crates/flock-skills" }
 flock-agent     = { path = "crates/flock-agent" }
+flock-workflow  = { path = "crates/flock-workflow" }
 
 # LangGraph (github path to Rust reimplementation)
 langgraph                    = { git = "https://github.com/Onelevenvy/langgraph-rust" }
