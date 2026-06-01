@@ -1383,6 +1383,7 @@ version = "0.2.0"
 dependencies = [
  "chrono",
  "flock-core",
+ "flock-skills",
  "flock-tools",
  "langgraph",
  "langgraph-checkpoint",
@@ -1393,6 +1394,7 @@ dependencies = [
  "regex",
  "serde",
  "serde_json",
+ "sqlx",
  "tokio",
  "tokio-stream",
  "workspace-hack",

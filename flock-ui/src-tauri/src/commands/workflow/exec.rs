@@ -252,54 +252,8 @@ pub async fn run_workflow(
         }
     };
 
-    let thread_id_val = thread_id.unwrap_or_else(|| workflow_id.clone());
-
-    // 6. 实例化 Sink & Context
-    let accumulated_text = Arc::new(Mutex::new(String::new()));
-    let accumulated_thinking = Arc::new(Mutex::new(String::new()));
-
-    let sink = Arc::new(TauriWorkflowSink {
-        app: app.clone(),
-        workflow_id: workflow_id.clone(),
-        thread_id: thread_id_val.clone(),
-        accumulated_text: accumulated_text.clone(),
-        accumulated_thinking: accumulated_thinking.clone(),
-    });
-    let tools = Arc::new(all_tools().registry);
-
-    // Extract env_vars from workflow config metadata
-    let env_vars: HashMap<String, JsonValue> = wf_record.config
-        .get("metadata")
-        .and_then(|m| m.get("env_vars"))
-        .and_then(|v| serde_json::from_value(v.clone()).ok())
-        .unwrap_or_default();
-
-    let approval_manager = agent_state.lock().await.approval_manager.clone();
-
-    let ctx = Arc::new(WorkflowNodeContext {
-        provider: provider.clone(),
-        model_factory,
-        tools,
-        db: db.inner().clone(),
-        sink: sink.clone(),
-        debug_mode: true,
-        env_vars,
-        workflow_id: workflow_id.clone(),
-        approval_manager,
-    });
-
-    // 6. 构建 Graph
-    let graph = build_workflow_graph(&wf_record.config, ctx, checkpointer)
-        .map_err(|e| e.to_string())?;
-
-    // 7. 配置 thread_id
-    let mut config = RunnableConfig::default();
-    config.insert(
-        "configurable".to_string(),
-        serde_json::json!({ "thread_id": thread_id_val }),
-    );
-
     // 自动为工作流切换至当前激活工作空间的 working directory，解决不能选择工作空间的问题
+    let thread_id_val = thread_id.unwrap_or_else(|| workflow_id.clone());
     let mut final_workdir: Option<std::path::PathBuf> = None;
     let row = sqlx::query("SELECT workspace_id, cwd FROM session_metadata WHERE thread_id = ?1")
         .bind(&thread_id_val)
@@ -343,6 +297,88 @@ pub async fn run_workflow(
             log::info!("Successfully set current dir and initialized debug/session workspace to {:?}", workdir);
         }
     }
+
+    // 6. 实例化 Sink & Context
+    let accumulated_text = Arc::new(Mutex::new(String::new()));
+    let accumulated_thinking = Arc::new(Mutex::new(String::new()));
+
+    let sink = Arc::new(TauriWorkflowSink {
+        app: app.clone(),
+        workflow_id: workflow_id.clone(),
+        thread_id: thread_id_val.clone(),
+        accumulated_text: accumulated_text.clone(),
+        accumulated_thinking: accumulated_thinking.clone(),
+    });
+
+    // 动态加载所有 skills 并注册 SkillTool 供工作流使用
+    let mut raw_paths: Vec<std::path::PathBuf> = Vec::new();
+    if let Ok(rows) = sqlx::query("SELECT path FROM imported_skill")
+        .fetch_all(db.pool())
+        .await
+    {
+        for row in rows {
+            if let Ok(path_str) = row.try_get::<String, _>("path") {
+                raw_paths.push(std::path::PathBuf::from(path_str));
+            }
+        }
+    }
+
+    let extra_dirs: Vec<String> = db
+        .get_config("extra_skill_dirs")
+        .await
+        .unwrap_or_default();
+    for d in extra_dirs {
+        raw_paths.push(std::path::PathBuf::from(d));
+    }
+
+    let skills = flock_skills::loader::load_all_skills(&workdir, &[], false, None, &raw_paths).await;
+    let mut tools_reg = all_tools().registry;
+    if !skills.is_empty() {
+        let checker = flock_skills::permissions::SkillPermissionChecker::new(
+            config.tools.skills.deny.clone(),
+            config.tools.skills.allow.clone(),
+            config.tools.auto_approve,
+        );
+        let skill_tool = flock_agent::tools::skill::SkillTool::new(
+            std::sync::Arc::new(skills),
+            workdir.to_string_lossy().to_string(),
+            checker,
+        );
+        tools_reg.register(Box::new(skill_tool));
+    }
+    let tools = Arc::new(tools_reg);
+
+    // Extract env_vars from workflow config metadata
+    let env_vars: HashMap<String, JsonValue> = wf_record.config
+        .get("metadata")
+        .and_then(|m| m.get("env_vars"))
+        .and_then(|v| serde_json::from_value(v.clone()).ok())
+        .unwrap_or_default();
+
+    let approval_manager = agent_state.lock().await.approval_manager.clone();
+
+    let ctx = Arc::new(WorkflowNodeContext {
+        provider: provider.clone(),
+        model_factory,
+        tools,
+        db: db.inner().clone(),
+        sink: sink.clone(),
+        debug_mode: true,
+        env_vars,
+        workflow_id: workflow_id.clone(),
+        approval_manager,
+    });
+
+    // 6. 构建 Graph
+    let graph = build_workflow_graph(&wf_record.config, ctx.clone(), checkpointer)
+        .map_err(|e| e.to_string())?;
+
+    // 7. 配置 thread_id
+    let mut config = RunnableConfig::default();
+    config.insert(
+        "configurable".to_string(),
+        serde_json::json!({ "thread_id": thread_id_val }),
+    );
 
     // 8. 决定初始输入（是全新启动还是 resume）
     let mut input_msg = String::new();

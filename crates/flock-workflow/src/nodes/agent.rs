@@ -35,13 +35,70 @@ pub fn make_agent_workflow_node(
                     let sys_template = node_data.get("systemMessage").and_then(|v| v.as_str()).unwrap_or("");
                     let user_template = node_data.get("userMessage").and_then(|v| v.as_str()).unwrap_or("");
 
-                    let sys_prompt = interpolate_string_with_context(sys_template, &state, &ctx, &ctx.workflow_id);
+                    let mut sys_prompt = interpolate_string_with_context(sys_template, &state, &ctx, &ctx.workflow_id);
                     let user_prompt = interpolate_string_with_context(user_template, &state, &ctx, &ctx.workflow_id);
 
                     let tool_names: Vec<String> = node_data.get("tools")
                         .and_then(|v| v.as_array())
                         .map(|arr| arr.iter().filter_map(|t| t.as_str().map(|s| s.to_string())).collect())
                         .unwrap_or_default();
+
+                    // If 'Skill' tool is enabled, dynamically load all skills and inject them to system prompt
+                    if tool_names.contains(&"Skill".to_string()) {
+                        let cwd = std::env::current_dir().unwrap_or_default();
+                        let mut raw_paths = Vec::new();
+
+                        // Query imported skills from database
+                        if let Ok(rows) = sqlx::query("SELECT path FROM imported_skill")
+                            .fetch_all(ctx.db.pool())
+                            .await
+                        {
+                            use sqlx::Row;
+                            for row in rows {
+                                let path_res: Result<String, sqlx::Error> = row.try_get::<String, &str>("path");
+                                if let Ok(path_str) = path_res {
+                                    raw_paths.push(std::path::PathBuf::from(path_str));
+                                }
+                            }
+                        }
+
+                        // Query extra_skill_dirs from config
+                        let mut extra_dirs = Vec::new();
+                        if let Ok(row) = sqlx::query("SELECT value FROM config WHERE key = 'extra_skill_dirs'")
+                            .fetch_optional(ctx.db.pool())
+                            .await
+                        {
+                            if let Some(r) = row {
+                                use sqlx::Row;
+                                let val_res: Result<String, sqlx::Error> = r.try_get::<String, &str>("value");
+                                if let Ok(val_str) = val_res {
+                                    if let Ok(parsed) = serde_json::from_str::<Vec<String>>(&val_str) {
+                                        extra_dirs = parsed;
+                                    }
+                                }
+                            }
+                        }
+                        for d in extra_dirs {
+                            raw_paths.push(std::path::PathBuf::from(d));
+                        }
+
+                        let skills = flock_skills::loader::load_all_skills(&cwd, &[], false, None, &raw_paths).await;
+                        let visible_skills: Vec<_> = skills
+                            .iter()
+                            .filter(|s| !s.disable_model_invocation)
+                            .cloned()
+                            .collect();
+
+                        if !visible_skills.is_empty() {
+                            let listing = flock_skills::prompt::format_skills_within_budget(&visible_skills, None);
+                            if !listing.is_empty() {
+                                sys_prompt.push_str(&format!(
+                                    "\n\n<system-reminder>\nThe following skills are available for use with the Skill tool:\n\n{}\n</system-reminder>",
+                                    listing
+                                ));
+                            }
+                        }
+                    }
 
                     let tool_defs = ctx.tools.to_tool_defs_filtered(|t| tool_names.contains(&t.name().to_string()));
                     let bound_tools: Vec<_> = tool_defs.into_iter().map(|t| langgraph_prebuilt::ToolDef {

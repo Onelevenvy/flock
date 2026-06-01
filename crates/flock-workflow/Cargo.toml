@@ -12,6 +12,7 @@ repository.workspace = true
 [dependencies]
 flock-core.workspace      = true
 flock-tools.workspace     = true
+flock-skills.workspace    = true
 
 tokio.workspace       = true
 tokio-stream.workspace = true
@@ -20,6 +21,7 @@ serde_json.workspace  = true
 log.workspace         = true
 regex.workspace       = true
 chrono.workspace      = true
+sqlx.workspace        = true
 
 # LangGraph graph runtime
 langgraph.workspace                   = true
