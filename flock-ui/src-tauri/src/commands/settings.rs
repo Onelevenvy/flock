@@ -7,7 +7,21 @@ pub async fn get_app_config(
     db: State<'_, SharedDbManager>,
     key: String,
 ) -> Result<Option<serde_json::Value>, String> {
-    let config: Option<serde_json::Value> = db.get_config(&key).await;
+    let mut config: Option<serde_json::Value> = db.get_config(&key).await;
+    if key == "sandbox" {
+        if let Some(ref mut val) = config {
+            if let Ok(mut sandbox_cfg) = serde_json::from_value::<flock_core::config::settings::SandboxConfig>(val.clone()) {
+                if sandbox_cfg.api_key_encrypted.is_some() {
+                    sandbox_cfg.api_key = Some("••••••••".to_string());
+                } else {
+                    sandbox_cfg.api_key = None;
+                }
+                sandbox_cfg.api_key_encrypted = None;
+                sandbox_cfg.api_key_nonce = None;
+                *val = serde_json::to_value(&sandbox_cfg).unwrap_or_default();
+            }
+        }
+    }
     Ok(config)
 }
 
@@ -18,7 +32,45 @@ pub async fn set_app_config(
     key: String,
     value: serde_json::Value,
 ) -> Result<(), String> {
-    db.set_config(&key, &value).await
+    let mut final_value = value.clone();
+    
+    if key == "sandbox" {
+        if let Ok(mut sandbox_cfg) = serde_json::from_value::<flock_core::config::settings::SandboxConfig>(value.clone()) {
+            let db_inner = db.inner().clone();
+            let old_sandbox: Option<flock_core::config::settings::SandboxConfig> = db_inner.get_config("sandbox").await;
+            
+            let resolved_api_key = sandbox_cfg.api_key.clone();
+            
+            if let Some(ref key_str) = resolved_api_key {
+                if key_str == "••••••••" {
+                    if let Some(ref old) = old_sandbox {
+                        sandbox_cfg.api_key_encrypted = old.api_key_encrypted.clone();
+                        sandbox_cfg.api_key_nonce = old.api_key_nonce.clone();
+                    }
+                    sandbox_cfg.api_key = None;
+                } else if key_str.is_empty() {
+                    sandbox_cfg.api_key_encrypted = None;
+                    sandbox_cfg.api_key_nonce = None;
+                    sandbox_cfg.api_key = None;
+                } else {
+                    if let Ok(salt) = db_inner.get_or_create_salt().await {
+                        if let Ok((ct, n)) = flock_core::crypto::encrypt_value(key_str, &salt) {
+                            sandbox_cfg.api_key_encrypted = Some(ct);
+                            sandbox_cfg.api_key_nonce = Some(n);
+                            sandbox_cfg.api_key = None;
+                        }
+                    }
+                }
+            } else {
+                sandbox_cfg.api_key_encrypted = None;
+                sandbox_cfg.api_key_nonce = None;
+            }
+            
+            final_value = serde_json::to_value(&sandbox_cfg).unwrap_or(final_value);
+        }
+    }
+
+    db.set_config(&key, &final_value).await
         .map_err(|e| flock_core::tr(
             &format!("保存配置 '{}' 失败: {}", key, e),
             &format!("Failed to save config '{}': {}", key, e)
@@ -26,7 +78,7 @@ pub async fn set_app_config(
 
     // 当 sandbox 被禁用时，将其 provider 标记为不可用
     if key == "sandbox" {
-        let enabled = value.get("enabled").and_then(|v| v.as_bool()).unwrap_or(false);
+        let enabled = final_value.get("enabled").and_then(|v| v.as_bool()).unwrap_or(false);
         if !enabled {
             let _ = db.set_tool_provider_available("sandbox", false).await;
         }

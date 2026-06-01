@@ -149,6 +149,8 @@ pub struct SandboxConfig {
     pub enabled: bool,
     pub api_url: Option<String>,
     pub api_key: Option<String>,
+    pub api_key_encrypted: Option<String>,
+    pub api_key_nonce: Option<String>,
     pub snapshot: Option<String>,
 }
 

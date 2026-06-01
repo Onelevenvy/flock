@@ -55,7 +55,14 @@ impl Config {
         let debug = DebugConfig::default();
         let bedrock: Option<BedrockConfig> = db.get_config("bedrock").await;
         let vertex: Option<VertexConfig> = db.get_config("vertex").await;
-        let sandbox: SandboxConfig = db.get_config("sandbox").await.unwrap_or_default();
+        let mut sandbox: SandboxConfig = db.get_config("sandbox").await.unwrap_or_default();
+        if let (Some(ct), Some(n)) = (&sandbox.api_key_encrypted, &sandbox.api_key_nonce) {
+            if let Ok(salt) = db.get_or_create_salt().await {
+                if let Ok(decrypted) = crate::crypto::decrypt_value(ct, n, &salt) {
+                    sandbox.api_key = Some(decrypted);
+                }
+            }
+        }
 
         // Check active_model (set by UI) to override default provider/model
         let active_model: Option<serde_json::Value> = db.get_config("active_model").await;
