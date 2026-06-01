@@ -115,57 +115,67 @@ pub async fn add_extra_skill_dir(
     }
     let p = PathBuf::from(trimmed);
     
+    // Resolve imported_skills_dir first
+    let imported_dir = imported_skills_dir()
+        .ok_or_else(|| "无法获取导入技能目录".to_string())?;
+
     // If it's a file, check if it's a zip or skill archive
     if p.is_file() {
         let ext = p.extension().and_then(|e| e.to_str()).unwrap_or("").to_lowercase();
         if ext == "zip" || ext == "skill" {
-            // Extract to imported_skills_dir
-            let imported_dir = imported_skills_dir()
-                .ok_or_else(|| "无法获取导入技能目录".to_string())?;
-            std::fs::create_dir_all(&imported_dir).map_err(|e| e.to_string())?;
-            
             let file_stem = p.file_stem().and_then(|s| s.to_str()).unwrap_or("extracted_skill");
             let dest_dir = imported_dir.join(file_stem);
-            std::fs::create_dir_all(&dest_dir).map_err(|e| e.to_string())?;
             
-            // Execute tar -xf <archive> -C <dest_dir>
-            let output = std::process::Command::new("tar")
-                .args(&["-xf", trimmed, "-C", &dest_dir.to_string_lossy()])
-                .output()
-                .map_err(|e| format!("解压失败 (tar 执行出错): {}", e))?;
-                
-            if !output.status.success() {
-                let err_msg = String::from_utf8_lossy(&output.stderr);
-                return Err(format!("解压失败: {}", err_msg));
-            }
-            
-            // Check if there is SKILL.md
-            if !has_skill_md(&dest_dir) {
-                // Try walking down one directory in case the zip contained a single parent folder
-                if let Ok(entries) = std::fs::read_dir(&dest_dir) {
-                    let subdirs: Vec<_> = entries
-                        .flatten()
-                        .filter(|e| e.path().is_dir())
-                        .collect();
-                    if subdirs.len() == 1 && has_skill_md(&subdirs[0].path()) {
-                        let final_dir = subdirs[0].path();
-                        let canonical = final_dir.canonicalize()
-                            .map(|c| c.to_string_lossy().to_string())
-                            .unwrap_or_else(|_| final_dir.to_string_lossy().to_string());
-                        
-                        let folder_name = final_dir.file_name().and_then(|s| s.to_str()).unwrap_or("imported_skill");
-                        db_add_imported_skill(&db, folder_name, &canonical).await?;
-                        return db_get_imported_skills(&db).await;
-                    }
-                }
-                return Err("解压成功，但未在压缩包中找到 SKILL.md 文件".to_string());
-            }
-            
-            let canonical = dest_dir.canonicalize()
-                .map(|c| c.to_string_lossy().to_string())
-                .unwrap_or_else(|_| dest_dir.to_string_lossy().to_string());
-                
+            // Standardize path representation without needing physical existence for canonicalization
+            let canonical = dest_dir.to_string_lossy().to_string();
+
+            // 1. Try writing to Database FIRST
             db_add_imported_skill(&db, file_stem, &canonical).await?;
+
+            // 2. Perform File System extraction
+            if let Err(err) = (async {
+                std::fs::create_dir_all(&dest_dir)?;
+                
+                // Execute tar -xf <archive> -C <dest_dir>
+                let output = std::process::Command::new("tar")
+                    .args(&["-xf", trimmed, "-C", &dest_dir.to_string_lossy()])
+                    .output()?;
+                    
+                if !output.status.success() {
+                    let err_msg = String::from_utf8_lossy(&output.stderr);
+                    return Err(std::io::Error::new(std::io::ErrorKind::Other, err_msg.into_owned()));
+                }
+                
+                // Check if there is SKILL.md
+                if !has_skill_md(&dest_dir) {
+                    // Try walking down one directory in case the zip contained a single parent folder
+                    if let Ok(entries) = std::fs::read_dir(&dest_dir) {
+                        let subdirs: Vec<_> = entries
+                            .flatten()
+                            .filter(|e| e.path().is_dir())
+                            .collect();
+                        if subdirs.len() == 1 && has_skill_md(&subdirs[0].path()) {
+                            // If nested, we keep the database record pointing to the subdir, so update the DB!
+                            let final_dir = subdirs[0].path();
+                            let final_canonical = final_dir.to_string_lossy().to_string();
+                            let folder_name = final_dir.file_name().and_then(|s| s.to_str()).unwrap_or(file_stem);
+                            
+                            // Delete the old record and add new nested record
+                            let _ = db_remove_imported_skill(&db, &canonical).await;
+                            db_add_imported_skill(&db, folder_name, &final_canonical).await
+                                .map_err(|e| std::io::Error::new(std::io::ErrorKind::Other, e))?;
+                            return Ok(());
+                        }
+                    }
+                    return Err(std::io::Error::new(std::io::ErrorKind::NotFound, "未在压缩包中找到 SKILL.md 文件"));
+                }
+                Ok(())
+            }).await {
+                // ROLLBACK: Remove database entry if file extraction failed
+                let _ = db_remove_imported_skill(&db, &canonical).await;
+                return Err(format!("解压并配置技能失败: {}", err));
+            }
+
             return db_get_imported_skills(&db).await;
         } else {
             return Err("仅支持选择文件夹或 .zip/.skill 格式的压缩包".to_string());
@@ -183,22 +193,24 @@ pub async fn add_extra_skill_dir(
         ));
     }
 
-    // Copy directory recursively to imported_skills_dir to keep it self-contained
-    let imported_dir = imported_skills_dir()
-        .ok_or_else(|| "无法获取导入技能目录".to_string())?;
-    std::fs::create_dir_all(&imported_dir).map_err(|e| e.to_string())?;
-
     let folder_name = p.file_name().and_then(|s| s.to_str()).unwrap_or("imported_skill");
     let dest_dir = imported_dir.join(folder_name);
-    
-    copy_dir_all(&p, &dest_dir).map_err(|e| format!("拷贝技能文件夹失败: {}", e))?;
+    let canonical = dest_dir.to_string_lossy().to_string();
 
-    let canonical = dest_dir
-        .canonicalize()
-        .map(|c| c.to_string_lossy().to_string())
-        .unwrap_or_else(|_| dest_dir.to_string_lossy().to_string());
-        
+    // 1. Try writing to Database FIRST
     db_add_imported_skill(&db, folder_name, &canonical).await?;
+
+    // 2. Perform Folder Copy
+    if let Err(err) = (async {
+        std::fs::create_dir_all(&imported_dir)?;
+        copy_dir_all(&p, &dest_dir)?;
+        Ok::<(), std::io::Error>(())
+    }).await {
+        // ROLLBACK: Remove database entry if folder copy failed
+        let _ = db_remove_imported_skill(&db, &canonical).await;
+        return Err(format!("拷贝技能文件夹失败: {}", err));
+    }
+
     db_get_imported_skills(&db).await
 }
 
