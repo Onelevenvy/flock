@@ -3,6 +3,7 @@ import { notifications } from '@mantine/notifications';
 import i18n from '@/i18n';
 import { useWorkspacesQuery } from './useWorkspaces';
 import { useAssistantsQuery } from './useAssistants';
+import { useWorkflowsQuery } from './useWorkflow';
 import { useCreateCronJobMutation, useUpdateCronJobMutation } from './useCronJobs';
 import type { CronJob } from '@/pages/Schedule/types';
 import type { Assistant } from '@/types/assistant';
@@ -121,6 +122,7 @@ interface UseCronFormOptions {
 export function useCronForm({ opened, jobToEdit, onSuccess, onClose }: UseCronFormOptions) {
   const { data: workspaces = [] } = useWorkspacesQuery();
   const { data: rawAssistants = [] } = useAssistantsQuery();
+  const { data: workflows = [] } = useWorkflowsQuery();
   const createMutation = useCreateCronJobMutation();
   const updateMutation = useUpdateCronJobMutation();
 
@@ -128,7 +130,9 @@ export function useCronForm({ opened, jobToEdit, onSuccess, onClose }: UseCronFo
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');
   const [workspaceId, setWorkspaceId] = useState<string | null>(null);
+  const [targetType, setTargetType] = useState<'assistant' | 'workflow'>('assistant');
   const [assistantId, setAssistantId] = useState<string | null>(null);
+  const [workflowId, setWorkflowId] = useState<string | null>(null);
   const [executionMode, setExecutionMode] = useState<'new_conversation' | 'existing'>('new_conversation');
   const [prompt, setPrompt] = useState('');
 
@@ -152,7 +156,18 @@ export function useCronForm({ opened, jobToEdit, onSuccess, onClose }: UseCronFo
       setName(jobToEdit.name);
       setDescription(jobToEdit.description);
       setWorkspaceId(jobToEdit.workspace_id);
-      setAssistantId(jobToEdit.assistant_id);
+      
+      const isWorkflow = jobToEdit.assistant_id.startsWith('workflow:');
+      if (isWorkflow) {
+        setTargetType('workflow');
+        setWorkflowId(jobToEdit.assistant_id.replace('workflow:', ''));
+        setAssistantId(assistants[0]?.id ?? null);
+      } else {
+        setTargetType('assistant');
+        setAssistantId(jobToEdit.assistant_id);
+        setWorkflowId(workflows[0]?.id ?? null);
+      }
+
       setExecutionMode(jobToEdit.execution_mode as any);
       setPrompt(jobToEdit.prompt);
       const parsed = parseSchedule(jobToEdit);
@@ -165,7 +180,9 @@ export function useCronForm({ opened, jobToEdit, onSuccess, onClose }: UseCronFo
       setName('');
       setDescription('');
       setWorkspaceId(workspaces[0]?.id ?? null);
+      setTargetType('assistant');
       setAssistantId(assistants[0]?.id ?? null);
+      setWorkflowId(workflows[0]?.id ?? null);
       setExecutionMode('new_conversation');
       setPrompt('');
       setSchedulePreset('manual');
@@ -185,6 +202,10 @@ export function useCronForm({ opened, jobToEdit, onSuccess, onClose }: UseCronFo
     if (!jobToEdit && assistants.length > 0 && !assistantId) setAssistantId(assistants[0].id);
   }, [assistants]);
 
+  useEffect(() => {
+    if (!jobToEdit && workflows.length > 0 && !workflowId) setWorkflowId(workflows[0].id);
+  }, [workflows]);
+
   const handleSubmit = async () => {
     if (!workspaceId) {
       notifications.show({ title: i18n.t('schedule.submitFail'), message: i18n.t('schedule.selectWorkspace'), color: 'red' }); return;
@@ -192,11 +213,15 @@ export function useCronForm({ opened, jobToEdit, onSuccess, onClose }: UseCronFo
     if (!name.trim()) {
       notifications.show({ title: i18n.t('schedule.submitFail'), message: i18n.t('schedule.enterTaskName'), color: 'red' }); return;
     }
+    if (targetType === 'workflow' && !workflowId) {
+      notifications.show({ title: i18n.t('schedule.submitFail'), message: i18n.t('schedule.selectWorkflow'), color: 'red' }); return;
+    }
     if (!prompt.trim()) {
       notifications.show({ title: i18n.t('schedule.submitFail'), message: i18n.t('schedule.enterPrompt'), color: 'red' }); return;
     }
 
     const { kind, value, desc } = buildSchedule(schedulePreset, dailyTime, weeklyDay, weeklyTime, customCron);
+    const finalAssistantId = targetType === 'workflow' ? `workflow:${workflowId}` : (assistantId || '__xiaof__');
     const payload = {
       id: jobToEdit ? jobToEdit.id : null,
       name: name.trim(),
@@ -208,7 +233,7 @@ export function useCronForm({ opened, jobToEdit, onSuccess, onClose }: UseCronFo
       execution_mode: executionMode,
       prompt: prompt.trim(),
       workspace_id: workspaceId,
-      assistant_id: assistantId || '__xiaof__',
+      assistant_id: finalAssistantId,
     };
 
     try {
@@ -230,12 +255,15 @@ export function useCronForm({ opened, jobToEdit, onSuccess, onClose }: UseCronFo
     // data
     workspaces,
     assistants,
+    workflows,
     loading,
     // fields
     name, setName,
     description, setDescription,
     workspaceId, setWorkspaceId,
+    targetType, setTargetType,
     assistantId, setAssistantId,
+    workflowId, setWorkflowId,
     executionMode, setExecutionMode,
     prompt, setPrompt,
     // schedule

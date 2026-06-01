@@ -81,5 +81,10 @@
   "updatedMsg": "定时任务配置已保存",
   "created": "已创建",
   "createdMsg": "定时任务已成功建立",
-  "operationFail": "操作失败"
+  "operationFail": "操作失败",
+  "targetType": "执行主体",
+  "targetAssistant": "AI 助手",
+  "targetWorkflow": "工作流",
+  "workflow": "工作流",
+  "selectWorkflow": "请选择工作流"
 }
