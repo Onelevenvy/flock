@@ -98,21 +98,27 @@ export function NodePalette({ onAddNode }: NodePaletteProps) {
         >
           {t('workflow.palette.tabNodes', 'Nodes')}
         </UnstyledButton>
-        <UnstyledButton
-          onClick={() => setActiveTab('tools')}
-          style={{
-            flex: 1,
-            textAlign: 'center',
-            padding: '8px 0',
-            fontSize: 11,
-            fontWeight: 700,
-            color: activeTab === 'tools' ? 'var(--flock-accent)' : 'var(--flock-text-muted)',
-            borderBottom: activeTab === 'tools' ? '2px solid var(--flock-accent)' : '2px solid transparent',
-            transition: 'all 0.15s ease',
-          }}
+        <Tooltip
+          label={t('workflow.palette.comingSoon', 'Coming soon')}
+          position="top"
+          withArrow
         >
-          {t('workflow.palette.tabTools', 'Tools')}
-        </UnstyledButton>
+          <UnstyledButton
+            style={{
+              flex: 1,
+              textAlign: 'center',
+              padding: '8px 0',
+              fontSize: 11,
+              fontWeight: 700,
+              color: 'var(--flock-text-muted)',
+              borderBottom: '2px solid transparent',
+              cursor: 'not-allowed',
+              opacity: 0.5,
+            }}
+          >
+            {t('workflow.palette.tabTools', 'Tools')}
+          </UnstyledButton>
+        </Tooltip>
       </Box>
 
       {activeTab === 'nodes' ? (
