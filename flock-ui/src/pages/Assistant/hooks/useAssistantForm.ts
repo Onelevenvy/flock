@@ -75,8 +75,7 @@ export function useAssistantForm(
       setDisabledTools([]);
       setSelectedSkills([]);
     }
-    loadOptions();
-  }, [opened, initial, providers, models, skills]);
+  }, [opened, initial]);
 
   const loadOptions = useCallback(async () => {
     setLoadingOptions(true);
@@ -108,6 +107,12 @@ export function useAssistantForm(
       setLoadingOptions(false);
     }
   }, [providers, models, skills]);
+
+  useEffect(() => {
+    if (opened) {
+      loadOptions();
+    }
+  }, [opened, loadOptions]);
 
   const handleSave = async () => {
     if (!name.trim()) {

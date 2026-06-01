@@ -27,6 +27,7 @@
     "title": "创建工作流",
     "nameLabel": "工作流名称",
     "namePlaceholder": "例: 客服自动化工作流",
+    "nameAndAvatar": "名称与图标",
     "descLabel": "描述",
     "descPlaceholder": "简单描述这个工作流的用途...",
     "confirm": "创建并编辑"

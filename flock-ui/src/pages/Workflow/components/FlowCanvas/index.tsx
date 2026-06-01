@@ -22,6 +22,7 @@ import { workflowNodeTypes } from '../../nodes/nodeTypesMap';
 import { useWorkflowStore } from '../../../../store/workflowStore';
 import { useUpdateWorkflow, type WorkflowRecord } from '../../../../hooks/useWorkflow';
 import { NodePalette } from '../NodePalette';
+import { IconPicker } from '../../../Assistant/IconPicker';
 import { CustomStepEdge } from '../CustomStepEdge';
 import { PropertiesPanel } from '../PropertiesPanel';
 import { ExecutionPanel } from '../../../../components/chat/workflow/ExecutionPanel';
@@ -47,6 +48,21 @@ export function FlowCanvas({ workflowId, workflowData, onBack }: FlowCanvasProps
   const { t } = useTranslation();
   const { fitView } = useReactFlow();
   const updateMutation = useUpdateWorkflow();
+
+  const [workflowIcon, setWorkflowIcon] = useState(() => {
+    return (workflowData.config?.metadata?.icon as string) || '🤖';
+  });
+
+  useEffect(() => {
+    if (workflowData.config?.metadata?.icon) {
+      setWorkflowIcon(workflowData.config.metadata.icon as string);
+    }
+  }, [workflowData]);
+
+  const handleIconChange = (newIcon: string) => {
+    setWorkflowIcon(newIcon);
+    setDirty(true);
+  };
 
   const {
     nodes,
@@ -120,6 +136,7 @@ export function FlowCanvas({ workflowId, workflowData, onBack }: FlowCanvasProps
     const metadata = {
       ...(workflowData.config.metadata ?? {}),
       env_vars: environmentVariables,
+      icon: workflowIcon,
     };
     await updateMutation.mutateAsync({
       id: workflowId,
@@ -131,7 +148,7 @@ export function FlowCanvas({ workflowId, workflowData, onBack }: FlowCanvasProps
       },
     });
     setDirty(false);
-  }, [workflowId, workflowData, nodes, edges, environmentVariables, updateMutation, setDirty]);
+  }, [workflowId, workflowData, nodes, edges, environmentVariables, workflowIcon, updateMutation, setDirty]);
 
   // ── Auto-start workflow if navigated from home page with a query ────────
   useEffect(() => {
@@ -214,13 +231,7 @@ export function FlowCanvas({ workflowId, workflowData, onBack }: FlowCanvasProps
           <ActionIcon variant="subtle" color="gray" onClick={onBack} size="sm">
             <IconArrowLeft size={16} />
           </ActionIcon>
-          <ThemeIcon
-            size={28}
-            radius="md"
-            style={{ background: 'var(--flock-accent)', boxShadow: '0 2px 8px rgba(21,90,239,0.2)' }}
-          >
-            <IconRoute size={14} />
-          </ThemeIcon>
+          <IconPicker value={workflowIcon} onChange={handleIconChange} size={28} />
           <Box>
             <Text size="sm" fw={600} style={{ color: 'var(--flock-text-bright)', lineHeight: 1.2 }}>
               {workflowData.name}

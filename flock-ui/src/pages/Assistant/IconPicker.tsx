@@ -12,30 +12,40 @@ export const ICON_OPTIONS = [
 export function IconPicker({
   value,
   onChange,
+  disabled = false,
+  size = 38,
 }: {
   value: string;
   onChange: (v: string) => void;
+  disabled?: boolean;
+  size?: number;
 }) {
   const { t } = useTranslation();
   const [opened, setOpened] = useState(false);
   return (
     <Popover
       opened={opened}
-      onClose={() => setOpened(false)}
+      onChange={setOpened}
       position="bottom-start"
       withArrow
       shadow="lg"
       withinPortal
+      disabled={disabled}
     >
       <Popover.Target>
         <Avatar
-          size={38}
+          size={size}
           radius="md"
-          onClick={() => setOpened(o => !o)}
+          onClick={() => {
+            if (!disabled) {
+              setOpened(o => !o);
+            }
+          }}
           style={{
-            cursor: 'pointer',
+            cursor: disabled ? 'not-allowed' : 'pointer',
+            opacity: disabled ? 0.6 : 1,
             background: 'var(--flock-bg-base)',
-            fontSize: 20,
+            fontSize: size > 30 ? 20 : 16,
             flexShrink: 0,
             border: '1px solid var(--flock-border-base)',
             transition: 'all 0.2s ease',

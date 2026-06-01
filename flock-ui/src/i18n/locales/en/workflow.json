@@ -25,6 +25,7 @@
     "title": "Create Workflow",
     "nameLabel": "Workflow Name",
     "namePlaceholder": "e.g. Customer Support Automation",
+    "nameAndAvatar": "Name and Avatar",
     "descLabel": "Description",
     "descPlaceholder": "Briefly describe what this workflow does...",
     "confirm": "Create & Edit"
