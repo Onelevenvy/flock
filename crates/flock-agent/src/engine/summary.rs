@@ -8,7 +8,7 @@ struct DbModelConfig {
     model: Option<String>,
 }
 
-pub(crate) async fn run_background_summary(
+pub async fn run_background_summary(
     db: Arc<flock_core::db::DbManager>,
     thread_id: String,
     messages: Vec<Message>,
@@ -249,16 +249,19 @@ pub(crate) async fn run_background_summary(
 /// Placeholder patterns come from `create_conversation()` in conversations.rs:
 ///   - "对话 <digits>"    e.g. "对话 1779024059"
 ///   - "Session <id>"    e.g. "Session conv_1779024059"  (list_workspace_sessions fallback)
-fn is_placeholder_title(s: &str) -> bool {
-    // "对话 " followed by digits (numeric timestamp suffix)
-    if let Some(rest) = s.strip_prefix("对话 ") {
+pub fn is_placeholder_title(s: &str) -> bool {
+    let s = s.trim();
+    if s.starts_with("对话") {
+        let rest = s.strip_prefix("对话").unwrap().trim();
         if !rest.is_empty() && rest.chars().all(|c| c.is_ascii_digit()) {
             return true;
         }
     }
-    // "Session " followed by any non-empty suffix
-    if s.starts_with("Session ") && s.len() > "Session ".len() {
-        return true;
+    if s.starts_with("Session") {
+        let rest = s.strip_prefix("Session").unwrap().trim();
+        if !rest.is_empty() && (rest.chars().all(|c| c.is_ascii_digit() || c == '_' || c == '-') || rest.starts_with("conv_")) {
+            return true;
+        }
     }
     false
 }
