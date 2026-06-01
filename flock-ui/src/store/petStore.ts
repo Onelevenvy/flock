@@ -22,7 +22,7 @@ interface PetStore {
   setMode: (mode: 'desktop' | 'in-app') => void;
 }
 
-const DEFAULT_POSITION: PetPosition = { x: -8, y: -120 };
+const DEFAULT_POSITION: PetPosition = { x: -6, y: -130 };
 
 function loadStored<T>(key: string, fallback: T): T {
   try {
