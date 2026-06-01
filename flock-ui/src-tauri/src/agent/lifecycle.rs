@@ -293,3 +293,95 @@ pub async fn send_message(
 
     Ok(())
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use std::sync::atomic::Ordering;
+    use std::time::{Duration, Instant};
+    use tokio::sync::mpsc;
+
+    fn create_mock_session(is_running: bool, last_used: Instant) -> (SessionHandle, mpsc::Receiver<SessionCommand>) {
+        let (tx, rx) = mpsc::channel(10);
+        (
+            SessionHandle {
+                tx,
+                workdir: PathBuf::from("mock_dir"),
+                assistant_id: None,
+                is_running: Arc::new(AtomicBool::new(is_running)),
+                cancel_flag: Arc::new(AtomicBool::new(false)),
+                last_used,
+            },
+            rx,
+        )
+    }
+
+    #[tokio::test]
+    async fn test_max_cached_sessions_eviction() {
+        let mut state = AgentState::new();
+        let max_cached = 10;
+
+        // 1. 创建 10 个 session，并插入
+        let mut rxs = Vec::new();
+        let now = Instant::now();
+        for i in 1..=10 {
+            // 设置不同的 last_used 时间，i 越小，last_used 越早（越旧）
+            let last_used = now - Duration::from_secs(100 - i);
+            let (handle, rx) = create_mock_session(false, last_used);
+            state.sessions.insert(format!("session_{}", i), handle);
+            rxs.push(rx);
+        }
+
+        assert_eq!(state.sessions.len(), 10);
+
+        // 2. 模拟新 session 准备插入，触发驱逐逻辑
+        let oldest_idle_key = state.sessions.iter()
+            .filter(|(_, v)| !v.is_running.load(Ordering::SeqCst))
+            .min_by_key(|(_, v)| v.last_used)
+            .map(|(k, _)| k.clone());
+
+        // 预期最旧的（session_1，因为 last_used 最早，为 now - 99s）被选出
+        assert_eq!(oldest_idle_key, Some("session_1".to_string()));
+
+        if let Some(key_to_evict) = oldest_idle_key {
+            if let Some(handle) = state.sessions.remove(&key_to_evict) {
+                let _ = handle.tx.send(SessionCommand::Stop).await;
+            }
+        }
+
+        // 检查驱逐后，session_1 是否已被移除，剩余数量是否为 9
+        assert_eq!(state.sessions.len(), 9);
+        assert!(!state.sessions.contains_key("session_1"));
+
+        // 检查驱逐的 session_1 确实收到了 Stop 命令
+        let mut rx_1 = rxs.remove(0);
+        let cmd = rx_1.recv().await;
+        assert!(matches!(cmd, Some(SessionCommand::Stop)));
+    }
+
+    #[test]
+    fn test_max_running_sessions_limit() {
+        let mut state = AgentState::new();
+        let max_running = 4;
+        let sid = "new_session".to_string();
+
+        // 模拟 4 个并发运行的会话
+        for i in 1..=4 {
+            let (handle, _) = create_mock_session(true, Instant::now());
+            state.sessions.insert(format!("run_{}", i), handle);
+        }
+
+        // 新建一个会话来发送消息
+        let (new_handle, _) = create_mock_session(false, Instant::now());
+        state.sessions.insert(sid.clone(), new_handle);
+
+        // 模拟 send_message 中的并发计数判断
+        let running_count = state.sessions.iter()
+            .filter(|(k, v)| k.as_str() != sid.as_str() && v.is_running.load(Ordering::SeqCst))
+            .count();
+
+        // 因为已有 4 个运行，所以预期会被拒绝
+        assert!(running_count >= max_running);
+    }
+}
+

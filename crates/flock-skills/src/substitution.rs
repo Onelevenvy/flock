@@ -109,20 +109,24 @@ pub fn parse_arguments(args: &str) -> Vec<String> {
     let mut current = String::new();
     let mut in_double = false;
     let mut in_single = false;
+    let mut quote_detected = false;
     let chars = args.chars();
 
     for ch in chars {
         match ch {
             '"' if !in_single => {
                 in_double = !in_double;
+                quote_detected = true;
             }
             '\'' if !in_double => {
                 in_single = !in_single;
+                quote_detected = true;
             }
             ' ' | '\t' if !in_double && !in_single => {
-                if !current.is_empty() {
+                if !current.is_empty() || quote_detected {
                     result.push(current.clone());
                     current.clear();
+                    quote_detected = false;
                 }
             }
             _ => {
@@ -130,10 +134,50 @@ pub fn parse_arguments(args: &str) -> Vec<String> {
             }
         }
     }
-    if !current.is_empty() {
+    if !current.is_empty() || quote_detected {
         result.push(current);
     }
 
     result
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_parse_arguments_normal() {
+        let parsed = parse_arguments("hello world \"foo bar\" 'baz qux'");
+        assert_eq!(parsed, vec!["hello", "world", "foo bar", "baz qux"]);
+    }
+
+    #[test]
+    fn test_substitute_arguments_basic() {
+        let content = "Hello $foo and $0, index is $ARGUMENTS[1]";
+        let result = substitute_arguments(
+            content,
+            Some("arg1 arg2"),
+            &["foo".to_string(), "bar".to_string()],
+            None,
+            None,
+        );
+        // $foo -> arg1
+        // $0 -> arg1
+        // $ARGUMENTS[1] -> arg2
+        assert_eq!(result, "Hello arg1 and arg1, index is arg2");
+    }
+
+    #[test]
+    fn test_parse_arguments_empty_quoted_bug() {
+        // 在标准的命令行解析中，传入的空双引号 "" 或空单引号 '' 应当作为一个有效的空字符串参数 ["foo", "", "bar"]
+        // 但是当前生产代码在遇到闭合双引号后如果 current 为空，则不会将其推入结果，造成参数个数少于预期。
+        let parsed = parse_arguments("foo \"\" bar");
+        assert_eq!(
+            parsed,
+            vec!["foo".to_string(), "".to_string(), "bar".to_string()],
+            "发现严重漏洞：当前的 parse_arguments 实现中，空双引号 ''\"\"'' 被完全静默丢弃了！"
+        );
+    }
+}
+
 

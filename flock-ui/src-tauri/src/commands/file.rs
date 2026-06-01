@@ -1,9 +1,8 @@
 use crate::workspace;
-use flock_core::db::DbManager;
 use flock_tools::daytona::{get_active_sandbox_id, fs::DaytonaFs};
 use std::path::PathBuf;
 
-async fn is_sandbox_active(db: &crate::SharedDbManager) -> bool {
+async fn is_sandbox_active(_db: &crate::SharedDbManager) -> bool {
     get_active_sandbox_id().await.is_some()
 }
 

@@ -68,3 +68,9 @@ crates/flock-app/
 
 legacy/*
 flock-data/imported_skills/*
+crates/flock-agent/*.db
+crates/flock-agent/*.db-shm
+crates/flock-agent/*.db-wal
+crates/flock-agent/mock_db_path-wal
+crates/flock-agent/mock_db_path-shm
+crates/flock-agent/mock_db_path

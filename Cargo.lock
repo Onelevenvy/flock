@@ -1226,6 +1226,7 @@ dependencies = [
  "flock-core",
  "flock-skills",
  "flock-tools",
+ "flock-workflow",
  "futures",
  "glob",
  "is-terminal",

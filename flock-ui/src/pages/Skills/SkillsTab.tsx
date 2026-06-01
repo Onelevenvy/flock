@@ -29,6 +29,7 @@ import { useTranslation } from 'react-i18next';
 import type { SkillInfo } from './types';
 import { SOURCE_COLORS } from './helpers';
 import { SkillDetailPanel } from './components/SkillDetailPanel';
+import { parseMultiLang } from '@/utils/i18n';
 
 import { useSkillsQuery } from '@/hooks/useToolQueries';
 
@@ -79,7 +80,7 @@ export function SkillsTab() {
         const importName = cleaned.split(/[/\\]/).filter(Boolean).pop()?.replace(/\.(zip|skill)$/i, '') || '';
         
         // Check if there is already a skill with this name in existing skills
-        const exists = skills.some(s => s.name.toLowerCase() === importName.toLowerCase() || (s.display_name && s.display_name.toLowerCase() === importName.toLowerCase()));
+        const exists = skills.some(s => s.name.toLowerCase() === importName.toLowerCase() || (s.display_name && parseMultiLang(s.display_name).toLowerCase() === importName.toLowerCase()));
         
         if (exists) {
           notifications.show({
@@ -230,7 +231,7 @@ export function SkillsTab() {
                     </ThemeIcon>
                     <Box style={{ flex: 1, minWidth: 0 }}>
                       <Text size="sm" fw={600} truncate style={{ color: 'var(--flock-text-bright)' }}>
-                        {skill.display_name || skill.name}
+                        {parseMultiLang(skill.display_name) || skill.name}
                       </Text>
                     </Box>
                   </Group>

@@ -98,7 +98,7 @@ export function useAssistantForm(
       setSkillSelectData(
         skills.map((s) => ({
           value: s.name,
-          label: s.display_name || s.name,
+          label: parseMultiLang(s.display_name) || s.name,
         })),
       );
     } catch (e) {
