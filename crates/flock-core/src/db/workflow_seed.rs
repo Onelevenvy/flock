@@ -18,24 +18,30 @@ pub fn builtin_workflows() -> Vec<UpsertWorkflow> {
                     {
                         "id": "start",
                         "type": "start",
-                        "position": { "x": 100, "y": 200 },
+                        "position": { "x": 50, "y": 200 },
+                        "width": 240,
+                        "height": 46,
                         "data": {}
                     },
                     {
                         "id": "llm_generate",
                         "type": "llm",
-                        "position": { "x": 300, "y": 200 },
+                        "position": { "x": 400, "y": 200 },
+                        "width": 240,
+                        "height": 85,
                         "data": {
                             "model": "",
                             "temperature": 0.8,
                             "systemMessage": "你是一个幽默风趣的段子手，擅长写各种轻松搞笑的幽默段子。",
-                            "userMessage": "请根据主题：\"{{input_msg}}\" 写一个简短好笑的冷笑话或段子。"
+                            "userMessage": "请根据主题：\"{{input_msg}}\" 写一个简短好笑的冷笑话或段子."
                         }
                     },
                     {
                         "id": "llm_polish",
                         "type": "llm",
-                        "position": { "x": 550, "y": 200 },
+                        "position": { "x": 750, "y": 200 },
+                        "width": 240,
+                        "height": 85,
                         "data": {
                             "model": "",
                             "temperature": 0.5,
@@ -46,7 +52,9 @@ pub fn builtin_workflows() -> Vec<UpsertWorkflow> {
                     {
                         "id": "answer",
                         "type": "answer",
-                        "position": { "x": 800, "y": 200 },
+                        "position": { "x": 1100, "y": 200 },
+                        "width": 240,
+                        "height": 85,
                         "data": {
                             "answer": "{{node_outputs.llm_polish.response}}"
                         }
@@ -91,12 +99,16 @@ pub fn builtin_workflows() -> Vec<UpsertWorkflow> {
                         "id": "start",
                         "type": "start",
                         "position": { "x": 50, "y": 250 },
+                        "width": 240,
+                        "height": 46,
                         "data": {}
                     },
                     {
                         "id": "llm_translate",
                         "type": "llm",
-                        "position": { "x": 220, "y": 250 },
+                        "position": { "x": 380, "y": 250 },
+                        "width": 240,
+                        "height": 85,
                         "data": {
                             "model": "",
                             "temperature": 0.3,
@@ -107,7 +119,9 @@ pub fn builtin_workflows() -> Vec<UpsertWorkflow> {
                     {
                         "id": "classifier_topic",
                         "type": "classifier",
-                        "position": { "x": 450, "y": 250 },
+                        "position": { "x": 720, "y": 250 },
+                        "width": 240,
+                        "height": 120,
                         "data": {
                             "model": "",
                             "input": "{{node_outputs.llm_translate.response}}",
@@ -121,7 +135,9 @@ pub fn builtin_workflows() -> Vec<UpsertWorkflow> {
                     {
                         "id": "ans_tech",
                         "type": "answer",
-                        "position": { "x": 750, "y": 100 },
+                        "position": { "x": 1080, "y": 100 },
+                        "width": 240,
+                        "height": 85,
                         "data": {
                             "answer": "【分类：科技】\n\n智能翻译结果：\n{{node_outputs.llm_translate.response}}"
                         }
@@ -129,7 +145,9 @@ pub fn builtin_workflows() -> Vec<UpsertWorkflow> {
                     {
                         "id": "ans_life",
                         "type": "answer",
-                        "position": { "x": 750, "y": 250 },
+                        "position": { "x": 1080, "y": 250 },
+                        "width": 240,
+                        "height": 85,
                         "data": {
                             "answer": "【分类：生活娱乐】\n\n智能翻译结果：\n{{node_outputs.llm_translate.response}}"
                         }
@@ -137,7 +155,9 @@ pub fn builtin_workflows() -> Vec<UpsertWorkflow> {
                     {
                         "id": "ans_other",
                         "type": "answer",
-                        "position": { "x": 750, "y": 400 },
+                        "position": { "x": 1080, "y": 400 },
+                        "width": 240,
+                        "height": 85,
                         "data": {
                             "answer": "【分类：其他】\n\n智能翻译结果：\n{{node_outputs.llm_translate.response}}"
                         }
@@ -184,3 +204,4 @@ pub fn builtin_workflows() -> Vec<UpsertWorkflow> {
         }
     ]
 }
+
