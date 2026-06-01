@@ -8,10 +8,12 @@ import {
   Modal,
   TextInput,
   Textarea,
+  Stack,
 } from '@mantine/core';
 import { IconRoute } from '@tabler/icons-react';
 import { useTranslation } from 'react-i18next';
 import { useCreateWorkflow } from '../../../hooks/useWorkflow';
+import { IconPicker } from '../../Assistant/IconPicker';
 
 interface CreateWorkflowModalProps {
   opened: boolean;
@@ -24,6 +26,7 @@ export function CreateWorkflowModal({ opened, onClose, onCreated }: CreateWorkfl
   const createMutation = useCreateWorkflow();
   const [name, setName] = useState('');
   const [desc, setDesc] = useState('');
+  const [icon, setIcon] = useState('🤖');
 
   const handleCreate = async () => {
     if (!name.trim()) return;
@@ -35,12 +38,15 @@ export function CreateWorkflowModal({ opened, onClose, onCreated }: CreateWorkfl
           { id: 'start-1', type: 'start', position: { x: 150, y: 200 }, data: { label: 'Start' } },
         ],
         edges: [],
-        metadata: {},
+        metadata: {
+          icon: icon,
+        },
       },
       is_active: true,
     });
     setName('');
     setDesc('');
+    setIcon('🤖');
     onClose();
     onCreated(record.id);
   };
@@ -48,6 +54,7 @@ export function CreateWorkflowModal({ opened, onClose, onCreated }: CreateWorkfl
   const handleClose = () => {
     setName('');
     setDesc('');
+    setIcon('🤖');
     onClose();
   };
 
@@ -82,18 +89,26 @@ export function CreateWorkflowModal({ opened, onClose, onCreated }: CreateWorkfl
       }}
     >
       <Box py="sm">
-        <TextInput
-          label={t('workflow.createModal.nameLabel')}
-          placeholder={t('workflow.createModal.namePlaceholder')}
-          value={name}
-          onChange={(e) => setName(e.target.value)}
-          mb="sm"
-          required
-          onKeyDown={(e) => e.key === 'Enter' && handleCreate()}
-          styles={{
-            input: { background: 'var(--flock-bg-surface)', border: '1px solid var(--flock-border-dim)' },
-          }}
-        />
+        <Stack gap={4} mb="sm">
+          <Text size="xs" fw={500} mb={2} style={{ color: 'var(--flock-text-secondary)', display: 'flex', alignItems: 'center' }}>
+            <span style={{ color: '#fa5252', marginRight: 4 }}>*</span>
+            {t('workflow.createModal.nameAndAvatar', 'Name and Avatar')}
+          </Text>
+          <Group gap="xs" style={{ width: '100%', alignItems: 'center' }}>
+            <IconPicker value={icon} onChange={setIcon} />
+            <TextInput
+              placeholder={t('workflow.createModal.namePlaceholder')}
+              value={name}
+              onChange={(e) => setName(e.currentTarget.value)}
+              required
+              style={{ flex: 1 }}
+              onKeyDown={(e) => e.key === 'Enter' && handleCreate()}
+              styles={{
+                input: { background: 'var(--flock-bg-surface)', border: '1px solid var(--flock-border-dim)', height: 38 },
+              }}
+            />
+          </Group>
+        </Stack>
         <Textarea
           label={t('workflow.createModal.descLabel')}
           placeholder={t('workflow.createModal.descPlaceholder')}

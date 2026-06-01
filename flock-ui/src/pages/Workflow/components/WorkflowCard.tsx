@@ -9,6 +9,7 @@ import {
   Modal,
   Button,
   Menu,
+  Avatar,
 } from '@mantine/core';
 import {
   IconRoute,
@@ -68,13 +69,28 @@ export function WorkflowCard({ workflow, onOpen, onRun }: WorkflowCardProps) {
 
         {/* Card header */}
         <Group justify="space-between" mb={10} mt={4}>
-          <ThemeIcon
-            size={46}
-            radius={14}
-            style={{ background: 'var(--flock-accent-soft)', flexShrink: 0 }}
-          >
-            <IconRoute size={22} style={{ color: 'var(--flock-accent)' }} />
-          </ThemeIcon>
+          {workflow.config?.metadata?.icon ? (
+            <Avatar
+              size={46}
+              radius={14}
+              style={{
+                background: 'var(--flock-accent-soft)',
+                color: 'var(--flock-accent)',
+                fontSize: 24,
+                flexShrink: 0,
+              }}
+            >
+              {workflow.config.metadata.icon as string}
+            </Avatar>
+          ) : (
+            <ThemeIcon
+              size={46}
+              radius={14}
+              style={{ background: 'var(--flock-accent-soft)', flexShrink: 0 }}
+            >
+              <IconRoute size={22} style={{ color: 'var(--flock-accent)' }} />
+            </ThemeIcon>
+          )}
           <Menu shadow="md" position="bottom-end" withinPortal>
             <Menu.Target>
               <ActionIcon

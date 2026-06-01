@@ -73,7 +73,7 @@ export function AssistantFormModal({
               {t('assistant.form.nameAndAvatar')}
             </Text>
             <Group gap="xs" style={{ width: '100%', alignItems: 'center' }}>
-              <IconPicker value={icon} onChange={setIcon} />
+              <IconPicker value={icon} onChange={setIcon} disabled={isBuiltin} />
               <TextInput
                 placeholder={t('assistant.form.namePlaceholder')}
                 value={name}
