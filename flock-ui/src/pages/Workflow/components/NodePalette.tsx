@@ -1,8 +1,11 @@
-import { useState } from 'react';
-import { Box, Text, TextInput, UnstyledButton, Tooltip } from '@mantine/core';
+import { useState, useMemo } from 'react';
+import { Box, Text, TextInput, UnstyledButton, Tooltip, Accordion, Group, Badge } from '@mantine/core';
 import { useTranslation } from 'react-i18next';
-import { IconSearch } from '@tabler/icons-react';
+import { IconSearch, IconPuzzle, IconLock } from '@tabler/icons-react';
 import { nodeConfig, type NodeType } from '../nodeConfig';
+import { useAvailableTools } from '../../../hooks/useAvailableTools';
+import { ToolsIcon } from '../../../components/Common/Icons';
+import { getProviderName } from '../../Skills/helpers';
 
 // Nodes that can be added onto canvas (start/end are pre-placed)
 const PALETTE_NODES: NodeType[] = [
@@ -17,7 +20,7 @@ const PALETTE_NODES: NodeType[] = [
 ];
 
 interface NodePaletteProps {
-  onAddNode: (type: NodeType) => void;
+  onAddNode: (type: NodeType, toolName?: string) => void;
 }
 
 export function NodePalette({ onAddNode }: NodePaletteProps) {
@@ -25,8 +28,13 @@ export function NodePalette({ onAddNode }: NodePaletteProps) {
   const [activeTab, setActiveTab] = useState<'nodes' | 'tools'>('nodes');
   const [searchQuery, setSearchQuery] = useState('');
 
-  const onDragStart = (e: React.DragEvent<HTMLDivElement>, nodeType: NodeType) => {
+  const { tools = [], providers = [] } = useAvailableTools();
+
+  const onDragStart = (e: React.DragEvent<HTMLDivElement>, nodeType: NodeType, toolName?: string) => {
     e.dataTransfer.setData('application/workflow-node', nodeType);
+    if (toolName) {
+      e.dataTransfer.setData('application/workflow-tool-name', toolName);
+    }
     e.dataTransfer.effectAllowed = 'move';
   };
 
@@ -38,6 +46,19 @@ export function NodePalette({ onAddNode }: NodePaletteProps) {
     const query = searchQuery.toLowerCase();
     return name.includes(query) || display.includes(query);
   });
+
+  const filteredProviders = useMemo(() => {
+    const q = searchQuery.toLowerCase().trim();
+    return providers
+      .map((prov) => {
+        const provTools = tools.filter((t) => t.provider_id === prov.id);
+        const matched = provTools.filter((tool) =>
+          !q || tool.name.toLowerCase().includes(q) || getProviderName(prov).toLowerCase().includes(q)
+        );
+        return { ...prov, tools: matched };
+      })
+      .filter((prov) => prov.tools.length > 0);
+  }, [providers, tools, searchQuery]);
 
   return (
     <Box
@@ -212,11 +233,124 @@ export function NodePalette({ onAddNode }: NodePaletteProps) {
           </Box>
         </>
       ) : (
-        <Box style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20 }}>
-          <Text size="xs" ta="center" c="dimmed">
-            {t('workflow.palette.noTools', 'No custom tools configured')}
-          </Text>
-        </Box>
+        <>
+          {/* Search Box */}
+          <Box style={{ padding: 10 }}>
+            <TextInput
+              size="xs"
+              placeholder={t('workflow.palette.searchToolsPlaceholder', 'Search tools...')}
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.currentTarget.value)}
+              leftSection={<IconSearch size={12} style={{ color: 'var(--flock-text-muted)' }} />}
+              styles={{
+                input: {
+                  borderRadius: 6,
+                  background: 'var(--flock-bg-base)',
+                  border: '1px solid var(--flock-border-subtle)',
+                },
+              }}
+            />
+          </Box>
+
+          {/* Tools List */}
+          <Box style={{ flex: 1, overflowY: 'auto', padding: '0 8px 10px' }}>
+            {filteredProviders.length > 0 ? (
+              <Accordion
+                multiple
+                defaultValue={filteredProviders.map((p) => p.id)}
+                styles={{
+                  item: { border: 'none', background: 'var(--flock-bg-surface)', marginBottom: 4, borderRadius: 8, overflow: 'hidden' },
+                  control: { padding: '6px 8px' },
+                  content: { padding: '0 8px 6px 8px' },
+                }}
+              >
+                {filteredProviders.map((provider) => (
+                  <Accordion.Item key={provider.id} value={provider.id}>
+                    <Accordion.Control>
+                      <Group gap="xs">
+                        <ToolsIcon name={provider.icon || provider.id} size={14} style={{ flexShrink: 0 }} />
+                        <Text fw={600} size="xs" style={{ color: 'var(--flock-text-bright)' }}>
+                          {getProviderName(provider)}
+                        </Text>
+                      </Group>
+                    </Accordion.Control>
+                    <Accordion.Panel>
+                      <Box style={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
+                        {provider.tools.map((tool) => {
+                          const isUnauthorized = provider.credentials_schema && !provider.is_available;
+                          return (
+                            <div
+                              key={tool.id}
+                              draggable={!isUnauthorized}
+                              onDragStart={(e) => {
+                                if (isUnauthorized) {
+                                  e.preventDefault();
+                                  return;
+                                }
+                                onDragStart(e, 'plugin', tool.name);
+                              }}
+                              onClick={() => !isUnauthorized && onAddNode('plugin', tool.name)}
+                              style={{
+                                display: 'flex',
+                                alignItems: 'center',
+                                gap: 8,
+                                padding: '6px 8px',
+                                borderRadius: 6,
+                                cursor: isUnauthorized ? 'not-allowed' : 'grab',
+                                userSelect: 'none',
+                                opacity: isUnauthorized ? 0.55 : 1,
+                                transition: 'all 0.15s ease',
+                              }}
+                              onMouseEnter={(e) => {
+                                if (!isUnauthorized) {
+                                  (e.currentTarget as HTMLElement).style.background = 'var(--flock-bg-hover)';
+                                }
+                              }}
+                              onMouseLeave={(e) => {
+                                if (!isUnauthorized) {
+                                  (e.currentTarget as HTMLElement).style.background = 'transparent';
+                                }
+                              }}
+                            >
+                              <Group justify="space-between" align="center" style={{ width: '100%' }}>
+                                <Text
+                                  size="xs"
+                                  fw={500}
+                                  style={{
+                                    color: 'var(--flock-text-dim)',
+                                    lineHeight: 1.3,
+                                    fontFamily: 'var(--mantine-font-family-monospace)',
+                                  }}
+                                >
+                                  {tool.name}
+                                </Text>
+                                {isUnauthorized && (
+                                  <Badge
+                                    size="xs"
+                                    color="red"
+                                    variant="light"
+                                    leftSection={<IconLock size={8} />}
+                                    styles={{ root: { padding: '0 4px', height: 16 } }}
+                                  >
+                                    {t('assistant.form.unauthorized', '未授权')}
+                                  </Badge>
+                                )}
+                              </Group>
+                            </div>
+                          );
+                        })}
+                      </Box>
+                    </Accordion.Panel>
+                  </Accordion.Item>
+                ))}
+              </Accordion>
+            ) : (
+              <Text size="xs" ta="center" c="dimmed" py="xl">
+                {t('workflow.palette.noToolsResults', 'No tools found')}
+              </Text>
+            )}
+          </Box>
+        </>
       )}
     </Box>
   );

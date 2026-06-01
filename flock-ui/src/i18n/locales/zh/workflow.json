@@ -192,7 +192,7 @@
     "code": { "label": "代码" },
     "human": { "label": "HITL" },
     "parameterExtractor": { "label": "参数提取" },
-    "plugin": { "label": "插件" },
+    "plugin": { "label": "工具" },
     "noModel": "未选择模型",
     "classifierCount": "{{count}} 个分类",
     "noOutputTemplate": "无输出模板",

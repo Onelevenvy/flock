@@ -7,6 +7,7 @@ import {
   IconCode,
   IconUser,
   IconCrosshair,
+  IconPuzzle,
   IconBrain,
   IconTags,
   type IconProps,
@@ -167,6 +168,18 @@ export const nodeConfig: Record<string, NodeConfigItem> = {
       parameters: [],
       instruction: '',
       input: '',
+    },
+  },
+  plugin: {
+    display: 'Tool',
+    displayKey: 'workflow.nodes.plugin.label',
+    icon: IconPuzzle,
+    color: 'gray',
+    colorHex: '#4b5563',
+    allowedConnections: { sources: ['right'], targets: ['left'] },
+    initialData: {
+      tool: null,
+      args: '',
     },
   },
 };

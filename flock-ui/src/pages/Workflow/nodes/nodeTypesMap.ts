@@ -5,6 +5,7 @@ import {
   AnswerNode,
   CodeNode,
   ParameterExtractorNode,
+  PluginNode,
 } from './StandardNodes';
 import { ClassifierNode, IfElseNode, HumanNode } from './MultiHandleNodes';
 
@@ -19,4 +20,5 @@ export const workflowNodeTypes = {
   code: CodeNode,
   human: HumanNode,
   parameterExtractor: ParameterExtractorNode,
+  plugin: PluginNode,
 };

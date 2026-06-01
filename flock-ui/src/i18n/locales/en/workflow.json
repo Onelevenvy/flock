@@ -190,7 +190,7 @@
     "code": { "label": "Code" },
     "human": { "label": "HITL" },
     "parameterExtractor": { "label": "Extractor" },
-    "plugin": { "label": "Plugin" },
+    "plugin": { "label": "Tool" },
     "noModel": "No Model",
     "classifierCount": "{{count}} Categories",
     "noOutputTemplate": "No Output Template",

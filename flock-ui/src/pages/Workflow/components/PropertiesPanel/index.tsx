@@ -19,7 +19,7 @@ import { useAvailableModels } from '../../../../hooks/useAvailableModels';
 import { useAvailableTools } from '../../../../hooks/useAvailableTools';
 
 // 引入公共组件
-import { VariableTextarea } from './VariableInput';
+import { VariableTextInput, VariableTextarea } from './VariableInput';
 
 // 引入各节点专属文件夹中的配置组件
 import { LLMFields } from './LLM';
@@ -238,6 +238,18 @@ function NodeSpecificFields({
         <HumanFields
           node={node}
           onDataChange={onDataChange}
+        />
+      );
+
+    case 'plugin':
+      return (
+        <VariableTextInput
+          label={t('workflow.properties.plugin.args')}
+          placeholder='{"key": "value"}'
+          value={String(node.data.args ?? '')}
+          currentNodeId={node.id}
+          onChange={(val) => onDataChange(node.id, 'args', val)}
+          size="xs"
         />
       );
 

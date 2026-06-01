@@ -294,7 +294,7 @@ export function ToolPickerPopover({
                                     <Group gap={6} align="center">
                                       <Text
                                         size="xs" fw={isSelected ? 600 : 400}
-                                        style={{ fontFamily: 'var(--mantine-font-family-monospace)', color: 'var(--flock-text-bright)', lineHeight: 1.3 }}
+                                        style={{ fontFamily: 'var(--mantine-font-family-monospace)', color: 'var(--flock-text-dim)', lineHeight: 1.3 }}
                                       >
                                         {tool.name}
                                       </Text>
