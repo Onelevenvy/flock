@@ -92,7 +92,7 @@ pub fn make_agent_workflow_node(
                             .iter()
                             .filter(|s| {
                                 !s.disable_model_invocation && 
-                                (node_skills.is_empty() || node_skills.contains(&s.name))
+                                !node_skills.is_empty() && node_skills.contains(&s.name)
                             })
                             .cloned()
                             .collect();
