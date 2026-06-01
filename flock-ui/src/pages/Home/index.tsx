@@ -154,7 +154,7 @@ export function HomeView() {
         padding: '36px 42px',
       }}
     >
-      <Stack gap={28} style={{ maxWidth: 1120, margin: '0 auto' }}>
+      <Stack gap={28} style={{ width: '100%' }}>
         <Group justify="space-between" align="flex-start" gap="xl">
           <Stack gap={10} style={{ maxWidth: 680 }}>
             <Group gap="xs">
@@ -253,7 +253,7 @@ export function HomeView() {
               <Text size="xs" c="dimmed">{t('home.explorer.assistantsHint')}</Text>
             </Group>
 
-            <SimpleGrid cols={{ base: 1, sm: 2, lg: 3 }} spacing="md">
+            <SimpleGrid cols={{ base: 1, sm: 2, md: 3, lg: 4, xl: 5 }} spacing="md">
               {featuredAssistants.map((assistant) => (
                 <ExplorerAppCard
                   key={assistant.id}
@@ -293,7 +293,7 @@ export function HomeView() {
                 <Text size="xs" mt={6}>{t('home.explorer.emptyWorkflowsDesc')}</Text>
               </Box>
             ) : (
-              <SimpleGrid cols={{ base: 1, sm: 2, lg: 3 }} spacing="md">
+              <SimpleGrid cols={{ base: 1, sm: 2, md: 3, lg: 4, xl: 5 }} spacing="md">
                 {featuredWorkflows.map((workflow) => (
                   <ExplorerAppCard
                     key={workflow.id}
