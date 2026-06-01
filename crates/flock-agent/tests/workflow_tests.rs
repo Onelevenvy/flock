@@ -3,7 +3,7 @@ use std::collections::HashMap;
 use serde_json::json;
 use flock_workflow::builder::build_workflow_graph;
 use flock_workflow::nodes::{WorkflowNodeContext, WorkflowSink};
-use flock_core::config::settings::types::ProviderType;
+use flock_core::config::settings::ProviderType;
 use flock_core::model_factory::{create_model, ModelProviderParams};
 use flock_tools::registry::ToolRegistry;
 use flock_core::db::DbManager;
@@ -49,13 +49,16 @@ async fn test_workflow_start_and_llm_nodes() {
         response_format: None,
     }).unwrap());
 
-    let db = Arc::new(DbManager::init_in_memory().await.unwrap());
+    // 使用临时目录代替内存数据库（避免原 init_in_memory 缺失的问题）
+    let temp_dir = tempfile::tempdir().unwrap();
+    let db_path = temp_dir.path().join("test_workflow.db");
+    let db = Arc::new(DbManager::init_at(db_path).await.unwrap());
     
     let ctx = Arc::new(WorkflowNodeContext {
         provider,
-        model_factory: Arc::new(flock_core::model_factory::DefaultModelFactory::new(
+        model_factory: Arc::new(flock_core::model_factory::CachedModelFactory::new(
+            HashMap::new(),
             "openai".to_string(),
-            "gpt-4o".to_string(),
             "mock-key".to_string(),
             Some(mock_server.uri()),
         )),
@@ -113,8 +116,9 @@ async fn test_workflow_start_and_llm_nodes() {
         "env_vars": {}
     });
 
-    let run_config = RunnableConfig::default().thread_id("thread-1");
-    let final_state = graph.clone().run(initial_state, run_config).await.unwrap();
+    let mut run_config = RunnableConfig::default();
+    run_config.insert("configurable".to_string(), serde_json::json!({ "thread_id": "thread-1" }));
+    let final_state = graph.ainvoke(&initial_state, &run_config).await.unwrap();
 
     let node_outputs = final_state.get("node_outputs").unwrap();
     let llm_output = node_outputs.get("llm_1").unwrap();
@@ -149,7 +153,9 @@ async fn test_workflow_concurrency_isolation() {
         .await;
 
     let base_url = mock_server.uri();
-    let db = Arc::new(DbManager::init_in_memory().await.unwrap());
+    let temp_dir = tempfile::tempdir().unwrap();
+    let db_path = temp_dir.path().join("test_concurrency_workflow.db");
+    let db = Arc::new(DbManager::init_at(db_path).await.unwrap());
     let checkpointer = Arc::new(InMemorySaver::new());
 
     let mut tasks = Vec::new();
@@ -176,9 +182,9 @@ async fn test_workflow_concurrency_isolation() {
 
             let ctx = Arc::new(WorkflowNodeContext {
                 provider,
-                model_factory: Arc::new(flock_core::model_factory::DefaultModelFactory::new(
+                model_factory: Arc::new(flock_core::model_factory::CachedModelFactory::new(
+                    HashMap::new(),
                     "openai".to_string(),
-                    "gpt-4o".to_string(),
                     "mock-key".to_string(),
                     Some(base_url_clone),
                 )),
@@ -220,8 +226,9 @@ async fn test_workflow_concurrency_isolation() {
                 "env_vars": {}
             });
 
-            let run_config = RunnableConfig::default().thread_id(format!("thread-wf-{}", uuid_clone));
-            let final_state = graph.run(initial_state, run_config).await.unwrap();
+            let mut run_config = RunnableConfig::default();
+            run_config.insert("configurable".to_string(), serde_json::json!({ "thread_id": format!("thread-wf-{}", uuid_clone) }));
+            let final_state = graph.ainvoke(&initial_state, &run_config).await.unwrap();
             
             let node_outputs = final_state.get("node_outputs").unwrap();
             let llm_output = node_outputs.get("llm_1").unwrap();

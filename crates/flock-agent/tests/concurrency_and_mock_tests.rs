@@ -1,6 +1,6 @@
 use flock_agent::agent_setup::{AgentBuilder, AssistantOverrides};
 use flock_agent::sinks::null_sink::NullSink;
-use flock_core::config::settings::types::{Config, ProviderType};
+use flock_core::config::settings::{Config, ProviderType, ToolsConfig, SessionConfig, McpConfig, SandboxConfig};
 use std::sync::Arc;
 use std::path::PathBuf;
 
@@ -17,16 +17,16 @@ fn create_test_config(base_url: String) -> Config {
         thinking: None,
         prompt_caching: false,
         compat: flock_core::config::compat::ProviderCompat::openai_defaults(),
-        tools: flock_core::config::settings::types::ToolsConfig::default(),
-        session: flock_core::config::settings::types::SessionConfig::default(),
+        tools: ToolsConfig::default(),
+        session: SessionConfig::default(),
         compact: flock_core::config::compression::CompressionConfig::default(),
         plan: flock_core::config::plan::PlanConfig::default(),
         file_cache: flock_core::config::file_cache::FileCacheConfig::default(),
         hooks: flock_core::config::hooks::HooksConfig::default(),
         bedrock: None,
         vertex: None,
-        mcp: flock_core::config::settings::types::McpConfig::default(),
-        sandbox: flock_core::config::settings::types::SandboxConfig::default(),
+        mcp: McpConfig::default(),
+        sandbox: SandboxConfig::default(),
         debug: flock_core::config::debug::DebugConfig::default(),
         db_path: PathBuf::from("mock_db_path"),
         db_manager: None,
@@ -74,7 +74,7 @@ async fn test_agent_dialogue_mock() {
     let mut engine = build_result.engine;
     engine.init_session("openai", &workspace.path().to_string_lossy(), None).await.unwrap();
     
-    let response = engine.run("Hello").await.unwrap();
+    let response = engine.run("Hello", "msg-1").await.unwrap().text;
     assert_eq!(response, "Hello, I am a mock AI assistant!");
 }
 
@@ -141,7 +141,7 @@ async fn test_agent_concurrency_isolation() {
             engine.init_session("openai", &workspace.path().to_string_lossy(), None).await.unwrap();
             
             let prompt = format!("Hello, my UUID: {}", uuid_clone);
-            let response = engine.run(&prompt).await.unwrap();
+            let response = engine.run(&prompt, &uuid_clone).await.unwrap().text;
             
             (uuid_clone, response)
         });
