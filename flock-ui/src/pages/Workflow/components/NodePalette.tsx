@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Box, Text, TextInput, UnstyledButton } from '@mantine/core';
+import { Box, Text, TextInput, UnstyledButton, Tooltip } from '@mantine/core';
 import { useTranslation } from 'react-i18next';
 import { IconSearch } from '@tabler/icons-react';
 import { nodeConfig, type NodeType } from '../nodeConfig';
@@ -8,13 +8,12 @@ import { nodeConfig, type NodeType } from '../nodeConfig';
 const PALETTE_NODES: NodeType[] = [
   'llm',
   'agent',
-  'classifier',
-  'ifelse',
-  'answer',
-  'code',
   'human',
+  'classifier',
+  'answer',
   'parameterExtractor',
-  'plugin',
+  'ifelse',
+  'code',
 ];
 
 interface NodePaletteProps {
@@ -122,27 +121,40 @@ export function NodePalette({ onAddNode }: NodePaletteProps) {
                 {filteredNodes.map((type) => {
                   const cfg = nodeConfig[type];
                   const Icon = cfg.icon;
-                  return (
+                  const isDisabled = ['ifelse', 'code', 'parameterExtractor'].includes(type);
+
+                  const item = (
                     <div
                       key={type}
-                      draggable
-                      onDragStart={(e) => onDragStart(e, type)}
-                      onClick={() => onAddNode(type)}
+                      draggable={!isDisabled}
+                      onDragStart={(e) => {
+                        if (isDisabled) {
+                          e.preventDefault();
+                          return;
+                        }
+                        onDragStart(e, type);
+                      }}
+                      onClick={() => !isDisabled && onAddNode(type)}
                       style={{
                         display: 'flex',
                         alignItems: 'center',
                         gap: 10,
                         padding: '8px 10px',
                         borderRadius: 8,
-                        cursor: 'grab',
+                        cursor: isDisabled ? 'not-allowed' : 'grab',
                         userSelect: 'none',
-                        transition: 'background 0.15s ease',
+                        opacity: isDisabled ? 0.45 : 1,
+                        transition: 'all 0.15s ease',
                       }}
                       onMouseEnter={(e) => {
-                        (e.currentTarget as HTMLElement).style.background = 'var(--flock-bg-hover)';
+                        if (!isDisabled) {
+                          (e.currentTarget as HTMLElement).style.background = 'var(--flock-bg-hover)';
+                        }
                       }}
                       onMouseLeave={(e) => {
-                        (e.currentTarget as HTMLElement).style.background = 'transparent';
+                        if (!isDisabled) {
+                          (e.currentTarget as HTMLElement).style.background = 'transparent';
+                        }
                       }}
                     >
                       <Box
@@ -174,6 +186,22 @@ export function NodePalette({ onAddNode }: NodePaletteProps) {
                       </Box>
                     </div>
                   );
+
+                  if (isDisabled) {
+                    return (
+                      <Tooltip
+                        key={type}
+                        label={t('workflow.palette.comingSoon', 'Coming soon')}
+                        position="right"
+                        withArrow
+                        openDelay={200}
+                      >
+                        {item}
+                      </Tooltip>
+                    );
+                  }
+
+                  return item;
                 })}
               </Box>
             ) : (

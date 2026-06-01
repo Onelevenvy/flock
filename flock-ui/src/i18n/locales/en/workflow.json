@@ -40,7 +40,8 @@
     "edges": "edges"
   },
   "palette": {
-    "title": "Nodes"
+    "title": "Nodes",
+    "comingSoon": "Coming soon"
   },
   "properties": {
     "label": "Node Name",

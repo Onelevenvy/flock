@@ -42,7 +42,8 @@
     "edges": "连线"
   },
   "palette": {
-    "title": "节点"
+    "title": "节点",
+    "comingSoon": "敬请期待"
   },
   "properties": {
     "label": "节点名称",
