@@ -169,4 +169,14 @@ pub const MIGRATIONS: &[(i64, &str, &str)] = &[
         "add_tool_provider_tools_i18n",
         "ALTER TABLE tool_provider ADD COLUMN tools_i18n TEXT;",
     ),
+    (
+        5,
+        "add_imported_skill_table",
+        "CREATE TABLE IF NOT EXISTS imported_skill (
+            name        TEXT PRIMARY KEY,
+            path        TEXT NOT NULL UNIQUE,
+            created_at  TEXT NOT NULL DEFAULT (datetime('now'))
+        );",
+    ),
 ];
+

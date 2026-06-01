@@ -5,6 +5,7 @@ use tauri::State;
 
 use crate::SharedDbManager;
 use super::utils::{imported_skills_dir, has_skill_md, copy_dir_all};
+use sqlx::Row;
 
 const EXTRA_SKILL_DIRS_KEY: &str = "extra_skill_dirs";
 
@@ -50,6 +51,37 @@ impl From<flock_skills::types::SkillMetadata> for SkillInfo {
     }
 }
 
+// SQL helper functions to operate on the dedicated `imported_skill` table
+async fn db_get_imported_skills(db: &SharedDbManager) -> Result<Vec<String>, String> {
+    let rows = sqlx::query("SELECT path FROM imported_skill")
+        .fetch_all(db.pool())
+        .await
+        .map_err(|e| e.to_string())?;
+    Ok(rows.iter().map(|r| r.get("path")).collect())
+}
+
+async fn db_add_imported_skill(db: &SharedDbManager, name: &str, path: &str) -> Result<(), String> {
+    sqlx::query(
+        "INSERT INTO imported_skill (name, path) VALUES (?1, ?2)
+         ON CONFLICT(name) DO UPDATE SET path = ?2"
+    )
+        .bind(name)
+        .bind(path)
+        .execute(db.pool())
+        .await
+        .map_err(|e| e.to_string())?;
+    Ok(())
+}
+
+async fn db_remove_imported_skill(db: &SharedDbManager, path: &str) -> Result<(), String> {
+    sqlx::query("DELETE FROM imported_skill WHERE path = ?1")
+        .bind(path)
+        .execute(db.pool())
+        .await
+        .map_err(|e| e.to_string())?;
+    Ok(())
+}
+
 /// Load all filesystem skills (no agent required). MCP-sourced skills are excluded
 /// because they need a live McpManager connection.
 ///
@@ -57,10 +89,7 @@ impl From<flock_skills::types::SkillMetadata> for SkillInfo {
 #[tauri::command]
 pub async fn list_skills(db: State<'_, SharedDbManager>) -> Result<Vec<SkillInfo>, String> {
     let cwd = std::env::current_dir().unwrap_or_default();
-    let extra: Vec<String> = db
-        .get_config(EXTRA_SKILL_DIRS_KEY)
-        .await
-        .unwrap_or_default();
+    let extra = db_get_imported_skills(&db).await?;
     let extra_raw: Vec<PathBuf> = extra.into_iter().map(PathBuf::from).collect();
     let metadata_list =
         flock_skills::loader::load_all_skills(&cwd, &[], false, None, &extra_raw).await;
@@ -70,10 +99,7 @@ pub async fn list_skills(db: State<'_, SharedDbManager>) -> Result<Vec<SkillInfo
 /// Get the list of imported extra skill directory paths.
 #[tauri::command]
 pub async fn get_extra_skill_dirs(db: State<'_, SharedDbManager>) -> Result<Vec<String>, String> {
-    Ok(db
-        .get_config(EXTRA_SKILL_DIRS_KEY)
-        .await
-        .unwrap_or_default())
+    db_get_imported_skills(&db).await
 }
 
 /// Add an extra skill directory. Validates that the path exists and is a directory.
@@ -124,30 +150,23 @@ pub async fn add_extra_skill_dir(
                     if subdirs.len() == 1 && has_skill_md(&subdirs[0].path()) {
                         let final_dir = subdirs[0].path();
                         let canonical = final_dir.canonicalize()
-                            .map(|c| c.to_string_lossy().into_owned())
+                            .map(|c| c.to_string_lossy().to_string())
                             .unwrap_or_else(|_| final_dir.to_string_lossy().to_string());
                         
-                        let mut dirs: Vec<String> = db.get_config(EXTRA_SKILL_DIRS_KEY).await.unwrap_or_default();
-                        if !dirs.contains(&canonical) {
-                            dirs.push(canonical);
-                            db.set_config(EXTRA_SKILL_DIRS_KEY, &dirs).await.map_err(|e| e.to_string())?;
-                        }
-                        return Ok(dirs);
+                        let folder_name = final_dir.file_name().and_then(|s| s.to_str()).unwrap_or("imported_skill");
+                        db_add_imported_skill(&db, folder_name, &canonical).await?;
+                        return db_get_imported_skills(&db).await;
                     }
                 }
                 return Err("解压成功，但未在压缩包中找到 SKILL.md 文件".to_string());
             }
             
             let canonical = dest_dir.canonicalize()
-                .map(|c| c.to_string_lossy().into_owned())
+                .map(|c| c.to_string_lossy().to_string())
                 .unwrap_or_else(|_| dest_dir.to_string_lossy().to_string());
                 
-            let mut dirs: Vec<String> = db.get_config(EXTRA_SKILL_DIRS_KEY).await.unwrap_or_default();
-            if !dirs.contains(&canonical) {
-                dirs.push(canonical);
-                db.set_config(EXTRA_SKILL_DIRS_KEY, &dirs).await.map_err(|e| e.to_string())?;
-            }
-            return Ok(dirs);
+            db_add_imported_skill(&db, file_stem, &canonical).await?;
+            return db_get_imported_skills(&db).await;
         } else {
             return Err("仅支持选择文件夹或 .zip/.skill 格式的压缩包".to_string());
         }
@@ -174,23 +193,13 @@ pub async fn add_extra_skill_dir(
     
     copy_dir_all(&p, &dest_dir).map_err(|e| format!("拷贝技能文件夹失败: {}", e))?;
 
-    let mut dirs: Vec<String> = db
-        .get_config(EXTRA_SKILL_DIRS_KEY)
-        .await
-        .unwrap_or_default();
     let canonical = dest_dir
         .canonicalize()
-        .map(|c| c.to_string_lossy().into_owned())
+        .map(|c| c.to_string_lossy().to_string())
         .unwrap_or_else(|_| dest_dir.to_string_lossy().to_string());
         
-    if dirs.iter().any(|d| d == &canonical) {
-        return Err("该路径已经导入过了".to_string());
-    }
-    dirs.push(canonical);
-    db.set_config(EXTRA_SKILL_DIRS_KEY, &dirs)
-        .await
-        .map_err(|e| e.to_string())?;
-    Ok(dirs)
+    db_add_imported_skill(&db, folder_name, &canonical).await?;
+    db_get_imported_skills(&db).await
 }
 
 /// Remove an extra skill directory by path. Returns the updated list.
@@ -199,40 +208,36 @@ pub async fn remove_extra_skill_dir(
     db: State<'_, SharedDbManager>,
     path: String,
 ) -> Result<Vec<String>, String> {
-    let mut dirs: Vec<String> = db
-        .get_config(EXTRA_SKILL_DIRS_KEY)
-        .await
-        .unwrap_or_default();
+    let dirs = db_get_imported_skills(&db).await?;
         
     let p_path = PathBuf::from(&path);
     let p_canon = p_path.canonicalize().unwrap_or(p_path);
     
     let mut to_delete = Vec::new();
     
-    dirs.retain(|d| {
-        let d_path = PathBuf::from(d);
+    for d in dirs {
+        let d_path = PathBuf::from(&d);
         let d_canon = d_path.canonicalize().unwrap_or(d_path);
         if p_canon.starts_with(&d_canon) {
-            to_delete.push(d_canon);
-            false // Remove from db
-        } else {
-            true // Keep in db
+            to_delete.push(d); // Store original path to delete from DB and disk
         }
-    });
+    }
     
-    db.set_config(EXTRA_SKILL_DIRS_KEY, &dirs)
-        .await
-        .map_err(|e| e.to_string())?;
+    for d in &to_delete {
+        db_remove_imported_skill(&db, d).await?;
+    }
 
     // If any deleted directory lies inside imported_skills_dir, delete it from disk
     if let Some(imported_dir) = imported_skills_dir() {
         let imported_canon = imported_dir.canonicalize().unwrap_or(imported_dir);
         for d in to_delete {
-            if d.starts_with(&imported_canon) && d.exists() {
-                let _ = std::fs::remove_dir_all(&d);
+            let d_path = PathBuf::from(&d);
+            let d_canon = d_path.canonicalize().unwrap_or(d_path);
+            if d_canon.starts_with(&imported_canon) && d_canon.exists() {
+                let _ = std::fs::remove_dir_all(&d_canon);
             }
         }
     }
 
-    Ok(dirs)
+    db_get_imported_skills(&db).await
 }

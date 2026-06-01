@@ -99,10 +99,13 @@
     "noDirs": "暂无导入的外部技能文件夹",
     "searchPlaceholder": "搜索 skills...",
     "filterAll": "全部",
-    "importBtn": "导入外部技能",
     "noMatches": "没有匹配的 skills",
     "noSkills": "暂无 skills",
-    "invocableBadge": "可调用"
+    "invocableBadge": "可调用",
+    "importBtn": "导入外部技能",
+    "importFolderBtn": "导入技能文件夹",
+    "importZipBtn": "导入压缩包",
+    "duplicateSkillWarning": "该技能已存在，继续导入将替换更新老的技能，确定要继续吗？"
   },
   "tools_i18n": {
     "Read": {

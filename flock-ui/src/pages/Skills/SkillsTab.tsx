@@ -76,6 +76,19 @@ export function SkillsTab() {
         ]
       });
       if (selected && typeof selected === 'string') {
+        const cleaned = cleanPath(selected);
+        const importName = cleaned.split(/[/\\]/).filter(Boolean).pop()?.replace(/\.(zip|skill)$/i, '') || '';
+        
+        // Check if there is already a skill with this name in existing skills
+        const exists = skills.some(s => s.name.toLowerCase() === importName.toLowerCase() || (s.display_name && s.display_name.toLowerCase() === importName.toLowerCase()));
+        
+        if (exists) {
+          const confirm = window.confirm(t('skills.skills.duplicateSkillWarning'));
+          if (!confirm) {
+            return;
+          }
+        }
+
         setImporting(true);
         await invoke<string[]>('add_extra_skill_dir', { path: selected });
         fetchSkills();
@@ -164,10 +177,10 @@ export function SkillsTab() {
             </Menu.Target>
             <Menu.Dropdown>
               <Menu.Item leftSection={<IconFolder size={14} />} onClick={() => handleSelectAndAdd(true)}>
-                导入技能文件夹 (Import Folder)
+                {t('skills.skills.importFolderBtn')}
               </Menu.Item>
               <Menu.Item leftSection={<IconFolderPlus size={14} />} onClick={() => handleSelectAndAdd(false)}>
-                导入压缩包 (Import Zip/Skill Archive)
+                {t('skills.skills.importZipBtn')}
               </Menu.Item>
             </Menu.Dropdown>
           </Menu>
@@ -220,7 +233,7 @@ export function SkillsTab() {
                     </Box>
                   </Group>
 
-                  {(skill.source === 'User' || skill.skill_root) && (
+                  {skill.source === 'User' && (
                     <Menu shadow="md" position="bottom-end" withinPortal>
                       <Menu.Target>
                         <ActionIcon size="sm" variant="subtle" color="gray" onClick={(e) => e.stopPropagation()}>
