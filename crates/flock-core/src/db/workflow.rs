@@ -130,6 +130,37 @@ impl DbManager {
             .await?;
         Ok(())
     }
+
+    /// Seed / upsert built-in workflows (called on startup).
+    /// Keeps user-modified settings if any.
+    pub async fn seed_builtin_workflows(&self, builtins: &[UpsertWorkflow]) -> anyhow::Result<()> {
+        for wf in builtins {
+            let default_id = format!("wf_{}", uuid_like());
+            let id = wf.id.as_deref().unwrap_or(&default_id);
+            let config_json = serde_json::to_string(&wf.config)?;
+            let now = chrono::Utc::now().to_rfc3339();
+
+            // Insert if not exists; on conflict update name, description, config, etc.
+            sqlx::query(
+                "INSERT INTO workflow (id, name, description, config, is_active, created_at, updated_at)
+                 VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?6)
+                 ON CONFLICT(id) DO UPDATE SET
+                    name = excluded.name,
+                    description = excluded.description,
+                    config = excluded.config,
+                    updated_at = excluded.updated_at",
+            )
+            .bind(id)
+            .bind(&wf.name)
+            .bind(&wf.description)
+            .bind(&config_json)
+            .bind(wf.is_active as i64)
+            .bind(&now)
+            .execute(self.pool())
+            .await?;
+        }
+        Ok(())
+    }
 }
 
 fn parse_row(row: &sqlx::sqlite::SqliteRow) -> anyhow::Result<WorkflowRecord> {
