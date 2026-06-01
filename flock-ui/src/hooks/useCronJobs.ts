@@ -72,8 +72,14 @@ export function useCronJobsQuery() {
 export function useCreateCronJobMutation() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: (input: UpsertCronJobInput) =>
-      invoke<CronJob>('create_cron_job', { input }),
+    mutationFn: (input: UpsertCronJobInput) => {
+      const payload = {
+        ...input,
+        name: { zh: input.name, en: input.name },
+        description: { zh: input.description, en: input.description },
+      };
+      return invoke<CronJob>('create_cron_job', { input: payload });
+    },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['cron_jobs'] });
     },
@@ -84,8 +90,14 @@ export function useCreateCronJobMutation() {
 export function useUpdateCronJobMutation() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: ({ id, input }: { id: string; input: UpsertCronJobInput }) =>
-      invoke<CronJob>('update_cron_job', { id, input }),
+    mutationFn: ({ id, input }: { id: string; input: UpsertCronJobInput }) => {
+      const payload = {
+        ...input,
+        name: { zh: input.name, en: input.name },
+        description: { zh: input.description, en: input.description },
+      };
+      return invoke<CronJob>('update_cron_job', { id, input: payload });
+    },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['cron_jobs'] });
     },
