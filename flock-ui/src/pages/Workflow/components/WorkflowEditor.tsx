@@ -24,19 +24,22 @@ export function WorkflowEditor({ workflowId, onBack }: WorkflowEditorProps) {
   const { loadWorkflowConfig, setActiveWorkflowId } = useWorkflowStore();
   const [ready, setReady] = useState(false);
 
-  // Seed the canvas store from DB on first load of this workflow
+  // Set active ID and handle unmount cleanup
   useEffect(() => {
-    if (workflowData) {
-      setActiveWorkflowId(workflowId);
-      loadWorkflowConfig(workflowData.config);
-      setReady(true);
-    }
-    // Reset ready when switching workflows
+    setActiveWorkflowId(workflowId);
     return () => {
       setReady(false);
       setActiveWorkflowId(null);
     };
-  }, [workflowId, workflowData, loadWorkflowConfig, setActiveWorkflowId]);
+  }, [workflowId, setActiveWorkflowId]);
+
+  // Seed the canvas store from DB when data is loaded
+  useEffect(() => {
+    if (workflowData) {
+      loadWorkflowConfig(workflowData.config);
+      setReady(true);
+    }
+  }, [workflowData, loadWorkflowConfig]);
 
   if (isLoading || !workflowData || !ready) {
     return (
