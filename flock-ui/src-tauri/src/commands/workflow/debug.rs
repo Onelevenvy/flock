@@ -11,7 +11,7 @@ use langgraph_checkpoint::checkpoint::base::BaseCheckpointSaver;
 use langgraph_checkpoint::checkpoint::memory::InMemorySaver;
 use langgraph_prebuilt::BaseChatModel;
 
-use flock_agent::workflow_graph::{build_debug_node_graph, WorkflowNodeContext};
+use flock_workflow::{build_debug_node_graph, WorkflowNodeContext};
 use flock_core::model_factory::{CachedModelFactory, ModelFactory};
 use flock_tools::all_tools;
 use crate::SharedDbManager;

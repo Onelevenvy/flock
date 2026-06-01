@@ -21,6 +21,7 @@ flock-core.workspace = true
 flock-agent.workspace = true
 flock-tools.workspace = true
 flock-skills.workspace = true
+flock-workflow.workspace = true
 langgraph-prebuilt.workspace = true
 langgraph-providers.workspace = true
 langgraph.workspace = true

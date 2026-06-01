@@ -13,7 +13,6 @@ pub mod tool_executor;
 pub mod sinks;
 pub mod session;
 pub mod tools;
-pub mod workflow_graph;
 
 
 pub mod spawner;

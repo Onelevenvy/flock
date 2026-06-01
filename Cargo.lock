@@ -1299,6 +1299,7 @@ dependencies = [
  "flock-core",
  "flock-skills",
  "flock-tools",
+ "flock-workflow",
  "langgraph",
  "langgraph-checkpoint",
  "langgraph-checkpoint-sqlite",
@@ -1371,6 +1372,27 @@ dependencies = [
  "tempfile",
  "thiserror 2.0.18",
  "tokio",
+ "workspace-hack",
+]
+
+[[package]]
+name = "flock-workflow"
+version = "0.2.0"
+dependencies = [
+ "chrono",
+ "flock-core",
+ "flock-tools",
+ "langgraph",
+ "langgraph-checkpoint",
+ "langgraph-checkpoint-sqlite",
+ "langgraph-derive",
+ "langgraph-prebuilt",
+ "log",
+ "regex",
+ "serde",
+ "serde_json",
+ "tokio",
+ "tokio-stream",
  "workspace-hack",
 ]
 

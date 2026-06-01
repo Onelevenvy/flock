@@ -1,0 +1,31 @@
+[lints]
+workspace = true
+
+[package]
+name = "flock-workflow"
+description = "Workflow graph engine and orchestration for flock"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+
+[dependencies]
+flock-core.workspace      = true
+flock-tools.workspace     = true
+
+tokio.workspace       = true
+tokio-stream.workspace = true
+serde.workspace       = true
+serde_json.workspace  = true
+log.workspace         = true
+regex.workspace       = true
+chrono.workspace      = true
+
+# LangGraph graph runtime
+langgraph.workspace                   = true
+langgraph-derive.workspace            = true
+langgraph-checkpoint.workspace        = true
+langgraph-checkpoint-sqlite.workspace = true
+langgraph-prebuilt.workspace          = true
+
+workspace-hack.workspace = true
