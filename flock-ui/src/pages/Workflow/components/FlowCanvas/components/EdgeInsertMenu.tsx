@@ -1,6 +1,6 @@
 import { Box } from '@mantine/core';
-import { NodePalette } from '../../NodePalette';
-import { type NodeType } from '../../../nodeConfig';
+import { NodePalette } from '@/pages/Workflow/components/NodePalette';
+import { type NodeType } from '@/pages/Workflow/nodeConfig';
 
 interface EdgeInsertMenuProps {
   menuPortalPosition: { x: number; y: number } | null;

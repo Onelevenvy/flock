@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import { Box, Group, Paper, Text, Loader, ActionIcon, Collapse, Button } from '@mantine/core';
 import { IconChevronRight, IconChevronDown } from '@tabler/icons-react';
 import { useTranslation } from 'react-i18next';
-import { MessageChunk, InfoChunk } from '../../../../types/protocol';
+import { MessageChunk, InfoChunk } from '@/types/protocol';
 
 export type RenderChunk = MessageChunk | { kind: 'info_group'; infos: InfoChunk[] };
 

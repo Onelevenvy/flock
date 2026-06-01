@@ -23,9 +23,9 @@ import {
 } from '@tabler/icons-react';
 import { invoke } from '@tauri-apps/api/core';
 import { useTranslation } from 'react-i18next';
-import { PendingApproval, ToolCategory } from '../../../../types/protocol';
-import { useAgentStore } from '../../../../store/agentStore';
-import { useUiStore } from '../../../../store/uiStore';
+import { PendingApproval, ToolCategory } from '@/types/protocol';
+import { useAgentStore } from '@/store/agentStore';
+import { useUiStore } from '@/store/uiStore';
 
 interface ToolApprovalModalProps {
   approval: PendingApproval | null;

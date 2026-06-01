@@ -1,9 +1,9 @@
 import { Group, Stack, TextInput, ActionIcon, Badge, Button, Divider } from '@mantine/core';
-import { ModelSelect } from '../../../../../components/Common/ModelSelect';
+import { ModelSelect } from '@/components/Common/ModelSelect';
 import { IconTrash, IconPlus } from '@tabler/icons-react';
 import { useTranslation } from 'react-i18next';
 import { v4 as uuidv4 } from 'uuid';
-import { VariableTextInput } from '../VariableInput';
+import { VariableTextInput } from '@/pages/Workflow/components/PropertiesPanel/VariableInput';
 
 export interface ClassifierFieldsProps {
   node: any;

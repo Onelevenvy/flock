@@ -2,8 +2,8 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { invoke } from '@tauri-apps/api/core';
 import { notifications } from '@mantine/notifications';
 import { useTranslation } from 'react-i18next';
-import type { WorkflowRecord } from '../store/workflowStore';
-import { formatError } from '../utils/error';
+import type { WorkflowRecord } from '@/store/workflowStore';
+import { formatError } from '@/utils/error';
 
 export type { WorkflowRecord };
 

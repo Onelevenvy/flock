@@ -5,7 +5,7 @@ import { useTranslation } from 'react-i18next';
 import ReactMarkdown from 'react-markdown';
 import { WorkflowStepItem } from './WorkflowStepItem';
 import { HumanReviewCard } from './HumanReviewCard';
-import { nodeConfig } from '../../../../pages/Workflow/nodeConfig';
+import { nodeConfig } from '@/pages/Workflow/nodeConfig';
 
 interface ExecutionRoundItemProps {
   round: {

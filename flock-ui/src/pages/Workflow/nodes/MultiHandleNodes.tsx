@@ -3,7 +3,7 @@ import { Handle, Position, type NodeProps } from 'reactflow';
 import { Box, Text, ActionIcon } from '@mantine/core';
 import { IconPlus } from '@tabler/icons-react';
 import { useTranslation } from 'react-i18next';
-import { nodeConfig } from '../nodeConfig';
+import { nodeConfig } from '@/pages/Workflow/nodeConfig';
 import { type BaseNodeData } from './types';
 import { handleStyle } from './styles';
 

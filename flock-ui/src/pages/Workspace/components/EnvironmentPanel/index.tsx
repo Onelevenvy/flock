@@ -4,8 +4,8 @@ import { IconX, IconCode, IconBrowser, IconDeviceDesktop, IconTerminal2 } from '
 import { useTranslation } from 'react-i18next';
 import { notifications } from '@mantine/notifications';
 import { save } from '@tauri-apps/plugin-dialog';
-import { useUiStore } from '../../../../store/uiStore';
-import { useWorkspaceStore } from '../../../../store/workspaceStore';
+import { useUiStore } from '@/store/uiStore';
+import { useWorkspaceStore } from '@/store/workspaceStore';
 import { invoke } from '@tauri-apps/api/core';
 
 import { ImageView } from './ImageView';

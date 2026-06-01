@@ -1,9 +1,9 @@
 import { Group, UnstyledButton, Avatar, Text, Box, Menu } from '@mantine/core';
 import { IconSparkles, IconRoute, IconDots } from '@tabler/icons-react';
 import i18next from 'i18next';
-import { type Assistant } from '../../types/assistant';
-import { useAssistantsQuery } from '../../hooks/useAssistants';
-import { useWorkflowsQuery, type WorkflowRecord } from '../../hooks/useWorkflow';
+import { type Assistant } from '@/types/assistant';
+import { useAssistantsQuery } from '@/hooks/useAssistants';
+import { useWorkflowsQuery, type WorkflowRecord } from '@/hooks/useWorkflow';
 import { useTranslation } from 'react-i18next';
 
 // ---- 内置 XiaoF agent ----

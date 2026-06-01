@@ -14,9 +14,9 @@ import {
 } from '@mantine/core';
 import { IconX } from '@tabler/icons-react';
 import { useTranslation } from 'react-i18next';
-import { nodeConfig, type NodeType } from '../../nodeConfig';
-import { useAvailableModels } from '../../../../hooks/useAvailableModels';
-import { useAvailableTools } from '../../../../hooks/useAvailableTools';
+import { nodeConfig, type NodeType } from '@/pages/Workflow/nodeConfig';
+import { useAvailableModels } from '@/hooks/useAvailableModels';
+import { useAvailableTools } from '@/hooks/useAvailableTools';
 
 // 引入公共组件
 import { VariableTextInput, VariableTextarea } from './VariableInput';

@@ -1,9 +1,9 @@
 import { useEffect } from 'react';
 import { listen } from '@tauri-apps/api/event';
 import { invoke } from '@tauri-apps/api/core';
-import { usePetStore } from '../../store/petStore';
-import { useXiaofState } from '../../hooks/useXiaofState';
-import { useAgentStore } from '../../store/agentStore';
+import { usePetStore } from '@/store/petStore';
+import { useXiaofState } from '@/hooks/useXiaofState';
+import { useAgentStore } from '@/store/agentStore';
 
 /**
  * XiaofSyncManager

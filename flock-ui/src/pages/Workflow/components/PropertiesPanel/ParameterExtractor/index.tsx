@@ -1,8 +1,8 @@
 import { TextInput, ActionIcon, Button, Group, Divider, Stack } from '@mantine/core';
-import { ModelSelect } from '../../../../../components/Common/ModelSelect';
+import { ModelSelect } from '@/components/Common/ModelSelect';
 import { IconTrash, IconPlus } from '@tabler/icons-react';
 import { useTranslation } from 'react-i18next';
-import { VariableTextInput, VariableTextarea } from '../VariableInput';
+import { VariableTextInput, VariableTextarea } from '@/pages/Workflow/components/PropertiesPanel/VariableInput';
 
 export interface ParameterExtractorFieldsProps {
   node: any;

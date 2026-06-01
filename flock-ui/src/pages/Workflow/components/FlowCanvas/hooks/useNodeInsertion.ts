@@ -3,8 +3,8 @@ import { type Edge, type Node, MarkerType } from 'reactflow';
 
 
 import { useFlowLayout } from './useFlowLayout';
-import { nodeConfig, type NodeType } from '../../../nodeConfig';
-import { useWorkflowStore } from '../../../../../store/workflowStore';
+import { nodeConfig, type NodeType } from '@/pages/Workflow/nodeConfig';
+import { useWorkflowStore } from '@/store/workflowStore';
 
 interface ActiveSourceHandle {
   nodeId: string;

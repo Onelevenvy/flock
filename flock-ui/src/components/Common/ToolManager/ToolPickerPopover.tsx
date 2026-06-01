@@ -18,10 +18,10 @@ import {
   Box,
 } from '@mantine/core';
 import { useTranslation } from 'react-i18next';
-import { useAvailableTools } from '../../../hooks/useAvailableTools';
-import { ToolsIcon } from '../Icons';
+import { useAvailableTools } from '@/hooks/useAvailableTools';
+import { ToolsIcon } from '@/components/Common/Icons';
 import { IconSearch, IconX, IconPlus } from '@tabler/icons-react';
-import { getProviderName } from '../../../pages/Skills/helpers';
+import { getProviderName } from '@/pages/Skills/helpers';
 
 
 import { useDisclosure } from '@mantine/hooks';

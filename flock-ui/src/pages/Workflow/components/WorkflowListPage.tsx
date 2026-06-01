@@ -12,10 +12,10 @@ import {
 } from '@mantine/core';
 import { IconPlus, IconRoute } from '@tabler/icons-react';
 import { useTranslation } from 'react-i18next';
-import { useWorkflowsQuery } from '../../../hooks/useWorkflow';
+import { useWorkflowsQuery } from '@/hooks/useWorkflow';
 import { WorkflowCard } from './WorkflowCard';
 import { CreateWorkflowModal } from './CreateWorkflowModal';
-import { useStartAgent } from '../../../hooks/useStartAgent';
+import { useStartAgent } from '@/hooks/useStartAgent';
 
 interface WorkflowListPageProps {
   onOpenEditor: (id: string) => void;

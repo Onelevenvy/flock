@@ -25,7 +25,7 @@ import { SOURCE_COLORS } from './helpers';
 import { SkillDetailPanel } from './components/SkillDetailPanel';
 import { ExtraDirsModal } from './components/ExtraDirsModal';
 
-import { useSkillsQuery } from '../../hooks/useToolQueries';
+import { useSkillsQuery } from '@/hooks/useToolQueries';
 
 export function SkillsTab() {
   const { t } = useTranslation();

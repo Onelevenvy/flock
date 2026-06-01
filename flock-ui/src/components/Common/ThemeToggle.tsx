@@ -1,7 +1,7 @@
 import { ActionIcon, Tooltip } from '@mantine/core';
 import { IconSun, IconMoon } from '@tabler/icons-react';
 import { useTranslation } from 'react-i18next';
-import { useUiStore } from '../../store/uiStore';
+import { useUiStore } from '@/store/uiStore';
 
 export function ThemeToggle() {
   const { t } = useTranslation();

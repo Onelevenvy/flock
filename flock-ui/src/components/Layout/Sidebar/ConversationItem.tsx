@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Avatar, Box, Group, Text, TextInput, Menu, ActionIcon, Stack } from '@mantine/core';
 import { IconDotsVertical, IconEdit, IconTrash } from '@tabler/icons-react';
-import { ConversationInfo } from '../../../types/workspace';
+import { ConversationInfo } from '@/types/workspace';
 import { useTranslation } from 'react-i18next';
 
 export interface ConversationAppMeta {

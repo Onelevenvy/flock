@@ -13,7 +13,7 @@ import {
 } from '@mantine/core';
 import { IconBolt } from '@tabler/icons-react';
 import { useTranslation } from 'react-i18next';
-import { useWorkflowStore } from '../../../../store/workflowStore';
+import { useWorkflowStore } from '@/store/workflowStore';
 import { getAvailableVariables } from './helper';
 
 // --- HTML/Plain text conversion helpers ---

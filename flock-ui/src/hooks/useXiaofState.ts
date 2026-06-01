@@ -1,5 +1,5 @@
 import { useMemo } from 'react';
-import { useAgentStore } from '../store/agentStore';
+import { useAgentStore } from '@/store/agentStore';
 
 export type XiaofMood =
   | 'sleeping'   // disconnected

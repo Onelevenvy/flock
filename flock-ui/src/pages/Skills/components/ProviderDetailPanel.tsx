@@ -21,10 +21,10 @@ import {
 } from '@tabler/icons-react';
 import { invoke } from '@tauri-apps/api/core';
 import { useTranslation } from 'react-i18next';
-import type { ToolProvider, Tool } from '../types';
-import { getProviderDescription, getProviderName, formatLabel, parseInputSchema, getToolName, getToolDescription, getToolParamDescription } from '../helpers';
-import { ToolsIcon } from '../../../components/Common/Icons';
-import { useProviderCredentials } from '../hooks/useProviderCredentials';
+import type { ToolProvider, Tool } from '@/pages/Skills/types';
+import { getProviderDescription, getProviderName, formatLabel, parseInputSchema, getToolName, getToolDescription, getToolParamDescription } from '@/pages/Skills/helpers';
+import { ToolsIcon } from '@/components/Common/Icons';
+import { useProviderCredentials } from '@/pages/Skills/hooks/useProviderCredentials';
 
 export function renderTextWithLinks(text: string) {
   if (!text) return null;

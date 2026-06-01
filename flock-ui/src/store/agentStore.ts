@@ -7,7 +7,7 @@ import {
   HumanTakeoverInfo,
   PendingApproval,
   ProtocolEvent,
-} from '../types/protocol';
+} from '@/types/protocol';
 import { handleAgentEvent, loadAgentHistory } from './agentEventHandlers';
 
 export interface AgentStore {

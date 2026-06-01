@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
-import { useAgentStore } from '../../../../../store/agentStore';
-import { extractScreenshotsStructured, type ScreenshotInfo } from '../utils/vncUtils';
+import { useAgentStore } from '@/store/agentStore';
+import { extractScreenshotsStructured, type ScreenshotInfo } from '@/pages/Workspace/components/EnvironmentPanel/utils/vncUtils';
 
 export function useScreenshotPlayback(formattedVncUrl: string) {
   const [activeTab, setActiveTab] = useState<'screenshot' | 'vnc'>('screenshot');

@@ -11,8 +11,8 @@ import {
   type OnNodesChange,
   MarkerType,
 } from 'reactflow';
-import { nodeConfig, type NodeType } from '../../../nodeConfig';
-import { useWorkflowStore } from '../../../../../store/workflowStore';
+import { nodeConfig, type NodeType } from '@/pages/Workflow/nodeConfig';
+import { useWorkflowStore } from '@/store/workflowStore';
 
 
 /**

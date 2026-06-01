@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Stack } from '@mantine/core';
 import { IconCheck } from '@tabler/icons-react';
-import { useUiStore } from '../../../store/uiStore';
+import { useUiStore } from '@/store/uiStore';
 import { invoke } from '@tauri-apps/api/core';
 import { notifications } from '@mantine/notifications';
 import { useTranslation } from 'react-i18next';

@@ -5,7 +5,7 @@ import {
   IconDeviceDesktop,
 } from '@tabler/icons-react';
 import { useTranslation } from 'react-i18next';
-import type { ScreenshotInfo } from '../utils/vncUtils';
+import type { ScreenshotInfo } from '@/pages/Workspace/components/EnvironmentPanel/utils/vncUtils';
 
 interface VncTimelineProps {
   screenshots: ScreenshotInfo[];

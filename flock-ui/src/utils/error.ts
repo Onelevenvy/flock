@@ -1,4 +1,4 @@
-import i18n from '../i18n';
+import i18n from '@/i18n';
 
 /**
  * 格式化并本地化从 Rust 端或网络请求返回的错误信息

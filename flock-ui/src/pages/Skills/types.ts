@@ -1,4 +1,4 @@
-import type { McpServerInfo, SkillInfo } from '../../types/protocol';
+import type { McpServerInfo, SkillInfo } from '@/types/protocol';
 
 export interface I18nString {
   zh: string;

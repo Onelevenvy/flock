@@ -11,10 +11,10 @@
 import { useEffect, useRef, useCallback } from 'react';
 import { listen } from '@tauri-apps/api/event';
 import { invoke } from '@tauri-apps/api/core';
-import { useWorkflowStore } from '../store/workflowStore';
-import { useWorkspaceStore } from '../store/workspaceStore';
-import { useAgentStore } from '../store/agentStore';
-import type { WorkflowExecutionMessage } from '../store/workflowStore';
+import { useWorkflowStore } from '@/store/workflowStore';
+import { useWorkspaceStore } from '@/store/workspaceStore';
+import { useAgentStore } from '@/store/agentStore';
+import type { WorkflowExecutionMessage } from '@/store/workflowStore';
 
 export interface WorkflowTauriEvent {
   type:

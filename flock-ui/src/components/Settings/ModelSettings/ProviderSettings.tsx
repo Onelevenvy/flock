@@ -12,8 +12,8 @@ import { invoke } from '@tauri-apps/api/core';
 import { notifications } from '@mantine/notifications';
 import { IconCheck, IconX } from '@tabler/icons-react';
 import { useTranslation } from 'react-i18next';
-import { ProviderIcon } from '../../Common/Icons';
-import { parseMultiLang } from '../../../utils/i18n';
+import { ProviderIcon } from '@/components/Common/Icons';
+import { parseMultiLang } from '@/utils/i18n';
 
 interface ModelProvider {
   id: string;

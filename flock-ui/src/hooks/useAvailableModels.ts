@@ -1,7 +1,7 @@
 import { useProvidersQuery } from './useModelQueries';
 import { useQueries } from '@tanstack/react-query';
 import { invoke } from '@tauri-apps/api/core';
-import { parseMultiLang } from '../utils/i18n';
+import { parseMultiLang } from '@/utils/i18n';
 
 export interface ModelProvider {
   id: string;

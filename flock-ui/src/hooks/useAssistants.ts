@@ -1,7 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { invoke } from '@tauri-apps/api/core';
 import { useTranslation } from 'react-i18next';
-import type { Assistant, UpsertAssistant } from '../types/assistant';
+import type { Assistant, UpsertAssistant } from '@/types/assistant';
 
 export interface I18nString {
   zh: string;

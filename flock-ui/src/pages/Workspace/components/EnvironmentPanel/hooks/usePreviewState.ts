@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { invoke } from '@tauri-apps/api/core';
-import { useAgentStore } from '../../../../../store/agentStore';
-import { useWorkspaceStore } from '../../../../../store/workspaceStore';
+import { useAgentStore } from '@/store/agentStore';
+import { useWorkspaceStore } from '@/store/workspaceStore';
 
 /**
  * Compute the formatted VNC URL with required query params for noVNC.

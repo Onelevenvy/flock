@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import i18n from '../i18n';
+import i18n from '@/i18n';
 import { invoke } from '@tauri-apps/api/core';
 
 export type ThemeMode = 'light' | 'dark';

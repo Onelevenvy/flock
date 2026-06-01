@@ -17,7 +17,7 @@ import { Box, Text, Group, Stack, ActionIcon } from '@mantine/core';
 import { IconX } from '@tabler/icons-react';
 import { useTranslation } from 'react-i18next';
 import { notifications } from '@mantine/notifications';
-import { useAvailableTools, type Tool } from '../../../hooks/useAvailableTools';
+import { useAvailableTools, type Tool } from '@/hooks/useAvailableTools';
 import { ToolCard } from './ToolCard';
 import { ToolPickerPopover } from './ToolPickerPopover';
 import type { PopoverProps } from '@mantine/core';

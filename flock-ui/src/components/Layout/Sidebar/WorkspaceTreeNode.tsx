@@ -1,11 +1,11 @@
 import { Box, Group, Text, ActionIcon, Menu, Collapse, Loader, Stack } from '@mantine/core';
 import { IconChevronDown, IconChevronRight, IconDotsVertical, IconTrash } from '@tabler/icons-react';
 import { ConversationAppMeta, ConversationItem } from './ConversationItem';
-import { useConversationsQuery } from '../../../hooks/useWorkspaces';
-import { useAssistantsQuery } from '../../../hooks/useAssistants';
-import { useWorkflowsQuery } from '../../../hooks/useWorkflow';
-import { useWorkspaceStore } from '../../../store/workspaceStore';
-import { XIAOF_AGENT } from '../../../pages/Home/AssistantPicker';
+import { useConversationsQuery } from '@/hooks/useWorkspaces';
+import { useAssistantsQuery } from '@/hooks/useAssistants';
+import { useWorkflowsQuery } from '@/hooks/useWorkflow';
+import { useWorkspaceStore } from '@/store/workspaceStore';
+import { XIAOF_AGENT } from '@/pages/Home/AssistantPicker';
 import { useTranslation } from 'react-i18next';
 
 export function WorkspaceTreeNode({

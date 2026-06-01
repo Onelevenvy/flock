@@ -2,9 +2,9 @@ import { useState } from 'react';
 import { Box, Text, Group, Badge, Stack, Popover, Divider, Tooltip, ActionIcon } from '@mantine/core';
 import { IconInfoCircle } from '@tabler/icons-react';
 import { useTranslation } from 'react-i18next';
-import type { Tool, ToolProvider } from '../../../hooks/useAvailableTools';
-import { ToolsIcon } from '../Icons';
-import { getProviderName, getToolName, getToolDescription, getToolParamDescription } from '../../../pages/Skills/helpers';
+import type { Tool, ToolProvider } from '@/hooks/useAvailableTools';
+import { ToolsIcon } from '@/components/Common/Icons';
+import { getProviderName, getToolName, getToolDescription, getToolParamDescription } from '@/pages/Skills/helpers';
 
 
 interface ToolDetailPopoverProps {

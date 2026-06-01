@@ -1,6 +1,6 @@
 import { Card, Group, ThemeIcon, Box, Tooltip, Text } from '@mantine/core';
 import { IconSparkles, IconHelpCircle } from '@tabler/icons-react';
-import { ModelSelect } from '../../../Common/ModelSelect';
+import { ModelSelect } from '@/components/Common/ModelSelect';
 
 interface SummaryModelCardProps {
   t: any;

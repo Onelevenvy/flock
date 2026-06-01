@@ -1,7 +1,7 @@
 import { invoke } from '@tauri-apps/api/core';
-import { useAgentStore } from '../store/agentStore';
-import { useWorkspaceStore } from '../store/workspaceStore';
-import type { ConversationInfo, WorkspaceInfo } from '../types/workspace';
+import { useAgentStore } from '@/store/agentStore';
+import { useWorkspaceStore } from '@/store/workspaceStore';
+import type { ConversationInfo, WorkspaceInfo } from '@/types/workspace';
 
 export async function reconnectCurrentAgent(workspaces: WorkspaceInfo[]) {
   const {

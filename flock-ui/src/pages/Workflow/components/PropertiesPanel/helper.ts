@@ -1,7 +1,7 @@
 import type { Edge, Node } from 'reactflow';
-import type { VariableType } from '../../../../types/workflowVariables';
-import { SYSTEM_VARIABLES } from '../../../../types/workflowVariables';
-import type { EnvVar } from '../../../../store/workflowStore';
+import type { VariableType } from '@/types/workflowVariables';
+import { SYSTEM_VARIABLES } from '@/types/workflowVariables';
+import type { EnvVar } from '@/store/workflowStore';
 
 export interface VariableOption {
   label: string;

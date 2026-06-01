@@ -3,12 +3,12 @@ import { Group, Text, Tooltip, Loader } from '@mantine/core';
 import { IconCube, IconCheck } from '@tabler/icons-react';
 import { invoke } from '@tauri-apps/api/core';
 import { useTranslation } from 'react-i18next';
-import { useWorkspacesQuery } from '../../hooks/useWorkspaces';
-import { reconnectCurrentAgent } from '../../lib/agentConnection';
+import { useWorkspacesQuery } from '@/hooks/useWorkspaces';
+import { reconnectCurrentAgent } from '@/lib/agentConnection';
 import { ModelSelect } from './ModelSelect';
-import { parseMultiLang } from '../../utils/i18n';
+import { parseMultiLang } from '@/utils/i18n';
 
-import { useAvailableModels } from '../../hooks/useAvailableModels';
+import { useAvailableModels } from '@/hooks/useAvailableModels';
 
 interface ActiveModel {
   provider_id: string;

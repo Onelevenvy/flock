@@ -1,7 +1,7 @@
 import { Box, Group, Text, Avatar, Menu, ActionIcon, Tooltip, Badge, Button } from '@mantine/core';
 import { IconDotsVertical, IconEdit, IconTrash, IconLock, IconMessageCircle } from '@tabler/icons-react';
 import { useTranslation } from 'react-i18next';
-import { type Assistant } from '../../types/assistant';
+import { type Assistant } from '@/types/assistant';
 
 export function AssistantCard({
   assistant,

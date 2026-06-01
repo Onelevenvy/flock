@@ -2,10 +2,10 @@ import { useState } from 'react';
 import { Box, Text, Group, Switch, ActionIcon, Tooltip } from '@mantine/core';
 import { IconX, IconShieldHeart } from '@tabler/icons-react';
 import { useTranslation } from 'react-i18next';
-import type { Tool, ToolProvider } from '../../../hooks/useAvailableTools';
-import { ToolsIcon } from '../Icons';
+import type { Tool, ToolProvider } from '@/hooks/useAvailableTools';
+import { ToolsIcon } from '@/components/Common/Icons';
 import { ToolDetailPopover } from './ToolDetailPopover';
-import { getProviderName } from '../../../pages/Skills/helpers';
+import { getProviderName } from '@/pages/Skills/helpers';
 
 
 

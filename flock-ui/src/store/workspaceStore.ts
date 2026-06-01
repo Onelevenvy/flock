@@ -2,7 +2,7 @@ import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 
 // 重新导出类型，以保证其它组件导入路径不被破坏 (Backward Compatibility)
-export type { WorkspaceInfo, ConversationInfo } from '../types/workspace';
+export type { WorkspaceInfo, ConversationInfo } from '@/types/workspace';
 
 interface WorkspaceStore {
   activeWorkspaceId: string | null;

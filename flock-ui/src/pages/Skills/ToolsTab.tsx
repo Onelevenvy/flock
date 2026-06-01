@@ -14,10 +14,10 @@ import { invoke } from '@tauri-apps/api/core';
 import { useTranslation } from 'react-i18next';
 import type { ToolProvider, Tool } from './types';
 import { getProviderDescription, getProviderName } from './helpers';
-import { ToolsIcon } from '../../components/Common/Icons';
+import { ToolsIcon } from '@/components/Common/Icons';
 import { ProviderDetailPanel } from './components/ProviderDetailPanel';
 
-import { useAvailableTools } from '../../hooks/useAvailableTools';
+import { useAvailableTools } from '@/hooks/useAvailableTools';
 
 export function ToolsTab() {
   const { t } = useTranslation();
