@@ -12,9 +12,9 @@ pub fn builtin_cron_jobs() -> Vec<UpsertCronJob> {
                 "Triggers automatically at 8:00 AM daily. XiaoF compiles today's plan, system health, and warm tips for you."
             ),
             enabled: true,
-            schedule_kind: "manual".to_string(), // 手动执行周期或留空让用户选择
+            schedule_kind: "manual".to_string(), 
             schedule_value: "".to_string(),
-            schedule_desc: "Manual (手动执行)".to_string(),
+            schedule_desc: "Manual".to_string(),
             execution_mode: "new_conversation".to_string(),
             prompt: "Hi XiaoF! 请帮我生成一份今天的智能工作简报。包括：1. 问候语；2. 建议的今日任务清单（根据我的日程或模拟）；3. 给我一条充满活力的早安寄语！".to_string(),
             workspace_id: "default".to_string(),

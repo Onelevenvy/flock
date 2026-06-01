@@ -63,9 +63,20 @@ export function useWorkflowsQuery() {
 }
 
 export function useWorkflowQuery(id: string | null) {
+  const { i18n } = useTranslation();
+  const currentLang = i18n.language;
+
   return useQuery({
-    queryKey: ['workflow', id],
-    queryFn: () => invoke<WorkflowRecord | null>('get_workflow', { id }),
+    queryKey: ['workflow', id, currentLang],
+    queryFn: async () => {
+      const w = await invoke<RawWorkflowRecord | null>('get_workflow', { id });
+      if (!w) return null;
+      return {
+        ...w,
+        name: parseWorkflowMultiLang(w.name, currentLang),
+        description: parseWorkflowMultiLang(w.description, currentLang),
+      } as WorkflowRecord;
+    },
     enabled: !!id,
   });
 }
