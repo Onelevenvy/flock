@@ -18,11 +18,51 @@ export interface UpsertCronJobInput {
   assistant_id: string;
 }
 
+import { useTranslation } from 'react-i18next';
+
+export interface I18nString {
+  zh: string;
+  en: string;
+}
+
+type RawCronJob = Omit<CronJob, 'name' | 'description'> & {
+  name: I18nString | string;
+  description: I18nString | string;
+};
+
+function parseCronMultiLang(fieldVal: I18nString | string | undefined | null, lang: string): string {
+  if (!fieldVal) return '';
+  if (typeof fieldVal === 'string') {
+    if (fieldVal.startsWith('{') && fieldVal.endsWith('}')) {
+      try {
+        const parsed = JSON.parse(fieldVal) as I18nString;
+        const currentLang = ((lang || 'zh').split('-')[0]) as 'zh' | 'en';
+        return parsed[currentLang] || parsed['en'] || parsed['zh'] || '';
+      } catch (e) {
+        return fieldVal;
+      }
+    }
+    return fieldVal;
+  }
+  const currentLang = ((lang || 'zh').split('-')[0]) as 'zh' | 'en';
+  return fieldVal[currentLang] || fieldVal['en'] || fieldVal['zh'] || '';
+}
+
 /** 获取所有定时任务列表 */
 export function useCronJobsQuery() {
+  const { i18n } = useTranslation();
+  const currentLang = i18n.language;
+
   return useQuery<CronJob[]>({
-    queryKey: ['cron_jobs'],
-    queryFn: () => invoke<CronJob[]>('list_cron_jobs'),
+    queryKey: ['cron_jobs', currentLang],
+    queryFn: async () => {
+      const data = await invoke<RawCronJob[]>('list_cron_jobs');
+      return data.map(job => ({
+        ...job,
+        name: parseCronMultiLang(job.name, currentLang),
+        description: parseCronMultiLang(job.description, currentLang),
+      })) as CronJob[];
+    },
     staleTime: 30 * 1000, // 30s 缓存，任务状态变动较频繁
     refetchInterval: 10 * 1000, // 每 10s 自动刷新（后台调度可能更新 next_run_at）
   });
@@ -32,8 +72,14 @@ export function useCronJobsQuery() {
 export function useCreateCronJobMutation() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: (input: UpsertCronJobInput) =>
-      invoke<CronJob>('create_cron_job', { input }),
+    mutationFn: (input: UpsertCronJobInput) => {
+      const payload = {
+        ...input,
+        name: { zh: input.name, en: input.name },
+        description: { zh: input.description, en: input.description },
+      };
+      return invoke<CronJob>('create_cron_job', { input: payload });
+    },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['cron_jobs'] });
     },
@@ -44,8 +90,14 @@ export function useCreateCronJobMutation() {
 export function useUpdateCronJobMutation() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: ({ id, input }: { id: string; input: UpsertCronJobInput }) =>
-      invoke<CronJob>('update_cron_job', { id, input }),
+    mutationFn: ({ id, input }: { id: string; input: UpsertCronJobInput }) => {
+      const payload = {
+        ...input,
+        name: { zh: input.name, en: input.name },
+        description: { zh: input.description, en: input.description },
+      };
+      return invoke<CronJob>('update_cron_job', { id, input: payload });
+    },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['cron_jobs'] });
     },
