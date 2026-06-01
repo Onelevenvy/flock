@@ -38,10 +38,22 @@ pub fn make_agent_workflow_node(
                     let mut sys_prompt = interpolate_string_with_context(sys_template, &state, &ctx, &ctx.workflow_id);
                     let user_prompt = interpolate_string_with_context(user_template, &state, &ctx, &ctx.workflow_id);
 
-                    let tool_names: Vec<String> = node_data.get("tools")
+                    let mut tool_names: Vec<String> = node_data.get("tools")
                         .and_then(|v| v.as_array())
                         .map(|arr| arr.iter().filter_map(|t| t.as_str().map(|s| s.to_string())).collect())
                         .unwrap_or_default();
+
+                    let node_skills: Vec<String> = node_data.get("skills")
+                        .and_then(|v| v.as_array())
+                        .map(|arr| arr.iter().filter_map(|t| t.as_str().map(|s| s.to_string())).collect())
+                        .unwrap_or_default();
+
+                    // If the node has explicitly bound skills, automatically enable the 'Skill' tool!
+                    if !node_skills.is_empty() {
+                        if !tool_names.contains(&"Skill".to_string()) {
+                            tool_names.push("Skill".to_string());
+                        }
+                    }
 
                     // If 'Skill' tool is enabled, dynamically load all skills and inject them to system prompt
                     if tool_names.contains(&"Skill".to_string()) {
@@ -81,11 +93,6 @@ pub fn make_agent_workflow_node(
                         for d in extra_dirs {
                             raw_paths.push(std::path::PathBuf::from(d));
                         }
-
-                        let node_skills: Vec<String> = node_data.get("skills")
-                            .and_then(|v| v.as_array())
-                            .map(|arr| arr.iter().filter_map(|t| t.as_str().map(|s| s.to_string())).collect())
-                            .unwrap_or_default();
 
                         let skills = flock_skills::loader::load_all_skills(&cwd, &[], false, None, &raw_paths).await;
                         let visible_skills: Vec<_> = skills

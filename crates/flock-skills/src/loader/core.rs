@@ -44,11 +44,11 @@ pub async fn load_all_skills(
         }
         all.splice(0..0, bundled_loaded);
         let final_skills = deduplicate_by_name(deduplicate(all));
-        log::info!("===== [Flock Skills] Loaded {} skills (bare) =====", final_skills.len());
-        for skill in &final_skills {
-            log::info!("  - Name: '{}', Context: {:?}, Source: {:?}", skill.name, skill.execution_context, skill.source);
-        }
-        log::info!("==================================================");
+        // log::info!("===== [Flock Skills] Loaded {} skills (bare) =====", final_skills.len());
+        // for skill in &final_skills {
+        //     log::info!("  - Name: '{}', Context: {:?}, Source: {:?}", skill.name, skill.execution_context, skill.source);
+        // }
+        // log::info!("==================================================");
         return final_skills;
     }
 
@@ -114,11 +114,11 @@ pub async fn load_all_skills(
     all.splice(0..0, bundled_loaded);
 
     let final_skills = deduplicate_by_name(deduplicate(all));
-    log::info!("===== [Flock Skills] Loaded {} skills =====", final_skills.len());
-    for skill in &final_skills {
-        log::info!("  - Name: '{}', Context: {:?}, Source: {:?}", skill.name, skill.execution_context, skill.source);
-    }
-    log::info!("=============================================");
+    // log::info!("===== [Flock Skills] Loaded {} skills =====", final_skills.len());
+    // for skill in &final_skills {
+    //     log::info!("  - Name: '{}', Context: {:?}, Source: {:?}", skill.name, skill.execution_context, skill.source);
+    // }
+    // log::info!("=============================================");
     final_skills
 }
 
