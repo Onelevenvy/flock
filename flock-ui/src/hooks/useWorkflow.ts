@@ -88,8 +88,14 @@ export function useCreateWorkflow() {
   const { t } = useTranslation();
 
   return useMutation({
-    mutationFn: (input: UpsertWorkflow) =>
-      invoke<WorkflowRecord>('create_workflow', { input }),
+    mutationFn: (input: UpsertWorkflow) => {
+      const payload = {
+        ...input,
+        name: { zh: input.name, en: input.name },
+        description: { zh: input.description, en: input.description },
+      };
+      return invoke<WorkflowRecord>('create_workflow', { input: payload });
+    },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['workflows'] });
       notifications.show({
@@ -111,8 +117,14 @@ export function useUpdateWorkflow() {
   const { t } = useTranslation();
 
   return useMutation({
-    mutationFn: ({ id, input }: { id: string; input: UpsertWorkflow }) =>
-      invoke<WorkflowRecord>('update_workflow', { id, input }),
+    mutationFn: ({ id, input }: { id: string; input: UpsertWorkflow }) => {
+      const payload = {
+        ...input,
+        name: { zh: input.name, en: input.name },
+        description: { zh: input.description, en: input.description },
+      };
+      return invoke<WorkflowRecord>('update_workflow', { id, input: payload });
+    },
     onSuccess: (_data, { id }) => {
       qc.invalidateQueries({ queryKey: ['workflows'] });
       qc.invalidateQueries({ queryKey: ['workflow', id] });
