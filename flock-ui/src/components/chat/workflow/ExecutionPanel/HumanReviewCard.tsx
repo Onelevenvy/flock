@@ -102,7 +102,7 @@ export function HumanReviewCard({
         </Box>
 
         <Text size="xs" fw={600} style={{ flex: 1, color: 'var(--flock-text-bright)' }}>
-          {displayName ?? t('workflow.nodes.human.label', '人工审查')}
+          {displayName ?? t('workflow.nodes.human.label', 'HITL')}
         </Text>
 
         {isResolved ? (

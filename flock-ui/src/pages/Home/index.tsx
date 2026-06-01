@@ -12,10 +12,13 @@ import { XIAOF_AGENT } from './AssistantPicker';
 import { WorkspacePicker } from './WorkspacePicker';
 import { ExplorerAppCard } from './components/ExplorerAppCard';
 import { useStartAgent } from '../../hooks/useStartAgent';
+import { XiaofCharacter } from '../../components/Pet/XiaofCharacter';
+import { useXiaofState } from '../../hooks/useXiaofState';
 
 export function HomeView() {
   const { t } = useTranslation();
   const [filter, setFilter] = useState<'all' | 'assistants' | 'workflows'>('all');
+  const { mood } = useXiaofState();
 
   const { data: assistants = [] } = useAssistantsQuery();
   const { data: workflows = [] } = useWorkflowsQuery();
@@ -32,8 +35,7 @@ export function HomeView() {
 
   const { startAssistant, startWorkflow, loadingId } = useStartAgent();
 
-  const allAssistants = useMemo(() => [XIAOF_AGENT, ...assistants], [assistants]);
-  const featuredAssistants = allAssistants.slice(0, 6);
+  const featuredAssistants = assistants.filter((a) => a.id !== '__xiaof__').slice(0, 6);
   const featuredWorkflows = workflows.slice(0, 6);
 
   const handleSelectWorkspace = useCallback(async (wsId: string, wsPath: string) => {
@@ -111,20 +113,20 @@ export function HomeView() {
             }}
           >
             <Group justify="space-between" align="center">
-              <Group gap="sm">
+              <Group gap="md">
                 <Box
                   style={{
-                    width: 42,
-                    height: 42,
-                    borderRadius: 14,
+                    width: 52,
+                    height: 52,
+                    borderRadius: 16,
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center',
-                    color: 'var(--flock-accent)',
                     background: 'var(--flock-accent-soft)',
+                    overflow: 'visible',
                   }}
                 >
-                  <IconMessageCircle size={20} />
+                  <XiaofCharacter mood={mood} size={48} />
                 </Box>
                 <Stack gap={2}>
                   <Text size="sm" fw={700}>{t('home.explorer.quickStartTitle')}</Text>

@@ -188,7 +188,7 @@
     "ifelse": { "label": "条件分支" },
     "answer": { "label": "输出" },
     "code": { "label": "代码" },
-    "human": { "label": "人工审查" },
+    "human": { "label": "HITL" },
     "parameterExtractor": { "label": "参数提取" },
     "plugin": { "label": "插件" },
     "noModel": "未选择模型",

@@ -186,7 +186,7 @@
     "ifelse": { "label": "If-Else" },
     "answer": { "label": "Answer" },
     "code": { "label": "Code" },
-    "human": { "label": "Human Review" },
+    "human": { "label": "HITL" },
     "parameterExtractor": { "label": "Extractor" },
     "plugin": { "label": "Plugin" },
     "noModel": "No Model",
