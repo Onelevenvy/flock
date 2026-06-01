@@ -14,6 +14,8 @@ pub mod cron;
 pub mod app_config;
 pub mod workflow;
 pub mod workflow_seed;
+pub mod cron_seed;
+
 
 use std::path::{Path, PathBuf};
 
@@ -86,6 +88,7 @@ impl DbManager {
         mgr.seed_builtin_providers().await?;
         mgr.seed_builtin_assistants(&assistants_seed::builtin_assistants()).await?;
         mgr.seed_builtin_workflows(&workflow_seed::builtin_workflows()).await?;
+        mgr.seed_builtin_cron_jobs(&cron_seed::builtin_cron_jobs()).await?;
         mgr.seed_default_app_config().await?;
         Ok(mgr)
     }

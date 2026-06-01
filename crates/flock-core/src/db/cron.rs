@@ -2,12 +2,13 @@ use serde::{Deserialize, Serialize};
 use sqlx::Row;
 
 use super::DbManager;
+use crate::types::tool::I18nString;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct CronJobRecord {
     pub id: String,
-    pub name: String,
-    pub description: String,
+    pub name: I18nString,
+    pub description: I18nString,
     pub enabled: bool,
     pub schedule_kind: String,
     pub schedule_value: String,
@@ -29,8 +30,8 @@ pub struct CronJobRecord {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct UpsertCronJob {
     pub id: Option<String>,
-    pub name: String,
-    pub description: String,
+    pub name: I18nString,
+    pub description: I18nString,
     pub enabled: bool,
     pub schedule_kind: String,
     pub schedule_value: String,
@@ -85,6 +86,8 @@ impl DbManager {
         let id = input.id.clone().unwrap_or_else(|| {
             format!("cron_{}", uuid_like())
         });
+        let name_json = serde_json::to_string(&input.name)?;
+        let description_json = serde_json::to_string(&input.description)?;
 
         sqlx::query(
             "INSERT INTO cron_job
@@ -94,8 +97,8 @@ impl DbManager {
              VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, NULL, NULL, 'ok', NULL, 0, NULL, ?12, ?12)",
         )
         .bind(&id)
-        .bind(&input.name)
-        .bind(&input.description)
+        .bind(&name_json)
+        .bind(&description_json)
         .bind(input.enabled as i64)
         .bind(&input.schedule_kind)
         .bind(&input.schedule_value)
@@ -134,6 +137,8 @@ impl DbManager {
     /// 更新定时任务，排除 next_run_at，last_run_at 等状态，这些由运行期动态更新
     pub async fn update_cron_job(&self, id: &str, input: &UpsertCronJob) -> anyhow::Result<CronJobRecord> {
         let now = chrono::Utc::now().to_rfc3339();
+        let name_json = serde_json::to_string(&input.name)?;
+        let description_json = serde_json::to_string(&input.description)?;
 
         let rows_affected = sqlx::query(
             "UPDATE cron_job SET
@@ -142,8 +147,8 @@ impl DbManager {
                 prompt = ?8, workspace_id = ?9, assistant_id = ?10, updated_at = ?11
              WHERE id = ?12",
         )
-        .bind(&input.name)
-        .bind(&input.description)
+        .bind(&name_json)
+        .bind(&description_json)
         .bind(input.enabled as i64)
         .bind(&input.schedule_kind)
         .bind(&input.schedule_value)
@@ -219,14 +224,62 @@ impl DbManager {
         .await?;
         Ok(())
     }
+
+    /// Seed / upsert built-in cron jobs (called on startup).
+    /// Keeps user modifications if any.
+    pub async fn seed_builtin_cron_jobs(&self, builtins: &[UpsertCronJob]) -> anyhow::Result<()> {
+        for job in builtins {
+            let default_id = format!("cron_{}", uuid_like());
+            let id = job.id.as_deref().unwrap_or(&default_id);
+            let now = chrono::Utc::now().to_rfc3339();
+            let name_json = serde_json::to_string(&job.name)?;
+            let description_json = serde_json::to_string(&job.description)?;
+
+            // Insert if not exists; on conflict do nothing or keep existing to prevent overwriting user modifications
+            sqlx::query(
+                "INSERT INTO cron_job
+                 (id, name, description, enabled, schedule_kind, schedule_value, schedule_desc,
+                  execution_mode, prompt, workspace_id, assistant_id, next_run_at, last_run_at,
+                  last_status, last_error, run_count, last_conversation_id, created_at, updated_at)
+                 VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, NULL, NULL, 'ok', NULL, 0, NULL, ?12, ?12)
+                 ON CONFLICT(id) DO UPDATE SET
+                    name = excluded.name,
+                    description = excluded.description,
+                    updated_at = excluded.updated_at",
+            )
+            .bind(id)
+            .bind(&name_json)
+            .bind(&description_json)
+            .bind(job.enabled as i64)
+            .bind(&job.schedule_kind)
+            .bind(&job.schedule_value)
+            .bind(&job.schedule_desc)
+            .bind(&job.execution_mode)
+            .bind(&job.prompt)
+            .bind(&job.workspace_id)
+            .bind(&job.assistant_id)
+            .bind(&now)
+            .execute(self.pool())
+            .await?;
+        }
+        Ok(())
+    }
 }
 
 fn parse_row(row: &sqlx::sqlite::SqliteRow) -> anyhow::Result<CronJobRecord> {
+    let name_str: String = row.get("name");
+    let name: I18nString = serde_json::from_str(&name_str)
+        .unwrap_or_else(|_| I18nString::single(name_str));
+
+    let description_str: String = row.get("description");
+    let description: I18nString = serde_json::from_str(&description_str)
+        .unwrap_or_else(|_| I18nString::single(description_str));
+
     let enabled: i64 = row.get("enabled");
     Ok(CronJobRecord {
         id: row.get("id"),
-        name: row.get("name"),
-        description: row.get("description"),
+        name,
+        description,
         enabled: enabled != 0,
         schedule_kind: row.get("schedule_kind"),
         schedule_value: row.get("schedule_value"),

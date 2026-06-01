@@ -3,13 +3,14 @@ use serde_json::Value as JsonValue;
 use sqlx::Row;
 
 use super::DbManager;
+use crate::types::tool::I18nString;
 
 /// A workflow record stored in the database.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct WorkflowRecord {
     pub id: String,
-    pub name: String,
-    pub description: String,
+    pub name: I18nString,
+    pub description: I18nString,
     /// Full ReactFlow config: { nodes, edges, metadata, ... }
     pub config: JsonValue,
     pub is_active: bool,
@@ -21,8 +22,8 @@ pub struct WorkflowRecord {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct UpsertWorkflow {
     pub id: Option<String>,
-    pub name: String,
-    pub description: String,
+    pub name: I18nString,
+    pub description: I18nString,
     pub config: JsonValue,
     pub is_active: bool,
 }
@@ -67,6 +68,8 @@ impl DbManager {
         let id = input.id.clone().unwrap_or_else(|| {
             format!("wf_{}", uuid_like())
         });
+        let name_json = serde_json::to_string(&input.name)?;
+        let description_json = serde_json::to_string(&input.description)?;
         let config_json = serde_json::to_string(&input.config)?;
 
         sqlx::query(
@@ -74,8 +77,8 @@ impl DbManager {
              VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?6)",
         )
         .bind(&id)
-        .bind(&input.name)
-        .bind(&input.description)
+        .bind(&name_json)
+        .bind(&description_json)
         .bind(&config_json)
         .bind(input.is_active as i64)
         .bind(&now)
@@ -96,6 +99,8 @@ impl DbManager {
     /// Update an existing workflow. Returns error if not found.
     pub async fn update_workflow(&self, id: &str, input: &UpsertWorkflow) -> anyhow::Result<WorkflowRecord> {
         let now = chrono::Utc::now().to_rfc3339();
+        let name_json = serde_json::to_string(&input.name)?;
+        let description_json = serde_json::to_string(&input.description)?;
         let config_json = serde_json::to_string(&input.config)?;
 
         let rows_affected = sqlx::query(
@@ -103,8 +108,8 @@ impl DbManager {
                 name = ?1, description = ?2, config = ?3, is_active = ?4, updated_at = ?5
              WHERE id = ?6",
         )
-        .bind(&input.name)
-        .bind(&input.description)
+        .bind(&name_json)
+        .bind(&description_json)
         .bind(&config_json)
         .bind(input.is_active as i64)
         .bind(&now)
@@ -137,6 +142,8 @@ impl DbManager {
         for wf in builtins {
             let default_id = format!("wf_{}", uuid_like());
             let id = wf.id.as_deref().unwrap_or(&default_id);
+            let name_json = serde_json::to_string(&wf.name)?;
+            let description_json = serde_json::to_string(&wf.description)?;
             let config_json = serde_json::to_string(&wf.config)?;
             let now = chrono::Utc::now().to_rfc3339();
 
@@ -151,8 +158,8 @@ impl DbManager {
                     updated_at = excluded.updated_at",
             )
             .bind(id)
-            .bind(&wf.name)
-            .bind(&wf.description)
+            .bind(&name_json)
+            .bind(&description_json)
             .bind(&config_json)
             .bind(wf.is_active as i64)
             .bind(&now)
@@ -164,14 +171,22 @@ impl DbManager {
 }
 
 fn parse_row(row: &sqlx::sqlite::SqliteRow) -> anyhow::Result<WorkflowRecord> {
+    let name_str: String = row.get("name");
+    let name: I18nString = serde_json::from_str(&name_str)
+        .unwrap_or_else(|_| I18nString::single(name_str));
+
+    let description_str: String = row.get("description");
+    let description: I18nString = serde_json::from_str(&description_str)
+        .unwrap_or_else(|_| I18nString::single(description_str));
+
     let config_json: String = row.get("config");
     let config: JsonValue = serde_json::from_str(&config_json).unwrap_or(serde_json::json!({}));
     let is_active: i64 = row.get("is_active");
 
     Ok(WorkflowRecord {
         id: row.get("id"),
-        name: row.get("name"),
-        description: row.get("description"),
+        name,
+        description,
         config,
         is_active: is_active != 0,
         created_at: row.get("created_at"),

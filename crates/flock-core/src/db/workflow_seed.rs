@@ -1,4 +1,5 @@
 use serde_json::json;
+use crate::types::tool::I18nString;
 use super::workflow::UpsertWorkflow;
 
 /// Default built-in workflows seeded on every startup.
@@ -6,8 +7,11 @@ pub fn builtin_workflows() -> Vec<UpsertWorkflow> {
     vec![
         UpsertWorkflow {
             id: Some("builtin-wf-joke-teller".to_string()),
-            name: "每日幽默段子生成器 (Joke Generator)".to_string(),
-            description: "接收用户的指令，生成一个有创意的幽默段子，并由另一个LLM节点进行评分和润色。".to_string(),
+            name: I18nString::new("每日幽默段子生成器", "Daily Joke Generator"),
+            description: I18nString::new(
+                "接收用户的指令，生成一个有创意的幽默段子，并由另一个LLM节点进行评分和润色。",
+                "Receives user instructions, generates a creative joke, and has another LLM node polish and rate it."
+            ),
             is_active: true,
             config: json!({
                 "nodes": [
@@ -75,8 +79,11 @@ pub fn builtin_workflows() -> Vec<UpsertWorkflow> {
         },
         UpsertWorkflow {
             id: Some("builtin-wf-smart-translator".to_string()),
-            name: "多语言智能翻译与分类器 (Smart Translator)".to_string(),
-            description: "首先将输入的任意语言文本翻译为中文，再利用分类器判断文本的类型（如技术、娱乐、其他），提供全自动处理流。".to_string(),
+            name: I18nString::new("多语言智能翻译与分类器", "Smart Translator & Classifier"),
+            description: I18nString::new(
+                "首先将输入的任意语言文本翻译为中文，再利用分类器判断文本的类型（如技术、娱乐、其他），提供全自动处理流。",
+                "Translates any source text to Chinese first, then classifies the topic (e.g. tech, life, other) for automatic routing."
+            ),
             is_active: true,
             config: json!({
                 "nodes": [

@@ -7,6 +7,11 @@ import { formatError } from '../utils/error';
 
 export type { WorkflowRecord };
 
+export interface I18nString {
+  zh: string;
+  en: string;
+}
+
 export interface UpsertWorkflow {
   id?: string;
   name: string;
@@ -17,10 +22,43 @@ export interface UpsertWorkflow {
 
 // ── Queries ─────────────────────────────────────────────────────────────────
 
+type RawWorkflowRecord = Omit<WorkflowRecord, 'name' | 'description'> & {
+  name: I18nString | string;
+  description: I18nString | string;
+};
+
+function parseWorkflowMultiLang(fieldVal: I18nString | string | undefined | null, lang: string): string {
+  if (!fieldVal) return '';
+  if (typeof fieldVal === 'string') {
+    if (fieldVal.startsWith('{') && fieldVal.endsWith('}')) {
+      try {
+        const parsed = JSON.parse(fieldVal) as I18nString;
+        const currentLang = ((lang || 'zh').split('-')[0]) as 'zh' | 'en';
+        return parsed[currentLang] || parsed['en'] || parsed['zh'] || '';
+      } catch (e) {
+        return fieldVal;
+      }
+    }
+    return fieldVal;
+  }
+  const currentLang = ((lang || 'zh').split('-')[0]) as 'zh' | 'en';
+  return fieldVal[currentLang] || fieldVal['en'] || fieldVal['zh'] || '';
+}
+
 export function useWorkflowsQuery() {
+  const { i18n } = useTranslation();
+  const currentLang = i18n.language;
+
   return useQuery({
-    queryKey: ['workflows'],
-    queryFn: () => invoke<WorkflowRecord[]>('list_workflows'),
+    queryKey: ['workflows', currentLang],
+    queryFn: async () => {
+      const data = await invoke<RawWorkflowRecord[]>('list_workflows');
+      return data.map(w => ({
+        ...w,
+        name: parseWorkflowMultiLang(w.name, currentLang),
+        description: parseWorkflowMultiLang(w.description, currentLang),
+      })) as WorkflowRecord[];
+    },
   });
 }
 
