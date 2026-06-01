@@ -16,7 +16,7 @@ pub fn builtin_cron_jobs() -> Vec<UpsertCronJob> {
             schedule_value: "".to_string(),
             schedule_desc: "Manual".to_string(),
             execution_mode: "new_conversation".to_string(),
-            prompt: "Hi XiaoF! 请帮我生成一份今天的智能工作简报。包括：1. 问候语；2. 建议的今日任务清单（根据我的日程或模拟）；3. 给我一条充满活力的早安寄语！".to_string(),
+            prompt: "Hi XiaoF! Please generate an intelligent morning work briefing for me today. It should include: 1. A warm greeting; 2. A recommended task list for today (based on my calendar or simulated tasks); 3. A vibrant and motivating morning message to start my day!".to_string(),
             workspace_id: "default".to_string(),
             assistant_id: "__xiaof__".to_string(), // 使用 xiaof 助手
         }

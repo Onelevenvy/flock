@@ -32,8 +32,8 @@ pub fn builtin_workflows() -> Vec<UpsertWorkflow> {
                         "data": {
                             "model": "",
                             "temperature": 0.8,
-                            "systemMessage": "你是一个幽默风趣的段子手，擅长写各种轻松搞笑的幽默段子。",
-                            "userMessage": "请根据主题：\"{{input_msg}}\" 写一个简短好笑的冷笑话或段子."
+                            "systemMessage": "You are a witty and humorous humorist who specializes in writing lighthearted, funny, and creative jokes.",
+                            "userMessage": "Please write a short and funny joke or one-liner based on the theme: \"{{input_msg}}\"."
                         }
                     },
                     {
@@ -45,8 +45,8 @@ pub fn builtin_workflows() -> Vec<UpsertWorkflow> {
                         "data": {
                             "model": "",
                             "temperature": 0.5,
-                            "systemMessage": "你是一个专业的幽默文学编辑。负责润色笑话，并为其添加简短而风趣的评语。",
-                            "userMessage": "请对以下段子进行排版、精简或润色，使其更加好笑，并在最后加上一行逗趣的[小编点评]：\n\n{{node_outputs.llm_generate.response}}"
+                            "systemMessage": "You are a professional literary editor for comedy. You polish jokes to make them flow better, and append a short, witty editor's commentary.",
+                            "userMessage": "Please format, streamline, or polish the following joke to make it even funnier, and add a witty [Editor's Note] at the very end:\n\n{{node_outputs.llm_generate.response}}"
                         }
                     },
                     {
@@ -112,7 +112,7 @@ pub fn builtin_workflows() -> Vec<UpsertWorkflow> {
                         "data": {
                             "model": "",
                             "temperature": 0.3,
-                            "systemMessage": "你是一个高水平的翻译专家。直接将用户输入的非中文文本翻译成地道的中文；如果已经是中文，则对其进行错别字修正和润色。只输出翻译或修正后的文本，不要带有任何多余的解释。",
+                            "systemMessage": "You are a professional translator. Directly translate the user's input text into fluent, natural English. If it is already in English, correct any grammar mistakes and polish it. Output ONLY the translated or polished text without any extra explanation.",
                             "userMessage": "{{input_msg}}"
                         }
                     },
@@ -126,9 +126,9 @@ pub fn builtin_workflows() -> Vec<UpsertWorkflow> {
                             "model": "",
                             "input": "{{node_outputs.llm_translate.response}}",
                             "categories": [
-                                { "category_id": "tech", "category_name": "科技与编程" },
-                                { "category_id": "life", "category_name": "生活与娱乐" },
-                                { "category_id": "others_category", "category_name": "其他" }
+                                { "category_id": "tech", "category_name": "Technology & Coding" },
+                                { "category_id": "life", "category_name": "Life & Entertainment" },
+                                { "category_id": "others_category", "category_name": "Others" }
                             ]
                         }
                     },
@@ -139,7 +139,7 @@ pub fn builtin_workflows() -> Vec<UpsertWorkflow> {
                         "width": 240,
                         "height": 85,
                         "data": {
-                            "answer": "【分类：科技】\n\n智能翻译结果：\n{{node_outputs.llm_translate.response}}"
+                            "answer": "[Category: Technology]\n\nSmart Translation Result:\n{{node_outputs.llm_translate.response}}"
                         }
                     },
                     {
@@ -149,7 +149,7 @@ pub fn builtin_workflows() -> Vec<UpsertWorkflow> {
                         "width": 240,
                         "height": 85,
                         "data": {
-                            "answer": "【分类：生活娱乐】\n\n智能翻译结果：\n{{node_outputs.llm_translate.response}}"
+                            "answer": "[Category: Life & Entertainment]\n\nSmart Translation Result:\n{{node_outputs.llm_translate.response}}"
                         }
                     },
                     {
@@ -159,7 +159,7 @@ pub fn builtin_workflows() -> Vec<UpsertWorkflow> {
                         "width": 240,
                         "height": 85,
                         "data": {
-                            "answer": "【分类：其他】\n\n智能翻译结果：\n{{node_outputs.llm_translate.response}}"
+                            "answer": "[Category: Others]\n\nSmart Translation Result:\n{{node_outputs.llm_translate.response}}"
                         }
                     }
                 ],

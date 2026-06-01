@@ -3,9 +3,9 @@ import {
   IconPlus,
   IconPointer,
   IconHandGrab,
-  IconHierarchy,
+  IconMapSearch,
   IconMaximize,
-  IconLayoutGrid,
+  IconLayoutGridAdd ,
 } from '@tabler/icons-react';
 
 import { type FitViewOptions } from 'reactflow';
@@ -104,7 +104,7 @@ export function LeftToolbar({
           size="md"
           onClick={() => layoutAllNodes()}
         >
-          <IconHierarchy size={16} />
+          <IconLayoutGridAdd  size={16} />
         </ActionIcon>
       </Tooltip>
 
@@ -130,7 +130,7 @@ export function LeftToolbar({
           size="md"
           onClick={() => setShowMinimap((v) => !v)}
         >
-          <IconLayoutGrid size={16} />
+          <IconMapSearch size={16} />
         </ActionIcon>
       </Tooltip>
     </Box>
