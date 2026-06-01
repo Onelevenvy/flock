@@ -67,3 +67,4 @@ crates/flock-app/
 
 
 legacy/*
+flock-data/imported_skills/*

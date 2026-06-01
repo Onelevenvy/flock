@@ -1,9 +1,9 @@
 {
   "title": "Skills",
   "subtitle": "Configure and manage your built-in tools, MCP servers, and external skills",
-  "tabTools": "Built-in Tools",
-  "tabMcp": "MCP Services",
-  "tabSkills": "External Skills",
+  "tabTools": "Tools",
+  "tabMcp": "MCP",
+  "tabSkills": "Skills",
   "tools": {
     "verifyingTitle": "Verifying",
     "verifyingMsg": "Testing connectivity for {{name}}...",
@@ -102,6 +102,10 @@
     "importBtn": "Import External Skills",
     "noMatches": "No matching skills",
     "noSkills": "No skills available",
-    "invocableBadge": "Invocable"
+    "invocableBadge": "Invocable",
+    "importFolderBtn": "Import Folder",
+    "importZipBtn": "Import Zip/Skill Archive",
+    "duplicateSkillWarning": "This skill already exists. Continuing will overwrite the existing skill. Are you sure you want to proceed?",
+    "duplicateSkillError": "This skill already exists! Please delete the existing skill from the list first before importing again."
   }
 }

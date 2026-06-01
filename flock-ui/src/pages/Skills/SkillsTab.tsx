@@ -1,4 +1,4 @@
-import { useState, useCallback, useEffect } from 'react';
+import { useState, useCallback } from 'react';
 import {
   Box,
   Text,
@@ -12,28 +12,45 @@ import {
   TextInput,
   SegmentedControl,
   Button,
+  Menu,
 } from '@mantine/core';
 import {
   IconSparkles,
   IconSearch,
   IconFolderPlus,
+  IconFolder,
+  IconTrash,
+  IconDotsVertical,
 } from '@tabler/icons-react';
 import { invoke } from '@tauri-apps/api/core';
+import { open } from '@tauri-apps/plugin-dialog';
+import { notifications } from '@mantine/notifications';
 import { useTranslation } from 'react-i18next';
 import type { SkillInfo } from './types';
 import { SOURCE_COLORS } from './helpers';
 import { SkillDetailPanel } from './components/SkillDetailPanel';
-import { ExtraDirsModal } from './components/ExtraDirsModal';
 
 import { useSkillsQuery } from '@/hooks/useToolQueries';
 
+const cleanPath = (path?: string) => {
+  if (!path) return '';
+  let cleaned = path;
+  if (cleaned.startsWith('\\\\?\\')) {
+    cleaned = cleaned.substring(4);
+  }
+  return cleaned;
+};
+
 export function SkillsTab() {
+
   const { t } = useTranslation();
-  const { data: skills = [], isLoading: loading, refetch: fetchSkills } = useSkillsQuery();
+  const { data: skills = [], isLoading: loadingSkills, refetch: fetchSkills } = useSkillsQuery();
   const [selectedSkill, setSelectedSkill] = useState<SkillInfo | null>(null);
   const [searchKey, setSearchKey] = useState('');
   const [sourceFilter, setSourceFilter] = useState('all');
-  const [showImportModal, setShowImportModal] = useState(false);
+  const [importing, setImporting] = useState(false);
+
+  const loading = loadingSkills || importing;
 
   const filteredSkills = skills.filter((s) => {
     const matchesSearch =
@@ -44,7 +61,79 @@ export function SkillsTab() {
     return matchesSearch && matchesSource;
   });
 
+
   const availableSources = Array.from(new Set(skills.map((s) => s.source))).sort();
+
+
+  const handleSelectAndAdd = async (isDirectory: boolean) => {
+    try {
+      const selected = await open({
+        directory: isDirectory,
+        multiple: false,
+        filters: isDirectory ? undefined : [
+          { name: 'Skill Archive', extensions: ['zip', 'skill'] }
+        ]
+      });
+      if (selected && typeof selected === 'string') {
+        const cleaned = cleanPath(selected);
+        const importName = cleaned.split(/[/\\]/).filter(Boolean).pop()?.replace(/\.(zip|skill)$/i, '') || '';
+        
+        // Check if there is already a skill with this name in existing skills
+        const exists = skills.some(s => s.name.toLowerCase() === importName.toLowerCase() || (s.display_name && s.display_name.toLowerCase() === importName.toLowerCase()));
+        
+        if (exists) {
+          notifications.show({
+            title: t('skills.skills.importFailed'),
+            message: t('skills.skills.duplicateSkillError'),
+            color: 'red',
+            autoClose: 5000
+          });
+          return;
+        }
+
+        setImporting(true);
+        await invoke<string[]>('add_extra_skill_dir', { path: selected });
+        fetchSkills();
+        notifications.show({
+          title: t('skills.skills.importSuccess'),
+          message: t('skills.skills.importSuccessMsg'),
+          color: 'teal',
+          autoClose: 3000
+        });
+      }
+    } catch (e: any) {
+      notifications.show({
+        title: t('skills.skills.importFailed'),
+        message: String(e),
+        color: 'red',
+        autoClose: 5000
+      });
+    } finally {
+      setImporting(false);
+    }
+  };
+
+  const handleRemoveFolder = async (path: string, e: React.MouseEvent) => {
+    e.stopPropagation();
+    try {
+      await invoke<string[]>('remove_extra_skill_dir', { path });
+      fetchSkills();
+      notifications.show({
+        title: t('skills.skills.removedToast'),
+        message: t('skills.skills.removedToastMsg'),
+        color: 'teal',
+        autoClose: 3000
+      });
+    } catch (e: any) {
+      notifications.show({
+        title: t('skills.skills.removeFailed'),
+        message: String(e),
+        color: 'red',
+        autoClose: 5000
+      });
+    }
+  };
+
 
   return (
     <Box
@@ -76,15 +165,27 @@ export function SkillsTab() {
               />
             )}
           </Group>
-          <Button
-            size="xs"
-            variant="light"
-            color="teal"
-            leftSection={<IconFolderPlus size={14} />}
-            onClick={(e) => { e.stopPropagation(); setShowImportModal(true); }}
-          >
-            {t('skills.skills.importBtn')}
-          </Button>
+          <Menu shadow="md" position="bottom-end">
+            <Menu.Target>
+              <Button
+                size="xs"
+                variant="light"
+                color="teal"
+                leftSection={<IconFolderPlus size={14} />}
+                loading={importing}
+              >
+                {t('skills.skills.importBtn')}
+              </Button>
+            </Menu.Target>
+            <Menu.Dropdown>
+              <Menu.Item leftSection={<IconFolder size={14} />} onClick={() => handleSelectAndAdd(true)}>
+                {t('skills.skills.importFolderBtn')}
+              </Menu.Item>
+              <Menu.Item leftSection={<IconFolderPlus size={14} />} onClick={() => handleSelectAndAdd(false)}>
+                {t('skills.skills.importZipBtn')}
+              </Menu.Item>
+            </Menu.Dropdown>
+          </Menu>
         </Group>
 
         {filteredSkills.length === 0 && !loading ? (
@@ -122,15 +223,41 @@ export function SkillsTab() {
                   e.currentTarget.style.boxShadow = '0 8px 24px rgba(15, 23, 42, 0.05)';
                 }}
               >
-                <Group gap="sm" mb="sm">
-                  <ThemeIcon size={46} radius={14} variant="light" color="teal">
-                    <IconSparkles size={20} />
-                  </ThemeIcon>
-                  <Box style={{ flex: 1, minWidth: 0 }}>
-                    <Text size="sm" fw={600} truncate style={{ color: 'var(--flock-text-bright)' }}>
-                      {skill.display_name || skill.name}
-                    </Text>
-                  </Box>
+                <Group gap="sm" mb="sm" wrap="nowrap" justify="space-between" align="center">
+                  <Group gap="sm" wrap="nowrap" style={{ flex: 1, minWidth: 0 }}>
+                    <ThemeIcon size={46} radius={14} variant="light" color="teal">
+                      <IconSparkles size={20} />
+                    </ThemeIcon>
+                    <Box style={{ flex: 1, minWidth: 0 }}>
+                      <Text size="sm" fw={600} truncate style={{ color: 'var(--flock-text-bright)' }}>
+                        {skill.display_name || skill.name}
+                      </Text>
+                    </Box>
+                  </Group>
+
+                  {skill.source === 'User' && (
+                    <Menu shadow="md" position="bottom-end" withinPortal>
+                      <Menu.Target>
+                        <ActionIcon size="sm" variant="subtle" color="gray" onClick={(e) => e.stopPropagation()}>
+                          <IconDotsVertical size={14} />
+                        </ActionIcon>
+                      </Menu.Target>
+                      <Menu.Dropdown onClick={(e) => e.stopPropagation()}>
+                        <Menu.Item
+                          leftSection={<IconTrash size={14} />}
+                          color="red"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            if (skill.skill_root) {
+                              handleRemoveFolder(skill.skill_root, e);
+                            }
+                          }}
+                        >
+                          {t('skills.skills.removeTooltip')}
+                        </Menu.Item>
+                      </Menu.Dropdown>
+                    </Menu>
+                  )}
                 </Group>
 
                 <Box mb="sm" style={{ minHeight: 36 }}>
@@ -166,12 +293,6 @@ export function SkillsTab() {
           onClose={() => setSelectedSkill(null)}
         />
       )}
-
-      <ExtraDirsModal
-        opened={showImportModal}
-        onClose={() => setShowImportModal(false)}
-        onUpdate={fetchSkills}
-      />
     </Box>
   );
 }

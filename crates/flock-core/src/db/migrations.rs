@@ -69,6 +69,7 @@ pub const MIGRATIONS: &[(i64, &str, &str)] = &[
             credentials_encrypted TEXT,
             credentials_nonce     TEXT,
             credentials_schema    TEXT,
+            tools_i18n            TEXT,
             created_at            TEXT NOT NULL DEFAULT (datetime('now')),
             updated_at            TEXT NOT NULL DEFAULT (datetime('now'))
         );
@@ -115,6 +116,7 @@ pub const MIGRATIONS: &[(i64, &str, &str)] = &[
             system_prompt   TEXT NOT NULL DEFAULT '',
             tools           TEXT NOT NULL DEFAULT '[]',
             skills          TEXT NOT NULL DEFAULT '[]',
+            disabled_tools  TEXT NOT NULL DEFAULT '[]',
             is_builtin      INTEGER NOT NULL DEFAULT 0,
             sort_order      INTEGER NOT NULL DEFAULT 0,
             created_at      TEXT NOT NULL DEFAULT (datetime('now')),
@@ -143,12 +145,9 @@ pub const MIGRATIONS: &[(i64, &str, &str)] = &[
             created_at          TEXT NOT NULL DEFAULT (datetime('now')),
             updated_at          TEXT NOT NULL DEFAULT (datetime('now'))
         );
-        CREATE INDEX IF NOT EXISTS idx_cron_job_workspace ON cron_job(workspace_id);",
-    ),
-    (
-        2,
-        "add_workflow_table",
-        "CREATE TABLE IF NOT EXISTS workflow (
+        CREATE INDEX IF NOT EXISTS idx_cron_job_workspace ON cron_job(workspace_id);
+
+        CREATE TABLE IF NOT EXISTS workflow (
             id           TEXT PRIMARY KEY,
             name         TEXT NOT NULL,
             description  TEXT NOT NULL DEFAULT '',
@@ -157,16 +156,12 @@ pub const MIGRATIONS: &[(i64, &str, &str)] = &[
             created_at   TEXT NOT NULL DEFAULT (datetime('now')),
             updated_at   TEXT NOT NULL DEFAULT (datetime('now'))
         );
-        CREATE INDEX IF NOT EXISTS idx_workflow_updated ON workflow(updated_at);",
-    ),
-    (
-        3,
-        "add_assistant_disabled_tools",
-        "ALTER TABLE assistant ADD COLUMN disabled_tools TEXT NOT NULL DEFAULT '[]';",
-    ),
-    (
-        4,
-        "add_tool_provider_tools_i18n",
-        "ALTER TABLE tool_provider ADD COLUMN tools_i18n TEXT;",
+        CREATE INDEX IF NOT EXISTS idx_workflow_updated ON workflow(updated_at);
+
+        CREATE TABLE IF NOT EXISTS imported_skill (
+            name        TEXT PRIMARY KEY,
+            path        TEXT NOT NULL UNIQUE,
+            created_at  TEXT NOT NULL DEFAULT (datetime('now'))
+        );",
     ),
 ];
