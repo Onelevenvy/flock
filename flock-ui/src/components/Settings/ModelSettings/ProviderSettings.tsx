@@ -146,9 +146,6 @@ export default function ProviderSettings({ provider, onClose, onSaved }: Props) 
               color: 'var(--flock-text-primary)',
             },
           }}
-          visibilityToggleIcon={({ reveal }) =>
-            reveal ? <Text size="xs">{t('common.hide')}</Text> : <Text size="xs">{t('common.show')}</Text>
-          }
         />
 
         <TextInput

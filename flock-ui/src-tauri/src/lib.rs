@@ -164,6 +164,7 @@ pub fn run() {
             commands::get_workflow,
             commands::create_workflow,
             commands::update_workflow,
+            commands::delete_workflow,
             commands::run_workflow,
             commands::stop_workflow,
             commands::debug_node,
