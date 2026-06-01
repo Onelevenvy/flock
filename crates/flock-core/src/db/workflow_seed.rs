@@ -21,7 +21,9 @@ pub fn builtin_workflows() -> Vec<UpsertWorkflow> {
                         "position": { "x": 50, "y": 200 },
                         "width": 240,
                         "height": 46,
-                        "data": {}
+                        "data": {
+                            "label": "Start"
+                        }
                     },
                     {
                         "id": "llm_generate",
@@ -30,6 +32,7 @@ pub fn builtin_workflows() -> Vec<UpsertWorkflow> {
                         "width": 240,
                         "height": 85,
                         "data": {
+                            "label": "Joke Generator",
                             "model": "",
                             "temperature": 0.8,
                             "systemMessage": "You are a witty and humorous humorist who specializes in writing lighthearted, funny, and creative jokes.",
@@ -43,6 +46,7 @@ pub fn builtin_workflows() -> Vec<UpsertWorkflow> {
                         "width": 240,
                         "height": 85,
                         "data": {
+                            "label": "Joke Polisher",
                             "model": "",
                             "temperature": 0.5,
                             "systemMessage": "You are a professional literary editor for comedy. You polish jokes to make them flow better, and append a short, witty editor's commentary.",
@@ -56,6 +60,7 @@ pub fn builtin_workflows() -> Vec<UpsertWorkflow> {
                         "width": 240,
                         "height": 85,
                         "data": {
+                            "label": "Answer",
                             "answer": "${llm_polish.response}"
                         }
                     }
@@ -101,7 +106,9 @@ pub fn builtin_workflows() -> Vec<UpsertWorkflow> {
                         "position": { "x": 50, "y": 250 },
                         "width": 240,
                         "height": 46,
-                        "data": {}
+                        "data": {
+                            "label": "Start"
+                        }
                     },
                     {
                         "id": "llm_translate",
@@ -110,6 +117,7 @@ pub fn builtin_workflows() -> Vec<UpsertWorkflow> {
                         "width": 240,
                         "height": 85,
                         "data": {
+                            "label": "Translator",
                             "model": "",
                             "temperature": 0.3,
                             "systemMessage": "You are a professional translator. Directly translate the user's input text into fluent, natural English. If it is already in English, correct any grammar mistakes and polish it. Output ONLY the translated or polished text without any extra explanation.",
@@ -123,6 +131,7 @@ pub fn builtin_workflows() -> Vec<UpsertWorkflow> {
                         "width": 240,
                         "height": 120,
                         "data": {
+                            "label": "Topic Classifier",
                             "model": "",
                             "input": "${llm_translate.response}",
                             "categories": [
@@ -139,6 +148,7 @@ pub fn builtin_workflows() -> Vec<UpsertWorkflow> {
                         "width": 240,
                         "height": 85,
                         "data": {
+                            "label": "Answer",
                             "answer": "[Category: Technology]\n\nSmart Translation Result:\n${llm_translate.response}"
                         }
                     },
@@ -149,6 +159,7 @@ pub fn builtin_workflows() -> Vec<UpsertWorkflow> {
                         "width": 240,
                         "height": 85,
                         "data": {
+                            "label": "Answer",
                             "answer": "[Category: Life & Entertainment]\n\nSmart Translation Result:\n${llm_translate.response}"
                         }
                     },
@@ -159,6 +170,7 @@ pub fn builtin_workflows() -> Vec<UpsertWorkflow> {
                         "width": 240,
                         "height": 85,
                         "data": {
+                            "label": "Answer",
                             "answer": "[Category: Others]\n\nSmart Translation Result:\n${llm_translate.response}"
                         }
                     }
