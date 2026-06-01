@@ -46,13 +46,13 @@ impl Config {
         // Load all config sections from DB
         let default_cfg: DefaultConfig = db.get_config("default").await.unwrap_or_default();
         let tools: ToolsConfig = db.get_config("tools").await.unwrap_or_default();
-        let session: SessionConfig = db.get_config("session").await.unwrap_or_default();
+        let session = SessionConfig::default();
         let compact: CompressionConfig = db.get_config("compact").await.unwrap_or_default();
         let plan: PlanConfig = db.get_config("plan").await.unwrap_or_default();
         let file_cache: FileCacheConfig = db.get_config("file_cache").await.unwrap_or_default();
         let hooks: HooksConfig = db.get_config("hooks").await.unwrap_or_default();
         let mcp: McpConfig = db.load_mcp_servers_as_config().await.unwrap_or_default();
-        let debug: DebugConfig = db.get_config("debug").await.unwrap_or_default();
+        let debug = DebugConfig::default();
         let bedrock: Option<BedrockConfig> = db.get_config("bedrock").await;
         let vertex: Option<VertexConfig> = db.get_config("vertex").await;
         let sandbox: SandboxConfig = db.get_config("sandbox").await.unwrap_or_default();
@@ -307,13 +307,11 @@ async fn resolve_db_api_key(
 async fn seed_default_config(db: &DbManager) -> anyhow::Result<()> {
     db.set_config("default", &DefaultConfig::default()).await?;
     db.set_config("tools", &ToolsConfig::default()).await?;
-    db.set_config("session", &SessionConfig::default()).await?;
     db.set_config("compact", &CompressionConfig::default()).await?;
     db.set_config("plan", &PlanConfig::default()).await?;
     db.set_config("file_cache", &FileCacheConfig::default()).await?;
     db.set_config("hooks", &HooksConfig::default()).await?;
     db.set_config("sandbox", &SandboxConfig::default()).await?;
-    db.set_config("debug", &DebugConfig::default()).await?;
     Ok(())
 }
 
