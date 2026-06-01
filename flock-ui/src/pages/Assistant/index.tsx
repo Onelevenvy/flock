@@ -104,7 +104,7 @@ export function AssistantPage() {
         flexDirection: 'column',
         overflow: 'hidden',
         minWidth: 0,
-        background: 'var(--flock-bg-base)',
+        background: 'var(--flock-bg-surface)',
         borderRadius: '16px',
         border: '1px solid var(--flock-border-subtle)',
         boxShadow: '0 4px 20px rgba(0, 0, 0, 0.03)',

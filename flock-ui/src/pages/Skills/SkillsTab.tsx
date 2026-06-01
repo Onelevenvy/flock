@@ -104,16 +104,26 @@ export function SkillsTab() {
                 p="md"
                 onClick={(e) => { e.stopPropagation(); setSelectedSkill(skill); }}
                 style={{
-                  borderRadius: 12,
+                  borderRadius: 18,
                   border: `1px solid ${selectedSkill?.name === skill.name ? 'var(--mantine-color-teal-4)' : 'var(--flock-border-subtle)'}`,
-                  background: selectedSkill?.name === skill.name ? 'var(--flock-accent-soft)' : 'var(--flock-bg-surface)',
+                  background: selectedSkill?.name === skill.name ? 'var(--flock-accent-soft)' : 'var(--flock-bg-raised)',
                   cursor: 'pointer',
-                  transition: 'all 0.2s ease',
+                  transition: 'transform 0.18s ease, border-color 0.18s ease, box-shadow 0.18s ease',
+                  boxShadow: '0 8px 24px rgba(15, 23, 42, 0.05)',
                 }}
-                className="hover-card-lift"
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.transform = 'translateY(-2px)';
+                  e.currentTarget.style.borderColor = 'var(--flock-accent)';
+                  e.currentTarget.style.boxShadow = '0 14px 36px rgba(21, 90, 239, 0.14)';
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.transform = 'translateY(0)';
+                  e.currentTarget.style.borderColor = selectedSkill?.name === skill.name ? 'var(--mantine-color-teal-4)' : 'var(--flock-border-subtle)';
+                  e.currentTarget.style.boxShadow = '0 8px 24px rgba(15, 23, 42, 0.05)';
+                }}
               >
                 <Group gap="sm" mb="sm">
-                  <ThemeIcon size={36} radius="md" variant="light" color="teal">
+                  <ThemeIcon size={46} radius={14} variant="light" color="teal">
                     <IconSparkles size={20} />
                   </ThemeIcon>
                   <Box style={{ flex: 1, minWidth: 0 }}>

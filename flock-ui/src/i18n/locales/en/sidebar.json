@@ -19,5 +19,6 @@
   "rename": "Rename",
   "deleteConversation": "Delete",
   "noConversation": "No conversations",
+  "newConversation": "New conversation",
   "deleteWorkspace": "Delete Workspace"
 }

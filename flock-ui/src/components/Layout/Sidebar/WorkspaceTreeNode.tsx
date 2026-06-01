@@ -1,7 +1,11 @@
 import { Box, Group, Text, ActionIcon, Menu, Collapse, Loader, Stack } from '@mantine/core';
 import { IconChevronDown, IconChevronRight, IconDotsVertical, IconTrash } from '@tabler/icons-react';
-import { ConversationItem } from './ConversationItem';
+import { ConversationAppMeta, ConversationItem } from './ConversationItem';
 import { useConversationsQuery } from '../../../hooks/useWorkspaces';
+import { useAssistantsQuery } from '../../../hooks/useAssistants';
+import { useWorkflowsQuery } from '../../../hooks/useWorkflow';
+import { useWorkspaceStore } from '../../../store/workspaceStore';
+import { XIAOF_AGENT } from '../../../pages/Home/AssistantPicker';
 import { useTranslation } from 'react-i18next';
 
 export function WorkspaceTreeNode({
@@ -31,6 +35,31 @@ export function WorkspaceTreeNode({
   const isWsActive = ws.id === activeWorkspaceId;
   // 仅在当前工作区节点展开时才获取并监听该工作区的会话列表
   const { data: conversations = [], isLoading } = useConversationsQuery(isExpanded ? ws.id : null);
+  const conversationAssistants = useWorkspaceStore((s) => s.conversationAssistants);
+  const { data: assistants = [] } = useAssistantsQuery();
+  const { data: workflows = [] } = useWorkflowsQuery();
+
+  const getConversationMeta = (convId: string): ConversationAppMeta | undefined => {
+    const appId = conversationAssistants[convId];
+    if (!appId) return undefined;
+    if (appId.startsWith('workflow:')) {
+      const workflowId = appId.slice('workflow:'.length);
+      const workflow = workflows.find((item) => item.id === workflowId);
+      return {
+        icon: '⚡',
+        name: workflow?.name || t('sidebar.workflow'),
+        type: 'workflow',
+      };
+    }
+    const assistant = appId === XIAOF_AGENT.id
+      ? XIAOF_AGENT
+      : assistants.find((item) => item.id === appId);
+    return {
+      icon: assistant?.icon || '🤖',
+      name: assistant?.name || t('sidebar.assistant'),
+      type: 'assistant',
+    };
+  };
 
   return (
     <Box mb={4}>
@@ -102,6 +131,7 @@ export function WorkspaceTreeNode({
                 key={conv.id}
                 conv={conv}
                 isActive={conv.id === activeConversationId && isWsActive}
+                appMeta={getConversationMeta(conv.id)}
                 onSelect={() => onSelectConversation(ws.id, conv.id)}
                 onDelete={() => onDeleteConversation(ws.id, conv.id)}
                 onRename={(title) => onRenameConversation(ws.id, conv.id, title)}

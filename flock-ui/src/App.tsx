@@ -107,6 +107,13 @@ function AppInner() {
         const assistantId = sessionId
           ? conversationAssistants[sessionId] || null
           : null;
+        if (assistantId?.startsWith('workflow:')) {
+          setWorkdir(targetWs.path);
+          setStatus('ready');
+          return () => {
+            active = false;
+          };
+        }
         setStatus('connecting');
         setWorkdir(targetWs.path);
         invoke('start_agent', {

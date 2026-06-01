@@ -7,7 +7,8 @@ import {
   Badge,
   Alert,
   Divider,
-  Tabs,
+  SegmentedControl,
+  Box,
 } from '@mantine/core';
 import {
   IconShieldLock,
@@ -88,65 +89,66 @@ export default function SandboxSettings() {
           </Alert>
         )}
 
-        <Tabs value={activeTab} onChange={(val) => setActiveTab(val || 'config')} variant="pills" radius="md">
-          <Tabs.List style={{ marginBottom: 20 }}>
-            <Tabs.Tab value="config" leftSection={<IconSettings size={14} />}>
-              {t('settings.sandbox.tabConfig')}
-            </Tabs.Tab>
-            <Tabs.Tab
-              value="instances"
-              leftSection={<IconCpu size={14} />}
-              disabled={!isAvailable}
-            >
-              {t('settings.sandbox.tabInstances')}
-            </Tabs.Tab>
-            <Tabs.Tab
-              value="snapshots"
-              leftSection={<IconCamera size={14} />}
-              disabled={!isAvailable}
-            >
-              {t('settings.sandbox.tabSnapshots')}
-            </Tabs.Tab>
-          </Tabs.List>
+        <SegmentedControl
+          value={activeTab}
+          onChange={(val) => setActiveTab(val as any)}
+          data={[
+            { value: 'config', label: t('settings.sandbox.tabConfig') },
+            { value: 'instances', label: t('settings.sandbox.tabInstances'), disabled: !isAvailable },
+            { value: 'snapshots', label: t('settings.sandbox.tabSnapshots'), disabled: !isAvailable },
+          ]}
+          size="xs"
+          mb="lg"
+          styles={{
+            root: {
+              background: 'var(--flock-bg-surface)',
+              border: '1px solid var(--flock-border-dim)',
+              padding: 2,
+              borderRadius: 8,
+            },
+            control: {
+              minWidth: 100,
+            }
+          }}
+        />
 
-          <Tabs.Panel value="config">
-            <Stack gap="lg">
-              <SandboxCredentials
-                apiUrl={apiUrl}
-                apiKey={apiKey}
-                onApiUrlChange={setApiUrl}
-                onApiKeyChange={setApiKey}
-              />
-              <Divider color="var(--flock-border-subtle)" mt="md" />
-              <SandboxActions
-                isAvailable={isAvailable}
-                apiUrl={apiUrl}
-                apiKey={apiKey}
-                testing={testing}
-                disabling={disabling}
-                onTestConnection={handleTestConnection}
-                onDisable={handleDisable}
-              />
-            </Stack>
-          </Tabs.Panel>
+        {activeTab === 'config' && (
+          <Stack gap="lg" mt="md">
+            <SandboxCredentials
+              apiUrl={apiUrl}
+              apiKey={apiKey}
+              onApiUrlChange={setApiUrl}
+              onApiKeyChange={setApiKey}
+            />
+            <Divider color="var(--flock-border-subtle)" mt="md" />
+            <SandboxActions
+              isAvailable={isAvailable}
+              apiUrl={apiUrl}
+              apiKey={apiKey}
+              testing={testing}
+              disabling={disabling}
+              onTestConnection={handleTestConnection}
+              onDisable={handleDisable}
+            />
+          </Stack>
+        )}
 
-          {isAvailable && (
-            <Tabs.Panel value="instances">
-              <SandboxListSection />
-            </Tabs.Panel>
-          )}
+        {activeTab === 'instances' && isAvailable && (
+          <Box mt="md">
+            <SandboxListSection />
+          </Box>
+        )}
 
-          {isAvailable && (
-            <Tabs.Panel value="snapshots">
-              <SnapshotListSection
-                currentDefaultSnapshot={snapshot}
-                onSetDefaultSnapshot={handleSetDefaultSnapshot}
-                onCreateSnapshot={handleCreateSnapshot}
-                creatingSnapshot={creatingSnapshot}
-              />
-            </Tabs.Panel>
-          )}
-        </Tabs>
+        {activeTab === 'snapshots' && isAvailable && (
+          <Box mt="md">
+            <SnapshotListSection
+              currentDefaultSnapshot={snapshot}
+              onSetDefaultSnapshot={handleSetDefaultSnapshot}
+              onCreateSnapshot={handleCreateSnapshot}
+              creatingSnapshot={creatingSnapshot}
+            />
+          </Box>
+        )}
       </Card>
     </Stack>
   );

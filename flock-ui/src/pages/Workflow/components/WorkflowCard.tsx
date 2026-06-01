@@ -8,11 +8,13 @@ import {
   Divider,
   Modal,
   Button,
+  Menu,
 } from '@mantine/core';
 import {
   IconRoute,
   IconEdit,
   IconTrash,
+  IconDotsVertical,
   IconCalendar,
   IconBolt,
   IconArrowsShuffle,
@@ -38,52 +40,72 @@ export function WorkflowCard({ workflow, onOpen }: WorkflowCardProps) {
   return (
     <>
       <Box
-        className="hover-card-lift"
         onClick={onOpen}
         style={{
-          padding: '14px 16px',
-          borderRadius: 14,
+          padding: 18,
+          borderRadius: 18,
           border: '1px solid var(--flock-border-subtle)',
-          background: 'var(--flock-bg-surface)',
+          background: 'var(--flock-bg-raised)',
           cursor: 'pointer',
           position: 'relative',
           overflow: 'hidden',
+          boxShadow: '0 8px 24px rgba(15, 23, 42, 0.05)',
+          transition: 'transform 0.18s ease, border-color 0.18s ease, box-shadow 0.18s ease',
+        }}
+        onMouseEnter={(e) => {
+          e.currentTarget.style.transform = 'translateY(-2px)';
+          e.currentTarget.style.borderColor = 'var(--flock-accent)';
+          e.currentTarget.style.boxShadow = '0 14px 36px rgba(21, 90, 239, 0.14)';
+        }}
+        onMouseLeave={(e) => {
+          e.currentTarget.style.transform = 'translateY(0)';
+          e.currentTarget.style.borderColor = 'var(--flock-border-subtle)';
+          e.currentTarget.style.boxShadow = '0 8px 24px rgba(15, 23, 42, 0.05)';
         }}
       >
 
         {/* Card header */}
         <Group justify="space-between" mb={10} mt={4}>
           <ThemeIcon
-            size={32}
-            radius="md"
+            size={46}
+            radius={14}
             style={{ background: 'var(--flock-accent-soft)', flexShrink: 0 }}
           >
-            <IconRoute size={17} style={{ color: 'var(--flock-accent)' }} />
+            <IconRoute size={22} style={{ color: 'var(--flock-accent)' }} />
           </ThemeIcon>
-          <Group gap={4}>
-            <ActionIcon
-              size="sm"
-              variant="subtle"
-              color="blue"
-              onClick={(e) => {
-                e.stopPropagation();
-                onOpen();
-              }}
-            >
-              <IconEdit size={13} />
-            </ActionIcon>
-            <ActionIcon
-              size="sm"
-              variant="subtle"
-              color="red"
-              onClick={(e) => {
-                e.stopPropagation();
-                setDeleteConfirm(true);
-              }}
-            >
-              <IconTrash size={13} />
-            </ActionIcon>
-          </Group>
+          <Menu shadow="md" position="bottom-end" withinPortal>
+            <Menu.Target>
+              <ActionIcon
+                size="sm"
+                variant="subtle"
+                color="gray"
+                onClick={(e) => e.stopPropagation()}
+              >
+                <IconDotsVertical size={14} />
+              </ActionIcon>
+            </Menu.Target>
+            <Menu.Dropdown>
+              <Menu.Item
+                leftSection={<IconEdit size={14} />}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onOpen();
+                }}
+              >
+                {t('common.edit')}
+              </Menu.Item>
+              <Menu.Item
+                leftSection={<IconTrash size={14} />}
+                color="red"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setDeleteConfirm(true);
+                }}
+              >
+                {t('common.delete')}
+              </Menu.Item>
+            </Menu.Dropdown>
+          </Menu>
         </Group>
 
         {/* Name */}

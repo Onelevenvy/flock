@@ -172,6 +172,7 @@
     "thinking": "思考过程",
     "missingParams": "缺少必填参数: {{names}}",
     "run": "发送",
+    "confirmParams": "确认参数",
     "steps": "步",
     "generating": "生成中..."
   },
