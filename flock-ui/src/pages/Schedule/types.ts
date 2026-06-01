@@ -9,7 +9,8 @@ export interface CronJob {
   execution_mode: 'new_conversation' | 'existing';
   prompt: string;
   workspace_id: string;
-  assistant_id: string;
+  assistant_id?: string | null;
+  workflow_id?: string | null;
   next_run_at: number | null;
   last_run_at: number | null;
   last_status: 'ok' | 'error' | 'skipped' | 'missed';

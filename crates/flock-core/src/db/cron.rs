@@ -16,7 +16,8 @@ pub struct CronJobRecord {
     pub execution_mode: String,
     pub prompt: String,
     pub workspace_id: String,
-    pub assistant_id: String,
+    pub assistant_id: Option<String>,
+    pub workflow_id: Option<String>,
     pub next_run_at: Option<i64>,
     pub last_run_at: Option<i64>,
     pub last_status: String,
@@ -39,7 +40,8 @@ pub struct UpsertCronJob {
     pub execution_mode: String,
     pub prompt: String,
     pub workspace_id: String,
-    pub assistant_id: String,
+    pub assistant_id: Option<String>,
+    pub workflow_id: Option<String>,
 }
 
 impl DbManager {
@@ -47,7 +49,7 @@ impl DbManager {
     pub async fn list_cron_jobs(&self) -> anyhow::Result<Vec<CronJobRecord>> {
         let rows = sqlx::query(
             "SELECT id, name, description, enabled, schedule_kind, schedule_value, schedule_desc,
-                    execution_mode, prompt, workspace_id, assistant_id, next_run_at, last_run_at,
+                    execution_mode, prompt, workspace_id, assistant_id, workflow_id, next_run_at, last_run_at,
                     last_status, last_error, run_count, last_conversation_id, created_at, updated_at
              FROM cron_job
              ORDER BY created_at DESC",
@@ -66,7 +68,7 @@ impl DbManager {
     pub async fn get_cron_job(&self, id: &str) -> anyhow::Result<Option<CronJobRecord>> {
         let row = sqlx::query(
             "SELECT id, name, description, enabled, schedule_kind, schedule_value, schedule_desc,
-                    execution_mode, prompt, workspace_id, assistant_id, next_run_at, last_run_at,
+                    execution_mode, prompt, workspace_id, assistant_id, workflow_id, next_run_at, last_run_at,
                     last_status, last_error, run_count, last_conversation_id, created_at, updated_at
              FROM cron_job WHERE id = ?1",
         )
@@ -80,7 +82,7 @@ impl DbManager {
         }
     }
 
-    /// 创建定时任务，自动计算 next_run_at 的逻辑在调度器层处理，这里先入库
+    /// 创建定时任务
     pub async fn create_cron_job(&self, input: &UpsertCronJob) -> anyhow::Result<CronJobRecord> {
         let now = chrono::Utc::now().to_rfc3339();
         let id = input.id.clone().unwrap_or_else(|| {
@@ -92,9 +94,9 @@ impl DbManager {
         sqlx::query(
             "INSERT INTO cron_job
              (id, name, description, enabled, schedule_kind, schedule_value, schedule_desc,
-              execution_mode, prompt, workspace_id, assistant_id, next_run_at, last_run_at,
+              execution_mode, prompt, workspace_id, assistant_id, workflow_id, next_run_at, last_run_at,
               last_status, last_error, run_count, last_conversation_id, created_at, updated_at)
-             VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, NULL, NULL, 'ok', NULL, 0, NULL, ?12, ?12)",
+             VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, ?12, NULL, NULL, 'ok', NULL, 0, NULL, ?13, ?13)",
         )
         .bind(&id)
         .bind(&name_json)
@@ -107,6 +109,7 @@ impl DbManager {
         .bind(&input.prompt)
         .bind(&input.workspace_id)
         .bind(&input.assistant_id)
+        .bind(&input.workflow_id)
         .bind(&now)
         .execute(self.pool())
         .await?;
@@ -123,6 +126,7 @@ impl DbManager {
             prompt: input.prompt.clone(),
             workspace_id: input.workspace_id.clone(),
             assistant_id: input.assistant_id.clone(),
+            workflow_id: input.workflow_id.clone(),
             next_run_at: None,
             last_run_at: None,
             last_status: "ok".to_string(),
@@ -134,7 +138,7 @@ impl DbManager {
         })
     }
 
-    /// 更新定时任务，排除 next_run_at，last_run_at 等状态，这些由运行期动态更新
+    /// 更新定时任务
     pub async fn update_cron_job(&self, id: &str, input: &UpsertCronJob) -> anyhow::Result<CronJobRecord> {
         let now = chrono::Utc::now().to_rfc3339();
         let name_json = serde_json::to_string(&input.name)?;
@@ -144,8 +148,8 @@ impl DbManager {
             "UPDATE cron_job SET
                 name = ?1, description = ?2, enabled = ?3, schedule_kind = ?4,
                 schedule_value = ?5, schedule_desc = ?6, execution_mode = ?7,
-                prompt = ?8, workspace_id = ?9, assistant_id = ?10, updated_at = ?11
-             WHERE id = ?12",
+                prompt = ?8, workspace_id = ?9, assistant_id = ?10, workflow_id = ?11, updated_at = ?12
+             WHERE id = ?13",
         )
         .bind(&name_json)
         .bind(&description_json)
@@ -157,6 +161,7 @@ impl DbManager {
         .bind(&input.prompt)
         .bind(&input.workspace_id)
         .bind(&input.assistant_id)
+        .bind(&input.workflow_id)
         .bind(&now)
         .bind(id)
         .execute(self.pool())
@@ -226,7 +231,6 @@ impl DbManager {
     }
 
     /// Seed / upsert built-in cron jobs (called on startup).
-    /// Keeps user modifications if any.
     pub async fn seed_builtin_cron_jobs(&self, builtins: &[UpsertCronJob]) -> anyhow::Result<()> {
         for job in builtins {
             let default_id = format!("cron_{}", uuid_like());
@@ -235,13 +239,12 @@ impl DbManager {
             let name_json = serde_json::to_string(&job.name)?;
             let description_json = serde_json::to_string(&job.description)?;
 
-            // Insert if not exists; on conflict do nothing or keep existing to prevent overwriting user modifications
             sqlx::query(
                 "INSERT INTO cron_job
                  (id, name, description, enabled, schedule_kind, schedule_value, schedule_desc,
-                  execution_mode, prompt, workspace_id, assistant_id, next_run_at, last_run_at,
+                  execution_mode, prompt, workspace_id, assistant_id, workflow_id, next_run_at, last_run_at,
                   last_status, last_error, run_count, last_conversation_id, created_at, updated_at)
-                 VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, NULL, NULL, 'ok', NULL, 0, NULL, ?12, ?12)
+                 VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, ?12, NULL, NULL, 'ok', NULL, 0, NULL, ?13, ?13)
                  ON CONFLICT(id) DO UPDATE SET
                     name = excluded.name,
                     description = excluded.description,
@@ -258,6 +261,7 @@ impl DbManager {
             .bind(&job.prompt)
             .bind(&job.workspace_id)
             .bind(&job.assistant_id)
+            .bind(&job.workflow_id)
             .bind(&now)
             .execute(self.pool())
             .await?;
@@ -287,7 +291,8 @@ fn parse_row(row: &sqlx::sqlite::SqliteRow) -> anyhow::Result<CronJobRecord> {
         execution_mode: row.get("execution_mode"),
         prompt: row.get("prompt"),
         workspace_id: row.get("workspace_id"),
-        assistant_id: row.get("assistant_id"),
+        assistant_id: row.try_get("assistant_id").ok(),
+        workflow_id: row.try_get("workflow_id").ok(),
         next_run_at: row.try_get("next_run_at").ok(),
         last_run_at: row.try_get("last_run_at").ok(),
         last_status: row.get("last_status"),

@@ -157,14 +157,13 @@ export function useCronForm({ opened, jobToEdit, onSuccess, onClose }: UseCronFo
       setDescription(jobToEdit.description);
       setWorkspaceId(jobToEdit.workspace_id);
       
-      const isWorkflow = jobToEdit.assistant_id.startsWith('workflow:');
-      if (isWorkflow) {
+      if (jobToEdit.workflow_id) {
         setTargetType('workflow');
-        setWorkflowId(jobToEdit.assistant_id.replace('workflow:', ''));
+        setWorkflowId(jobToEdit.workflow_id);
         setAssistantId(assistants[0]?.id ?? null);
       } else {
         setTargetType('assistant');
-        setAssistantId(jobToEdit.assistant_id);
+        setAssistantId(jobToEdit.assistant_id || assistants[0]?.id || null);
         setWorkflowId(workflows[0]?.id ?? null);
       }
 
@@ -221,7 +220,6 @@ export function useCronForm({ opened, jobToEdit, onSuccess, onClose }: UseCronFo
     }
 
     const { kind, value, desc } = buildSchedule(schedulePreset, dailyTime, weeklyDay, weeklyTime, customCron);
-    const finalAssistantId = targetType === 'workflow' ? `workflow:${workflowId}` : (assistantId || '__xiaof__');
     const payload = {
       id: jobToEdit ? jobToEdit.id : null,
       name: name.trim(),
@@ -233,7 +231,8 @@ export function useCronForm({ opened, jobToEdit, onSuccess, onClose }: UseCronFo
       execution_mode: executionMode,
       prompt: prompt.trim(),
       workspace_id: workspaceId,
-      assistant_id: finalAssistantId,
+      assistant_id: targetType === 'assistant' ? (assistantId || '__xiaof__') : null,
+      workflow_id: targetType === 'workflow' ? workflowId : null,
     };
 
     try {

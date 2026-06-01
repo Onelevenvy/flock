@@ -18,7 +18,8 @@ pub fn builtin_cron_jobs() -> Vec<UpsertCronJob> {
             execution_mode: "new_conversation".to_string(),
             prompt: "Hi XiaoF! Please generate an intelligent morning work briefing for me today. It should include: 1. A warm greeting; 2. A recommended task list for today (based on my calendar or simulated tasks); 3. A vibrant and motivating morning message to start my day!".to_string(),
             workspace_id: "default".to_string(),
-            assistant_id: "__xiaof__".to_string(), // 使用 xiaof 助手
+            assistant_id: Some("__xiaof__".to_string()), // 使用 xiaof 助手
+            workflow_id: None,
         }
     ]
 }

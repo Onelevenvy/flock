@@ -43,10 +43,8 @@ pub async fn trigger_job_execution(
         conv_id = conv_info.id;
     }
 
-    // 如果 assistant_id 以 "workflow:" 开头，执行工作流
-    if job.assistant_id.starts_with("workflow:") {
-        let workflow_id = job.assistant_id.strip_prefix("workflow:").unwrap().to_string();
-
+    // 如果 workflow_id 存在，执行工作流
+    if let Some(ref workflow_id) = job.workflow_id {
         let db_state = app.state::<SharedDbManager>();
         let exec_state = app.state::<Arc<crate::commands::WorkflowExecutionState>>();
         let agent_state_state = app.state::<SharedAgentState>();
@@ -86,7 +84,7 @@ pub async fn trigger_job_execution(
         for _ in 0..1800 { // 最多执行 15 分钟
             tokio::time::sleep(Duration::from_secs(1)).await;
             let executions = exec_state.executions.lock().unwrap();
-            if !executions.contains_key(&workflow_id) {
+            if !executions.contains_key(workflow_id) {
                 run_success = true;
                 break;
             }
@@ -117,12 +115,13 @@ pub async fn trigger_job_execution(
 
     // 3. 启动 Agent
     let extra_args = vec![];
+    let selected_assistant = job.assistant_id.clone().unwrap_or_else(|| "__xiaof__".to_string());
     if let Err(e) = crate::agent::start_agent(
         app.clone(),
         agent_state.clone(),
         workdir,
         Some(conv_id.clone()),
-        Some(job.assistant_id.clone()),
+        Some(selected_assistant),
         extra_args,
     ).await {
         db.update_cron_job_status(

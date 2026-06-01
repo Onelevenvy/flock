@@ -15,7 +15,8 @@ export interface UpsertCronJobInput {
   execution_mode: string;
   prompt: string;
   workspace_id: string;
-  assistant_id: string;
+  assistant_id?: string | null;
+  workflow_id?: string | null;
 }
 
 import { useTranslation } from 'react-i18next';
