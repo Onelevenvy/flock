@@ -82,10 +82,18 @@ pub fn make_agent_workflow_node(
                             raw_paths.push(std::path::PathBuf::from(d));
                         }
 
+                        let node_skills: Vec<String> = node_data.get("skills")
+                            .and_then(|v| v.as_array())
+                            .map(|arr| arr.iter().filter_map(|t| t.as_str().map(|s| s.to_string())).collect())
+                            .unwrap_or_default();
+
                         let skills = flock_skills::loader::load_all_skills(&cwd, &[], false, None, &raw_paths).await;
                         let visible_skills: Vec<_> = skills
                             .iter()
-                            .filter(|s| !s.disable_model_invocation)
+                            .filter(|s| {
+                                !s.disable_model_invocation && 
+                                (node_skills.is_empty() || node_skills.contains(&s.name))
+                            })
                             .cloned()
                             .collect();
 
