@@ -18,6 +18,7 @@ import {
 import { useTranslation } from 'react-i18next';
 import type { SkillInfo } from '@/pages/Skills/types';
 import { SOURCE_COLORS } from '@/pages/Skills/helpers';
+import { parseMultiLang } from '@/utils/i18n';
 
 export function SkillDetailPanel({
   skill,
@@ -49,7 +50,7 @@ export function SkillDetailPanel({
           <IconX size={16} />
         </ActionIcon>
       </Group>
-
+ 
       <Box px="md" pb="md">
         <Group gap="sm" mb="xs">
           <ThemeIcon size={40} radius="md" variant="light" color="teal">
@@ -57,7 +58,7 @@ export function SkillDetailPanel({
           </ThemeIcon>
           <Box style={{ flex: 1, minWidth: 0 }}>
             <Text size="sm" fw={600} style={{ color: 'var(--flock-text-bright)' }} truncate>
-              {skill.display_name || skill.name}
+              {parseMultiLang(skill.display_name) || skill.name}
             </Text>
             <Group gap={6}>
               <Badge size="xs" variant="light" color={SOURCE_COLORS[skill.source] || 'gray'}>

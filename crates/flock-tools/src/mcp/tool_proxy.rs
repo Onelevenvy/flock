@@ -25,6 +25,8 @@ pub struct McpToolProxy {
     manager: Arc<McpManager>,
     /// Whether this tool's schema should be deferred (sent as name-only stub).
     deferred: bool,
+    provider_id: String,
+    provider_name: String,
 }
 
 impl McpToolProxy {
@@ -37,6 +39,8 @@ impl McpToolProxy {
         manager: Arc<McpManager>,
         deferred: bool,
     ) -> Self {
+        let provider_id = format!("mcp:{}", server_name);
+        let provider_name = format!("MCP: {}", server_name);
         Self {
             display_name,
             tool_name,
@@ -45,6 +49,8 @@ impl McpToolProxy {
             input_schema,
             manager,
             deferred,
+            provider_id,
+            provider_name,
         }
     }
 }
@@ -100,6 +106,14 @@ impl Tool for McpToolProxy {
             self.tool_name,
             serde_json::to_string(input).unwrap_or_default()
         )
+    }
+
+    fn provider_id(&self) -> &str {
+        &self.provider_id
+    }
+
+    fn provider_name(&self) -> &str {
+        &self.provider_name
     }
 }
 
