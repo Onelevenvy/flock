@@ -119,6 +119,7 @@ export function XiaofPet() {
   const onMouseDown = useCallback((e: React.MouseEvent) => {
     if ((e.target as HTMLElement).closest('.xiaof-approve-popup, .xiaof-close-btn, .xiaof-approve-btn')) return;
     e.preventDefault();
+    e.stopPropagation();
     const widget = (e.currentTarget as HTMLElement).querySelector('.xiaof-widget') as HTMLElement | null;
     const el = widget ? widget.getBoundingClientRect() : (e.currentTarget as HTMLElement).getBoundingClientRect();
     dragStartRef.current = {
@@ -182,7 +183,7 @@ export function XiaofPet() {
   return (
     // Outermost container
     <div
-      className="xiaof-pet-root"
+      className={`xiaof-pet-root in-app-pet ${pendingCount === 0 ? 'xiaof-pet-idle' : ''}`}
       style={getStyle()}
       onMouseDown={onMouseDown}
     >
@@ -256,17 +257,6 @@ export function XiaofPet() {
 
         {/* Character */}
         <XiaofCharacter mood={mood} size={size} />
-
-        {/* Status label */}
-        {!minimized && (
-          <div className="xiaof-status-label">
-            <span
-              className="xiaof-status-dot"
-              style={{ background: MOOD_DOT_COLOR[mood] }}
-            />
-            {t(MOOD_STATUS_KEYS[mood] ?? 'pet.status.idle')}
-          </div>
-        )}
       </div>
     </div>
   );

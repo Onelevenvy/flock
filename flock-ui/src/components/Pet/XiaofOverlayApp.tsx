@@ -228,6 +228,7 @@ export function XiaofOverlayApp() {
 
   return (
     <div
+      className={`xiaof-pet-root ${state.pendingCount === 0 ? 'xiaof-pet-idle' : ''}`}
       style={{
         width: '100%',
         height: '100%',
@@ -307,14 +308,6 @@ export function XiaofOverlayApp() {
 
         {/* Dynamic Glowing Cyber Fox Character */}
         <XiaofCharacter mood={effectiveMood} size={size} />
-
-        {/* Status label (only when expanded) */}
-        {!state.minimized && (
-          <div className="xiaof-status-label">
-            <span className="xiaof-status-dot" style={{ background: MOOD_DOT_COLOR[effectiveMood] || '#06b6d4' }} />
-            {MOOD_STATUS[effectiveMood] ?? '待命'}
-          </div>
-        )}
       </div>
     </div>
   );
