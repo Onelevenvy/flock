@@ -13,6 +13,7 @@
   flex-direction: column;
   align-items: center;
   gap: 0;
+  transition: opacity 0.25s ease-in-out, transform 0.25s ease-in-out;
 }
 
 .xiaof-pet-root * {
@@ -35,9 +36,6 @@
   position: relative;
   overflow: visible; /* 必须是 visible，防止裁剪狐狸边缘 */
   transition: all 0.3s ease;
-  
-  /* 允许整个小部件作为操作系统原生无缝拖拽标题栏 */
-  -webkit-app-region: drag;
 }
 
 .xiaof-widget:active {
