@@ -105,6 +105,7 @@
     "invocableBadge": "Invocable",
     "importFolderBtn": "Import Folder",
     "importZipBtn": "Import Zip/Skill Archive",
-    "duplicateSkillWarning": "This skill already exists. Continuing will overwrite the existing skill. Are you sure you want to proceed?"
+    "duplicateSkillWarning": "This skill already exists. Continuing will overwrite the existing skill. Are you sure you want to proceed?",
+    "duplicateSkillError": "This skill already exists! Please delete the existing skill from the list first before importing again."
   }
 }

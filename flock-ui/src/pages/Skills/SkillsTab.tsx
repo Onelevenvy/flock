@@ -12,7 +12,6 @@ import {
   TextInput,
   SegmentedControl,
   Button,
-  Tooltip,
   Menu,
 } from '@mantine/core';
 import {
@@ -83,10 +82,13 @@ export function SkillsTab() {
         const exists = skills.some(s => s.name.toLowerCase() === importName.toLowerCase() || (s.display_name && s.display_name.toLowerCase() === importName.toLowerCase()));
         
         if (exists) {
-          const confirm = window.confirm(t('skills.skills.duplicateSkillWarning'));
-          if (!confirm) {
-            return;
-          }
+          notifications.show({
+            title: t('skills.skills.importFailed'),
+            message: t('skills.skills.duplicateSkillError'),
+            color: 'red',
+            autoClose: 5000
+          });
+          return;
         }
 
         setImporting(true);

@@ -105,7 +105,8 @@
     "importBtn": "导入外部技能",
     "importFolderBtn": "导入技能文件夹",
     "importZipBtn": "导入压缩包",
-    "duplicateSkillWarning": "该技能已存在，继续导入将替换更新老的技能，确定要继续吗？"
+    "duplicateSkillWarning": "该技能已存在，继续导入将替换更新老的技能，确定要继续吗？",
+    "duplicateSkillError": "该技能已存在！请先在列表中删除现有同名技能，再重新导入。"
   },
   "tools_i18n": {
     "Read": {

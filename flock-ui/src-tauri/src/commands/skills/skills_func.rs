@@ -4,7 +4,7 @@ use serde::Serialize;
 use tauri::State;
 
 use crate::SharedDbManager;
-use super::utils::{imported_skills_dir, has_skill_md, copy_dir_all};
+use super::utils::{imported_skills_dir, has_skill_md, copy_dir_all, get_skill_name};
 use sqlx::Row;
 
 const EXTRA_SKILL_DIRS_KEY: &str = "extra_skill_dirs";
@@ -124,57 +124,75 @@ pub async fn add_extra_skill_dir(
         let ext = p.extension().and_then(|e| e.to_str()).unwrap_or("").to_lowercase();
         if ext == "zip" || ext == "skill" {
             let file_stem = p.file_stem().and_then(|s| s.to_str()).unwrap_or("extracted_skill");
-            let dest_dir = imported_dir.join(file_stem);
             
-            // Standardize path representation without needing physical existence for canonicalization
-            let canonical = dest_dir.to_string_lossy().to_string();
-
-            // 1. Try writing to Database FIRST
-            db_add_imported_skill(&db, file_stem, &canonical).await?;
-
-            // 2. Perform File System extraction
+            // We use a temporary subdirectory for unpacking first
+            let temp_dir_name = format!("{}_temp", file_stem);
+            let temp_dest_dir = imported_dir.join(&temp_dir_name);
+            
             if let Err(err) = (async {
-                std::fs::create_dir_all(&dest_dir)?;
+                std::fs::create_dir_all(&temp_dest_dir)?;
                 
-                // Execute tar -xf <archive> -C <dest_dir>
+                // Execute tar -xf <archive> -C <temp_dest_dir>
                 let output = std::process::Command::new("tar")
-                    .args(&["-xf", trimmed, "-C", &dest_dir.to_string_lossy()])
+                    .args(&["-xf", trimmed, "-C", &temp_dest_dir.to_string_lossy()])
                     .output()?;
                     
                 if !output.status.success() {
                     let err_msg = String::from_utf8_lossy(&output.stderr);
                     return Err(std::io::Error::new(std::io::ErrorKind::Other, err_msg.into_owned()));
                 }
-                
-                // Check if there is SKILL.md
-                if !has_skill_md(&dest_dir) {
-                    // Try walking down one directory in case the zip contained a single parent folder
-                    if let Ok(entries) = std::fs::read_dir(&dest_dir) {
-                        let subdirs: Vec<_> = entries
-                            .flatten()
-                            .filter(|e| e.path().is_dir())
-                            .collect();
-                        if subdirs.len() == 1 && has_skill_md(&subdirs[0].path()) {
-                            // If nested, we keep the database record pointing to the subdir, so update the DB!
-                            let final_dir = subdirs[0].path();
-                            let final_canonical = final_dir.to_string_lossy().to_string();
-                            let folder_name = final_dir.file_name().and_then(|s| s.to_str()).unwrap_or(file_stem);
-                            
-                            // Delete the old record and add new nested record
-                            let _ = db_remove_imported_skill(&db, &canonical).await;
-                            db_add_imported_skill(&db, folder_name, &final_canonical).await
-                                .map_err(|e| std::io::Error::new(std::io::ErrorKind::Other, e))?;
-                            return Ok(());
-                        }
-                    }
-                    return Err(std::io::Error::new(std::io::ErrorKind::NotFound, "未在压缩包中找到 SKILL.md 文件"));
-                }
-                Ok(())
+                Ok::<(), std::io::Error>(())
             }).await {
-                // ROLLBACK: Remove database entry if file extraction failed
-                let _ = db_remove_imported_skill(&db, &canonical).await;
+                let _ = std::fs::remove_dir_all(&temp_dest_dir);
                 return Err(format!("解压并配置技能失败: {}", err));
             }
+
+            // Find the actual sub-directory that contains SKILL.md
+            let mut final_src_dir = temp_dest_dir.clone();
+            if !has_skill_md(&final_src_dir) {
+                if let Ok(entries) = std::fs::read_dir(&temp_dest_dir) {
+                    let subdirs: Vec<_> = entries
+                        .flatten()
+                        .filter(|e| e.path().is_dir())
+                        .collect();
+                    if subdirs.len() == 1 && has_skill_md(&subdirs[0].path()) {
+                        final_src_dir = subdirs[0].path();
+                    } else {
+                        let _ = std::fs::remove_dir_all(&temp_dest_dir);
+                        return Err("未在压缩包中找到 SKILL.md 文件".to_string());
+                    }
+                } else {
+                    let _ = std::fs::remove_dir_all(&temp_dest_dir);
+                    return Err("未在压缩包中找到 SKILL.md 文件".to_string());
+                }
+            }
+
+            // Extract the real skill name
+            let real_name = get_skill_name(&final_src_dir)
+                .unwrap_or_else(|| file_stem.to_string());
+
+            let dest_dir = imported_dir.join(&real_name);
+            let canonical = dest_dir.to_string_lossy().to_string();
+
+            // 1. Try writing to Database FIRST
+            db_add_imported_skill(&db, &real_name, &canonical).await?;
+
+            // 2. Perform File System move/rename
+            if let Err(err) = (async {
+                if dest_dir.exists() {
+                    let _ = std::fs::remove_dir_all(&dest_dir);
+                }
+                std::fs::rename(&final_src_dir, &dest_dir)?;
+                Ok::<(), std::io::Error>(())
+            }).await {
+                // ROLLBACK: Remove database entry if directory move failed
+                let _ = db_remove_imported_skill(&db, &canonical).await;
+                let _ = std::fs::remove_dir_all(&temp_dest_dir);
+                return Err(format!("重命名并移动技能目录失败: {}", err));
+            }
+
+            // Clean up the temporary folder if anything remains
+            let _ = std::fs::remove_dir_all(&temp_dest_dir);
 
             return db_get_imported_skills(&db).await;
         } else {
@@ -194,11 +212,15 @@ pub async fn add_extra_skill_dir(
     }
 
     let folder_name = p.file_name().and_then(|s| s.to_str()).unwrap_or("imported_skill");
-    let dest_dir = imported_dir.join(folder_name);
+    
+    // Extract real skill name directly from the source directory
+    let real_name = get_skill_name(&p).unwrap_or_else(|| folder_name.to_string());
+    
+    let dest_dir = imported_dir.join(&real_name);
     let canonical = dest_dir.to_string_lossy().to_string();
 
     // 1. Try writing to Database FIRST
-    db_add_imported_skill(&db, folder_name, &canonical).await?;
+    db_add_imported_skill(&db, &real_name, &canonical).await?;
 
     // 2. Perform Folder Copy
     if let Err(err) = (async {

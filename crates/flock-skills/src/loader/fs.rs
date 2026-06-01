@@ -12,6 +12,14 @@ pub(crate) async fn load_skills_from_dir(
     loaded_from: LoadChannel,
 ) -> Vec<LoadedSkill> {
     let mut results = Vec::new();
+    if let Some(skill_file) = find_exact_file(base_dir, "SKILL.md").await {
+        if let Some(skill) =
+            load_skill_file(&skill_file, base_dir, base_dir, source, loaded_from).await
+        {
+            results.push(skill);
+            return results;
+        }
+    }
     collect_skill_md(base_dir, base_dir, source, loaded_from, &mut results).await;
     results
 }

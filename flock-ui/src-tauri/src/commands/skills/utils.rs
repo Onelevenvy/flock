@@ -37,3 +37,54 @@ pub fn copy_dir_all(src: impl AsRef<Path>, dst: impl AsRef<Path>) -> std::io::Re
     }
     Ok(())
 }
+
+/// Find and parse the real skill name from SKILL.md in the directory
+pub fn get_skill_name(dir: &Path) -> Option<String> {
+    // 1. Check direct SKILL.md
+    let direct_skill_md = dir.join("SKILL.md");
+    if direct_skill_md.exists() {
+        if let Ok(content) = std::fs::read_to_string(direct_skill_md) {
+            if let Some(name) = extract_name_from_md(&content) {
+                return Some(name);
+            }
+        }
+    }
+    // 2. Check immediate subdirectories for SKILL.md
+    if let Ok(entries) = std::fs::read_dir(dir) {
+        for entry in entries.flatten() {
+            if entry.path().is_dir() {
+                let sub_skill_md = entry.path().join("SKILL.md");
+                if sub_skill_md.exists() {
+                    if let Ok(content) = std::fs::read_to_string(sub_skill_md) {
+                        if let Some(name) = extract_name_from_md(&content) {
+                            return Some(name);
+                        }
+                    }
+                }
+            }
+        }
+    }
+    None
+}
+
+fn extract_name_from_md(content: &str) -> Option<String> {
+    let mut in_frontmatter = false;
+    for line in content.lines() {
+        let trimmed = line.trim();
+        if trimmed == "---" {
+            if in_frontmatter {
+                break;
+            }
+            in_frontmatter = true;
+            continue;
+        }
+        if in_frontmatter && trimmed.starts_with("name:") {
+            let val = trimmed.splitn(2, ':').nth(1)?.trim();
+            let val = val.trim_matches(|c| c == '"' || c == '\'');
+            if !val.is_empty() {
+                return Some(val.to_string());
+            }
+        }
+    }
+    None
+}
