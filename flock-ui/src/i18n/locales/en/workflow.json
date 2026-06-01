@@ -8,6 +8,7 @@
   "createdToast": "Workflow created",
   "deletedToast": "Deleted",
   "unsaved": "Unsaved",
+  "unsavedConfirm": "You have unsaved changes. Are you sure you want to leave?",
   "minimap": "Minimap",
   "debug": "Debug Run",
   "debugNode": "Debug Node",

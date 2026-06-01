@@ -8,6 +8,7 @@
   "createdToast": "工作流已创建",
   "deletedToast": "已删除",
   "unsaved": "未保存",
+  "unsavedConfirm": "您有未保存的修改，确定要离开吗？",
   "minimap": "小地图",
   "debug": "调试执行",
   "debugNode": "调试节点",
