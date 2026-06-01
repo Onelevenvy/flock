@@ -277,7 +277,7 @@ pub async fn run_workflow(
     let approval_manager = agent_state.lock().await.approval_manager.clone();
 
     let ctx = Arc::new(WorkflowNodeContext {
-        provider,
+        provider: provider.clone(),
         model_factory,
         tools,
         db: db.inner().clone(),
@@ -582,7 +582,7 @@ pub async fn run_workflow(
                 let mut updated_title = None;
 
                 if enable_summary.unwrap_or(false) {
-                    let protocol_emitter_for_summary = Arc::new(crate::agent::emitter::TauriProtocolEmitter::new(app_clone.clone()));
+                    let protocol_emitter_for_summary: Arc<dyn flock_core::ipc_interface::writer::ProtocolEmitter> = Arc::new(crate::agent::TauriProtocolEmitter::new(app_clone.clone()));
                     if let Err(e) = flock_agent::engine::summary::run_background_summary(
                         db_for_task.clone(),
                         thread_id_val_clone_inner.clone(),
