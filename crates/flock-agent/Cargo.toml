@@ -49,10 +49,12 @@ base64.workspace = true
 
 [dev-dependencies]
 flock-tools = { path = "../flock-tools", features = ["test-utils"] }
+flock-workflow = { path = "../flock-workflow" }
 wiremock.workspace    = true
 tokio-test.workspace  = true
 tempfile.workspace    = true
 mockall.workspace     = true
 rstest.workspace      = true
 serial_test.workspace = true
+
 
