@@ -192,7 +192,7 @@
     "human": { "label": "HITL" },
     "parameterExtractor": { "label": "Extractor" },
     "plugin": { "label": "Tool" },
-    "noModel": "No Model",
+    "noModel": "No Model Selected",
     "classifierCount": "{{count}} Categories",
     "noOutputTemplate": "No Output Template",
     "toolLabel": "Tool: {{name}}",
