@@ -19,20 +19,16 @@ impl WorkflowSink for MockWorkflowSink {
     fn emit_error(&self, _msg: &str) {}
 }
 
-#[tokio::test]
+#[tokio::test(flavor = "multi_thread")]
 async fn test_workflow_start_and_llm_nodes() {
     let mock_server = wiremock::MockServer::start().await;
     
+    let mock_stream = "data: {\"id\":\"chatcmpl-123\",\"object\":\"chat.completion.chunk\",\"created\":1677858242,\"model\":\"gpt-4o\",\"choices\":[{\"index\":0,\"delta\":{\"role\":\"assistant\",\"content\":\"Workflow processed message successfully!\"},\"finish_reason\":null}]}\r\n\r\ndata: {\"id\":\"chatcmpl-123\",\"object\":\"chat.completion.chunk\",\"created\":1677858242,\"model\":\"gpt-4o\",\"choices\":[{\"index\":0,\"delta\":{},\"finish_reason\":\"stop\"}]}\r\n\r\ndata: [DONE]\r\n\r\n";
+
     wiremock::Mock::given(wiremock::matchers::method("POST"))
         .and(wiremock::matchers::path("/v1/chat/completions"))
-        .respond_with(wiremock::ResponseTemplate::new(200).set_body_json(serde_json::json!({
-            "choices": [{
-                "message": {
-                    "role": "assistant",
-                    "content": "Workflow processed message successfully!"
-                }
-            }]
-        })))
+        .respond_with(wiremock::ResponseTemplate::new(200)
+            .set_body_raw(mock_stream.as_bytes().to_vec(), "text/event-stream"))
         .mount(&mock_server)
         .await;
 
@@ -40,7 +36,7 @@ async fn test_workflow_start_and_llm_nodes() {
         provider_type: "openai".to_string(),
         model: "gpt-4o".to_string(),
         api_key: "mock-key".to_string(),
-        base_url: Some(mock_server.uri()),
+        base_url: Some(format!("{}/v1", mock_server.uri())),
         max_tokens: None,
         temperature: None,
         top_p: None,
@@ -60,7 +56,7 @@ async fn test_workflow_start_and_llm_nodes() {
             HashMap::new(),
             "openai".to_string(),
             "mock-key".to_string(),
-            Some(mock_server.uri()),
+            Some(format!("{}/v1", mock_server.uri())),
         )),
         tools: Arc::new(ToolRegistry::new()),
         db,
@@ -82,7 +78,7 @@ async fn test_workflow_start_and_llm_nodes() {
                 "id": "llm_1",
                 "type": "llm",
                 "data": {
-                    "prompt": "Say hello to: {{input_msg}}",
+                    "userMessage": "Say hello to: ${sys.query}",
                     "output_var": "greeting"
                 }
             },
@@ -122,10 +118,10 @@ async fn test_workflow_start_and_llm_nodes() {
 
     let node_outputs = final_state.get("node_outputs").unwrap();
     let llm_output = node_outputs.get("llm_1").unwrap();
-    assert_eq!(llm_output.get("greeting").unwrap().as_str().unwrap(), "Workflow processed message successfully!");
+    assert_eq!(llm_output.get("response").unwrap().as_str().unwrap(), "Workflow processed message successfully!");
 }
 
-#[tokio::test]
+#[tokio::test(flavor = "multi_thread")]
 async fn test_workflow_concurrency_isolation() {
     let mock_server = wiremock::MockServer::start().await;
 
@@ -133,16 +129,15 @@ async fn test_workflow_concurrency_isolation() {
     impl wiremock::Respond for WorkflowResponder {
         fn respond(&self, request: &wiremock::Request) -> wiremock::ResponseTemplate {
             let body: serde_json::Value = serde_json::from_slice(&request.body).unwrap();
-            let prompt = body["messages"][0]["content"].as_str().unwrap_or("");
+            let messages = body["messages"].as_array().unwrap();
+            let prompt = messages.last().and_then(|m| m["content"].as_str()).unwrap_or("");
             let uuid = prompt.split("hello to:").last().unwrap_or("").trim();
-            wiremock::ResponseTemplate::new(200).set_body_json(serde_json::json!({
-                "choices": [{
-                    "message": {
-                        "role": "assistant",
-                        "content": format!("Response for workflow UUID: {}", uuid)
-                    }
-                }]
-            }))
+            let mock_stream = format!(
+                "data: {{\"id\":\"chatcmpl-123\",\"object\":\"chat.completion.chunk\",\"created\":1677858242,\"model\":\"gpt-4o\",\"choices\":[{{\"index\":0,\"delta\":{{\"role\":\"assistant\",\"content\":\"Response for workflow UUID: {}\"}},\"finish_reason\":null}}]}}\r\n\r\ndata: {{\"id\":\"chatcmpl-123\",\"object\":\"chat.completion.chunk\",\"created\":1677858242,\"model\":\"gpt-4o\",\"choices\":[{{\"index\":0,\"delta\":{{}},\"finish_reason\":\"stop\"}}]}}\r\n\r\ndata: [DONE]\r\n\r\n",
+                uuid
+            );
+            wiremock::ResponseTemplate::new(200)
+                .set_body_raw(mock_stream.as_bytes().to_vec(), "text/event-stream")
         }
     }
 
@@ -171,7 +166,7 @@ async fn test_workflow_concurrency_isolation() {
                 provider_type: "openai".to_string(),
                 model: "gpt-4o".to_string(),
                 api_key: "mock-key".to_string(),
-                base_url: Some(base_url_clone.clone()),
+                base_url: Some(format!("{}/v1", base_url_clone.clone())),
                 max_tokens: None,
                 temperature: None,
                 top_p: None,
@@ -186,7 +181,7 @@ async fn test_workflow_concurrency_isolation() {
                     HashMap::new(),
                     "openai".to_string(),
                     "mock-key".to_string(),
-                    Some(base_url_clone),
+                    Some(format!("{}/v1", base_url_clone)),
                 )),
                 tools: Arc::new(ToolRegistry::new()),
                 db: db_clone,
@@ -204,7 +199,7 @@ async fn test_workflow_concurrency_isolation() {
                         "id": "llm_1",
                         "type": "llm",
                         "data": {
-                            "prompt": "Say hello to: {{input_msg}}",
+                            "userMessage": "Say hello to: ${sys.query}",
                             "output_var": "greeting"
                         }
                     },
@@ -232,7 +227,7 @@ async fn test_workflow_concurrency_isolation() {
             
             let node_outputs = final_state.get("node_outputs").unwrap();
             let llm_output = node_outputs.get("llm_1").unwrap();
-            let greeting = llm_output.get("greeting").unwrap().as_str().unwrap().to_string();
+            let greeting = llm_output.get("response").unwrap().as_str().unwrap().to_string();
             
             (uuid_clone, greeting)
         });

@@ -149,3 +149,53 @@ pub fn calculate_next_run(kind: &str, value: &str) -> Option<i64> {
         _ => None,
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use chrono::TimeZone;
+
+    #[test]
+    fn test_cron_parser_parse() {
+        // 测试每 15 分钟的表达式
+        let p = CronParser::parse("*/15 * * * *").unwrap();
+        assert_eq!(p.minutes, vec![0, 15, 30, 45]);
+        assert_eq!(p.hours.len(), 24);
+
+        // 测试范围周
+        let p2 = CronParser::parse("0 9 * * 1-5").unwrap();
+        assert_eq!(p2.minutes, vec![0]);
+        assert_eq!(p2.hours, vec![9]);
+        assert_eq!(p2.days_of_week, vec![1, 2, 3, 4, 5]);
+    }
+
+    #[test]
+    fn test_cron_parser_next_run() {
+        let p = CronParser::parse("0 9 * * 1-5").unwrap();
+        // 模拟一个星期天的中午：2026年6月7日 12:00:00 (Sunday)
+        let base_dt = Local.with_ymd_and_hms(2026, 6, 7, 12, 0, 0).single().unwrap();
+        let next_run = p.next_run_from(base_dt).unwrap();
+        
+        // 预期下一次运行是周一早上 9:00: 2026年6月8日 9:00:00 (Monday)
+        assert_eq!(next_run.year(), 2026);
+        assert_eq!(next_run.month(), 6);
+        assert_eq!(next_run.day(), 8);
+        assert_eq!(next_run.hour(), 9);
+        assert_eq!(next_run.minute(), 0);
+    }
+
+    #[test]
+    fn test_calculate_next_run() {
+        // 测试 every 模式 (5分钟)
+        let next_ms = calculate_next_run("every", "5").unwrap();
+        let now_ms = Local::now().timestamp_millis();
+        // 预期大约在 5 分钟之后 (误差10秒内)
+        assert!((next_ms - now_ms - 300_000).abs() < 10_000);
+
+        // 测试 at 模式
+        let future_time = Local::now().timestamp_millis() + 100_000;
+        let next_ms_at = calculate_next_run("at", &future_time.to_string()).unwrap();
+        assert_eq!(next_ms_at, future_time);
+    }
+}
+
