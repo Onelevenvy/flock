@@ -1,20 +1,20 @@
 import { Box } from '@mantine/core';
 import { Sidebar } from './Sidebar';
 import { TitleBar } from './TitleBar';
-import { SkillsPage } from '../../pages/Skills';
-import { AssistantPage } from '../../pages/Assistant';
-import { HomeView } from '../../pages/Home';
-import { WorkspaceView } from '../../pages/Workspace';
-import { PlaceholderPage } from '../../pages/Placeholder';
-import { SchedulePage } from '../../pages/Schedule';
-import { WorkflowPage } from '../../pages/Workflow';
-import { useUiStore } from '../../store/uiStore';
-import { useWorkspaceStore } from '../../store/workspaceStore';
-import { usePetStore } from '../../store/petStore';
+import { SkillsPage } from '@/pages/Skills';
+import { AssistantPage } from '@/pages/Assistant';
+import { HomeView } from '@/pages/Home';
+import { WorkspaceView } from '@/pages/Workspace';
+import { PlaceholderPage } from '@/pages/Placeholder';
+import { SchedulePage } from '@/pages/Schedule';
+import { WorkflowPage } from '@/pages/Workflow';
+import { useUiStore } from '@/store/uiStore';
+import { useWorkspaceStore } from '@/store/workspaceStore';
+import { usePetStore } from '@/store/petStore';
 import { IconBoxMultiple, IconLego } from '@tabler/icons-react';
 import { useTranslation } from 'react-i18next';
-import { XiaofSyncManager } from '../Pet/XiaofSyncManager';
-import { XiaofPet } from '../Pet/XiaofPet';
+import { XiaofSyncManager } from '@/components/Pet/XiaofSyncManager';
+import { XiaofPet } from '@/components/Pet/XiaofPet';
 
 export function MainLayout() {
   const { t } = useTranslation();

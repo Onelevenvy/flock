@@ -2,8 +2,8 @@ import { useState, useEffect, useCallback } from 'react';
 import { invoke } from '@tauri-apps/api/core';
 import { notifications } from '@mantine/notifications';
 import { useTranslation } from 'react-i18next';
-import { type Assistant, type UpsertAssistant } from '../../../types/assistant';
-import { parseMultiLang } from '../../../utils/i18n';
+import { type Assistant, type UpsertAssistant } from '@/types/assistant';
+import { parseMultiLang } from '@/utils/i18n';
 
 interface ModelProvider {
   id: string;
@@ -18,8 +18,8 @@ interface Model {
   is_online: boolean;
 }
 
-import { useAvailableModels } from '../../../hooks/useAvailableModels';
-import { useSkillsQuery } from '../../../hooks/useToolQueries';
+import { useAvailableModels } from '@/hooks/useAvailableModels';
+import { useSkillsQuery } from '@/hooks/useToolQueries';
 
 interface SkillInfo {
   name: string;

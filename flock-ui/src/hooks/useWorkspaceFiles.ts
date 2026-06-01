@@ -2,8 +2,8 @@ import { useState, useCallback, useEffect } from 'react';
 import { invoke } from '@tauri-apps/api/core';
 import { notifications } from '@mantine/notifications';
 import { useTranslation } from 'react-i18next';
-import { useUiStore } from '../store/uiStore';
-import { formatError } from '../utils/error';
+import { useUiStore } from '@/store/uiStore';
+import { formatError } from '@/utils/error';
 
 export interface FileEntry {
   path: string;

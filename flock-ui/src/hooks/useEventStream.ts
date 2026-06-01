@@ -1,7 +1,7 @@
 import { useEffect, useRef } from 'react';
 import { listen, UnlistenFn } from '@tauri-apps/api/event';
-import { useAgentStore } from '../store/agentStore';
-import { ProtocolEvent } from '../types/protocol';
+import { useAgentStore } from '@/store/agentStore';
+import { ProtocolEvent } from '@/types/protocol';
 
 /**
  * 监听 Tauri 事件流，将 Agent 发来的 JSON 事件解析后分发到 store

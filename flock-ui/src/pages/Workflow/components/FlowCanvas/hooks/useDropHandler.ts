@@ -1,6 +1,6 @@
 import { useCallback } from 'react';
 import { type Node, useReactFlow, MarkerType } from 'reactflow';
-import { nodeConfig, type NodeType } from '../../../nodeConfig';
+import { nodeConfig, type NodeType } from '@/pages/Workflow/nodeConfig';
 
 /**
  * Handles adding a node via palette click or drag-and-drop.

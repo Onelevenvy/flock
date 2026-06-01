@@ -1,10 +1,10 @@
 import { Modal, Group, ThemeIcon, Text, ScrollArea, Stack, TextInput, Textarea, Select, Divider, MultiSelect, Button, Tabs, Box } from '@mantine/core';
 import { IconEdit, IconPlus, IconCheck } from '@tabler/icons-react';
 import { useTranslation } from 'react-i18next';
-import { type Assistant, type UpsertAssistant } from '../../types/assistant';
+import { type Assistant, type UpsertAssistant } from '@/types/assistant';
 import { IconPicker } from './IconPicker';
-import { MarkdownRenderer } from '../../components/chat/shared/MarkdownRenderer';
-import ToolManager from '../../components/Common/ToolManager';
+import { MarkdownRenderer } from '@/components/chat/shared/MarkdownRenderer';
+import ToolManager from '@/components/Common/ToolManager';
 import { useAssistantForm } from './hooks/useAssistantForm';
 
 export function AssistantFormModal({

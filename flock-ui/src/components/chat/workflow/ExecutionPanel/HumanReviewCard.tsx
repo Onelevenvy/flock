@@ -16,7 +16,7 @@ import {
 } from '@tabler/icons-react';
 import { useTranslation } from 'react-i18next';
 import { HumanAction, InterruptData } from './types';
-import { nodeConfig } from '../../../../pages/Workflow/nodeConfig';
+import { nodeConfig } from '@/pages/Workflow/nodeConfig';
 
 interface HumanReviewCardProps {
   interruptData: InterruptData;

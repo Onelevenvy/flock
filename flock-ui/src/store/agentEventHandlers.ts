@@ -1,12 +1,12 @@
 import { invoke } from '@tauri-apps/api/core';
 import { useUiStore } from './uiStore';
 import { useWorkspaceStore } from './workspaceStore';
-import { queryClient } from '../lib/queryClient';
+import { queryClient } from '@/lib/queryClient';
 import {
   ChatMessage,
   ProtocolEvent,
   ToolRequestChunk,
-} from '../types/protocol';
+} from '@/types/protocol';
 
 type SetFn = (partial: any) => void;
 type GetFn = () => any;

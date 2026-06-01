@@ -18,10 +18,10 @@ import {
   IconUpload,
 } from '@tabler/icons-react';
 import { useTranslation } from 'react-i18next';
-import { useUiStore, FileEntry } from '../../../../store/uiStore';
-import { useWorkspaceStore } from '../../../../store/workspaceStore';
-import { useWorkspacesQuery } from '../../../../hooks/useWorkspaces';
-import { useWorkspaceFiles } from '../../../../hooks/useWorkspaceFiles';
+import { useUiStore, FileEntry } from '@/store/uiStore';
+import { useWorkspaceStore } from '@/store/workspaceStore';
+import { useWorkspacesQuery } from '@/hooks/useWorkspaces';
+import { useWorkspaceFiles } from '@/hooks/useWorkspaceFiles';
 import { FileTreeItem } from './components/FileTreeItem';
 
 export function FileTreePanel() {

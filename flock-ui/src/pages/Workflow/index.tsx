@@ -1,4 +1,4 @@
-import { useWorkflowStore } from '../../store/workflowStore';
+import { useWorkflowStore } from '@/store/workflowStore';
 import { WorkflowListPage } from './components/WorkflowListPage';
 import { WorkflowEditor } from './components/WorkflowEditor';
 

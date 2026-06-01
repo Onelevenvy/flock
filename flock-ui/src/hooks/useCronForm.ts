@@ -1,11 +1,11 @@
 import { useState, useEffect } from 'react';
 import { notifications } from '@mantine/notifications';
-import i18n from '../i18n';
+import i18n from '@/i18n';
 import { useWorkspacesQuery } from './useWorkspaces';
 import { useAssistantsQuery } from './useAssistants';
 import { useCreateCronJobMutation, useUpdateCronJobMutation } from './useCronJobs';
-import type { CronJob } from '../pages/Schedule/types';
-import type { Assistant } from '../types/assistant';
+import type { CronJob } from '@/pages/Schedule/types';
+import type { Assistant } from '@/types/assistant';
 
 // ==================== Cron Form Data Types ====================
 

@@ -18,17 +18,17 @@ import {
   IconKey,
 } from '@tabler/icons-react';
 import { useTranslation } from 'react-i18next';
-import { workflowNodeTypes } from '../../nodes/nodeTypesMap';
-import { useWorkflowStore } from '../../../../store/workflowStore';
-import { useUpdateWorkflow, type WorkflowRecord } from '../../../../hooks/useWorkflow';
-import { NodePalette } from '../NodePalette';
-import { IconPicker } from '../../../Assistant/IconPicker';
-import { CustomStepEdge } from '../CustomStepEdge';
-import { PropertiesPanel } from '../PropertiesPanel';
-import { ExecutionPanel } from '../../../../components/chat/workflow/ExecutionPanel';
-import { EnvironmentVarsPanel } from '../EnvironmentVarsPanel';
-import { NodeDebugPanel } from '../NodeDebugPanel';
-import { useWorkflowRuntime } from '../../../../hooks/useWorkflowRuntime';
+import { workflowNodeTypes } from '@/pages/Workflow/nodes/nodeTypesMap';
+import { useWorkflowStore } from '@/store/workflowStore';
+import { useUpdateWorkflow, type WorkflowRecord } from '@/hooks/useWorkflow';
+import { NodePalette } from '@/pages/Workflow/components/NodePalette';
+import { IconPicker } from '@/pages/Assistant/IconPicker';
+import { CustomStepEdge } from '@/pages/Workflow/components/CustomStepEdge';
+import { PropertiesPanel } from '@/pages/Workflow/components/PropertiesPanel';
+import { ExecutionPanel } from '@/components/chat/workflow/ExecutionPanel';
+import { EnvironmentVarsPanel } from '@/pages/Workflow/components/EnvironmentVarsPanel';
+import { NodeDebugPanel } from '@/pages/Workflow/components/NodeDebugPanel';
+import { useWorkflowRuntime } from '@/hooks/useWorkflowRuntime';
 
 import { useFlowLayout } from './hooks/useFlowLayout';
 import { useNodeInsertion } from './hooks/useNodeInsertion';

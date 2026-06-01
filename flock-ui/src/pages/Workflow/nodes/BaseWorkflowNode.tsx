@@ -3,15 +3,15 @@ import { Handle, Position, type NodeProps } from 'reactflow';
 import { Box, Text, ActionIcon, Tooltip } from '@mantine/core';
 import { IconPlus, IconBug } from '@tabler/icons-react';
 import { useTranslation } from 'react-i18next';
-import { nodeConfig, type NodeType } from '../nodeConfig';
-import { useWorkflowStore } from '../../../store/workflowStore';
+import { nodeConfig, type NodeType } from '@/pages/Workflow/nodeConfig';
+import { useWorkflowStore } from '@/store/workflowStore';
 import { type BaseNodeData } from './types';
 import { handleStyle } from './styles';
 import { getNodeSummary } from './helpers';
 
-import { ModelIcon, ToolsIcon } from '../../../components/Common/Icons';
-import { useAvailableModels } from '../../../hooks/useAvailableModels';
-import { useAvailableTools } from '../../../hooks/useAvailableTools';
+import { ModelIcon, ToolsIcon } from '@/components/Common/Icons';
+import { useAvailableModels } from '@/hooks/useAvailableModels';
+import { useAvailableTools } from '@/hooks/useAvailableTools';
 
 interface BaseWorkflowNodeProps extends NodeProps<BaseNodeData> {
   type: NodeType;

@@ -3,10 +3,10 @@ import { invoke } from '@tauri-apps/api/core';
 import { notifications } from '@mantine/notifications';
 import { useTranslation } from 'react-i18next';
 import { IconCheck } from '@tabler/icons-react';
-import { reconnectCurrentAgent } from '../../../../lib/agentConnection';
-import { useWorkspacesQuery } from '../../../../hooks/useWorkspaces';
+import { reconnectCurrentAgent } from '@/lib/agentConnection';
+import { useWorkspacesQuery } from '@/hooks/useWorkspaces';
 import { useQueryClient } from '@tanstack/react-query';
-import type { ModelProvider, ModelItem, DefaultConfig, SummaryModelConfig } from '../types';
+import type { ModelProvider, ModelItem, DefaultConfig, SummaryModelConfig } from '@/components/Settings/ModelSettings/types';
 import React from 'react';
 
 export function useModelSettings() {

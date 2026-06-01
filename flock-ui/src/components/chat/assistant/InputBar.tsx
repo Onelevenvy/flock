@@ -17,11 +17,11 @@ import {
 } from '@tabler/icons-react';
 import { invoke } from '@tauri-apps/api/core';
 import { useTranslation } from 'react-i18next';
-import { useAgentStore } from '../../../store/agentStore';
-import { useWorkspaceStore } from '../../../store/workspaceStore';
-import { useWorkspacesQuery } from '../../../hooks/useWorkspaces';
+import { useAgentStore } from '@/store/agentStore';
+import { useWorkspaceStore } from '@/store/workspaceStore';
+import { useWorkspacesQuery } from '@/hooks/useWorkspaces';
 import { v4 as uuidv4 } from 'uuid';
-import { ActiveModelPicker } from '../../Common/ActiveModelPicker';
+import { ActiveModelPicker } from '@/components/Common/ActiveModelPicker';
 
 const MODE_OPTIONS = [
   { value: 'default', labelKey: 'chat.mode.default', labelDefault: 'Approval Mode', icon: IconShieldCheck, color: 'blue' },

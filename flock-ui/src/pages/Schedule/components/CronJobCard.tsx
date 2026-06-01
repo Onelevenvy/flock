@@ -21,8 +21,8 @@ import {
   IconAlertCircle,
   IconPlayerPlay,
 } from '@tabler/icons-react';
-import type { CronJob } from '../types';
-import { parseScheduleDesc, formatTime } from '../utils';
+import type { CronJob } from '@/pages/Schedule/types';
+import { parseScheduleDesc, formatTime } from '@/pages/Schedule/utils';
 
 interface CronJobCardProps {
   job: CronJob;

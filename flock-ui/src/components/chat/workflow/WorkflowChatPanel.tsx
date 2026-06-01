@@ -1,5 +1,5 @@
 import type { Node } from 'reactflow';
-import { useWorkflowRuntime } from '../../../hooks/useWorkflowRuntime';
+import { useWorkflowRuntime } from '@/hooks/useWorkflowRuntime';
 import { ExecutionPanel } from './ExecutionPanel';
 
 interface WorkflowChatPanelProps {

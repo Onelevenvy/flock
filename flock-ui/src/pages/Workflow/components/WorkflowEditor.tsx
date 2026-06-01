@@ -10,8 +10,8 @@
 import { useEffect, useState } from 'react';
 import { ReactFlowProvider } from 'reactflow';
 import { Box, Loader } from '@mantine/core';
-import { useWorkflowQuery } from '../../../hooks/useWorkflow';
-import { useWorkflowStore } from '../../../store/workflowStore';
+import { useWorkflowQuery } from '@/hooks/useWorkflow';
+import { useWorkflowStore } from '@/store/workflowStore';
 import { FlowCanvas } from './FlowCanvas';
 
 interface WorkflowEditorProps {

@@ -17,7 +17,7 @@ import {
 } from '@mantine/core';
 import { IconAdjustmentsHorizontal, IconX, IconHelpCircle } from '@tabler/icons-react';
 import { useTranslation } from 'react-i18next';
-import { ModelSelect } from '../../../../../components/Common/ModelSelect';
+import { ModelSelect } from '@/components/Common/ModelSelect';
 
 interface ModelSettingsPopoverProps {
   node: any;

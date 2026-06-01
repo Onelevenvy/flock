@@ -1,5 +1,5 @@
 import React from 'react';
-import type { XiaofMood } from '../../hooks/useXiaofState';
+import type { XiaofMood } from '@/hooks/useXiaofState';
 
 interface XiaofCharacterProps {
   mood: XiaofMood;

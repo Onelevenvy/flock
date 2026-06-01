@@ -2,8 +2,8 @@ import { useState } from 'react';
 import { Popover, UnstyledButton, Text, Stack } from '@mantine/core';
 import { IconFolder, IconChevronDown, IconCheck } from '@tabler/icons-react';
 import { useTranslation } from 'react-i18next';
-import { useWorkspaceStore } from '../../store/workspaceStore';
-import { useWorkspacesQuery } from '../../hooks/useWorkspaces';
+import { useWorkspaceStore } from '@/store/workspaceStore';
+import { useWorkspacesQuery } from '@/hooks/useWorkspaces';
 
 export function WorkspacePicker({
   onSelect,

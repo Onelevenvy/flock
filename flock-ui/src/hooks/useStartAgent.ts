@@ -2,12 +2,12 @@ import { useCallback, useState } from 'react';
 import { invoke } from '@tauri-apps/api/core';
 import { useTranslation } from 'react-i18next';
 import { notifications } from '@mantine/notifications';
-import { useAgentStore } from '../store/agentStore';
-import { useWorkspaceStore } from '../store/workspaceStore';
-import { useUiStore } from '../store/uiStore';
+import { useAgentStore } from '@/store/agentStore';
+import { useWorkspaceStore } from '@/store/workspaceStore';
+import { useUiStore } from '@/store/uiStore';
 import { useCreateConversationMutation, useWorkspacesQuery } from './useWorkspaces';
-import { useWorkflowStore } from '../store/workflowStore';
-import type { Assistant } from '../types/assistant';
+import { useWorkflowStore } from '@/store/workflowStore';
+import type { Assistant } from '@/types/assistant';
 import type { WorkflowRecord } from './useWorkflow';
 
 export function useStartAgent() {

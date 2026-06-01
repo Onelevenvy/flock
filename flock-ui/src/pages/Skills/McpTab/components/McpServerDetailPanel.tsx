@@ -24,8 +24,8 @@ import { invoke } from '@tauri-apps/api/core';
 import { notifications } from '@mantine/notifications';
 import { useTranslation } from 'react-i18next';
 
-import { ToolsIcon } from '../../../../components/Common/Icons';
-import type { McpServerInfo, Tool } from '../../types';
+import { ToolsIcon } from '@/components/Common/Icons';
+import type { McpServerInfo, Tool } from '@/pages/Skills/types';
 
 interface McpServerDetailPanelProps {
   server: McpServerInfo;

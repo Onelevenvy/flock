@@ -1,5 +1,5 @@
 import { TFunction } from 'i18next';
-import { type NodeType } from '../nodeConfig';
+import { type NodeType } from '@/pages/Workflow/nodeConfig';
 
 export function getNodeSummary(
   type: NodeType,

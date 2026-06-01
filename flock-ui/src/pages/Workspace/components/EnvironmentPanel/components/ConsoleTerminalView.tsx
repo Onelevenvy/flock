@@ -1,10 +1,10 @@
 import React, { useEffect, useRef } from 'react';
 import { Box, Text, ScrollArea, Group } from '@mantine/core';
 import { useTranslation } from 'react-i18next';
-import { useUiStore } from '../../../../../store/uiStore';
-import { useAgentStore } from '../../../../../store/agentStore';
-import { buildLiveTerminalContent } from '../utils/consoleUtils';
-import { useTypewriterStream } from '../hooks/useTypewriterStream';
+import { useUiStore } from '@/store/uiStore';
+import { useAgentStore } from '@/store/agentStore';
+import { buildLiveTerminalContent } from '@/pages/Workspace/components/EnvironmentPanel/utils/consoleUtils';
+import { useTypewriterStream } from '@/pages/Workspace/components/EnvironmentPanel/hooks/useTypewriterStream';
 
 interface ConsoleTerminalViewProps {
   content: string;

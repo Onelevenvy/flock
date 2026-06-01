@@ -1,6 +1,6 @@
 import { useMemo, useEffect, useRef } from 'react';
 import { ExecutionMessage, WorkflowStep, InterruptData, HumanAction } from '@/components/chat/workflow/ExecutionPanel/types';
-import { nodeConfig } from '../pages/Workflow/nodeConfig';
+import { nodeConfig } from '@/pages/Workflow/nodeConfig';
 import type { Node } from 'reactflow';
 
 interface UseExecutionPanelMessagesProps {

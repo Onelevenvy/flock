@@ -17,14 +17,14 @@ import {
 import { notifications } from '@mantine/notifications';
 import { useTranslation } from 'react-i18next';
 import { CreateTaskModal } from './CreateTaskModal';
-import { useWorkspacesQuery } from '../../hooks/useWorkspaces';
-import { useAssistantsQuery } from '../../hooks/useAssistants';
+import { useWorkspacesQuery } from '@/hooks/useWorkspaces';
+import { useAssistantsQuery } from '@/hooks/useAssistants';
 import {
   useCronJobsQuery,
   useToggleCronJobMutation,
   useDeleteCronJobMutation,
   useRunCronJobNowMutation,
-} from '../../hooks/useCronJobs';
+} from '@/hooks/useCronJobs';
 import type { CronJob } from './types';
 import { EmptyState } from './components/EmptyState';
 import { CronJobCard } from './components/CronJobCard';

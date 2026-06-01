@@ -18,8 +18,8 @@ import {
 } from '@tabler/icons-react';
 import { invoke } from '@tauri-apps/api/core';
 import { useTranslation } from 'react-i18next';
-import type { McpServerInfo, Tool } from '../types';
-import { ToolsIcon } from '../../../components/Common/Icons';
+import type { McpServerInfo, Tool } from '@/pages/Skills/types';
+import { ToolsIcon } from '@/components/Common/Icons';
 import { McpServerDetailPanel } from './components/McpServerDetailPanel';
 import { McpServerFormModal } from './components/McpServerFormModal';
 

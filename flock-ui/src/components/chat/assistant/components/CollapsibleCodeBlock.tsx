@@ -17,7 +17,7 @@ import {
 import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
 import { vscDarkPlus, prism } from 'react-syntax-highlighter/dist/esm/styles/prism';
 import { useTranslation } from 'react-i18next';
-import { useUiStore } from '../../../../store/uiStore';
+import { useUiStore } from '@/store/uiStore';
 
 interface CollapsibleCodeBlockProps {
   codeString: string;

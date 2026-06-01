@@ -1,6 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { invoke } from '@tauri-apps/api/core';
-import type { CronJob } from '../pages/Schedule/types';
+import type { CronJob } from '@/pages/Schedule/types';
 
 // ==================== CronJob Queries & Mutations ====================
 

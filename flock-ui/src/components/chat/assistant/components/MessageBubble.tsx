@@ -1,11 +1,11 @@
 import { Box, Stack, Paper, Text, Group, Avatar, Loader, Badge, Button } from '@mantine/core';
 import { IconUser, IconRobot } from '@tabler/icons-react';
 import { useTranslation } from 'react-i18next';
-import { ChatMessage, MessageChunk } from '../../../../types/protocol';
-import { useAgentStore } from '../../../../store/agentStore';
-import { useUiStore } from '../../../../store/uiStore';
-import { ToolCard } from '../ToolApproval/ToolCard';
-import { MarkdownRenderer } from '../../shared/MarkdownRenderer';
+import { ChatMessage, MessageChunk } from '@/types/protocol';
+import { useAgentStore } from '@/store/agentStore';
+import { useUiStore } from '@/store/uiStore';
+import { ToolCard } from '@/components/chat/assistant/ToolApproval/ToolCard';
+import { MarkdownRenderer } from '@/components/chat/shared/MarkdownRenderer';
 import { ThinkingBlock } from './ThinkingBlock';
 import { InfoGroupRenderer, groupContinuousInfoChunks, RenderChunk } from './InfoGroupRenderer';
 

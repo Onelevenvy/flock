@@ -22,20 +22,20 @@ import {
 } from '@tabler/icons-react';
 import { notifications } from '@mantine/notifications';
 import { useTranslation } from 'react-i18next';
-import { type Assistant, type UpsertAssistant } from '../../types/assistant';
-import { formatError } from '../../utils/error';
+import { type Assistant, type UpsertAssistant } from '@/types/assistant';
+import { formatError } from '@/utils/error';
 import {
   useAssistantsQuery,
   useCreateAssistantMutation,
   useUpdateAssistantMutation,
   useDeleteAssistantMutation,
-} from '../../hooks/useAssistants';
+} from '@/hooks/useAssistants';
 import { AssistantCard } from './AssistantCard';
 import { AssistantFormModal } from './AssistantFormModal';
-import { useWorkspaceStore } from '../../store/workspaceStore';
-import { useUiStore } from '../../store/uiStore';
-import { useStartAgent } from '../../hooks/useStartAgent';
-import { XIAOF_AGENT } from '../Home/AssistantPicker';
+import { useWorkspaceStore } from '@/store/workspaceStore';
+import { useUiStore } from '@/store/uiStore';
+import { useStartAgent } from '@/hooks/useStartAgent';
+import { XIAOF_AGENT } from '@/pages/Home/AssistantPicker';
 
 export function AssistantPage() {
   const { t } = useTranslation();

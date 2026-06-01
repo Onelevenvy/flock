@@ -21,9 +21,9 @@ import {
   IconTrash,
 } from '@tabler/icons-react';
 import { TFunction } from 'i18next';
-import { ModelProvider, ModelItem } from '../types';
-import { ModelIcon, ProviderIcon } from '../../../Common/Icons';
-import { parseMultiLang } from '../../../../utils/i18n';
+import { ModelProvider, ModelItem } from '@/components/Settings/ModelSettings/types';
+import { ModelIcon, ProviderIcon } from '@/components/Common/Icons';
+import { parseMultiLang } from '@/utils/i18n';
 
 interface ProviderCardProps {
   provider: ModelProvider;

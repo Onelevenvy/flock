@@ -1,7 +1,7 @@
 import { Group, Input, Textarea } from '@mantine/core';
 import { useTranslation } from 'react-i18next';
-import { VariableTextarea } from '../VariableInput';
-import { ModelSelect } from '../../../../../components/Common/ModelSelect';
+import { VariableTextarea } from '@/pages/Workflow/components/PropertiesPanel/VariableInput';
+import { ModelSelect } from '@/components/Common/ModelSelect';
 import { ModelSettingsPopover } from './ModelSettingsPopover';
 
 export interface ModelFieldsProps {

@@ -18,8 +18,8 @@ import {
 import { invoke } from '@tauri-apps/api/core';
 import { useTranslation } from 'react-i18next';
 import { notifications } from '@mantine/notifications';
-import { useUiStore, FileEntry } from '../../../../../store/uiStore';
-import { getFileIcon, formatSize } from '../utils';
+import { useUiStore, FileEntry } from '@/store/uiStore';
+import { getFileIcon, formatSize } from '@/pages/Workspace/components/FileTreePanel/utils';
 
 interface FileTreeItemProps {
   entry: FileEntry;

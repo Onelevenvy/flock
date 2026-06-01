@@ -1,7 +1,7 @@
 import { Box } from '@mantine/core';
 import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
 import { vscDarkPlus, prism } from 'react-syntax-highlighter/dist/esm/styles/prism';
-import { useUiStore } from '../../../../store/uiStore';
+import { useUiStore } from '@/store/uiStore';
 
 interface CodeViewProps {
   content: string;

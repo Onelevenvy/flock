@@ -11,7 +11,7 @@ import {
 import { invoke } from '@tauri-apps/api/core';
 import { notifications } from '@mantine/notifications';
 import { useTranslation } from 'react-i18next';
-import type { McpServerInfo } from '../../types';
+import type { McpServerInfo } from '@/pages/Skills/types';
 
 interface McpServerFormModalProps {
   opened: boolean;

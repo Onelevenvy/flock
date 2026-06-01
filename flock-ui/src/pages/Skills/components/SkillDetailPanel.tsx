@@ -16,8 +16,8 @@ import {
   IconChevronRight,
 } from '@tabler/icons-react';
 import { useTranslation } from 'react-i18next';
-import type { SkillInfo } from '../types';
-import { SOURCE_COLORS } from '../helpers';
+import type { SkillInfo } from '@/pages/Skills/types';
+import { SOURCE_COLORS } from '@/pages/Skills/helpers';
 
 export function SkillDetailPanel({
   skill,

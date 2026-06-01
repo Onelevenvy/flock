@@ -23,7 +23,7 @@ import {
 } from '@tabler/icons-react';
 import { useTranslation } from 'react-i18next';
 import { useState } from 'react';
-import { useDeleteWorkflow, type WorkflowRecord } from '../../../hooks/useWorkflow';
+import { useDeleteWorkflow, type WorkflowRecord } from '@/hooks/useWorkflow';
 
 interface WorkflowCardProps {
   workflow: WorkflowRecord;

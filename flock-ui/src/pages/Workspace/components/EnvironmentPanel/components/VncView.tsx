@@ -1,13 +1,13 @@
 import { Box } from '@mantine/core';
-import { ImageView } from '../ImageView';
-import { useWorkspaceStore } from '../../../../../store/workspaceStore';
-import { getRelativePath } from '../utils/vncUtils';
-import { useScreenshotPlayback } from '../hooks/useScreenshotPlayback';
+import { ImageView } from '@/pages/Workspace/components/EnvironmentPanel/ImageView';
+import { useWorkspaceStore } from '@/store/workspaceStore';
+import { getRelativePath } from '@/pages/Workspace/components/EnvironmentPanel/utils/vncUtils';
+import { useScreenshotPlayback } from '@/pages/Workspace/components/EnvironmentPanel/hooks/useScreenshotPlayback';
 import { VncHeader } from './VncHeader';
 import { VncTimeline } from './VncTimeline';
 import { ActionOverlay } from './ActionOverlay';
 
-export type { ScreenshotInfo } from '../utils/vncUtils';
+export type { ScreenshotInfo } from '@/pages/Workspace/components/EnvironmentPanel/utils/vncUtils';
 
 interface VncViewProps {
   formattedVncUrl: string;

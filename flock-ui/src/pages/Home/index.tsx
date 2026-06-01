@@ -3,17 +3,17 @@ import { Box, Button, Group, SegmentedControl, SimpleGrid, Stack, Text, Title } 
 import { notifications } from '@mantine/notifications';
 import { IconCompass, IconFolder, IconMessageCircle, IconRoute, IconSparkles } from '@tabler/icons-react';
 import { useTranslation } from 'react-i18next';
-import { useAssistantsQuery } from '../../hooks/useAssistants';
-import { useWorkflowsQuery } from '../../hooks/useWorkflow';
-import { useWorkspacesQuery } from '../../hooks/useWorkspaces';
-import { useAgentStore } from '../../store/agentStore';
-import { useWorkspaceStore } from '../../store/workspaceStore';
+import { useAssistantsQuery } from '@/hooks/useAssistants';
+import { useWorkflowsQuery } from '@/hooks/useWorkflow';
+import { useWorkspacesQuery } from '@/hooks/useWorkspaces';
+import { useAgentStore } from '@/store/agentStore';
+import { useWorkspaceStore } from '@/store/workspaceStore';
 import { XIAOF_AGENT } from './AssistantPicker';
 import { WorkspacePicker } from './WorkspacePicker';
 import { ExplorerAppCard } from './components/ExplorerAppCard';
-import { useStartAgent } from '../../hooks/useStartAgent';
-import { XiaofCharacter } from '../../components/Pet/XiaofCharacter';
-import { useXiaofState } from '../../hooks/useXiaofState';
+import { useStartAgent } from '@/hooks/useStartAgent';
+import { XiaofCharacter } from '@/components/Pet/XiaofCharacter';
+import { useXiaofState } from '@/hooks/useXiaofState';
 
 export function HomeView() {
   const { t } = useTranslation();

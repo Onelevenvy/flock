@@ -1,7 +1,7 @@
 import { Divider } from '@mantine/core';
 import { useTranslation } from 'react-i18next';
-import { LLMFields } from '../LLM';
-import ToolManager from '../../../../../components/Common/ToolManager';
+import { LLMFields } from '@/pages/Workflow/components/PropertiesPanel/LLM';
+import ToolManager from '@/components/Common/ToolManager';
 
 export interface AgentFieldsProps {
   node: any;

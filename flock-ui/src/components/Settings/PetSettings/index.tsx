@@ -1,9 +1,9 @@
 import { Switch, Slider, Stack, Text, Group, Button, Box, Paper, Divider, SegmentedControl } from '@mantine/core';
 import { IconPaw, IconBubble, IconRefresh } from '@tabler/icons-react';
 import { useTranslation } from 'react-i18next';
-import { usePetStore } from '../../../store/petStore';
-import { XiaofCharacter } from '../../Pet/XiaofCharacter';
-import type { XiaofMood } from '../../../hooks/useXiaofState';
+import { usePetStore } from '@/store/petStore';
+import { XiaofCharacter } from '@/components/Pet/XiaofCharacter';
+import type { XiaofMood } from '@/hooks/useXiaofState';
 import { useState } from 'react';
 
 const MOOD_PREVIEWS: { mood: XiaofMood; labelKey: string }[] = [

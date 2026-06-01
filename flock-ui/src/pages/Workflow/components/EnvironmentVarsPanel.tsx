@@ -13,8 +13,8 @@ import {
 } from '@mantine/core';
 import { IconX, IconPlus, IconTrash } from '@tabler/icons-react';
 import { useTranslation } from 'react-i18next';
-import { useWorkflowStore, type EnvVar } from '../../../store/workflowStore';
-import type { VariableType } from '../../../types/workflowVariables';
+import { useWorkflowStore, type EnvVar } from '@/store/workflowStore';
+import type { VariableType } from '@/types/workflowVariables';
 
 const TYPE_OPTIONS = [
   { value: 'string', label: 'String' },

@@ -13,9 +13,9 @@ import {
 } from '@mantine/core';
 import { IconPlus, IconRefresh } from '@tabler/icons-react';
 import { invoke } from '@tauri-apps/api/core';
-import { useWorkspaceStore } from '../../../store/workspaceStore';
-import { useUiStore } from '../../../store/uiStore';
-import { useAgentStore } from '../../../store/agentStore';
+import { useWorkspaceStore } from '@/store/workspaceStore';
+import { useUiStore } from '@/store/uiStore';
+import { useAgentStore } from '@/store/agentStore';
 import { WorkspaceTreeNode } from './WorkspaceTreeNode';
 import {
   useWorkspacesQuery,
@@ -24,7 +24,7 @@ import {
   useCreateConversationMutation,
   useDeleteConversationMutation,
   useUpdateConversationTitleMutation,
-} from '../../../hooks/useWorkspaces';
+} from '@/hooks/useWorkspaces';
 import { useTranslation } from 'react-i18next';
 
 export function WorkspaceSection() {

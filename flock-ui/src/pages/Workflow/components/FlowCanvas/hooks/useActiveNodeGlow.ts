@@ -1,5 +1,5 @@
 import { useMemo, useEffect } from 'react';
-import type { WorkflowExecutionMessage } from '../../../../../store/workflowStore';
+import type { WorkflowExecutionMessage } from '@/store/workflowStore';
 
 export function useActiveNodeGlow(
   executionMessages: WorkflowExecutionMessage[],

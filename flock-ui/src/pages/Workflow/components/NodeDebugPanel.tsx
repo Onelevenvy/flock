@@ -2,8 +2,8 @@ import { useState, useEffect } from 'react';
 import { Box, Text, Group, ActionIcon, Textarea, TextInput, Button, Stack, ScrollArea, Badge, Divider, Tabs } from '@mantine/core';
 import { IconX, IconPlayerPlay, IconSettings, IconHistory } from '@tabler/icons-react';
 import { useTranslation } from 'react-i18next';
-import { useWorkflowStore } from '../../../store/workflowStore';
-import { useWorkflowRuntime } from '../../../hooks/useWorkflowRuntime';
+import { useWorkflowStore } from '@/store/workflowStore';
+import { useWorkflowRuntime } from '@/hooks/useWorkflowRuntime';
 
 interface NodeDebugPanelProps {
   nodeId: string;

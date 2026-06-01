@@ -1,6 +1,6 @@
 import { Box } from '@mantine/core';
 import { useTranslation } from 'react-i18next';
-import type { ScreenshotInfo } from '../utils/vncUtils';
+import type { ScreenshotInfo } from '@/pages/Workspace/components/EnvironmentPanel/utils/vncUtils';
 
 export function ActionOverlay({ info }: { info: ScreenshotInfo }) {
   const { t } = useTranslation();

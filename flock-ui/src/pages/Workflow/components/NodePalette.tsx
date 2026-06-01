@@ -2,10 +2,10 @@ import { useState, useMemo } from 'react';
 import { Box, Text, TextInput, UnstyledButton, Tooltip, Accordion, Group, Badge } from '@mantine/core';
 import { useTranslation } from 'react-i18next';
 import { IconSearch, IconPuzzle, IconLock } from '@tabler/icons-react';
-import { nodeConfig, type NodeType } from '../nodeConfig';
-import { useAvailableTools } from '../../../hooks/useAvailableTools';
-import { ToolsIcon } from '../../../components/Common/Icons';
-import { getProviderName } from '../../Skills/helpers';
+import { nodeConfig, type NodeType } from '@/pages/Workflow/nodeConfig';
+import { useAvailableTools } from '@/hooks/useAvailableTools';
+import { ToolsIcon } from '@/components/Common/Icons';
+import { getProviderName } from '@/pages/Skills/helpers';
 
 // Nodes that can be added onto canvas (start/end are pre-placed)
 const PALETTE_NODES: NodeType[] = [

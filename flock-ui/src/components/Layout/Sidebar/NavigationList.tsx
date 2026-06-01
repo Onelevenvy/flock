@@ -12,9 +12,9 @@ import {
   IconChevronDown,
   IconChevronRight,
 } from '@tabler/icons-react';
-import { useUiStore } from '../../../store/uiStore';
-import { useWorkspaceStore } from '../../../store/workspaceStore';
-import { useWorkflowStore } from '../../../store/workflowStore';
+import { useUiStore } from '@/store/uiStore';
+import { useWorkspaceStore } from '@/store/workspaceStore';
+import { useWorkflowStore } from '@/store/workflowStore';
 import { useTranslation } from 'react-i18next';
 
 export function NavigationList() {

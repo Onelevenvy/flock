@@ -9,9 +9,9 @@ import { invoke } from '@tauri-apps/api/core';
 import { getCurrentWindow } from '@tauri-apps/api/window';
 import { PhysicalPosition } from '@tauri-apps/api/dpi';
 import { XiaofCharacter } from './XiaofCharacter';
-import type { XiaofMood } from '../../hooks/useXiaofState';
+import type { XiaofMood } from '@/hooks/useXiaofState';
 import './xiaof.css';
-import '../../index.css';
+import '@/index.css';
 
 interface PetSyncState {
   mood: XiaofMood;

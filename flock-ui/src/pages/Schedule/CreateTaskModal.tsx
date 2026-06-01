@@ -28,7 +28,7 @@ import {
   IconCode,
 } from '@tabler/icons-react';
 import { useTranslation } from 'react-i18next';
-import { useCronForm, getWeekdayOptions, type SchedulePreset } from '../../hooks/useCronForm';
+import { useCronForm, getWeekdayOptions, type SchedulePreset } from '@/hooks/useCronForm';
 import type { CronJob } from './types';
 
 interface CreateTaskModalProps {

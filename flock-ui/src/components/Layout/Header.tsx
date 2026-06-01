@@ -13,10 +13,10 @@ import {
   IconDeviceDesktop,
 } from '@tabler/icons-react';
 
-import { useAgentStore } from '../../store/agentStore';
-import { useUiStore } from '../../store/uiStore';
-import { useWorkspaceStore } from '../../store/workspaceStore';
-import { useAssistantsQuery } from '../../hooks/useAssistants';
+import { useAgentStore } from '@/store/agentStore';
+import { useUiStore } from '@/store/uiStore';
+import { useWorkspaceStore } from '@/store/workspaceStore';
+import { useAssistantsQuery } from '@/hooks/useAssistants';
 import { useTranslation } from 'react-i18next';
 
 const STATUS_COLOR: Record<string, string> = {

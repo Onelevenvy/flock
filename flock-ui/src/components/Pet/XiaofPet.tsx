@@ -1,9 +1,9 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { invoke } from '@tauri-apps/api/core';
 import { useTranslation } from 'react-i18next';
-import { useXiaofState } from '../../hooks/useXiaofState';
-import { usePetStore } from '../../store/petStore';
-import { useAgentStore } from '../../store/agentStore';
+import { useXiaofState } from '@/hooks/useXiaofState';
+import { usePetStore } from '@/store/petStore';
+import { useAgentStore } from '@/store/agentStore';
 import { XiaofCharacter } from './XiaofCharacter';
 import './xiaof.css';
 

@@ -2,9 +2,9 @@ import { Box, Group, Tooltip, ActionIcon, UnstyledButton, Text } from '@mantine/
 import { IconSettings, IconBrandGithub, IconStar } from '@tabler/icons-react';
 import { useTranslation } from 'react-i18next';
 import { invoke } from '@tauri-apps/api/core';
-import { useUiStore } from '../../../store/uiStore';
-import { useGithubStars } from '../../../hooks/useGithubStars';
-import { ThemeToggle } from '../../Common/ThemeToggle';
+import { useUiStore } from '@/store/uiStore';
+import { useGithubStars } from '@/hooks/useGithubStars';
+import { ThemeToggle } from '@/components/Common/ThemeToggle';
 
 export function BottomBar() {
   const { t } = useTranslation();

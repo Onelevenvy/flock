@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Box, Loader, Text } from '@mantine/core';
 import { invoke, convertFileSrc } from '@tauri-apps/api/core';
-import { useAgentStore } from '../../../../store/agentStore';
+import { useAgentStore } from '@/store/agentStore';
 import { useTranslation } from 'react-i18next';
 
 interface ImageViewProps {

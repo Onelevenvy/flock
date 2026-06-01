@@ -4,9 +4,9 @@ import { invoke } from '@tauri-apps/api/core';
 import { notifications } from '@mantine/notifications';
 import { useTranslation } from 'react-i18next';
 import { IconCheck, IconX } from '@tabler/icons-react';
-import { formatError } from '../../../utils/error';
-import { getProviderName } from '../helpers';
-import type { ToolProvider } from '../types';
+import { formatError } from '@/utils/error';
+import { getProviderName } from '@/pages/Skills/helpers';
+import type { ToolProvider } from '@/pages/Skills/types';
 
 export function useProviderCredentials(
   provider: ToolProvider,

@@ -12,8 +12,8 @@ import {
 } from '@mantine/core';
 import { IconRoute } from '@tabler/icons-react';
 import { useTranslation } from 'react-i18next';
-import { useCreateWorkflow } from '../../../hooks/useWorkflow';
-import { IconPicker } from '../../Assistant/IconPicker';
+import { useCreateWorkflow } from '@/hooks/useWorkflow';
+import { IconPicker } from '@/pages/Assistant/IconPicker';
 
 interface CreateWorkflowModalProps {
   opened: boolean;

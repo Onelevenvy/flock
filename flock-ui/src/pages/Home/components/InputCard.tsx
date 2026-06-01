@@ -1,7 +1,7 @@
 import { Box, Textarea, Group, Menu, Tooltip, ActionIcon, Text } from '@mantine/core';
 import { IconSend, IconPlayerStop } from '@tabler/icons-react';
-import { WorkspacePicker } from '../WorkspacePicker';
-import { ActiveModelPicker } from '../../../components/Common/ActiveModelPicker';
+import { WorkspacePicker } from '@/pages/Home/WorkspacePicker';
+import { ActiveModelPicker } from '@/components/Common/ActiveModelPicker';
 
 interface InputCardProps {
   t: any;
