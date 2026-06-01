@@ -2,47 +2,35 @@ import { useCallback, useMemo, useState } from 'react';
 import { Box, Button, Group, SegmentedControl, SimpleGrid, Stack, Text, Title } from '@mantine/core';
 import { notifications } from '@mantine/notifications';
 import { IconCompass, IconFolder, IconMessageCircle, IconRoute, IconSparkles } from '@tabler/icons-react';
-import { invoke } from '@tauri-apps/api/core';
 import { useTranslation } from 'react-i18next';
 import { useAssistantsQuery } from '../../hooks/useAssistants';
-import { useWorkflowsQuery, type WorkflowRecord } from '../../hooks/useWorkflow';
-import { useCreateConversationMutation, useWorkspacesQuery } from '../../hooks/useWorkspaces';
+import { useWorkflowsQuery } from '../../hooks/useWorkflow';
+import { useWorkspacesQuery } from '../../hooks/useWorkspaces';
 import { useAgentStore } from '../../store/agentStore';
 import { useWorkspaceStore } from '../../store/workspaceStore';
-import { useWorkflowStore } from '../../store/workflowStore';
-import type { Assistant } from '../../types/assistant';
 import { XIAOF_AGENT } from './AssistantPicker';
 import { WorkspacePicker } from './WorkspacePicker';
 import { ExplorerAppCard } from './components/ExplorerAppCard';
+import { useStartAgent } from '../../hooks/useStartAgent';
 
 export function HomeView() {
   const { t } = useTranslation();
   const [filter, setFilter] = useState<'all' | 'assistants' | 'workflows'>('all');
-  const [launchingAssistantId, setLaunchingAssistantId] = useState<string | null>(null);
-  const [launchingWorkflowId, setLaunchingWorkflowId] = useState<string | null>(null);
 
   const { data: assistants = [] } = useAssistantsQuery();
   const { data: workflows = [] } = useWorkflowsQuery();
   const { data: workspaces = [] } = useWorkspacesQuery();
-  const { mutateAsync: createConversation } = useCreateConversationMutation();
 
   const status = useAgentStore((s) => s.status);
   const setStatus = useAgentStore((s) => s.setStatus);
   const setWorkdir = useAgentStore((s) => s.setWorkdir);
-  const clearMessages = useAgentStore((s) => s.clearMessages);
-  const setError = useAgentStore((s) => s.setError);
 
   const {
     activeWorkspaceId,
     setActiveWorkspace,
-    setActiveConversation,
-    setConversationAssistant,
   } = useWorkspaceStore();
 
-  const activeWorkspace = useMemo(
-    () => workspaces.find((workspace) => workspace.id === activeWorkspaceId),
-    [activeWorkspaceId, workspaces]
-  );
+  const { startAssistant, startWorkflow, loadingId } = useStartAgent();
 
   const allAssistants = useMemo(() => [XIAOF_AGENT, ...assistants], [assistants]);
   const featuredAssistants = allAssistants.slice(0, 6);
@@ -56,94 +44,7 @@ export function HomeView() {
     setStatus('ready');
   }, [activeWorkspaceId, setActiveWorkspace, setStatus, setWorkdir]);
 
-  const ensureWorkspace = useCallback(() => {
-    if (activeWorkspace) return true;
-    notifications.show({
-      title: t('home.explorer.workspaceRequiredTitle'),
-      message: t('home.pleaseSelectWorkspace'),
-      color: 'orange',
-    });
-    return false;
-  }, [activeWorkspace, t]);
 
-  const handleStartAssistant = useCallback(async (assistant: Assistant) => {
-    if (!ensureWorkspace() || !activeWorkspace) return;
-
-    setLaunchingAssistantId(assistant.id);
-    setStatus('connecting');
-    try {
-      const conversation = await createConversation({
-        workspaceId: activeWorkspace.id,
-        title: '',
-      });
-      clearMessages();
-      setActiveConversation(conversation.id);
-      setConversationAssistant(conversation.id, assistant.id);
-      setWorkdir(activeWorkspace.path);
-
-      await invoke('start_agent', {
-        workdir: activeWorkspace.path,
-        sessionId: conversation.id,
-        assistantId: assistant.id === '__xiaof__' ? null : assistant.id,
-        projectDir: null,
-        apiKey: null,
-        extraArgs: null,
-      });
-
-      setStatus('ready');
-    } catch (error: any) {
-      setStatus('error');
-      setError(error.message || String(error));
-    } finally {
-      setLaunchingAssistantId(null);
-    }
-  }, [
-    activeWorkspace,
-    clearMessages,
-    createConversation,
-    ensureWorkspace,
-    setActiveConversation,
-    setConversationAssistant,
-    setError,
-    setStatus,
-    setWorkdir,
-  ]);
-
-  const handleStartWorkflow = useCallback(async (workflow: WorkflowRecord) => {
-    if (!ensureWorkspace() || !activeWorkspace) return;
-
-    setLaunchingWorkflowId(workflow.id);
-    try {
-      const conversation = await createConversation({
-        workspaceId: activeWorkspace.id,
-        title: '',
-      });
-
-      clearMessages();
-      setActiveConversation(conversation.id);
-      setConversationAssistant(conversation.id, `workflow:${workflow.id}`);
-      useWorkflowStore.getState().setPendingStartInput(null);
-      useWorkflowStore.getState().setPendingStartQuery(null);
-      useWorkflowStore.getState().setActiveExecutionThreadId(conversation.id);
-      setWorkdir(activeWorkspace.path);
-      setStatus('ready');
-    } catch (error: any) {
-      setStatus('error');
-      setError(error.message || String(error));
-    } finally {
-      setLaunchingWorkflowId(null);
-    }
-  }, [
-    activeWorkspace,
-    clearMessages,
-    createConversation,
-    ensureWorkspace,
-    setActiveConversation,
-    setConversationAssistant,
-    setError,
-    setStatus,
-    setWorkdir,
-  ]);
 
   return (
     <Box
@@ -234,8 +135,8 @@ export function HomeView() {
                 variant="light"
                 color="blue"
                 leftSection={<IconSparkles size={15} />}
-                loading={launchingAssistantId === '__xiaof__' || status === 'connecting'}
-                onClick={() => handleStartAssistant(XIAOF_AGENT)}
+                loading={loadingId === '__xiaof__' || status === 'connecting'}
+                onClick={() => startAssistant(XIAOF_AGENT)}
               >
                 {t('home.explorer.chatWithXiaof')}
               </Button>
@@ -261,8 +162,8 @@ export function HomeView() {
                   name={assistant.name}
                   description={assistant.description}
                   icon={assistant.icon || '🤖'}
-                  disabled={launchingAssistantId === assistant.id}
-                  onClick={() => handleStartAssistant(assistant)}
+                  disabled={loadingId === assistant.id}
+                  onClick={() => startAssistant(assistant)}
                 />
               ))}
             </SimpleGrid>
@@ -301,8 +202,8 @@ export function HomeView() {
                     name={workflow.name}
                     description={workflow.description}
                     icon="⚡"
-                    disabled={launchingWorkflowId === workflow.id}
-                    onClick={() => handleStartWorkflow(workflow)}
+                    disabled={loadingId === workflow.id}
+                    onClick={() => startWorkflow(workflow)}
                   />
                 ))}
               </SimpleGrid>

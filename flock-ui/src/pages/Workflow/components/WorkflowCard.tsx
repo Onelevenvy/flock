@@ -18,6 +18,7 @@ import {
   IconCalendar,
   IconBolt,
   IconArrowsShuffle,
+  IconPlayerPlay,
 } from '@tabler/icons-react';
 import { useTranslation } from 'react-i18next';
 import { useState } from 'react';
@@ -26,9 +27,10 @@ import { useDeleteWorkflow, type WorkflowRecord } from '../../../hooks/useWorkfl
 interface WorkflowCardProps {
   workflow: WorkflowRecord;
   onOpen: () => void;
+  onRun?: () => void;
 }
 
-export function WorkflowCard({ workflow, onOpen }: WorkflowCardProps) {
+export function WorkflowCard({ workflow, onOpen, onRun }: WorkflowCardProps) {
   const { t } = useTranslation();
   const deleteMutation = useDeleteWorkflow();
   const [deleteConfirm, setDeleteConfirm] = useState(false);
@@ -127,7 +129,7 @@ export function WorkflowCard({ workflow, onOpen }: WorkflowCardProps) {
         <Divider mb="sm" color="var(--flock-border-subtle)" />
 
         {/* Footer stats */}
-        <Group justify="space-between">
+        <Group justify="space-between" mb="xs">
           <Group gap={5}>
             <Badge
               size="xs"
@@ -153,6 +155,29 @@ export function WorkflowCard({ workflow, onOpen }: WorkflowCardProps) {
             </Text>
           </Group>
         </Group>
+
+        <Button
+          variant="light"
+          color="teal"
+          fullWidth
+          leftSection={<IconPlayerPlay size={14} />}
+          onClick={(e) => {
+            e.stopPropagation();
+            onRun?.();
+          }}
+          styles={{
+            root: {
+              borderRadius: 10,
+              fontWeight: 600,
+              transition: 'all 0.2s ease',
+              background: 'rgba(20, 184, 166, 0.1)',
+              color: 'var(--mantine-color-teal-6)',
+              border: 'none',
+            }
+          }}
+        >
+          {t('home.explorer.runWorkflow')}
+        </Button>
       </Box>
 
       {/* Delete confirmation modal */}

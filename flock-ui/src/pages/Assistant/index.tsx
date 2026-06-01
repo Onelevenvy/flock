@@ -34,18 +34,15 @@ import { AssistantCard } from './AssistantCard';
 import { AssistantFormModal } from './AssistantFormModal';
 import { useWorkspaceStore } from '../../store/workspaceStore';
 import { useUiStore } from '../../store/uiStore';
+import { useStartAgent } from '../../hooks/useStartAgent';
+import { XIAOF_AGENT } from '../Home/AssistantPicker';
 
 export function AssistantPage() {
   const { t } = useTranslation();
   const setSelectedHomeAssistantId = useWorkspaceStore(s => s.setSelectedHomeAssistantId);
   const setActiveConversation = useWorkspaceStore(s => s.setActiveConversation);
   const setCurrentView = useUiStore(s => s.setCurrentView);
-
-  const handleChat = (aId: string) => {
-    setSelectedHomeAssistantId(aId);
-    setActiveConversation(null);
-    setCurrentView('home');
-  };
+  const { startAssistant } = useStartAgent();
 
   const { data: assistants = [], isLoading: loading } = useAssistantsQuery();
   const createMutation = useCreateAssistantMutation();
@@ -55,6 +52,13 @@ export function AssistantPage() {
   const [formOpened, setFormOpened] = useState(false);
   const [editTarget, setEditTarget] = useState<Assistant | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<Assistant | null>(null);
+
+  const handleChat = (aId: string) => {
+    const target = assistants.find(a => a.id === aId) || (aId === XIAOF_AGENT.id ? XIAOF_AGENT : null);
+    if (target) {
+      startAssistant(target);
+    }
+  };
 
   const handleOpenCreate = () => { setEditTarget(null); setFormOpened(true); };
   const handleOpenEdit = (a: Assistant) => { setEditTarget(a); setFormOpened(true); };
