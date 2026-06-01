@@ -277,7 +277,7 @@ pub async fn run_workflow(
     let approval_manager = agent_state.lock().await.approval_manager.clone();
 
     let ctx = Arc::new(WorkflowNodeContext {
-        provider,
+        provider: provider.clone(),
         model_factory,
         tools,
         db: db.inner().clone(),
@@ -500,15 +500,21 @@ pub async fn run_workflow(
             let input_msg_clone = input_msg.clone();
             let final_text_clone = final_text.clone();
             let final_thinking_clone = final_thinking.clone();
+            let provider_for_summary = provider.clone();
 
             tokio::spawn(async move {
-                let existing_messages_str: Option<String> = sqlx::query_scalar(
-                    "SELECT messages FROM session_metadata WHERE thread_id = ?1"
+                let existing_row: Option<(String, String)> = sqlx::query_as(
+                    "SELECT summary, messages FROM session_metadata WHERE thread_id = ?1"
                 )
                 .bind(&thread_id_val_clone_inner)
                 .fetch_optional(db_for_task.pool())
                 .await
                 .unwrap_or(None);
+
+                let (existing_summary, existing_messages_str) = match existing_row {
+                    Some((sum, msgs)) => (sum, Some(msgs)),
+                    None => (String::new(), None),
+                };
 
                 let mut db_messages: Vec<serde_json::Value> = existing_messages_str
                     .as_deref()
@@ -549,6 +555,76 @@ pub async fn run_workflow(
                     }));
                 }
 
+                let enable_summary: Option<bool> = db_for_task.get_config("enable_title_summary").await;
+                
+                let is_placeholder = |s: &str| {
+                    let s = s.trim();
+                    if s.starts_with("对话") {
+                        let rest = s.strip_prefix("对话").unwrap().trim();
+                        if !rest.is_empty() && rest.chars().all(|c| c.is_ascii_digit()) {
+                            return true;
+                        }
+                    }
+                    if s.starts_with("Session") {
+                        let rest = s.strip_prefix("Session").unwrap().trim();
+                        if !rest.is_empty() && (rest.chars().all(|c| c.is_ascii_digit() || c == '_' || c == '-') || rest.starts_with("conv_")) {
+                            return true;
+                        }
+                    }
+                    false
+                };
+
+                let messages_for_summary: Vec<flock_core::types::message::Message> = db_messages
+                    .iter()
+                    .filter_map(|v| serde_json::from_value(v.clone()).ok())
+                    .collect();
+
+                let mut updated_title = None;
+
+                if enable_summary.unwrap_or(false) {
+                    let protocol_emitter_for_summary: Arc<dyn flock_core::ipc_interface::writer::ProtocolEmitter> = Arc::new(crate::agent::TauriProtocolEmitter::new(app_clone.clone()));
+                    if let Err(e) = flock_agent::engine::summary::run_background_summary(
+                        db_for_task.clone(),
+                        thread_id_val_clone_inner.clone(),
+                        messages_for_summary,
+                        provider_for_summary,
+                        Some(protocol_emitter_for_summary),
+                    ).await {
+                        log::warn!("[workflow summary] Background auto summary failed: {}", e);
+                    }
+                } else if is_placeholder(&existing_summary) {
+                    let mut default_sum = String::new();
+                    for msg in &messages_for_summary {
+                        if msg.role == flock_core::types::message::Role::User {
+                            for block in &msg.content {
+                                if let flock_core::types::message::ContentBlock::Text { text } = block {
+                                    default_sum = text.clone();
+                                    break;
+                                }
+                            }
+                            if !default_sum.is_empty() {
+                                break;
+                            }
+                        }
+                    }
+                    if !default_sum.is_empty() {
+                        if default_sum.chars().count() > 80 {
+                            let truncated: String = default_sum.chars().take(77).collect();
+                            default_sum = format!("{}...", truncated);
+                        }
+                        
+                        let _ = sqlx::query(
+                            "UPDATE session_metadata SET summary = ?1 WHERE thread_id = ?2"
+                        )
+                        .bind(&default_sum)
+                        .bind(&thread_id_val_clone_inner)
+                        .execute(db_for_task.pool())
+                        .await;
+
+                        updated_title = Some(default_sum);
+                    }
+                }
+
                 let messages_json = serde_json::to_string(&db_messages).unwrap_or_else(|_| "[]".to_string());
                 let msg_count = db_messages.len();
                 let updated_at = chrono::Utc::now().to_rfc3339();
@@ -562,6 +638,15 @@ pub async fn run_workflow(
                 .bind(&thread_id_val_clone_inner)
                 .execute(db_for_task.pool())
                 .await;
+
+                if let Some(title) = updated_title {
+                    let title_updated_event = serde_json::json!({
+                        "type": "title_updated",
+                        "thread_id": thread_id_val_clone_inner.clone(),
+                        "title": title,
+                    });
+                    let _ = app_clone.emit("agent-event", serde_json::to_string(&title_updated_event).unwrap_or_default());
+                }
             });
         }
 

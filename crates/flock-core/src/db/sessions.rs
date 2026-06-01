@@ -113,13 +113,18 @@ impl SessionManager {
         let existing_summary = existing_summary.unwrap_or_default();
 
         let is_placeholder = |s: &str| {
-            if let Some(rest) = s.strip_prefix("对话 ") {
+            let s = s.trim();
+            if s.starts_with("对话") {
+                let rest = s.strip_prefix("对话").unwrap().trim();
                 if !rest.is_empty() && rest.chars().all(|c| c.is_ascii_digit()) {
                     return true;
                 }
             }
-            if s.starts_with("Session ") && s.len() > "Session ".len() {
-                return true;
+            if s.starts_with("Session") {
+                let rest = s.strip_prefix("Session").unwrap().trim();
+                if !rest.is_empty() && (rest.chars().all(|c| c.is_ascii_digit() || c == '_' || c == '-') || rest.starts_with("conv_")) {
+                    return true;
+                }
             }
             false
         };
