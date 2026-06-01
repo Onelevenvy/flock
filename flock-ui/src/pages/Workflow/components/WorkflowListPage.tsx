@@ -15,6 +15,7 @@ import { useTranslation } from 'react-i18next';
 import { useWorkflowsQuery } from '../../../hooks/useWorkflow';
 import { WorkflowCard } from './WorkflowCard';
 import { CreateWorkflowModal } from './CreateWorkflowModal';
+import { useStartAgent } from '../../../hooks/useStartAgent';
 
 interface WorkflowListPageProps {
   onOpenEditor: (id: string) => void;
@@ -24,6 +25,15 @@ export function WorkflowListPage({ onOpenEditor }: WorkflowListPageProps) {
   const { t } = useTranslation();
   const { data: workflows = [], isLoading } = useWorkflowsQuery();
   const [createOpened, setCreateOpened] = useState(false);
+
+  const { startWorkflow } = useStartAgent();
+
+  const handleRun = (wfId: string) => {
+    const target = workflows.find(w => w.id === wfId);
+    if (target) {
+      startWorkflow(target);
+    }
+  };
 
   return (
     <Box
@@ -113,6 +123,7 @@ export function WorkflowListPage({ onOpenEditor }: WorkflowListPageProps) {
                 key={wf.id}
                 workflow={wf}
                 onOpen={() => onOpenEditor(wf.id)}
+                onRun={() => handleRun(wf.id)}
               />
             ))}
           </SimpleGrid>

@@ -8,6 +8,7 @@
   "createdToast": "工作流已创建",
   "deletedToast": "已删除",
   "unsaved": "未保存",
+  "unsavedConfirm": "您有未保存的修改，确定要离开吗？",
   "minimap": "小地图",
   "debug": "调试执行",
   "debugNode": "调试节点",
@@ -41,7 +42,8 @@
     "edges": "连线"
   },
   "palette": {
-    "title": "节点"
+    "title": "节点",
+    "comingSoon": "敬请期待"
   },
   "properties": {
     "label": "节点名称",
@@ -188,9 +190,9 @@
     "ifelse": { "label": "条件分支" },
     "answer": { "label": "输出" },
     "code": { "label": "代码" },
-    "human": { "label": "人工审查" },
+    "human": { "label": "HITL" },
     "parameterExtractor": { "label": "参数提取" },
-    "plugin": { "label": "插件" },
+    "plugin": { "label": "工具" },
     "noModel": "未选择模型",
     "classifierCount": "{{count}} 个分类",
     "noOutputTemplate": "无输出模板",

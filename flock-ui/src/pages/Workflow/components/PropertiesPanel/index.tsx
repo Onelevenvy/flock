@@ -241,7 +241,6 @@ function NodeSpecificFields({
         />
       );
 
-
     case 'plugin':
       return (
         <VariableTextInput

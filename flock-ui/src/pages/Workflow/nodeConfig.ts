@@ -171,7 +171,7 @@ export const nodeConfig: Record<string, NodeConfigItem> = {
     },
   },
   plugin: {
-    display: 'Plugin',
+    display: 'Tool',
     displayKey: 'workflow.nodes.plugin.label',
     icon: IconPuzzle,
     color: 'gray',

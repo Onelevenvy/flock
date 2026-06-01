@@ -8,6 +8,7 @@
   "createdToast": "Workflow created",
   "deletedToast": "Deleted",
   "unsaved": "Unsaved",
+  "unsavedConfirm": "You have unsaved changes. Are you sure you want to leave?",
   "minimap": "Minimap",
   "debug": "Debug Run",
   "debugNode": "Debug Node",
@@ -39,7 +40,8 @@
     "edges": "edges"
   },
   "palette": {
-    "title": "Nodes"
+    "title": "Nodes",
+    "comingSoon": "Coming soon"
   },
   "properties": {
     "label": "Node Name",
@@ -186,9 +188,9 @@
     "ifelse": { "label": "If-Else" },
     "answer": { "label": "Answer" },
     "code": { "label": "Code" },
-    "human": { "label": "Human Review" },
+    "human": { "label": "HITL" },
     "parameterExtractor": { "label": "Extractor" },
-    "plugin": { "label": "Plugin" },
+    "plugin": { "label": "Tool" },
     "noModel": "No Model",
     "classifierCount": "{{count}} Categories",
     "noOutputTemplate": "No Output Template",

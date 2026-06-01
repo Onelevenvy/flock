@@ -13,7 +13,7 @@ export function useDropHandler(
   const { screenToFlowPosition } = useReactFlow();
 
   const handleAddNode = useCallback(
-    (type: NodeType) => {
+    (type: NodeType, toolName?: string) => {
       if (!nodeConfig[type]) return;
 
       let position = { x: 250, y: 200 };
@@ -32,8 +32,9 @@ export function useDropHandler(
         type,
         position,
         data: {
-          label: `${nodeConfig[type].display} ${sameTypeCount + 1}`,
+          label: toolName || `${nodeConfig[type].display} ${sameTypeCount + 1}`,
           ...nodeConfig[type].initialData,
+          ...(toolName ? { tool: { name: toolName }, args: '' } : {}),
         },
       };
       setNodes((nds) => [...nds, newNode]);
@@ -53,6 +54,8 @@ export function useDropHandler(
       const type = e.dataTransfer.getData('application/workflow-node') as NodeType;
       if (!type || !nodeConfig[type]) return;
 
+      const toolName = e.dataTransfer.getData('application/workflow-tool-name');
+
       const position = screenToFlowPosition({ x: e.clientX, y: e.clientY });
       const sameTypeCount = nodes.filter((n) => n.type === type).length;
 
@@ -61,8 +64,9 @@ export function useDropHandler(
         type,
         position,
         data: {
-          label: `${nodeConfig[type].display} ${sameTypeCount + 1}`,
+          label: toolName || `${nodeConfig[type].display} ${sameTypeCount + 1}`,
           ...nodeConfig[type].initialData,
+          ...(toolName ? { tool: { name: toolName }, args: '' } : {}),
         },
       };
       setNodes((nds) => [...nds, newNode]);

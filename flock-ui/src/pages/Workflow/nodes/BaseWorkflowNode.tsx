@@ -1,4 +1,4 @@
-import React, { useMemo } from 'react';
+import { useMemo } from 'react';
 import { Handle, Position, type NodeProps } from 'reactflow';
 import { Box, Text, ActionIcon, Tooltip } from '@mantine/core';
 import { IconPlus, IconBug } from '@tabler/icons-react';
@@ -9,9 +9,9 @@ import { type BaseNodeData } from './types';
 import { handleStyle } from './styles';
 import { getNodeSummary } from './helpers';
 
-import { invoke } from '@tauri-apps/api/core';
-import { ModelIcon } from '../../../components/Common/Icons';
+import { ModelIcon, ToolsIcon } from '../../../components/Common/Icons';
 import { useAvailableModels } from '../../../hooks/useAvailableModels';
+import { useAvailableTools } from '../../../hooks/useAvailableTools';
 
 interface BaseWorkflowNodeProps extends NodeProps<BaseNodeData> {
   type: NodeType;
@@ -42,6 +42,22 @@ export function BaseWorkflowNode({ id, type, data, selected }: BaseWorkflowNodeP
     });
     return mapping;
   }, [providers, models]);
+
+  const { tools: availableTools, providers: availableProviders } = useAvailableTools();
+
+  const toolIcon = useMemo(() => {
+    if (type === 'plugin') {
+      const toolData = data.tool as { name?: string } | undefined;
+      if (toolData?.name) {
+        const tool = availableTools.find((t) => t.name === toolData.name);
+        if (tool) {
+          const provider = availableProviders.find((p) => p.id === tool.provider_id);
+          return provider?.icon || '';
+        }
+      }
+    }
+    return '';
+  }, [type, data.tool, availableTools, availableProviders]);
 
   const cfg = nodeConfig[type];
   if (!cfg) return null;
@@ -88,7 +104,11 @@ export function BaseWorkflowNode({ id, type, data, selected }: BaseWorkflowNodeP
             background: `${cfg.colorHex}15`,
           }}
         >
-          <Icon size={14} stroke={2.5} style={{ color: cfg.colorHex }} />
+          {toolIcon ? (
+            <ToolsIcon name={toolIcon} size={14} />
+          ) : (
+            <Icon size={14} stroke={2.5} style={{ color: cfg.colorHex }} />
+          )}
         </Box>
         <Text size="xs" fw={700} style={{ color: 'var(--flock-text-bright)', flex: 1, fontSize: 12, lineHeight: 1.2 }} lineClamp={1}>
           {data.label || t(cfg.displayKey, { defaultValue: cfg.display })}
