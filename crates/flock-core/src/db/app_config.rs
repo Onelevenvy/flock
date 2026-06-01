@@ -35,20 +35,17 @@ impl DbManager {
     pub(super) async fn seed_default_app_config(&self) -> anyhow::Result<()> {
         use crate::config::compression::CompressionConfig;
         use crate::config::plan::PlanConfig;
-        use crate::config::debug::DebugConfig;
         use crate::config::file_cache::FileCacheConfig;
         use crate::config::hooks::HooksConfig;
-        use crate::config::settings::{DefaultConfig, SessionConfig, ToolsConfig};
+        use crate::config::settings::{DefaultConfig, ToolsConfig};
 
         let entries: Vec<(&str, String)> = vec![
             ("default", serde_json::to_string(&DefaultConfig::default())?),
             ("tools",   serde_json::to_string(&ToolsConfig::default())?),
             ("compact", serde_json::to_string(&CompressionConfig::default())?),
-            ("session", serde_json::to_string(&SessionConfig::default())?),
             ("plan",    serde_json::to_string(&PlanConfig::default())?),
             ("file_cache", serde_json::to_string(&FileCacheConfig::default())?),
             ("hooks",   serde_json::to_string(&HooksConfig::default())?),
-            ("debug",   serde_json::to_string(&DebugConfig::default())?),
             ("max_running_sessions", serde_json::to_string(&4)?),
             ("max_cached_sessions", serde_json::to_string(&10)?),
             ("enable_title_summary", serde_json::to_string(&false)?),

@@ -13,15 +13,26 @@ pub fn get_db_path(db: State<'_, SharedDbManager>) -> String {
 pub async fn list_providers(
     db: State<'_, SharedDbManager>,
 ) -> Result<Vec<flock_core::db::ModelProvider>, String> {
-    db.list_providers().await.map_err(|e| e.to_string())
+    let mut providers = db.list_providers().await.map_err(|e| e.to_string())?;
+    for p in &mut providers {
+        if p.api_key.is_some() {
+            p.api_key = Some("••••••••".to_string());
+        }
+    }
+    Ok(providers)
 }
 
 /// 创建或更新模型提供商
 #[tauri::command]
 pub async fn upsert_provider(
     db: State<'_, SharedDbManager>,
-    provider: flock_core::db::ModelProvider,
+    mut provider: flock_core::db::ModelProvider,
 ) -> Result<(), String> {
+    if let Some(ref key) = provider.api_key {
+        if key == "••••••••" {
+            provider.api_key = None;
+        }
+    }
     db.upsert_provider(&provider).await.map_err(|e| e.to_string())
 }
 

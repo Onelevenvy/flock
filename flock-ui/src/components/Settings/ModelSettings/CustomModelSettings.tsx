@@ -156,9 +156,6 @@ export default function CustomModelSettings({ provider, onClose, onSaved }: Prop
               color: 'var(--flock-text-primary)',
             },
           }}
-          visibilityToggleIcon={({ reveal }) =>
-            reveal ? <Text size="xs">{t('common.hide')}</Text> : <Text size="xs">{t('common.show')}</Text>
-          }
         />
 
         <Group justify="flex-end" mt="xs">
