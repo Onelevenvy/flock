@@ -57,6 +57,11 @@
     "batchToolUnauthorizedMsg": "已为您自动过滤未授权的工具。请先在「插件管理」页面配置它们的 API 凭证。",
     "unauthorizedTag": "未授权",
     "deleteSuccess": "模型已移除",
-    "selectIcon": "选择头像"
+    "selectIcon": "选择头像",
+    "skillsBoundCount": "已绑定 {{count}} 个技能",
+    "addSkills": "添加技能",
+    "selectSkills": "选择技能",
+    "noMatchingSkills": "无匹配的技能",
+    "noSkillsBound": "未绑定技能，该Agent将无法调用任何skills"
   }
 }

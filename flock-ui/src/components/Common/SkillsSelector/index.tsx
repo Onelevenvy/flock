@@ -8,9 +8,18 @@ import { useDisclosure } from '@mantine/hooks';
 export interface SkillsSelectorProps {
   value: string[];
   onChange: (skills: string[]) => void;
+  label?: string;
+  placeholder?: string;
+  emptyLabel?: string;
 }
 
-export function SkillsSelector({ value = [], onChange }: SkillsSelectorProps) {
+export function SkillsSelector({
+  value = [],
+  onChange,
+  label,
+  placeholder,
+  emptyLabel,
+}: SkillsSelectorProps) {
   const { t } = useTranslation();
   const [opened, { open, close }] = useDisclosure(false);
   const [searchText, setSearchText] = useState('');
@@ -70,11 +79,11 @@ export function SkillsSelector({ value = [], onChange }: SkillsSelectorProps) {
       <Group justify="space-between" align="center">
         <Group gap={6}>
           <Text size="xs" fw={600} style={{ color: 'var(--flock-text-secondary)' }}>
-            {t('workflow.properties.agent.skillsList', 'Skill列表')}
+            {label || t('assistant.form.skillsLabel', '技能列表')}
           </Text>
           {totalCount > 0 && (
             <Text size="xs" c="dimmed">
-              已绑定 {totalCount} 个技能
+              {t('assistant.form.skillsBoundCount', { count: totalCount, defaultValue: `已绑定 ${totalCount} 个技能` })}
             </Text>
           )}
         </Group>
@@ -117,7 +126,7 @@ export function SkillsSelector({ value = [], onChange }: SkillsSelectorProps) {
                 },
               }}
             >
-              添加技能
+              {t('assistant.form.addSkills', '添加技能')}
             </Button>
           </Popover.Target>
 
@@ -125,7 +134,7 @@ export function SkillsSelector({ value = [], onChange }: SkillsSelectorProps) {
             <Stack gap="xs" style={{ flex: 1, minHeight: 0, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
               <Group justify="space-between" align="center">
                 <Text fw={700} size="sm" style={{ color: 'var(--flock-text-bright)' }}>
-                  选择技能
+                  {t('assistant.form.selectSkills', '选择技能')}
                 </Text>
                 <IconX
                   size={16}
@@ -135,7 +144,7 @@ export function SkillsSelector({ value = [], onChange }: SkillsSelectorProps) {
               </Group>
 
               <TextInput
-                placeholder="搜索技能..."
+                placeholder={placeholder || t('assistant.form.skillsPlaceholder', '搜索技能...')}
                 leftSection={<IconSearch size={14} style={{ color: 'var(--flock-text-dim)' }} />}
                 value={searchText}
                 onChange={(e) => setSearchText(e.currentTarget.value)}
@@ -148,7 +157,7 @@ export function SkillsSelector({ value = [], onChange }: SkillsSelectorProps) {
                 {loadingSkills ? (
                   <Text size="xs" c="dimmed" ta="center" py="xl">{t('common.loading')}</Text>
                 ) : filteredSkills.length === 0 ? (
-                  <Text size="xs" c="dimmed" ta="center" py="xl">无匹配的技能</Text>
+                  <Text size="xs" c="dimmed" ta="center" py="xl">{t('assistant.form.noMatchingSkills', '无匹配的技能')}</Text>
                 ) : (
                   <Stack gap={4}>
                     {filteredSkills.map((s) => {
@@ -177,7 +186,7 @@ export function SkillsSelector({ value = [], onChange }: SkillsSelectorProps) {
                               </Text>
                             </Box>
                             {isSelected && (
-                              <Badge size="xs" color="blue" variant="light">已选择</Badge>
+                              <Badge size="xs" color="blue" variant="light">{t('assistant.form.addedTag', '已选择')}</Badge>
                             )}
                           </Group>
                         </Box>
@@ -211,7 +220,7 @@ export function SkillsSelector({ value = [], onChange }: SkillsSelectorProps) {
           }}
         >
           <Text size="xs" c="dimmed">
-            未绑定技能，该节点将无法调用任何技能
+            {emptyLabel || t('assistant.form.noSkillsBound', '未绑定技能，该节点将无法调用任何技能')}
           </Text>
         </Box>
       ) : (
@@ -258,3 +267,5 @@ export function SkillsSelector({ value = [], onChange }: SkillsSelectorProps) {
     </Stack>
   );
 }
+
+export default SkillsSelector;

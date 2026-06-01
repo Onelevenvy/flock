@@ -2,7 +2,7 @@ import { Divider, Stack } from '@mantine/core';
 import { useTranslation } from 'react-i18next';
 import { LLMFields } from '@/pages/Workflow/components/PropertiesPanel/LLM';
 import ToolManager from '@/components/Common/ToolManager';
-import { SkillsSelector } from './SkillsSelector';
+import { SkillsSelector } from '@/components/Common/SkillsSelector';
 
 export interface AgentFieldsProps {
   node: any;
