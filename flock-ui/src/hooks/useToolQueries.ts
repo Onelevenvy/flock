@@ -41,3 +41,14 @@ export function useMcpServersQuery() {
     gcTime: 10 * 60 * 1000,
   });
 }
+
+// Cache the list of extra skill dirs
+export function useExtraSkillDirsQuery() {
+  return useQuery<string[]>({
+    queryKey: ['extra_skill_dirs'],
+    queryFn: () => invoke<string[]>('get_extra_skill_dirs'),
+    staleTime: 5 * 60 * 1000, // 5 minutes cache
+    gcTime: 10 * 60 * 1000,
+  });
+}
+

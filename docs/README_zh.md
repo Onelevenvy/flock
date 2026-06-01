@@ -8,6 +8,7 @@
 ![Flock 聊天界面截图](./resources/chat.png)
 ![Flock 自动化界面截图](./resources/chedule.png)
 ![Flock 智能体界面截图](./resources/assistants.png)
+![Flock 工作流界面截图](./resources/workflow.png)
 
 
 > **注意**：本项目基于 [langgraph-rust](https://github.com/Onelevenvy/langgraph-rust) 构建，这是我个人对 LangGraph 框架的 Rust 实现。
