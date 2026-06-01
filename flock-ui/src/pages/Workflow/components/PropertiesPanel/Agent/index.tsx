@@ -1,7 +1,8 @@
-import { Divider } from '@mantine/core';
+import { Divider, Stack } from '@mantine/core';
 import { useTranslation } from 'react-i18next';
 import { LLMFields } from '@/pages/Workflow/components/PropertiesPanel/LLM';
 import ToolManager from '@/components/Common/ToolManager';
+import { SkillsSelector } from '@/components/Common/SkillsSelector';
 
 export interface AgentFieldsProps {
   node: any;
@@ -24,9 +25,10 @@ export function AgentFields({
   const tools = (node.data.tools as string[]) ?? [];
   const disabledTools = (node.data.disabled_tools as string[]) ?? [];
   const sensitiveTools = (node.data.sensitive_tools as string[]) ?? [];
+  const selectedSkills = (node.data.skills as string[]) ?? [];
 
   return (
-    <>
+    <Stack gap="md">
       <LLMFields
         node={node}
         onDataChange={onDataChange}
@@ -44,6 +46,12 @@ export function AgentFields({
         disabled={toolsLoading}
         selectorPosition="bottom-end"
       />
-    </>
+
+      <Divider label={t('assistant.form.skillsLabel', '技能')} labelPosition="center" />
+      <SkillsSelector
+        value={selectedSkills}
+        onChange={(v) => onDataChange(node.id, 'skills', v)}
+      />
+    </Stack>
   );
 }

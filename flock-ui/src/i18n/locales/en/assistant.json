@@ -57,6 +57,11 @@
     "batchToolUnauthorizedMsg": "Unauthorized tools have been automatically filtered. Please configure their API credentials in the Plugin Management page.",
     "unauthorizedTag": "Unauthorized",
     "deleteSuccess": "Model removed successfully",
-    "selectIcon": "Select Icon"
+    "selectIcon": "Select Icon",
+    "skillsBoundCount": "{{count}} skills bound",
+    "addSkills": "Add Skills",
+    "selectSkills": "Select Skills",
+    "noMatchingSkills": "No matching skills found",
+    "noSkillsBound": "No skills bound, this agent will not be able to call any skills"
   }
 }

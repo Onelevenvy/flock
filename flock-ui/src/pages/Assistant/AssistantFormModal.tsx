@@ -5,6 +5,7 @@ import { type Assistant, type UpsertAssistant } from '@/types/assistant';
 import { IconPicker } from './IconPicker';
 import { MarkdownRenderer } from '@/components/chat/shared/MarkdownRenderer';
 import ToolManager from '@/components/Common/ToolManager';
+import { SkillsSelector } from '@/components/Common/SkillsSelector';
 import { useAssistantForm } from './hooks/useAssistantForm';
 
 export function AssistantFormModal({
@@ -225,28 +226,12 @@ export function AssistantFormModal({
             onDisabledChange={setDisabledTools}
             selectorPosition="bottom-start"
           />
-
-          <MultiSelect
-            label={
-              <Group gap={6}>
-                <Text size="sm" fw={500}>{t('assistant.form.skillsLabel')}</Text>
-              </Group>
-            }
+          <SkillsSelector
+            label={t('assistant.form.skillsLabel')}
             placeholder={t('assistant.form.skillsPlaceholder')}
-            data={skillSelectData}
             value={selectedSkills}
             onChange={setSelectedSkills}
-            searchable
-            styles={{
-              input: {
-                background: 'var(--flock-bg-surface)',
-                border: '1px solid var(--flock-border-dim)',
-              },
-              dropdown: {
-                background: 'var(--flock-bg-raised)',
-                border: '1px solid var(--flock-border-dim)',
-              },
-            }}
+            emptyLabel={t('assistant.form.noSkillsBound', '未绑定技能，该助手将无法调用任何技能')}
           />
         </Stack>
       </ScrollArea>

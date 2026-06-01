@@ -9,6 +9,7 @@ repository.workspace = true
 [dependencies]
 flock-core.workspace   = true
 flock-tools.workspace  = true
+log.workspace          = true
 
 serde.workspace        = true
 serde_json.workspace   = true

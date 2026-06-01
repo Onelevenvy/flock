@@ -152,12 +152,28 @@ pub async fn start_agent(
         }
     }
 
+    let mut raw_paths: Vec<PathBuf> = Vec::new();
+    if let Ok(rows) = sqlx::query("SELECT path FROM imported_skill")
+        .fetch_all(db_manager.pool())
+        .await
+    {
+        use sqlx::Row;
+        for row in rows {
+            if let Ok(path_str) = row.try_get::<String, _>("path") {
+                raw_paths.push(PathBuf::from(path_str));
+            }
+        }
+    }
+
     let extra_dirs: Vec<String> = db_manager
         .get_config("extra_skill_dirs")
         .await
         .unwrap_or_default();
-    if !extra_dirs.is_empty() {
-        let raw_paths: Vec<PathBuf> = extra_dirs.into_iter().map(PathBuf::from).collect();
+    for d in extra_dirs {
+        raw_paths.push(PathBuf::from(d));
+    }
+
+    if !raw_paths.is_empty() {
         bootstrap = bootstrap.add_raw_skill_paths(raw_paths);
     }
     
