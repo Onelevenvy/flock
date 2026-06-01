@@ -239,3 +239,188 @@ async fn test_workflow_concurrency_isolation() {
         assert_eq!(greeting, format!("Response for workflow UUID: {}", uuid));
     }
 }
+
+#[tokio::test(flavor = "multi_thread")]
+async fn test_workflow_classifier_and_answer_routing() {
+    let mock_server = wiremock::MockServer::start().await;
+
+    struct ClassifierResponder;
+    impl wiremock::Respond for ClassifierResponder {
+        fn respond(&self, request: &wiremock::Request) -> wiremock::ResponseTemplate {
+            let body: serde_json::Value = serde_json::from_slice(&request.body).unwrap();
+            let messages = body["messages"].as_array().unwrap();
+            let prompt = messages.last().and_then(|m| m["content"].as_str()).unwrap_or("");
+
+            // 提取 input_text: "..." 里的内容来避免把 categories 列表里的词错配进去
+            let category_name = if prompt.to_lowercase().contains("technical support") {
+                "Technical Issue"
+            } else if prompt.to_lowercase().contains("billing support") {
+                "Billing Issue"
+            } else {
+                "Others"
+            };
+
+            let mock_stream = format!(
+                "data: {{\"id\":\"chatcmpl-123\",\"object\":\"chat.completion.chunk\",\"created\":1677858242,\"model\":\"gpt-4o\",\"choices\":[{{\"index\":0,\"delta\":{{\"role\":\"assistant\",\"content\":\"{{\\\"category_name\\\": \\\"{}\\\", \\\"keywords\\\": [\\\"test\\\"]}}\"}},\"finish_reason\":null}}]}}\r\n\r\ndata: {{\"id\":\"chatcmpl-123\",\"object\":\"chat.completion.chunk\",\"created\":1677858242,\"model\":\"gpt-4o\",\"choices\":[{{\"index\":0,\"delta\":{{}},\"finish_reason\":\"stop\"}}]}}\r\n\r\ndata: [DONE]\r\n\r\n",
+                category_name
+            );
+
+            wiremock::ResponseTemplate::new(200)
+                .set_body_raw(mock_stream.as_bytes().to_vec(), "text/event-stream")
+        }
+    }
+
+    wiremock::Mock::given(wiremock::matchers::method("POST"))
+        .and(wiremock::matchers::path("/v1/chat/completions"))
+        .respond_with(ClassifierResponder)
+        .mount(&mock_server)
+        .await;
+
+    let base_url = mock_server.uri();
+    let temp_dir = tempfile::tempdir().unwrap();
+    let db_path = temp_dir.path().join("test_classifier_workflow.db");
+    let db = Arc::new(DbManager::init_at(db_path).await.unwrap());
+    let checkpointer = Arc::new(InMemorySaver::new());
+
+    let provider = Arc::from(create_model(ModelProviderParams {
+        provider_type: "openai".to_string(),
+        model: "gpt-4o".to_string(),
+        api_key: "mock-key".to_string(),
+        base_url: Some(format!("{}/v1", base_url.clone())),
+        max_tokens: None,
+        temperature: None,
+        top_p: None,
+        frequency_penalty: None,
+        presence_penalty: None,
+        response_format: None,
+    }).unwrap());
+
+    let ctx = Arc::new(WorkflowNodeContext {
+        provider,
+        model_factory: Arc::new(flock_core::model_factory::CachedModelFactory::new(
+            HashMap::new(),
+            "openai".to_string(),
+            "mock-key".to_string(),
+            Some(format!("{}/v1", base_url.clone())),
+        )),
+        tools: Arc::new(ToolRegistry::new()),
+        db,
+        sink: Arc::new(MockWorkflowSink),
+        debug_mode: false,
+        env_vars: HashMap::new(),
+        workflow_id: "test-classifier-workflow".to_string(),
+        approval_manager: Arc::new(flock_core::ipc_interface::approval::ToolApprovalManager::new()),
+    });
+
+    let workflow_config = json!({
+        "nodes": [
+            { "id": "start_node", "type": "start", "data": {} },
+            {
+                "id": "classifier_node",
+                "type": "classifier",
+                "data": {
+                    "input": "${start.query}",
+                    "categories": [
+                        { "category_id": "tech_cat", "category_name": "Technical Issue" },
+                        { "category_id": "billing_cat", "category_name": "Billing Issue" },
+                        { "category_id": "others_category", "category_name": "Others" }
+                    ]
+                }
+            },
+            {
+                "id": "answer_tech",
+                "type": "answer",
+                "data": {
+                    "answer": "Handling tech support for: ${start.query}"
+                }
+            },
+            {
+                "id": "answer_billing",
+                "type": "answer",
+                "data": {
+                    "answer": "Handling billing support for: ${start.query}"
+                }
+            },
+            {
+                "id": "answer_others",
+                "type": "answer",
+                "data": {
+                    "answer": "Handling general support for: ${start.query}"
+                }
+            }
+        ],
+        "edges": [
+            { "source": "start_node", "target": "classifier_node" },
+            { "source": "classifier_node", "sourceHandle": "tech_cat", "target": "answer_tech" },
+            { "source": "classifier_node", "sourceHandle": "billing_cat", "target": "answer_billing" },
+            { "source": "classifier_node", "sourceHandle": "others_category", "target": "answer_others" }
+        ]
+    });
+
+    // 1. 测试 "technical" 分支路由
+    let graph = build_workflow_graph(&workflow_config, ctx.clone(), checkpointer.clone()).unwrap();
+    let initial_state = json!({
+        "input_msg": "I have a technical support request",
+        "messages": [],
+        "node_outputs": {},
+        "current_node": "",
+        "quit_requested": false,
+        "env_vars": {}
+    });
+
+    let mut run_config = RunnableConfig::default();
+    run_config.insert("configurable".to_string(), serde_json::json!({ "thread_id": "thread-tech" }));
+    let final_state = graph.ainvoke(&initial_state, &run_config).await.unwrap();
+
+    let node_outputs = final_state.get("node_outputs").unwrap();
+    let answer_tech_output = node_outputs.get("answer_tech");
+    assert!(answer_tech_output.is_some(), "Should route to answer_tech node");
+    assert_eq!(
+        answer_tech_output.unwrap().get("answer").unwrap().as_str().unwrap(),
+        "Handling tech support for: I have a technical support request"
+    );
+
+    // 2. 测试 "billing" 分支路由
+    let initial_state_billing = json!({
+        "input_msg": "I have a billing support request",
+        "messages": [],
+        "node_outputs": {},
+        "current_node": "",
+        "quit_requested": false,
+        "env_vars": {}
+    });
+
+    let mut run_config_billing = RunnableConfig::default();
+    run_config_billing.insert("configurable".to_string(), serde_json::json!({ "thread_id": "thread-billing" }));
+    let final_state_billing = graph.ainvoke(&initial_state_billing, &run_config_billing).await.unwrap();
+
+    let node_outputs_billing = final_state_billing.get("node_outputs").unwrap();
+    let answer_billing_output = node_outputs_billing.get("answer_billing");
+    assert!(answer_billing_output.is_some(), "Should route to answer_billing node");
+    assert_eq!(
+        answer_billing_output.unwrap().get("answer").unwrap().as_str().unwrap(),
+        "Handling billing support for: I have a billing support request"
+    );
+
+    // 3. 测试降级 "others" 分支路由
+    let initial_state_others = json!({
+        "input_msg": "Hello there",
+        "messages": [],
+        "node_outputs": {},
+        "current_node": "",
+        "quit_requested": false,
+        "env_vars": {}
+    });
+
+    let mut run_config_others = RunnableConfig::default();
+    run_config_others.insert("configurable".to_string(), serde_json::json!({ "thread_id": "thread-others" }));
+    let final_state_others = graph.ainvoke(&initial_state_others, &run_config_others).await.unwrap();
+
+    let node_outputs_others = final_state_others.get("node_outputs").unwrap();
+    let answer_others_output = node_outputs_others.get("answer_others");
+    assert!(answer_others_output.is_some(), "Should route to answer_others node");
+    assert_eq!(
+        answer_others_output.unwrap().get("answer").unwrap().as_str().unwrap(),
+        "Handling general support for: Hello there"
+    );
+}

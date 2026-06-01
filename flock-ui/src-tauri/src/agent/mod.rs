@@ -5,7 +5,6 @@ mod lifecycle;
 mod commands;
 
 pub use emitter::TauriProtocolEmitter;
-pub use state::{SessionCommand, SessionHandle, AgentState};
-pub use actor::run_session_actor;
+pub use state::AgentState;
 pub use lifecycle::{start_agent, stop_agent, send_message};
 pub use commands::{approve_tool, deny_tool, set_mode, set_config};

@@ -1,5 +1,5 @@
 use std::collections::HashSet;
-use std::path::{Path, PathBuf};
+use std::path::Path;
 
 use crate::frontmatter::{parse_frontmatter, parse_skill_fields};
 use crate::types::{LoadChannel, SkillSource};
