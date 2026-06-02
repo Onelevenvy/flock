@@ -21,26 +21,53 @@ export function WorkflowChatInput({
 }: WorkflowChatInputProps) {
   const { t } = useTranslation();
 
+  const isStreaming = status === 'running';
+  const canSend = inputVal.trim().length > 0 && status !== 'running';
+
+  const placeholder = isStreaming
+    ? t('chat.agentThinking')
+    : t('chat.inputPlaceholder');
+
   return (
-    <Box p="xs" style={{ background: 'var(--flock-bg-surface)', width: '100%' }}>
+    <Box
+      style={{
+        background: 'var(--flock-bg-surface)',
+        padding: '12px 16px 14px',
+        flexShrink: 0,
+        width: '100%',
+      }}
+    >
       <ChatInput
         value={inputVal}
         onChange={setInputVal}
         onSend={handleStart}
         onStop={stopWorkflow}
-        isStreaming={status === 'running'}
+        isStreaming={isStreaming}
         disabled={status === 'running'}
-        placeholder={t('workflow.execution.inputPlaceholder', 'Enter initial query...')}
+        placeholder={placeholder}
         isInterrupted={isInterrupted}
         interruptedMessage={t('workflow.execution.waitingHint', 'Waiting for your selection above...')}
-        sendLabel={t('workflow.execution.run', 'Send')}
+        leftExtra={
+          inputVal.length > 0 ? (
+            <Text size="xs" style={{ color: 'var(--flock-text-dim)', fontSize: 11, flexShrink: 0, whiteSpace: 'nowrap' }}>
+              {inputVal.length} {t('chat.characterCount')}
+            </Text>
+          ) : undefined
+        }
+        rightExtra={
+          canSend && (
+            <Text size="xs" style={{ color: 'var(--flock-text-dim)', opacity: 0.8, fontSize: 11, whiteSpace: 'nowrap' }}>
+              {t('chat.enterToSend')}
+            </Text>
+          )
+        }
+        sendLabel={canSend ? t('chat.sendEnter') : placeholder}
         stopLabel={t('common.stop', 'Stop responding')}
       />
 
-       <Text size="xs" style={{ color: 'var(--flock-text-dim)', textAlign: 'center', opacity: 0.8, fontSize: 11 }} mt={6}>
-              {t('chat.disclaimer')}
-            </Text>
-      
+      <Text size="xs" style={{ color: 'var(--flock-text-dim)', textAlign: 'center', opacity: 0.8, fontSize: 11 }} mt={6}>
+        {t('chat.disclaimer')}
+      </Text>
     </Box>
   );
 }
