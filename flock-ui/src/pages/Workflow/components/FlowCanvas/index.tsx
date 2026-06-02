@@ -75,8 +75,6 @@ export function FlowCanvas({ workflowId, workflowData, onBack }: FlowCanvasProps
     setSelectedNodeId,
     updateNodeData,
     environmentVariables,
-    debugTarget,
-    setDebugTarget,
     pendingStartQuery,
     setPendingStartQuery,
     activeExecutionThreadId,
@@ -370,14 +368,7 @@ export function FlowCanvas({ workflowId, workflowData, onBack }: FlowCanvasProps
           <EnvironmentVarsPanel onClose={() => setShowEnvVars(false)} />
         )}
 
-        {debugTarget && !showEnvVars && (
-          <NodeDebugPanel
-            nodeId={debugTarget.nodeId}
-            onClose={() => setDebugTarget(null)}
-          />
-        )}
-
-        {selectedNode && !showEnvVars && !debugTarget && (
+        {selectedNode && !showEnvVars && (
           <PropertiesPanel
             node={selectedNode}
             onClose={() => setSelectedNodeId(null)}

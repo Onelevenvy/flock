@@ -27,8 +27,6 @@ export function useFlowHandlers(
   setSelectedNodeId: (id: string | null) => void,
   setShowNodePalette: (v: boolean) => void,
 ) {
-  const debugTarget = useWorkflowStore((s) => s.debugTarget);
-  const setDebugTarget = useWorkflowStore((s) => s.setDebugTarget);
 
   const onNodesChange: OnNodesChange = useCallback(
     (changes) => setNodes((nds) => applyNodeChanges(changes, nds)),
@@ -82,11 +80,8 @@ export function useFlowHandlers(
     (_: React.MouseEvent, node: Node) => {
       setSelectedNodeId(node.id);
       setShowNodePalette(false);
-      if (debugTarget && node.type !== 'start' && node.type !== 'end') {
-        setDebugTarget({ nodeId: node.id });
-      }
     },
-    [setSelectedNodeId, setShowNodePalette, debugTarget, setDebugTarget]
+    [setSelectedNodeId, setShowNodePalette]
   );
 
   const onPaneClick = useCallback(() => {

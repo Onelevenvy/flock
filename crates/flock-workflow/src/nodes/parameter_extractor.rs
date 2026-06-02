@@ -34,6 +34,10 @@ pub fn make_parameter_extractor_node(
 
                     let input_val_template = node_data.get("input").and_then(|v| v.as_str()).unwrap_or("");
                     let input_val = interpolate_string_with_context(input_val_template, &state, &ctx, &ctx.workflow_id);
+                    if input_val.trim().is_empty() {
+                        let input_label = node_data.get("label").and_then(|v| v.as_str()).unwrap_or("Input parameter");
+                        return Err(format!("{} is required", input_label));
+                    }
                     let instruction = node_data.get("instruction").and_then(|v| v.as_str()).unwrap_or("");
 
                     let parameters_raw = node_data.get("parameters").and_then(|v| v.as_array());

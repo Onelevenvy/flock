@@ -12,18 +12,22 @@ import {
   Divider,
   ThemeIcon,
   Tooltip,
+  Tabs,
+  Badge,
 } from '@mantine/core';
-import { IconX, IconPlayerPlay } from '@tabler/icons-react';
+import { IconX, IconPlayerPlay, IconSettings, IconHistory } from '@tabler/icons-react';
 import { useTranslation } from 'react-i18next';
 import { nodeConfig, type NodeType } from '@/pages/Workflow/nodeConfig';
 import { useAvailableModels } from '@/hooks/useAvailableModels';
 import { useAvailableTools } from '@/hooks/useAvailableTools';
+import { useState, useEffect } from 'react';
 
 // 引入公共组件
 import { VariableTextInput, VariableTextarea } from './VariableInput';
 
 import { ToolsIcon } from '@/components/Common/Icons';
 import { useWorkflowStore } from '@/store/workflowStore';
+import { useWorkflowRuntime } from '@/hooks/useWorkflowRuntime';
 
 // 引入各节点专属文件夹中的配置组件
 import { LLMFields } from './LLM';
@@ -48,8 +52,22 @@ export function PropertiesPanel({ node, onClose, onDataChange }: PropertiesPanel
   const type = node.type as NodeType;
   const cfg = nodeConfig[type];
 
+  const [activeTab, setActiveTab] = useState<string | null>('settings');
+
   const { groupedOptions: modelOptions, loading: modelsLoading } = useAvailableModels();
   const { tools: availableTools, providers: availableProviders, groupedOptions: toolOptions, loading: toolsLoading } = useAvailableTools();
+
+  const activeWorkflowId = useWorkflowStore((s) => s.activeWorkflowId);
+  const activeExecutionThreadId = useWorkflowStore((s) => s.activeExecutionThreadId);
+
+  const { debugNode, status: executionStatus } = useWorkflowRuntime({
+    workflowId: activeWorkflowId,
+    threadId: activeExecutionThreadId,
+    isDebug: true,
+  });
+
+  const debugResults = useWorkflowStore((s) => s.debugResults);
+  const debugResult = debugResults[node.id];
 
   const toolIcon = useMemo(() => {
     if (type === 'plugin') {
@@ -65,10 +83,23 @@ export function PropertiesPanel({ node, onClose, onDataChange }: PropertiesPanel
     return '';
   }, [type, node.data.tool, availableTools, availableProviders]);
 
-  const setDebugTarget = useWorkflowStore((s) => s.setDebugTarget);
-
   if (!cfg) return null;
   const Icon = cfg.icon;
+
+  const handleRun = async () => {
+    // 自动收集该节点当前 settings 面板里的最新数据传给后端
+    // 调试的时候，直接从 node.data 构建 payload 送去后端
+    const payload = {
+      input_msg: "",
+      node_outputs: {} as Record<string, any>,
+      env_vars: {} as Record<string, any>,
+    };
+
+    setActiveTab('last-run');
+    if (debugNode) {
+      await debugNode(node.id, JSON.stringify(payload));
+    }
+  };
 
   return (
     <Box
@@ -114,7 +145,8 @@ export function PropertiesPanel({ node, onClose, onDataChange }: PropertiesPanel
               <ActionIcon
                 variant="subtle"
                 color="teal"
-                onClick={() => setDebugTarget({ nodeId: node.id })}
+                onClick={handleRun}
+                loading={executionStatus === 'running'}
               >
                 <IconPlayerPlay size={16} stroke={2.2} />
               </ActionIcon>
@@ -126,38 +158,190 @@ export function PropertiesPanel({ node, onClose, onDataChange }: PropertiesPanel
         </Group>
       </Group>
 
-      {/* Scrollable form */}
-      <ScrollArea style={{ flex: 1 }} px="md" py="sm">
-        <Stack gap="sm">
-          {/* Label */}
-          <TextInput
-            label={t('workflow.properties.label')}
-            value={String(node.data.label ?? '')}
-            onChange={(e) => onDataChange(node.id, 'label', e.target.value)}
-            size="xs"
-          />
+      {/* Tabs */}
+      <Tabs
+        value={activeTab}
+        onChange={setActiveTab}
+        styles={{
+          root: { display: 'flex', flexDirection: 'column', flex: 1, overflow: 'hidden' },
+          list: { borderBottom: '1px solid var(--flock-border-subtle)', paddingLeft: 12 },
+          tab: { padding: '8px 12px', fontSize: 11, fontWeight: 600 },
+          panel: { display: 'flex', flexDirection: 'column', flex: 1, overflow: 'hidden' }
+        }}
+      >
+        <Tabs.List>
+          <Tabs.Tab value="settings" leftSection={<IconSettings size={12} />}>
+            {t('workflow.debugPanel.tabSetup', 'SETTINGS')}
+          </Tabs.Tab>
+          <Tabs.Tab value="last-run" leftSection={<IconHistory size={12} />}>
+            {t('workflow.debugPanel.tabLastRun', 'LAST RUN')}
+          </Tabs.Tab>
+        </Tabs.List>
 
-          <Divider label={t('workflow.properties.config')} labelPosition="center" />
+        {/* Tab 1: Settings / Setup */}
+        <Tabs.Panel value="settings">
+          <ScrollArea style={{ flex: 1 }} px="md" py="sm">
+            <Stack gap="sm">
+              {/* Label */}
+              <TextInput
+                label={t('workflow.properties.label')}
+                value={String(node.data.label ?? '')}
+                onChange={(e) => onDataChange(node.id, 'label', e.target.value)}
+                size="xs"
+              />
 
-          {/* Type-specific fields */}
-          <NodeSpecificFields
-            node={node}
-            onDataChange={onDataChange}
-            modelOptions={modelOptions}
-            modelsLoading={modelsLoading}
-            toolOptions={toolOptions}
-            toolsLoading={toolsLoading}
-          />
+              <Divider label={t('workflow.properties.config')} labelPosition="center" />
 
-          {/* Retry & timeout config (not for start/end nodes) */}
-          {type !== 'start' && type !== 'end' && (
-            <>
-              <Divider />
-              <RetryTimeoutFields node={node} onDataChange={onDataChange} />
-            </>
-          )}
-        </Stack>
-      </ScrollArea>
+              {/* Type-specific fields */}
+              <NodeSpecificFields
+                node={node}
+                onDataChange={onDataChange}
+                modelOptions={modelOptions}
+                modelsLoading={modelsLoading}
+                toolOptions={toolOptions}
+                toolsLoading={toolsLoading}
+              />
+
+              {/* Retry & timeout config (not for start/end nodes) */}
+              {type !== 'start' && type !== 'end' && (
+                <>
+                  <Divider />
+                  <RetryTimeoutFields node={node} onDataChange={onDataChange} />
+                </>
+              )}
+            </Stack>
+          </ScrollArea>
+        </Tabs.Panel>
+
+        {/* Tab 2: Last Run */}
+        <Tabs.Panel value="last-run">
+          <ScrollArea style={{ flex: 1 }} px="md" py="sm">
+            {!debugResult ? (
+              <Box style={{ padding: 24, textAlign: 'center' }}>
+                <Text size="xs" c="dimmed">
+                  {t('workflow.debugPanel.noRunResult', 'No run results yet. Click the play button to run this node.')}
+                </Text>
+              </Box>
+            ) : (
+              <Stack gap="sm">
+                {/* Status Bar */}
+                <Box
+                  style={{
+                    padding: '8px 12px',
+                    borderRadius: 8,
+                    background: debugResult.status === 'done'
+                      ? 'var(--flock-accent-soft, rgba(21, 90, 239, 0.08))'
+                      : debugResult.status === 'running'
+                        ? 'rgba(34, 139, 230, 0.08)'
+                        : 'rgba(250, 82, 82, 0.08)',
+                    border: `1px solid ${debugResult.status === 'done'
+                        ? 'var(--flock-accent)'
+                        : debugResult.status === 'running'
+                          ? '#228be6'
+                          : '#fa5252'
+                      }`,
+                    display: 'flex',
+                    justifyContent: 'space-between',
+                    alignItems: 'center',
+                  }}
+                >
+                  <Group gap="xs">
+                    <span style={{
+                      width: 6,
+                      height: 6,
+                      borderRadius: '50%',
+                      background: debugResult.status === 'done' ? '#40c057' : debugResult.status === 'running' ? '#228be6' : '#fa5252'
+                    }} />
+                    <Text size="xs" fw={700} style={{
+                      color: debugResult.status === 'done' ? 'var(--flock-accent)' : debugResult.status === 'running' ? '#228be6' : '#fa5252',
+                      fontSize: 10,
+                    }}>
+                      {debugResult.status === 'done' ? 'SUCCESS' : debugResult.status === 'running' ? 'RUNNING' : 'FAILED'}
+                    </Text>
+                  </Group>
+                  {debugResult.duration !== undefined && (
+                    <Text size="xs" c="dimmed" style={{ fontSize: 10 }}>
+                      {(debugResult.duration / 1000).toFixed(3)}s
+                    </Text>
+                  )}
+                </Box>
+
+                {/* Input JSON Block */}
+                {debugResult.input && (
+                  <Box>
+                    <Text size="xs" fw={600} mb={4} style={{ color: 'var(--flock-text-bright)' }}>
+                      {t('workflow.debugPanel.inputData', 'Input')}
+                    </Text>
+                    <Box
+                      style={{
+                        maxHeight: 150,
+                        overflow: 'auto',
+                        padding: 8,
+                        borderRadius: 8,
+                        background: 'var(--flock-bg-raised, rgba(0,0,0,0.02))',
+                        border: '1px solid var(--flock-border-subtle)',
+                      }}
+                    >
+                      <pre style={{ margin: 0, fontSize: 10, fontFamily: 'monospace', whiteSpace: 'pre-wrap', wordBreak: 'break-all', color: 'var(--flock-text-secondary)' }}>
+                        {JSON.stringify(debugResult.input, null, 2)}
+                      </pre>
+                    </Box>
+                  </Box>
+                )}
+
+                {/* Output JSON Block */}
+                <Box>
+                  <Text size="xs" fw={600} mb={4} style={{ color: 'var(--flock-text-bright)' }}>
+                    {t('workflow.debugPanel.outputData', 'Output')}
+                  </Text>
+                  <Box
+                      style={{
+                        maxHeight: 180,
+                        overflow: 'auto',
+                        padding: 8,
+                        borderRadius: 8,
+                        background: 'var(--flock-bg-raised, rgba(0,0,0,0.02))',
+                        border: '1px solid var(--flock-border-subtle)',
+                      }}
+                    >
+                    <pre style={{ margin: 0, fontSize: 10, fontFamily: 'monospace', whiteSpace: 'pre-wrap', wordBreak: 'break-all', color: 'var(--flock-text-secondary)' }}>
+                      {debugResult.status === 'running'
+                        ? 'Running...'
+                        : debugResult.error
+                          ? debugResult.error
+                          : JSON.stringify(debugResult.output, null, 2)}
+                    </pre>
+                  </Box>
+                </Box>
+
+                {/* Metadata Details */}
+                <Divider />
+                <Box style={{ fontSize: 11 }}>
+                  <Text size="xs" fw={600} mb={6} style={{ color: 'var(--flock-text-bright)' }}>
+                    {t('workflow.debugPanel.metaTitle', 'Metadata')}
+                  </Text>
+                  <Stack gap={6}>
+                    <Group justify="space-between">
+                      <Text size="xs" c="dimmed" style={{ fontSize: 10 }}>{t('workflow.debugPanel.metaStatus', 'Status')}</Text>
+                      <Text size="xs" fw={500} style={{ fontSize: 10 }}>{debugResult.status.toUpperCase()}</Text>
+                    </Group>
+                    <Group justify="space-between">
+                      <Text size="xs" c="dimmed" style={{ fontSize: 10 }}>{t('workflow.debugPanel.metaStartTime', 'Start Time')}</Text>
+                      <Text size="xs" fw={500} style={{ fontSize: 10 }}>{new Date(debugResult.startTime).toLocaleTimeString()}</Text>
+                    </Group>
+                    {debugResult.duration !== undefined && (
+                      <Group justify="space-between">
+                        <Text size="xs" c="dimmed" style={{ fontSize: 10 }}>{t('workflow.debugPanel.metaDuration', 'Duration')}</Text>
+                        <Text size="xs" fw={500} style={{ fontSize: 10 }}>{(debugResult.duration / 1000).toFixed(3)}s</Text>
+                      </Group>
+                    )}
+                  </Stack>
+                </Box>
+              </Stack>
+            )}
+          </ScrollArea>
+        </Tabs.Panel>
+      </Tabs>
     </Box>
   );
 }
