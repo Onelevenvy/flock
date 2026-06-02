@@ -51,6 +51,7 @@ export function useStartAgent() {
       const conversation = await createConversation({
         workspaceId: activeWorkspace.id,
         title: '',
+        assistantId: assistant.id,
       });
       clearMessages();
       setActiveConversation(conversation.id);
@@ -98,6 +99,7 @@ export function useStartAgent() {
       const conversation = await createConversation({
         workspaceId: activeWorkspace.id,
         title: '',
+        assistantId: `workflow:${workflow.id}`,
       });
 
       clearMessages();

@@ -166,8 +166,9 @@ pub async fn create_conversation(
     db: &flock_core::db::DbManager,
     workspace_id: &str,
     title: &str,
+    assistant_id: Option<String>,
 ) -> anyhow::Result<ConversationInfo> {
-    db.create_conversation(workspace_id, title).await
+    db.create_conversation(workspace_id, title, assistant_id).await
 }
 
 /// 更新对话标题（写入 DB）

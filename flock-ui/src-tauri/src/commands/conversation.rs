@@ -18,8 +18,9 @@ pub async fn create_conversation(
     db: State<'_, SharedDbManager>,
     workspace_id: String,
     title: String,
+    assistant_id: Option<String>,
 ) -> Result<workspace::ConversationInfo, String> {
-    workspace::create_conversation(&db, &workspace_id, &title).await.map_err(|e| e.to_string())
+    workspace::create_conversation(&db, &workspace_id, &title, assistant_id).await.map_err(|e| e.to_string())
 }
 
 /// 更新对话标题

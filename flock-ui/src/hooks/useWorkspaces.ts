@@ -61,13 +61,16 @@ export function useConversationsQuery(workspaceId: string | null) {
 export function useCreateConversationMutation() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: ({ workspaceId, title = '' }: { workspaceId: string; title?: string }) =>
-      invoke<ConversationInfo>('create_conversation', { workspaceId, title }),
+    mutationFn: ({ workspaceId, title = '', assistantId }: { workspaceId: string; title?: string; assistantId?: string | null }) =>
+      invoke<ConversationInfo>('create_conversation', { workspaceId, title, assistantId }),
     onSuccess: (newConv, variables) => {
       // 刷新该工作区下的会话缓存
       queryClient.invalidateQueries({ queryKey: ['conversations', variables.workspaceId] });
       // 激活新创建的会话
       useWorkspaceStore.getState().setActiveConversation(newConv.id);
+      if (variables.assistantId) {
+        useWorkspaceStore.getState().setConversationAssistant(newConv.id, variables.assistantId);
+      }
     },
   });
 }

@@ -56,6 +56,7 @@ pub const MIGRATIONS: &[(i64, &str, &str)] = &[
             summary      TEXT NOT NULL DEFAULT '',
             messages     TEXT NOT NULL DEFAULT '[]',
             msg_count    INTEGER NOT NULL DEFAULT 0,
+            assistant_id TEXT,
             created_at   TEXT NOT NULL,
             updated_at   TEXT NOT NULL
         );

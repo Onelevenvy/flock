@@ -59,7 +59,18 @@ function AppInner() {
     isFetching: conversationsFetching,
   } = useConversationsQuery(activeWorkspaceId);
 
+  const setConversationAssistant = useWorkspaceStore((s) => s.setConversationAssistant);
   const isHistoryRestored = useRef(false);
+
+  // 同步对话与助手的数据库元数据映射关系，保证本地存储或后台新生成的对话状态在前端完全自动同步
+  useEffect(() => {
+    if (!conversationsFetched || conversations.length === 0) return;
+    conversations.forEach((conv) => {
+      if (conv.assistant_id) {
+        setConversationAssistant(conv.id, conv.assistant_id);
+      }
+    });
+  }, [conversations, conversationsFetched, setConversationAssistant]);
 
   useEffect(() => {
     if (!activeConversationId || !conversationsFetched || conversationsFetching) return;

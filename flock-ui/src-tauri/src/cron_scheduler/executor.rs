@@ -39,7 +39,12 @@ pub async fn trigger_job_execution(
 
     if needs_create {
         let title = format!("🕒 ：{}", job.name.zh);
-        let conv_info = db.create_conversation(&job.workspace_id, &title).await?;
+        let target_assistant = if let Some(ref wf_id) = job.workflow_id {
+            Some(format!("workflow:{}", wf_id))
+        } else {
+            job.assistant_id.clone()
+        };
+        let conv_info = db.create_conversation(&job.workspace_id, &title, target_assistant).await?;
         conv_id = conv_info.id;
     }
 
