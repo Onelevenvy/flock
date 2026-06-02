@@ -14,7 +14,7 @@ import {
 import { IconBolt } from '@tabler/icons-react';
 import { useTranslation } from 'react-i18next';
 import { useWorkflowStore } from '@/store/workflowStore';
-import { getAvailableVariables, parseVariableTemplate, resolveVariableDetails } from './helper';
+import { getAvailableVariables, parseVariableTemplate, resolveVariableDetails } from '../PropertiesPanel/helper';
 
 // --- HTML/Plain text conversion helpers ---
 function htmlToPlain(html: string): string {
@@ -393,4 +393,3 @@ export function VariableTextarea({ currentNodeId, onChange, value, label, placeh
     />
   );
 }
-

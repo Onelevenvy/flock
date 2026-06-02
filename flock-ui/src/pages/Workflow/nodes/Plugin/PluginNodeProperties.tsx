@@ -9,7 +9,7 @@ import {
   Tooltip,
 } from '@mantine/core';
 import { useTranslation } from 'react-i18next';
-import { VariableTextInput } from '@/pages/Workflow/PropertiesPanel/VariableInput';
+import { VariableTextInput } from '@/pages/Workflow/components/VariableInput';
 import { useAvailableTools } from '@/hooks/useAvailableTools';
 
 export interface PluginNodePropertiesProps {

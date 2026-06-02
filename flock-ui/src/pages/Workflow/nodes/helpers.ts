@@ -17,7 +17,7 @@ export function getNodeSummary(
     case 'code':
       return `${data.language ?? 'python'}`;
     case 'plugin':
-      return data.tool ? t('workflow.nodes.toolLabel', 'Tool: {{name}}', { name: (data.tool as { name: string }).name }) : t('workflow.nodes.noTool', 'No Tool');
+      return '';
     case 'human':
       return data.title ? String(data.title).slice(0, 30) : t('workflow.nodes.waitingHuman', 'Waiting review');
     case 'parameterExtractor':

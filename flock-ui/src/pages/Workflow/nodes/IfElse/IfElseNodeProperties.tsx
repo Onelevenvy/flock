@@ -3,7 +3,7 @@ import { Box, Group, Badge, ActionIcon, Button, Stack, Select, Text, Divider } f
 import { IconTrash, IconPlus } from '@tabler/icons-react';
 import { useTranslation } from 'react-i18next';
 import { v4 as uuidv4 } from 'uuid';
-import { VariableTextInput } from '@/pages/Workflow/PropertiesPanel/VariableInput';
+import { VariableTextInput } from '@/pages/Workflow/components/VariableInput';
 import { useWorkflowStore } from '@/store/workflowStore';
 import { getAvailableVariables } from '@/pages/Workflow/PropertiesPanel/helper';
 

@@ -1,7 +1,7 @@
 import { Group, Stack, Text, TextInput, ActionIcon, Button, Divider, Switch, NumberInput, Select, Tooltip } from '@mantine/core';
 import { IconTrash, IconPlus, IconMessage } from '@tabler/icons-react';
 import { useTranslation } from 'react-i18next';
-import { VariableTextarea } from '@/pages/Workflow/PropertiesPanel/VariableInput';
+import { VariableTextarea } from '@/pages/Workflow/components/VariableInput';
 
 export interface HumanAction {
   key: string;

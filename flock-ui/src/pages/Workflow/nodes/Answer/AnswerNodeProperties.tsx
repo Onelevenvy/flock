@@ -1,5 +1,5 @@
 import { useTranslation } from 'react-i18next';
-import { VariableTextarea } from '@/pages/Workflow/PropertiesPanel/VariableInput';
+import { VariableTextarea } from '@/pages/Workflow/components/VariableInput';
 
 export interface AnswerNodePropertiesProps {
   node: any;

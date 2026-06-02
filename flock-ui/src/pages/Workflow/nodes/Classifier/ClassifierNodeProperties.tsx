@@ -3,7 +3,7 @@ import { ModelSelect } from '@/components/Common/ModelSelect';
 import { IconTrash, IconPlus } from '@tabler/icons-react';
 import { useTranslation } from 'react-i18next';
 import { v4 as uuidv4 } from 'uuid';
-import { VariableTextInput } from '@/pages/Workflow/PropertiesPanel/VariableInput';
+import { VariableTextInput } from '@/pages/Workflow/components/VariableInput';
 
 export interface ClassifierNodePropertiesProps {
   node: any;
