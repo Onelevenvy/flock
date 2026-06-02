@@ -36,6 +36,8 @@ export interface ToolPickerPopoverProps {
   disabled?: boolean;
   /** Popover 弹出方向 */
   position?: PopoverProps['position'];
+  /** 自定义按钮文字 */
+  triggerLabel?: string;
 }
 
 export function ToolPickerPopover({
@@ -43,6 +45,7 @@ export function ToolPickerPopover({
   onChange,
   disabled = false,
   position = 'bottom-end',
+  triggerLabel,
 }: ToolPickerPopoverProps) {
   const { t } = useTranslation();
   const [opened, { open, close }] = useDisclosure(false);
@@ -174,7 +177,7 @@ export function ToolPickerPopover({
               },
             }}
           >
-            {t('workflow.properties.agent.addTools')}
+            {triggerLabel || t('workflow.properties.agent.addTools')}
           </Button>
         </Popover.Target>
 

@@ -98,27 +98,21 @@ export function NodePalette({ onAddNode }: NodePaletteProps) {
         >
           {t('workflow.palette.tabNodes', 'Nodes')}
         </UnstyledButton>
-        <Tooltip
-          label={t('workflow.palette.comingSoon', 'Coming soon')}
-          position="top"
-          withArrow
+        <UnstyledButton
+          onClick={() => setActiveTab('tools')}
+          style={{
+            flex: 1,
+            textAlign: 'center',
+            padding: '8px 0',
+            fontSize: 11,
+            fontWeight: 700,
+            color: activeTab === 'tools' ? 'var(--flock-accent)' : 'var(--flock-text-muted)',
+            borderBottom: activeTab === 'tools' ? '2px solid var(--flock-accent)' : '2px solid transparent',
+            transition: 'all 0.15s ease',
+          }}
         >
-          <UnstyledButton
-            style={{
-              flex: 1,
-              textAlign: 'center',
-              padding: '8px 0',
-              fontSize: 11,
-              fontWeight: 700,
-              color: 'var(--flock-text-muted)',
-              borderBottom: '2px solid transparent',
-              cursor: 'not-allowed',
-              opacity: 0.5,
-            }}
-          >
-            {t('workflow.palette.tabTools', 'Tools')}
-          </UnstyledButton>
-        </Tooltip>
+          {t('workflow.palette.tabTools', 'Tools')}
+        </UnstyledButton>
       </Box>
 
       {activeTab === 'nodes' ? (
@@ -148,7 +142,7 @@ export function NodePalette({ onAddNode }: NodePaletteProps) {
                 {filteredNodes.map((type) => {
                   const cfg = nodeConfig[type];
                   const Icon = cfg.icon;
-                  const isDisabled = ['ifelse', 'code', 'parameterExtractor'].includes(type);
+                  const isDisabled = ['code'].includes(type);
 
                   const item = (
                     <div

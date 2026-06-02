@@ -29,6 +29,7 @@ import { IfElseFields } from './IfElse';
 import { HumanFields } from './Human';
 import { StartFields } from './Start';
 import { ParameterExtractorFields } from './ParameterExtractor';
+import { PluginFields } from './Plugin';
 import { RetryTimeoutFields } from './RetryTimeoutFields';
 
 export interface PropertiesPanelProps {
@@ -243,13 +244,9 @@ function NodeSpecificFields({
 
     case 'plugin':
       return (
-        <VariableTextInput
-          label={t('workflow.properties.plugin.args')}
-          placeholder='{"key": "value"}'
-          value={String(node.data.args ?? '')}
-          currentNodeId={node.id}
-          onChange={(val) => onDataChange(node.id, 'args', val)}
-          size="xs"
+        <PluginFields
+          node={node}
+          onDataChange={onDataChange}
         />
       );
 
