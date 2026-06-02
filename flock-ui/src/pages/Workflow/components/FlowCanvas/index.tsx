@@ -28,7 +28,6 @@ import { CustomStepEdge } from '@/pages/Workflow/components/CustomStepEdge';
 import { PropertiesPanel } from '@/pages/Workflow/components/PropertiesPanel';
 import { ExecutionPanel } from '@/components/chat/workflow/ExecutionPanel';
 import { EnvironmentVarsPanel } from '@/pages/Workflow/components/EnvironmentVarsPanel';
-import { NodeDebugPanel } from '@/pages/Workflow/components/NodeDebugPanel';
 import { useWorkflowRuntime } from '@/hooks/useWorkflowRuntime';
 
 import { useFlowLayout } from './hooks/useFlowLayout';
@@ -131,35 +130,51 @@ export function FlowCanvas({ workflowId, workflowData, onBack }: FlowCanvasProps
   // ── Add node via click/drop ─────────────────────────────────────────────
   const { handleAddNode, onDragOver, onDrop } = useDropHandler(nodes, setNodes, setShowNodePalette);
 
+  const saveDraftImmediately = useCallback(async () => {
+    if (!workflowId) return;
+    try {
+      const metadata = {
+        ...(workflowData?.config?.metadata ?? {}),
+        env_vars: environmentVariables,
+        icon: workflowIcon,
+      };
+      await invoke('update_workflow', {
+        id: workflowId,
+        input: {
+          name: workflowData?.name || "",
+          description: workflowData?.description || "",
+          is_active: workflowData?.is_active ?? true,
+          config: { nodes, edges, metadata },
+        },
+      });
+      setDirty(false);
+    } catch (e) {
+      console.error("Auto silent save draft workflow failed:", e);
+    }
+  }, [workflowId, workflowData, nodes, edges, environmentVariables, workflowIcon, setDirty]);
+
   // ── Auto Silent Save Draft Config ──
   // 每当节点、连线、环境变量、图标变化时，自动将当前状态静默保存到 config (草稿数据库)
   useEffect(() => {
     if (!workflowId) return;
-    const autoSaveDraft = async () => {
-      try {
-        const metadata = {
-          ...(workflowData?.config?.metadata ?? {}),
-          env_vars: environmentVariables,
-          icon: workflowIcon,
-        };
-        await invoke('update_workflow', {
-          id: workflowId,
-          input: {
-            name: workflowData?.name || "",
-            description: workflowData?.description || "",
-            is_active: workflowData?.is_active ?? true,
-            config: { nodes, edges, metadata },
-          },
-        });
-      } catch (e) {
-        console.error("Auto silent save draft workflow failed:", e);
+    // 延迟 300ms 防抖，避免拖拽时高频调用 API
+    const timer = setTimeout(saveDraftImmediately, 300);
+    return () => clearTimeout(timer);
+  }, [workflowId, saveDraftImmediately]);
+
+  // 将保存草稿的函数引用同步到全局 Store，供其他调试面板执行前触发强制自动保存
+  useEffect(() => {
+    const store = useWorkflowStore.getState();
+    if (store.saveDraftRef) {
+      store.saveDraftRef.current = saveDraftImmediately;
+    }
+    return () => {
+      const currentStore = useWorkflowStore.getState();
+      if (currentStore.saveDraftRef) {
+        currentStore.saveDraftRef.current = null;
       }
     };
-    
-    // 延迟 300ms 防抖，避免拖拽时高频调用 API
-    const timer = setTimeout(autoSaveDraft, 300);
-    return () => clearTimeout(timer);
-  }, [workflowId, nodes, edges, environmentVariables, workflowIcon]);
+  }, [saveDraftImmediately]);
 
   // ── Publish States ──
   const [publishModalOpen, setPublishModalOpen] = useState(false);
@@ -257,40 +272,12 @@ export function FlowCanvas({ workflowId, workflowData, onBack }: FlowCanvasProps
     }
   }, [workflowId, loadHistoryVersions]);
 
-  // ── Silent Auto-Publish on automatic execution ──
-  const silentPublish = useCallback(async () => {
-    const metadata = {
-      ...(workflowData.config.metadata ?? {}),
-      env_vars: environmentVariables,
-      icon: workflowIcon,
-    };
-    await updateMutation.mutateAsync({
-      id: workflowId,
-      input: {
-        name: workflowData.name,
-        description: workflowData.description,
-        is_active: workflowData.is_active,
-        config: { nodes, edges, metadata },
-      },
-    });
-    try {
-      await invoke('publish_workflow', {
-        id: workflowId,
-        version: 'V0.0.0-auto',
-        description: 'Auto-publish on start',
-      });
-      setDirty(false);
-    } catch (e) {
-      console.error("Silent publish workflow failed:", e);
-    }
-  }, [workflowId, workflowData, nodes, edges, environmentVariables, workflowIcon, updateMutation, setDirty]);
-
   // ── Auto-start workflow if navigated from home page with a query ────────
   useEffect(() => {
     if (pendingStartQuery && workflowId) {
       const runPending = async () => {
         if (isDirty) {
-          await silentPublish();
+          await saveDraftImmediately();
         }
         setShowExecution(true);
         startWorkflow(JSON.stringify({ query: pendingStartQuery }));
@@ -298,7 +285,7 @@ export function FlowCanvas({ workflowId, workflowData, onBack }: FlowCanvasProps
       };
       runPending();
     }
-  }, [pendingStartQuery, workflowId, isDirty, silentPublish, startWorkflow, setPendingStartQuery]);
+  }, [pendingStartQuery, workflowId, isDirty, saveDraftImmediately, startWorkflow, setPendingStartQuery]);
 
   // ── Selected node ───────────────────────────────────────────────────────
   const selectedNode = useMemo(
@@ -515,7 +502,7 @@ export function FlowCanvas({ workflowId, workflowData, onBack }: FlowCanvasProps
             onClose={() => setShowExecution(false)}
             startWorkflow={async (input) => {
               if (isDirty) {
-                await silentPublish();
+                await saveDraftImmediately();
               }
               await startWorkflow(input);
             }}
