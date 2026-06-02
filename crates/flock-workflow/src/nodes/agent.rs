@@ -151,6 +151,9 @@ pub fn make_agent_workflow_node(
                         if loop_count > max_loops {
                             return Err("Max tool loop count exceeded".to_string());
                         }
+                        if ctx.cancel_flag.load(std::sync::atomic::Ordering::SeqCst) {
+                            return Err("Workflow execution cancelled by user".to_string());
+                        }
 
                         let mut rx = provider.astream(&local_messages[..], &config);
                         let mut assistant_text = String::new();
@@ -158,6 +161,9 @@ pub fn make_agent_workflow_node(
                         let mut tool_calls = Vec::new();
 
                         while let Some(msg_res) = rx.next().await {
+                            if ctx.cancel_flag.load(std::sync::atomic::Ordering::SeqCst) {
+                                return Err("Workflow execution cancelled by user".to_string());
+                            }
                             let msg = msg_res.map_err(|e| format!("{}", e))?;
                             if let Some(thinking) = msg.thinking() {
                                 if !thinking.is_empty() {

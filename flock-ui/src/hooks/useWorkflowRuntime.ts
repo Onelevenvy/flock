@@ -554,12 +554,22 @@ export function useWorkflowRuntime({
 
   // ── stopWorkflow ──
   const stopWorkflow = useCallback(async () => {
-    if (!workflowId) return;
+    console.log("[useWorkflowRuntime] stopWorkflow clicked! workflowId:", workflowId, "threadId:", threadId, "isDebug:", isDebug);
+    if (!workflowId) {
+      console.warn("[useWorkflowRuntime] stopWorkflow failed: workflowId is null or empty");
+      return;
+    }
     const activeTid = isDebug
       ? (store.activeExecutionThreadId ?? `${workflowId}:debug`)
       : threadId;
     try {
+      console.log("[useWorkflowRuntime] Invoking stop_workflow with workflowId:", workflowId);
       await invoke('stop_workflow', { workflowId });
+      console.log("[useWorkflowRuntime] stop_workflow command executed successfully on backend.");
+      
+      // 同时重置 AgentStore 的状态，以防全局状态处于 thinking 或连接中
+      useAgentStore.getState().setStatus('ready');
+
       if (activeTid) {
         store.setThreadStatus(activeTid, 'idle');
         dispatch(activeTid, {
@@ -569,6 +579,7 @@ export function useWorkflowRuntime({
         });
       }
     } catch (e) {
+      console.error("[useWorkflowRuntime] stop_workflow invoke failed:", e);
       if (activeTid) {
         dispatch(activeTid, {
           type: 'error',

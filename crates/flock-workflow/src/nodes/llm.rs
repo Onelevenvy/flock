@@ -57,6 +57,9 @@ pub fn make_llm_workflow_node(
                     let mut thinking_text = String::new();
 
                     while let Some(msg_res) = rx.next().await {
+                        if ctx.cancel_flag.load(std::sync::atomic::Ordering::SeqCst) {
+                            return Err("Workflow execution cancelled by user".to_string());
+                        }
                         let msg = msg_res.map_err(|e| format!("{}", e))?;
                         if let Some(thinking) = msg.thinking() {
                             if !thinking.is_empty() {

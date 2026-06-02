@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
-import { Box, Text, ScrollArea, Stack, Button, Divider } from '@mantine/core';
+import { Box, Text, ScrollArea, Stack, Button, Divider, Group } from '@mantine/core';
 import { useTranslation } from 'react-i18next';
-import { IconCheck, IconPlayerPlay } from '@tabler/icons-react';
+import { IconCheck, IconPlayerPlay, IconPlayerStop } from '@tabler/icons-react';
 import { useWorkflowStore } from '@/store/workflowStore';
 import { useUiStore } from '@/store/uiStore';
 import { useAgentStore } from '@/store/agentStore';
@@ -11,7 +11,7 @@ import { StartParametersForm } from './StartParametersForm';
 import { useExecutionPanelMessages } from '@/hooks/useExecutionPanelMessages';
 import { ExecutionPanelHeader } from './ExecutionPanelHeader';
 import { ExecutionRoundItem } from './ExecutionRoundItem';
-import { ExecutionBottomBar } from './ExecutionBottomBar';
+import { WorkflowChatInput } from './WorkflowChatInput';
 
 export function ExecutionPanel({
   status,
@@ -369,12 +369,13 @@ export function ExecutionPanel({
 
         {/* Bottom input area */}
         {!showInitialForm && (
-          <ExecutionBottomBar
+          <WorkflowChatInput
             isInterrupted={isInterrupted}
             status={status}
             inputVal={inputVal}
             setInputVal={setInputVal}
             handleStart={handleStart}
+            stopWorkflow={stopWorkflow}
           />
         )}
       </Box>

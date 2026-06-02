@@ -21,7 +21,7 @@ use crate::SharedDbManager;
 use crate::commands::agent::SharedAgentState;
 
 pub struct WorkflowExecutionState {
-    pub executions: Mutex<HashMap<String, JoinHandle<()>>>,
+    pub executions: Mutex<HashMap<String, (JoinHandle<()>, Arc<std::sync::atomic::AtomicBool>)>>,
 }
 
 impl WorkflowExecutionState {
@@ -245,7 +245,8 @@ pub async fn run_workflow(
     // 2. 如果之前已经在运行，先取消之前的实例
     {
         let mut executions = execution_state.executions.lock().unwrap();
-        if let Some(handle) = executions.remove(&workflow_id) {
+        if let Some((handle, cancel_flag)) = executions.remove(&workflow_id) {
+            cancel_flag.store(true, std::sync::atomic::Ordering::SeqCst);
             handle.abort();
         }
     }
@@ -443,6 +444,9 @@ pub async fn run_workflow(
 
     let approval_manager = agent_state.lock().await.approval_manager.clone();
 
+    let cancel_flag = Arc::new(std::sync::atomic::AtomicBool::new(false));
+    let cancel_flag_clone = cancel_flag.clone();
+
     let ctx = Arc::new(WorkflowNodeContext {
         provider: provider.clone(),
         model_factory,
@@ -453,6 +457,7 @@ pub async fn run_workflow(
         env_vars,
         workflow_id: workflow_id.clone(),
         approval_manager,
+        cancel_flag,
     });
 
     // 6. 构建 Graph
@@ -789,7 +794,7 @@ pub async fn run_workflow(
     // 10. 存储 JoinHandle
     {
         let mut executions = execution_state.executions.lock().unwrap();
-        executions.insert(workflow_id, join_handle);
+        executions.insert(workflow_id, (join_handle, cancel_flag_clone));
     }
 
     Ok(())
@@ -801,9 +806,14 @@ pub async fn stop_workflow(
     execution_state: State<'_, Arc<WorkflowExecutionState>>,
     workflow_id: String,
 ) -> Result<(), String> {
+    log::info!("[workflow] stop_workflow command received for workflow_id: {}", workflow_id);
     let mut executions = execution_state.executions.lock().unwrap();
-    if let Some(handle) = executions.remove(&workflow_id) {
+    if let Some((handle, cancel_flag)) = executions.remove(&workflow_id) {
+        log::info!("[workflow] Found active execution handle for {}, aborting it...", workflow_id);
+        cancel_flag.store(true, std::sync::atomic::Ordering::SeqCst);
         handle.abort();
+    } else {
+        log::warn!("[workflow] No active execution handle found for workflow_id: {} in executions map! Current keys: {:?}", workflow_id, executions.keys().collect::<Vec<_>>());
     }
     Ok(())
 }
