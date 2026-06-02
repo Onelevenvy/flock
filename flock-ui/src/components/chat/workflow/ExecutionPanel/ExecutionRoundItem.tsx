@@ -215,6 +215,16 @@ export function ExecutionRoundItem({
           </Box>
         );
       })}
+
+      {/* 如果被中止，在最外侧以最简约的纯文字展现，确保不受折叠影响，去掉任何红色背景和虚线 */}
+      {round.steps.some(s => s.outputText?.includes('🚫') || s.outputText?.includes('aborted') || s.outputText?.includes('中止')) && (
+        <Box px="xs" py={4}>
+          <Text size="xs" fw={500} style={{ color: '#ef4444', display: 'flex', alignItems: 'center', gap: 6 }}>
+            <span>🚫</span>
+            <span>{t('chat.aborted', 'Dialogue aborted by user').replace(/^[\n\s*🚫]+/g, '').replace(/[\s*]+$/g, '')}</span>
+          </Text>
+        </Box>
+      )}
     </Stack>
   );
 }

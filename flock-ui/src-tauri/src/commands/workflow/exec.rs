@@ -331,7 +331,7 @@ pub async fn run_workflow(
     // 自动为工作流切换至当前激活工作空间的 working directory，解决不能选择工作空间的问题
     let thread_id_val = thread_id.unwrap_or_else(|| workflow_id.clone());
     let mut final_workdir: Option<std::path::PathBuf> = None;
-    let row = sqlx::query("SELECT workspace_id, cwd FROM session_metadata WHERE thread_id = ?1")
+    let row = sqlx::query("SELECT workspace_id, cwd, summary FROM session_metadata WHERE thread_id = ?1")
         .bind(&thread_id_val)
         .fetch_optional(db.pool())
         .await
@@ -340,6 +340,49 @@ pub async fn run_workflow(
     if let Some(r) = row {
         let workspace_id: String = r.get("workspace_id");
         let cwd: String = r.get("cwd");
+        let existing_summary: String = r.get("summary");
+        
+        let is_placeholder = |s: &str| {
+            let s = s.trim();
+            if s.starts_with("对话") {
+                let rest = s.strip_prefix("对话").unwrap().trim();
+                if !rest.is_empty() && rest.chars().all(|c| c.is_ascii_digit()) {
+                    return true;
+                }
+            }
+            if s.starts_with("Session") {
+                let rest = s.strip_prefix("Session").unwrap().trim();
+                if !rest.is_empty() && (rest.chars().all(|c| c.is_ascii_digit() || c == '_' || c == '-') || rest.starts_with("conv_")) {
+                    return true;
+                }
+            }
+            false
+        };
+
+        // 实时更新：如果当前是占位标题，且此次有首次输入的 input (即首句提问)，立刻将标题修改并通知前端，实现侧边栏实时改变
+        if let Some(ref input_str) = input {
+            if !input_str.is_empty() && (existing_summary.is_empty() || is_placeholder(&existing_summary)) {
+                let mut title_to_use = input_str.clone();
+                if title_to_use.chars().count() > 80 {
+                    let truncated: String = title_to_use.chars().take(77).collect();
+                    title_to_use = format!("{}...", truncated);
+                }
+                
+                let _ = sqlx::query("UPDATE session_metadata SET summary = ?1 WHERE thread_id = ?2")
+                    .bind(&title_to_use)
+                    .bind(&thread_id_val)
+                    .execute(db.pool())
+                    .await;
+
+                let title_updated_event = serde_json::json!({
+                    "type": "title_updated",
+                    "thread_id": thread_id_val.clone(),
+                    "title": title_to_use,
+                });
+                let _ = app.emit("agent-event", serde_json::to_string(&title_updated_event).unwrap_or_default()).ok();
+            }
+        }
+
         let workdir = if !cwd.is_empty() {
             std::path::PathBuf::from(cwd)
         } else if !workspace_id.is_empty() {
