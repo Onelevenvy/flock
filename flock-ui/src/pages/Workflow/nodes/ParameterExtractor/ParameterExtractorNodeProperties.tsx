@@ -1,15 +1,10 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState } from 'react';
 import {
-  TextInput,
   ActionIcon,
-  Button,
   Group,
   Stack,
   Text,
   Badge,
-  Modal,
-  Select,
-  Switch,
   Card,
   Tooltip,
 } from '@mantine/core';
@@ -17,7 +12,6 @@ import { ModelSelect } from '@/components/Common/ModelSelect';
 import {
   IconTrash,
   IconPlus,
-  IconFileImport,
   IconEdit,
   IconCheck,
   IconBraces,
@@ -29,27 +23,21 @@ import { VariableTextInput, VariableTextarea } from '@/pages/Workflow/components
 import { useAvailableTools } from '@/hooks/useAvailableTools';
 import { notifications } from '@mantine/notifications';
 import { ToolPickerPopover } from '@/components/Common/ToolManager/ToolPickerPopover';
+import { ParameterModal, type ExtractorParameter } from './ParameterModal';
 
-export interface ParameterExtractorFieldsProps {
+export interface ParameterExtractorNodePropertiesProps {
   node: any;
   onDataChange: (nodeId: string, key: string, value: unknown) => void;
   modelOptions: any[];
   modelsLoading: boolean;
 }
 
-interface ExtractorParameter {
-  name: string;
-  type: string;
-  description: string;
-  required: boolean;
-}
-
-export function ParameterExtractorFields({
+export function ParameterExtractorNodeProperties({
   node,
   onDataChange,
   modelOptions,
   modelsLoading,
-}: ParameterExtractorFieldsProps) {
+}: ParameterExtractorNodePropertiesProps) {
   const { t } = useTranslation();
   const { tools } = useAvailableTools();
 
@@ -385,76 +373,14 @@ export function ParameterExtractorFields({
         />
       </Stack>
 
-      {/* -------------------- 弹窗：自定义参数创建/编辑 -------------------- */}
-      <Modal
+      <ParameterModal
         opened={editModalOpen}
         onClose={() => setEditModalOpen(false)}
-        title={
-          activeParamIndex !== null
-            ? t('workflow.properties.extractor.editParam', 'Edit Parameter')
-            : t('workflow.properties.extractor.addParam', 'Add Parameter')
-        }
-        size="sm"
-        centered
-        styles={{
-          header: { borderBottom: '1px solid var(--flock-border-subtle)', minHeight: 48 },
-          body: { paddingTop: 16 }
-        }}
-      >
-        <Stack gap="sm">
-          <TextInput
-            label={t('workflow.properties.extractor.pName', 'Parameter Name')}
-            placeholder="e.g. city"
-            value={paramForm.name}
-            disabled={activeParamIndex !== null}
-            onChange={(e) => setParamForm({ ...paramForm, name: e.target.value })}
-            size="xs"
-            required
-          />
-
-          <Select
-            label={t('workflow.properties.extractor.pType', 'Type')}
-            data={[
-              { value: 'string', label: 'string' },
-              { value: 'number', label: 'number' },
-              { value: 'boolean', label: 'boolean' },
-              { value: 'array', label: 'array' },
-              { value: 'object', label: 'object' },
-            ]}
-            value={paramForm.type}
-            onChange={(v) => setParamForm({ ...paramForm, type: v || 'string' })}
-            size="xs"
-          />
-
-          <TextInput
-            label={t('workflow.properties.extractor.pDesc', 'Description')}
-            placeholder="Describe the parameter for the extraction assistant..."
-            value={paramForm.description}
-            onChange={(e) => setParamForm({ ...paramForm, description: e.target.value })}
-            size="xs"
-          />
-
-          <Group justify="space-between" mt="xs">
-            <Text size="xs" fw={500}>
-              {t('workflow.properties.extractor.pRequired', 'Required')}
-            </Text>
-            <Switch
-              checked={paramForm.required}
-              onChange={(e) => setParamForm({ ...paramForm, required: e.currentTarget.checked })}
-              size="sm"
-            />
-          </Group>
-
-          <Group justify="flex-end" mt="md">
-            <Button size="xs" variant="subtle" color="gray" onClick={() => setEditModalOpen(false)}>
-              {t('workflow.common.cancel', 'Cancel')}
-            </Button>
-            <Button size="xs" color="blue" onClick={handleSaveParam}>
-              {t('workflow.common.save', 'Save')}
-            </Button>
-          </Group>
-        </Stack>
-      </Modal>
+        activeParamIndex={activeParamIndex}
+        paramForm={paramForm}
+        setParamForm={setParamForm}
+        onSave={handleSaveParam}
+      />
     </>
   );
 }

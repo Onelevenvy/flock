@@ -3,16 +3,16 @@ import { Box, Group, Badge, ActionIcon, Button, Stack, Select, Text, Divider } f
 import { IconTrash, IconPlus } from '@tabler/icons-react';
 import { useTranslation } from 'react-i18next';
 import { v4 as uuidv4 } from 'uuid';
-import { VariableTextInput } from '../VariableInput';
+import { VariableTextInput } from '@/pages/Workflow/components/PropertiesPanel/VariableInput';
 import { useWorkflowStore } from '@/store/workflowStore';
-import { getAvailableVariables } from '../helper';
+import { getAvailableVariables } from '@/pages/Workflow/components/PropertiesPanel/helper';
 
-export interface IfElseFieldsProps {
+export interface IfElseNodePropertiesProps {
   node: any;
   onDataChange: (nodeId: string, key: string, value: unknown) => void;
 }
 
-export function IfElseFields({ node, onDataChange }: IfElseFieldsProps) {
+export function IfElseNodeProperties({ node, onDataChange }: IfElseNodePropertiesProps) {
   const { t } = useTranslation();
   const cases = (node.data.cases as { case_id: string; logical_operator: string; conditions: any[] }[]) ?? [];
 

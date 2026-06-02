@@ -31,15 +31,17 @@ import { ToolsIcon } from '@/components/Common/Icons';
 import { useWorkflowStore } from '@/store/workflowStore';
 import { useWorkflowRuntime } from '@/hooks/useWorkflowRuntime';
 
-// 引入各节点专属文件夹中的配置组件
-import { LLMFields } from './LLM';
-import { AgentFields } from './Agent';
-import { ClassifierFields } from './Classifier';
-import { IfElseFields } from './IfElse';
-import { HumanFields } from './Human';
-import { StartFields } from './Start';
-import { ParameterExtractorFields } from './ParameterExtractor';
-import { PluginFields } from './Plugin';
+// 引入各节点专属文件夹中的配置组件 (从 nodes/ 目录下对应节点引入)
+import { StartNodeProperties } from '../../nodes/Start/StartNodeProperties';
+import { LLMNodeProperties } from '../../nodes/LLM/LLMNodeProperties';
+import { AgentNodeProperties } from '../../nodes/Agent/AgentNodeProperties';
+import { ClassifierNodeProperties } from '../../nodes/Classifier/ClassifierNodeProperties';
+import { IfElseNodeProperties } from '../../nodes/IfElse/IfElseNodeProperties';
+import { AnswerNodeProperties } from '../../nodes/Answer/AnswerNodeProperties';
+import { CodeNodeProperties } from '../../nodes/Code/CodeNodeProperties';
+import { HumanNodeProperties } from '../../nodes/Human/HumanNodeProperties';
+import { ParameterExtractorNodeProperties } from '../../nodes/ParameterExtractor/ParameterExtractorNodeProperties';
+import { PluginNodeProperties } from '../../nodes/Plugin/PluginNodeProperties';
 import { RetryTimeoutFields } from './RetryTimeoutFields';
 import { useMemo } from 'react';
 
@@ -371,7 +373,7 @@ function NodeSpecificFields({
 
   switch (type) {
     case 'start':
-      return <StartFields node={node} onDataChange={onDataChange} />;
+      return <StartNodeProperties node={node} onDataChange={onDataChange} />;
 
     case 'end':
       return (
@@ -382,7 +384,7 @@ function NodeSpecificFields({
 
     case 'llm':
       return (
-        <LLMFields
+        <LLMNodeProperties
           node={node}
           onDataChange={onDataChange}
           modelOptions={modelOptions}
@@ -392,7 +394,7 @@ function NodeSpecificFields({
 
     case 'agent':
       return (
-        <AgentFields
+        <AgentNodeProperties
           node={node}
           onDataChange={onDataChange}
           modelOptions={modelOptions}
@@ -404,7 +406,7 @@ function NodeSpecificFields({
 
     case 'classifier':
       return (
-        <ClassifierFields
+        <ClassifierNodeProperties
           node={node}
           onDataChange={onDataChange}
           modelOptions={modelOptions}
@@ -413,46 +415,17 @@ function NodeSpecificFields({
       );
 
     case 'ifelse':
-      return <IfElseFields node={node} onDataChange={onDataChange} />;
+      return <IfElseNodeProperties node={node} onDataChange={onDataChange} />;
 
     case 'answer':
-      return (
-        <VariableTextarea
-          label={t('workflow.properties.answer.template')}
-          placeholder="${llm.response}"
-          value={String(node.data.answer ?? '')}
-          currentNodeId={node.id}
-          onChange={(val) => onDataChange(node.id, 'answer', val)}
-          minRows={4}
-          size="xs"
-        />
-      );
+      return <AnswerNodeProperties node={node} onDataChange={onDataChange} />;
 
     case 'code':
-      return (
-        <>
-          <Select
-            label={t('workflow.properties.code.language')}
-            data={['python', 'javascript']}
-            value={String(node.data.language ?? 'python')}
-            onChange={(v) => onDataChange(node.id, 'language', v)}
-            size="xs"
-          />
-          <Textarea
-            label={t('workflow.properties.code.code')}
-            placeholder="# Your code here"
-            value={String(node.data.code ?? '')}
-            onChange={(e) => onDataChange(node.id, 'code', e.target.value)}
-            minRows={6}
-            size="xs"
-            styles={{ input: { fontFamily: 'var(--mantine-font-family-monospace)', fontSize: 12 } }}
-          />
-        </>
-      );
+      return <CodeNodeProperties node={node} onDataChange={onDataChange} />;
 
     case 'parameterExtractor':
       return (
-        <ParameterExtractorFields
+        <ParameterExtractorNodeProperties
           node={node}
           onDataChange={onDataChange}
           modelOptions={modelOptions}
@@ -462,7 +435,7 @@ function NodeSpecificFields({
 
     case 'human':
       return (
-        <HumanFields
+        <HumanNodeProperties
           node={node}
           onDataChange={onDataChange}
         />
@@ -470,7 +443,7 @@ function NodeSpecificFields({
 
     case 'plugin':
       return (
-        <PluginFields
+        <PluginNodeProperties
           node={node}
           onDataChange={onDataChange}
         />

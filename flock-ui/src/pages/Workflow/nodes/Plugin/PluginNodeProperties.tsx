@@ -9,15 +9,15 @@ import {
   Tooltip,
 } from '@mantine/core';
 import { useTranslation } from 'react-i18next';
-import { VariableTextInput } from '../VariableInput';
+import { VariableTextInput } from '@/pages/Workflow/components/PropertiesPanel/VariableInput';
 import { useAvailableTools } from '@/hooks/useAvailableTools';
 
-export interface PluginFieldsProps {
+export interface PluginNodePropertiesProps {
   node: any;
   onDataChange: (nodeId: string, key: string, value: unknown) => void;
 }
 
-export function PluginFields({ node, onDataChange }: PluginFieldsProps) {
+export function PluginNodeProperties({ node, onDataChange }: PluginNodePropertiesProps) {
   const { t } = useTranslation();
   const { tools, groupedOptions: toolOptions, loading: toolsLoading } = useAvailableTools();
 
@@ -77,8 +77,8 @@ export function PluginFields({ node, onDataChange }: PluginFieldsProps) {
       const displayLabel = toolObj ? toolObj.name : toolName;
       onDataChange(node.id, 'label', displayLabel);
 
-      // 根据工具的 schema properties 生成初始的默认 args
-      let defaultArgs: Record<string, string> = {};
+      // 根据工具的 schema properties 生成初始 of 默认 args
+      const defaultArgs: Record<string, string> = {};
       try {
         if (toolObj?.input_schema) {
           const parsed = JSON.parse(toolObj.input_schema);
@@ -87,7 +87,9 @@ export function PluginFields({ node, onDataChange }: PluginFieldsProps) {
             defaultArgs[key] = '';
           });
         }
-      } catch {}
+      } catch (err) {
+        console.warn('Failed to parse input schema for tool:', err);
+      }
 
       onDataChange(node.id, 'args', JSON.stringify(defaultArgs, null, 2));
     },
@@ -108,9 +110,7 @@ export function PluginFields({ node, onDataChange }: PluginFieldsProps) {
 
   return (
     <Stack gap="md" style={{ width: '100%' }}>
-      {/* 仅在节点尚未绑定任何工具时展示“Select Tool”下拉框。
-          如果已经绑定（通过 Tools 标签直接拖拽创建或已做出选择），则自动隐藏下拉选择，
-          直接向用户呈现工具 input 参数表单，杜绝多余的二次点选，体验完美契合 Dify！ */}
+      {/* 仅在节点尚未绑定任何工具时展示“Select Tool”下拉框。 */}
       {!selectedToolName && (
         <Select
           label={t('workflow.properties.plugin.tool', 'Select Tool')}

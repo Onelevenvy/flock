@@ -9,12 +9,12 @@ export interface HumanAction {
   enable_feedback?: boolean;
 }
 
-export interface HumanFieldsProps {
+export interface HumanNodePropertiesProps {
   node: any;
   onDataChange: (nodeId: string, key: string, value: unknown) => void;
 }
 
-export function HumanFields({ node, onDataChange }: HumanFieldsProps) {
+export function HumanNodeProperties({ node, onDataChange }: HumanNodePropertiesProps) {
   const { t } = useTranslation();
 
   // Submission types (default to true for Webapp)
