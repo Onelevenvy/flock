@@ -94,11 +94,19 @@ export function useWorkflowRuntime({
   // ── 追踪本轮已接收的消息（用于 node_done 补偿去重，不走 store 避免异步问题） ──
   const sentMessagesRef = useRef<WorkflowExecutionMessage[]>([]);
 
-  // ── 分发消息（同时写 store + 更新 ref） ──
+  // ── 分发消息（同时写 store + 更新 ref + 实时增量持久化至 SQLite） ──
   const dispatch = useCallback((tid: string, msg: WorkflowExecutionMessage) => {
     sentMessagesRef.current = [...sentMessagesRef.current, msg];
     store.appendThreadMessage(tid, msg);
-  }, [store]);
+
+    if (!isDebug) {
+      const allMsgs = [...(store.threadExecutions[tid]?.messages ?? []), msg];
+      invoke('save_workflow_messages', {
+        threadId: tid,
+        messagesJson: JSON.stringify(allMsgs),
+      }).catch((e: unknown) => console.warn('[WorkflowRuntime] Failed to auto-save workflow messages:', e));
+    }
+  }, [store, isDebug]);
 
   // ── 切换工作流时清理旧调试数据（仅调试模式） ──
   useEffect(() => {
