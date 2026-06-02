@@ -161,6 +161,17 @@ pub const MIGRATIONS: &[(i64, &str, &str)] = &[
         );
         CREATE INDEX IF NOT EXISTS idx_workflow_updated ON workflow(updated_at);
 
+        CREATE TABLE IF NOT EXISTS workflow_version (
+            id               TEXT PRIMARY KEY,
+            workflow_id      TEXT NOT NULL,
+            version          TEXT NOT NULL,
+            description      TEXT NOT NULL DEFAULT '',
+            config           TEXT NOT NULL DEFAULT '{}',
+            created_at       TEXT NOT NULL DEFAULT (datetime('now')),
+            FOREIGN KEY (workflow_id) REFERENCES workflow(id) ON DELETE CASCADE
+        );
+        CREATE INDEX IF NOT EXISTS idx_workflow_version_wf ON workflow_version(workflow_id);
+
         CREATE TABLE IF NOT EXISTS imported_skill (
             name        TEXT PRIMARY KEY,
             path        TEXT NOT NULL UNIQUE,

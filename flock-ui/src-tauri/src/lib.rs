@@ -165,6 +165,8 @@ pub fn run() {
             commands::create_workflow,
             commands::update_workflow,
             commands::publish_workflow,
+            commands::list_workflow_versions,
+            commands::rollback_workflow_version,
             commands::delete_workflow,
             commands::run_workflow,
             commands::stop_workflow,

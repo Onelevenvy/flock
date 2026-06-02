@@ -20,6 +20,17 @@ pub struct WorkflowRecord {
     pub updated_at: String,
 }
 
+/// A workflow version record stored in the database.
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct WorkflowVersionRecord {
+    pub id: String,
+    pub workflow_id: String,
+    pub version: String,
+    pub description: String,
+    pub config: JsonValue,
+    pub created_at: String,
+}
+
 /// Input for creating or updating a workflow.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct UpsertWorkflow {
@@ -131,8 +142,29 @@ impl DbManager {
     }
 
     /// Publish draft config as production version
-    pub async fn publish_workflow(&self, id: &str) -> anyhow::Result<WorkflowRecord> {
+    pub async fn publish_workflow(&self, id: &str, version: &str, description: Option<&str>) -> anyhow::Result<WorkflowRecord> {
         let now = chrono::Utc::now().to_rfc3339();
+        
+        let wf = self.get_workflow(id).await?
+            .ok_or_else(|| anyhow::anyhow!("Workflow '{}' not found for publish", id))?;
+
+        let version_id = format!("wfv_{}", uuid_like());
+        let desc = description.unwrap_or("");
+        let config_str = serde_json::to_string(&wf.config)?;
+
+        sqlx::query(
+            "INSERT INTO workflow_version (id, workflow_id, version, description, config, created_at)
+             VALUES (?1, ?2, ?3, ?4, ?5, ?6)"
+        )
+        .bind(&version_id)
+        .bind(id)
+        .bind(version)
+        .bind(desc)
+        .bind(&config_str)
+        .bind(&now)
+        .execute(self.pool())
+        .await?;
+
         let rows_affected = sqlx::query(
             "UPDATE workflow SET
                 published_config = config, updated_at = ?1
@@ -151,6 +183,65 @@ impl DbManager {
         self.get_workflow(id)
             .await?
             .ok_or_else(|| anyhow::anyhow!("Workflow '{}' not found after publish", id))
+    }
+
+    /// List all versions of a workflow, ordered by created_at DESC.
+    pub async fn list_workflow_versions(&self, workflow_id: &str) -> anyhow::Result<Vec<WorkflowVersionRecord>> {
+        let rows = sqlx::query(
+            "SELECT id, workflow_id, version, description, config, created_at
+             FROM workflow_version
+             WHERE workflow_id = ?1
+             ORDER BY created_at DESC",
+        )
+        .bind(workflow_id)
+        .fetch_all(self.pool())
+        .await?;
+
+        let mut result = Vec::with_capacity(rows.len());
+        for row in rows {
+            let config_json: String = row.get("config");
+            let config: JsonValue = serde_json::from_str(&config_json).unwrap_or(serde_json::json!({}));
+            result.push(WorkflowVersionRecord {
+                id: row.get("id"),
+                workflow_id: row.get("workflow_id"),
+                version: row.get("version"),
+                description: row.get("description"),
+                config,
+                created_at: row.get("created_at"),
+            });
+        }
+        Ok(result)
+    }
+
+    /// Rollback workflow draft config to a historical version config.
+    pub async fn rollback_workflow_version(&self, workflow_id: &str, version_id: &str) -> anyhow::Result<WorkflowRecord> {
+        let now = chrono::Utc::now().to_rfc3339();
+        
+        let row = sqlx::query(
+            "SELECT config FROM workflow_version WHERE id = ?1 AND workflow_id = ?2",
+        )
+        .bind(version_id)
+        .bind(workflow_id)
+        .fetch_optional(self.pool())
+        .await?;
+
+        let config_json = match row {
+            Some(r) => r.get::<String, _>("config"),
+            None => anyhow::bail!("Workflow version '{}' not found", version_id),
+        };
+
+        sqlx::query(
+            "UPDATE workflow SET config = ?1, updated_at = ?2 WHERE id = ?3"
+        )
+        .bind(&config_json)
+        .bind(&now)
+        .bind(workflow_id)
+        .execute(self.pool())
+        .await?;
+
+        self.get_workflow(workflow_id)
+            .await?
+            .ok_or_else(|| anyhow::anyhow!("Workflow '{}' not found after rollback", workflow_id))
     }
 
     /// Delete a workflow by ID.

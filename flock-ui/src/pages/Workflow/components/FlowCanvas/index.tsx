@@ -9,13 +9,14 @@ import ReactFlow, {
   useReactFlow,
 } from 'reactflow';
 import 'reactflow/dist/style.css';
-import { Box, Group, Button, ActionIcon, Tooltip, Divider, ThemeIcon, Badge, Text, Transition } from '@mantine/core';
+import { Box, Group, Button, ActionIcon, Tooltip, Divider, ThemeIcon, Badge, Text, Transition, Modal, TextInput, Textarea, Stack, Table, ScrollArea, Tabs } from '@mantine/core';
 import {
   IconArrowLeft,
   IconDeviceFloppy,
   IconPlayerPlay,
   IconRoute,
   IconKey,
+  IconHistory,
 } from '@tabler/icons-react';
 import { useTranslation } from 'react-i18next';
 import { workflowNodeTypes } from '@/pages/Workflow/nodes/nodeTypesMap';
@@ -160,9 +161,45 @@ export function FlowCanvas({ workflowId, workflowData, onBack }: FlowCanvasProps
     return () => clearTimeout(timer);
   }, [workflowId, nodes, edges, environmentVariables, workflowIcon]);
 
-  // ── Save (Now is Publish) ────────────────────────────────────────────────
-  const handlePublish = useCallback(async () => {
-    // 1. 先确保当前的最新配置已保存
+  // ── Publish States ──
+  const [publishModalOpen, setPublishModalOpen] = useState(false);
+  const [newVersion, setNewVersion] = useState('V1.0.0');
+  const [newDescription, setNewDescription] = useState('');
+  const [historyVersions, setHistoryVersions] = useState<any[]>([]);
+
+  // ── Load History Versions & Auto Increment ──
+  const loadHistoryVersions = useCallback(async () => {
+    try {
+      const res = await invoke<any[]>('list_workflow_versions', { workflowId });
+      setHistoryVersions(res || []);
+      if (res && res.length > 0) {
+        const latest = res[0].version;
+        const match = latest.match(/^[vV]?(\d+)\.(\d+)\.(\d+)$/);
+        if (match) {
+          const major = match[1];
+          const minor = match[2];
+          const patch = parseInt(match[3], 10) + 1;
+          setNewVersion(`V${major}.${minor}.${patch}`);
+        } else {
+          setNewVersion(latest + '_next');
+        }
+      } else {
+        setNewVersion('V1.0.0');
+      }
+    } catch (e) {
+      console.error("Failed to load workflow versions:", e);
+      setHistoryVersions([]);
+      setNewVersion('V1.0.0');
+    }
+  }, [workflowId]);
+
+  const handlePublishClick = useCallback(() => {
+    setPublishModalOpen(true);
+    loadHistoryVersions();
+  }, [loadHistoryVersions]);
+
+  // ── Submit Publish ──
+  const handlePublishSubmit = async () => {
     const metadata = {
       ...(workflowData.config.metadata ?? {}),
       env_vars: environmentVariables,
@@ -177,12 +214,61 @@ export function FlowCanvas({ workflowId, workflowData, onBack }: FlowCanvasProps
         config: { nodes, edges, metadata },
       },
     });
-    // 2. 调用后端发布指令
     try {
-      await invoke('publish_workflow', { id: workflowId });
+      await invoke('publish_workflow', {
+        id: workflowId,
+        version: newVersion,
+        description: newDescription || null,
+      });
       setDirty(false);
+      setPublishModalOpen(false);
+      setNewDescription('');
     } catch (e) {
       console.error("Publish workflow failed:", e);
+    }
+  };
+
+  // ── Rollback to History Version ──
+  const handleRollback = useCallback(async (versionId: string) => {
+    try {
+      const updatedWf = await invoke<any>('rollback_workflow_version', {
+        workflowId,
+        versionId,
+      });
+      if (updatedWf && updatedWf.config) {
+        useWorkflowStore.getState().loadWorkflowConfig(updatedWf.config);
+      }
+      setPublishModalOpen(false);
+    } catch (e) {
+      console.error("Rollback failed:", e);
+    }
+  }, [workflowId]);
+
+  // ── Silent Auto-Publish on automatic execution ──
+  const silentPublish = useCallback(async () => {
+    const metadata = {
+      ...(workflowData.config.metadata ?? {}),
+      env_vars: environmentVariables,
+      icon: workflowIcon,
+    };
+    await updateMutation.mutateAsync({
+      id: workflowId,
+      input: {
+        name: workflowData.name,
+        description: workflowData.description,
+        is_active: workflowData.is_active,
+        config: { nodes, edges, metadata },
+      },
+    });
+    try {
+      await invoke('publish_workflow', {
+        id: workflowId,
+        version: 'V0.0.0-auto',
+        description: 'Auto-publish on start',
+      });
+      setDirty(false);
+    } catch (e) {
+      console.error("Silent publish workflow failed:", e);
     }
   }, [workflowId, workflowData, nodes, edges, environmentVariables, workflowIcon, updateMutation, setDirty]);
 
@@ -191,7 +277,7 @@ export function FlowCanvas({ workflowId, workflowData, onBack }: FlowCanvasProps
     if (pendingStartQuery && workflowId) {
       const runPending = async () => {
         if (isDirty) {
-          await handlePublish();
+          await silentPublish();
         }
         setShowExecution(true);
         startWorkflow(JSON.stringify({ query: pendingStartQuery }));
@@ -199,7 +285,7 @@ export function FlowCanvas({ workflowId, workflowData, onBack }: FlowCanvasProps
       };
       runPending();
     }
-  }, [pendingStartQuery, workflowId, isDirty, handlePublish, startWorkflow, setPendingStartQuery]);
+  }, [pendingStartQuery, workflowId, isDirty, silentPublish, startWorkflow, setPendingStartQuery]);
 
   // ── Selected node ───────────────────────────────────────────────────────
   const selectedNode = useMemo(
@@ -306,13 +392,8 @@ export function FlowCanvas({ workflowId, workflowData, onBack }: FlowCanvasProps
             size="xs"
             leftSection={<IconDeviceFloppy size={13} />}
             loading={updateMutation.isPending}
-            onClick={handlePublish}
-            disabled={!isDirty}
-            style={
-              isDirty
-                ? { background: 'var(--flock-accent)', boxShadow: '0 2px 8px rgba(21,90,239,0.2)' }
-                : undefined
-            }
+            onClick={handlePublishClick}
+            style={{ background: 'var(--flock-accent)', boxShadow: '0 2px 8px rgba(21,90,239,0.2)' }}
             color="blue"
           >
             {t('workflow.publish', 'Publish')}
@@ -421,7 +502,7 @@ export function FlowCanvas({ workflowId, workflowData, onBack }: FlowCanvasProps
             onClose={() => setShowExecution(false)}
             startWorkflow={async (input) => {
               if (isDirty) {
-                await handleSave();
+                await silentPublish();
               }
               await startWorkflow(input);
             }}
@@ -439,6 +520,99 @@ export function FlowCanvas({ workflowId, workflowData, onBack }: FlowCanvasProps
         onClose={closeMenu}
         onAddNode={handleInsertNode}
       />
+
+      {/* ── Publish & Version Management Modal ────────────────────────── */}
+      <Modal
+        opened={publishModalOpen}
+        onClose={() => setPublishModalOpen(false)}
+        title={t('workflow.version_management', 'Version Management')}
+        size="lg"
+      >
+        <Tabs defaultValue="publish">
+          <Tabs.List>
+            <Tabs.Tab value="publish">{t('workflow.publish_new', 'Publish New Version')}</Tabs.Tab>
+            <Tabs.Tab value="history" leftSection={<IconHistory size={14} />}>
+              {t('workflow.version_history', 'Version History')}
+            </Tabs.Tab>
+          </Tabs.List>
+
+          <Tabs.Panel value="publish" pt="md">
+            <Stack gap="md">
+              <TextInput
+                label={t('workflow.version_number', 'Version Number')}
+                placeholder="e.g. V1.0.0"
+                value={newVersion}
+                onChange={(e) => setNewVersion(e.currentTarget.value)}
+                required
+              />
+              <Textarea
+                label={t('workflow.publish_description', 'Publish Description (Optional)')}
+                placeholder={t('workflow.publish_description_placeholder', 'Enter what changed in this version...')}
+                value={newDescription}
+                onChange={(e) => setNewDescription(e.currentTarget.value)}
+                rows={3}
+              />
+              <Group justify="flex-end" mt="md">
+                <Button variant="default" onClick={() => setPublishModalOpen(false)}>
+                  {t('common.cancel', 'Cancel')}
+                </Button>
+                <Button onClick={handlePublishSubmit} style={{ background: 'var(--flock-accent)' }}>
+                  {t('workflow.publish', 'Publish')}
+                </Button>
+              </Group>
+            </Stack>
+          </Tabs.Panel>
+
+          <Tabs.Panel value="history" pt="md">
+            <ScrollArea h={300} offsetScrollbars>
+              {historyVersions.length === 0 ? (
+                <Text c="dimmed" size="sm" ta="center" py="xl">
+                  {t('workflow.no_versions', 'No published versions yet.')}
+                </Text>
+              ) : (
+                <Table variant="simple" verticalSpacing="sm">
+                  <Table.Thead>
+                    <Table.Tr>
+                      <Table.Th>{t('workflow.version', 'Version')}</Table.Th>
+                      <Table.Th>{t('workflow.description', 'Description')}</Table.Th>
+                      <Table.Th>{t('workflow.published_at', 'Published At')}</Table.Th>
+                      <Table.Th style={{ width: 100 }}></Table.Th>
+                    </Table.Tr>
+                  </Table.Thead>
+                  <Table.Tbody>
+                    {historyVersions.map((v) => (
+                      <Table.Tr key={v.id}>
+                        <Table.Td>
+                          <Badge variant="light">{v.version}</Badge>
+                        </Table.Td>
+                        <Table.Td>
+                          <Text size="sm" style={{ wordBreak: 'break-all' }}>
+                            {v.description || '-'}
+                          </Text>
+                        </Table.Td>
+                        <Table.Td>
+                          <Text size="xs" c="dimmed">
+                            {new Date(v.created_at).toLocaleString()}
+                          </Text>
+                        </Table.Td>
+                        <Table.Td>
+                          <Button
+                            size="xs"
+                            variant="light"
+                            onClick={() => handleRollback(v.id)}
+                          >
+                            {t('workflow.rollback', 'Rollback')}
+                          </Button>
+                        </Table.Td>
+                      </Table.Tr>
+                    ))}
+                  </Table.Tbody>
+                </Table>
+              )}
+            </ScrollArea>
+          </Tabs.Panel>
+        </Tabs>
+      </Modal>
     </Box>
   );
 }

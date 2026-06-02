@@ -1,6 +1,6 @@
 use tauri::State;
 use crate::SharedDbManager;
-use flock_core::db::{UpsertWorkflow, WorkflowRecord};
+use flock_core::db::{UpsertWorkflow, WorkflowRecord, WorkflowVersionRecord};
 
 /// 列出所有工作流
 #[tauri::command]
@@ -54,6 +54,27 @@ pub async fn delete_workflow(
 pub async fn publish_workflow(
     db: State<'_, SharedDbManager>,
     id: String,
+    version: String,
+    description: Option<String>,
 ) -> Result<WorkflowRecord, String> {
-    db.publish_workflow(&id).await.map_err(|e| e.to_string())
+    db.publish_workflow(&id, &version, description.as_deref()).await.map_err(|e| e.to_string())
+}
+
+/// 获取某个工作流的所有历史版本
+#[tauri::command]
+pub async fn list_workflow_versions(
+    db: State<'_, SharedDbManager>,
+    workflow_id: String,
+) -> Result<Vec<WorkflowVersionRecord>, String> {
+    db.list_workflow_versions(&workflow_id).await.map_err(|e| e.to_string())
+}
+
+/// 将当前草稿配置回退到历史版本配置
+#[tauri::command]
+pub async fn rollback_workflow_version(
+    db: State<'_, SharedDbManager>,
+    workflow_id: String,
+    version_id: String,
+) -> Result<WorkflowRecord, String> {
+    db.rollback_workflow_version(&workflow_id, &version_id).await.map_err(|e| e.to_string())
 }
