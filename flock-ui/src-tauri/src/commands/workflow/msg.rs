@@ -58,6 +58,63 @@ pub async fn load_workflow_messages(
             if v.get("__wf_native__").and_then(|b| b.as_bool()) == Some(true) {
                 return Ok(v.get("msgs").cloned());
             }
+
+            // 否则是标准的 AI 消息格式，我们将其映射转换为工作流原生消息格式
+            if let Some(arr) = v.as_array() {
+                let mut wf_msgs = Vec::new();
+                for item in arr {
+                    let role = item.get("role").and_then(|r| r.as_str()).unwrap_or("");
+                    let timestamp_str = item.get("timestamp").and_then(|t| t.as_str()).unwrap_or("");
+                    let timestamp_ms = chrono::DateTime::parse_from_rfc3339(timestamp_str)
+                        .map(|dt| dt.timestamp_millis())
+                        .unwrap_or_else(|_| chrono::Local::now().timestamp_millis());
+
+                    if role == "user" {
+                        let mut text_content = String::new();
+                        if let Some(content_arr) = item.get("content").and_then(|c| c.as_array()) {
+                            for block in content_arr {
+                                if block.get("type").and_then(|t| t.as_str()) == Some("text") {
+                                    if let Some(t) = block.get("text").and_then(|t| t.as_str()) {
+                                        text_content.push_str(t);
+                                    }
+                                }
+                            }
+                        }
+                        wf_msgs.push(serde_json::json!({
+                            "type": "user",
+                            "content": text_content,
+                            "timestamp": timestamp_ms
+                        }));
+                    } else if role == "assistant" {
+                        if let Some(content_arr) = item.get("content").and_then(|c| c.as_array()) {
+                            for block in content_arr {
+                                let block_type = block.get("type").and_then(|t| t.as_str()).unwrap_or("");
+                                if block_type == "thinking" {
+                                    if let Some(thinking_text) = block.get("thinking").and_then(|t| t.as_str()) {
+                                        wf_msgs.push(serde_json::json!({
+                                            "type": "thinking",
+                                            "content": thinking_text,
+                                            "timestamp": timestamp_ms
+                                        }));
+                                    }
+                                } else if block_type == "text" {
+                                    if let Some(text_content) = block.get("text").and_then(|t| t.as_str()) {
+                                        wf_msgs.push(serde_json::json!({
+                                            "type": "text_delta",
+                                            "content": text_content,
+                                            "timestamp": timestamp_ms
+                                        }));
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+
+                if !wf_msgs.is_empty() {
+                    return Ok(Some(serde_json::Value::Array(wf_msgs)));
+                }
+            }
         }
     }
     Ok(None)

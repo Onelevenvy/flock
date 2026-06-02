@@ -92,8 +92,23 @@ pub async fn set_app_config(
 pub async fn test_sandbox_connection(
     db: State<'_, SharedDbManager>,
     api_url: String,
-    api_key: String,
+    mut api_key: String,
 ) -> Result<String, String> {
+    if api_key == "••••••••" {
+        let old_sandbox: Option<flock_core::config::settings::SandboxConfig> = db.get_config("sandbox").await;
+        if let Some(cfg) = old_sandbox {
+            if let (Some(ct), Some(n)) = (cfg.api_key_encrypted, cfg.api_key_nonce) {
+                if let Ok(salt) = db.get_or_create_salt().await {
+                    if let Ok(decrypted) = flock_core::crypto::decrypt_value(&ct, &n, &salt) {
+                        api_key = decrypted;
+                    }
+                }
+            } else if let Some(key) = cfg.api_key {
+                api_key = key;
+            }
+        }
+    }
+
     let client = reqwest::Client::new();
     let base = flock_tools::daytona::get_api_base(&api_url);
     let url = format!("{}/api/sandbox", base);

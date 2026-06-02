@@ -15,7 +15,8 @@ export interface UpsertCronJobInput {
   execution_mode: string;
   prompt: string;
   workspace_id: string;
-  assistant_id: string;
+  assistant_id?: string | null;
+  workflow_id?: string | null;
 }
 
 import { useTranslation } from 'react-i18next';
@@ -136,6 +137,7 @@ export function useRunCronJobNowMutation() {
       // 延迟刷新，让后台启动有一点时间
       setTimeout(() => {
         queryClient.invalidateQueries({ queryKey: ['cron_jobs'] });
+        queryClient.invalidateQueries({ queryKey: ['conversations'] });
       }, 1500);
     },
   });

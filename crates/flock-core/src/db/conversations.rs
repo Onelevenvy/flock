@@ -13,6 +13,7 @@ pub struct ConversationInfo {
     pub updated_at: u64,
     pub model: Option<String>,
     pub message_count: usize,
+    pub assistant_id: Option<String>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -38,7 +39,7 @@ impl DbManager {
     /// Filters by workspace_id (preferred) or cwd (fallback for legacy data).
     pub async fn list_workspace_sessions(&self, workspace_id: &str, workspace_path: &str) -> anyhow::Result<Vec<ConversationInfo>> {
         let rows = sqlx::query(
-            "SELECT thread_id, model, summary, msg_count, updated_at, workspace_id
+            "SELECT thread_id, model, summary, msg_count, updated_at, workspace_id, assistant_id
              FROM session_metadata
              WHERE workspace_id = ?1 OR (workspace_id = '' AND cwd = ?2)
              ORDER BY updated_at DESC",
@@ -74,6 +75,7 @@ impl DbManager {
                 updated_at,
                 model: row.try_get::<String, _>("model").ok(),
                 message_count: msg_count as usize,
+                assistant_id: row.try_get::<String, _>("assistant_id").ok(),
             });
         }
 
@@ -85,6 +87,7 @@ impl DbManager {
         &self,
         workspace_id: &str,
         title: &str,
+        assistant_id: Option<String>,
     ) -> anyhow::Result<ConversationInfo> {
         let now = chrono::Utc::now();
         let now_str = now.to_rfc3339();
@@ -99,13 +102,14 @@ impl DbManager {
 
         sqlx::query(
             "INSERT INTO session_metadata
-             (thread_id, provider, cwd, model, summary, messages, msg_count, created_at, updated_at, workspace_id)
-             VALUES (?1, '', '', '', ?2, '[]', 0, ?3, ?3, ?4)",
+             (thread_id, provider, cwd, model, summary, messages, msg_count, created_at, updated_at, workspace_id, assistant_id)
+             VALUES (?1, '', '', '', ?2, '[]', 0, ?3, ?3, ?4, ?5)",
         )
         .bind(&id)
         .bind(&display_title)
         .bind(&now_str)
         .bind(workspace_id)
+        .bind(&assistant_id)
         .execute(self.pool())
         .await?;
 
@@ -117,6 +121,7 @@ impl DbManager {
             updated_at: now_secs,
             model: None,
             message_count: 0,
+            assistant_id,
         })
     }
 

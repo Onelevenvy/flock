@@ -2,6 +2,7 @@ import { useEffect, useRef } from 'react';
 import { listen, UnlistenFn } from '@tauri-apps/api/event';
 import { useAgentStore } from '@/store/agentStore';
 import { ProtocolEvent } from '@/types/protocol';
+import { useQueryClient } from '@tanstack/react-query';
 
 /**
  * 监听 Tauri 事件流，将 Agent 发来的 JSON 事件解析后分发到 store
@@ -11,6 +12,7 @@ export function useEventStream() {
   const handleEvent = useAgentStore((s) => s.handleEvent);
   const setStatus = useAgentStore((s) => s.setStatus);
   const setError = useAgentStore((s) => s.setError);
+  const queryClient = useQueryClient();
 
   // 用 ref 存 unlisten 函数，避免闭包捕获过期值
   const unlistenRefs = useRef<UnlistenFn[]>([]);
@@ -125,14 +127,21 @@ export function useEventStream() {
           }
         });
 
+        const cronUnlisten = await listen<string>('cron-job-updated', () => {
+          if (cancelled) return;
+          queryClient.invalidateQueries({ queryKey: ['cron_jobs'] });
+          queryClient.invalidateQueries({ queryKey: ['conversations'] });
+        });
+
         if (!cancelled) {
-          unlistenRefs.current = [agentUnlisten, stoppedUnlisten, stderrUnlisten, workflowUnlisten];
+          unlistenRefs.current = [agentUnlisten, stoppedUnlisten, stderrUnlisten, workflowUnlisten, cronUnlisten];
         } else {
           // 如果组件已经卸载，立刻清理
           agentUnlisten();
           stoppedUnlisten();
           stderrUnlisten();
           workflowUnlisten();
+          cronUnlisten();
         }
       } catch (e) {
         // 在非 Tauri 环境（如浏览器 dev）下忽略

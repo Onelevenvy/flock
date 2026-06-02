@@ -56,6 +56,7 @@ pub const MIGRATIONS: &[(i64, &str, &str)] = &[
             summary      TEXT NOT NULL DEFAULT '',
             messages     TEXT NOT NULL DEFAULT '[]',
             msg_count    INTEGER NOT NULL DEFAULT 0,
+            assistant_id TEXT,
             created_at   TEXT NOT NULL,
             updated_at   TEXT NOT NULL
         );
@@ -135,7 +136,8 @@ pub const MIGRATIONS: &[(i64, &str, &str)] = &[
             execution_mode      TEXT NOT NULL DEFAULT 'new_conversation',
             prompt              TEXT NOT NULL,
             workspace_id        TEXT NOT NULL,
-            assistant_id        TEXT NOT NULL,
+            assistant_id        TEXT,
+            workflow_id         TEXT,
             next_run_at         INTEGER,
             last_run_at         INTEGER,
             last_status         TEXT NOT NULL DEFAULT 'ok',

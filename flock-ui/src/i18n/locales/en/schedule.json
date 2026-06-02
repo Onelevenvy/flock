@@ -81,5 +81,10 @@
   "updatedMsg": "Task configuration saved",
   "created": "Created",
   "createdMsg": "Task created successfully",
-  "operationFail": "Operation Failed"
+  "operationFail": "Operation Failed",
+  "targetType": "Execution Type",
+  "targetAssistant": "AI Assistant",
+  "targetWorkflow": "Workflow",
+  "workflow": "Workflow",
+  "selectWorkflow": "Please select a workflow"
 }

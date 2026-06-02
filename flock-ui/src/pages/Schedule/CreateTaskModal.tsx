@@ -14,6 +14,7 @@ import {
   Tooltip,
   UnstyledButton,
   Radio,
+  SegmentedControl,
 } from '@mantine/core';
 import {
   IconCalendarTime,
@@ -144,14 +145,53 @@ export function CreateTaskModal({ opened, onClose, onSuccess, jobToEdit }: Creat
             styles={inputStyle}
           />
 
-          {/* 执行助手 (独立一行) */}
-          <Select
-            label={t('schedule.assistant')}
-            value={form.assistantId}
-            onChange={form.setAssistantId}
-            data={form.assistants.map(a => ({ value: a.id, label: `${a.icon} ${a.name}` }))}
-            styles={inputStyle}
-          />
+          {/* 执行主体 (执行助手 / 工作流) */}
+          <Box>
+            <Text size="sm" fw={500} mb={4}>{t('schedule.targetType')}</Text>
+            <SegmentedControl
+              value={form.targetType}
+              onChange={v => form.setTargetType(v as any)}
+              data={[
+                { label: t('schedule.targetAssistant'), value: 'assistant' },
+                { label: t('schedule.targetWorkflow'), value: 'workflow' },
+              ]}
+              fullWidth
+              styles={{
+                root: {
+                  background: 'var(--flock-bg-surface)',
+                  border: '1px solid var(--flock-border-dim)',
+                  padding: 2,
+                },
+                indicator: {
+                  background: 'var(--flock-accent)',
+                },
+                label: {
+                  fontSize: 12,
+                  fontWeight: 500,
+                }
+              }}
+            />
+          </Box>
+
+          {/* 根据执行主体动态显示 */}
+          {form.targetType === 'assistant' ? (
+            <Select
+              label={t('schedule.assistant')}
+              value={form.assistantId}
+              onChange={form.setAssistantId}
+              data={form.assistants.map(a => ({ value: a.id, label: `${a.icon} ${a.name}` }))}
+              styles={inputStyle}
+            />
+          ) : (
+            <Select
+              label={t('schedule.workflow')}
+              placeholder={t('schedule.selectWorkflow')}
+              value={form.workflowId}
+              onChange={form.setWorkflowId}
+              data={form.workflows.map(w => ({ value: w.id, label: `⚡ ${w.name}` }))}
+              styles={inputStyle}
+            />
+          )}
 
           {/* 执行模式 (独立一行，改为 Radio 单选组) */}
           <Box>

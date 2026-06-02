@@ -11,4 +11,5 @@ export interface ConversationInfo {
   title: string;
   created_at: number;
   updated_at: number;
+  assistant_id?: string | null;
 }

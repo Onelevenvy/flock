@@ -99,6 +99,7 @@ pub async fn debug_node(
         thread_id: format!("debug:{}:{}", workflow_id, node_id),
         accumulated_text: Arc::new(Mutex::new(String::new())),
         accumulated_thinking: Arc::new(Mutex::new(String::new())),
+        events_log: Arc::new(Mutex::new(Vec::new())),
     });
     let tools = Arc::new(all_tools().registry);
 

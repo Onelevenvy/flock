@@ -3,7 +3,14 @@ use flock_core::config::settings::SandboxConfig;
 
 /// 获取当前启用的沙盒配置。若未启用或未配置，则返回 None。
 pub async fn get_sandbox_config(db: &DbManager) -> Option<SandboxConfig> {
-    let cfg: SandboxConfig = db.get_config("sandbox").await?;
+    let mut cfg: SandboxConfig = db.get_config("sandbox").await?;
+    if let (Some(ct), Some(n)) = (&cfg.api_key_encrypted, &cfg.api_key_nonce) {
+        if let Ok(salt) = db.get_or_create_salt().await {
+            if let Ok(decrypted) = flock_core::crypto::decrypt_value(ct, n, &salt) {
+                cfg.api_key = Some(decrypted);
+            }
+        }
+    }
     if cfg.enabled && cfg.api_url.is_some() && cfg.api_key.is_some() {
         Some(cfg)
     } else {
