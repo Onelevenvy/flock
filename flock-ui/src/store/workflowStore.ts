@@ -10,6 +10,7 @@ export interface WorkflowRecord {
   is_active: boolean;
   created_at: string;
   updated_at: string;
+  active_version?: string;
 }
 
 export interface WorkflowConfig {

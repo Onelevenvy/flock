@@ -48,7 +48,7 @@ pub use assistants::{AssistantRecord, UpsertAssistant};
 pub use cron::{CronJobRecord, UpsertCronJob};
 
 // Re-export workflow types.
-pub use workflow::{WorkflowRecord, UpsertWorkflow};
+pub use workflow::{WorkflowRecord, UpsertWorkflow, WorkflowVersionRecord};
 
 /// Database manager: handles migrations, config KV, and provider/model CRUD.
 pub struct DbManager {

@@ -34,33 +34,95 @@ pub fn make_parameter_extractor_node(
 
                     let input_val_template = node_data.get("input").and_then(|v| v.as_str()).unwrap_or("");
                     let input_val = interpolate_string_with_context(input_val_template, &state, &ctx, &ctx.workflow_id);
+                    if input_val.trim().is_empty() {
+                        let input_label = node_data.get("label").and_then(|v| v.as_str()).unwrap_or("Input parameter");
+                        return Err(format!("{} is required", input_label));
+                    }
                     let instruction = node_data.get("instruction").and_then(|v| v.as_str()).unwrap_or("");
 
                     let parameters_raw = node_data.get("parameters").and_then(|v| v.as_array());
-                    let mut params_desc = Vec::new();
+                    let mut schema_obj = serde_json::Map::new();
                     if let Some(arr) = parameters_raw {
                         for item in arr {
-                            let name = item.get("name").and_then(|v| v.as_str()).unwrap_or("");
-                            let ptype = item.get("type").and_then(|v| v.as_str()).unwrap_or("string");
-                            let desc = item.get("description").and_then(|v| v.as_str()).unwrap_or("");
-                            let req = item.get("required").and_then(|v| v.as_bool()).unwrap_or(false);
-                            params_desc.push(format!("- {}: type={}, description={}, required={}", name, ptype, desc, req));
+                            if let Some(name) = item.get("name").and_then(|v| v.as_str()) {
+                                if !name.is_empty() {
+                                    let mut param_details = serde_json::Map::new();
+                                    let ptype = item.get("type").and_then(|v| v.as_str()).unwrap_or("string");
+                                    let desc = item.get("description").and_then(|v| v.as_str()).unwrap_or("");
+                                    let req = item.get("required").and_then(|v| v.as_bool()).unwrap_or(false);
+                                    param_details.insert("type".to_string(), json!(ptype));
+                                    param_details.insert("required".to_string(), json!(req));
+                                    param_details.insert("description".to_string(), json!(desc));
+                                    schema_obj.insert(name.to_string(), json!(param_details));
+                                }
+                            }
                         }
                     }
+                    let parameter_schema_str = serde_json::to_string_pretty(&schema_obj).unwrap_or_default();
 
                     let sys_prompt = format!(
-                        "You are a structured extraction assistant.\n\
-                         Extract the parameters described below from the user's input text according to the instructions.\n\
-                         Respond with ONLY a single, valid JSON object containing the extracted key-value pairs, and nothing else. Do NOT wrap it in code block markdown or quotes.\n\n\
-                         Parameters to extract:\n{}\n\n\
-                         Instructions:\n{}",
-                        params_desc.join("\n"),
+                        "You are a helpful assistant tasked with extracting structured information based on specific criteria provided. Follow the guidelines below to ensure consistency and accuracy.\n\n\
+                         ### Task\n\
+                         Always extract parameters from the input text according to the provided schema. Your output must be a valid JSON object that matches the schema requirements.\n\n\
+                         ### Instructions\n\
+                         Some additional information is provided below. Always adhere to these instructions as closely as possible:\n\
+                         <instruction>\n\
+                         {}\n\
+                         </instruction>\n\n\
+                         Steps:\n\
+                         1. Review the input text carefully and understand the schema requirements\n\
+                         2. Extract relevant parameters based on the schema definition\n\
+                         3. Ensure extracted values match the required data types\n\
+                         4. Generate a well-formatted JSON output\n\
+                         5. Do not include any explanations or additional text in the output\n\
+                         6. Return ONLY the JSON object, no XML tags in the output\n\n\
+                         ### Structure\n\
+                         Here is the structure of the expected output, you MUST always follow this output structure:\n\
+                         {{\n\
+                             \"parameter_name1\": \"value matching schema type\",\n\
+                             \"parameter_name2\": \"value matching schema type\",\n\
+                             ...\n\
+                         }}\n\
+                         The output must:\n\
+                         1. Contain all required parameters defined in the schema\n\
+                         2. Match the exact data types specified in the schema\n\
+                         3. Be a valid JSON object without any additional text or XML tags\n\
+                         4. Follow the exact parameter names from the schema\n\n\
+                         ### Example Output\n\
+                         To illustrate, here are some examples of valid parameter extraction:\n\
+                         <example>\n\
+                         Input: {{\"text\": \"Book a flight from NYC to London on July 15th\", \"schema\": {{\"departure\": {{\"type\": \"string\", \"required\": true, \"description\": \"The departure city\"}}, \"destination\": {{\"type\": \"string\", \"required\": true, \"description\": \"The destination city\"}}, \"date\": {{\"type\": \"string\", \"required\": true, \"description\": \"The date of the flight\"}}}}}}\n\
+                         Output: {{\"departure\": \"NYC\", \"destination\": \"London\", \"date\": \"July 15th\"}}\n\n\
+                         Input: {{\"text\": \"Room temperature is 23.5°C with 45 percent humidity\", \"schema\": {{\"temperature\": {{\"type\": \"number\", \"required\": true, \"description\": \"The temperature in degrees Celsius\"}}, \"humidity\": {{\"type\": \"number\", \"required\": true, \"description\": \"The humidity in percent\"}}}}}}\n\
+                         Output: {{\"temperature\": 23.5, \"humidity\": 45}}\n\
+                         </example>\n\n\
+                         ### Final Output\n\
+                         Produce well-formatted JSON object without XML tags, strictly following the schema structure.",
                         instruction
+                    );
+
+                    let user_prompt = format!(
+                        "Extract structured parameters from the input text inside <text></text> XML tags according to the schema inside <schema></schema> XML tags.\n\n\
+                         ### Input Text\n\
+                         <text>\n\
+                         {}\n\
+                         </text>\n\n\
+                         ### Parameter Schema\n\
+                         <schema>\n\
+                         {}\n\
+                         </schema>\n\n\
+                         ### Task\n\
+                         1. Extract all required parameters from the input text\n\
+                         2. Format them according to the schema definition\n\
+                         3. Return only a valid JSON object containing the extracted parameters\n\
+                         4. Do not include any explanations or XML tags in the output",
+                        input_val,
+                        parameter_schema_str
                     );
 
                     let messages = vec![
                         LgMessage::system(sys_prompt),
-                        LgMessage::human(input_val),
+                        LgMessage::human(user_prompt),
                     ];
 
                     let model = resolve_model(&node_data, &ctx);

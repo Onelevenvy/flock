@@ -91,17 +91,28 @@ export function WorkflowCard({ workflow, onOpen, onRun }: WorkflowCardProps) {
               <IconRoute size={22} style={{ color: 'var(--flock-accent)' }} />
             </ThemeIcon>
           )}
-          <Menu shadow="md" position="bottom-end" withinPortal>
-            <Menu.Target>
-              <ActionIcon
-                size="sm"
-                variant="subtle"
-                color="gray"
-                onClick={(e) => e.stopPropagation()}
-              >
-                <IconDotsVertical size={14} />
-              </ActionIcon>
-            </Menu.Target>
+          <Group gap="xs">
+            {workflow.active_version ? (
+              <Badge color="blue" variant="light" size="xs">
+                {workflow.active_version}
+              </Badge>
+            ) : (
+              <Badge color="gray" variant="dot" size="xs">
+                {t('workflow.unpublished', 'Unpublished')}
+              </Badge>
+            )}
+
+            <Menu shadow="md" position="bottom-end" withinPortal>
+              <Menu.Target>
+                <ActionIcon
+                  size="sm"
+                  variant="subtle"
+                  color="gray"
+                  onClick={(e) => e.stopPropagation()}
+                >
+                  <IconDotsVertical size={14} />
+                </ActionIcon>
+              </Menu.Target>
             <Menu.Dropdown>
               <Menu.Item
                 leftSection={<IconEdit size={14} />}
@@ -125,6 +136,7 @@ export function WorkflowCard({ workflow, onOpen, onRun }: WorkflowCardProps) {
             </Menu.Dropdown>
           </Menu>
         </Group>
+      </Group>
 
         {/* Name */}
         <Text

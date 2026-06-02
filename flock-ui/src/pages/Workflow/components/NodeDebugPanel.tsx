@@ -35,20 +35,23 @@ export function NodeDebugPanel({ nodeId, onClose, onRunStart }: NodeDebugPanelPr
 
   const debugResult = debugResults[nodeId];
 
-  // Scan node data for any referenced variables `${variable_name}`
+  // Scan node data for any referenced variables `${variable_name}` or `{{variable_name}}`
   const [detectedVars, setDetectedVars] = useState<string[]>([]);
 
   useEffect(() => {
     if (!node?.data) return;
     const vars: string[] = [];
-    const regex = /\$\{([^}]+)\}/g;
+    const regex = /\{\{([^}]+)\}\}|\$\{([^}]+)\}/g;
 
     const scan = (value: any) => {
       if (typeof value === 'string') {
         let match;
         regex.lastIndex = 0;
         while ((match = regex.exec(value)) !== null) {
-          vars.push(match[1]);
+          const varName = match[1] || match[2];
+          if (varName) {
+            vars.push(varName.trim());
+          }
         }
       } else if (Array.isArray(value)) {
         value.forEach(scan);

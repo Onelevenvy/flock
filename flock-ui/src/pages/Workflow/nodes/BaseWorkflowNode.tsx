@@ -171,22 +171,7 @@ export function BaseWorkflowNode({ id, type, data, selected }: BaseWorkflowNodeP
         <Text size="xs" fw={700} style={{ color: 'var(--flock-text-bright)', flex: 1, fontSize: 12, lineHeight: 1.2 }} lineClamp={1}>
           {data.label || t(cfg.displayKey, { defaultValue: cfg.display })}
         </Text>
-        {canDebug && (
-          <Tooltip label={t('workflow.debugNode', 'Debug')} position="top" withArrow>
-            <ActionIcon
-              size="xs"
-              variant="subtle"
-              color="teal"
-              onClick={(e) => {
-                e.stopPropagation();
-                setDebugTarget({ nodeId: id });
-              }}
-              style={{ opacity: 0.6 }}
-            >
-              <IconBug size={10} />
-            </ActionIcon>
-          </Tooltip>
-        )}
+
       </Box>
 
       {/* Node Content/Summary */}

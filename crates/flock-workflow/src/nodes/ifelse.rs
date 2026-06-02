@@ -48,12 +48,42 @@ pub fn make_ifelse_node(
                                 let cmp_val = interpolate_string_with_context(cmp_val_template, &state, &ctx, &ctx.workflow_id);
 
                                 let cond_result = match cmp_op {
-                                    "equals" | "eq" | "==" => variable == cmp_val,
-                                    "not_equals" | "neq" | "!=" => variable != cmp_val,
+                                    "equal" | "equals" | "eq" | "==" | "is" => variable == cmp_val,
+                                    "notEqual" | "not_equal" | "not_equals" | "neq" | "!=" | "isNot" | "is_not" => variable != cmp_val,
                                     "contains" => variable.contains(&cmp_val),
-                                    "not_contains" => !variable.contains(&cmp_val),
+                                    "notContains" | "not_contains" => !variable.contains(&cmp_val),
+                                    "startWith" | "starts_with" | "startswith" => variable.starts_with(&cmp_val),
+                                    "endWith" | "ends_with" | "endswith" => variable.ends_with(&cmp_val),
                                     "empty" | "is_empty" => variable.trim().is_empty(),
-                                    "not_empty" | "is_not_empty" => !variable.trim().is_empty(),
+                                    "notEmpty" | "is_not_empty" | "not_empty" => !variable.trim().is_empty(),
+                                    "largerThan" | "larger_than" | ">" => {
+                                        if let (Ok(v), Ok(c)) = (variable.parse::<f64>(), cmp_val.parse::<f64>()) {
+                                            v > c
+                                        } else {
+                                            variable > cmp_val
+                                        }
+                                    }
+                                    "lessThan" | "less_than" | "<" => {
+                                        if let (Ok(v), Ok(c)) = (variable.parse::<f64>(), cmp_val.parse::<f64>()) {
+                                            v < c
+                                        } else {
+                                            variable < cmp_val
+                                        }
+                                    }
+                                    "largerThanOrEqual" | "larger_than_or_equal" | ">=" | "≥" => {
+                                        if let (Ok(v), Ok(c)) = (variable.parse::<f64>(), cmp_val.parse::<f64>()) {
+                                            v >= c
+                                        } else {
+                                            variable >= cmp_val
+                                        }
+                                    }
+                                    "lessThanOrEqual" | "less_than_or_equal" | "<=" | "≤" => {
+                                        if let (Ok(v), Ok(c)) = (variable.parse::<f64>(), cmp_val.parse::<f64>()) {
+                                            v <= c
+                                        } else {
+                                            variable <= cmp_val
+                                        }
+                                    }
                                     _ => false,
                                 };
 

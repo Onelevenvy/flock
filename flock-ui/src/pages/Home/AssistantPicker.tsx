@@ -45,7 +45,7 @@ export function AssistantPicker({
       const defaultAsst = allAssistants[0];
       onSelect('assistant', defaultAsst.id, defaultAsst);
     } else {
-      const defaultWf = workflows[0];
+      const defaultWf = workflows.filter(w => !!w.active_version)[0];
       if (defaultWf) {
         onSelect('workflow', defaultWf.id, defaultWf);
       } else {
@@ -57,7 +57,7 @@ export function AssistantPicker({
   // Determine current items list based on selectedType
   const currentItems = selectedType === 'assistant' 
     ? allAssistants.map(a => ({ id: a.id, name: a.name, icon: a.icon, raw: a }))
-    : workflows.map(w => ({ id: w.id, name: w.name, icon: '⚡', raw: w }));
+    : workflows.filter(w => !!w.active_version).map(w => ({ id: w.id, name: w.name, icon: '⚡', raw: w }));
 
   // Apply max-5 rule with ellipsis
   const getVisibleItems = (items: typeof currentItems, activeId: string) => {

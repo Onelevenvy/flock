@@ -33,7 +33,7 @@ export function useNodeInsertion(
     setMenuPortalPosition(null);
   }, []);
 
-  const handleInsertNode = useCallback((type: NodeType) => {
+  const handleInsertNode = useCallback((type: NodeType, toolName?: string) => {
     if (!insertMode) return;
 
     const sameTypeCount = nodes.filter((n) => n.type === type).length;
@@ -55,8 +55,9 @@ export function useNodeInsertion(
         type,
         position,
         data: {
-          label: `${nodeConfig[type].display} ${sameTypeCount + 1}`,
+          label: toolName || `${nodeConfig[type].display} ${sameTypeCount + 1}`,
           ...nodeConfig[type].initialData,
+          ...(toolName ? { tool: { name: toolName }, args: '' } : {}),
         },
       };
 
@@ -102,8 +103,9 @@ export function useNodeInsertion(
         type,
         position,
         data: {
-          label: `${nodeConfig[type].display} ${sameTypeCount + 1}`,
+          label: toolName || `${nodeConfig[type].display} ${sameTypeCount + 1}`,
           ...nodeConfig[type].initialData,
+          ...(toolName ? { tool: { name: toolName }, args: '' } : {}),
         },
       };
 

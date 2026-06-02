@@ -26,7 +26,7 @@ pub fn make_plugin_node(
 
             ctx.sink.emit_text_delta(&node_id, &format!("*🔧 正在调用插件 `{}`...*\n", tool_name));
 
-            let tool_args_json: JsonValue = serde_json::from_str(&interpolated_args).unwrap_or_else(|_| {
+            let mut tool_args_json: JsonValue = serde_json::from_str(&interpolated_args).unwrap_or_else(|_| {
                 // If not valid JSON, wrap it as a string
                 json!({ "query": interpolated_args })
             });

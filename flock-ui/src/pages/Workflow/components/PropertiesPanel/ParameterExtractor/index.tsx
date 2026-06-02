@@ -1,14 +1,47 @@
-import { TextInput, ActionIcon, Button, Group, Divider, Stack } from '@mantine/core';
+import React, { useState, useCallback } from 'react';
+import {
+  TextInput,
+  ActionIcon,
+  Button,
+  Group,
+  Stack,
+  Text,
+  Badge,
+  Modal,
+  Select,
+  Switch,
+  Card,
+  Tooltip,
+} from '@mantine/core';
 import { ModelSelect } from '@/components/Common/ModelSelect';
-import { IconTrash, IconPlus } from '@tabler/icons-react';
+import {
+  IconTrash,
+  IconPlus,
+  IconFileImport,
+  IconEdit,
+  IconCheck,
+  IconBraces,
+  IconCopy,
+  IconMaximize,
+} from '@tabler/icons-react';
 import { useTranslation } from 'react-i18next';
 import { VariableTextInput, VariableTextarea } from '@/pages/Workflow/components/PropertiesPanel/VariableInput';
+import { useAvailableTools } from '@/hooks/useAvailableTools';
+import { notifications } from '@mantine/notifications';
+import { ToolPickerPopover } from '@/components/Common/ToolManager/ToolPickerPopover';
 
 export interface ParameterExtractorFieldsProps {
   node: any;
   onDataChange: (nodeId: string, key: string, value: unknown) => void;
   modelOptions: any[];
   modelsLoading: boolean;
+}
+
+interface ExtractorParameter {
+  name: string;
+  type: string;
+  description: string;
+  required: boolean;
 }
 
 export function ParameterExtractorFields({
@@ -18,10 +51,169 @@ export function ParameterExtractorFields({
   modelsLoading,
 }: ParameterExtractorFieldsProps) {
   const { t } = useTranslation();
-  const parameters = (node.data.parameters as { name: string; type: string; description: string; required: boolean }[]) ?? [];
+  const { tools } = useAvailableTools();
+
+  const parameters = (node.data.parameters as ExtractorParameter[]) ?? [];
+
+  // 弹窗状态
+  const [editModalOpen, setEditModalOpen] = useState(false);
+  
+  // 当前正在编辑的参数 (新增时为 null)
+  const [activeParamIndex, setActiveParamIndex] = useState<number | null>(null);
+  const [paramForm, setParamForm] = useState<ExtractorParameter>({
+    name: '',
+    type: 'string',
+    description: '',
+    required: false,
+  });
+
+  // 打开新增参数 Modal
+  const handleOpenAdd = () => {
+    setActiveParamIndex(null);
+    setParamForm({
+      name: '',
+      type: 'string',
+      description: '',
+      required: false,
+    });
+    setEditModalOpen(true);
+  };
+
+  // 打开编辑参数 Modal
+  const handleOpenEdit = (index: number) => {
+    setActiveParamIndex(index);
+    setParamForm({ ...parameters[index] });
+    setEditModalOpen(true);
+  };
+
+  // 保存自定义参数 (新增/编辑)
+  const handleSaveParam = () => {
+    if (!paramForm.name.trim()) {
+      notifications.show({
+        title: t('workflow.properties.extractor.error', 'Validation Error'),
+        message: t('workflow.properties.extractor.nameRequired', 'Parameter name is required'),
+        color: 'red',
+      });
+      return;
+    }
+
+    const next = [...parameters];
+    if (activeParamIndex !== null) {
+      // 编辑
+      next[activeParamIndex] = paramForm;
+    } else {
+      // 新建，查重
+      if (parameters.some((p) => p.name === paramForm.name)) {
+        notifications.show({
+          title: t('workflow.properties.extractor.error', 'Validation Error'),
+          message: t('workflow.properties.extractor.duplicateName', 'Parameter name already exists'),
+          color: 'red',
+        });
+        return;
+      }
+      next.push(paramForm);
+    }
+
+    onDataChange(node.id, 'parameters', next);
+    setEditModalOpen(false);
+  };
+
+  // 删除参数
+  const handleRemoveParam = (index: number) => {
+    const next = parameters.filter((_, i) => i !== index);
+    onDataChange(node.id, 'parameters', next);
+  };
+
+  // 从选择的 Tool 自动导入参数解析
+  const handleImportFromToolPicker = (selectedNames: string[]) => {
+    if (selectedNames.length === 0) return;
+    const toolName = selectedNames[0];
+
+    const tool = tools.find((t) => t.name === toolName);
+    if (!tool) return;
+
+    try {
+      const schema = JSON.parse(tool.input_schema || '{}');
+      const properties = schema.properties || {};
+      const requiredList = Array.isArray(schema.required) ? schema.required : [];
+
+      const importedParams: ExtractorParameter[] = [];
+
+      Object.entries(properties).forEach(([key, val]: [string, any]) => {
+        let mappedType = 'string';
+        if (val.type === 'integer' || val.type === 'number') {
+          mappedType = 'number';
+        } else if (val.type === 'boolean') {
+          mappedType = 'boolean';
+        } else if (val.type === 'array') {
+          mappedType = 'array';
+        } else if (val.type === 'object') {
+          mappedType = 'object';
+        }
+
+        importedParams.push({
+          name: key,
+          type: mappedType,
+          description: val.description || '',
+          required: requiredList.includes(key),
+        });
+      });
+
+      if (importedParams.length === 0) {
+        notifications.show({
+          title: t('workflow.properties.extractor.import', 'Import Parameters'),
+          message: t('workflow.properties.extractor.noParamsFound', 'No parameters found in the tool schema'),
+          color: 'orange',
+        });
+        return;
+      }
+
+      // 合并旧参数与新导入参数（参数名排重）
+      const existingNames = parameters.map((p) => p.name);
+      const uniqueNewParams = importedParams.filter((p) => !existingNames.includes(p.name));
+
+      if (uniqueNewParams.length === 0) {
+        notifications.show({
+          title: t('workflow.properties.extractor.import', 'Import Parameters'),
+          message: t('workflow.properties.extractor.alreadyExists', 'All tool parameters already exist in the extractor'),
+          color: 'blue',
+        });
+      } else {
+        const next = [...parameters, ...uniqueNewParams];
+        onDataChange(node.id, 'parameters', next);
+        notifications.show({
+          title: t('workflow.properties.extractor.importSuccess', 'Import Success'),
+          message: t('workflow.properties.extractor.importedCount', 'Successfully imported {{count}} parameters', { count: uniqueNewParams.length }),
+          color: 'green',
+          icon: <IconCheck size={16} />,
+        });
+      }
+    } catch (e) {
+      console.error(e);
+      notifications.show({
+        title: t('workflow.properties.extractor.importError', 'Import Error'),
+        message: t('workflow.properties.extractor.parseFailed', 'Failed to parse tool input schema'),
+        color: 'red',
+      });
+    }
+  };
+
+  // 复制 Instruction 文本到剪切板
+  const handleCopyInstruction = () => {
+    navigator.clipboard.writeText(node.data.instruction || '');
+    notifications.show({
+      title: t('workflow.properties.extractor.copied', 'Copied'),
+      message: t('workflow.properties.extractor.copySuccess', 'Instruction copied to clipboard'),
+      color: 'teal',
+      icon: <IconCheck size={16} />,
+    });
+  };
+
+  const instructionLength = (node.data.instruction || '').length;
 
   return (
     <>
+      {/* 基础模型配置 */}
       <ModelSelect
         label={t('workflow.properties.llm.model')}
         placeholder={t('workflow.properties.llm.modelPlaceholder')}
@@ -33,65 +225,236 @@ export function ParameterExtractorFields({
         clearable
         size="xs"
       />
+
+      {/* 提取输入文本 */}
       <VariableTextInput
-        label={t('workflow.properties.extractor.input')}
-        placeholder=""
+        label={t('workflow.properties.extractor.input', 'INPUT VARIABLE')}
+        placeholder={t('workflow.properties.extractor.inputPlaceholder', 'Choose variable to extract from')}
         value={String(node.data.input ?? '')}
         currentNodeId={node.id}
         onChange={(val) => onDataChange(node.id, 'input', val)}
         size="xs"
       />
-      <VariableTextarea
-        label={t('workflow.properties.extractor.instruction')}
-        value={String(node.data.instruction ?? '')}
-        currentNodeId={node.id}
-        onChange={(val) => onDataChange(node.id, 'instruction', val)}
-        minRows={2}
-        size="xs"
-      />
-      <Divider label={t('workflow.properties.extractor.parameters')} labelPosition="center" />
-      <Stack gap={4}>
-        {parameters.map((p, i) => (
-          <Group key={i} gap={4} align="flex-start">
-            <Stack gap={2} style={{ flex: 1 }}>
-              <TextInput
-                placeholder={t('workflow.properties.extractor.paramName')}
-                value={p.name}
-                onChange={(e) => {
-                  const next = [...parameters];
-                  next[i] = { ...p, name: e.target.value };
-                  onDataChange(node.id, 'parameters', next);
-                }}
-                size="xs"
-              />
-            </Stack>
-            <ActionIcon
-              size="xs"
-              variant="subtle"
-              color="red"
-              mt={4}
-              onClick={() => {
-                onDataChange(node.id, 'parameters', parameters.filter((_, idx) => idx !== i));
+
+      {/* 参数管理区头部 */}
+      <Group justify="space-between" mt="md" mb="xs" align="center">
+        <Text size="xs" fw={700} style={{ color: 'var(--flock-text-bright)' }}>
+          {t('workflow.properties.extractor.parameters', 'EXTRACT PARAMETERS')}
+        </Text>
+        
+        <Group gap={6}>
+          {/* 从工具一键导入 */}
+          <ToolPickerPopover
+            value={[]}
+            onChange={handleImportFromToolPicker}
+            triggerLabel={t('workflow.properties.extractor.importFromTools', 'Import from tools')}
+          />
+
+          {/* 新增自定义参数 */}
+          <ActionIcon
+            size="26px"
+            radius="md"
+            variant="filled"
+            color="red"
+            onClick={handleOpenAdd}
+            styles={{
+              root: {
+                background: '#e02424',
+                '&:hover': {
+                  background: '#c81e1e',
+                }
+              }
+            }}
+          >
+            <IconPlus size={13} />
+          </ActionIcon>
+        </Group>
+      </Group>
+
+      {/* 参数列表渲染 (像素级还原 Dify 极简奢华卡片) */}
+      <Stack gap="xs" mb="md">
+        {parameters.length === 0 ? (
+          <Text size="xs" c="dimmed" ta="center" py="md" style={{ border: '1px dashed var(--flock-border-dim)', borderRadius: 8 }}>
+            {t('workflow.properties.extractor.noParams', 'Please add parameters or import from tools')}
+          </Text>
+        ) : (
+          parameters.map((p, i) => (
+            <Card
+              key={i}
+              padding="xs"
+              radius="md"
+              style={{
+                border: '1px solid var(--flock-border-subtle)',
+                background: 'var(--flock-bg-surface)',
+                boxShadow: 'none',
               }}
             >
-              <IconTrash size={12} />
-            </ActionIcon>
-          </Group>
-        ))}
-        <Button
-          size="xs"
-          variant="light"
-          leftSection={<IconPlus size={12} />}
-          onClick={() => {
-            onDataChange(node.id, 'parameters', [
-              ...parameters,
-              { name: '', type: 'string', description: '', required: false },
-            ]);
-          }}
-        >
-          {t('workflow.properties.extractor.addParam')}
-        </Button>
+              <Group justify="space-between" align="center" gap="xs">
+                {/* 扁平淡蓝色 (x) name String 标签组 */}
+                <Group gap={6}>
+                  <Text size="xs" fw={600} style={{ color: 'var(--flock-accent)', fontFamily: 'var(--mantine-font-family-monospace)' }}>
+                    (x)
+                  </Text>
+                  <Text size="xs" fw={700} style={{ color: 'var(--flock-text-bright)' }}>
+                    {p.name}
+                  </Text>
+                  <Text size="10px" c="dimmed" style={{ textTransform: 'capitalize', fontSize: 10 }}>
+                    {p.type}
+                  </Text>
+                  {p.required ? (
+                    <Badge size="xs" color="red" variant="light" style={{ fontSize: 8, height: 16, borderRadius: 4, fontWeight: 700 }}>
+                      REQUIRED
+                    </Badge>
+                  ) : (
+                    <Badge size="xs" color="gray" variant="outline" style={{ fontSize: 8, height: 16, borderRadius: 4, fontWeight: 500 }}>
+                      OPTIONAL
+                    </Badge>
+                  )}
+                </Group>
+
+                <Group gap={4}>
+                  <ActionIcon
+                    size="xs"
+                    variant="subtle"
+                    color="gray"
+                    onClick={() => handleOpenEdit(i)}
+                  >
+                    <IconEdit size={12} />
+                  </ActionIcon>
+                  <ActionIcon
+                    size="xs"
+                    variant="subtle"
+                    color="red"
+                    onClick={() => handleRemoveParam(i)}
+                  >
+                    <IconTrash size={12} />
+                  </ActionIcon>
+                </Group>
+              </Group>
+
+              {p.description && (
+                <Text size="11px" c="dimmed" mt={3} style={{ fontFamily: 'var(--mantine-font-family-monospace)', fontStyle: 'italic', paddingLeft: 18 }}>
+                  {p.description}
+                </Text>
+              )}
+            </Card>
+          ))
+        )}
       </Stack>
+
+      {/* 提取指令指示 (带右上角极客微型工具栏) */}
+      <Stack gap={4}>
+        <Group justify="space-between" align="center">
+          <Text size="xs" fw={700} style={{ color: 'var(--flock-text-bright)' }}>
+            {t('workflow.properties.extractor.instruction', 'INSTRUCTION')}
+          </Text>
+
+          {/* 右上角极客工具栏 */}
+          <Group gap={4} align="center">
+            <Text size="10px" c="dimmed" style={{ marginRight: 4, fontFamily: 'monospace' }}>
+              {instructionLength}
+            </Text>
+            
+            <Tooltip label={t('workflow.properties.extractor.insertVar', 'Insert Variable')} position="top">
+              <ActionIcon size="xs" variant="subtle" color="gray">
+                <IconBraces size={12} />
+              </ActionIcon>
+            </Tooltip>
+
+            <Tooltip label={t('workflow.properties.extractor.copy', 'Copy')} position="top">
+              <ActionIcon size="xs" variant="subtle" color="gray" onClick={handleCopyInstruction}>
+                <IconCopy size={12} />
+              </ActionIcon>
+            </Tooltip>
+
+            <Tooltip label={t('workflow.properties.extractor.maximize', 'Maximize')} position="top">
+              <ActionIcon size="xs" variant="subtle" color="gray">
+                <IconMaximize size={12} />
+              </ActionIcon>
+            </Tooltip>
+          </Group>
+        </Group>
+
+        <VariableTextarea
+          placeholder={t('workflow.properties.extractor.instructionPlaceholder', 'Write your prompt word here, enter \'{\' to insert a var...')}
+          value={String(node.data.instruction ?? '')}
+          currentNodeId={node.id}
+          onChange={(val) => onDataChange(node.id, 'instruction', val)}
+          minRows={3}
+          size="xs"
+        />
+      </Stack>
+
+      {/* -------------------- 弹窗：自定义参数创建/编辑 -------------------- */}
+      <Modal
+        opened={editModalOpen}
+        onClose={() => setEditModalOpen(false)}
+        title={
+          activeParamIndex !== null
+            ? t('workflow.properties.extractor.editParam', 'Edit Parameter')
+            : t('workflow.properties.extractor.addParam', 'Add Parameter')
+        }
+        size="sm"
+        centered
+        styles={{
+          header: { borderBottom: '1px solid var(--flock-border-subtle)', minHeight: 48 },
+          body: { paddingTop: 16 }
+        }}
+      >
+        <Stack gap="sm">
+          <TextInput
+            label={t('workflow.properties.extractor.pName', 'Parameter Name')}
+            placeholder="e.g. city"
+            value={paramForm.name}
+            disabled={activeParamIndex !== null}
+            onChange={(e) => setParamForm({ ...paramForm, name: e.target.value })}
+            size="xs"
+            required
+          />
+
+          <Select
+            label={t('workflow.properties.extractor.pType', 'Type')}
+            data={[
+              { value: 'string', label: 'string' },
+              { value: 'number', label: 'number' },
+              { value: 'boolean', label: 'boolean' },
+              { value: 'array', label: 'array' },
+              { value: 'object', label: 'object' },
+            ]}
+            value={paramForm.type}
+            onChange={(v) => setParamForm({ ...paramForm, type: v || 'string' })}
+            size="xs"
+          />
+
+          <TextInput
+            label={t('workflow.properties.extractor.pDesc', 'Description')}
+            placeholder="Describe the parameter for the extraction assistant..."
+            value={paramForm.description}
+            onChange={(e) => setParamForm({ ...paramForm, description: e.target.value })}
+            size="xs"
+          />
+
+          <Group justify="space-between" mt="xs">
+            <Text size="xs" fw={500}>
+              {t('workflow.properties.extractor.pRequired', 'Required')}
+            </Text>
+            <Switch
+              checked={paramForm.required}
+              onChange={(e) => setParamForm({ ...paramForm, required: e.currentTarget.checked })}
+              size="sm"
+            />
+          </Group>
+
+          <Group justify="flex-end" mt="md">
+            <Button size="xs" variant="subtle" color="gray" onClick={() => setEditModalOpen(false)}>
+              {t('workflow.common.cancel', 'Cancel')}
+            </Button>
+            <Button size="xs" color="blue" onClick={handleSaveParam}>
+              {t('workflow.common.save', 'Save')}
+            </Button>
+          </Group>
+        </Stack>
+      </Modal>
     </>
   );
 }
