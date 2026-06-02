@@ -11,8 +11,9 @@ import {
   Stack,
   Divider,
   ThemeIcon,
+  Tooltip,
 } from '@mantine/core';
-import { IconX } from '@tabler/icons-react';
+import { IconX, IconPlayerPlay } from '@tabler/icons-react';
 import { useTranslation } from 'react-i18next';
 import { nodeConfig, type NodeType } from '@/pages/Workflow/nodeConfig';
 import { useAvailableModels } from '@/hooks/useAvailableModels';
@@ -22,6 +23,7 @@ import { useAvailableTools } from '@/hooks/useAvailableTools';
 import { VariableTextInput, VariableTextarea } from './VariableInput';
 
 import { ToolsIcon } from '@/components/Common/Icons';
+import { useWorkflowStore } from '@/store/workflowStore';
 
 // 引入各节点专属文件夹中的配置组件
 import { LLMFields } from './LLM';
@@ -63,6 +65,8 @@ export function PropertiesPanel({ node, onClose, onDataChange }: PropertiesPanel
     return '';
   }, [type, node.data.tool, availableTools, availableProviders]);
 
+  const setDebugTarget = useWorkflowStore((s) => s.setDebugTarget);
+
   if (!cfg) return null;
   const Icon = cfg.icon;
 
@@ -103,9 +107,23 @@ export function PropertiesPanel({ node, onClose, onDataChange }: PropertiesPanel
             <Text size="xs" c="dimmed" style={{ fontFamily: 'var(--mantine-font-family-monospace)' }}>{node.id}</Text>
           </Box>
         </Group>
-        <ActionIcon variant="subtle" color="gray" onClick={onClose} className="hover-rotate-close">
-          <IconX size={16} />
-        </ActionIcon>
+        
+        <Group gap={6} align="center">
+          {type !== 'start' && type !== 'end' && (
+            <Tooltip label={t('workflow.debugNode', 'Debug')} position="top" withArrow>
+              <ActionIcon
+                variant="subtle"
+                color="teal"
+                onClick={() => setDebugTarget({ nodeId: node.id })}
+              >
+                <IconPlayerPlay size={16} stroke={2.2} />
+              </ActionIcon>
+            </Tooltip>
+          )}
+          <ActionIcon variant="subtle" color="gray" onClick={onClose} className="hover-rotate-close">
+            <IconX size={16} />
+          </ActionIcon>
+        </Group>
       </Group>
 
       {/* Scrollable form */}
