@@ -209,6 +209,18 @@ export function CronJobCard({
               {t('schedule.lastRun')} {formatTime(job.last_run_at)}
             </Text>
           )}
+          {job.last_status === 'running' && (
+            <Group gap={3}>
+              <Box style={{ width: 6, height: 6, borderRadius: '50%', background: 'var(--flock-accent)', animation: 'pulse 1.8s infinite' }} />
+              <Text style={{ fontSize: 10, color: 'var(--flock-accent)' }}>{t('schedule.running', '运行中')}</Text>
+            </Group>
+          )}
+          {job.last_status === 'ok' && job.last_run_at && (
+            <Group gap={3}>
+              <Box style={{ width: 6, height: 6, borderRadius: '50%', background: '#0ca678' }} />
+              <Text style={{ fontSize: 10, color: '#0ca678' }}>{t('schedule.runSuccess', '运行成功')}</Text>
+            </Group>
+          )}
           {job.last_status === 'error' && job.last_error && (
             <Tooltip label={job.last_error} withArrow multiline w={200}>
               <Group gap={3} style={{ cursor: 'help' }}>
@@ -219,14 +231,15 @@ export function CronJobCard({
           )}
         </Stack>
 
-        <Tooltip label={t('schedule.runNowTip')} withArrow>
+        <Tooltip label={job.last_status === 'running' ? t('schedule.runningTip', '任务正在执行中') : t('schedule.runNowTip')} withArrow>
           <ActionIcon
             onClick={() => onRunNow(job)}
             size="md"
             radius="md"
             variant="light"
             color="blue"
-            loading={runNowPending}
+            loading={runNowPending || job.last_status === 'running'}
+            disabled={job.last_status === 'running'}
             style={{ background: 'var(--flock-accent-soft)' }}
           >
             <IconPlayerPlay size={15} fill="currentColor" />

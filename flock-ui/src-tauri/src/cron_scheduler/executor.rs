@@ -52,6 +52,17 @@ pub async fn trigger_job_execution(
         conv_id = conv_info.id;
     }
 
+    // 立即更新任务状态为 "running" 并广播
+    db.update_cron_job_status(
+        job_id,
+        "running",
+        None,
+        None,
+        None,
+        Some(&conv_id),
+    ).await?;
+    let _ = app.emit("cron-job-updated", job_id);
+
     // 如果 workflow_id 存在且不为空，执行工作流
     if let Some(ref workflow_id) = job.workflow_id {
         if !workflow_id.trim().is_empty() {

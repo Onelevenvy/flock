@@ -248,6 +248,9 @@ impl DbManager {
                  ON CONFLICT(id) DO UPDATE SET
                     name = excluded.name,
                     description = excluded.description,
+                    assistant_id = excluded.assistant_id,
+                    workflow_id = excluded.workflow_id,
+                    prompt = excluded.prompt,
                     updated_at = excluded.updated_at",
             )
             .bind(id)

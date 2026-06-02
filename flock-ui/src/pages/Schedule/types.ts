@@ -13,7 +13,7 @@ export interface CronJob {
   workflow_id?: string | null;
   next_run_at: number | null;
   last_run_at: number | null;
-  last_status: 'ok' | 'error' | 'skipped' | 'missed';
+  last_status: 'ok' | 'error' | 'skipped' | 'missed' | 'running';
   last_error: string | null;
   run_count: number;
   last_conversation_id: string | null;
