@@ -11,6 +11,7 @@
 import { useEffect, useRef, useCallback } from 'react';
 import { listen } from '@tauri-apps/api/event';
 import { invoke } from '@tauri-apps/api/core';
+import { useTranslation } from 'react-i18next';
 import { useWorkflowStore } from '@/store/workflowStore';
 import { useWorkspaceStore } from '@/store/workspaceStore';
 import { useAgentStore } from '@/store/agentStore';
@@ -71,6 +72,7 @@ export function useWorkflowRuntime({
   threadId,
   isDebug = false,
 }: UseWorkflowRuntimeOptions) {
+  const { t } = useTranslation();
   const store = useWorkflowStore();
 
   // ── 当前 threadId 的快捷读取 ──
@@ -573,8 +575,8 @@ export function useWorkflowRuntime({
       if (activeTid) {
         store.setThreadStatus(activeTid, 'idle');
         dispatch(activeTid, {
-          type: 'info',
-          content: `🛑 Workflow execution stopped by user.`,
+          type: 'text_delta',
+          content: t('chat.aborted'),
           timestamp: Date.now(),
         });
       }

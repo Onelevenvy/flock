@@ -111,6 +111,8 @@ pub async fn debug_node(
 
     let approval_manager = agent_state.lock().await.approval_manager.clone();
 
+    let cancel_flag = Arc::new(std::sync::atomic::AtomicBool::new(false));
+
     let ctx = Arc::new(WorkflowNodeContext {
         provider,
         model_factory,
@@ -121,6 +123,7 @@ pub async fn debug_node(
         env_vars,
         workflow_id: workflow_id.clone(),
         approval_manager,
+        cancel_flag,
     });
 
     // 为调试节点默认切换至专属的 debug 工作区，确保内置工具可以读写文件且不污染其他项目
