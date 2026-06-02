@@ -131,30 +131,12 @@ impl AgentEngine {
             }
 
             let mut found_assistant = false;
-            
-            // 判定最后一个 Assistant 之后是否还有 User 消息。
-            // 如果最后一个 Assistant 后面还存在 User 消息，说明该 Assistant 属于上一轮，不能污染它
-            let mut has_user_after_assistant = false;
-            let mut last_assistant_idx = None;
-            for (i, msg) in msgs.iter().enumerate() {
-                if msg.role == flock_core::types::message::Role::Assistant {
-                    last_assistant_idx = Some(i);
-                    has_user_after_assistant = false;
-                } else if msg.role == flock_core::types::message::Role::User {
-                    if last_assistant_idx.is_some() {
-                        has_user_after_assistant = true;
-                    }
-                }
-            }
-
-            if let Some(idx) = last_assistant_idx {
-                if !has_user_after_assistant {
-                    if let Some(last_msg) = msgs.get_mut(idx) {
-                        last_msg.content.push(ContentBlock::Text {
-                            text: "\n\n*🚫 对话已被用户中止*".to_string(),
-                        });
-                        found_assistant = true;
-                    }
+            if let Some(last_msg) = msgs.last_mut() {
+                if last_msg.role == flock_core::types::message::Role::Assistant {
+                    last_msg.content.push(ContentBlock::Text {
+                        text: "\n\n*🚫 对话已被用户中止*".to_string(),
+                    });
+                    found_assistant = true;
                 }
             }
 
