@@ -22,6 +22,7 @@ import { useTranslation } from 'react-i18next';
 import { workflowNodeTypes } from '@/pages/Workflow/nodes/nodeTypesMap';
 import { useWorkflowStore } from '@/store/workflowStore';
 import { useUpdateWorkflow, type WorkflowRecord } from '@/hooks/useWorkflow';
+import { useQueryClient } from '@tanstack/react-query';
 import { NodePalette } from '@/pages/Workflow/components/NodePalette';
 import { IconPicker } from '@/pages/Assistant/IconPicker';
 import { CustomStepEdge } from '@/pages/Workflow/components/CustomStepEdge';
@@ -49,6 +50,7 @@ export function FlowCanvas({ workflowId, workflowData, onBack }: FlowCanvasProps
   const { t } = useTranslation();
   const { fitView } = useReactFlow();
   const updateMutation = useUpdateWorkflow();
+  const queryClient = useQueryClient();
 
   const [workflowIcon, setWorkflowIcon] = useState(() => {
     return (workflowData.config?.metadata?.icon as string) || '🤖';
@@ -150,10 +152,12 @@ export function FlowCanvas({ workflowId, workflowData, onBack }: FlowCanvasProps
         },
       });
       setDirty(false);
+      queryClient.invalidateQueries({ queryKey: ['workflow', workflowId] });
+      queryClient.invalidateQueries({ queryKey: ['workflows'] });
     } catch (e) {
       console.error("Auto silent save draft workflow failed:", e);
     }
-  }, [workflowId, workflowData, nodes, edges, environmentVariables, workflowIcon, setDirty]);
+  }, [workflowId, workflowData, nodes, edges, environmentVariables, workflowIcon, setDirty, queryClient]);
 
   const saveRef = useRef(saveDraftImmediately);
   useEffect(() => {
@@ -164,8 +168,8 @@ export function FlowCanvas({ workflowId, workflowData, onBack }: FlowCanvasProps
   // 每当节点、连线、环境变量、图标变化时，自动将当前状态静默保存到 config (草稿数据库)
   useEffect(() => {
     if (!workflowId) return;
-    // 延迟 300ms 防抖，避免拖拽时高频调用 API
-    const timer = setTimeout(saveDraftImmediately, 300);
+    // 延迟 1500ms 防抖，避免拖拽或连续输入时高频调用 API
+    const timer = setTimeout(saveDraftImmediately, 1500);
     return () => clearTimeout(timer);
   }, [workflowId, saveDraftImmediately]);
 
@@ -375,11 +379,6 @@ export function FlowCanvas({ workflowId, workflowData, onBack }: FlowCanvasProps
             <Text size="sm" fw={600} style={{ color: 'var(--flock-text-bright)', lineHeight: 1.2 }}>
               {workflowData.name}
             </Text>
-            {isDirty && (
-              <Badge size="xs" variant="dot" color="orange" style={{ fontSize: 9 }}>
-                {t('workflow.unsaved')}
-              </Badge>
-            )}
           </Box>
         </Group>
 
