@@ -35,11 +35,11 @@ export function WorkflowEditor({ workflowId, onBack }: WorkflowEditorProps) {
 
   // Seed the canvas store from DB when data is loaded
   useEffect(() => {
-    if (workflowData) {
+    if (workflowData && !ready) {
       loadWorkflowConfig(workflowData.config);
       setReady(true);
     }
-  }, [workflowData, loadWorkflowConfig]);
+  }, [workflowData, loadWorkflowConfig, ready]);
 
   if (isLoading || !workflowData || !ready) {
     return (

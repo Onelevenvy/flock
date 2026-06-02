@@ -1,4 +1,4 @@
-import { useCallback, useMemo, useState, useEffect } from 'react';
+import { useCallback, useMemo, useState, useEffect, useRef } from 'react';
 import ReactFlow, {
   Background,
   MiniMap,
@@ -138,11 +138,13 @@ export function FlowCanvas({ workflowId, workflowData, onBack }: FlowCanvasProps
         env_vars: environmentVariables,
         icon: workflowIcon,
       };
+      const nameVal = workflowData?.name || "";
+      const descVal = workflowData?.description || "";
       await invoke('update_workflow', {
         id: workflowId,
         input: {
-          name: workflowData?.name || "",
-          description: workflowData?.description || "",
+          name: { zh: nameVal, en: nameVal },
+          description: { zh: descVal, en: descVal },
           is_active: workflowData?.is_active ?? true,
           config: { nodes, edges, metadata },
         },
@@ -153,6 +155,11 @@ export function FlowCanvas({ workflowId, workflowData, onBack }: FlowCanvasProps
     }
   }, [workflowId, workflowData, nodes, edges, environmentVariables, workflowIcon, setDirty]);
 
+  const saveRef = useRef(saveDraftImmediately);
+  useEffect(() => {
+    saveRef.current = saveDraftImmediately;
+  }, [saveDraftImmediately]);
+
   // ── Auto Silent Save Draft Config ──
   // 每当节点、连线、环境变量、图标变化时，自动将当前状态静默保存到 config (草稿数据库)
   useEffect(() => {
@@ -161,6 +168,16 @@ export function FlowCanvas({ workflowId, workflowData, onBack }: FlowCanvasProps
     const timer = setTimeout(saveDraftImmediately, 300);
     return () => clearTimeout(timer);
   }, [workflowId, saveDraftImmediately]);
+
+  // 当组件卸载或切换工作流时，如果有未保存的变更则立即保存
+  useEffect(() => {
+    return () => {
+      const store = useWorkflowStore.getState();
+      if (store.isDirty) {
+        saveRef.current();
+      }
+    };
+  }, [workflowId]);
 
   // 将保存草稿的函数引用同步到全局 Store，供其他调试面板执行前触发强制自动保存
   useEffect(() => {
