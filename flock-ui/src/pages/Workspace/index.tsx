@@ -5,7 +5,7 @@ import { useUiStore } from '@/store/uiStore';
 import { useWorkspaceStore } from '@/store/workspaceStore';
 import { Header } from '@/components/Layout/Header';
 import { ChatPanel } from '@/components/chat/assistant/ChatPanel';
-import { InputBar } from '@/components/chat/assistant/InputBar';
+import { AssistantChatInput } from '@/components/chat/assistant/AssistantChatInput';
 import { ToolApprovalInline } from '@/components/chat/assistant/ToolApproval/ToolApprovalInline';
 import { HumanTakeoverBanner } from '@/components/chat/assistant/ToolApproval/HumanTakeoverBanner';
 import { FileTreePanel } from './components/FileTreePanel';
@@ -30,7 +30,7 @@ function AssistantChatContent() {
       <ChatPanel messages={messages} />
       <ToolApprovalInline approval={firstPending} />
       {humanTakeover && <HumanTakeoverBanner takeover={humanTakeover} />}
-      <InputBar />
+      <AssistantChatInput />
     </Box>
   );
 }

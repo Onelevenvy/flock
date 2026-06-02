@@ -130,6 +130,9 @@ pub fn make_parameter_extractor_node(
                     let mut assistant_text = String::new();
 
                     while let Some(msg_res) = rx.next().await {
+                        if ctx.cancel_flag.load(std::sync::atomic::Ordering::SeqCst) {
+                            return Err("Workflow execution cancelled by user".to_string());
+                        }
                         let msg = msg_res.map_err(|e| format!("{}", e))?;
                         if let Some(content) = msg.text() {
                             if !content.is_empty() {

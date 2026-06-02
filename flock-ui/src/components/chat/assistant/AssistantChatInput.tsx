@@ -1,27 +1,18 @@
 import { useState, useRef, KeyboardEvent } from 'react';
+import { ChatInput } from '@/components/chat/shared/ChatInput';
 import {
   Group,
-  Textarea,
-  ActionIcon,
-  Tooltip,
-  Box,
   Text,
-  Menu,
+  Box,
 } from '@mantine/core';
-import {
-  IconSend,
-  IconPlayerStop,
-  IconShieldCheck,
-  IconBolt,
-  IconFlame,
-} from '@tabler/icons-react';
 import { invoke } from '@tauri-apps/api/core';
 import { useTranslation } from 'react-i18next';
 import { useAgentStore } from '@/store/agentStore';
 import { useWorkspaceStore } from '@/store/workspaceStore';
 import { useWorkspacesQuery } from '@/hooks/useWorkspaces';
 import { v4 as uuidv4 } from 'uuid';
-import { ActiveModelPicker } from '@/components/Common/ActiveModelPicker';
+import { IconShieldCheck, IconBolt, IconFlame } from '@tabler/icons-react';
+import { ActionIcon, Tooltip, Menu, Button } from '@mantine/core';
 
 const MODE_OPTIONS = [
   { value: 'default', labelKey: 'chat.mode.default', labelDefault: 'Approval Mode', icon: IconShieldCheck, color: 'blue' },
@@ -85,10 +76,9 @@ function ModeSelector() {
   );
 }
 
-export function InputBar() {
+export function AssistantChatInput() {
   const { t } = useTranslation();
   const [value, setValue] = useState('');
-  const textareaRef = useRef<HTMLTextAreaElement>(null);
 
   const status = useAgentStore((s) => s.status);
   const setStatus = useAgentStore((s) => s.setStatus);
@@ -172,17 +162,9 @@ export function InputBar() {
     }
   };
 
-  const handleKeyDown = (e: KeyboardEvent<HTMLTextAreaElement>) => {
-    if (e.key === 'Enter' && !e.shiftKey) {
-      e.preventDefault();
-      handleSend();
-    }
-  };
-
   return (
     <Box
       style={{
-        borderTop: '1px solid var(--flock-border-dim)',
         background: 'var(--flock-bg-surface)',
         padding: '12px 16px 14px',
         flexShrink: 0,
@@ -230,93 +212,34 @@ export function InputBar() {
           </button>
         </Group>
       )}
-      <Box
-        className="input-bar-wrapper"
-        style={{
-          background: 'var(--flock-bg-raised)',
-          border: '1px solid var(--flock-border-base)',
-          borderRadius: 12,
-          padding: '8px 12px',
-          transition: 'border-color 0.15s, box-shadow 0.15s',
-        }}
-      >
-        <Textarea
-          ref={textareaRef}
-          placeholder={placeholder}
-          value={value}
-          onChange={(e) => setValue(e.currentTarget.value)}
-          onKeyDown={handleKeyDown}
-          disabled={!activeWorkspaceId || status === 'disconnected' || status === 'connecting'}
-          autosize
-          minRows={1}
-          maxRows={8}
-          styles={{
-            input: {
-              background: 'transparent',
-              border: 'none',
-              padding: 0,
-              color: 'var(--flock-text-primary)',
-              fontSize: 14,
-              lineHeight: 1.6,
-              resize: 'none',
-              outline: 'none',
-              boxShadow: 'none',
-            },
-          }}
-        />
 
-        <Group justify="space-between" mt={6} wrap="nowrap" style={{ width: '100%' }}>
-          <Group gap={8} wrap="nowrap" style={{ flexShrink: 1, minWidth: 0 }}>
-            <ActiveModelPicker />
-            {value.length > 0 && (
-              <Text size="xs" style={{ color: 'var(--flock-text-dim)', fontSize: 11, flexShrink: 0, whiteSpace: 'nowrap' }}>
-                {value.length} {t('chat.characterCount')}
-              </Text>
-            )}
-          </Group>
-
-          <Group gap={6} wrap="nowrap" style={{ flexShrink: 0 }}>
+      <ChatInput
+        value={value}
+        onChange={setValue}
+        onSend={handleSend}
+        onStop={handleStop}
+        isStreaming={isStreaming}
+        disabled={!activeWorkspaceId || status === 'disconnected' || status === 'connecting'}
+        placeholder={placeholder}
+        leftExtra={
+          value.length > 0 ? (
+            <Text size="xs" style={{ color: 'var(--flock-text-dim)', fontSize: 11, flexShrink: 0, whiteSpace: 'nowrap' }}>
+              {value.length} {t('chat.characterCount')}
+            </Text>
+          ) : undefined
+        }
+        rightExtra={
+          <>
             {canSend && (
               <Text size="xs" style={{ color: 'var(--flock-text-dim)', opacity: 0.8, fontSize: 11, whiteSpace: 'nowrap' }}>
                 {t('chat.enterToSend')}
               </Text>
             )}
-
             <ModeSelector />
-
-            {isStreaming ? (
-              <Tooltip label={t('chat.stopGeneration')} withArrow>
-                <ActionIcon
-                  size="md"
-                  color="red"
-                  variant="light"
-                  radius="md"
-                  onClick={handleStop}
-                >
-                  <IconPlayerStop size={16} />
-                </ActionIcon>
-              </Tooltip>
-            ) : (
-              <Tooltip label={canSend ? t('chat.sendEnter') : placeholder} withArrow>
-                <ActionIcon
-                  size="md"
-                  color="blue"
-                  variant={canSend ? 'filled' : 'subtle'}
-                  radius="md"
-                  onClick={handleSend}
-                  disabled={!canSend}
-                  style={{
-                    transition: 'all 0.15s ease',
-                    boxShadow: canSend ? '0 2px 8px rgba(21, 90, 239, 0.3)' : 'none',
-                  }}
-                >
-                  <IconSend size={16} />
-                </ActionIcon>
-              </Tooltip>
-            )}
-          </Group>
-        </Group>
-      </Box>
+          </>
+        }
+        sendLabel={canSend ? t('chat.sendEnter') : placeholder}
+      />
 
       <Text size="xs" style={{ color: 'var(--flock-text-dim)', textAlign: 'center', opacity: 0.8, fontSize: 11 }} mt={6}>
         {t('chat.disclaimer')}

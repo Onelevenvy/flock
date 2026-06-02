@@ -21,7 +21,7 @@ use crate::SharedDbManager;
 use crate::commands::agent::SharedAgentState;
 
 pub struct WorkflowExecutionState {
-    pub executions: Mutex<HashMap<String, JoinHandle<()>>>,
+    pub executions: Mutex<HashMap<String, (JoinHandle<()>, Arc<std::sync::atomic::AtomicBool>)>>,
 }
 
 impl WorkflowExecutionState {
@@ -245,7 +245,8 @@ pub async fn run_workflow(
     // 2. 如果之前已经在运行，先取消之前的实例
     {
         let mut executions = execution_state.executions.lock().unwrap();
-        if let Some(handle) = executions.remove(&workflow_id) {
+        if let Some((handle, cancel_flag)) = executions.remove(&workflow_id) {
+            cancel_flag.store(true, std::sync::atomic::Ordering::SeqCst);
             handle.abort();
         }
     }
@@ -329,8 +330,22 @@ pub async fn run_workflow(
 
     // 自动为工作流切换至当前激活工作空间的 working directory，解决不能选择工作空间的问题
     let thread_id_val = thread_id.unwrap_or_else(|| workflow_id.clone());
+
+    // 重点：如果是全新启动工作流运行（不是 resume 打断），彻底清空 sqlite checkpointer 里旧状态 records，防止 aborted 时脏状态残留导致数据串了和参数叠加
+    if resume_value.is_none() {
+        log::info!("[workflow] Fresh run detected. Purging old checkpoints for thread: {}", thread_id_val);
+        let _ = sqlx::query("DELETE FROM checkpoints WHERE thread_id = ?1")
+            .bind(&thread_id_val)
+            .execute(db.pool())
+            .await;
+        let _ = sqlx::query("DELETE FROM writes WHERE thread_id = ?1")
+            .bind(&thread_id_val)
+            .execute(db.pool())
+            .await;
+    }
+
     let mut final_workdir: Option<std::path::PathBuf> = None;
-    let row = sqlx::query("SELECT workspace_id, cwd FROM session_metadata WHERE thread_id = ?1")
+    let row = sqlx::query("SELECT workspace_id, cwd, summary FROM session_metadata WHERE thread_id = ?1")
         .bind(&thread_id_val)
         .fetch_optional(db.pool())
         .await
@@ -339,6 +354,71 @@ pub async fn run_workflow(
     if let Some(r) = row {
         let workspace_id: String = r.get("workspace_id");
         let cwd: String = r.get("cwd");
+        let existing_summary: String = r.get("summary");
+        
+        let is_placeholder = |s: &str| {
+            let s = s.trim();
+            if s.starts_with("对话") {
+                let rest = s.strip_prefix("对话").unwrap().trim();
+                if !rest.is_empty() && rest.chars().all(|c| c.is_ascii_digit()) {
+                    return true;
+                }
+            }
+            if s.starts_with("Session") {
+                let rest = s.strip_prefix("Session").unwrap().trim();
+                if !rest.is_empty() && (rest.chars().all(|c| c.is_ascii_digit() || c == '_' || c == '-') || rest.starts_with("conv_")) {
+                    return true;
+                }
+            }
+            false
+        };
+
+        // 实时更新：如果当前是占位标题，且此次有首次输入的 input (即首句提问)，立刻将标题修改并通知前端，实现侧边栏实时改变
+        if let Some(ref input_str) = input {
+            if !input_str.is_empty() && (existing_summary.is_empty() || is_placeholder(&existing_summary)) {
+                let mut title_to_use = input_str.clone();
+                
+                // 智能解包工作流首句提问 JSON 结构，提取诸如 {"query":"旅游"} 中的 "旅游" 纯文本
+                if let Ok(parsed_json) = serde_json::from_str::<serde_json::Value>(&title_to_use) {
+                    if let Some(obj) = parsed_json.as_object() {
+                        let found_val = obj.get("query")
+                            .or_else(|| obj.get("q"))
+                            .or_else(|| obj.get("input"))
+                            .and_then(|v| v.as_str())
+                            .map(|s| s.to_string());
+                        
+                        if let Some(val) = found_val {
+                            title_to_use = val;
+                        } else if let Some((_, first_val)) = obj.iter().next() {
+                            if let Some(s) = first_val.as_str() {
+                                title_to_use = s.to_string();
+                            } else {
+                                title_to_use = first_val.to_string();
+                            }
+                        }
+                    }
+                }
+
+                if title_to_use.chars().count() > 80 {
+                    let truncated: String = title_to_use.chars().take(77).collect();
+                    title_to_use = format!("{}...", truncated);
+                }
+                
+                let _ = sqlx::query("UPDATE session_metadata SET summary = ?1 WHERE thread_id = ?2")
+                    .bind(&title_to_use)
+                    .bind(&thread_id_val)
+                    .execute(db.pool())
+                    .await;
+
+                let title_updated_event = serde_json::json!({
+                    "type": "title_updated",
+                    "thread_id": thread_id_val.clone(),
+                    "title": title_to_use,
+                });
+                let _ = app.emit("agent-event", serde_json::to_string(&title_updated_event).unwrap_or_default()).ok();
+            }
+        }
+
         let workdir = if !cwd.is_empty() {
             std::path::PathBuf::from(cwd)
         } else if !workspace_id.is_empty() {
@@ -443,6 +523,9 @@ pub async fn run_workflow(
 
     let approval_manager = agent_state.lock().await.approval_manager.clone();
 
+    let cancel_flag = Arc::new(std::sync::atomic::AtomicBool::new(false));
+    let cancel_flag_clone = cancel_flag.clone();
+
     let ctx = Arc::new(WorkflowNodeContext {
         provider: provider.clone(),
         model_factory,
@@ -453,6 +536,7 @@ pub async fn run_workflow(
         env_vars,
         workflow_id: workflow_id.clone(),
         approval_manager,
+        cancel_flag,
     });
 
     // 6. 构建 Graph
@@ -789,7 +873,7 @@ pub async fn run_workflow(
     // 10. 存储 JoinHandle
     {
         let mut executions = execution_state.executions.lock().unwrap();
-        executions.insert(workflow_id, join_handle);
+        executions.insert(workflow_id, (join_handle, cancel_flag_clone));
     }
 
     Ok(())
@@ -801,9 +885,14 @@ pub async fn stop_workflow(
     execution_state: State<'_, Arc<WorkflowExecutionState>>,
     workflow_id: String,
 ) -> Result<(), String> {
+    log::info!("[workflow] stop_workflow command received for workflow_id: {}", workflow_id);
     let mut executions = execution_state.executions.lock().unwrap();
-    if let Some(handle) = executions.remove(&workflow_id) {
+    if let Some((handle, cancel_flag)) = executions.remove(&workflow_id) {
+        log::info!("[workflow] Found active execution handle for {}, aborting it...", workflow_id);
+        cancel_flag.store(true, std::sync::atomic::Ordering::SeqCst);
         handle.abort();
+    } else {
+        log::warn!("[workflow] No active execution handle found for workflow_id: {} in executions map! Current keys: {:?}", workflow_id, executions.keys().collect::<Vec<_>>());
     }
     Ok(())
 }

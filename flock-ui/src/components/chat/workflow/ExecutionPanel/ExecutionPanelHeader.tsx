@@ -59,7 +59,7 @@ export function ExecutionPanelHeader({
       </Group>
 
       <Group gap="xs">
-        {status !== 'running' && !isInterrupted && hasMessages && (
+        {!isEmbedded && status !== 'running' && !isInterrupted && hasMessages && (
           <Button
             size="xs"
             variant="subtle"
@@ -69,18 +69,6 @@ export function ExecutionPanelHeader({
             style={{ height: 24, fontSize: 10, padding: '0 8px' }}
           >
             {t('workflow.execution.newChat', 'New Chat')}
-          </Button>
-        )}
-        {status === 'running' && (
-          <Button
-            size="xs"
-            variant="subtle"
-            color="red"
-            leftSection={<IconPlayerStop size={12} />}
-            onClick={onStop}
-            style={{ height: 24, fontSize: 10, padding: '0 8px' }}
-          >
-            {t('common.stop', 'Stop')}
           </Button>
         )}
         {!isEmbedded && onClose && (

@@ -114,7 +114,6 @@ pub trait WorkflowSink: Send + Sync {
     fn emit_tool_result(&self, _call_id: &str, _tool_name: &str, _status: &str, _output: &str) {}
     fn emit_tool_cancelled(&self, _call_id: &str, _tool_name: &str, _reason: &str) {}
 }
-
 /// Node execution context
 pub struct WorkflowNodeContext {
     pub provider: Arc<dyn BaseChatModel>,
@@ -128,8 +127,8 @@ pub struct WorkflowNodeContext {
     /// Workflow ID for system variable resolution
     pub workflow_id: String,
     pub approval_manager: Arc<flock_core::ipc_interface::approval::ToolApprovalManager>,
+    pub cancel_flag: std::sync::Arc<std::sync::atomic::AtomicBool>,
 }
-
 /// Resolve the model for a node: use node-specific model if configured,
 /// otherwise fall back to the default provider.
 /// Extracts LLM params (temperature, top_p, etc.) from node_data if present.

@@ -1,5 +1,5 @@
 use serde_json::Value as JsonValue;
-use flock_core::types::message::{ContentBlock, Role, StopReason};
+use flock_core::types::message::{ContentBlock, Role, StopReason, Message};
 use crate::graph::AgentState;
 use crate::engine::{AgentEngine, AgentResult, AgentError};
 
@@ -12,10 +12,26 @@ pub async fn finalize_run(
 
     // messages: parse back to Vec<Message>
     if let Some(msgs) = result.get("messages").and_then(|v| v.as_array()) {
-        engine.messages = msgs
+        let mut final_msgs: Vec<Message> = msgs
             .iter()
             .filter_map(|v| serde_json::from_value(v.clone()).ok())
             .collect();
+
+        // 终极安全对齐：以内存中拥有打断警告的最精确 messages 历史为唯一绝对权威基准！
+        // 我们不进行整条消息链的覆盖（防止任何底层 checkpointer 导致的倒退覆写和消息蒸发），
+        // 而是将 Graph 最终生成的最新的那个 Assistant 消息平滑追加或更新在内存消息的尾部！
+        if let Some(graph_last) = final_msgs.last() {
+            if graph_last.role == Role::Assistant {
+                let already_has = engine.messages.last().map(|m| m.role == Role::Assistant).unwrap_or(false);
+                if !already_has {
+                    log::info!("[finalize] Smoothly appending new AI assistant reply to memory messages");
+                    engine.messages.push(graph_last.clone());
+                } else if let Some(last_msg) = engine.messages.last_mut() {
+                    // 如果最后一句话已经是 Assistant，但是它的内容在生成完毕后更新了，我们在此同步更新它
+                    last_msg.content = graph_last.content.clone();
+                }
+            }
+        }
     }
 
     // token usage

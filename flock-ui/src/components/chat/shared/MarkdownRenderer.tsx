@@ -71,7 +71,13 @@ export function MarkdownRenderer({ content }: MarkdownRendererProps) {
   const theme = useUiStore((s) => s.theme);
   const isDark = theme === 'dark';
 
-  const processedContent = filterBase64(content, t);
+  let processedContent = filterBase64(content, t);
+  if (processedContent) {
+    processedContent = processedContent
+      .replace(/\n\n\*🚫 对话已被用户中止\*/g, t('chat.aborted'))
+      .replace(/\*🚫 对话已被用户中止\*/g, t('chat.aborted').trim())
+      .replace(/🚫 对话已被用户中止/g, t('chat.aborted').replace(/\n/g, '').replace(/\*/g, '').replace(/🚫\s*/, '').trim());
+  }
 
   return (
     <ReactMarkdown
