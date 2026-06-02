@@ -1,9 +1,11 @@
-import React, { useCallback } from 'react';
-import { Box, Group, Badge, ActionIcon, Button, Stack, Select, Text, SegmentedControl, Divider } from '@mantine/core';
-import { IconTrash, IconPlus, IconSettings } from '@tabler/icons-react';
+import React, { useCallback, useMemo } from 'react';
+import { Box, Group, Badge, ActionIcon, Button, Stack, Select, Text, Divider } from '@mantine/core';
+import { IconTrash, IconPlus } from '@tabler/icons-react';
 import { useTranslation } from 'react-i18next';
 import { v4 as uuidv4 } from 'uuid';
 import { VariableTextInput } from '../VariableInput';
+import { useWorkflowStore } from '@/store/workflowStore';
+import { getAvailableVariables } from '../helper';
 
 export interface IfElseFieldsProps {
   node: any;
@@ -13,6 +15,56 @@ export interface IfElseFieldsProps {
 export function IfElseFields({ node, onDataChange }: IfElseFieldsProps) {
   const { t } = useTranslation();
   const cases = (node.data.cases as { case_id: string; logical_operator: string; conditions: any[] }[]) ?? [];
+
+  const nodes = useWorkflowStore((s) => s.nodes);
+  const edges = useWorkflowStore((s) => s.edges);
+  const environmentVariables = useWorkflowStore((s) => s.environmentVariables);
+
+  // 获得当前节点能取得的全部上游变量列表（包含类型 varType）
+  const variables = useMemo(
+    () => getAvailableVariables(node.id, nodes, edges, environmentVariables),
+    [node.id, nodes, edges, environmentVariables]
+  );
+
+  // 提取条件已选变量的类型
+  const getVariableType = useCallback((variableTemplate: string) => {
+    if (!variableTemplate) return null;
+    const found = variables.find((v) => v.value === variableTemplate);
+    return found ? (found.varType as string) : null;
+  }, [variables]);
+
+  // 根据所选变量类型，自适应分配 Dify 精准匹配符号组
+  const getOperatorOptions = useCallback((varType: string | null) => {
+    if (varType === 'number') {
+      return [
+        { value: 'equals', label: '=' },
+        { value: 'not_equals', label: '≠' },
+        { value: 'largerThan', label: '>' },
+        { value: 'lessThan', label: '<' },
+        { value: 'largerThanOrEqual', label: '≥' },
+        { value: 'lessThanOrEqual', label: '≤' },
+        { value: 'empty', label: 'is empty' },
+        { value: 'not_empty', label: 'is not empty' },
+      ];
+    }
+    if (varType === 'boolean') {
+      return [
+        { value: 'equals', label: 'is True' },
+        { value: 'not_equals', label: 'is False' },
+      ];
+    }
+    // 默认 String 类型匹配符号
+    return [
+      { value: 'contains', label: 'contains' },
+      { value: 'not_contains', label: 'does not contain' },
+      { value: 'startWith', label: 'starts with' },
+      { value: 'endWith', label: 'ends with' },
+      { value: 'equals', label: 'is' },
+      { value: 'not_equals', label: 'is not' },
+      { value: 'empty', label: 'is empty' },
+      { value: 'not_empty', label: 'is not empty' },
+    ];
+  }, []);
 
   // 添加新的 ELIF 条件分支
   const handleAddCase = useCallback(() => {
@@ -77,16 +129,36 @@ export function IfElseFields({ node, onDataChange }: IfElseFieldsProps) {
     const next = [...cases];
     const targetCase = next[caseIndex];
     const conditions = [...(targetCase.conditions || [])];
+    
+    // 如果修改了变量类型，我们需要自动重置操作符为该类型支持的首项
+    let finalOperator = conditions[condIndex].operator;
+    let finalValue = conditions[condIndex].value;
+
+    if (key === 'variable') {
+      const varType = getVariableType(val);
+      if (varType === 'number' || varType === 'integer') {
+        finalOperator = 'equals';
+      } else if (varType === 'boolean') {
+        finalOperator = 'equals';
+        finalValue = 'true'; // 布尔默认对比为 true 且隐藏值表单
+      } else {
+        finalOperator = 'contains';
+      }
+    }
+
     conditions[condIndex] = {
       ...conditions[condIndex],
       [key]: val,
+      operator: key === 'variable' ? finalOperator : (key === 'operator' ? val : finalOperator),
+      value: key === 'variable' ? finalValue : (key === 'value' ? val : finalValue),
     };
+
     next[caseIndex] = {
       ...targetCase,
       conditions,
     };
     onDataChange(node.id, 'cases', next);
-  }, [node.id, cases, onDataChange]);
+  }, [node.id, cases, onDataChange, getVariableType]);
 
   // 切换 AND/OR 关系
   const handleToggleLogicalOperator = useCallback((caseIndex: number, value: string) => {
@@ -98,17 +170,8 @@ export function IfElseFields({ node, onDataChange }: IfElseFieldsProps) {
     onDataChange(node.id, 'cases', next);
   }, [node.id, cases, onDataChange]);
 
-  const operatorOptions = [
-    { value: 'equals', label: t('workflow.properties.ifelse.ops.equals', 'equals (==)') },
-    { value: 'not_equals', label: t('workflow.properties.ifelse.ops.notEquals', 'not equals (!=)') },
-    { value: 'contains', label: t('workflow.properties.ifelse.ops.contains', 'contains') },
-    { value: 'not_contains', label: t('workflow.properties.ifelse.ops.notContains', 'not contains') },
-    { value: 'empty', label: t('workflow.properties.ifelse.ops.empty', 'is empty') },
-    { value: 'not_empty', label: t('workflow.properties.ifelse.ops.notEmpty', 'is not empty') },
-  ];
-
   return (
-    <Stack gap="md" style={{ width: '100%' }}>
+    <Stack gap="lg" style={{ width: '100%' }}>
       {cases.map((c, caseIdx) => {
         const isElse = c.case_id === 'false_else';
         const hasMultipleConds = c.conditions && c.conditions.length > 1;
@@ -123,16 +186,18 @@ export function IfElseFields({ node, onDataChange }: IfElseFieldsProps) {
                 background: 'var(--flock-bg-deepest)',
                 border: '1px solid var(--flock-border-dim)',
                 padding: '12px',
-                position: 'relative',
+                boxShadow: '0 1px 3px rgba(0,0,0,0.01)',
               }}
             >
-              <Group justify="space-between" mb="xs">
-                <Badge size="xs" color="orange" variant="light" fw={700}>
-                  ELSE
-                </Badge>
-                <Text size="11px" c="dimmed">
-                  {t('workflow.properties.ifelse.elseDesc', 'Default case when no conditions match')}
-                </Text>
+              <Group justify="space-between" align="center">
+                <Group gap="xs">
+                  <Badge size="xs" color="gray" variant="filled" fw={700} style={{ borderRadius: 4 }}>
+                    ELSE
+                  </Badge>
+                  <Text size="11px" c="dimmed">
+                    {t('workflow.properties.ifelse.elseDesc', 'Default case when no conditions match')}
+                  </Text>
+                </Group>
               </Group>
             </Box>
           );
@@ -144,122 +209,157 @@ export function IfElseFields({ node, onDataChange }: IfElseFieldsProps) {
             key={c.case_id}
             style={{
               borderRadius: '12px',
-              background: 'var(--flock-bg-surface)',
+              background: 'var(--flock-bg-base)',
               border: '1px solid var(--flock-border-dim)',
-              padding: '12px',
-              boxShadow: '0 2px 8px rgba(0,0,0,0.02)',
+              padding: '14px',
+              boxShadow: '0 4px 16px rgba(0, 0, 0, 0.02)',
               position: 'relative',
             }}
           >
             {/* 分支标题头部 */}
-            <Group justify="space-between" mb="sm" align="center">
-              <Badge size="xs" color={caseIdx === 0 ? 'blue' : 'violet'} variant="filled" fw={700}>
-                {caseIdx === 0 ? 'IF' : `ELIF CASE ${caseIdx + 1}`}
-              </Badge>
-              
+            <Group justify="space-between" mb="md" align="center">
               <Group gap="xs">
-                {hasMultipleConds && (
-                  <SegmentedControl
-                    size="xs"
-                    value={c.logical_operator || 'and'}
-                    onChange={(v) => handleToggleLogicalOperator(caseIdx, v)}
-                    data={[
-                      { label: 'AND', value: 'and' },
-                      { label: 'OR', value: 'or' },
-                    ]}
-                    styles={{
-                      root: { padding: 2, background: 'var(--flock-bg-deepest)' },
-                      indicator: { background: 'var(--flock-bg-base)' },
-                      control: { minWidth: 42 }
-                    }}
-                  />
-                )}
-                {caseIdx > 0 && (
-                  <Button
-                    size="xs"
-                    variant="subtle"
-                    color="red"
-                    leftSection={<IconTrash size={12} />}
-                    styles={{ root: { height: 24, padding: '0 8px' } }}
-                    onClick={() => handleRemoveCase(caseIdx)}
-                  >
-                    {t('workflow.properties.ifelse.removeCase', 'Remove')}
-                  </Button>
-                )}
+                <Text size="xs" fw={700} style={{ color: 'var(--flock-text-bright)' }}>
+                  {caseIdx === 0 ? 'IF' : 'ELIF'}
+                </Text>
+                <Text size="10px" c="dimmed" fw={500}>
+                  CASE {caseIdx + 1}
+                </Text>
               </Group>
+
+              {caseIdx > 0 && (
+                <Button
+                  size="xs"
+                  variant="subtle"
+                  color="red"
+                  leftSection={<IconTrash size={12} />}
+                  styles={{ root: { height: 24, padding: '0 8px', fontSize: 10 } }}
+                  onClick={() => handleRemoveCase(caseIdx)}
+                >
+                  {t('workflow.properties.ifelse.removeCase', 'Remove')}
+                </Button>
+              )}
             </Group>
 
-            {/* 条件行编辑器 */}
-            <Stack gap="sm" style={{ position: 'relative' }}>
-              {/* 如果有多条件，渲染左侧连接线 */}
+            {/* 条件编辑器区域 */}
+            <Box style={{ position: 'relative', paddingLeft: hasMultipleConds ? 24 : 0 }}>
+              
+              {/* Dify 极智左侧连接导轨线与逻辑小药丸 */}
               {hasMultipleConds && (
-                <div
+                <Box
                   style={{
                     position: 'absolute',
-                    left: '-6px',
-                    top: '20px',
-                    bottom: '20px',
-                    width: '2px',
-                    background: 'var(--flock-accent)',
-                    opacity: 0.4,
-                    borderRadius: '2px',
+                    left: 0,
+                    top: 0,
+                    bottom: 0,
+                    width: 24,
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    pointerEvents: 'none',
                   }}
-                />
+                >
+                  <div
+                    style={{
+                      position: 'absolute',
+                      left: 10,
+                      top: 18,
+                      bottom: 18,
+                      width: 2,
+                      background: 'var(--flock-accent)',
+                      opacity: 0.25,
+                      borderRadius: 1,
+                    }}
+                  />
+                  <Badge
+                    size="xs"
+                    onClick={() => handleToggleLogicalOperator(caseIdx, c.logical_operator === 'and' ? 'or' : 'and')}
+                    style={{
+                      zIndex: 10,
+                      cursor: 'pointer',
+                      pointerEvents: 'auto',
+                      background: 'var(--flock-bg-base)',
+                      border: '1.5px solid var(--flock-accent)',
+                      color: 'var(--flock-accent)',
+                      boxShadow: '0 2px 8px rgba(21, 90, 239, 0.18)',
+                      textTransform: 'uppercase',
+                      fontSize: 9,
+                      padding: '0 6px',
+                      height: 18,
+                      fontWeight: 700,
+                      borderRadius: 10,
+                      userSelect: 'none',
+                      transition: 'transform 0.1s ease',
+                    }}
+                    onMouseEnter={(e) => { e.currentTarget.style.transform = 'scale(1.08)'; }}
+                    onMouseLeave={(e) => { e.currentTarget.style.transform = 'scale(1)'; }}
+                  >
+                    {c.logical_operator || 'and'}
+                  </Badge>
+                </Box>
               )}
 
-              {(!c.conditions || c.conditions.length === 0) ? (
-                <Text size="xs" c="dimmed" ta="center" py="xs" style={{ border: '1px dashed var(--flock-border-dim)', borderRadius: 8 }}>
-                  {t('workflow.properties.ifelse.noConditions', 'No conditions added yet')}
-                </Text>
-              ) : (
-                c.conditions.map((cond, condIdx) => {
-                  const showValueField = cond.operator !== 'empty' && cond.operator !== 'not_empty';
+              <Stack gap="sm">
+                {(!c.conditions || c.conditions.length === 0) ? (
+                  <Text size="xs" c="dimmed" ta="center" py="xs" style={{ border: '1px dashed var(--flock-border-dim)', borderRadius: 8 }}>
+                    {t('workflow.properties.ifelse.noConditions', 'No conditions added yet')}
+                  </Text>
+                ) : (
+                  c.conditions.map((cond, condIdx) => {
+                    const varType = getVariableType(cond.variable);
+                    const ops = getOperatorOptions(varType);
+                    
+                    // 判断是否需要显示右侧比较值文本框（is empty, is not empty 以及布尔值类型直接隐藏输入框，使交互优雅化）
+                    const showValueField = cond.operator !== 'empty' && cond.operator !== 'not_empty' && varType !== 'boolean';
 
-                  return (
-                    <Box
-                      key={cond.id}
-                      style={{
-                        padding: '10px',
-                        borderRadius: '8px',
-                        background: 'var(--flock-bg-base)',
-                        border: '1px solid var(--flock-border-subtle)',
-                        position: 'relative',
-                        boxShadow: '0 1px 3px rgba(0,0,0,0.01)',
-                      }}
-                    >
-                      {/* 变量选择（左侧） */}
-                      <Group gap="xs" mb="xs" wrap="nowrap" align="center">
-                        <Box style={{ flex: 1 }}>
-                          <VariableTextInput
-                            currentNodeId={node.id}
-                            value={cond.variable || ''}
-                            placeholder={t('workflow.properties.ifelse.varPlaceholder', 'Choose variable')}
-                            onChange={(v) => handleUpdateCondition(caseIdx, condIdx, 'variable', v)}
+                    return (
+                      <Box
+                        key={cond.id}
+                        style={{
+                          borderRadius: '8px',
+                          border: '1px solid var(--flock-border-subtle)',
+                          background: 'var(--flock-bg-surface)',
+                          padding: '10px',
+                        }}
+                      >
+                        {/* 条件行：变量选框、判定下拉、删除 */}
+                        <Group gap="xs" wrap="nowrap" align="center" mb={showValueField ? 'xs' : 0}>
+                          <Box style={{ flex: 1 }}>
+                            <VariableTextInput
+                              currentNodeId={node.id}
+                              value={cond.variable || ''}
+                              placeholder={t('workflow.properties.ifelse.varPlaceholder', 'Select variable')}
+                              onChange={(v) => handleUpdateCondition(caseIdx, condIdx, 'variable', v)}
+                            />
+                          </Box>
+
+                          <Select
+                            size="xs"
+                            data={ops}
+                            value={cond.operator || 'equals'}
+                            onChange={(v) => handleUpdateCondition(caseIdx, condIdx, 'operator', v || 'equals')}
+                            style={{ width: 105 }}
+                            styles={{
+                              input: {
+                                background: 'var(--flock-bg-base)',
+                                border: '1px solid var(--flock-border-dim)',
+                                fontSize: 11,
+                                fontWeight: 600,
+                              }
+                            }}
                           />
-                        </Box>
-                        
-                        <ActionIcon
-                          size="sm"
-                          variant="subtle"
-                          color="red"
-                          onClick={() => handleRemoveCondition(caseIdx, condIdx)}
-                        >
-                          <IconTrash size={14} />
-                        </ActionIcon>
-                      </Group>
 
-                      {/* 运算符 & 值字段 */}
-                      <Stack gap="xs">
-                        <Select
-                          size="xs"
-                          data={operatorOptions}
-                          value={cond.operator || 'equals'}
-                          onChange={(v) => handleUpdateCondition(caseIdx, condIdx, 'operator', v)}
-                          styles={{
-                            input: { background: 'var(--flock-bg-surface)' }
-                          }}
-                        />
+                          <ActionIcon
+                            size="sm"
+                            variant="subtle"
+                            color="red"
+                            onClick={() => handleRemoveCondition(caseIdx, condIdx)}
+                          >
+                            <IconTrash size={13} />
+                          </ActionIcon>
+                        </Group>
 
+                        {/* 对比值输入（Enter value） */}
                         {showValueField && (
                           <VariableTextInput
                             currentNodeId={node.id}
@@ -268,21 +368,22 @@ export function IfElseFields({ node, onDataChange }: IfElseFieldsProps) {
                             onChange={(v) => handleUpdateCondition(caseIdx, condIdx, 'value', v)}
                           />
                         )}
-                      </Stack>
-                    </Box>
-                  );
-                })
-              )}
-            </Stack>
+                      </Box>
+                    );
+                  })
+                )}
+              </Stack>
+            </Box>
 
-            {/* 分支底部添加条件按钮 */}
-            <Group justify="flex-start" mt="sm">
+            {/* 添加判定条件按钮 */}
+            <Group justify="flex-start" mt="sm" style={{ paddingLeft: hasMultipleConds ? 24 : 0 }}>
               <Button
                 size="xs"
                 variant="light"
                 color="blue"
-                leftSection={<IconPlus size={12} />}
+                leftSection={<IconPlus size={11} />}
                 onClick={() => handleAddCondition(caseIdx)}
+                styles={{ root: { height: 26, fontSize: 11 } }}
               >
                 {t('workflow.properties.ifelse.addCondition', 'Add Condition')}
               </Button>
@@ -293,16 +394,18 @@ export function IfElseFields({ node, onDataChange }: IfElseFieldsProps) {
 
       <Divider />
 
-      {/* 添加 ELIF */}
+      {/* 一键新增 ELIF 分支 */}
       <Button
         size="sm"
         variant="outline"
         color="blue"
-        leftSection={<IconPlus size={14} />}
+        leftSection={<IconPlus size={13} />}
         fullWidth
         styles={{
           root: {
             borderStyle: 'dashed',
+            height: 36,
+            fontSize: 12,
             '&:hover': {
               background: 'var(--flock-bg-hover)',
             }

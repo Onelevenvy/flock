@@ -4,7 +4,6 @@ import {
   ActionIcon,
   Button,
   Group,
-  Divider,
   Stack,
   Text,
   Badge,
@@ -15,7 +14,16 @@ import {
   Tooltip,
 } from '@mantine/core';
 import { ModelSelect } from '@/components/Common/ModelSelect';
-import { IconTrash, IconPlus, IconFileImport, IconEdit, IconCheck } from '@tabler/icons-react';
+import {
+  IconTrash,
+  IconPlus,
+  IconFileImport,
+  IconEdit,
+  IconCheck,
+  IconBraces,
+  IconCopy,
+  IconMaximize,
+} from '@tabler/icons-react';
 import { useTranslation } from 'react-i18next';
 import { VariableTextInput, VariableTextarea } from '@/pages/Workflow/components/PropertiesPanel/VariableInput';
 import { useAvailableTools } from '@/hooks/useAvailableTools';
@@ -43,7 +51,7 @@ export function ParameterExtractorFields({
   modelsLoading,
 }: ParameterExtractorFieldsProps) {
   const { t } = useTranslation();
-  const { tools, groupedOptions: toolOptions, loading: toolsLoading } = useAvailableTools();
+  const { tools } = useAvailableTools();
 
   const parameters = (node.data.parameters as ExtractorParameter[]) ?? [];
 
@@ -132,7 +140,6 @@ export function ParameterExtractorFields({
       const importedParams: ExtractorParameter[] = [];
 
       Object.entries(properties).forEach(([key, val]: [string, any]) => {
-        // 映射 JSON Schema 的数据类型
         let mappedType = 'string';
         if (val.type === 'integer' || val.type === 'number') {
           mappedType = 'number';
@@ -191,6 +198,19 @@ export function ParameterExtractorFields({
     }
   };
 
+  // 复制 Instruction 文本到剪切板
+  const handleCopyInstruction = () => {
+    navigator.clipboard.writeText(node.data.instruction || '');
+    notifications.show({
+      title: t('workflow.properties.extractor.copied', 'Copied'),
+      message: t('workflow.properties.extractor.copySuccess', 'Instruction copied to clipboard'),
+      color: 'teal',
+      icon: <IconCheck size={16} />,
+    });
+  };
+
+  const instructionLength = (node.data.instruction || '').length;
+
   return (
     <>
       {/* 基础模型配置 */}
@@ -223,7 +243,7 @@ export function ParameterExtractorFields({
         </Text>
         
         <Group gap={6}>
-          {/* 从工具导入 */}
+          {/* 从工具一键导入 */}
           <ToolPickerPopover
             value={[]}
             onChange={handleImportFromToolPicker}
@@ -233,16 +253,25 @@ export function ParameterExtractorFields({
           {/* 新增自定义参数 */}
           <ActionIcon
             size="26px"
+            radius="md"
             variant="filled"
-            color="blue"
+            color="red"
             onClick={handleOpenAdd}
+            styles={{
+              root: {
+                background: '#e02424',
+                '&:hover': {
+                  background: '#c81e1e',
+                }
+              }
+            }}
           >
-            <IconPlus size={14} />
+            <IconPlus size={13} />
           </ActionIcon>
         </Group>
       </Group>
 
-      {/* 参数列表渲染 (卡片设计，符合 Dify 风格) */}
+      {/* 参数列表渲染 (像素级还原 Dify 极简奢华卡片) */}
       <Stack gap="xs" mb="md">
         {parameters.length === 0 ? (
           <Text size="xs" c="dimmed" ta="center" py="md" style={{ border: '1px dashed var(--flock-border-dim)', borderRadius: 8 }}>
@@ -255,25 +284,30 @@ export function ParameterExtractorFields({
               padding="xs"
               radius="md"
               style={{
-                border: '1px solid var(--flock-border-dim)',
+                border: '1px solid var(--flock-border-subtle)',
                 background: 'var(--flock-bg-surface)',
-                boxShadow: '0 1px 3px rgba(0,0,0,0.01)',
+                boxShadow: 'none',
               }}
             >
               <Group justify="space-between" align="center" gap="xs">
+                {/* 扁平淡蓝色 (x) name String 标签组 */}
                 <Group gap={6}>
-                  <span style={{ color: 'var(--flock-accent)', fontWeight: 600, fontSize: 11, fontFamily: 'monospace' }}>
+                  <Text size="xs" fw={600} style={{ color: 'var(--flock-accent)', fontFamily: 'var(--mantine-font-family-monospace)' }}>
                     (x)
-                  </span>
+                  </Text>
                   <Text size="xs" fw={700} style={{ color: 'var(--flock-text-bright)' }}>
                     {p.name}
                   </Text>
-                  <Badge size="xs" color="gray" variant="outline" style={{ textTransform: 'lowercase', fontSize: 9 }}>
+                  <Text size="10px" c="dimmed" style={{ textTransform: 'capitalize', fontSize: 10 }}>
                     {p.type}
-                  </Badge>
-                  {p.required && (
-                    <Badge size="xs" color="red" variant="light" style={{ fontSize: 9 }}>
+                  </Text>
+                  {p.required ? (
+                    <Badge size="xs" color="red" variant="light" style={{ fontSize: 8, height: 16, borderRadius: 4, fontWeight: 700 }}>
                       REQUIRED
+                    </Badge>
+                  ) : (
+                    <Badge size="xs" color="gray" variant="outline" style={{ fontSize: 8, height: 16, borderRadius: 4, fontWeight: 500 }}>
+                      OPTIONAL
                     </Badge>
                   )}
                 </Group>
@@ -282,7 +316,7 @@ export function ParameterExtractorFields({
                   <ActionIcon
                     size="xs"
                     variant="subtle"
-                    color="blue"
+                    color="gray"
                     onClick={() => handleOpenEdit(i)}
                   >
                     <IconEdit size={12} />
@@ -299,7 +333,7 @@ export function ParameterExtractorFields({
               </Group>
 
               {p.description && (
-                <Text size="xs" c="dimmed" mt={4} style={{ fontSize: 11, paddingLeft: 18 }}>
+                <Text size="11px" c="dimmed" mt={3} style={{ fontFamily: 'var(--mantine-font-family-monospace)', fontStyle: 'italic', paddingLeft: 18 }}>
                   {p.description}
                 </Text>
               )}
@@ -308,16 +342,48 @@ export function ParameterExtractorFields({
         )}
       </Stack>
 
-      {/* 提取指令指示 */}
-      <VariableTextarea
-        label={t('workflow.properties.extractor.instruction', 'INSTRUCTION')}
-        placeholder={t('workflow.properties.extractor.instructionPlaceholder', 'Describe the rules or context for LLM structured extraction...')}
-        value={String(node.data.instruction ?? '')}
-        currentNodeId={node.id}
-        onChange={(val) => onDataChange(node.id, 'instruction', val)}
-        minRows={3}
-        size="xs"
-      />
+      {/* 提取指令指示 (带右上角极客微型工具栏) */}
+      <Stack gap={4}>
+        <Group justify="space-between" align="center">
+          <Text size="xs" fw={700} style={{ color: 'var(--flock-text-bright)' }}>
+            {t('workflow.properties.extractor.instruction', 'INSTRUCTION')}
+          </Text>
+
+          {/* 右上角极客工具栏 */}
+          <Group gap={4} align="center">
+            <Text size="10px" c="dimmed" style={{ marginRight: 4, fontFamily: 'monospace' }}>
+              {instructionLength}
+            </Text>
+            
+            <Tooltip label={t('workflow.properties.extractor.insertVar', 'Insert Variable')} position="top">
+              <ActionIcon size="xs" variant="subtle" color="gray">
+                <IconBraces size={12} />
+              </ActionIcon>
+            </Tooltip>
+
+            <Tooltip label={t('workflow.properties.extractor.copy', 'Copy')} position="top">
+              <ActionIcon size="xs" variant="subtle" color="gray" onClick={handleCopyInstruction}>
+                <IconCopy size={12} />
+              </ActionIcon>
+            </Tooltip>
+
+            <Tooltip label={t('workflow.properties.extractor.maximize', 'Maximize')} position="top">
+              <ActionIcon size="xs" variant="subtle" color="gray">
+                <IconMaximize size={12} />
+              </ActionIcon>
+            </Tooltip>
+          </Group>
+        </Group>
+
+        <VariableTextarea
+          placeholder={t('workflow.properties.extractor.instructionPlaceholder', 'Write your prompt word here, enter \'{\' to insert a var...')}
+          value={String(node.data.instruction ?? '')}
+          currentNodeId={node.id}
+          onChange={(val) => onDataChange(node.id, 'instruction', val)}
+          minRows={3}
+          size="xs"
+        />
+      </Stack>
 
       {/* -------------------- 弹窗：自定义参数创建/编辑 -------------------- */}
       <Modal
@@ -340,7 +406,7 @@ export function ParameterExtractorFields({
             label={t('workflow.properties.extractor.pName', 'Parameter Name')}
             placeholder="e.g. city"
             value={paramForm.name}
-            disabled={activeParamIndex !== null} // 编辑模式下不能改参数名以防止引擎错误
+            disabled={activeParamIndex !== null}
             onChange={(e) => setParamForm({ ...paramForm, name: e.target.value })}
             size="xs"
             required

@@ -49,18 +49,28 @@ pub fn make_parameter_extractor_node(
                     }
 
                     let sys_prompt = format!(
-                        "You are a structured extraction assistant.\n\
-                         Extract the parameters described below from the user's input text according to the instructions.\n\
-                         Respond with ONLY a single, valid JSON object containing the extracted key-value pairs, and nothing else. Do NOT wrap it in code block markdown or quotes.\n\n\
-                         Parameters to extract:\n{}\n\n\
-                         Instructions:\n{}",
-                        params_desc.join("\n"),
-                        instruction
+                        "You are a structured parameter extraction assistant. Extract parameters from the input text according to the instructions and parameter definitions provided below.\n\n\
+                         ### Instructions\n\
+                         {}\n\n\
+                         ### Parameters to extract:\n\
+                         {}\n\n\
+                         ### Format requirements:\n\
+                         Your output must be a single, valid JSON object containing the extracted key-value pairs matching the exact types. Respond with ONLY the JSON object, and do NOT wrap it in code blocks or markdown.",
+                        instruction,
+                        params_desc.join("\n")
+                    );
+
+                    let user_prompt = format!(
+                        "Extract structured parameters from the input text inside <text></text> XML tags.\n\n\
+                         <text>\n\
+                         {}\n\
+                         </text>",
+                        input_val
                     );
 
                     let messages = vec![
                         LgMessage::system(sys_prompt),
-                        LgMessage::human(input_val),
+                        LgMessage::human(user_prompt),
                     ];
 
                     let model = resolve_model(&node_data, &ctx);
