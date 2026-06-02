@@ -19,7 +19,7 @@ import {
   IconMaximize,
 } from '@tabler/icons-react';
 import { useTranslation } from 'react-i18next';
-import { VariableTextInput, VariableTextarea } from '@/pages/Workflow/components/PropertiesPanel/VariableInput';
+import { VariableTextInput, VariableTextarea } from '@/pages/Workflow/PropertiesPanel/VariableInput';
 import { useAvailableTools } from '@/hooks/useAvailableTools';
 import { notifications } from '@mantine/notifications';
 import { ToolPickerPopover } from '@/components/Common/ToolManager/ToolPickerPopover';

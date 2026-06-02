@@ -4,7 +4,7 @@ import { Box, Text } from '@mantine/core';
 import { useTranslation } from 'react-i18next';
 import { BaseWorkflowNode } from '../BaseWorkflowNode';
 import { type BaseNodeData } from '../types';
-import { parseVariableTemplate, resolveVariableDetails } from '@/pages/Workflow/components/PropertiesPanel/helper';
+import { parseVariableTemplate, resolveVariableDetails } from '@/pages/Workflow/PropertiesPanel/helper';
 
 export const AnswerNode = memo((props: NodeProps<BaseNodeData>) => {
   const { data } = props;

@@ -6,42 +6,31 @@ import {
   ActionIcon,
   ScrollArea,
   TextInput,
-  Select,
-  Textarea,
   Stack,
   Divider,
   ThemeIcon,
   Tooltip,
   Tabs,
-  Badge,
+
 } from '@mantine/core';
 import { IconX, IconPlayerPlay, IconSettings, IconHistory } from '@tabler/icons-react';
 import { useTranslation } from 'react-i18next';
 import { nodeConfig, type NodeType } from '@/pages/Workflow/nodeConfig';
 import { useAvailableModels } from '@/hooks/useAvailableModels';
 import { useAvailableTools } from '@/hooks/useAvailableTools';
-import { useState, useEffect } from 'react';
-import { invoke } from '@tauri-apps/api/core';
+import { useState } from 'react';
+
 import { useWorkflowQuery } from '@/hooks/useWorkflow';
 
 // 引入公共组件
-import { VariableTextInput, VariableTextarea } from './VariableInput';
+
 
 import { ToolsIcon } from '@/components/Common/Icons';
 import { useWorkflowStore } from '@/store/workflowStore';
 import { useWorkflowRuntime } from '@/hooks/useWorkflowRuntime';
 
-// 引入各节点专属文件夹中的配置组件 (从 nodes/ 目录下对应节点引入)
-import { StartNodeProperties } from '../../nodes/Start/StartNodeProperties';
-import { LLMNodeProperties } from '../../nodes/LLM/LLMNodeProperties';
-import { AgentNodeProperties } from '../../nodes/Agent/AgentNodeProperties';
-import { ClassifierNodeProperties } from '../../nodes/Classifier/ClassifierNodeProperties';
-import { IfElseNodeProperties } from '../../nodes/IfElse/IfElseNodeProperties';
-import { AnswerNodeProperties } from '../../nodes/Answer/AnswerNodeProperties';
-import { CodeNodeProperties } from '../../nodes/Code/CodeNodeProperties';
-import { HumanNodeProperties } from '../../nodes/Human/HumanNodeProperties';
-import { ParameterExtractorNodeProperties } from '../../nodes/ParameterExtractor/ParameterExtractorNodeProperties';
-import { PluginNodeProperties } from '../../nodes/Plugin/PluginNodeProperties';
+// 引入属性配置组件注册表
+import { nodePropertiesMap } from '../nodes/propertiesMap';
 import { RetryTimeoutFields } from './RetryTimeoutFields';
 import { useMemo } from 'react';
 
@@ -63,7 +52,7 @@ export function PropertiesPanel({ node, onClose, onDataChange }: PropertiesPanel
 
   const activeWorkflowId = useWorkflowStore((s) => s.activeWorkflowId);
   const activeExecutionThreadId = useWorkflowStore((s) => s.activeExecutionThreadId);
-  const { data: workflowData } = useWorkflowQuery(activeWorkflowId || '');
+
 
   const { debugNode, status: executionStatus } = useWorkflowRuntime({
     workflowId: activeWorkflowId,
@@ -371,85 +360,25 @@ function NodeSpecificFields({
   const { t } = useTranslation();
   const type = node.type as NodeType;
 
-  switch (type) {
-    case 'start':
-      return <StartNodeProperties node={node} onDataChange={onDataChange} />;
-
-    case 'end':
-      return (
-        <Text size="xs" c="dimmed" ta="center" py="sm">
-          {t('workflow.properties.noConfig')}
-        </Text>
-      );
-
-    case 'llm':
-      return (
-        <LLMNodeProperties
-          node={node}
-          onDataChange={onDataChange}
-          modelOptions={modelOptions}
-          modelsLoading={modelsLoading}
-        />
-      );
-
-    case 'agent':
-      return (
-        <AgentNodeProperties
-          node={node}
-          onDataChange={onDataChange}
-          modelOptions={modelOptions}
-          modelsLoading={modelsLoading}
-          toolOptions={toolOptions}
-          toolsLoading={toolsLoading}
-        />
-      );
-
-    case 'classifier':
-      return (
-        <ClassifierNodeProperties
-          node={node}
-          onDataChange={onDataChange}
-          modelOptions={modelOptions}
-          modelsLoading={modelsLoading}
-        />
-      );
-
-    case 'ifelse':
-      return <IfElseNodeProperties node={node} onDataChange={onDataChange} />;
-
-    case 'answer':
-      return <AnswerNodeProperties node={node} onDataChange={onDataChange} />;
-
-    case 'code':
-      return <CodeNodeProperties node={node} onDataChange={onDataChange} />;
-
-    case 'parameterExtractor':
-      return (
-        <ParameterExtractorNodeProperties
-          node={node}
-          onDataChange={onDataChange}
-          modelOptions={modelOptions}
-          modelsLoading={modelsLoading}
-        />
-      );
-
-    case 'human':
-      return (
-        <HumanNodeProperties
-          node={node}
-          onDataChange={onDataChange}
-        />
-      );
-
-    case 'plugin':
-      return (
-        <PluginNodeProperties
-          node={node}
-          onDataChange={onDataChange}
-        />
-      );
-
-    default:
-      return null;
+  if (type === 'end') {
+    return (
+      <Text size="xs" c="dimmed" ta="center" py="sm">
+        {t('workflow.properties.noConfig')}
+      </Text>
+    );
   }
+
+  const PropertiesComponent = nodePropertiesMap[type];
+  if (!PropertiesComponent) return null;
+
+  return (
+    <PropertiesComponent
+      node={node}
+      onDataChange={onDataChange}
+      modelOptions={modelOptions}
+      modelsLoading={modelsLoading}
+      toolOptions={toolOptions}
+      toolsLoading={toolsLoading}
+    />
+  );
 }

@@ -8,7 +8,7 @@ import { useWorkflowStore } from '@/store/workflowStore';
 import { type BaseNodeData } from './types';
 import { handleStyle } from './styles';
 import { getNodeSummary } from './helpers';
-import { getAvailableVariables } from '@/pages/Workflow/components/PropertiesPanel/helper';
+import { getAvailableVariables } from '@/pages/Workflow/PropertiesPanel/helper';
 
 export interface BaseWorkflowNodeProps extends NodeProps<BaseNodeData> {
   type: NodeType;

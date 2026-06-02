@@ -26,7 +26,7 @@ import { useQueryClient } from '@tanstack/react-query';
 import { NodePalette } from '@/pages/Workflow/components/NodePalette';
 import { IconPicker } from '@/pages/Assistant/IconPicker';
 import { CustomStepEdge } from '@/pages/Workflow/components/CustomStepEdge';
-import { PropertiesPanel } from '@/pages/Workflow/components/PropertiesPanel';
+import { PropertiesPanel } from '@/pages/Workflow/PropertiesPanel';
 import { ExecutionPanel } from '@/components/chat/workflow/ExecutionPanel';
 import { EnvironmentVarsPanel } from '@/pages/Workflow/components/EnvironmentVarsPanel';
 import { useWorkflowRuntime } from '@/hooks/useWorkflowRuntime';
