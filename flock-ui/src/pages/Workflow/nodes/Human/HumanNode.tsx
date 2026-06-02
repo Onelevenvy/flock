@@ -1,11 +1,8 @@
-import React, { memo } from 'react';
-import { Handle, Position, type NodeProps } from 'reactflow';
-import { Box, Text, ActionIcon } from '@mantine/core';
-import { IconPlus } from '@tabler/icons-react';
+import React, { memo, useMemo } from 'react';
+import { type NodeProps } from 'reactflow';
 import { useTranslation } from 'react-i18next';
-import { nodeConfig } from '@/pages/Workflow/nodeConfig';
+import { BaseBranchWorkflowNode, type WorkflowNodeBranch } from '../BaseBranchWorkflowNode';
 import { type BaseNodeData } from '../types';
-import { handleStyle } from '../styles';
 
 export interface HumanAction {
   key: string;
@@ -13,139 +10,34 @@ export interface HumanAction {
   enable_feedback?: boolean;
 }
 
-export const HumanNode = memo(({ id, data, selected }: NodeProps<BaseNodeData>) => {
-  const cfg = nodeConfig['human'];
-  const Icon = cfg.icon;
+export const HumanNode = memo((props: NodeProps<BaseNodeData>) => {
+  const { data } = props;
   const { t } = useTranslation();
+  
   const actions = (data.user_actions as HumanAction[]) ?? [
     { key: 'action_1', label: 'Approve' },
     { key: 'action_2', label: 'Reject' },
   ];
 
-  // We append TIMEOUT action
-  const allActions = [
-    ...actions,
-    { key: 'TIMEOUT', label: t('workflow.properties.human.timeoutAction', 'TIMEOUT') }
-  ];
+  // 将人机交互的分支按钮（以及超时分支）转换为底座标准的分支结构
+  const branches = useMemo<WorkflowNodeBranch[]>(() => {
+    const regularBranches = actions.map((act) => ({
+      id: act.key,
+      title: act.key.toUpperCase(),
+      subtitle: act.label,
+    }));
 
-  return (
-    <Box
-      className={`flock-workflow-node ${selected ? 'selected' : ''}`}
-      style={{ overflow: 'visible' }}
-    >
-      <style dangerouslySetInnerHTML={{ __html: handleStyle }} />
-      <Box
-        style={{
-          padding: '10px 12px',
-          display: 'flex',
-          alignItems: 'center',
-          gap: 8,
-          borderBottom: '1px solid var(--flock-border-subtle)',
-        }}
-      >
-        <Box
-          className="flock-node-icon-container"
-          style={{
-            background: `${cfg.colorHex}15`,
-          }}
-        >
-          <Icon size={14} stroke={2.5} style={{ color: cfg.colorHex }} />
-        </Box>
-        <Text size="xs" fw={700} style={{ color: 'var(--flock-text-bright)', flex: 1, fontSize: 12, lineHeight: 1.2 }} lineClamp={1}>
-          {data.label || t(cfg.displayKey, { defaultValue: cfg.display })}
-        </Text>
-      </Box>
-      <Box style={{ padding: '8px 12px' }}>
-        {allActions.map((act) => {
-          const isTimeout = act.key === 'TIMEOUT';
-          return (
-            <Box key={act.key} style={{ position: 'relative', marginBottom: 6 }}>
-              <Box
-                style={{
-                  padding: '6px 10px',
-                  borderRadius: 8,
-                  background: 'var(--flock-bg-raised, rgba(0, 0, 0, 0.02))',
-                  border: '1px solid var(--flock-border-subtle)',
-                  display: 'flex',
-                  flexDirection: 'column',
-                  gap: 2,
-                  marginRight: 6,
-                  overflow: 'hidden',
-                }}
-              >
-                <Text size="xs" fw={700} style={{ fontSize: 10, color: isTimeout ? 'var(--mantine-color-red-6)' : 'var(--flock-text-bright)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-                  {act.key.toUpperCase()}
-                </Text>
-                {act.label && (
-                  <Text size="xs" c="dimmed" style={{ fontSize: 10, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-                    {act.label}
-                  </Text>
-                )}
-              </Box>
-              <div 
-                className="flock-handle-container"
-                style={{
-                  position: 'absolute',
-                  top: '50%',
-                  right: -40,
-                  transform: 'translateY(-50%)',
-                  width: 32,
-                  height: 20,
-                  zIndex: 10,
-                }}
-              >
-                <Handle
-                  type="source"
-                  position={Position.Right}
-                  id={act.key}
-                  style={{
-                    background: 'var(--flock-bg-surface)',
-                    border: `2px solid var(--flock-accent)`,
-                    width: 8,
-                    height: 8,
-                    top: '50%',
-                    left: 0,
-                    transform: 'translateY(-50%)',
-                  }}
-                />
-                <div className="flock-handle-plus">
-                  <ActionIcon
-                    size="16px"
-                    radius="xl"
-                    variant="filled"
-                    style={{
-                      boxShadow: '0 2px 6px rgba(0,0,0,0.15)',
-                      cursor: 'pointer',
-                      background: 'var(--flock-accent, #155aef)',
-                    }}
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      e.preventDefault();
-                      if (data.onHandlePlusClick) {
-                        data.onHandlePlusClick(id, act.key, e.clientX, e.clientY);
-                      }
-                    }}
-                  >
-                    <IconPlus size={10} stroke={3} />
-                  </ActionIcon>
-                </div>
-              </div>
-            </Box>
-          );
-        })}
-      </Box>
-      <Handle
-        type="target"
-        position={Position.Left}
-        id="left"
-        style={{
-          background: 'var(--flock-bg-surface)',
-          border: `2px solid var(--flock-accent)`,
-          width: 8,
-          height: 8,
-        }}
-      />
-    </Box>
-  );
+    const timeoutBranch = {
+      id: 'TIMEOUT',
+      title: 'TIMEOUT',
+      subtitle: t('workflow.properties.human.timeoutAction', 'TIMEOUT'),
+      titleColor: 'var(--mantine-color-red-6)', // 红色高亮
+    };
+
+    return [...regularBranches, timeoutBranch];
+  }, [actions, t]);
+
+  return <BaseBranchWorkflowNode {...props} type="human" branches={branches} />;
 });
+
 HumanNode.displayName = 'HumanNode';
