@@ -9,9 +9,8 @@ import {
   Badge,
   Box,
   ActionIcon,
-  Button,
 } from '@mantine/core';
-import { IconPuzzle, IconCode, IconList, IconSettings, IconKey, IconEdit } from '@tabler/icons-react';
+import { IconPuzzle, IconCode, IconList, IconSettings, IconEdit } from '@tabler/icons-react';
 import { useTranslation } from 'react-i18next';
 import { VariableTextInput, VariableTextarea } from '../VariableInput';
 import { useAvailableTools } from '@/hooks/useAvailableTools';
@@ -23,7 +22,7 @@ export interface PluginFieldsProps {
 
 export function PluginFields({ node, onDataChange }: PluginFieldsProps) {
   const { t } = useTranslation();
-  const { tools, providers, groupedOptions: toolOptions, loading: toolsLoading } = useAvailableTools();
+  const { tools, groupedOptions: toolOptions, loading: toolsLoading } = useAvailableTools();
 
   // 是否处于高级 JSON 模式
   const [isAdvancedJson, setIsAdvancedJson] = useState<boolean>(() => {
@@ -36,7 +35,7 @@ export function PluginFields({ node, onDataChange }: PluginFieldsProps) {
     }
   });
 
-  // 获取当前选中的工具 name
+  // 获取当前选中的工具 name (唯一标识符)
   const selectedToolName = node.data.tool?.name || null;
 
   // 根据 selectedToolName 获取完整的 Tool 对象
@@ -44,25 +43,6 @@ export function PluginFields({ node, onDataChange }: PluginFieldsProps) {
     if (!selectedToolName) return null;
     return tools.find((t) => t.name === selectedToolName) || null;
   }, [selectedToolName, tools]);
-
-  // 获取该 Tool 所属的 Provider
-  const selectedProvider = useMemo(() => {
-    if (!selectedTool) return null;
-    return providers.find((p) => p.id === selectedTool.provider_id) || null;
-  }, [selectedTool, providers]);
-
-  // 判断是否需要凭证授权鉴权 (即 provider 有 credentials_schema)
-  const isAuthRequired = useMemo(() => {
-    if (!selectedProvider) return false;
-    const schemaStr = selectedProvider.credentials_schema;
-    if (!schemaStr) return false;
-    try {
-      const schema = JSON.parse(schemaStr);
-      return schema && Object.keys(schema.properties || {}).length > 0;
-    } catch {
-      return false;
-    }
-  }, [selectedProvider]);
 
   // 解析当前已选工具的 input_schema (JSON Schema)
   const toolProperties = useMemo(() => {
@@ -95,7 +75,7 @@ export function PluginFields({ node, onDataChange }: PluginFieldsProps) {
     }
   }, [node.data.args]);
 
-  // 当切换所选工具时
+  // 当切换所选工具时 (在未绑定工具时显示)
   const handleToolChange = useCallback(
     (toolName: string | null) => {
       if (!toolName) {
@@ -106,6 +86,10 @@ export function PluginFields({ node, onDataChange }: PluginFieldsProps) {
 
       const toolObj = tools.find((t) => t.name === toolName);
       onDataChange(node.id, 'tool', { name: toolName });
+      
+      // 动态将画布上节点的展示标题同步重命名为该工具的名称！让 Tool 2 瞬间蜕变为具体工具名
+      const displayLabel = toolObj ? toolObj.name : toolName;
+      onDataChange(node.id, 'label', displayLabel);
 
       // 根据工具的 schema properties 生成初始的默认 args
       let defaultArgs: Record<string, string> = {};
@@ -138,44 +122,24 @@ export function PluginFields({ node, onDataChange }: PluginFieldsProps) {
 
   return (
     <Stack gap="md" style={{ width: '100%' }}>
-      {/* 工具选择下拉框 */}
-      <Select
-        label={t('workflow.properties.plugin.tool', 'Select Tool')}
-        placeholder={t('workflow.properties.plugin.toolPlaceholder', 'Choose a system tool to execute')}
-        data={toolOptions}
-        value={selectedToolName}
-        onChange={handleToolChange}
-        searchable
-        disabled={toolsLoading}
-        size="xs"
-      />
+      {/* 仅在节点尚未绑定任何工具时展示“Select Tool”下拉框。
+          如果已经绑定（通过 Tools 标签直接拖拽创建或已做出选择），则自动隐藏下拉选择，
+          直接向用户呈现工具 input 参数表单，杜绝多余的二次点选，体验完美契合 Dify！ */}
+      {!selectedToolName && (
+        <Select
+          label={t('workflow.properties.plugin.tool', 'Select Tool')}
+          placeholder={t('workflow.properties.plugin.toolPlaceholder', 'Choose a system tool to execute')}
+          data={toolOptions}
+          value={selectedToolName}
+          onChange={handleToolChange}
+          searchable
+          disabled={toolsLoading}
+          size="xs"
+        />
+      )}
 
       {selectedTool && (
         <>
-          {/* 只在真正需要鉴权的工具上，才显示 API Key 鉴权设置按钮卡片。无鉴权的工具(如 Math Calculator)直接隐藏，不予展示 */}
-          {isAuthRequired && (
-            <Button
-              size="xs"
-              variant="filled"
-              fullWidth
-              leftSection={<IconKey size={13} />}
-              styles={{
-                root: {
-                  background: 'var(--flock-accent)',
-                  height: 32,
-                  fontSize: 11,
-                  fontWeight: 600,
-                  borderRadius: 6,
-                  boxShadow: '0 2px 8px rgba(21, 90, 239, 0.15)',
-                }
-              }}
-            >
-              {t('workflow.properties.plugin.apiConfig', 'API Key Authorization Configuration')}
-            </Button>
-          )}
-
-          <Divider my={4} />
-
           {/* 表单模式与 JSON 模板切换开关 */}
           <Group justify="space-between" align="center">
             <Group gap={6}>

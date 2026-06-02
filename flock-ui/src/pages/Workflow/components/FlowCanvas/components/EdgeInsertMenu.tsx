@@ -5,7 +5,7 @@ import { type NodeType } from '@/pages/Workflow/nodeConfig';
 interface EdgeInsertMenuProps {
   menuPortalPosition: { x: number; y: number } | null;
   onClose: () => void;
-  onAddNode: (type: NodeType) => void;
+  onAddNode: (type: NodeType, toolName?: string) => void;
 }
 
 export function EdgeInsertMenu({ menuPortalPosition, onClose, onAddNode }: EdgeInsertMenuProps) {
