@@ -150,13 +150,14 @@ pub const MIGRATIONS: &[(i64, &str, &str)] = &[
         CREATE INDEX IF NOT EXISTS idx_cron_job_workspace ON cron_job(workspace_id);
 
         CREATE TABLE IF NOT EXISTS workflow (
-            id           TEXT PRIMARY KEY,
-            name         TEXT NOT NULL,
-            description  TEXT NOT NULL DEFAULT '',
-            config       TEXT NOT NULL DEFAULT '{}',
-            is_active    INTEGER NOT NULL DEFAULT 1,
-            created_at   TEXT NOT NULL DEFAULT (datetime('now')),
-            updated_at   TEXT NOT NULL DEFAULT (datetime('now'))
+            id               TEXT PRIMARY KEY,
+            name             TEXT NOT NULL,
+            description      TEXT NOT NULL DEFAULT '',
+            config           TEXT NOT NULL DEFAULT '{}',
+            published_config TEXT NOT NULL DEFAULT '{}',
+            is_active        INTEGER NOT NULL DEFAULT 1,
+            created_at       TEXT NOT NULL DEFAULT (datetime('now')),
+            updated_at       TEXT NOT NULL DEFAULT (datetime('now'))
         );
         CREATE INDEX IF NOT EXISTS idx_workflow_updated ON workflow(updated_at);
 

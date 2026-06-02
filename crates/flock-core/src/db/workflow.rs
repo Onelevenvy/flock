@@ -11,8 +11,10 @@ pub struct WorkflowRecord {
     pub id: String,
     pub name: I18nString,
     pub description: I18nString,
-    /// Full ReactFlow config: { nodes, edges, metadata, ... }
+    /// Full ReactFlow config (Draft): { nodes, edges, metadata, ... }
     pub config: JsonValue,
+    /// Published version ReactFlow config
+    pub published_config: JsonValue,
     pub is_active: bool,
     pub created_at: String,
     pub updated_at: String,
@@ -32,7 +34,7 @@ impl DbManager {
     /// List all workflows, ordered by updated_at DESC.
     pub async fn list_workflows(&self) -> anyhow::Result<Vec<WorkflowRecord>> {
         let rows = sqlx::query(
-            "SELECT id, name, description, config, is_active, created_at, updated_at
+            "SELECT id, name, description, config, published_config, is_active, created_at, updated_at
              FROM workflow
              ORDER BY updated_at DESC",
         )
@@ -49,7 +51,7 @@ impl DbManager {
     /// Get a single workflow by ID.
     pub async fn get_workflow(&self, id: &str) -> anyhow::Result<Option<WorkflowRecord>> {
         let row = sqlx::query(
-            "SELECT id, name, description, config, is_active, created_at, updated_at
+            "SELECT id, name, description, config, published_config, is_active, created_at, updated_at
              FROM workflow WHERE id = ?1",
         )
         .bind(id)
@@ -73,8 +75,8 @@ impl DbManager {
         let config_json = serde_json::to_string(&input.config)?;
 
         sqlx::query(
-            "INSERT INTO workflow (id, name, description, config, is_active, created_at, updated_at)
-             VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?6)",
+            "INSERT INTO workflow (id, name, description, config, published_config, is_active, created_at, updated_at)
+             VALUES (?1, ?2, ?3, ?4, '{}', ?5, ?6, ?6)",
         )
         .bind(&id)
         .bind(&name_json)
@@ -90,6 +92,7 @@ impl DbManager {
             name: input.name.clone(),
             description: input.description.clone(),
             config: input.config.clone(),
+            published_config: serde_json::json!({}),
             is_active: input.is_active,
             created_at: now.clone(),
             updated_at: now,
@@ -127,6 +130,29 @@ impl DbManager {
             .ok_or_else(|| anyhow::anyhow!("Workflow '{}' not found after update", id))
     }
 
+    /// Publish draft config as production version
+    pub async fn publish_workflow(&self, id: &str) -> anyhow::Result<WorkflowRecord> {
+        let now = chrono::Utc::now().to_rfc3339();
+        let rows_affected = sqlx::query(
+            "UPDATE workflow SET
+                published_config = config, updated_at = ?1
+             WHERE id = ?2",
+        )
+        .bind(&now)
+        .bind(id)
+        .execute(self.pool())
+        .await?
+        .rows_affected();
+
+        if rows_affected == 0 {
+            anyhow::bail!("Workflow '{}' not found for publish", id);
+        }
+
+        self.get_workflow(id)
+            .await?
+            .ok_or_else(|| anyhow::anyhow!("Workflow '{}' not found after publish", id))
+    }
+
     /// Delete a workflow by ID.
     pub async fn delete_workflow(&self, id: &str) -> anyhow::Result<()> {
         sqlx::query("DELETE FROM workflow WHERE id = ?1")
@@ -149,8 +175,8 @@ impl DbManager {
 
             // Insert if not exists; on conflict update name, description, config, etc.
             sqlx::query(
-                "INSERT INTO workflow (id, name, description, config, is_active, created_at, updated_at)
-                 VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?6)
+                "INSERT INTO workflow (id, name, description, config, published_config, is_active, created_at, updated_at)
+                 VALUES (?1, ?2, ?3, ?4, ?4, ?5, ?6, ?6)
                  ON CONFLICT(id) DO UPDATE SET
                     name = excluded.name,
                     description = excluded.description,
@@ -181,6 +207,10 @@ fn parse_row(row: &sqlx::sqlite::SqliteRow) -> anyhow::Result<WorkflowRecord> {
 
     let config_json: String = row.get("config");
     let config: JsonValue = serde_json::from_str(&config_json).unwrap_or(serde_json::json!({}));
+    
+    let published_config_json: String = row.get("published_config");
+    let published_config: JsonValue = serde_json::from_str(&published_config_json).unwrap_or(serde_json::json!({}));
+    
     let is_active: i64 = row.get("is_active");
 
     Ok(WorkflowRecord {
@@ -188,6 +218,7 @@ fn parse_row(row: &sqlx::sqlite::SqliteRow) -> anyhow::Result<WorkflowRecord> {
         name,
         description,
         config,
+        published_config,
         is_active: is_active != 0,
         created_at: row.get("created_at"),
         updated_at: row.get("updated_at"),

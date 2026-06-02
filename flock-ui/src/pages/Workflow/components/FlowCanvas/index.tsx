@@ -37,6 +37,7 @@ import { useDropHandler } from './hooks/useDropHandler';
 import { useActiveNodeGlow } from './hooks/useActiveNodeGlow';
 import { LeftToolbar } from './components/LeftToolbar';
 import { EdgeInsertMenu } from './components/EdgeInsertMenu';
+import { invoke } from '@tauri-apps/api/core';
 
 interface FlowCanvasProps {
   workflowId: string;
@@ -129,8 +130,39 @@ export function FlowCanvas({ workflowId, workflowData, onBack }: FlowCanvasProps
   // ── Add node via click/drop ─────────────────────────────────────────────
   const { handleAddNode, onDragOver, onDrop } = useDropHandler(nodes, setNodes, setShowNodePalette);
 
-  // ── Save ────────────────────────────────────────────────────────────────
-  const handleSave = useCallback(async () => {
+  // ── Auto Silent Save Draft Config ──
+  // 每当节点、连线、环境变量、图标变化时，自动将当前状态静默保存到 config (草稿数据库)
+  useEffect(() => {
+    if (!workflowId) return;
+    const autoSaveDraft = async () => {
+      try {
+        const metadata = {
+          ...(workflowData?.config?.metadata ?? {}),
+          env_vars: environmentVariables,
+          icon: workflowIcon,
+        };
+        await invoke('update_workflow', {
+          id: workflowId,
+          input: {
+            name: workflowData?.name || "",
+            description: workflowData?.description || "",
+            is_active: workflowData?.is_active ?? true,
+            config: { nodes, edges, metadata },
+          },
+        });
+      } catch (e) {
+        console.error("Auto silent save draft workflow failed:", e);
+      }
+    };
+    
+    // 延迟 300ms 防抖，避免拖拽时高频调用 API
+    const timer = setTimeout(autoSaveDraft, 300);
+    return () => clearTimeout(timer);
+  }, [workflowId, nodes, edges, environmentVariables, workflowIcon]);
+
+  // ── Save (Now is Publish) ────────────────────────────────────────────────
+  const handlePublish = useCallback(async () => {
+    // 1. 先确保当前的最新配置已保存
     const metadata = {
       ...(workflowData.config.metadata ?? {}),
       env_vars: environmentVariables,
@@ -145,7 +177,13 @@ export function FlowCanvas({ workflowId, workflowData, onBack }: FlowCanvasProps
         config: { nodes, edges, metadata },
       },
     });
-    setDirty(false);
+    // 2. 调用后端发布指令
+    try {
+      await invoke('publish_workflow', { id: workflowId });
+      setDirty(false);
+    } catch (e) {
+      console.error("Publish workflow failed:", e);
+    }
   }, [workflowId, workflowData, nodes, edges, environmentVariables, workflowIcon, updateMutation, setDirty]);
 
   // ── Auto-start workflow if navigated from home page with a query ────────
@@ -153,7 +191,7 @@ export function FlowCanvas({ workflowId, workflowData, onBack }: FlowCanvasProps
     if (pendingStartQuery && workflowId) {
       const runPending = async () => {
         if (isDirty) {
-          await handleSave();
+          await handlePublish();
         }
         setShowExecution(true);
         startWorkflow(JSON.stringify({ query: pendingStartQuery }));
@@ -161,7 +199,7 @@ export function FlowCanvas({ workflowId, workflowData, onBack }: FlowCanvasProps
       };
       runPending();
     }
-  }, [pendingStartQuery, workflowId, isDirty, handleSave, startWorkflow, setPendingStartQuery]);
+  }, [pendingStartQuery, workflowId, isDirty, handlePublish, startWorkflow, setPendingStartQuery]);
 
   // ── Selected node ───────────────────────────────────────────────────────
   const selectedNode = useMemo(
@@ -268,7 +306,7 @@ export function FlowCanvas({ workflowId, workflowData, onBack }: FlowCanvasProps
             size="xs"
             leftSection={<IconDeviceFloppy size={13} />}
             loading={updateMutation.isPending}
-            onClick={handleSave}
+            onClick={handlePublish}
             disabled={!isDirty}
             style={
               isDirty
@@ -277,7 +315,7 @@ export function FlowCanvas({ workflowId, workflowData, onBack }: FlowCanvasProps
             }
             color="blue"
           >
-            {t('common.save')}
+            {t('workflow.publish', 'Publish')}
           </Button>
         </Group>
       </Group>

@@ -21,6 +21,8 @@ import { nodeConfig, type NodeType } from '@/pages/Workflow/nodeConfig';
 import { useAvailableModels } from '@/hooks/useAvailableModels';
 import { useAvailableTools } from '@/hooks/useAvailableTools';
 import { useState, useEffect } from 'react';
+import { invoke } from '@tauri-apps/api/core';
+import { useWorkflowQuery } from '@/hooks/useWorkflow';
 
 // 引入公共组件
 import { VariableTextInput, VariableTextarea } from './VariableInput';
@@ -59,6 +61,7 @@ export function PropertiesPanel({ node, onClose, onDataChange }: PropertiesPanel
 
   const activeWorkflowId = useWorkflowStore((s) => s.activeWorkflowId);
   const activeExecutionThreadId = useWorkflowStore((s) => s.activeExecutionThreadId);
+  const { data: workflowData } = useWorkflowQuery(activeWorkflowId || '');
 
   const { debugNode, status: executionStatus } = useWorkflowRuntime({
     workflowId: activeWorkflowId,
@@ -87,8 +90,8 @@ export function PropertiesPanel({ node, onClose, onDataChange }: PropertiesPanel
   const Icon = cfg.icon;
 
   const handleRun = async () => {
-    // 自动收集该节点当前 settings 面板里的最新数据传给后端
-    // 调试的时候，直接从 node.data 构建 payload 送去后端
+    // 自动静默保存已经由 FlowCanvas 的 useEffect 效果托管。
+    // 在此处，我们直接触发后端执行 debug 即可。
     const payload = {
       input_msg: "",
       node_outputs: {} as Record<string, any>,

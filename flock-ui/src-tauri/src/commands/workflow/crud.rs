@@ -48,3 +48,12 @@ pub async fn delete_workflow(
 ) -> Result<(), String> {
     db.delete_workflow(&id).await.map_err(|e| e.to_string())
 }
+
+/// 发布工作流 (发布草稿版配置为正式版本)
+#[tauri::command]
+pub async fn publish_workflow(
+    db: State<'_, SharedDbManager>,
+    id: String,
+) -> Result<WorkflowRecord, String> {
+    db.publish_workflow(&id).await.map_err(|e| e.to_string())
+}

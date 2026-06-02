@@ -423,8 +423,15 @@ pub async fn run_workflow(
     }
     let tools = Arc::new(tools_reg);
 
+    // 优先从已发布的 published_config 中获取，如果为空（例如第一次创建还未发布过），则 fallback 到草稿 config
+    let config_to_run = if wf_record.published_config.get("nodes").and_then(|n| n.as_array()).map(|a| !a.is_empty()).unwrap_or(false) {
+        &wf_record.published_config
+    } else {
+        &wf_record.config
+    };
+
     // Extract env_vars from workflow config metadata
-    let env_vars: HashMap<String, JsonValue> = wf_record.config
+    let env_vars: HashMap<String, JsonValue> = config_to_run
         .get("metadata")
         .and_then(|m| m.get("env_vars"))
         .and_then(|v| serde_json::from_value(v.clone()).ok())
@@ -445,7 +452,7 @@ pub async fn run_workflow(
     });
 
     // 6. 构建 Graph
-    let graph = build_workflow_graph(&wf_record.config, ctx.clone(), checkpointer)
+    let graph = build_workflow_graph(config_to_run, ctx.clone(), checkpointer)
         .map_err(|e| e.to_string())?;
 
     // 7. 配置 thread_id
