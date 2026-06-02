@@ -40,6 +40,7 @@ export function SchedulePage() {
 
   const [modalOpened, setModalOpened] = useState(false);
   const [editingJob, setEditingJob] = useState<CronJob | null>(null);
+  const [runningJobIds, setRunningJobIds] = useState<Record<string, boolean>>({});
 
   const handleToggleEnabled = async (jobId: string, current: boolean) => {
     try {
@@ -66,6 +67,8 @@ export function SchedulePage() {
   };
 
   const handleRunNow = async (job: CronJob) => {
+    if (runningJobIds[job.id]) return;
+    setRunningJobIds(prev => ({ ...prev, [job.id]: true }));
     try {
       await runNowMutation.mutateAsync(job.id);
       notifications.show({
@@ -76,6 +79,14 @@ export function SchedulePage() {
       });
     } catch (e: any) {
       notifications.show({ title: t('common.failed'), message: String(e), color: 'red' });
+    } finally {
+      setTimeout(() => {
+        setRunningJobIds(prev => {
+          const next = { ...prev };
+          delete next[job.id];
+          return next;
+        });
+      }, 1500);
     }
   };
 
@@ -146,7 +157,7 @@ export function SchedulePage() {
                 onDelete={handleDelete}
                 onEdit={(selectedJob) => { setEditingJob(selectedJob); setModalOpened(true); }}
                 onRunNow={handleRunNow}
-                runNowPending={runNowMutation.isPending}
+                runNowPending={!!runningJobIds[job.id]}
               />
             ))}
           </SimpleGrid>

@@ -137,6 +137,7 @@ export function useRunCronJobNowMutation() {
       // 延迟刷新，让后台启动有一点时间
       setTimeout(() => {
         queryClient.invalidateQueries({ queryKey: ['cron_jobs'] });
+        queryClient.invalidateQueries({ queryKey: ['conversations'] });
       }, 1500);
     },
   });

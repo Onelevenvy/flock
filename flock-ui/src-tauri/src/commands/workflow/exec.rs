@@ -38,10 +38,26 @@ pub(crate) struct TauriWorkflowSink {
     pub(crate) thread_id: String,
     pub(crate) accumulated_text: Arc<Mutex<String>>,
     pub(crate) accumulated_thinking: Arc<Mutex<String>>,
+    pub(crate) events_log: Arc<Mutex<Vec<JsonValue>>>,
+}
+
+impl TauriWorkflowSink {
+    pub(crate) fn push_event(&self, event: JsonValue) {
+        if let Ok(mut log) = self.events_log.lock() {
+            log.push(event);
+        }
+    }
 }
 
 impl WorkflowSink for TauriWorkflowSink {
     fn emit_node_start(&self, node_id: &str) {
+        let ts = chrono::Utc::now().timestamp_millis();
+        self.push_event(serde_json::json!({
+            "type": "info",
+            "content": format!("▶️ Running node: [{}]", node_id),
+            "nodeId": node_id,
+            "timestamp": ts
+        }));
         let _ = self.app.emit("workflow-event", serde_json::json!({
             "type": "node_start",
             "workflow_id": &self.workflow_id,
@@ -50,6 +66,7 @@ impl WorkflowSink for TauriWorkflowSink {
         }));
     }
     fn emit_node_done(&self, node_id: &str, output: &JsonValue) {
+        let ts = chrono::Utc::now().timestamp_millis();
         if let Some(obj) = output.as_object() {
             let response_text = obj.get("response").or_else(|| obj.get("answer")).and_then(|v| v.as_str());
             if let Some(txt) = response_text {
@@ -66,6 +83,43 @@ impl WorkflowSink for TauriWorkflowSink {
                 }
             }
         }
+
+        self.push_event(serde_json::json!({
+            "type": "info",
+            "content": format!("✅ Node [{}] finished.", node_id),
+            "nodeId": node_id,
+            "timestamp": ts
+        }));
+
+        // 补偿非流式返回：只在该节点还没有 text_delta 时才补偿
+        let has_deltas = {
+            let log = self.events_log.lock().unwrap();
+            log.iter().any(|m| {
+                m.get("nodeId").and_then(|id| id.as_str()) == Some(node_id)
+                    && m.get("type").and_then(|t| t.as_str()) == Some("text_delta")
+            })
+        };
+        if !has_deltas {
+            if let Some(obj) = output.as_object() {
+                let response_text = obj.get("response").or_else(|| obj.get("answer")).and_then(|v| v.as_str());
+                if let Some(txt) = response_text {
+                    self.push_event(serde_json::json!({
+                        "type": "text_delta",
+                        "content": txt,
+                        "nodeId": node_id,
+                        "timestamp": ts + 1
+                    }));
+                }
+            } else if let Some(txt) = output.as_str() {
+                self.push_event(serde_json::json!({
+                    "type": "text_delta",
+                    "content": txt,
+                    "nodeId": node_id,
+                    "timestamp": ts + 1
+                }));
+            }
+        }
+
         let _ = self.app.emit("workflow-event", serde_json::json!({
             "type": "node_done",
             "workflow_id": &self.workflow_id,
@@ -78,6 +132,13 @@ impl WorkflowSink for TauriWorkflowSink {
         if let Ok(mut lock) = self.accumulated_text.lock() {
             lock.push_str(text);
         }
+        let ts = chrono::Utc::now().timestamp_millis();
+        self.push_event(serde_json::json!({
+            "type": "text_delta",
+            "content": text,
+            "nodeId": node_id,
+            "timestamp": ts
+        }));
         let _ = self.app.emit("workflow-event", serde_json::json!({
             "type": "text_delta",
             "workflow_id": &self.workflow_id,
@@ -90,6 +151,13 @@ impl WorkflowSink for TauriWorkflowSink {
         if let Ok(mut lock) = self.accumulated_thinking.lock() {
             lock.push_str(text);
         }
+        let ts = chrono::Utc::now().timestamp_millis();
+        self.push_event(serde_json::json!({
+            "type": "thinking",
+            "content": text,
+            "nodeId": node_id,
+            "timestamp": ts
+        }));
         let _ = self.app.emit("workflow-event", serde_json::json!({
             "type": "thinking",
             "workflow_id": &self.workflow_id,
@@ -99,6 +167,12 @@ impl WorkflowSink for TauriWorkflowSink {
         }));
     }
     fn emit_error(&self, msg: &str) {
+        let ts = chrono::Utc::now().timestamp_millis();
+        self.push_event(serde_json::json!({
+            "type": "error",
+            "content": format!("❌ Execution error: {}", msg),
+            "timestamp": ts
+        }));
         let _ = self.app.emit("workflow-event", serde_json::json!({
             "type": "error",
             "workflow_id": &self.workflow_id,
@@ -308,6 +382,7 @@ pub async fn run_workflow(
         thread_id: thread_id_val.clone(),
         accumulated_text: accumulated_text.clone(),
         accumulated_thinking: accumulated_thinking.clone(),
+        events_log: Arc::new(Mutex::new(Vec::new())),
     });
 
     // 动态加载所有 skills 并注册 SkillTool 供工作流使用
@@ -449,6 +524,20 @@ pub async fn run_workflow(
     let thread_id_val_clone = thread_id_val.clone();
 
     let join_handle = tokio::spawn(async move {
+        let start_ts = chrono::Utc::now().timestamp_millis();
+        sink.push_event(serde_json::json!({
+            "type": "info",
+            "content": "🚀 Workflow started...",
+            "timestamp": start_ts
+        }));
+        if !input_msg.is_empty() {
+            sink.push_event(serde_json::json!({
+                "type": "user",
+                "content": input_msg.clone(),
+                "timestamp": start_ts + 1
+            }));
+        }
+
         let _ = app_clone.emit("workflow-event", serde_json::json!({
             "type": "workflow_start",
             "workflow_id": workflow_id_clone,
@@ -479,6 +568,12 @@ pub async fn run_workflow(
                         "interrupt": first_interrupt,
                     }));
                 } else {
+                    let end_ts = chrono::Utc::now().timestamp_millis();
+                    sink.push_event(serde_json::json!({
+                        "type": "info",
+                        "content": "🎉 Workflow execution completed successfully.",
+                        "timestamp": end_ts
+                    }));
                     // 顺利执行结束
                     let _ = app_clone.emit("workflow-event", serde_json::json!({
                         "type": "workflow_done",
@@ -537,6 +632,7 @@ pub async fn run_workflow(
             let final_text_clone = final_text.clone();
             let final_thinking_clone = final_thinking.clone();
             let provider_for_summary = provider.clone();
+            let msgs = sink.events_log.lock().unwrap().clone();
 
             tokio::spawn(async move {
                 let existing_row: Option<(String, String)> = sqlx::query_as(
@@ -547,15 +643,12 @@ pub async fn run_workflow(
                 .await
                 .unwrap_or(None);
 
-                let (existing_summary, existing_messages_str) = match existing_row {
+                let (existing_summary, _existing_messages_str) = match existing_row {
                     Some((sum, msgs)) => (sum, Some(msgs)),
                     None => (String::new(), None),
                 };
 
-                let mut db_messages: Vec<serde_json::Value> = existing_messages_str
-                    .as_deref()
-                    .and_then(|s| serde_json::from_str(s).ok())
-                    .unwrap_or_default();
+                let mut db_messages: Vec<serde_json::Value> = Vec::new();
 
                 if !input_msg_clone.is_empty() {
                     db_messages.push(serde_json::json!({
@@ -629,20 +722,7 @@ pub async fn run_workflow(
                         log::warn!("[workflow summary] Background auto summary failed: {}", e);
                     }
                 } else if is_placeholder(&existing_summary) {
-                    let mut default_sum = String::new();
-                    for msg in &messages_for_summary {
-                        if msg.role == flock_core::types::message::Role::User {
-                            for block in &msg.content {
-                                if let flock_core::types::message::ContentBlock::Text { text } = block {
-                                    default_sum = text.clone();
-                                    break;
-                                }
-                            }
-                            if !default_sum.is_empty() {
-                                break;
-                            }
-                        }
-                    }
+                    let mut default_sum = input_msg_clone.clone();
                     if !default_sum.is_empty() {
                         if default_sum.chars().count() > 80 {
                             let truncated: String = default_sum.chars().take(77).collect();
@@ -661,8 +741,13 @@ pub async fn run_workflow(
                     }
                 }
 
-                let messages_json = serde_json::to_string(&db_messages).unwrap_or_else(|_| "[]".to_string());
-                let msg_count = db_messages.len();
+                // 重点：使用带有 __wf_native__ 标记的前端原生格式保存完整的 messages
+                let wrapped = serde_json::json!({
+                    "__wf_native__": true,
+                    "msgs": msgs
+                });
+                let messages_json = serde_json::to_string(&wrapped).unwrap_or_else(|_| "{}".to_string());
+                let msg_count = msgs.len();
                 let updated_at = chrono::Utc::now().to_rfc3339();
 
                 let _ = sqlx::query(
