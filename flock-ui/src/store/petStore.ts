@@ -35,7 +35,7 @@ function loadStored<T>(key: string, fallback: T): T {
 }
 
 export const usePetStore = create<PetStore>((set) => ({
-  enabled: loadStored('xiaof-pet-enabled', true),
+  enabled: loadStored('xiaof-pet-enabled', false),
   minimized: false,
   bubbleEnabled: loadStored('xiaof-bubble-enabled', true),
   bubbleDuration: loadStored('xiaof-bubble-duration', 3000),
