@@ -363,6 +363,28 @@ pub async fn run_workflow(
         if let Some(ref input_str) = input {
             if !input_str.is_empty() && (existing_summary.is_empty() || is_placeholder(&existing_summary)) {
                 let mut title_to_use = input_str.clone();
+                
+                // 智能解包工作流首句提问 JSON 结构，提取诸如 {"query":"旅游"} 中的 "旅游" 纯文本
+                if let Ok(parsed_json) = serde_json::from_str::<serde_json::Value>(&title_to_use) {
+                    if let Some(obj) = parsed_json.as_object() {
+                        let found_val = obj.get("query")
+                            .or_else(|| obj.get("q"))
+                            .or_else(|| obj.get("input"))
+                            .and_then(|v| v.as_str())
+                            .map(|s| s.to_string());
+                        
+                        if let Some(val) = found_val {
+                            title_to_use = val;
+                        } else if let Some((_, first_val)) = obj.iter().next() {
+                            if let Some(s) = first_val.as_str() {
+                                title_to_use = s.to_string();
+                            } else {
+                                title_to_use = first_val.to_string();
+                            }
+                        }
+                    }
+                }
+
                 if title_to_use.chars().count() > 80 {
                     let truncated: String = title_to_use.chars().take(77).collect();
                     title_to_use = format!("{}...", truncated);

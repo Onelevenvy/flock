@@ -124,6 +124,12 @@ impl AgentEngine {
                     .collect();
             }
 
+            // 重点防御：如果快照里拿到的消息长度，比我们内存现存的 self.messages 还少（说明快照还没来得及更新或发生了秒掐回滚）
+            // 我们保留更丰富、包含了最新用户输入的 self.messages，而不使用倒退的快照覆盖
+            if msgs.len() < self.messages.len() {
+                msgs = self.messages.clone();
+            }
+
             let mut found_assistant = false;
             
             // 判定最后一个 Assistant 之后是否还有 User 消息。

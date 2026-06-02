@@ -57,9 +57,11 @@ pub async fn prepare_run(
         .filter(|m| m.role == Role::User)
         .count() == 0;
 
+    // 无论是第一轮还是后续多轮，只要用户发送了输入，必须立刻同步追加进内存会话历史数组中，防止极速打断时用户输入在数据库和界面上人间蒸发
+    engine.messages.push(new_user_msg_struct.clone());
+
     if is_first_turn {
         log::info!("[summary] First turn detected. Saving user message and triggering immediate auto-summary.");
-        engine.messages.push(new_user_msg_struct.clone());
         engine.save_session().await;
     }
 
