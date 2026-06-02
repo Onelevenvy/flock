@@ -213,8 +213,8 @@ impl DbManager {
         Ok(result)
     }
 
-    /// Rollback workflow draft config to a historical version config.
-    pub async fn rollback_workflow_version(&self, workflow_id: &str, version_id: &str) -> anyhow::Result<WorkflowRecord> {
+    /// Rollback workflow draft config to a historical version config (only updates draft config).
+    pub async fn rollback_workflow_draft(&self, workflow_id: &str, version_id: &str) -> anyhow::Result<WorkflowRecord> {
         let now = chrono::Utc::now().to_rfc3339();
         
         let row = sqlx::query(
@@ -242,6 +242,37 @@ impl DbManager {
         self.get_workflow(workflow_id)
             .await?
             .ok_or_else(|| anyhow::anyhow!("Workflow '{}' not found after rollback", workflow_id))
+    }
+
+    /// Switch the workflow's active production version (only updates published_config).
+    pub async fn switch_workflow_production(&self, workflow_id: &str, version_id: &str) -> anyhow::Result<WorkflowRecord> {
+        let now = chrono::Utc::now().to_rfc3339();
+        
+        let row = sqlx::query(
+            "SELECT config FROM workflow_version WHERE id = ?1 AND workflow_id = ?2",
+        )
+        .bind(version_id)
+        .bind(workflow_id)
+        .fetch_optional(self.pool())
+        .await?;
+
+        let config_json = match row {
+            Some(r) => r.get::<String, _>("config"),
+            None => anyhow::bail!("Workflow version '{}' not found", version_id),
+        };
+
+        sqlx::query(
+            "UPDATE workflow SET published_config = ?1, updated_at = ?2 WHERE id = ?3"
+        )
+        .bind(&config_json)
+        .bind(&now)
+        .bind(workflow_id)
+        .execute(self.pool())
+        .await?;
+
+        self.get_workflow(workflow_id)
+            .await?
+            .ok_or_else(|| anyhow::anyhow!("Workflow '{}' not found after switching production", workflow_id))
     }
 
     /// Delete a workflow by ID.

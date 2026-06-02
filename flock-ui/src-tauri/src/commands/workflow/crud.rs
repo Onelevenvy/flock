@@ -71,10 +71,20 @@ pub async fn list_workflow_versions(
 
 /// 将当前草稿配置回退到历史版本配置
 #[tauri::command]
-pub async fn rollback_workflow_version(
+pub async fn rollback_workflow_draft(
     db: State<'_, SharedDbManager>,
     workflow_id: String,
     version_id: String,
 ) -> Result<WorkflowRecord, String> {
-    db.rollback_workflow_version(&workflow_id, &version_id).await.map_err(|e| e.to_string())
+    db.rollback_workflow_draft(&workflow_id, &version_id).await.map_err(|e| e.to_string())
+}
+
+/// 切换当前已发布（在线）的版本配置为指定历史版本配置
+#[tauri::command]
+pub async fn switch_workflow_production(
+    db: State<'_, SharedDbManager>,
+    workflow_id: String,
+    version_id: String,
+) -> Result<WorkflowRecord, String> {
+    db.switch_workflow_production(&workflow_id, &version_id).await.map_err(|e| e.to_string())
 }

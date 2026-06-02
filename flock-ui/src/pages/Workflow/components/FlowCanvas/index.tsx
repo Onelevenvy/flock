@@ -228,10 +228,10 @@ export function FlowCanvas({ workflowId, workflowData, onBack }: FlowCanvasProps
     }
   };
 
-  // ── Rollback to History Version ──
-  const handleRollback = useCallback(async (versionId: string) => {
+  // ── Rollback Draft to History Version ──
+  const handleRollbackDraft = useCallback(async (versionId: string) => {
     try {
-      const updatedWf = await invoke<any>('rollback_workflow_version', {
+      const updatedWf = await invoke<any>('rollback_workflow_draft', {
         workflowId,
         versionId,
       });
@@ -240,9 +240,22 @@ export function FlowCanvas({ workflowId, workflowData, onBack }: FlowCanvasProps
       }
       setPublishModalOpen(false);
     } catch (e) {
-      console.error("Rollback failed:", e);
+      console.error("Rollback draft failed:", e);
     }
   }, [workflowId]);
+
+  // ── Switch Active Production to History Version ──
+  const handleSwitchProduction = useCallback(async (versionId: string) => {
+    try {
+      await invoke('switch_workflow_production', {
+        workflowId,
+        versionId,
+      });
+      loadHistoryVersions();
+    } catch (e) {
+      console.error("Switch production version failed:", e);
+    }
+  }, [workflowId, loadHistoryVersions]);
 
   // ── Silent Auto-Publish on automatic execution ──
   const silentPublish = useCallback(async () => {
@@ -576,7 +589,7 @@ export function FlowCanvas({ workflowId, workflowData, onBack }: FlowCanvasProps
                       <Table.Th>{t('workflow.version', 'Version')}</Table.Th>
                       <Table.Th>{t('workflow.description', 'Description')}</Table.Th>
                       <Table.Th>{t('workflow.published_at', 'Published At')}</Table.Th>
-                      <Table.Th style={{ width: 100 }}></Table.Th>
+                      <Table.Th style={{ width: 220 }}></Table.Th>
                     </Table.Tr>
                   </Table.Thead>
                   <Table.Tbody>
@@ -596,13 +609,22 @@ export function FlowCanvas({ workflowId, workflowData, onBack }: FlowCanvasProps
                           </Text>
                         </Table.Td>
                         <Table.Td>
-                          <Button
-                            size="xs"
-                            variant="light"
-                            onClick={() => handleRollback(v.id)}
-                          >
-                            {t('workflow.rollback', 'Rollback')}
-                          </Button>
+                          <Group gap="xs" wrap="nowrap">
+                            <Button
+                              size="xs"
+                              variant="light"
+                              onClick={() => handleRollbackDraft(v.id)}
+                            >
+                              {t('workflow.rollback_draft', 'Rollback Draft')}
+                            </Button>
+                            <Button
+                              size="xs"
+                              variant="outline"
+                              onClick={() => handleSwitchProduction(v.id)}
+                            >
+                              {t('workflow.set_production', 'Set Active')}
+                            </Button>
+                          </Group>
                         </Table.Td>
                       </Table.Tr>
                     ))}
