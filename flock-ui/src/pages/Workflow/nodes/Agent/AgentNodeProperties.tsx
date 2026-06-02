@@ -1,10 +1,10 @@
 import { Divider, Stack } from '@mantine/core';
 import { useTranslation } from 'react-i18next';
-import { LLMFields } from '@/pages/Workflow/components/PropertiesPanel/LLM';
+import { LLMNodeProperties } from '../LLM/LLMNodeProperties';
 import ToolManager from '@/components/Common/ToolManager';
 import { SkillsSelector } from '@/components/Common/SkillsSelector';
 
-export interface AgentFieldsProps {
+export interface AgentNodePropertiesProps {
   node: any;
   onDataChange: (nodeId: string, key: string, value: unknown) => void;
   modelOptions: any[];
@@ -13,14 +13,14 @@ export interface AgentFieldsProps {
   toolsLoading: boolean;
 }
 
-export function AgentFields({
+export function AgentNodeProperties({
   node,
   onDataChange,
   modelOptions,
   modelsLoading,
   toolOptions,
   toolsLoading,
-}: AgentFieldsProps) {
+}: AgentNodePropertiesProps) {
   const { t } = useTranslation();
   const tools = (node.data.tools as string[]) ?? [];
   const disabledTools = (node.data.disabled_tools as string[]) ?? [];
@@ -29,7 +29,7 @@ export function AgentFields({
 
   return (
     <Stack gap="md">
-      <LLMFields
+      <LLMNodeProperties
         node={node}
         onDataChange={onDataChange}
         modelOptions={modelOptions}

@@ -10,7 +10,6 @@ import {
   NumberInput,
   Select,
   TagsInput,
-  SegmentedControl,
   Tooltip,
   Box,
   Divider,

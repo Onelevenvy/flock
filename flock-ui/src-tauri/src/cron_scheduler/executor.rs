@@ -85,6 +85,7 @@ pub async fn trigger_job_execution(
                 Some(job.prompt.clone()),
                 None,
                 Some(conv_id.clone()),
+                None,
             ).await {
                 db.update_cron_job_status(
                     job_id,

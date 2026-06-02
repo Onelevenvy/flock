@@ -1,9 +1,9 @@
 import { useState } from 'react';
-import { Group, Stack, Text, ActionIcon, Button, Divider, Badge, Modal, Select, TextInput, NumberInput, Switch } from '@mantine/core';
+import { Group, Stack, Text, ActionIcon, Button, Badge, Modal, Select, TextInput, NumberInput, Switch } from '@mantine/core';
 import { IconTrash, IconPlus } from '@tabler/icons-react';
 import { useTranslation } from 'react-i18next';
 
-export interface StartFieldsProps {
+export interface StartNodePropertiesProps {
   node: any;
   onDataChange: (nodeId: string, key: string, value: unknown) => void;
 }
@@ -18,7 +18,7 @@ export interface VariableConfig {
   options?: string[]; // Used for select dropdown options
 }
 
-export function StartFields({ node, onDataChange }: StartFieldsProps) {
+export function StartNodeProperties({ node, onDataChange }: StartNodePropertiesProps) {
   const { t } = useTranslation();
   const [modalOpened, setModalOpened] = useState(false);
   const [editingVarName, setEditingVarName] = useState<string | null>(null);
@@ -277,4 +277,3 @@ export function StartFields({ node, onDataChange }: StartFieldsProps) {
     </Stack>
   );
 }
-

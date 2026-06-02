@@ -1,17 +1,17 @@
 import { Group, Input, Textarea } from '@mantine/core';
 import { useTranslation } from 'react-i18next';
-import { VariableTextarea } from '@/pages/Workflow/components/PropertiesPanel/VariableInput';
+import { VariableTextarea } from '@/pages/Workflow/components/VariableInput';
 import { ModelSelect } from '@/components/Common/ModelSelect';
 import { ModelSettingsPopover } from './ModelSettingsPopover';
 
-export interface ModelFieldsProps {
+export interface LLMNodePropertiesProps {
   node: any;
   onDataChange: (nodeId: string, key: string, value: unknown) => void;
   modelOptions: any[];
   modelsLoading: boolean;
 }
 
-export function LLMFields({ node, onDataChange, modelOptions, modelsLoading }: ModelFieldsProps) {
+export function LLMNodeProperties({ node, onDataChange, modelOptions, modelsLoading }: LLMNodePropertiesProps) {
   const { t } = useTranslation();
   return (
     <>
@@ -86,4 +86,3 @@ export function LLMFields({ node, onDataChange, modelOptions, modelsLoading }: M
     </>
   );
 }
-

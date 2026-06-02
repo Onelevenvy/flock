@@ -1,7 +1,7 @@
 import { Group, Stack, Text, TextInput, ActionIcon, Button, Divider, Switch, NumberInput, Select, Tooltip } from '@mantine/core';
 import { IconTrash, IconPlus, IconMessage } from '@tabler/icons-react';
 import { useTranslation } from 'react-i18next';
-import { VariableTextarea } from '@/pages/Workflow/components/PropertiesPanel/VariableInput';
+import { VariableTextarea } from '@/pages/Workflow/components/VariableInput';
 
 export interface HumanAction {
   key: string;
@@ -9,12 +9,12 @@ export interface HumanAction {
   enable_feedback?: boolean;
 }
 
-export interface HumanFieldsProps {
+export interface HumanNodePropertiesProps {
   node: any;
   onDataChange: (nodeId: string, key: string, value: unknown) => void;
 }
 
-export function HumanFields({ node, onDataChange }: HumanFieldsProps) {
+export function HumanNodeProperties({ node, onDataChange }: HumanNodePropertiesProps) {
   const { t } = useTranslation();
 
   // Submission types (default to true for Webapp)

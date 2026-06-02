@@ -235,6 +235,7 @@ pub async fn run_workflow(
     input: Option<String>,
     resume_value: Option<JsonValue>,
     thread_id: Option<String>,
+    use_draft: Option<bool>,
 ) -> Result<(), String> {
     // 1. 获取工作流配置
     let wf_record = db.get_workflow(&workflow_id).await
@@ -423,8 +424,11 @@ pub async fn run_workflow(
     }
     let tools = Arc::new(tools_reg);
 
-    // 优先从已发布的 published_config 中获取，如果为空（例如第一次创建还未发布过），则 fallback 到草稿 config
-    let config_to_run = if wf_record.published_config.get("nodes").and_then(|n| n.as_array()).map(|a| !a.is_empty()).unwrap_or(false) {
+    let use_draft_val = use_draft.unwrap_or(false);
+    // 优先从已发布的 published_config 中获取，如果为空（例如第一次创建还未发布过）或者明确要求使用草稿，则 fallback 到草稿 config
+    let config_to_run = if use_draft_val {
+        &wf_record.config
+    } else if wf_record.published_config.get("nodes").and_then(|n| n.as_array()).map(|a| !a.is_empty()).unwrap_or(false) {
         &wf_record.published_config
     } else {
         &wf_record.config

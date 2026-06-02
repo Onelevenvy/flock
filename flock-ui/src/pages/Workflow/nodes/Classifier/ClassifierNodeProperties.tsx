@@ -3,16 +3,16 @@ import { ModelSelect } from '@/components/Common/ModelSelect';
 import { IconTrash, IconPlus } from '@tabler/icons-react';
 import { useTranslation } from 'react-i18next';
 import { v4 as uuidv4 } from 'uuid';
-import { VariableTextInput } from '@/pages/Workflow/components/PropertiesPanel/VariableInput';
+import { VariableTextInput } from '@/pages/Workflow/components/VariableInput';
 
-export interface ClassifierFieldsProps {
+export interface ClassifierNodePropertiesProps {
   node: any;
   onDataChange: (nodeId: string, key: string, value: unknown) => void;
   modelOptions: any[];
   modelsLoading: boolean;
 }
 
-export function ClassifierFields({ node, onDataChange, modelOptions, modelsLoading }: ClassifierFieldsProps) {
+export function ClassifierNodeProperties({ node, onDataChange, modelOptions, modelsLoading }: ClassifierNodePropertiesProps) {
   const { t } = useTranslation();
   const categories = (node.data.categories as { category_id: string; category_name: string }[]) ?? [];
 

@@ -447,6 +447,12 @@ export function useWorkflowRuntime({
   const startWorkflow = useCallback(async (input: string) => {
     if (!workflowId) return;
 
+    // 触发强制自动保存如果存在未保存的修改
+    const saveRef = store.saveDraftRef?.current;
+    if (saveRef && store.isDirty) {
+      await saveRef();
+    }
+
     let activeTid = threadId;
     if (isDebug && !activeTid) {
       // 调试模式：无活跃 threadId 时才全新生成并清空
@@ -487,6 +493,8 @@ export function useWorkflowRuntime({
         input,
         threadId: activeTid,
         thread_id: activeTid,
+        useDraft: isDebug,
+        use_draft: isDebug,
       });
     } catch (e) {
       store.setThreadStatus(activeTid, 'error');
@@ -531,6 +539,8 @@ export function useWorkflowRuntime({
         resumeValue: choiceValue,
         threadId: activeTid,
         thread_id: activeTid,
+        useDraft: isDebug,
+        use_draft: isDebug,
       });
     } catch (e) {
       store.setThreadStatus(activeTid, 'error');
@@ -572,6 +582,13 @@ export function useWorkflowRuntime({
   // ── debugNode（调试专属） ──
   const debugNode = useCallback(async (nodeId: string, input?: string) => {
     if (!workflowId || !isDebug) return;
+
+    // 调试单个节点也触发强制自动保存
+    const saveRef = store.saveDraftRef?.current;
+    if (saveRef && store.isDirty) {
+      await saveRef();
+    }
+
     const activeTid = isDebug
       ? (store.activeExecutionThreadId ?? `${workflowId}:debug`)
       : threadId;

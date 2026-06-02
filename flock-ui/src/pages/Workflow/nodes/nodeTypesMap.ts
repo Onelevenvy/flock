@@ -1,13 +1,14 @@
-import { StartNode, EndNode } from './StartEndNodes';
-import {
-  LLMNode,
-  AgentNode,
-  AnswerNode,
-  CodeNode,
-  ParameterExtractorNode,
-  PluginNode,
-} from './StandardNodes';
-import { ClassifierNode, IfElseNode, HumanNode } from './MultiHandleNodes';
+import { StartNode } from './Start/StartNode';
+import { EndNode } from './End/EndNode';
+import { LLMNode } from './LLM/LLMNode';
+import { AgentNode } from './Agent/AgentNode';
+import { ClassifierNode } from './Classifier/ClassifierNode';
+import { IfElseNode } from './IfElse/IfElseNode';
+import { AnswerNode } from './Answer/AnswerNode';
+import { CodeNode } from './Code/CodeNode';
+import { HumanNode } from './Human/HumanNode';
+import { ParameterExtractorNode } from './ParameterExtractor/ParameterExtractorNode';
+import { PluginNode } from './Plugin/PluginNode';
 
 export const workflowNodeTypes = {
   start: StartNode,
@@ -22,3 +23,4 @@ export const workflowNodeTypes = {
   parameterExtractor: ParameterExtractorNode,
   plugin: PluginNode,
 };
+
