@@ -57,36 +57,6 @@ pub async fn prepare_run(
         .filter(|m| m.role == Role::User)
         .count() == 0;
 
-    // 检测上一次是否被用户手动中止过
-    let mut last_was_aborted = false;
-    for msg in engine.messages.iter().rev() {
-        if msg.role == Role::Assistant {
-            for block in &msg.content {
-                if let ContentBlock::Text { text } = block {
-                    if text.contains("对话已被用户中止") || text.contains("Dialogue aborted by user") {
-                        last_was_aborted = true;
-                        break;
-                    }
-                }
-            }
-            break;
-        }
-    }
-
-    if last_was_aborted {
-        if let Some(db) = &engine.db_manager {
-            log::info!("[engine] Last run was aborted. Clearing checkpoints for thread_id: {}", engine.thread_id);
-            let _ = sqlx::query("DELETE FROM checkpoints WHERE thread_id = ?1")
-                .bind(&engine.thread_id)
-                .execute(db.pool())
-                .await;
-            let _ = sqlx::query("DELETE FROM writes WHERE thread_id = ?1")
-                .bind(&engine.thread_id)
-                .execute(db.pool())
-                .await;
-        }
-    }
-
     // 无论是第一轮还是后续多轮，只要用户发送了输入，必须立刻同步追加进内存会话历史数组中，防止极速打断时用户输入在数据库和界面上人间蒸发
     engine.messages.push(new_user_msg_struct.clone());
 
@@ -99,15 +69,6 @@ pub async fn prepare_run(
         .map_err(|e| AgentError::ApiError(format!("Serialise user msg: {e}")))?;
     log::debug!("[engine] Created new user message for graph");
 
-    let initial_messages = if last_was_aborted {
-        log::info!("[engine] Feeding complete messages to graph to recover from aborted turn");
-        engine.messages.iter()
-            .filter_map(|m| serde_json::to_value(m).ok())
-            .collect()
-    } else {
-        vec![new_user_msg]
-    };
-
     let initial_state = AgentState::from_engine_snapshot(
         engine.model.clone(),
         engine.current_reasoning_effort.clone(),
@@ -117,7 +78,7 @@ pub async fn prepare_run(
         engine.allow_list.clone(),
         engine.plan_state.is_active,
         engine.plan_state.pre_plan_allow_list.clone(),
-        initial_messages,
+        vec![new_user_msg],
     );
 
     let initial_json = serde_json::to_value(&initial_state)
