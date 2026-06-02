@@ -18,6 +18,7 @@ pub struct WorkflowRecord {
     pub is_active: bool,
     pub created_at: String,
     pub updated_at: String,
+    pub active_version: Option<String>,
 }
 
 /// A workflow version record stored in the database.
@@ -45,7 +46,8 @@ impl DbManager {
     /// List all workflows, ordered by updated_at DESC.
     pub async fn list_workflows(&self) -> anyhow::Result<Vec<WorkflowRecord>> {
         let rows = sqlx::query(
-            "SELECT id, name, description, config, published_config, is_active, created_at, updated_at
+            "SELECT id, name, description, config, published_config, is_active, created_at, updated_at,
+                    (SELECT version FROM workflow_version WHERE workflow_id = workflow.id ORDER BY created_at DESC LIMIT 1) as active_version
              FROM workflow
              ORDER BY updated_at DESC",
         )
@@ -62,7 +64,8 @@ impl DbManager {
     /// Get a single workflow by ID.
     pub async fn get_workflow(&self, id: &str) -> anyhow::Result<Option<WorkflowRecord>> {
         let row = sqlx::query(
-            "SELECT id, name, description, config, published_config, is_active, created_at, updated_at
+            "SELECT id, name, description, config, published_config, is_active, created_at, updated_at,
+                    (SELECT version FROM workflow_version WHERE workflow_id = workflow.id ORDER BY created_at DESC LIMIT 1) as active_version
              FROM workflow WHERE id = ?1",
         )
         .bind(id)
@@ -98,16 +101,9 @@ impl DbManager {
         .execute(self.pool())
         .await?;
 
-        Ok(WorkflowRecord {
-            id,
-            name: input.name.clone(),
-            description: input.description.clone(),
-            config: input.config.clone(),
-            published_config: serde_json::json!({}),
-            is_active: input.is_active,
-            created_at: now.clone(),
-            updated_at: now,
-        })
+        self.get_workflow(&id)
+            .await?
+            .ok_or_else(|| anyhow::anyhow!("Workflow '{}' not found after creation", id))
     }
 
     /// Update an existing workflow. Returns error if not found.
@@ -295,7 +291,7 @@ impl DbManager {
             let config_json = serde_json::to_string(&wf.config)?;
             let now = chrono::Utc::now().to_rfc3339();
 
-            // Insert if not exists; on conflict update name, description, config, etc.
+            // Insert if not exists; on conflict update name, description, config, published_config, etc.
             sqlx::query(
                 "INSERT INTO workflow (id, name, description, config, published_config, is_active, created_at, updated_at)
                  VALUES (?1, ?2, ?3, ?4, ?4, ?5, ?6, ?6)
@@ -303,6 +299,7 @@ impl DbManager {
                     name = excluded.name,
                     description = excluded.description,
                     config = excluded.config,
+                    published_config = excluded.published_config,
                     updated_at = excluded.updated_at",
             )
             .bind(id)
@@ -313,6 +310,22 @@ impl DbManager {
             .bind(&now)
             .execute(self.pool())
             .await?;
+
+            // 自动为内置工作流生成初始发布版本 V1.0.0
+            let existing_versions = self.list_workflow_versions(id).await?;
+            if existing_versions.is_empty() {
+                let version_id = format!("wfv_{}", uuid_like());
+                sqlx::query(
+                    "INSERT INTO workflow_version (id, workflow_id, version, description, config, created_at)
+                     VALUES (?1, ?2, 'V1.0.0', 'System seeded default version', ?3, ?4)"
+                )
+                .bind(&version_id)
+                .bind(id)
+                .bind(&config_json)
+                .bind(&now)
+                .execute(self.pool())
+                .await?;
+            }
         }
         Ok(())
     }
@@ -334,6 +347,7 @@ fn parse_row(row: &sqlx::sqlite::SqliteRow) -> anyhow::Result<WorkflowRecord> {
     let published_config: JsonValue = serde_json::from_str(&published_config_json).unwrap_or(serde_json::json!({}));
     
     let is_active: i64 = row.get("is_active");
+    let active_version: Option<String> = row.try_get("active_version").ok();
 
     Ok(WorkflowRecord {
         id: row.get("id"),
@@ -344,6 +358,7 @@ fn parse_row(row: &sqlx::sqlite::SqliteRow) -> anyhow::Result<WorkflowRecord> {
         is_active: is_active != 0,
         created_at: row.get("created_at"),
         updated_at: row.get("updated_at"),
+        active_version,
     })
 }
 

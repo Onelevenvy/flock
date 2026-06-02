@@ -36,7 +36,7 @@ export function HomeView() {
   const { startAssistant, startWorkflow, loadingId } = useStartAgent();
 
   const featuredAssistants = assistants.filter((a) => a.id !== '__xiaof__').slice(0, 6);
-  const featuredWorkflows = workflows.slice(0, 6);
+  const featuredWorkflows = workflows.filter((w) => !!w.active_version).slice(0, 6);
 
   const handleSelectWorkspace = useCallback(async (wsId: string, wsPath: string) => {
     if (wsId !== activeWorkspaceId) {
