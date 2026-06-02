@@ -330,6 +330,20 @@ pub async fn run_workflow(
 
     // 自动为工作流切换至当前激活工作空间的 working directory，解决不能选择工作空间的问题
     let thread_id_val = thread_id.unwrap_or_else(|| workflow_id.clone());
+
+    // 重点：如果是全新启动工作流运行（不是 resume 打断），彻底清空 sqlite checkpointer 里旧状态 records，防止 aborted 时脏状态残留导致数据串了和参数叠加
+    if resume_value.is_none() {
+        log::info!("[workflow] Fresh run detected. Purging old checkpoints for thread: {}", thread_id_val);
+        let _ = sqlx::query("DELETE FROM checkpoints WHERE thread_id = ?1")
+            .bind(&thread_id_val)
+            .execute(db.pool())
+            .await;
+        let _ = sqlx::query("DELETE FROM writes WHERE thread_id = ?1")
+            .bind(&thread_id_val)
+            .execute(db.pool())
+            .await;
+    }
+
     let mut final_workdir: Option<std::path::PathBuf> = None;
     let row = sqlx::query("SELECT workspace_id, cwd, summary FROM session_metadata WHERE thread_id = ?1")
         .bind(&thread_id_val)
