@@ -26,7 +26,7 @@ pub fn make_plugin_node(
 
             ctx.sink.emit_text_delta(&node_id, &format!("*🔧 正在调用插件 `{}`...*\n", tool_name));
 
-            let tool_args_json: JsonValue = serde_json::from_str(&interpolated_args).unwrap_or_else(|_| {
+            let mut tool_args_json: JsonValue = serde_json::from_str(&interpolated_args).unwrap_or_else(|_| {
                 // If not valid JSON, wrap it as a string
                 json!({ "query": interpolated_args })
             });
@@ -34,6 +34,53 @@ pub fn make_plugin_node(
             let tool = ctx.tools.get(tool_name).ok_or_else(|| {
                 RunnableError::Node(format!("Tool not found: {}", tool_name))
             })?;
+
+            // 智能降级适配：如果工具需要的参数没有被填入，但 state 中有 input_msg 且不为空
+            if let Some(tool_obj) = tool_args_json.as_object_mut() {
+                if let Ok(schema) = serde_json::to_value(tool.input_schema()) {
+                    if let Some(properties) = schema.get("properties").and_then(|v| v.as_object()) {
+                        let required_list = schema.get("required").and_then(|v| v.as_array());
+                        let debug_input = &state.input_msg;
+                        if !debug_input.is_empty() {
+                            if let Some(req_arr) = required_list {
+                                for req_val in req_arr {
+                                    if let Some(req_name) = req_val.as_str() {
+                                        let is_empty_or_missing = match tool_obj.get(req_name) {
+                                            None => true,
+                                            Some(v) => {
+                                                if let Some(s) = v.as_str() {
+                                                    s.trim().is_empty()
+                                                } else {
+                                                    v.is_null()
+                                                }
+                                            }
+                                        };
+                                        if is_empty_or_missing {
+                                            tool_obj.insert(req_name.to_string(), json!(debug_input));
+                                        }
+                                    }
+                                }
+                            } else if properties.len() == 1 {
+                                if let Some(sole_key) = properties.keys().next() {
+                                    let is_empty_or_missing = match tool_obj.get(sole_key) {
+                                        None => true,
+                                        Some(v) => {
+                                            if let Some(s) = v.as_str() {
+                                                s.trim().is_empty()
+                                            } else {
+                                                v.is_null()
+                                            }
+                                        }
+                                    };
+                                    if is_empty_or_missing {
+                                        tool_obj.insert(sole_key.to_string(), json!(debug_input));
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
 
             let res = tool.execute(tool_args_json).await;
 

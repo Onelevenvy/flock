@@ -21,6 +21,8 @@ import { useAvailableTools } from '@/hooks/useAvailableTools';
 // 引入公共组件
 import { VariableTextInput, VariableTextarea } from './VariableInput';
 
+import { ToolsIcon } from '@/components/Common/Icons';
+
 // 引入各节点专属文件夹中的配置组件
 import { LLMFields } from './LLM';
 import { AgentFields } from './Agent';
@@ -31,6 +33,7 @@ import { StartFields } from './Start';
 import { ParameterExtractorFields } from './ParameterExtractor';
 import { PluginFields } from './Plugin';
 import { RetryTimeoutFields } from './RetryTimeoutFields';
+import { useMemo } from 'react';
 
 export interface PropertiesPanelProps {
   node: Node;
@@ -44,7 +47,21 @@ export function PropertiesPanel({ node, onClose, onDataChange }: PropertiesPanel
   const cfg = nodeConfig[type];
 
   const { groupedOptions: modelOptions, loading: modelsLoading } = useAvailableModels();
-  const { groupedOptions: toolOptions, loading: toolsLoading } = useAvailableTools();
+  const { tools: availableTools, providers: availableProviders, groupedOptions: toolOptions, loading: toolsLoading } = useAvailableTools();
+
+  const toolIcon = useMemo(() => {
+    if (type === 'plugin') {
+      const toolData = node.data.tool as { name?: string } | undefined;
+      if (toolData?.name) {
+        const tool = availableTools.find((t) => t.name === toolData.name);
+        if (tool) {
+          const provider = availableProviders.find((p) => p.id === tool.provider_id);
+          return provider?.icon || '';
+        }
+      }
+    }
+    return '';
+  }, [type, node.data.tool, availableTools, availableProviders]);
 
   if (!cfg) return null;
   const Icon = cfg.icon;
@@ -73,7 +90,11 @@ export function PropertiesPanel({ node, onClose, onDataChange }: PropertiesPanel
       >
         <Group gap="xs">
           <ThemeIcon size={32} radius="lg" style={{ background: `${cfg.colorHex}15`, color: cfg.colorHex }}>
-            <Icon size={16} stroke={2.5} />
+            {toolIcon ? (
+              <ToolsIcon name={toolIcon} size={16} />
+            ) : (
+              <Icon size={16} stroke={2.5} />
+            )}
           </ThemeIcon>
           <Box>
             <Text size="sm" fw={700} style={{ color: 'var(--flock-text-bright)' }}>

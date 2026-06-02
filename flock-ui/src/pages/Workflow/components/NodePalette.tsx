@@ -257,7 +257,7 @@ export function NodePalette({ onAddNode }: NodePaletteProps) {
             {filteredProviders.length > 0 ? (
               <Accordion
                 multiple
-                defaultValue={filteredProviders.map((p) => p.id)}
+                defaultValue={[]}
                 styles={{
                   item: { border: 'none', background: 'var(--flock-bg-surface)', marginBottom: 4, borderRadius: 8, overflow: 'hidden' },
                   control: { padding: '6px 8px' },

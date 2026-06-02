@@ -10,9 +10,7 @@ import {
   ScrollArea,
 } from '@mantine/core';
 import { IconTool } from '@tabler/icons-react';
-import { invoke } from '@tauri-apps/api/core';
 import { useTranslation } from 'react-i18next';
-import type { ToolProvider, Tool } from './types';
 import { getProviderDescription, getProviderName } from './helpers';
 import { ToolsIcon } from '@/components/Common/Icons';
 import { ProviderDetailPanel } from './components/ProviderDetailPanel';
