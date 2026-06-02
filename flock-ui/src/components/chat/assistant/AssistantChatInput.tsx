@@ -11,7 +11,6 @@ import { useAgentStore } from '@/store/agentStore';
 import { useWorkspaceStore } from '@/store/workspaceStore';
 import { useWorkspacesQuery } from '@/hooks/useWorkspaces';
 import { v4 as uuidv4 } from 'uuid';
-import { ActiveModelPicker } from '@/components/Common/ActiveModelPicker';
 import { IconShieldCheck, IconBolt, IconFlame } from '@tabler/icons-react';
 import { ActionIcon, Tooltip, Menu, Button } from '@mantine/core';
 
@@ -223,14 +222,11 @@ export function AssistantChatInput() {
         disabled={!activeWorkspaceId || status === 'disconnected' || status === 'connecting'}
         placeholder={placeholder}
         leftExtra={
-          <>
-            <ActiveModelPicker />
-            {value.length > 0 && (
-              <Text size="xs" style={{ color: 'var(--flock-text-dim)', fontSize: 11, flexShrink: 0, whiteSpace: 'nowrap' }}>
-                {value.length} {t('chat.characterCount')}
-              </Text>
-            )}
-          </>
+          value.length > 0 ? (
+            <Text size="xs" style={{ color: 'var(--flock-text-dim)', fontSize: 11, flexShrink: 0, whiteSpace: 'nowrap' }}>
+              {value.length} {t('chat.characterCount')}
+            </Text>
+          ) : undefined
         }
         rightExtra={
           <>

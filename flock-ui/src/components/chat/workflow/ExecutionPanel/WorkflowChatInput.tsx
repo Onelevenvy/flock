@@ -1,4 +1,4 @@
-import { Box } from '@mantine/core';
+import { Box, Text } from '@mantine/core';
 import { ChatInput } from '@/components/chat/shared/ChatInput';
 import { useTranslation } from 'react-i18next';
 
@@ -36,6 +36,11 @@ export function WorkflowChatInput({
         sendLabel={t('workflow.execution.run', 'Send')}
         stopLabel={t('common.stop', 'Stop responding')}
       />
+
+       <Text size="xs" style={{ color: 'var(--flock-text-dim)', textAlign: 'center', opacity: 0.8, fontSize: 11 }} mt={6}>
+              {t('chat.disclaimer')}
+            </Text>
+      
     </Box>
   );
 }
