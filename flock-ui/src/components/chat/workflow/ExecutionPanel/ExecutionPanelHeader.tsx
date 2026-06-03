@@ -34,8 +34,8 @@ export function ExecutionPanelHeader({
       style={{
         height: 48,
         flexShrink: 0,
-        borderBottom: '1px solid var(--flock-border-subtle)',
-        background: 'var(--flock-bg-surface)',
+        borderBottom: '1px solid var(--flock-border-dim)',
+        background: 'var(--flock-bg-deep)',
       }}
     >
       <Group gap="xs">

@@ -8,7 +8,7 @@ interface ChatPanelProps {
   messages: ChatMessage[];
 }
 
-export function ChatPanel({ messages }: ChatPanelProps) {
+export function AssistantChatPanel({ messages }: ChatPanelProps) {
   const bottomRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {

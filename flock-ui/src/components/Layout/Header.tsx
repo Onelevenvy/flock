@@ -18,6 +18,8 @@ import { useUiStore } from '@/store/uiStore';
 import { useWorkspaceStore } from '@/store/workspaceStore';
 import { useAssistantsQuery } from '@/hooks/useAssistants';
 import { useTranslation } from 'react-i18next';
+import { useWorkflowQuery } from '@/hooks/useWorkflow';
+import { useWorkflowStore } from '@/store/workflowStore';
 
 const STATUS_COLOR: Record<string, string> = {
   disconnected: 'gray',
@@ -29,10 +31,7 @@ const STATUS_COLOR: Record<string, string> = {
 
 export function Header() {
   const { t } = useTranslation();
-  const status = useAgentStore((s) => s.status);
   const { toggleSidebar, isFileTreeOpen, toggleFileTree, environmentMode, openEnvironment, closeEnvironment } = useUiStore();
-  const statusColor = STATUS_COLOR[status] ?? 'gray';
-  const statusLabel = t(`header.status.${status}`, { defaultValue: status });
 
   const { activeConversationId, conversationAssistants } = useWorkspaceStore();
   const { data: assistants = [] } = useAssistantsQuery();
@@ -41,12 +40,43 @@ export function Header() {
   const assistantId = activeConversationId ? conversationAssistants[activeConversationId] : null;
   const currentAssistant = assistants.find((a) => a.id === assistantId);
 
+  // Check if active conversation is a workflow conversation
+  const isWorkflow = !!assistantId?.startsWith('workflow:');
+  const workflowId = isWorkflow && assistantId ? assistantId.slice('workflow:'.length) : null;
+  const { data: workflow } = useWorkflowQuery(workflowId);
+
+  // Get workflow execution status from store
+  const workflowExecution = useWorkflowStore((s) =>
+    activeConversationId ? s.threadExecutions[activeConversationId] : null
+  );
+  const workflowStatus = workflowExecution?.status ?? 'idle';
+  const isInterrupted = workflowExecution?.interrupt !== null && workflowExecution?.interrupt !== undefined;
+
   // Determine assistant display name
-  const assistantName = currentAssistant
+  const assistantName = isWorkflow
+    ? (workflow?.name ?? t('workflow.execution.title', 'Workflow'))
+    : currentAssistant
     ? currentAssistant.name
     : (assistantId === '__xiaof__' || !assistantId)
     ? t('header.defaultAssistant')
     : t('header.customAssistant');
+
+  // Map status based on whether it is a workflow conversation or agent conversation
+  const agentStatus = useAgentStore((s) => s.status);
+  const currentStatus = isWorkflow
+    ? (workflowStatus === 'running'
+        ? 'thinking'
+        : isInterrupted
+        ? 'connecting'
+        : workflowStatus === 'done'
+        ? 'ready'
+        : workflowStatus === 'error'
+        ? 'error'
+        : 'disconnected')
+    : agentStatus;
+
+  const statusColor = STATUS_COLOR[currentStatus] ?? 'gray';
+  const statusLabel = t(`header.status.${currentStatus}`, { defaultValue: currentStatus });
 
   const isEnvironmentOpen = environmentMode !== 'closed';
 
@@ -108,7 +138,6 @@ export function Header() {
       </Group>
 
       <Group gap={12}>
-        {/* Active Assistant display next to status */}
         {assistantId && assistantId !== '__xiaof__' ? (
           <Badge
             variant="light"
@@ -130,7 +159,7 @@ export function Header() {
               size={12}
               color={`var(--mantine-color-${statusColor}-5)`}
               style={{
-                animation: (status === 'thinking' || status === 'connecting') ? 'blink 1.5s infinite' : 'none'
+                animation: (currentStatus === 'thinking' || currentStatus === 'connecting') ? 'blink 1.5s infinite' : 'none'
               }}
             />
           </ActionIcon>

@@ -78,6 +78,10 @@ export function ExecutionRoundItem({
             border: '1px solid var(--flock-border-subtle)',
             overflow: 'hidden',
             background: 'var(--flock-bg-surface)',
+            alignSelf: 'flex-start',
+            width: 'fit-content',
+            minWidth: 280,
+            maxWidth: '85%',
           }}
         >
           {/* 组标题行 */}
@@ -170,6 +174,9 @@ export function ExecutionRoundItem({
               border: '1px solid var(--flock-border-subtle)',
               overflow: 'hidden',
               background: 'var(--flock-bg-surface)',
+              alignSelf: 'flex-start',
+              width: 'fit-content',
+              maxWidth: '85%',
             }}
           >
             <Box

@@ -4,7 +4,7 @@ import { useAgentStore } from '@/store/agentStore';
 import { useUiStore } from '@/store/uiStore';
 import { useWorkspaceStore } from '@/store/workspaceStore';
 import { Header } from '@/components/Layout/Header';
-import { ChatPanel } from '@/components/chat/assistant/ChatPanel';
+import { AssistantChatPanel } from '@/components/chat/assistant/AssistantChatPanel';
 import { AssistantChatInput } from '@/components/chat/assistant/AssistantChatInput';
 import { ToolApprovalInline } from '@/components/chat/assistant/ToolApproval/ToolApprovalInline';
 import { HumanTakeoverBanner } from '@/components/chat/assistant/ToolApproval/HumanTakeoverBanner';
@@ -27,7 +27,7 @@ function AssistantChatContent() {
 
   return (
     <Box style={{ display: 'flex', flexDirection: 'column', flex: 1, overflow: 'hidden' }}>
-      <ChatPanel messages={messages} />
+      <AssistantChatPanel messages={messages} />
       <ToolApprovalInline approval={firstPending} />
       {humanTakeover && <HumanTakeoverBanner takeover={humanTakeover} />}
       <AssistantChatInput />
@@ -117,8 +117,7 @@ export function WorkspaceView() {
               boxShadow: '0 4px 20px rgba(0, 0, 0, 0.03)',
             }}
           >
-            {/* 工作流对话有自己的 header，助手对话才需要外层 Header */}
-            {!isWorkflowConv && <Header />}
+            <Header />
             {mainContent}
           </Box>
         </>
@@ -137,8 +136,7 @@ export function WorkspaceView() {
             boxShadow: '0 4px 20px rgba(0, 0, 0, 0.03)',
           }}
         >
-          {/* 工作流对话有自己的 header，助手对话才需要外层 Header */}
-          {!isWorkflowConv && <Header />}
+          <Header />
           {mainContent}
         </Box>
       )}

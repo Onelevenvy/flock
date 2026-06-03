@@ -210,17 +210,19 @@ export function ExecutionPanel({
       }}
     >
       {/* Panel header */}
-      <ExecutionPanelHeader
-        isEmbedded={isEmbedded}
-        workflowName={workflowName}
-        status={status}
-        statusColor={statusColor}
-        isInterrupted={isInterrupted}
-        hasMessages={messages.length > 0}
-        onClear={handleClear}
-        onStop={stopWorkflow}
-        onClose={onClose}
-      />
+      {!isEmbedded && (
+        <ExecutionPanelHeader
+          isEmbedded={isEmbedded}
+          workflowName={workflowName}
+          status={status}
+          statusColor={statusColor}
+          isInterrupted={isInterrupted}
+          hasMessages={messages.length > 0}
+          onClear={handleClear}
+          onStop={stopWorkflow}
+          onClose={onClose}
+        />
+      )}
 
       {/* Main content */}
       <Box
@@ -228,7 +230,7 @@ export function ExecutionPanel({
           flex: 1,
           display: 'flex',
           flexDirection: 'column',
-          background: 'var(--flock-bg-base)',
+          background: 'var(--flock-bg-surface)',
           minHeight: 0,
         }}
       >
