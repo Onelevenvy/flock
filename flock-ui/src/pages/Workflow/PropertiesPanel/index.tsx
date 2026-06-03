@@ -65,10 +65,20 @@ export function PropertiesPanel({ node, onClose, onDataChange }: PropertiesPanel
   }, [node.id, node.data]);
 
   const executeDebug = async (mockOutputs: Record<string, any>) => {
+    const envVars: Record<string, any> = {};
+    let inputMsg = "";
+
+    if (mockOutputs["env"]) {
+      Object.assign(envVars, mockOutputs["env"]);
+    }
+    if (mockOutputs["start"] && mockOutputs["start"]["query"] !== undefined) {
+      inputMsg = mockOutputs["start"]["query"];
+    }
+
     const payload = {
-      input_msg: "",
+      input_msg: inputMsg,
       node_outputs: mockOutputs,
-      env_vars: {} as Record<string, any>,
+      env_vars: envVars,
     };
 
     setActiveTab('last-run');
@@ -176,7 +186,7 @@ export function PropertiesPanel({ node, onClose, onDataChange }: PropertiesPanel
             {t('workflow.debugPanel.tabSetup', 'SETTINGS')}
           </Tabs.Tab>
           <Tabs.Tab value="last-run" leftSection={<IconHistory size={12} />}>
-            {t('workflow.debugPanel.tabLastRun', 'LAST RUN')}
+            {t('workflow.debugPanel.tabLastRun', 'DEBUG')}
           </Tabs.Tab>
         </Tabs.List>
 

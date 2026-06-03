@@ -19,7 +19,6 @@
     "run": "Run Node",
     "hint": "Output will appear in the execution panel. Open it via the play button in the toolbar.",
     "mockVariablesTitle": "Configure Debug Variables",
-    "mockVariablesDesc": "This node depends on output variables from other nodes. Please configure mock values for debugging:",
     "mockValuePlaceholder": "Enter mock value",
     "runDebug": "Run"
   },

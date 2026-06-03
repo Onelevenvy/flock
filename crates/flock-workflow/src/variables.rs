@@ -156,10 +156,21 @@ pub fn resolve_and_interpolate(template: &str, scope: &VariableScope) -> String 
     }).into_owned()
 }
 
-/// Interpolate all string values in a JSON tree.
+/// Interpolate all string values in a JSON tree, preserving raw variable types for single variable placeholders.
 pub fn resolve_and_interpolate_json(val: &JsonValue, scope: &VariableScope) -> JsonValue {
     match val {
-        JsonValue::String(s) => JsonValue::String(resolve_and_interpolate(s, scope)),
+        JsonValue::String(s) => {
+            let trimmed = s.trim();
+            if trimmed.starts_with("${") && trimmed.ends_with('}') {
+                let inner = &trimmed[2..trimmed.len() - 1];
+                if !inner.contains("${") && !inner.contains('}') {
+                    if let Some(tv) = scope.resolve(inner) {
+                        return tv.value;
+                    }
+                }
+            }
+            JsonValue::String(resolve_and_interpolate(s, scope))
+        }
         JsonValue::Array(arr) => JsonValue::Array(
             arr.iter().map(|item| resolve_and_interpolate_json(item, scope)).collect()
         ),
@@ -174,7 +185,6 @@ pub fn resolve_and_interpolate_json(val: &JsonValue, scope: &VariableScope) -> J
     }
 }
 
-/// Build system variables from state and context.
 pub fn build_system_vars(
     state: &WorkflowState,
     workflow_id: &str,

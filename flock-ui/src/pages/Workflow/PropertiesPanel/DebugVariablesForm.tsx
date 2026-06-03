@@ -43,12 +43,7 @@ export function DebugVariablesForm({ variables, onRun, isRunning }: DebugVariabl
         <Text size="xs" fw={700} style={{ color: 'var(--flock-text-bright)' }}>
           {t('workflow.debugPanel.mockVariablesTitle', 'Configure Debug Variables')}
         </Text>
-        <Text size="11px" c="dimmed">
-          {t(
-            'workflow.debugPanel.mockVariablesDesc',
-            'Please configure mock values for dependency variables:'
-          )}
-        </Text>
+       
         <Stack gap="xs" mt={4}>
           {localVars.map((v, idx) => (
             <TextInput

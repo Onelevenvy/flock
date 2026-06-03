@@ -263,7 +263,7 @@ export function extractVariables(data: unknown): DebugVariable[] {
 
   const vars: DebugVariable[] = [];
   matches.forEach((p) => {
-    if (p.startsWith('sys.') || p.startsWith('env.') || p === 'start.query') {
+    if (p.startsWith('sys.')) {
       return;
     }
     const parts = p.split('.').map((s) => s.trim());
