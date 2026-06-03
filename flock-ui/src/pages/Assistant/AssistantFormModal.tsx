@@ -114,7 +114,7 @@ export function AssistantFormModal({
             value={model}
             onChange={setModel}
             searchable
-            clearable
+            withAsterisk
             styles={{
               input: {
                 background: 'var(--flock-bg-surface)',
