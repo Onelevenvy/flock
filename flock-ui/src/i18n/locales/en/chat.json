@@ -11,6 +11,7 @@
   "copyCode": "Copy Code",
   "runningMode": "Running Mode",
   "inputPlaceholder": "Type a message (Enter to send, Shift+Enter for new line)",
+  "inputPlaceholderShort": "Type a message...",
   "chooseWorkspace": "Please select or create a workspace on the left first...",
   "agentDisconnected": "Agent disconnected, starting...",
   "agentConnecting": "Connecting to Agent...",
