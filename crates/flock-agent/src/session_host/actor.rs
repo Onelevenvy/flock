@@ -1,8 +1,8 @@
 use std::sync::Arc;
 use std::sync::atomic::{AtomicBool, Ordering};
 use tokio::sync::mpsc;
-use flock_agent::engine::AgentEngine;
-use crate::assistant::state::SessionCommand;
+use crate::engine::AgentEngine;
+use crate::session_host::state::SessionCommand;
 
 pub async fn run_session_actor(
     session_id: String,
@@ -21,7 +21,7 @@ pub async fn run_session_actor(
                     engine.run(&content, &msg_id).await
                 }).await;
                 if let Err(err) = run_result {
-                    if matches!(err, flock_agent::engine::AgentError::UserAborted) {
+                    if matches!(err, crate::engine::AgentError::UserAborted) {
                         log::info!("Agent run for session {} aborted by user.", session_id);
                         engine.output().emit_stream_end(&msg_id, 0, 0, 0, 0, 0);
                     } else {

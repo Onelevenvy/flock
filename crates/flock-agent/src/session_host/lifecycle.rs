@@ -4,30 +4,29 @@ use std::sync::atomic::{AtomicBool, Ordering};
 use std::time::Instant;
 use tokio::sync::mpsc;
 use anyhow::Result;
-use tauri::{AppHandle, Manager};
 use tokio::sync::Mutex;
 
-use flock_agent::agent_setup::{AgentBuilder, AssistantOverrides};
-use flock_agent::sinks::OutputSink;
+use crate::agent_setup::{AgentBuilder, AssistantOverrides};
+use crate::sinks::OutputSink;
 use flock_core::config::settings::{CliArgs, Config};
 use flock_core::db::DbManager;
-use crate::assistant::state::{AgentState, SessionCommand, SessionHandle};
-use crate::ipc::emitter::TauriProtocolEmitter;
-use crate::assistant::actor::run_session_actor;
+use crate::session_host::state::{AgentState, SessionCommand, SessionHandle};
+use crate::session_host::actor::run_session_actor;
 
-/// 启动 Agent 引擎
+/// 启动 Agent 引擎 (解耦 Tauri, 接收抽象的 db_manager, emitter & output)
 pub async fn start_agent(
-    app: AppHandle,
+    db_manager: Arc<DbManager>,
     state: Arc<Mutex<AgentState>>,
     workdir: PathBuf,
     session_id: Option<String>,
     assistant_id: Option<String>,
     extra_args: Vec<String>,
+    protocol_emitter: Arc<dyn flock_core::ipc_interface::writer::ProtocolEmitter + Send + Sync>,
+    output: Arc<dyn OutputSink + Send + Sync>,
 ) -> Result<()> {
     let sid = session_id.clone().unwrap_or_else(|| "default".to_string());
     let force_restart = extra_args.iter().any(|arg| arg == "--force-restart");
 
-    let db_manager: Arc<DbManager> = app.state::<Arc<DbManager>>().inner().clone();
     let max_cached: usize = db_manager.get_config("max_cached_sessions").await.unwrap_or(10);
 
     // 1. 检查该会话是否已经加载到内存中
@@ -140,10 +139,8 @@ pub async fn start_agent(
         s.approval_manager.clone()
     };
 
-    let protocol_emitter = Arc::new(TauriProtocolEmitter::new(app.clone()));
     flock_tools::init_global_emitter(protocol_emitter.clone());
-    flock_tools::init_global_approval_manager(approval_manager);
-    let output: Arc<dyn OutputSink> = protocol_emitter.clone();
+    flock_tools::init_global_approval_manager(approval_manager.clone());
 
     let mut bootstrap = AgentBuilder::new(config.clone(), workdir.to_string_lossy(), output.clone());
 
@@ -226,10 +223,6 @@ pub async fn start_agent(
     let result = bootstrap.build().await?;
     let mut engine = result.engine;
 
-    let approval_manager = {
-        let s = state.lock().await;
-        s.approval_manager.clone()
-    };
     engine.set_approval_manager(approval_manager);
     engine.set_protocol_writer(protocol_emitter.clone());
 
@@ -244,12 +237,20 @@ pub async fn start_agent(
 
     {
         let s = state.lock().await;
-        protocol_emitter.emit_ready(
-            engine.compat(),
-            result.has_mcp,
-            sid_actual.clone(),
-            &s.approval_manager.current_mode(),
-        );
+        let ready_event = flock_core::ipc_interface::events::ProtocolEvent::Ready {
+            version: "0.1.0".to_string(),
+            session_id: sid_actual.clone(),
+            capabilities: flock_core::ipc_interface::events::Capabilities {
+                tool_approval: true,
+                thinking: engine.compat().supports_thinking(),
+                effort: engine.compat().supports_effort(),
+                effort_levels: engine.compat().effort_levels().to_vec(),
+                modes: vec!["default".into(), "auto_edit".into(), "yolo".into()],
+                current_mode: s.approval_manager.current_mode(),
+                mcp: result.has_mcp,
+            },
+        };
+        let _ = protocol_emitter.emit(&ready_event);
     }
 
     let (tx, rx) = mpsc::channel(100);
@@ -289,7 +290,7 @@ pub async fn stop_agent(state: Arc<Mutex<AgentState>>, session_id: Option<String
     let sid = session_id.unwrap_or_else(|| "default".to_string());
     if let Some(handle) = s.sessions.get(&sid) {
         log::info!("Cancelling agent engine run for session: {}", sid);
-        // 先触发 cancel，打断正在阻塞运行ের engine，但并不从缓存中移除，确保后续可继续交互
+        // 先触发 cancel，打断正在阻塞运行的 engine，但并不从缓存中移除，确保后续可继续交互
         handle.cancel_flag.store(true, Ordering::SeqCst);
     }
     Ok(())
@@ -301,12 +302,11 @@ pub async fn send_message(
     session_id: Option<String>,
     msg_id: String,
     content: String,
-    app: AppHandle,
+    db_manager: Arc<DbManager>,
 ) -> Result<()> {
     let sid = session_id.unwrap_or_else(|| "default".to_string());
     log::info!("Sending message [{}] for session {}: {}", msg_id, sid, content);
 
-    let db_manager = app.state::<Arc<DbManager>>().inner().clone();
     let max_running: usize = db_manager.get_config("max_running_sessions").await.unwrap_or(4);
 
     let tx = {

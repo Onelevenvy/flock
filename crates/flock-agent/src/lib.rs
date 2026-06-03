@@ -12,6 +12,7 @@ pub mod graph;
 pub mod tool_executor;
 pub mod sinks;
 pub mod session;
+pub mod session_host;
 pub mod tools;
 
 

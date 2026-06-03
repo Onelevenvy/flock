@@ -3,7 +3,7 @@ use tokio::sync::Mutex;
 use anyhow::Result;
 use flock_core::ipc_interface::approval::ToolApprovalResult;
 use flock_core::ipc_interface::commands::{ApprovalScope, SessionMode};
-use crate::assistant::state::{AgentState, SessionCommand};
+use crate::session_host::state::{AgentState, SessionCommand};
 
 /// 批准工具调用
 pub async fn approve_tool(

@@ -1,7 +1,7 @@
 use std::path::PathBuf;
 use std::sync::Arc;
 
-use tauri::{AppHandle, State};
+use tauri::{AppHandle, State, Manager};
 use tokio::sync::Mutex;
 
 use crate::assistant::{self, AgentState};
@@ -33,9 +33,22 @@ pub async fn start_agent(
         args.push(key.clone());
     }
 
-    assistant::start_agent(app, state.inner().clone(), workdir, session_id, assistant_id, args)
-        .await
-        .map_err(|e| e.to_string())
+    let db_manager = app.state::<Arc<flock_core::db::DbManager>>().inner().clone();
+    let emitter = Arc::new(crate::ipc::emitter::TauriProtocolEmitter::new(app.clone()));
+    let output = emitter.clone() as Arc<dyn flock_agent::sinks::OutputSink + Send + Sync>;
+
+    assistant::start_agent(
+        db_manager,
+        state.inner().clone(),
+        workdir,
+        session_id,
+        assistant_id,
+        args,
+        emitter,
+        output,
+    )
+    .await
+    .map_err(|e| e.to_string())
 }
 
 /// 停止 Agent
@@ -58,7 +71,8 @@ pub async fn send_message(
     msg_id: String,
     content: String,
 ) -> Result<(), String> {
-    assistant::send_message(state.inner().clone(), session_id, msg_id, content, app)
+    let db_manager = app.state::<Arc<flock_core::db::DbManager>>().inner().clone();
+    assistant::send_message(state.inner().clone(), session_id, msg_id, content, db_manager)
         .await
         .map_err(|e| e.to_string())
 }
