@@ -1,4 +1,4 @@
-mod shared;
+mod common;
 pub mod assistant;
 mod conversation;
 mod file;
@@ -9,7 +9,7 @@ mod settings;
 mod cron;
 mod workflow;
 
-pub use shared::*;
+pub use common::*;
 pub use assistant::*;
 pub use conversation::*;
 pub use file::*;
