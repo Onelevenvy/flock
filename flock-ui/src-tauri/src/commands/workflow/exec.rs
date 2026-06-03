@@ -751,7 +751,6 @@ pub async fn run_workflow(
             let final_text_clone = final_text.clone();
             let final_thinking_clone = final_thinking.clone();
             let provider_for_summary = provider.clone();
-            let msgs = sink.events_log.lock().unwrap().clone();
 
             tokio::spawn(async move {
                 let existing_row: Option<(String, String)> = sqlx::query_as(
@@ -860,20 +859,11 @@ pub async fn run_workflow(
                     }
                 }
 
-                // 重点：使用带有 __wf_native__ 标记的前端原生格式保存完整的 messages
-                let wrapped = serde_json::json!({
-                    "__wf_native__": true,
-                    "msgs": msgs
-                });
-                let messages_json = serde_json::to_string(&wrapped).unwrap_or_else(|_| "{}".to_string());
-                let msg_count = msgs.len();
                 let updated_at = chrono::Utc::now().to_rfc3339();
 
                 let _ = sqlx::query(
-                    "UPDATE session_metadata SET messages = ?1, msg_count = ?2, updated_at = ?3 WHERE thread_id = ?4"
+                    "UPDATE session_metadata SET updated_at = ?1 WHERE thread_id = ?2"
                 )
-                .bind(&messages_json)
-                .bind(msg_count as i64)
                 .bind(&updated_at)
                 .bind(&thread_id_val_clone_inner)
                 .execute(db_for_task.pool())
