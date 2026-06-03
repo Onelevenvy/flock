@@ -71,7 +71,7 @@ pub struct AgentEngine {
     pub(crate) thread_id: String,
     /// Whether to print verbose [DEBUG] logs to stderr.
     pub(crate) debug_mode: bool,
-    pub(crate) provider_label: String,
+    pub provider_label: String,
     pub(crate) db_manager: Option<Arc<flock_core::db::DbManager>>,
     pub(crate) cancel_flag: Arc<AtomicBool>,
     pub(crate) has_error: Arc<Mutex<Option<String>>>,

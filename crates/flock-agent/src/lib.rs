@@ -10,7 +10,6 @@ pub mod engine;
 pub mod graph;
 pub mod sinks;
 pub mod session;
-pub mod session_host;
 pub mod tools;
 
 
