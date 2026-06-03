@@ -125,7 +125,7 @@ pub fn make_parameter_extractor_node(
                         LgMessage::human(user_prompt),
                     ];
 
-                    ctx.sink.emit_text_delta(&node_id, "*🔍 Extracting parameters...*\n");
+                    ctx.sink.emit_text_delta(&node_id, "\u{200b}");
 
                     let model = resolve_model(&node_data, &ctx);
                     let mut rx = model.astream(&messages[..], &config);

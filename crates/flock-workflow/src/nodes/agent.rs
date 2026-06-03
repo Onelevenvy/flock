@@ -122,7 +122,7 @@ pub fn make_agent_workflow_node(
                         parameters: t.input_schema,
                     }).collect();
 
-                    ctx.sink.emit_text_delta(&node_id, "*🔍 Running agent...*\n");
+                    ctx.sink.emit_text_delta(&node_id, "\u{200b}");
 
                     let model = resolve_model(&node_data, &ctx);
                     let provider = model.bind_tools(bound_tools);
