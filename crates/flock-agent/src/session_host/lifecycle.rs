@@ -315,8 +315,48 @@ pub async fn send_message(
     let content_clone = content.clone();
     let msg_id_clone = msg_id.clone();
 
+    struct SessionCleanupGuard {
+        state: Arc<Mutex<AgentState>>,
+        session_id: String,
+        msg_id: String,
+        cancel_flag: Arc<AtomicBool>,
+    }
+
+    impl Drop for SessionCleanupGuard {
+        fn drop(&mut self) {
+            let state = self.state.clone();
+            let session_id = self.session_id.clone();
+            let msg_id = self.msg_id.clone();
+            let cancel_flag = self.cancel_flag.clone();
+            tokio::spawn(async move {
+                let mut s = state.lock().await;
+                s.sessions.remove(&session_id);
+                if cancel_flag.load(Ordering::SeqCst) {
+                    if let Some(emitter) = flock_tools::get_global_emitter() {
+                        let _ = emitter.emit(&flock_core::ipc_interface::events::ProtocolEvent::StreamEnd {
+                            msg_id,
+                            usage: None,
+                        });
+                    }
+                }
+            });
+        }
+    }
+
+    let state_clone = state.clone();
+    let cancel_flag_clone2 = cancel_flag.clone();
+    let sid_clone2 = sid.clone();
+    let msg_id_clone2 = msg_id.clone();
+
     // 4. 异步拉起单次运行
     let join_handle = tokio::spawn(async move {
+        let _guard = SessionCleanupGuard {
+            state: state_clone,
+            session_id: sid_clone2,
+            msg_id: msg_id_clone2,
+            cancel_flag: cancel_flag_clone2,
+        };
+
         let run_result = flock_core::CURRENT_SESSION_ID.scope(sid_clone.clone(), async {
             engine.run(&content_clone, &msg_id_clone).await
         }).await;
@@ -341,6 +381,7 @@ pub async fn send_message(
                 join_handle,
                 cancel_flag,
                 is_running,
+                msg_id,
             },
         );
     }

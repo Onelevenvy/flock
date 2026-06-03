@@ -14,6 +14,7 @@ pub struct ActiveSession {
     pub join_handle: tokio::task::JoinHandle<()>,
     pub cancel_flag: Arc<AtomicBool>,
     pub is_running: Arc<AtomicBool>,
+    pub msg_id: String,
 }
 
 /// 全局 Agent 状态
