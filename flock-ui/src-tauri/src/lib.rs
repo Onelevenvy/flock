@@ -1,4 +1,3 @@
-mod assistant;
 mod ipc;
 mod commands;
 mod workspace;
@@ -9,7 +8,7 @@ use std::sync::Arc;
 use tauri::Manager;
 use tokio::sync::Mutex;
 
-use assistant::AgentState;
+use commands::assistant::AgentState;
 use commands::SharedAgentState;
 
 /// Shared database manager type.

@@ -141,7 +141,7 @@ pub async fn trigger_job_execution(
     let selected_assistant = job.assistant_id.clone().unwrap_or_else(|| "__xiaof__".to_string());
     let emitter = Arc::new(crate::ipc::emitter::TauriProtocolEmitter::new(app.clone()));
     let output = emitter.clone() as Arc<dyn flock_agent::sinks::OutputSink + Send + Sync>;
-    if let Err(e) = crate::assistant::start_agent(
+    if let Err(e) = crate::commands::assistant::start_agent_engine(
         db.clone(),
         agent_state.clone(),
         workdir,
@@ -197,7 +197,7 @@ pub async fn trigger_job_execution(
     let msg_id = format!("msg_{}", uuid_like());
     let prompt_content = job.prompt.clone();
 
-    if let Err(e) = crate::assistant::send_message(
+    if let Err(e) = crate::commands::assistant::send_message_to_engine(
         agent_state.clone(),
         Some(conv_id.clone()),
         msg_id,

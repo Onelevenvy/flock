@@ -4,13 +4,15 @@ use std::collections::HashMap;
 use std::sync::atomic::{AtomicBool, Ordering};
 use anyhow::Result;
 use tokio::sync::Mutex;
+use tauri::State;
 
 use flock_agent::agent_setup::{AgentBuilder, AssistantOverrides};
 use flock_agent::sinks::OutputSink;
 use flock_core::config::settings::{CliArgs, Config};
-use flock_core::db::DbManager;
+use flock_core::db::{DbManager, AssistantRecord, UpsertAssistant};
 use flock_core::ipc_interface::approval::{ToolApprovalManager, ToolApprovalResult};
 use flock_core::ipc_interface::commands::{ApprovalScope, SessionMode};
+use crate::SharedDbManager;
 
 pub struct SessionMetadata {
     pub workdir: PathBuf,
@@ -18,7 +20,6 @@ pub struct SessionMetadata {
     pub extra_args: Vec<String>,
 }
 
-#[allow(dead_code)]
 pub struct ActiveSession {
     pub join_handle: tokio::task::JoinHandle<()>,
     pub cancel_flag: Arc<AtomicBool>,
@@ -212,7 +213,7 @@ async fn build_session_engine(
 }
 
 /// 启动 Agent 引擎
-pub async fn start_agent(
+pub async fn start_agent_engine(
     db_manager: Arc<DbManager>,
     state: Arc<Mutex<AgentState>>,
     workdir: PathBuf,
@@ -282,7 +283,7 @@ pub async fn start_agent(
 }
 
 /// 停止 Agent 运行
-pub async fn stop_agent(state: Arc<Mutex<AgentState>>, session_id: Option<String>) -> Result<()> {
+pub async fn stop_agent_engine(state: Arc<Mutex<AgentState>>, session_id: Option<String>) -> Result<()> {
     let mut s = state.lock().await;
     let sid = session_id.unwrap_or_else(|| "default".to_string());
     if let Some(active) = s.sessions.remove(&sid) {
@@ -294,7 +295,7 @@ pub async fn stop_agent(state: Arc<Mutex<AgentState>>, session_id: Option<String
 }
 
 /// 发送消息（无状态运行，异步拉起）
-pub async fn send_message(
+pub async fn send_message_to_engine(
     state: Arc<Mutex<AgentState>>,
     session_id: Option<String>,
     msg_id: String,
@@ -423,7 +424,7 @@ pub async fn send_message(
 }
 
 /// 批准工具调用
-pub async fn approve_tool(
+pub async fn approve_tool_call(
     state: Arc<Mutex<AgentState>>,
     call_id: String,
     scope: String,
@@ -438,7 +439,7 @@ pub async fn approve_tool(
 }
 
 /// 拒绝工具调用
-pub async fn deny_tool(
+pub async fn deny_tool_call(
     state: Arc<Mutex<AgentState>>,
     call_id: String,
     reason: Option<String>,
@@ -454,7 +455,7 @@ pub async fn deny_tool(
 }
 
 /// 设置模式
-pub async fn set_mode(state: Arc<Mutex<AgentState>>, mode: String) -> Result<()> {
+pub async fn set_approval_mode(state: Arc<Mutex<AgentState>>, mode: String) -> Result<()> {
     let s = state.lock().await;
     let mode_enum = match mode.as_str() {
         "auto_edit" => SessionMode::AutoEdit,
@@ -466,7 +467,7 @@ pub async fn set_mode(state: Arc<Mutex<AgentState>>, mode: String) -> Result<()>
 }
 
 /// 更新配置 (无状态模式下配置变化主要通过数据库持久化，此接口做日志记录)
-pub async fn set_config(
+pub async fn set_engine_config(
     _state: Arc<Mutex<AgentState>>,
     session_id: Option<String>,
     model: Option<String>,
@@ -480,4 +481,40 @@ pub async fn set_config(
         session_id, model, thinking, thinking_budget, effort, compaction
     );
     Ok(())
+}
+
+/// 列出所有助手（内置 + 用户创建）
+#[tauri::command]
+pub async fn list_assistants(
+    db: State<'_, SharedDbManager>,
+) -> Result<Vec<AssistantRecord>, String> {
+    db.list_assistants().await.map_err(|e| e.to_string())
+}
+
+/// 创建新助手
+#[tauri::command]
+pub async fn create_assistant(
+    db: State<'_, SharedDbManager>,
+    input: UpsertAssistant,
+) -> Result<AssistantRecord, String> {
+    db.create_assistant(&input).await.map_err(|e| e.to_string())
+}
+
+/// 更新助手
+#[tauri::command]
+pub async fn update_assistant(
+    db: State<'_, SharedDbManager>,
+    id: String,
+    input: UpsertAssistant,
+) -> Result<AssistantRecord, String> {
+    db.update_assistant(&id, &input).await.map_err(|e| e.to_string())
+}
+
+/// 删除助手
+#[tauri::command]
+pub async fn delete_assistant(
+    db: State<'_, SharedDbManager>,
+    id: String,
+) -> Result<(), String> {
+    db.delete_assistant(&id).await.map_err(|e| e.to_string())
 }

@@ -1,5 +1,5 @@
 mod agent;
-mod assistant;
+pub mod assistant;
 mod conversation;
 mod file;
 mod models;
