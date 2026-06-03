@@ -141,7 +141,7 @@ pub async fn debug_node(
         }
     }
 
-    let graph = build_debug_node_graph(&wf_record.config, &node_id, ctx, checkpointer)
+    let graph = build_debug_node_graph(&wf_record.config, &node_id, ctx.clone(), checkpointer)
         .map_err(|e| e.to_string())?;
 
     let mut config = RunnableConfig::default();
