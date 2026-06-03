@@ -1,7 +1,8 @@
 use serde_json::{json, Value as JsonValue};
 use langgraph::runnable::RunnableError;
 use flock_core::types::message::{ContentBlock, Message, Role};
-use crate::tool_executor::{run_tools, ExecutionControl};
+use flock_tools::tool_executor::{run_tools, ExecutionControl};
+use flock_tools::approval::ToolConfirmer;
 use super::FlockToolNode;
 use super::extract::extract_tool_calls;
 
@@ -50,8 +51,8 @@ pub async fn ainvoke_impl(
             .unwrap_or_default();
 
         use std::sync::atomic::Ordering;
-        use crate::tool_executor::execute_tool_calls_with_approval;
-        use crate::tool_executor::ExecutionControl;
+        use flock_tools::tool_executor::execute_tool_calls_with_approval;
+        use flock_tools::tool_executor::ExecutionControl;
 
         let outcome_res = tokio::select! {
             _ = async {

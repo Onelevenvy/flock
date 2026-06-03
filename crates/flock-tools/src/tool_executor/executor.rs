@@ -1,5 +1,5 @@
 use std::sync::{Arc, Mutex};
-use crate::approval::ToolApproval;
+use crate::approval::ToolConfirmer;
 use flock_core::config::hooks::HookEngine;
 use flock_core::ipc_interface::approval::{ToolApprovalManager, ToolApprovalResult};
 use flock_core::ipc_interface::events::{OutputType, ProtocolEvent, ToolCategory, ToolInfo, ToolStatus};
@@ -18,7 +18,7 @@ use super::image_extract::extract_images_from_tool_result;
 pub async fn run_tools(
     registry: &ToolRegistry,
     tool_calls: &[ContentBlock],
-    confirmer: Option<&Arc<Mutex<ToolApproval>>>,
+    confirmer: Option<&Arc<Mutex<dyn ToolConfirmer>>>,
     mut hooks: Option<&mut HookEngine>,
     compaction_level: flock_core::context_compression::CompressionLevel,
     toon_enabled: bool,
