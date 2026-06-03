@@ -1,83 +1,6 @@
-use std::path::PathBuf;
-use std::sync::Arc;
+use tauri::State;
 
-use tauri::{AppHandle, State, Manager};
-use tokio::sync::Mutex;
-
-use crate::commands::assistant::{self, AgentState};
-
-pub type SharedAgentState = Arc<Mutex<AgentState>>;
-
-/// 启动 Agent（工作目录自动绑定工作空间路径）
-#[tauri::command]
-pub async fn start_agent(
-    app: AppHandle,
-    state: State<'_, SharedAgentState>,
-    workdir: String,
-    project_dir: Option<String>,
-    api_key: Option<String>,
-    session_id: Option<String>,
-    assistant_id: Option<String>,
-    extra_args: Option<Vec<String>>,
-) -> Result<(), String> {
-    let workdir = PathBuf::from(&workdir);
-    let mut args = extra_args.unwrap_or_default();
-
-    if let Some(ref pd) = project_dir {
-        args.push("--project-dir".to_string());
-        args.push(pd.clone());
-    }
-
-    if let Some(ref key) = api_key {
-        args.push("--api-key".to_string());
-        args.push(key.clone());
-    }
-
-    let db_manager = app.state::<Arc<flock_core::db::DbManager>>().inner().clone();
-    let emitter = Arc::new(crate::ipc::emitter::TauriProtocolEmitter::new(app.clone()));
-    let output = emitter.clone() as Arc<dyn flock_agent::sinks::OutputSink + Send + Sync>;
-
-    assistant::start_agent_engine(
-        db_manager,
-        state.inner().clone(),
-        workdir,
-        session_id,
-        assistant_id,
-        args,
-        emitter,
-        output,
-    )
-    .await
-    .map_err(|e| e.to_string())
-}
-
-/// 停止 Agent
-#[tauri::command]
-pub async fn stop_agent(
-    state: State<'_, SharedAgentState>,
-    session_id: Option<String>,
-) -> Result<(), String> {
-    assistant::stop_agent_engine(state.inner().clone(), session_id)
-        .await
-        .map_err(|e| e.to_string())
-}
-
-/// 发送消息给 Agent
-#[tauri::command]
-pub async fn send_message(
-    app: AppHandle,
-    state: State<'_, SharedAgentState>,
-    session_id: Option<String>,
-    msg_id: String,
-    content: String,
-) -> Result<(), String> {
-    let db_manager = app.state::<Arc<flock_core::db::DbManager>>().inner().clone();
-    let emitter = Arc::new(crate::ipc::emitter::TauriProtocolEmitter::new(app.clone()));
-    let output = emitter.clone() as Arc<dyn flock_agent::sinks::OutputSink + Send + Sync>;
-    assistant::send_message_to_engine(state.inner().clone(), session_id, msg_id, content, db_manager, emitter, output)
-        .await
-        .map_err(|e| e.to_string())
-}
+use crate::commands::assistant::{self, SharedAgentState};
 
 /// 批准工具调用
 #[tauri::command]
@@ -134,30 +57,6 @@ pub async fn set_mode(
         .map_err(|e| e.to_string())
 }
 
-/// 更新配置
-#[tauri::command]
-pub async fn set_config(
-    state: State<'_, SharedAgentState>,
-    session_id: Option<String>,
-    model: Option<String>,
-    thinking: Option<String>,
-    thinking_budget: Option<u32>,
-    effort: Option<String>,
-    compaction: Option<String>,
-) -> Result<(), String> {
-    assistant::set_engine_config(
-        state.inner().clone(),
-        session_id,
-        model,
-        thinking,
-        thinking_budget,
-        effort,
-        compaction,
-    )
-    .await
-    .map_err(|e| e.to_string())
-}
-
 /// Ping Agent
 #[tauri::command]
 pub async fn ping_agent(_state: State<'_, SharedAgentState>) -> Result<(), String> {
@@ -168,17 +67,6 @@ pub async fn ping_agent(_state: State<'_, SharedAgentState>) -> Result<(), Strin
 #[tauri::command]
 pub async fn get_flock_path(_state: State<'_, SharedAgentState>) -> Result<String, String> {
     Ok("integrated".to_string())
-}
-
-/// 获取当前工作目录
-#[tauri::command]
-pub async fn get_workdir(
-    state: State<'_, SharedAgentState>,
-    session_id: Option<String>,
-) -> Result<Option<String>, String> {
-    let s = state.lock().await;
-    let sid = session_id.unwrap_or_else(|| "default".to_string());
-    Ok(s.metadata.get(&sid).map(|h| h.workdir.to_string_lossy().to_string()))
 }
 
 /// 手动销毁当前活跃的 Daytona 沙盒（并清除内存缓存）

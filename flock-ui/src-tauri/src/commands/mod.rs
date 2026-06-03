@@ -1,4 +1,4 @@
-mod agent;
+mod shared;
 pub mod assistant;
 mod conversation;
 mod file;
@@ -9,7 +9,7 @@ mod settings;
 mod cron;
 mod workflow;
 
-pub use agent::*;
+pub use shared::*;
 pub use assistant::*;
 pub use conversation::*;
 pub use file::*;

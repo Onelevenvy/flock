@@ -18,7 +18,7 @@ use flock_workflow::{build_workflow_graph, WorkflowNodeContext, WorkflowSink};
 use flock_core::model_factory::{CachedModelFactory, ModelFactory};
 use flock_tools::all_tools;
 use crate::SharedDbManager;
-use crate::commands::agent::SharedAgentState;
+use crate::commands::SharedAgentState;
 
 pub struct WorkflowExecutionState {
     pub executions: Mutex<HashMap<String, (JoinHandle<()>, Arc<std::sync::atomic::AtomicBool>)>>,
