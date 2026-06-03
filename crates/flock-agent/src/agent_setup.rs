@@ -116,16 +116,18 @@ impl AgentBuilder {
         let cwd = &self.workspace;
         let cwd_path = std::path::Path::new(cwd);
 
-        // --- Apply assistant overrides to config BEFORE creating the model ---
         if let Some(ref ov) = self.assistant_overrides {
             // Override model if assistant specifies one (format: "provider_id:model_name")
             if let Some(ref model_str) = ov.model {
                 if !model_str.is_empty() {
-                    // model_str is "provider_id:model_name"
-                    let parts: Vec<&str> = model_str.splitn(2, ':').collect();
-                    if parts.len() == 2 {
-                        self.config.model = parts[1].to_string();
-                        log::info!("Assistant overrides model to: {}", self.config.model);
+                    if let Err(e) = self.config.apply_assistant_model_override(model_str).await {
+                        log::error!("Failed to apply assistant model override: {}", e);
+                    } else {
+                        log::info!(
+                            "Assistant overrides model to: {} (provider: {})",
+                            self.config.model,
+                            self.config.provider_label
+                        );
                     }
                 }
             }

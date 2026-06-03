@@ -124,6 +124,15 @@ export function useAssistantForm(
       });
       return;
     }
+    if (!model) {
+      notifications.show({
+        title: t('assistant.form.modelRequired'),
+        message: '',
+        color: 'orange',
+        autoClose: 3000,
+      });
+      return;
+    }
     setSaving(true);
     try {
       await onSave({

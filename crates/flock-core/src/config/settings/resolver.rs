@@ -22,6 +22,81 @@ pub struct ResolvedProviderConfig {
 }
 
 impl Config {
+    pub async fn apply_assistant_model_override(&mut self, model_override: &str) -> anyhow::Result<()> {
+        let parts: Vec<&str> = model_override.splitn(2, ':').collect();
+        if parts.len() != 2 {
+            return Ok(());
+        }
+        let provider_id = parts[0];
+        let model_name = parts[1];
+
+        self.model = model_name.to_string();
+
+        let db = match &self.db_manager {
+            Some(db) => db.clone(),
+            None => return Ok(()),
+        };
+
+        let providers = build_providers_from_db(&db).await?;
+        let resolved_provider = resolve_provider_alias(&providers, provider_id)?;
+
+        self.provider_label = resolved_provider.requested_name.clone();
+        self.provider = resolved_provider.provider_type;
+        let provider_config = resolved_provider.effective_config;
+
+        let mut model_meta_base_url = None;
+        let mut model_meta_api_key = None;
+        if let Ok(Some(m)) = db.get_model(&self.provider_label, &self.model).await {
+            if let Some(meta) = m.meta {
+                if let Some(bu) = meta.get("base_url").and_then(|v| v.as_str()) {
+                    model_meta_base_url = Some(bu.to_string());
+                }
+                if let Some(enc) = meta.get("api_key_encrypted").and_then(|v| v.as_str()) {
+                    if let Some(nonce) = meta.get("api_key_nonce").and_then(|v| v.as_str()) {
+                        if let Ok(salt) = db.get_or_create_salt().await {
+                            if let Ok(decrypted) = crate::crypto::decrypt_value(enc, nonce, &salt) {
+                                model_meta_api_key = Some(decrypted);
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        self.base_url = model_meta_base_url
+            .or_else(|| provider_config.base_url.clone())
+            .unwrap_or_else(|| match self.provider {
+                ProviderType::Anthropic => "https://api.anthropic.com".into(),
+                ProviderType::OpenAI => "https://api.openai.com".into(),
+                ProviderType::Bedrock | ProviderType::Vertex => String::new(),
+            });
+
+        let empty_cli = CliArgs::default();
+        self.api_key = resolve_db_api_key(
+            &db,
+            &empty_cli,
+            &provider_config,
+            self.provider,
+            &self.provider_label,
+            model_meta_api_key,
+        ).await?;
+
+        self.prompt_caching = provider_config
+            .prompt_caching
+            .unwrap_or(matches!(self.provider, ProviderType::Anthropic));
+
+        let compat_defaults = match self.provider {
+            ProviderType::Anthropic => ProviderCompat::anthropic_defaults(),
+            ProviderType::OpenAI => ProviderCompat::openai_defaults(),
+            ProviderType::Bedrock => ProviderCompat::bedrock_defaults(),
+            ProviderType::Vertex => ProviderCompat::anthropic_defaults(),
+        };
+        let user_compat = provider_config.compat.clone().unwrap_or_default();
+        self.compat = ProviderCompat::merge(compat_defaults, user_compat);
+
+        Ok(())
+    }
+
     /// Resolve config with database support (creates its own DbManager).
     pub async fn resolve_with_db(cli: &CliArgs) -> anyhow::Result<Self> {
         let db = DbManager::init().await?;

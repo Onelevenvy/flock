@@ -219,7 +219,43 @@ async fn pick_heuristic_model(db: &flock_core::db::DbManager, provider_id: &str)
 #[tauri::command]
 pub async fn get_active_model(
     db: State<'_, SharedDbManager>,
+    session_id: Option<String>,
+    assistant_id: Option<String>,
 ) -> Result<Option<serde_json::Value>, String> {
+    if let Some(ref sid) = session_id {
+        let row = sqlx::query("SELECT provider, model FROM session_metadata WHERE thread_id = ?1")
+            .bind(sid)
+            .fetch_optional(db.pool())
+            .await
+            .map_err(|e| e.to_string())?;
+
+        if let Some(r) = row {
+            use sqlx::Row;
+            let provider: String = r.get("provider");
+            let model: String = r.get("model");
+            if !provider.is_empty() && !model.is_empty() {
+                return Ok(Some(serde_json::json!({
+                    "provider_id": provider,
+                    "model_name": model,
+                })));
+            }
+        }
+    }
+
+    if let Some(ref asst_id) = assistant_id {
+        if let Ok(Some(asst)) = db.get_assistant(asst_id).await {
+            if !asst.model.is_empty() {
+                let parts: Vec<&str> = asst.model.splitn(2, ':').collect();
+                if parts.len() == 2 {
+                    return Ok(Some(serde_json::json!({
+                        "provider_id": parts[0],
+                        "model_name": parts[1],
+                    })));
+                }
+            }
+        }
+    }
+
     let config: Option<serde_json::Value> = db.get_config("active_model").await;
     Ok(config)
 }
@@ -230,13 +266,26 @@ pub async fn set_active_model(
     db: State<'_, SharedDbManager>,
     provider_id: String,
     model_name: String,
+    session_id: Option<String>,
 ) -> Result<(), String> {
     let active = serde_json::json!({
         "provider_id": provider_id,
         "model_name": model_name,
     });
     db.set_config("active_model", &active).await
-        .map_err(|e| format!("保存活跃模型失败: {}", e))
+        .map_err(|e| format!("保存活跃模型失败: {}", e))?;
+
+    if let Some(ref sid) = session_id {
+        sqlx::query("UPDATE session_metadata SET provider = ?1, model = ?2 WHERE thread_id = ?3")
+            .bind(&provider_id)
+            .bind(&model_name)
+            .bind(sid)
+            .execute(db.pool())
+            .await
+            .map_err(|e| format!("更新会话模型失败: {}", e))?;
+    }
+
+    Ok(())
 }
 
 /// 创建自定义模型并加密其专属 API Key

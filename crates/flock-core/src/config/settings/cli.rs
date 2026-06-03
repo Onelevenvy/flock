@@ -3,6 +3,7 @@ use crate::config::auth::{AuthConfig, OAuthManager};
 use crate::config::settings::types::ProviderType;
 
 /// CLI arguments needed for config resolution
+#[derive(Default)]
 pub struct CliArgs {
     pub provider: Option<String>,
     pub api_key: Option<String>,
