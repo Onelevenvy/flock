@@ -288,18 +288,6 @@ pub async fn send_message(
         }
     };
 
-    // 2. 最大运行限制检查
-    let max_running: usize = db_manager.get_config("max_running_sessions").await.unwrap_or(4);
-    {
-        let s = state.lock().await;
-        let running_count = s.sessions.iter()
-            .filter(|(k, v)| k.as_str() != sid.as_str() && v.is_running.load(Ordering::SeqCst))
-            .count();
-        if running_count >= max_running {
-            anyhow::bail!("当前有太多会话在并发运行（最大限制为 {}），请稍等其他对话执行完毕后再试。", max_running);
-        }
-    }
-
     let approval_manager = {
         let s = state.lock().await;
         s.approval_manager.clone()

@@ -46,8 +46,6 @@ impl DbManager {
             ("plan",    serde_json::to_string(&PlanConfig::default())?),
             ("file_cache", serde_json::to_string(&FileCacheConfig::default())?),
             ("hooks",   serde_json::to_string(&HooksConfig::default())?),
-            ("max_running_sessions", serde_json::to_string(&4)?),
-            ("max_cached_sessions", serde_json::to_string(&10)?),
             ("enable_title_summary", serde_json::to_string(&false)?),
         ];
 
