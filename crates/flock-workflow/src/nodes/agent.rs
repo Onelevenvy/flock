@@ -122,6 +122,8 @@ pub fn make_agent_workflow_node(
                         parameters: t.input_schema,
                     }).collect();
 
+                    ctx.sink.emit_text_delta(&node_id, "*🔍 Running agent...*\n");
+
                     let model = resolve_model(&node_data, &ctx);
                     let provider = model.bind_tools(bound_tools);
 
@@ -234,13 +236,13 @@ pub fn make_agent_workflow_node(
                                 }
                             }
 
-                            ctx.sink.emit_text_delta(&node_id, &format!("\n\n*🔧 调用工具 `{}`...*\n", tc.name));
+                            ctx.sink.emit_text_delta(&node_id, &format!("\n\n*🔧 Calling tool `{}`...*\n", tc.name));
                             let tool = ctx.tools.get(&tc.name).ok_or_else(|| {
                                 format!("Tool not found: {}", tc.name)
                             })?;
 
                             let tool_res = tool.execute(tc.args.clone()).await;
-                            ctx.sink.emit_text_delta(&node_id, &format!("*工具 `{}` 返回结果: {}*\n\n", tc.name, tool_res.content));
+                            ctx.sink.emit_text_delta(&node_id, &format!("*Tool `{}` returned result: {}*\n\n", tc.name, tool_res.content));
 
                             if needs_approval {
                                 let status = if tool_res.is_error { "error" } else { "success" };
