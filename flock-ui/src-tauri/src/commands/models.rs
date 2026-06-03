@@ -220,6 +220,7 @@ async fn pick_heuristic_model(db: &flock_core::db::DbManager, provider_id: &str)
 pub async fn get_active_model(
     db: State<'_, SharedDbManager>,
     session_id: Option<String>,
+    assistant_id: Option<String>,
 ) -> Result<Option<serde_json::Value>, String> {
     if let Some(ref sid) = session_id {
         let row = sqlx::query("SELECT provider, model FROM session_metadata WHERE thread_id = ?1")
@@ -237,6 +238,20 @@ pub async fn get_active_model(
                     "provider_id": provider,
                     "model_name": model,
                 })));
+            }
+        }
+    }
+
+    if let Some(ref asst_id) = assistant_id {
+        if let Ok(Some(asst)) = db.get_assistant(asst_id).await {
+            if !asst.model.is_empty() {
+                let parts: Vec<&str> = asst.model.splitn(2, ':').collect();
+                if parts.len() == 2 {
+                    return Ok(Some(serde_json::json!({
+                        "provider_id": parts[0],
+                        "model_name": parts[1],
+                    })));
+                }
             }
         }
     }

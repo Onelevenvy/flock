@@ -21,13 +21,15 @@ export function ActiveModelPicker() {
   const [activeModel, setActiveModelState] = useState<ActiveModel | null>(null);
   const [loadingActive, setLoadingActive] = useState(false);
   const { data: workspaces = [] } = useWorkspacesQuery();
-  const { activeConversationId } = useWorkspaceStore();
+  const { activeConversationId, conversationAssistants } = useWorkspaceStore();
+  const assistantId = activeConversationId ? conversationAssistants[activeConversationId] : null;
 
   const loadActiveModel = async () => {
     setLoadingActive(true);
     try {
       const active = await invoke<ActiveModel | null>('get_active_model', {
         sessionId: activeConversationId || null,
+        assistantId: assistantId === '__xiaof__' ? null : assistantId,
       });
       let resolvedActive = active;
       if (!resolvedActive) {
@@ -53,7 +55,7 @@ export function ActiveModelPicker() {
 
   useEffect(() => {
     loadActiveModel();
-  }, [activeConversationId]);
+  }, [activeConversationId, assistantId]);
 
   const loadData = async () => {
     await Promise.all([
