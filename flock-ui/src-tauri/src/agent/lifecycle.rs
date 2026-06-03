@@ -98,7 +98,35 @@ pub async fn start_agent(
         let _ = std::env::set_current_dir(&workdir);
     }
 
-    let config = Config::resolve_from_db(&cli_args, db_manager.clone()).await?;
+    let mut config = Config::resolve_from_db(&cli_args, db_manager.clone()).await?;
+
+    let mut has_session_model_override = false;
+    if let Some(ref sid) = session_id {
+        let row = sqlx::query("SELECT provider, model FROM session_metadata WHERE thread_id = ?1")
+            .bind(sid)
+            .fetch_optional(db_manager.pool())
+            .await
+            .unwrap_or(None);
+
+        if let Some(r) = row {
+            use sqlx::Row;
+            let prov: String = r.get("provider");
+            let model: String = r.get("model");
+            if !prov.is_empty() && !model.is_empty() {
+                let model_override = format!("{}:{}", prov, model);
+                if let Err(e) = config.apply_assistant_model_override(&model_override).await {
+                    log::error!("Failed to apply session model override: {}", e);
+                } else {
+                    log::info!(
+                        "Session overrides model to: {} (provider: {})",
+                        config.model,
+                        config.provider_label
+                    );
+                    has_session_model_override = true;
+                }
+            }
+        }
+    }
 
     log::info!(
         "Resolved config: provider={}, model={}, base_url={}",
@@ -137,7 +165,13 @@ pub async fn start_agent(
                     } else {
                         Some(asst.system_prompt)
                     },
-                    model: if asst.model.is_empty() { None } else { Some(asst.model) },
+                    model: if has_session_model_override {
+                        None
+                    } else if asst.model.is_empty() {
+                        None
+                    } else {
+                        Some(asst.model)
+                    },
                     allowed_tool_providers: Some(enabled_tools),
                     allowed_skill_names: Some(asst.skills),
                 };

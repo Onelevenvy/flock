@@ -13,6 +13,7 @@ import { useWorkspacesQuery } from '@/hooks/useWorkspaces';
 import { v4 as uuidv4 } from 'uuid';
 import { IconShieldCheck, IconBolt, IconFlame } from '@tabler/icons-react';
 import { ActionIcon, Tooltip, Menu, Button } from '@mantine/core';
+import { ActiveModelPicker } from '@/components/Common/ActiveModelPicker';
 
 const MODE_OPTIONS = [
   { value: 'default', labelKey: 'chat.mode.default', labelDefault: 'Approval Mode', icon: IconShieldCheck, color: 'blue' },
@@ -222,11 +223,13 @@ export function AssistantChatInput() {
         disabled={!activeWorkspaceId || status === 'disconnected' || status === 'connecting'}
         placeholder={placeholder}
         leftExtra={
-          value.length > 0 ? (
-            <Text size="xs" style={{ color: 'var(--flock-text-dim)', fontSize: 11, flexShrink: 0, whiteSpace: 'nowrap' }}>
-              {value.length} {t('chat.characterCount')}
-            </Text>
-          ) : undefined
+          <>
+            <ActiveModelPicker />
+            {value.length > 0 ? (
+              <Text size="xs" style={{ color: 'var(--flock-text-dim)', fontSize: 11, flexShrink: 0, whiteSpace: 'nowrap' }}>
+                {value.length} {t('chat.characterCount')}
+              </Text>
+            ) : undefined}</>
         }
         rightExtra={
           <>
