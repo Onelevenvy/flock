@@ -25,7 +25,7 @@ pub fn make_plugin_node(
             let args_val = node_data.get("args").unwrap_or(&default_val);
             let interpolated_val = interpolate_json_with_context(args_val, &state, &ctx, &ctx.workflow_id);
 
-            ctx.sink.emit_text_delta(&node_id, &format!("*🔧 正在调用插件 `{}`...*\n", tool_name));
+            ctx.sink.emit_text_delta(&node_id, &format!("*🔧 Calling tool `{}`...*\n", tool_name));
 
             let tool_args_json: JsonValue = match &interpolated_val {
                 JsonValue::String(s) => {
@@ -42,7 +42,7 @@ pub fn make_plugin_node(
 
             let res = tool.execute(tool_args_json).await;
 
-            ctx.sink.emit_text_delta(&node_id, &format!("\n插件 `{}` 返回结果:\n{}\n", tool_name, res.content));
+            ctx.sink.emit_text_delta(&node_id, &format!("\nTool `{}` returned result:\n{}\n", tool_name, res.content));
 
             let mut outputs = state.node_outputs.clone();
             if !outputs.is_object() {

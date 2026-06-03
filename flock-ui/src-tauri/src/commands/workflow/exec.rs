@@ -242,13 +242,19 @@ pub async fn run_workflow(
         .map_err(|e| e.to_string())?
         .ok_or_else(|| format!("Workflow {} not found", workflow_id))?;
 
+    let cancel_flag = Arc::new(std::sync::atomic::AtomicBool::new(false));
+    let cancel_flag_clone = cancel_flag.clone();
+
     // 2. 如果之前已经在运行，先取消之前的实例
     {
         let mut executions = execution_state.executions.lock().unwrap();
-        if let Some((handle, cancel_flag)) = executions.remove(&workflow_id) {
-            cancel_flag.store(true, std::sync::atomic::Ordering::SeqCst);
+        if let Some((handle, old_cancel_flag)) = executions.remove(&workflow_id) {
+            old_cancel_flag.store(true, std::sync::atomic::Ordering::SeqCst);
             handle.abort();
         }
+        // 立即放入一个 dummy 的 join_handle 并关联当前真正的 cancel_flag，解决并发快速点击/调用导致的竞争问题
+        let dummy_handle = tokio::spawn(async {});
+        executions.insert(workflow_id.clone(), (dummy_handle, cancel_flag_clone.clone()));
     }
 
     // 3. 构建 model provider 和配置
@@ -523,8 +529,6 @@ pub async fn run_workflow(
 
     let approval_manager = agent_state.lock().await.approval_manager.clone();
 
-    let cancel_flag = Arc::new(std::sync::atomic::AtomicBool::new(false));
-    let cancel_flag_clone = cancel_flag.clone();
 
     let ctx = Arc::new(WorkflowNodeContext {
         provider: provider.clone(),
@@ -536,7 +540,7 @@ pub async fn run_workflow(
         env_vars,
         workflow_id: workflow_id.clone(),
         approval_manager,
-        cancel_flag,
+        cancel_flag: cancel_flag.clone(),
     });
 
     // 6. 构建 Graph
@@ -618,7 +622,11 @@ pub async fn run_workflow(
     let db_for_task = db.inner().clone();
     let thread_id_val_clone = thread_id_val.clone();
 
+    let cancel_flag_for_run = cancel_flag.clone();
     let join_handle = tokio::spawn(async move {
+        if cancel_flag_for_run.load(std::sync::atomic::Ordering::SeqCst) {
+            return;
+        }
         let start_ts = chrono::Utc::now().timestamp_millis();
         sink.push_event(serde_json::json!({
             "type": "info",
@@ -873,7 +881,11 @@ pub async fn run_workflow(
     // 10. 存储 JoinHandle
     {
         let mut executions = execution_state.executions.lock().unwrap();
-        executions.insert(workflow_id, (join_handle, cancel_flag_clone));
+        if cancel_flag.load(std::sync::atomic::Ordering::SeqCst) {
+            join_handle.abort();
+        } else {
+            executions.insert(workflow_id, (join_handle, cancel_flag_clone));
+        }
     }
 
     Ok(())
