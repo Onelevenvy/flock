@@ -80,6 +80,9 @@ where
             Ok(Ok(val)) => return Ok(val),
             Ok(Err(e)) => {
                 last_err = e;
+                if last_err == "Workflow execution cancelled by user" {
+                    return Err(last_err);
+                }
             }
             Err(_) => {
                 last_err = format!("timed out after {}ms", timeout.timeout_ms);

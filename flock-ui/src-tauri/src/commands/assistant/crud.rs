@@ -1,7 +1,6 @@
 use tauri::State;
-
-use crate::SharedDbManager;
 use flock_core::db::{AssistantRecord, UpsertAssistant};
+use crate::SharedDbManager;
 
 /// 列出所有助手（内置 + 用户创建）
 #[tauri::command]
@@ -30,7 +29,7 @@ pub async fn update_assistant(
     db.update_assistant(&id, &input).await.map_err(|e| e.to_string())
 }
 
-/// 删除助手（内置助手不可删除，由 DB 层保证）
+/// 删除助手
 #[tauri::command]
 pub async fn delete_assistant(
     db: State<'_, SharedDbManager>,

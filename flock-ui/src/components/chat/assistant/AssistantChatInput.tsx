@@ -143,11 +143,27 @@ export function AssistantChatInput() {
   const handleStop = async () => {
     const assistants = useWorkspaceStore.getState().conversationAssistants;
     const activeAsst = activeConversationId ? assistants[activeConversationId] : null;
+
+    const state = useAgentStore.getState();
+    const lastMsg = state.messages[state.messages.length - 1];
+    const activeMsgId = lastMsg && lastMsg.role === 'assistant' && lastMsg.streaming ? lastMsg.id : null;
+
     if (activeAsst && activeAsst.startsWith('workflow:')) {
       const workflowId = activeAsst.replace('workflow:', '');
       try {
         await invoke('stop_workflow', { workflowId });
         setStatus('ready');
+        if (activeMsgId) {
+          state.handleEvent({
+            type: 'text_delta',
+            msg_id: activeMsgId,
+            text: t('chat.aborted', '\n\n*🚫 Dialogue aborted by user*'),
+          });
+          state.handleEvent({
+            type: 'stream_end',
+            msg_id: activeMsgId,
+          });
+        }
       } catch (e: any) {
         console.error('stop_workflow error:', e);
         setError(e.message || String(e));
@@ -157,6 +173,18 @@ export function AssistantChatInput() {
 
     try {
       await invoke('stop_agent', { sessionId: activeConversationId || null });
+      setStatus('ready');
+      if (activeMsgId) {
+        state.handleEvent({
+          type: 'text_delta',
+          msg_id: activeMsgId,
+          text: t('chat.aborted', '\n\n*🚫 Dialogue aborted by user*'),
+        });
+        state.handleEvent({
+          type: 'stream_end',
+          msg_id: activeMsgId,
+        });
+      }
     } catch (e: any) {
       console.error('stop_agent error:', e);
       setError(e.message || String(e));

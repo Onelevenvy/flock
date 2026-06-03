@@ -1,6 +1,5 @@
 pub mod null_sink;
 pub mod protocol_sink;
-pub mod terminal;
 
 use crossterm::execute;
 use crossterm::style::{Attribute, Color, Print, ResetColor, SetAttribute, SetForegroundColor};

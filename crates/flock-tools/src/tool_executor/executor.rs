@@ -1,5 +1,4 @@
-use std::sync::{Arc, Mutex};
-use crate::approval::ToolApproval;
+use std::sync::Arc;
 use flock_core::config::hooks::HookEngine;
 use flock_core::ipc_interface::approval::{ToolApprovalManager, ToolApprovalResult};
 use flock_core::ipc_interface::events::{OutputType, ProtocolEvent, ToolCategory, ToolInfo, ToolStatus};
@@ -7,46 +6,33 @@ use flock_core::ipc_interface::writer::ProtocolEmitter;
 use flock_core::types::message::ContentBlock;
 use flock_core::types::skill_types::ContextModifier;
 use flock_core::types::tool::ToolResult;
-use flock_tools::registry::ToolRegistry;
+use crate::registry::ToolRegistry;
 
 use super::types::{ToolCallOutcome, ExecutionControl};
 use super::helpers::{group_calls, truncate_result, maybe_append_deferred_hint};
-use super::approval::{request_approval, update_plugin_hooks, block_is_error};
+use super::approval::{update_plugin_hooks, block_is_error};
 use super::image_extract::extract_images_from_tool_result;
 
-/// Partition tool calls and execute them with optional confirmation and hooks
+/// Partition tool calls and execute them with hooks
 pub async fn run_tools(
     registry: &ToolRegistry,
     tool_calls: &[ContentBlock],
-    confirmer: Option<&Arc<Mutex<ToolApproval>>>,
     mut hooks: Option<&mut HookEngine>,
     compaction_level: flock_core::context_compression::CompressionLevel,
     toon_enabled: bool,
+    msg_id: &str,
 ) -> Result<ToolCallOutcome, ExecutionControl> {
     let mut results = Vec::new();
     let mut modifiers = Vec::new();
 
     for batch in group_calls(registry, tool_calls) {
         if batch.is_concurrent {
-            // For concurrent batch, confirm all first, then execute approved ones.
-            // Concurrent tools are never SkillTool (is_concurrency_safe=false for Skill),
-            // so no skill hooks merging is needed here.
-            let mut approved = Vec::new();
-            for call in &batch.calls {
-                match request_approval(confirmer, call)? {
-                    Some(denied) => {
-                        results.push(denied);
-                        modifiers.push(None);
-                    }
-                    None => approved.push(call),
-                }
-            }
             // Reborrow as shared for concurrent execution.
             let hooks_shared: Option<&HookEngine> = hooks.as_deref();
-            let futures: Vec<_> = approved
+            let futures: Vec<_> = batch.calls
                 .iter()
                 .map(|call| {
-                    execute_single(registry, call, hooks_shared, compaction_level, toon_enabled, "")
+                    execute_single(registry, call, hooks_shared, compaction_level, toon_enabled, msg_id)
                 })
                 .collect();
             let batch_results = futures::future::join_all(futures).await;
@@ -56,37 +42,29 @@ pub async fn run_tools(
             }
         } else {
             for call in &batch.calls {
-                match request_approval(confirmer, call)? {
-                    Some(denied) => {
-                        results.push(denied);
-                        modifiers.push(None);
-                    }
-                    None => {
-                        // Reborrow as shared for execute_single, then reclaim mut for merge.
-                        let blocks;
-                        let modifier;
-                        {
-                            let hooks_shared: Option<&HookEngine> = hooks.as_deref();
-                            (blocks, modifier) = execute_single(
-                                registry,
-                                call,
-                                hooks_shared,
-                                compaction_level,
-                                toon_enabled,
-                                "",
-                            )
-                            .await;
-                        }
-                        // Merge skill hooks after a successful sequential execution.
-                        if let Some(first_block) = blocks.first() {
-                            if !block_is_error(first_block) {
-                                update_plugin_hooks(registry, call, hooks.as_deref_mut());
-                            }
-                        }
-                        results.extend(blocks);
-                        modifiers.push(modifier);
+                // Reborrow as shared for execute_single, then reclaim mut for merge.
+                let blocks;
+                let modifier;
+                {
+                    let hooks_shared: Option<&HookEngine> = hooks.as_deref();
+                    (blocks, modifier) = execute_single(
+                        registry,
+                        call,
+                        hooks_shared,
+                        compaction_level,
+                        toon_enabled,
+                        msg_id,
+                    )
+                    .await;
+                }
+                // Merge skill hooks after a successful sequential execution.
+                if let Some(first_block) = blocks.first() {
+                    if !block_is_error(first_block) {
+                        update_plugin_hooks(registry, call, hooks.as_deref_mut());
                     }
                 }
+                results.extend(blocks);
+                modifiers.push(modifier);
             }
         }
     }

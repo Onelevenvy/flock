@@ -1,12 +1,8 @@
-import { Card, Group, ThemeIcon, Text, Badge, Stack, Grid, NumberInput, Tooltip, Switch, Divider, Button } from '@mantine/core';
+import { Card, Group, ThemeIcon, Text, Badge, Stack, Tooltip, Switch, Divider, Button } from '@mantine/core';
 import { IconServer, IconHelpCircle, IconSettings } from '@tabler/icons-react';
 
 interface SessionLimitsCardProps {
   t: any;
-  maxRunning: number;
-  setMaxRunning: (val: number) => void;
-  maxCached: number;
-  setMaxCached: (val: number) => void;
   enableTitleSummary: boolean;
   setEnableTitleSummary: (val: boolean) => void;
   saving: boolean;
@@ -15,10 +11,6 @@ interface SessionLimitsCardProps {
 
 export function SessionLimitsCard({
   t,
-  maxRunning,
-  setMaxRunning,
-  maxCached,
-  setMaxCached,
   enableTitleSummary,
   setEnableTitleSummary,
   saving,
@@ -48,61 +40,6 @@ export function SessionLimitsCard({
       </Group>
 
       <Stack gap="lg">
-        <Grid align="flex-start">
-          <Grid.Col span={{ base: 12, md: 6 }}>
-            <NumberInput
-              label={
-                <Group gap={6} wrap="nowrap" style={{ marginBottom: 4 }}>
-                  <Text size="sm" fw={500}>{t('systemSettings.maxRunning')}</Text>
-                  <Tooltip
-                    label={t('systemSettings.maxRunningTooltip')}
-                    multiline
-                    w={260}
-                    withArrow
-                    position="top"
-                  >
-                    <IconHelpCircle size={14} color="var(--flock-text-dim)" style={{ cursor: 'help' }} />
-                  </Tooltip>
-                </Group>
-              }
-              min={1}
-              max={20}
-              value={maxRunning}
-              onChange={(val) => setMaxRunning(typeof val === 'number' ? val : Number(val))}
-              styles={{
-                input: { background: 'var(--flock-bg-surface)' },
-              }}
-            />
-          </Grid.Col>
-
-          <Grid.Col span={{ base: 12, md: 6 }}>
-            <NumberInput
-              label={
-                <Group gap={6} wrap="nowrap" style={{ marginBottom: 4 }}>
-                  <Text size="sm" fw={500}>{t('systemSettings.maxCached')}</Text>
-                  <Tooltip
-                    label={t('systemSettings.maxCachedTooltip')}
-                    multiline
-                    w={260}
-                    withArrow
-                    position="top"
-                  >
-                    <IconHelpCircle size={14} color="var(--flock-text-dim)" style={{ cursor: 'help' }} />
-                  </Tooltip>
-                </Group>
-              }
-              min={2}
-              max={100}
-              value={maxCached}
-              onChange={(val) => setMaxCached(typeof val === 'number' ? val : Number(val))}
-              styles={{
-                input: { background: 'var(--flock-bg-surface)' },
-              }}
-            />
-          </Grid.Col>
-        </Grid>
-
-        <Divider color="var(--flock-border-subtle)" />
 
         {/* 自动总结标题 */}
         <Group justify="space-between" align="center">

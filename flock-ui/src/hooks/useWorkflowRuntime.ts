@@ -329,11 +329,16 @@ export function useWorkflowRuntime({
 
               case 'workflow_error':
               case 'error':
+                const isUserCancel = (payload.error || payload.text || (payload as any).message || '').includes('Workflow execution cancelled by user');
+                if (isUserCancel) {
+                  store.setThreadStatus(activeTid, 'idle');
+                  break;
+                }
                 store.setThreadStatus(activeTid, 'error');
                 store.setThreadInterrupt(activeTid, null);
                 dispatch(activeTid, {
                   type: 'error',
-                  content: `❌ Execution error: ${payload.error || payload.text || 'Unknown error'}`,
+                  content: `❌ Execution error: ${payload.error || payload.text || (payload as any).message || 'Unknown error'}`,
                   timestamp,
                 });
                 break;

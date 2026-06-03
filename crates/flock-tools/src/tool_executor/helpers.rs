@@ -1,5 +1,5 @@
 use flock_core::types::message::ContentBlock;
-use flock_tools::registry::ToolRegistry;
+use crate::registry::ToolRegistry;
 use super::types::Batch;
 
 pub fn group_calls<'a>(registry: &ToolRegistry, calls: &'a [ContentBlock]) -> Vec<Batch<'a>> {

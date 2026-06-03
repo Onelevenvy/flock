@@ -3,7 +3,6 @@ use langgraph_prebuilt::BaseChatModel;
 use flock_core::config::compression::CompressionConfig;
 use flock_core::types::llm::ThinkingConfig;
 use flock_tools::registry::ToolRegistry;
-use crate::approval::ToolApproval;
 use crate::sinks::OutputSink;
 
 /// All infrastructure that nodes need but that is NOT part of graph state.
@@ -11,7 +10,8 @@ use crate::sinks::OutputSink;
 pub struct NodeContext {
     pub provider: Arc<dyn BaseChatModel>,
     pub tools: Arc<ToolRegistry>,
-    pub confirmer: Arc<std::sync::Mutex<ToolApproval>>,
+    pub auto_approve: bool,
+    pub allow_list: Vec<String>,
     pub compact_config: CompressionConfig,
     pub plan_config: flock_core::config::plan::PlanConfig,
     pub system_prompt: String,
@@ -31,4 +31,7 @@ pub struct NodeContext {
     pub debug_mode: bool,
     pub provider_label: String,
     pub has_error: Arc<std::sync::Mutex<Option<String>>>,
+    pub cancel_flag: Arc<std::sync::atomic::AtomicBool>,
+    pub approval_manager: Option<Arc<flock_core::ipc_interface::approval::ToolApprovalManager>>,
+    pub protocol_writer: Option<Arc<dyn flock_core::ipc_interface::writer::ProtocolEmitter>>,
 }

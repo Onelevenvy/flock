@@ -15,7 +15,7 @@ use flock_workflow::{build_debug_node_graph, WorkflowNodeContext};
 use flock_core::model_factory::{CachedModelFactory, ModelFactory};
 use flock_tools::all_tools;
 use crate::SharedDbManager;
-use crate::commands::agent::SharedAgentState;
+use crate::commands::SharedAgentState;
 use super::exec::TauriWorkflowSink;
 
 /// 调试单个节点（独立执行，不走完整图）

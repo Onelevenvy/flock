@@ -1,4 +1,4 @@
-mod agent;
+mod ipc;
 mod commands;
 mod workspace;
 mod cron_scheduler;
@@ -8,7 +8,7 @@ use std::sync::Arc;
 use tauri::Manager;
 use tokio::sync::Mutex;
 
-use agent::AgentState;
+use commands::assistant::AgentState;
 use commands::SharedAgentState;
 
 /// Shared database manager type.
@@ -94,6 +94,7 @@ pub fn run() {
             commands::update_conversation_title,
             commands::delete_conversation,
             commands::load_conversation_history,
+            commands::save_conversation_messages,
             // 文件
             commands::list_workspace_files,
             commands::read_workspace_file,

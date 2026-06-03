@@ -104,11 +104,7 @@ impl AgentEngine {
         config: &langgraph::prelude::RunnableConfig,
     ) {
         use crate::graph::AgentState;
-        use flock_core::types::message::ContentBlock;
         use flock_core::types::message::Message;
-
-        // Emit text delta to frontend to visually notify user
-        self.output.emit_text_delta("\n\n*🚫 对话已被用户中止*", &self.current_msg_id);
 
         let snapshot_res = {
             let app = self.graph.as_ref().unwrap();
@@ -128,25 +124,6 @@ impl AgentEngine {
             // 我们保留更丰富、包含了最新用户输入的 self.messages，而不使用倒退的快照覆盖
             if msgs.len() < self.messages.len() {
                 msgs = self.messages.clone();
-            }
-
-            let mut found_assistant = false;
-            if let Some(last_msg) = msgs.last_mut() {
-                if last_msg.role == flock_core::types::message::Role::Assistant {
-                    last_msg.content.push(ContentBlock::Text {
-                        text: "\n\n*🚫 对话已被用户中止*".to_string(),
-                    });
-                    found_assistant = true;
-                }
-            }
-
-            if !found_assistant {
-                msgs.push(Message::now(
-                    flock_core::types::message::Role::Assistant,
-                    vec![ContentBlock::Text {
-                        text: "*🚫 对话已被用户中止*".to_string(),
-                    }],
-                ));
             }
 
             self.messages = msgs;

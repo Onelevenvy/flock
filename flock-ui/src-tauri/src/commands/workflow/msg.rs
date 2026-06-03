@@ -11,10 +11,16 @@ pub async fn save_workflow_messages(
     // 用特殊 marker 包装，便于 load 时区分 agent 消息格式
     let wrapped = format!("{{\"__wf_native__\":true,\"msgs\":{}}}", messages_json);
     let updated_at = chrono::Utc::now().to_rfc3339();
+    let msg_count = serde_json::from_str::<serde_json::Value>(&messages_json)
+        .ok()
+        .and_then(|v| v.as_array().map(|a| a.len() as i64))
+        .unwrap_or(0);
+
     let affected = sqlx::query(
-        "UPDATE session_metadata SET messages = ?1, updated_at = ?2 WHERE thread_id = ?3"
+        "UPDATE session_metadata SET messages = ?1, msg_count = ?2, updated_at = ?3 WHERE thread_id = ?4"
     )
     .bind(&wrapped)
+    .bind(msg_count)
     .bind(&updated_at)
     .bind(&thread_id)
     .execute(db.pool())
@@ -27,10 +33,11 @@ pub async fn save_workflow_messages(
         sqlx::query(
             "INSERT OR IGNORE INTO session_metadata \
              (thread_id, provider, cwd, model, summary, messages, msg_count, created_at, updated_at, workspace_id) \
-             VALUES (?1, '', '', '', '', ?2, 1, ?3, ?3, '')"
+             VALUES (?1, '', '', '', '', ?2, ?3, ?4, ?4, '')"
         )
         .bind(&thread_id)
         .bind(&wrapped)
+        .bind(msg_count)
         .bind(&updated_at)
         .execute(db.pool())
         .await

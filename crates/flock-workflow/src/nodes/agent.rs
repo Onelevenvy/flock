@@ -4,7 +4,44 @@ use langgraph::prelude::RunnableConfig;
 use langgraph::runnable::RunnableError;
 use tokio_stream::StreamExt;
 use langgraph_prebuilt::types::Message as LgMessage;
-use super::common::{WorkflowNodeContext, parse_state, interpolate_string_with_context, resolve_model, parse_retry_config, parse_timeout_config, execute_with_retry};
+use flock_core::ipc_interface::events::ProtocolEvent;
+use flock_core::ipc_interface::writer::ProtocolEmitter;
+use flock_core::types::message::ContentBlock;
+use super::common::{WorkflowNodeContext, parse_state, interpolate_string_with_context, resolve_model, parse_retry_config, parse_timeout_config, execute_with_retry, WorkflowSink};
+
+struct WorkflowEmitter {
+    sink: Arc<dyn WorkflowSink>,
+    node_id: String,
+}
+
+impl ProtocolEmitter for WorkflowEmitter {
+    fn emit(&self, event: &ProtocolEvent) -> Result<(), std::io::Error> {
+        match event {
+            ProtocolEvent::ToolRequest { call_id, tool, .. } => {
+                self.sink.emit_tool_request(call_id, &tool.name, &tool.category, &tool.args);
+            }
+            ProtocolEvent::ToolRunning { call_id, tool_name, args, .. } => {
+                let default_args = json!({});
+                let args_val = args.as_ref().unwrap_or(&default_args);
+                self.sink.emit_tool_running(call_id, tool_name, args_val);
+                self.sink.emit_text_delta(&self.node_id, &format!("\n\n*🔧 Calling tool `{}`...*\n", tool_name));
+            }
+            ProtocolEvent::ToolResult { call_id, tool_name, status, output, .. } => {
+                let status_str = match status {
+                    flock_core::ipc_interface::events::ToolStatus::Success => "success",
+                    flock_core::ipc_interface::events::ToolStatus::Error => "error",
+                };
+                self.sink.emit_tool_result(call_id, tool_name, status_str, output);
+                self.sink.emit_text_delta(&self.node_id, &format!("*Tool `{}` returned result: {}*\n\n", tool_name, output));
+            }
+            ProtocolEvent::ToolCancelled { call_id, reason, .. } => {
+                self.sink.emit_tool_cancelled(call_id, "", reason);
+            }
+            _ => {}
+        }
+        Ok(())
+    }
+}
 
 pub fn make_agent_workflow_node(
     node_id: String,
@@ -197,67 +234,68 @@ pub fn make_agent_workflow_node(
                             break;
                         }
 
-                        for tc in tool_calls {
-                            log::info!("[workflow agent node] processing tool call: name={}, id={:?}", tc.name, tc.id);
-                            let sensitive_tools: Vec<String> = node_data.get("sensitive_tools")
-                                .and_then(|v| v.as_array())
-                                .map(|arr| arr.iter().filter_map(|t| t.as_str().map(|s| s.to_string())).collect())
-                                .unwrap_or_default();
-                            log::info!("[workflow agent node] sensitive_tools configuration: {:?}", sensitive_tools);
+                        // Convert ToolCall to ContentBlock
+                        let content_blocks: Vec<ContentBlock> = tool_calls.iter().map(|tc| {
+                            ContentBlock::ToolUse {
+                                id: tc.id.clone().unwrap_or_else(|| format!("{}_{}", tc.name, chrono::Utc::now().timestamp_nanos_opt().unwrap_or(0))),
+                                name: tc.name.clone(),
+                                input: tc.args.clone(),
+                            }
+                        }).collect();
 
-                            let tool = ctx.tools.get(&tc.name);
-                            let category = tool.as_ref().map(|t| t.category()).unwrap_or(flock_core::ipc_interface::events::ToolCategory::Exec);
+                        let sensitive_tools: Vec<String> = node_data.get("sensitive_tools")
+                            .and_then(|v| v.as_array())
+                            .map(|arr| arr.iter().filter_map(|t| t.as_str().map(|s| s.to_string())).collect())
+                            .unwrap_or_default();
 
-                            let call_id = tc.id.clone().unwrap_or_else(|| format!("{}_{}", tc.name, chrono::Utc::now().timestamp_nanos_opt().unwrap_or(0)));
-                            let needs_approval = sensitive_tools.contains(&tc.name);
-                            log::info!("[workflow agent node] tool call needs_approval: {}", needs_approval);
+                        // allow_list is all registered tool names minus sensitive_tools
+                        let all_tool_names: Vec<String> = ctx.tools.to_tool_defs_filtered(|_| true)
+                            .into_iter()
+                            .map(|t| t.name)
+                            .collect();
+                        let allow_list: Vec<String> = all_tool_names.into_iter()
+                            .filter(|t| !sensitive_tools.contains(t))
+                            .collect();
 
-                            if needs_approval {
-                                ctx.sink.emit_tool_request(&call_id, &tc.name, &category, &tc.args);
-                                let rx = ctx.approval_manager.request_approval(&call_id, &category);
-                                match rx.await {
-                                    Ok(flock_core::ipc_interface::approval::ToolApprovalResult::Approved) => {
-                                        ctx.sink.emit_tool_running(&call_id, &tc.name, &tc.args);
-                                    }
-                                    Ok(flock_core::ipc_interface::approval::ToolApprovalResult::Denied { reason }) => {
-                                        ctx.sink.emit_tool_cancelled(&call_id, &tc.name, &reason);
+                        let emitter = Arc::new(WorkflowEmitter {
+                            sink: ctx.sink.clone(),
+                            node_id: node_id.clone(),
+                        });
+                        let emitter_dyn: Arc<dyn ProtocolEmitter> = emitter;
+
+                        // Call execute_tool_calls_with_approval
+                        let outcome = flock_tools::tool_executor::execute_tool_calls_with_approval(
+                            &ctx.tools,
+                            &content_blocks,
+                            &ctx.approval_manager,
+                            &emitter_dyn,
+                            &node_id,
+                            false,
+                            &allow_list,
+                            None,
+                            flock_core::context_compression::CompressionLevel::Safe,
+                            false,
+                        ).await;
+
+                        match outcome {
+                            Ok(outcome) => {
+                                for block in outcome.results {
+                                    if let ContentBlock::ToolResult { tool_use_id, content, is_error } = block {
                                         let tool_msg = LgMessage::Tool {
-                                            tool_call_id: call_id,
-                                            content: langgraph_prebuilt::types::MessageContent::Text(format!("Tool execution denied by user: {}", reason)),
+                                            tool_call_id: tool_use_id,
+                                            content: langgraph_prebuilt::types::MessageContent::Text(content),
                                             name: None,
                                             id: None,
-                                            status: "error".to_string(),
+                                            status: if is_error { "error".to_string() } else { "success".to_string() },
                                         };
                                         local_messages.push(tool_msg.clone());
                                         run_messages.push(tool_msg);
-                                        continue;
                                     }
-                                    Err(_) => return Err("Tool approval communication failed".to_string()),
                                 }
                             }
-
-                            ctx.sink.emit_text_delta(&node_id, &format!("\n\n*🔧 Calling tool `{}`...*\n", tc.name));
-                            let tool = ctx.tools.get(&tc.name).ok_or_else(|| {
-                                format!("Tool not found: {}", tc.name)
-                            })?;
-
-                            let tool_res = tool.execute(tc.args.clone()).await;
-                            ctx.sink.emit_text_delta(&node_id, &format!("*Tool `{}` returned result: {}*\n\n", tc.name, tool_res.content));
-
-                            if needs_approval {
-                                let status = if tool_res.is_error { "error" } else { "success" };
-                                ctx.sink.emit_tool_result(&call_id, &tc.name, status, &tool_res.content);
+                            Err(_) => {
+                                return Err("Tool execution aborted".to_string());
                             }
-
-                            let tool_msg = LgMessage::Tool {
-                                tool_call_id: call_id,
-                                content: langgraph_prebuilt::types::MessageContent::Text(tool_res.content.clone()),
-                                name: None,
-                                id: None,
-                                status: if tool_res.is_error { "error".to_string() } else { "success".to_string() },
-                            };
-                            local_messages.push(tool_msg.clone());
-                            run_messages.push(tool_msg);
                         }
                     }
 

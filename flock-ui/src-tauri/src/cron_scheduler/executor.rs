@@ -139,13 +139,17 @@ pub async fn trigger_job_execution(
     // 3. 启动 Agent
     let extra_args = vec![];
     let selected_assistant = job.assistant_id.clone().unwrap_or_else(|| "__xiaof__".to_string());
-    if let Err(e) = crate::agent::start_agent(
-        app.clone(),
+    let emitter = Arc::new(crate::ipc::emitter::TauriProtocolEmitter::new(app.clone()));
+    let output = emitter.clone() as Arc<dyn flock_agent::sinks::OutputSink + Send + Sync>;
+    if let Err(e) = crate::commands::assistant::start_agent_engine(
+        db.clone(),
         agent_state.clone(),
         workdir,
         Some(conv_id.clone()),
         Some(selected_assistant),
         extra_args,
+        emitter.clone(),
+        output.clone(),
     ).await {
         db.update_cron_job_status(
             job_id,
@@ -164,7 +168,7 @@ pub async fn trigger_job_execution(
     for _ in 0..30 {
         tokio::time::sleep(Duration::from_millis(200)).await;
         let s = agent_state.lock().await;
-        if s.sessions.contains_key(&conv_id) {
+        if s.metadata.contains_key(&conv_id) {
             handle_exists = true;
             break;
         }
@@ -193,12 +197,14 @@ pub async fn trigger_job_execution(
     let msg_id = format!("msg_{}", uuid_like());
     let prompt_content = job.prompt.clone();
 
-    if let Err(e) = crate::agent::send_message(
+    if let Err(e) = crate::commands::assistant::send_message_to_engine(
         agent_state.clone(),
         Some(conv_id.clone()),
         msg_id,
         prompt_content,
-        app.clone(),
+        db.clone(),
+        emitter,
+        output,
     ).await {
         db.update_cron_job_status(
             job_id,

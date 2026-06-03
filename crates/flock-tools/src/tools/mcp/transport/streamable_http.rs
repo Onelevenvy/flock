@@ -6,7 +6,7 @@ use reqwest::header::{HeaderMap, HeaderValue};
 use tokio::sync::Mutex;
 
 use super::{McpError, McpTransport};
-use crate::mcp::protocol::{JsonRpcRequest, JsonRpcResponse};
+use crate::tools::mcp::protocol::{JsonRpcRequest, JsonRpcResponse};
 
 /// Streamable HTTP transport: uses HTTP POST for both requests and responses
 /// Supports optional SSE streaming for server responses

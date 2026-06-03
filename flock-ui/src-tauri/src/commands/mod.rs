@@ -1,5 +1,5 @@
-mod agent;
-mod assistant;
+mod common;
+pub mod assistant;
 mod conversation;
 mod file;
 mod models;
@@ -9,7 +9,7 @@ mod settings;
 mod cron;
 mod workflow;
 
-pub use agent::*;
+pub use common::*;
 pub use assistant::*;
 pub use conversation::*;
 pub use file::*;
