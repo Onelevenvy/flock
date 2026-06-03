@@ -9,7 +9,8 @@ use langgraph_derive::tool;
 /// @param expression The math expression to evaluate, e.g. "2 + 3 * sqrt(16)"
 #[tool("Math Calculator")]
 pub async fn math_calculator(expression: String) -> Result<String, String> {
-    match meval::eval_str(&expression) {
+    let expr = expression.trim().replace("\\*", "*");
+    match meval::eval_str(&expr) {
         Ok(result) => Ok(format!("{}", result)),
         Err(e) => Err(format!(
             "Error evaluating expression '{}': {}",

@@ -333,7 +333,7 @@ pub async fn run_workflow(
 
     // 重点：如果是全新启动工作流运行（不是 resume 打断），彻底清空 sqlite checkpointer 里旧状态 records，防止 aborted 时脏状态残留导致数据串了和参数叠加
     if resume_value.is_none() {
-        log::info!("[workflow] Fresh run detected. Purging old checkpoints for thread: {}", thread_id_val);
+        // log::info!("[workflow] Fresh run detected. Purging old checkpoints for thread: {}", thread_id_val);
         let _ = sqlx::query("DELETE FROM checkpoints WHERE thread_id = ?1")
             .bind(&thread_id_val)
             .execute(db.pool())
@@ -641,7 +641,7 @@ pub async fn run_workflow(
 
         let mut astream = graph.astream(&initial_input, &config, vec![StreamMode::Updates]);
         while let Some(part) = astream.next().await {
-            log::info!("[workflow] step update: {:?}", part);
+            // log::info!("[workflow] step update: {:?}", part);
             let _ = app_clone.emit("workflow-event", serde_json::json!({
                 "type": "workflow_progress",
                 "workflow_id": workflow_id_clone,
@@ -885,10 +885,10 @@ pub async fn stop_workflow(
     execution_state: State<'_, Arc<WorkflowExecutionState>>,
     workflow_id: String,
 ) -> Result<(), String> {
-    log::info!("[workflow] stop_workflow command received for workflow_id: {}", workflow_id);
+    // log::info!("[workflow] stop_workflow command received for workflow_id: {}", workflow_id);
     let mut executions = execution_state.executions.lock().unwrap();
     if let Some((handle, cancel_flag)) = executions.remove(&workflow_id) {
-        log::info!("[workflow] Found active execution handle for {}, aborting it...", workflow_id);
+        // log::info!("[workflow] Found active execution handle for {}, aborting it...", workflow_id);
         cancel_flag.store(true, std::sync::atomic::Ordering::SeqCst);
         handle.abort();
     } else {
