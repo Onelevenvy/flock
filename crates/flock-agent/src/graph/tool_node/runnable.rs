@@ -230,6 +230,7 @@ pub async fn ainvoke_impl(
         "[node] tools: calling run_tools with {} tool_calls",
         tool_calls.len()
     ));
+    let msg_id = node.ctx.msg_id.lock().unwrap().clone();
     let outcome = match run_tools(
         &node.ctx.tools,
         &tool_calls,
@@ -237,6 +238,7 @@ pub async fn ainvoke_impl(
         None, // No hooks in graph node mode
         node.ctx.compaction_level,
         node.ctx.toon_enabled,
+        &msg_id,
     )
     .await
     {

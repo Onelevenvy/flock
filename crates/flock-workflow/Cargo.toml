@@ -22,6 +22,7 @@ log.workspace         = true
 regex.workspace       = true
 chrono.workspace      = true
 sqlx.workspace        = true
+anyhow.workspace      = true
 
 # LangGraph graph runtime
 langgraph.workspace                   = true
