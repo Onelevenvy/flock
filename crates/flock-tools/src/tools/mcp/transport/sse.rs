@@ -7,7 +7,7 @@ use reqwest::header::{HeaderMap, HeaderValue};
 use tokio::sync::{oneshot, Mutex};
 
 use super::{McpError, McpTransport};
-use crate::mcp::protocol::{JsonRpcRequest, JsonRpcResponse};
+use crate::tools::mcp::protocol::{JsonRpcRequest, JsonRpcResponse};
 
 /// SSE transport: connects to an SSE endpoint for server→client events,
 /// sends requests via POST to the endpoint URL received from the SSE stream

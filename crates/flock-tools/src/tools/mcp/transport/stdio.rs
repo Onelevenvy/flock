@@ -7,7 +7,7 @@ use tokio::process::{Child, ChildStdin, ChildStdout};
 use tokio::sync::Mutex;
 
 use super::{McpError, McpTransport};
-use crate::mcp::protocol::{JsonRpcRequest, JsonRpcResponse};
+use crate::tools::mcp::protocol::{JsonRpcRequest, JsonRpcResponse};
 
 /// Stdio transport: communicates with MCP server via child process stdin/stdout
 pub struct StdioTransport {

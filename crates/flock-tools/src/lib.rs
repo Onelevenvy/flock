@@ -4,16 +4,11 @@ pub mod adapter;
 pub mod file_cache;
 pub mod tool_executor;
 
-pub mod registry;
-pub mod mcp;
-pub mod builtin;
-pub mod math;
-pub mod openweather;
-pub mod baidu;
-pub mod google;
-pub mod serper;
 pub mod daytona;
-pub mod sandbox;
+pub mod registry;
+pub mod tools;
+
+pub use tools::{baidu, builtin, google, math, mcp, openweather, sandbox, serper};
 
 /// Snapshot of all registered tools and their provider metadata.
 pub struct ToolSet {
@@ -24,6 +19,7 @@ pub struct ToolSet {
 /// Build the complete tool set with all providers and tools.
 /// Adding a new tool provider? Just add one entry here.
 pub fn all_tools() -> ToolSet {
+
     let mut reg = registry::ToolRegistry::new();
     let mut infos = Vec::new();
 
@@ -197,7 +193,7 @@ pub fn parse_provider_info_from_yaml(yaml_str: &str, icon_svg: Option<&str>) -> 
         .unwrap_or_else(|e| panic!("Failed to parse provider YAML. Error: {}\nYAML:\n{}", e, yaml_str));
 
     let icon = icon_svg.map(|svg| {
-        use base64::{Engine as _, engine::general_purpose};
+        use base64::{engine::general_purpose, Engine as _};
         format!("data:image/svg+xml;base64,{}", general_purpose::STANDARD.encode(svg))
     }).or(parsed.identity.icon);
 

@@ -4,7 +4,7 @@ pub mod streamable_http;
 
 use async_trait::async_trait;
 
-use crate::mcp::protocol::{JsonRpcRequest, JsonRpcResponse};
+use crate::tools::mcp::protocol::{JsonRpcRequest, JsonRpcResponse};
 
 /// Transport abstraction for MCP communication
 #[async_trait]
