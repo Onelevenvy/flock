@@ -17,17 +17,16 @@ import { useTranslation } from 'react-i18next';
 import { nodeConfig, type NodeType } from '@/pages/Workflow/nodeConfig';
 import { useAvailableModels } from '@/hooks/useAvailableModels';
 import { useAvailableTools } from '@/hooks/useAvailableTools';
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 
 import { ToolsIcon } from '@/components/Common/Icons';
 import { useWorkflowStore } from '@/store/workflowStore';
 import { useWorkflowRuntime } from '@/hooks/useWorkflowRuntime';
 
 import { RetryTimeoutFields } from './RetryTimeoutFields';
-import { DebugVariablesModal, type DebugVariable } from './DebugVariablesModal';
 import { NodeSpecificFields } from './NodeSpecificFields';
 import { LastRunPanel } from './LastRunPanel';
-import { extractVariables } from './helper';
+import { extractVariables, type DebugVariable } from './helper';
 
 export interface PropertiesPanelProps {
   node: Node;
@@ -57,8 +56,13 @@ export function PropertiesPanel({ node, onClose, onDataChange }: PropertiesPanel
   const debugResults = useWorkflowStore((s) => s.debugResults);
   const debugResult = debugResults[node.id];
 
-  const [isModalOpen, setIsModalOpen] = useState(false);
   const [missingVars, setMissingVars] = useState<DebugVariable[]>([]);
+
+  // Automatically extract variables when node changes to prepare the debug variables form
+  useEffect(() => {
+    const vars = extractVariables(node.data);
+    setMissingVars(vars);
+  }, [node.id, node.data]);
 
   const executeDebug = async (mockOutputs: Record<string, any>) => {
     const payload = {
@@ -74,18 +78,12 @@ export function PropertiesPanel({ node, onClose, onDataChange }: PropertiesPanel
   };
 
   const handleRun = async () => {
-    const vars = extractVariables(node.data);
-    if (vars.length > 0) {
-      setMissingVars(vars);
-      setIsModalOpen(true);
+    // If the node has dependencies, navigate to Last Run to let them fill/see the inline form
+    if (missingVars.length > 0) {
+      setActiveTab('last-run');
     } else {
       await executeDebug({});
     }
-  };
-
-  const handleModalConfirm = (mockOutputs: Record<string, any>) => {
-    setIsModalOpen(false);
-    executeDebug(mockOutputs);
   };
 
   const toolIcon = useMemo(() => {
@@ -219,16 +217,14 @@ export function PropertiesPanel({ node, onClose, onDataChange }: PropertiesPanel
 
         {/* Tab 2: Last Run */}
         <Tabs.Panel value="last-run">
-          <LastRunPanel debugResult={debugResult} />
+          <LastRunPanel
+            debugResult={debugResult}
+            variables={missingVars}
+            onRun={executeDebug}
+            isRunning={executionStatus === 'running'}
+          />
         </Tabs.Panel>
       </Tabs>
-
-      <DebugVariablesModal
-        opened={isModalOpen}
-        onClose={() => setIsModalOpen(false)}
-        variables={missingVars}
-        onConfirm={handleModalConfirm}
-      />
     </Box>
   );
 }
