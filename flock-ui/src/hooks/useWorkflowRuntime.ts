@@ -329,7 +329,7 @@ export function useWorkflowRuntime({
 
               case 'workflow_error':
               case 'error':
-                const isUserCancel = (payload.error || payload.text || (payload as any).message) === 'Workflow execution cancelled by user';
+                const isUserCancel = (payload.error || payload.text || (payload as any).message || '').includes('Workflow execution cancelled by user');
                 if (isUserCancel) {
                   store.setThreadStatus(activeTid, 'idle');
                   break;

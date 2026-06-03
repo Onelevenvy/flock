@@ -124,7 +124,7 @@ export function useEventStream() {
               case 'error':
                 setStatus('ready');
                 const errMsg = payload.error || payload.text || (payload as any).message || 'Unknown error';
-                if (errMsg === 'Workflow execution cancelled by user') {
+                if (errMsg.includes('Workflow execution cancelled by user')) {
                   handleEvent({
                     type: 'text_delta',
                     msg_id: msgId,
