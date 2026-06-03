@@ -29,7 +29,8 @@ pub async fn prepare_run(
         let ctx = Arc::new(NodeContext {
             provider: Arc::clone(&engine.provider),
             tools: Arc::clone(&engine.tools),
-            confirmer: Arc::clone(&engine.confirmer),
+            auto_approve: engine.auto_approve,
+            allow_list: engine.allow_list.clone(),
             compact_config: engine.compact_config.clone(),
             plan_config: engine.plan_config.clone(),
             system_prompt: engine.system_prompt.clone(),

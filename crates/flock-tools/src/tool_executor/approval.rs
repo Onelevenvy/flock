@@ -1,40 +1,6 @@
-use std::sync::{Arc, Mutex};
-use crate::approval::{ApprovalDecision, ToolConfirmer};
 use flock_core::types::message::ContentBlock;
 use flock_core::config::hooks::HookEngine;
 use crate::registry::ToolRegistry;
-use super::types::ExecutionControl;
-use super::helpers::truncate_display;
-
-/// Confirm a single tool call. Returns Ok(Some(result)) if denied, Ok(None) if approved, Err if quit.
-pub fn request_approval(
-    confirmer: Option<&Arc<Mutex<dyn ToolConfirmer>>>,
-    call: &ContentBlock,
-) -> Result<Option<ContentBlock>, ExecutionControl> {
-    let ContentBlock::ToolUse { id, name, input } = call else {
-        return Ok(None);
-    };
-
-    let Some(confirmer) = confirmer else {
-        return Ok(None);
-    };
-
-    let input_display = serde_json::to_string(input).unwrap_or_default();
-    let result = confirmer
-        .lock()
-        .unwrap()
-        .check(name, &truncate_display(&input_display, 200));
-
-    match result {
-        ApprovalDecision::Approved => Ok(None),
-        ApprovalDecision::Denied => Ok(Some(ContentBlock::ToolResult {
-            tool_use_id: id.clone(),
-            content: "Tool execution denied by user".to_string(),
-            is_error: true,
-        })),
-        ApprovalDecision::Quit => Err(ExecutionControl::Quit),
-    }
-}
 
 pub fn update_plugin_hooks(
     registry: &ToolRegistry,

@@ -2,7 +2,6 @@ use serde_json::{json, Value as JsonValue};
 use langgraph::runnable::RunnableError;
 use flock_core::types::message::{ContentBlock, Message, Role};
 use flock_tools::tool_executor::{run_tools, ExecutionControl};
-use flock_tools::approval::ToolConfirmer;
 use super::FlockToolNode;
 use super::extract::extract_tool_calls;
 
@@ -23,10 +22,14 @@ pub async fn ainvoke_impl(
         return Ok(json!({}));
     }
 
+    let allow_list = input.get("allow_list")
+        .and_then(|v| serde_json::from_value::<Vec<String>>(v.clone()).ok())
+        .unwrap_or_default();
+
     // Check if any tool needs approval (same logic as old confirm_node)
     let needs_approval = tool_calls.iter().any(|call| {
         if let ContentBlock::ToolUse { name, .. } = call {
-            node.ctx.confirmer.lock().unwrap().requires_approval(name)
+            !node.ctx.auto_approve && !allow_list.contains(name)
         } else {
             false
         }
@@ -43,12 +46,8 @@ pub async fn ainvoke_impl(
 
         let writer = node.ctx.protocol_writer.as_ref()
             .expect("protocol_writer must be set when approval_manager is set");
-        let auto_approve = node.ctx.confirmer.lock().unwrap().is_auto_approve();
+        let auto_approve = node.ctx.auto_approve;
         let msg_id = node.ctx.msg_id.lock().unwrap().clone();
-        
-        let allow_list = input.get("allow_list")
-            .and_then(|v| serde_json::from_value::<Vec<String>>(v.clone()).ok())
-            .unwrap_or_default();
 
         use std::sync::atomic::Ordering;
         use flock_tools::tool_executor::execute_tool_calls_with_approval;
@@ -143,7 +142,6 @@ pub async fn ainvoke_impl(
                 });
                 if !list.contains(tool_name) {
                     list.push(tool_name.clone());
-                    node.ctx.confirmer.lock().unwrap().add_to_allow_list(tool_name);
                 }
             }
             if let Some(transition) = &modifier.plan_mode_transition {
@@ -235,7 +233,6 @@ pub async fn ainvoke_impl(
     let outcome = match run_tools(
         &node.ctx.tools,
         &tool_calls,
-        None, // No confirmer — approval handled above via interrupt()
         None, // No hooks in graph node mode
         node.ctx.compaction_level,
         node.ctx.toon_enabled,
@@ -290,7 +287,6 @@ pub async fn ainvoke_impl(
             });
             if !list.contains(tool_name) {
                 list.push(tool_name.clone());
-                node.ctx.confirmer.lock().unwrap().add_to_allow_list(tool_name);
             }
         }
         if let Some(transition) = &modifier.plan_mode_transition {

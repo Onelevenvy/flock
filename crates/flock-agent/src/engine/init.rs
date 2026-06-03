@@ -9,7 +9,6 @@ use langgraph_providers::openai::{OpenAIModel, OpenAIModelConfig};
 use std::sync::{Arc, Mutex};
 
 use super::AgentEngine;
-use crate::approval::ToolApproval;
 use crate::context_compression::state::CompactState;
 use crate::session::Session;
 use crate::sinks::OutputSink;
@@ -35,8 +34,7 @@ impl AgentEngine {
         output: Arc<dyn OutputSink>,
     ) -> Self {
         let system_prompt = config.system_prompt.clone().unwrap_or_default();
-        let confirmer =
-            ToolApproval::new(config.tools.auto_approve, config.tools.allow_list.clone());
+        let auto_approve = config.tools.auto_approve;
 
         // Use the main flock.db for checkpoints and sessions (single DB file)
         let db_path_str = config.db_path.to_string_lossy().to_string();
@@ -71,7 +69,7 @@ impl AgentEngine {
             total_usage: TokenUsage::default(),
             thinking: config.thinking,
             compat: config.compat.clone(),
-            confirmer: Arc::new(Mutex::new(confirmer)),
+            auto_approve,
             hooks: Some(HookEngine::new(config.hooks.clone())),
             session_manager,
             current_session: None,
@@ -156,8 +154,7 @@ impl AgentEngine {
         session: Session,
     ) -> Self {
         let system_prompt = config.system_prompt.clone().unwrap_or_default();
-        let confirmer =
-            ToolApproval::new(config.tools.auto_approve, config.tools.allow_list.clone());
+        let auto_approve = config.tools.auto_approve;
 
         // Use the session ID as the thread_id so LangGraph checkpointer
         // correctly links this run to the existing conversation history.
@@ -198,7 +195,7 @@ impl AgentEngine {
             total_usage: session.total_usage.clone(),
             thinking: config.thinking,
             compat: config.compat.clone(),
-            confirmer: Arc::new(Mutex::new(confirmer)),
+            auto_approve,
             hooks: Some(HookEngine::new(config.hooks.clone())),
             session_manager,
             current_session: Some(session),

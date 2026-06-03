@@ -2,7 +2,6 @@ use std::path::PathBuf;
 
 pub mod adapter;
 pub mod file_cache;
-pub mod approval;
 pub mod tool_executor;
 
 pub mod registry;

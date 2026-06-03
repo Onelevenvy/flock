@@ -11,7 +11,6 @@ use langgraph_prebuilt::BaseChatModel;
 use flock_core::types::message::{Message, StopReason, TokenUsage};
 use flock_tools::registry::ToolRegistry;
 
-use crate::approval::ToolApproval;
 use crate::context_compression::state::CompactState;
 use crate::session::{Session, SessionManager};
 use crate::sinks::OutputSink;
@@ -35,7 +34,7 @@ pub struct AgentEngine {
     pub(crate) thinking: Option<flock_core::types::llm::ThinkingConfig>,
     /// Resolved provider compat settings (for capability validation)
     pub(crate) compat: flock_core::config::compat::ProviderCompat,
-    pub(crate) confirmer: Arc<Mutex<ToolApproval>>,
+    pub(crate) auto_approve: bool,
     pub(crate) hooks: Option<HookEngine>,
     pub(crate) session_manager: Option<SessionManager>,
     pub(crate) current_session: Option<Session>,
