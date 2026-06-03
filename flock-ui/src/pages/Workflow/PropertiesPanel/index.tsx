@@ -11,7 +11,8 @@ import {
   ThemeIcon,
   Tooltip,
   Tabs,
-
+  Modal,
+  Button,
 } from '@mantine/core';
 import { IconX, IconPlayerPlay, IconSettings, IconHistory } from '@tabler/icons-react';
 import { useTranslation } from 'react-i18next';
@@ -63,6 +64,74 @@ export function PropertiesPanel({ node, onClose, onDataChange }: PropertiesPanel
   const debugResults = useWorkflowStore((s) => s.debugResults);
   const debugResult = debugResults[node.id];
 
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [missingVars, setMissingVars] = useState<Array<{ fullPath: string; nodeId: string; field: string; value: string }>>([]);
+
+  const extractVariables = (data: unknown): Array<{ fullPath: string; nodeId: string; field: string; value: string }> => {
+    const serialized = JSON.stringify(data);
+    const regex = /\$\{([^}]+)\}/g;
+    const matches = new Set<string>();
+    let match;
+    while ((match = regex.exec(serialized)) !== null) {
+      matches.add(match[1].trim());
+    }
+
+    const vars: Array<{ fullPath: string; nodeId: string; field: string; value: string }> = [];
+    matches.forEach((p) => {
+      if (p.startsWith('sys.') || p.startsWith('env.') || p === 'start.query') {
+        return;
+      }
+      const parts = p.split('.').map((s) => s.trim());
+      if (parts.length >= 2) {
+        const nodeId = parts[0];
+        const field = parts[parts.length - 1];
+        if (!vars.some((v) => v.nodeId === nodeId && v.field === field)) {
+          vars.push({ fullPath: p, nodeId, field, value: '' });
+        }
+      }
+    });
+    return vars;
+  };
+
+  const executeDebug = async (mockOutputs: Record<string, any>) => {
+    const payload = {
+      input_msg: "",
+      node_outputs: mockOutputs,
+      env_vars: {} as Record<string, any>,
+    };
+
+    setActiveTab('last-run');
+    if (debugNode) {
+      await debugNode(node.id, JSON.stringify(payload));
+    }
+  };
+
+  const handleRun = async () => {
+    const vars = extractVariables(node.data);
+    if (vars.length > 0) {
+      setMissingVars(vars);
+      setIsModalOpen(true);
+    } else {
+      await executeDebug({});
+    }
+  };
+
+  const handleModalConfirm = () => {
+    setIsModalOpen(false);
+    const mockOutputs: Record<string, any> = {};
+    missingVars.forEach((v) => {
+      if (!mockOutputs[v.nodeId]) {
+        mockOutputs[v.nodeId] = {};
+      }
+      mockOutputs[v.nodeId][v.field] = v.value;
+      if (!mockOutputs[v.nodeId].parameters) {
+        mockOutputs[v.nodeId].parameters = {};
+      }
+      mockOutputs[v.nodeId].parameters[v.field] = v.value;
+    });
+    executeDebug(mockOutputs);
+  };
+
   const toolIcon = useMemo(() => {
     if (type === 'plugin') {
       const toolData = node.data.tool as { name?: string } | undefined;
@@ -79,21 +148,6 @@ export function PropertiesPanel({ node, onClose, onDataChange }: PropertiesPanel
 
   if (!cfg) return null;
   const Icon = cfg.icon;
-
-  const handleRun = async () => {
-    // 自动静默保存已经由 FlowCanvas 的 useEffect 效果托管。
-    // 在此处，我们直接触发后端执行 debug 即可。
-    const payload = {
-      input_msg: "",
-      node_outputs: {} as Record<string, any>,
-      env_vars: {} as Record<string, any>,
-    };
-
-    setActiveTab('last-run');
-    if (debugNode) {
-      await debugNode(node.id, JSON.stringify(payload));
-    }
-  };
 
   return (
     <Box
@@ -336,6 +390,51 @@ export function PropertiesPanel({ node, onClose, onDataChange }: PropertiesPanel
           </ScrollArea>
         </Tabs.Panel>
       </Tabs>
+
+      <Modal
+        opened={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+        title={t('workflow.debugPanel.mockVariablesTitle', 'Configure Debug Variables')}
+        size="sm"
+        centered
+        styles={{
+          title: { fontSize: 13, fontWeight: 700, color: 'var(--flock-text-bright)' },
+          content: { background: 'var(--flock-bg-base)', border: '1px solid var(--flock-border-subtle)', borderRadius: 12 },
+        }}
+      >
+        <Stack gap="sm">
+          <Text size="xs" c="dimmed">
+            {t('workflow.debugPanel.mockVariablesDesc', 'This node depends on output variables from other nodes. Please configure mock values for debugging:')}
+          </Text>
+          {missingVars.map((v, idx) => (
+            <TextInput
+              key={`${v.nodeId}-${v.field}`}
+              label={
+                <Text size="xs" span style={{ fontFamily: 'monospace' }}>
+                  {v.nodeId} &rarr; {v.field}
+                </Text>
+              }
+              value={v.value}
+              onChange={(e) => {
+                const next = [...missingVars];
+                next[idx].value = e.target.value;
+                setMissingVars(next);
+              }}
+              placeholder={t('workflow.debugPanel.mockValuePlaceholder', 'Enter mock value')}
+              size="xs"
+              required
+            />
+          ))}
+          <Group justify="flex-end" mt="md" gap="xs">
+            <Button variant="subtle" size="xs" color="gray" onClick={() => setIsModalOpen(false)}>
+              {t('common.cancel', 'Cancel')}
+            </Button>
+            <Button size="xs" color="teal" onClick={handleModalConfirm}>
+              {t('workflow.debugPanel.runDebug', 'Run')}
+            </Button>
+          </Group>
+        </Stack>
+      </Modal>
     </Box>
   );
 }

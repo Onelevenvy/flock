@@ -17,3 +17,7 @@ models:
     model_name: Pro/deepseek-ai/DeepSeek-V3.2
     categories: ["chat"]
     capabilities: []
+  - id: siliconflow:Qwen/Qwen2.5-7B-Instruct
+    model_name: Qwen/Qwen2.5-7B-Instruct
+    categories: ["chat"]
+    capabilities: []
