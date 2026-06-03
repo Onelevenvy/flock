@@ -11,9 +11,9 @@ use flock_agent::agent_setup::{AgentBuilder, AssistantOverrides};
 use flock_agent::sinks::OutputSink;
 use flock_core::config::settings::{CliArgs, Config};
 use flock_core::db::DbManager;
-use crate::agent::state::{AgentState, SessionCommand, SessionHandle};
-use crate::agent::emitter::TauriProtocolEmitter;
-use crate::agent::actor::run_session_actor;
+use crate::assistant::state::{AgentState, SessionCommand, SessionHandle};
+use crate::ipc::emitter::TauriProtocolEmitter;
+use crate::assistant::actor::run_session_actor;
 
 /// 启动 Agent 引擎
 pub async fn start_agent(
@@ -289,7 +289,7 @@ pub async fn stop_agent(state: Arc<Mutex<AgentState>>, session_id: Option<String
     let sid = session_id.unwrap_or_else(|| "default".to_string());
     if let Some(handle) = s.sessions.get(&sid) {
         log::info!("Cancelling agent engine run for session: {}", sid);
-        // 先触发 cancel，打断正在阻塞运行的 engine，但并不从缓存中移除，确保后续可继续交互
+        // 先触发 cancel，打断正在阻塞运行ের engine，但并不从缓存中移除，确保后续可继续交互
         handle.cancel_flag.store(true, Ordering::SeqCst);
     }
     Ok(())
@@ -434,4 +434,3 @@ mod tests {
         assert!(running_count >= max_running);
     }
 }
-

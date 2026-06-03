@@ -139,7 +139,7 @@ pub async fn trigger_job_execution(
     // 3. 启动 Agent
     let extra_args = vec![];
     let selected_assistant = job.assistant_id.clone().unwrap_or_else(|| "__xiaof__".to_string());
-    if let Err(e) = crate::agent::start_agent(
+    if let Err(e) = crate::assistant::start_agent(
         app.clone(),
         agent_state.clone(),
         workdir,
@@ -193,7 +193,7 @@ pub async fn trigger_job_execution(
     let msg_id = format!("msg_{}", uuid_like());
     let prompt_content = job.prompt.clone();
 
-    if let Err(e) = crate::agent::send_message(
+    if let Err(e) = crate::assistant::send_message(
         agent_state.clone(),
         Some(conv_id.clone()),
         msg_id,

@@ -2,7 +2,7 @@ use std::sync::Arc;
 use std::sync::atomic::{AtomicBool, Ordering};
 use tokio::sync::mpsc;
 use flock_agent::engine::AgentEngine;
-use crate::agent::state::SessionCommand;
+use crate::assistant::state::SessionCommand;
 
 pub async fn run_session_actor(
     session_id: String,

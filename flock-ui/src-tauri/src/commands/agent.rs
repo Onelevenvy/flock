@@ -4,7 +4,7 @@ use std::sync::Arc;
 use tauri::{AppHandle, State};
 use tokio::sync::Mutex;
 
-use crate::agent::{self, AgentState};
+use crate::assistant::{self, AgentState};
 
 pub type SharedAgentState = Arc<Mutex<AgentState>>;
 
@@ -33,7 +33,7 @@ pub async fn start_agent(
         args.push(key.clone());
     }
 
-    agent::start_agent(app, state.inner().clone(), workdir, session_id, assistant_id, args)
+    assistant::start_agent(app, state.inner().clone(), workdir, session_id, assistant_id, args)
         .await
         .map_err(|e| e.to_string())
 }
@@ -44,7 +44,7 @@ pub async fn stop_agent(
     state: State<'_, SharedAgentState>,
     session_id: Option<String>,
 ) -> Result<(), String> {
-    agent::stop_agent(state.inner().clone(), session_id)
+    assistant::stop_agent(state.inner().clone(), session_id)
         .await
         .map_err(|e| e.to_string())
 }
@@ -58,7 +58,7 @@ pub async fn send_message(
     msg_id: String,
     content: String,
 ) -> Result<(), String> {
-    agent::send_message(state.inner().clone(), session_id, msg_id, content, app)
+    assistant::send_message(state.inner().clone(), session_id, msg_id, content, app)
         .await
         .map_err(|e| e.to_string())
 }
@@ -70,7 +70,7 @@ pub async fn approve_tool(
     call_id: String,
     scope: String,
 ) -> Result<(), String> {
-    agent::approve_tool(state.inner().clone(), call_id, scope)
+    assistant::approve_tool(state.inner().clone(), call_id, scope)
         .await
         .map_err(|e| e.to_string())
 }
@@ -82,7 +82,7 @@ pub async fn deny_tool(
     call_id: String,
     reason: Option<String>,
 ) -> Result<(), String> {
-    agent::deny_tool(state.inner().clone(), call_id, reason)
+    assistant::deny_tool(state.inner().clone(), call_id, reason)
         .await
         .map_err(|e| e.to_string())
 }
@@ -102,7 +102,7 @@ pub async fn resume_tool(
     } else {
         "once".to_string()
     };
-    agent::approve_tool(state.inner().clone(), call_id, scope)
+    assistant::approve_tool(state.inner().clone(), call_id, scope)
         .await
         .map_err(|e| e.to_string())
 }
@@ -113,7 +113,7 @@ pub async fn set_mode(
     state: State<'_, SharedAgentState>,
     mode: String,
 ) -> Result<(), String> {
-    agent::set_mode(state.inner().clone(), mode)
+    assistant::set_mode(state.inner().clone(), mode)
         .await
         .map_err(|e| e.to_string())
 }
@@ -129,7 +129,7 @@ pub async fn set_config(
     effort: Option<String>,
     compaction: Option<String>,
 ) -> Result<(), String> {
-    agent::set_config(
+    assistant::set_config(
         state.inner().clone(),
         session_id,
         model,
