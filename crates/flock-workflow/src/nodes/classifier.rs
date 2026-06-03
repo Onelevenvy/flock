@@ -105,7 +105,7 @@ Assistant:
                         LgMessage::human(user_prompt),
                     ];
 
-                    ctx.sink.emit_text_delta(&node_id, "*🔍 Classifying intent...*\n");
+                    ctx.sink.emit_text_delta(&node_id, "\u{200b}");
 
                     let model = resolve_model(&node_data, &ctx);
                     let mut rx = model.astream(&messages[..], &config);
@@ -200,6 +200,13 @@ Assistant:
                     }))
                 }
             }).await;
+
+            if let Err(ref e) = result {
+                ctx.sink.emit_error(e);
+                if let Ok(mut guard) = ctx.has_error.lock() {
+                    *guard = Some(e.clone());
+                }
+            }
 
             result.map_err(|e| RunnableError::Node(e))
         })

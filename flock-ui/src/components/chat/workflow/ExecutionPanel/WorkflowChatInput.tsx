@@ -26,7 +26,7 @@ export function WorkflowChatInput({
 
   const placeholder = isStreaming
     ? t('chat.agentThinking')
-    : t('chat.inputPlaceholder');
+    : t('chat.inputPlaceholderShort');
 
   return (
     <Box

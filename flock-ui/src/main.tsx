@@ -5,7 +5,6 @@ import { ReactQueryDevtools } from '@tanstack/react-query-devtools'
 import { queryClient } from './lib/queryClient'
 import App from './App'
 import { ErrorBoundary } from './components/Common/ErrorBoundary';
-import { getCurrentWindow } from '@tauri-apps/api/window';
 import './index.css';
 import './i18n';
 import { XiaofOverlayApp } from './components/Pet/XiaofOverlayApp'

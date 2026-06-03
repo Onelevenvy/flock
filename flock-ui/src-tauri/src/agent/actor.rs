@@ -2,7 +2,6 @@ use std::sync::Arc;
 use std::sync::atomic::{AtomicBool, Ordering};
 use tokio::sync::mpsc;
 use flock_agent::engine::AgentEngine;
-use flock_agent::sinks::OutputSink;
 use crate::agent::state::SessionCommand;
 
 pub async fn run_session_actor(

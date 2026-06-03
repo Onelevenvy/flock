@@ -65,6 +65,8 @@ async fn test_workflow_start_and_llm_nodes() {
         env_vars: HashMap::new(),
         workflow_id: "test-workflow-1".to_string(),
         approval_manager: Arc::new(flock_core::ipc_interface::approval::ToolApprovalManager::new()),
+        cancel_flag: Arc::new(std::sync::atomic::AtomicBool::new(false)),
+        has_error: Arc::new(std::sync::Mutex::new(None)),
     });
 
     let workflow_config = json!({
@@ -190,6 +192,8 @@ async fn test_workflow_concurrency_isolation() {
                 env_vars: HashMap::new(),
                 workflow_id: format!("wf-{}", uuid_clone),
                 approval_manager: Arc::new(flock_core::ipc_interface::approval::ToolApprovalManager::new()),
+                cancel_flag: Arc::new(std::sync::atomic::AtomicBool::new(false)),
+                has_error: Arc::new(std::sync::Mutex::new(None)),
             });
 
             let workflow_config = json!({
@@ -310,6 +314,8 @@ async fn test_workflow_classifier_and_answer_routing() {
         env_vars: HashMap::new(),
         workflow_id: "test-classifier-workflow".to_string(),
         approval_manager: Arc::new(flock_core::ipc_interface::approval::ToolApprovalManager::new()),
+        cancel_flag: Arc::new(std::sync::atomic::AtomicBool::new(false)),
+        has_error: Arc::new(std::sync::Mutex::new(None)),
     });
 
     let workflow_config = json!({

@@ -30,4 +30,5 @@ pub struct NodeContext {
     pub plan_active_flag: Option<Arc<std::sync::atomic::AtomicBool>>,
     pub debug_mode: bool,
     pub provider_label: String,
+    pub has_error: Arc<std::sync::Mutex<Option<String>>>,
 }

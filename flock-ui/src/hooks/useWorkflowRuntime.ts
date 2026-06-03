@@ -4,9 +4,6 @@
  * 同时服务于两种场景：
  *  - isDebug=true  →  WorkflowEditor 里的调试面板（ExecutionPanel）
  *  - isDebug=false →  Workspace 里的工作流对话（WorkflowChatPanel）
- *
- * 所有执行状态统一存储在 workflowStore.threadExecutions[threadId]，
- * 通过 threadId 天然隔离，不再有两套数据源。
  */
 import { useEffect, useRef, useCallback } from 'react';
 import { listen } from '@tauri-apps/api/event';

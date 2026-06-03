@@ -141,7 +141,12 @@ pub fn make_llm_node(
                     Ok(m) => m,
                     Err(e) => {
                         log::error!("[node:llm] Stream error: {}", e);
-                        return Err(RunnableError::Node(e.to_string()));
+                        let err_msg = e.to_string();
+                        ctx.output.emit_error(&err_msg);
+                        if let Ok(mut guard) = ctx.has_error.lock() {
+                            *guard = Some(err_msg.clone());
+                        }
+                        return Err(RunnableError::Node(err_msg));
                     }
                 };
 

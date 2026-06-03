@@ -11,6 +11,7 @@ pub async fn prepare_run(
     msg_id: &str,
 ) -> Result<(JsonValue, RunnableConfig), AgentError> {
     engine.cancel_flag.store(false, Ordering::SeqCst);
+    *engine.has_error.lock().unwrap() = None;
     engine.current_msg_id = msg_id.to_string();
     engine.output.emit_stream_start(msg_id);
 
@@ -41,6 +42,7 @@ pub async fn prepare_run(
             plan_active_flag: engine.plan_active_flag.clone(),
             debug_mode: engine.debug_mode,
             provider_label: engine.provider_label.clone(),
+            has_error: Arc::clone(&engine.has_error),
         });
         let app = build_agent_graph(ctx, Arc::clone(&engine.checkpointer))
             .map_err(|e| AgentError::ApiError(format!("Graph build error: {e}")))?;

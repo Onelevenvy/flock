@@ -86,6 +86,7 @@ export function ChatInput({
         >
           <Textarea
             ref={textareaRef}
+            variant="unstyled"
             placeholder={placeholder}
             value={value}
             onChange={(e) => onChange(e.currentTarget.value)}
@@ -105,11 +106,16 @@ export function ChatInput({
                 resize: 'none',
                 outline: 'none',
                 boxShadow: 'none',
+                '&::placeholder': {
+                  whiteSpace: 'nowrap',
+                  overflow: 'hidden',
+                  textOverflow: 'ellipsis',
+                },
               },
             }}
           />
 
-          <Group justify="space-between" mt={6} wrap="nowrap" style={{ width: '100%' }}>
+          <Group justify="space-between" mt={6} wrap="nowrap" style={{ width: '100%', height: 32 }}>
             <Group gap={8} wrap="nowrap" style={{ flexShrink: 1, minWidth: 0 }}>
               {leftExtra}
             </Group>

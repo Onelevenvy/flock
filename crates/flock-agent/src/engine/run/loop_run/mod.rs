@@ -47,6 +47,12 @@ impl AgentEngine {
                     self.sync_and_save_session(&config).await;
                     return Err(AgentError::UserAborted);
                 }
+                let err_opt = self.has_error.lock().unwrap().clone();
+                if let Some(err) = err_opt {
+                    self.output.emit_info(&format!("[engine] error detected in node context: {}", err));
+                    self.sync_and_save_session(&config).await;
+                    return Err(AgentError::Provider(err));
+                }
                 break snapshot.values;
             }
         };

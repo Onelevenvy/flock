@@ -51,7 +51,7 @@ pub fn make_llm_workflow_node(
                         messages.push(LgMessage::human(user_prompt.clone()));
                     }
 
-                    ctx.sink.emit_text_delta(&node_id, "*🔍 Thinking...*\n");
+                    ctx.sink.emit_text_delta(&node_id, "\u{200b}");
 
                     let model = resolve_model(&node_data, &ctx);
                     let mut rx = model.astream(&messages[..], &config);
@@ -98,6 +98,13 @@ pub fn make_llm_workflow_node(
                     }))
                 }
             }).await;
+
+            if let Err(ref e) = result {
+                ctx.sink.emit_error(e);
+                if let Ok(mut guard) = ctx.has_error.lock() {
+                    *guard = Some(e.clone());
+                }
+            }
 
             result.map_err(|e| RunnableError::Node(e))
         })

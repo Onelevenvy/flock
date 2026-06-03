@@ -97,6 +97,7 @@ impl AgentEngine {
             provider_label: config.provider_label.clone(),
             db_manager: config.db_manager.clone(),
             cancel_flag: Arc::new(std::sync::atomic::AtomicBool::new(false)),
+            has_error: Arc::new(Mutex::new(None)),
         }
     }
 
@@ -223,6 +224,7 @@ impl AgentEngine {
             provider_label: config.provider_label.clone(),
             db_manager: config.db_manager.clone(),
             cancel_flag: Arc::new(std::sync::atomic::AtomicBool::new(false)),
+            has_error: Arc::new(Mutex::new(None)),
         }
     }
 }

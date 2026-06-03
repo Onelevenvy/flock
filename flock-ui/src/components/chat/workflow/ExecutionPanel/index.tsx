@@ -210,17 +210,19 @@ export function ExecutionPanel({
       }}
     >
       {/* Panel header */}
-      <ExecutionPanelHeader
-        isEmbedded={isEmbedded}
-        workflowName={workflowName}
-        status={status}
-        statusColor={statusColor}
-        isInterrupted={isInterrupted}
-        hasMessages={messages.length > 0}
-        onClear={handleClear}
-        onStop={stopWorkflow}
-        onClose={onClose}
-      />
+      {!isEmbedded && (
+        <ExecutionPanelHeader
+          isEmbedded={isEmbedded}
+          workflowName={workflowName}
+          status={status}
+          statusColor={statusColor}
+          isInterrupted={isInterrupted}
+          hasMessages={messages.length > 0}
+          onClear={handleClear}
+          onStop={stopWorkflow}
+          onClose={onClose}
+        />
+      )}
 
       {/* Main content */}
       <Box
@@ -228,7 +230,7 @@ export function ExecutionPanel({
           flex: 1,
           display: 'flex',
           flexDirection: 'column',
-          background: 'var(--flock-bg-base)',
+          background: 'var(--flock-bg-surface)',
           minHeight: 0,
         }}
       >
@@ -348,7 +350,7 @@ export function ExecutionPanel({
           </Box>
         ) : (
           /* 有执行记录时或正在启动运行中（按轮次渲染：用户气泡 + 工作流折叠组 + answer/human 卡片） */
-          <ScrollArea style={{ flex: 1 }} px="sm" py="sm">
+          <ScrollArea style={{ flex: 1 }} px="md" py="md">
             <Stack gap={12}>
               {rounds.map((round) => (
                 <ExecutionRoundItem

@@ -11,6 +11,7 @@
   "copyCode": "复制代码",
   "runningMode": "运行模式",
   "inputPlaceholder": "输入消息（Enter 发送，Shift+Enter 换行）",
+  "inputPlaceholderShort": "输入消息...",
   "chooseWorkspace": "请先在左侧选择或新建工作空间...",
   "agentDisconnected": "Agent 未连接，正在启动...",
   "agentConnecting": "正在连接 Agent...",

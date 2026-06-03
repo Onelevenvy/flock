@@ -130,12 +130,13 @@ export function MessageBubble({ message }: MessageBubbleProps) {
           size={32}
           radius="xl"
           style={{
-            background: 'var(--flock-bg-surface)',
-            border: '1px solid var(--flock-border-dim)',
+            background: 'linear-gradient(135deg, var(--flock-accent) 0%, #3b82f6 100%)',
+            border: '1px solid rgba(21, 90, 239, 0.15)',
+            boxShadow: '0 2px 8px rgba(21, 90, 239, 0.15)',
             flexShrink: 0,
           }}
         >
-          <IconUser size={16} color="var(--flock-text-dim)" />
+          <IconUser size={16} color="white" />
         </Avatar>
       ) : (
         <Avatar
@@ -152,7 +153,6 @@ export function MessageBubble({ message }: MessageBubbleProps) {
         </Avatar>
       )}
 
-      {/* 内容区 */}
       <Box
         style={{
           flex: isUser ? '0 1 auto' : '1 1 0%',

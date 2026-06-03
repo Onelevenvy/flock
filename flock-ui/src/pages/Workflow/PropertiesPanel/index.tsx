@@ -12,7 +12,7 @@ import {
   Tooltip,
   Tabs,
 } from '@mantine/core';
-import { IconX, IconPlayerPlay, IconSettings, IconHistory } from '@tabler/icons-react';
+import { IconX, IconPlayerPlay, IconSettings, IconBugOff } from '@tabler/icons-react';
 import { useTranslation } from 'react-i18next';
 import { nodeConfig, type NodeType } from '@/pages/Workflow/nodeConfig';
 import { useAvailableModels } from '@/hooks/useAvailableModels';
@@ -185,7 +185,7 @@ export function PropertiesPanel({ node, onClose, onDataChange }: PropertiesPanel
           <Tabs.Tab value="settings" leftSection={<IconSettings size={12} />}>
             {t('workflow.debugPanel.tabSetup', 'SETTINGS')}
           </Tabs.Tab>
-          <Tabs.Tab value="last-run" leftSection={<IconHistory size={12} />}>
+          <Tabs.Tab value="last-run" leftSection={<IconBugOff  size={12} />}>
             {t('workflow.debugPanel.tabLastRun', 'DEBUG')}
           </Tabs.Tab>
         </Tabs.List>
