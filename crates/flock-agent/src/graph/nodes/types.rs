@@ -31,4 +31,7 @@ pub struct NodeContext {
     pub debug_mode: bool,
     pub provider_label: String,
     pub has_error: Arc<std::sync::Mutex<Option<String>>>,
+    pub cancel_flag: Arc<std::sync::atomic::AtomicBool>,
+    pub approval_manager: Option<Arc<flock_core::ipc_interface::approval::ToolApprovalManager>>,
+    pub protocol_writer: Option<Arc<dyn flock_core::ipc_interface::writer::ProtocolEmitter>>,
 }
