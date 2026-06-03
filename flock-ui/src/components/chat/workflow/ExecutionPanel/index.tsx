@@ -350,7 +350,7 @@ export function ExecutionPanel({
           </Box>
         ) : (
           /* 有执行记录时或正在启动运行中（按轮次渲染：用户气泡 + 工作流折叠组 + answer/human 卡片） */
-          <ScrollArea style={{ flex: 1 }} px="sm" py="sm">
+          <ScrollArea style={{ flex: 1 }} px="md" py="md">
             <Stack gap={12}>
               {rounds.map((round) => (
                 <ExecutionRoundItem

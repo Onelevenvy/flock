@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Box, Avatar, Paper, Text, Stack, ActionIcon, Collapse } from '@mantine/core';
-import { IconUser, IconCheck, IconChevronDown, IconChevronRight, IconMessageCircle } from '@tabler/icons-react';
+import { IconUser, IconCheck, IconChevronDown, IconChevronRight, IconMessageCircle, IconRobot } from '@tabler/icons-react';
 import { useTranslation } from 'react-i18next';
 import ReactMarkdown from 'react-markdown';
 import { WorkflowStepItem } from './WorkflowStepItem';
@@ -39,19 +39,22 @@ export function ExecutionRoundItem({
             display: 'flex',
             flexDirection: 'row-reverse',
             alignItems: 'flex-start',
-            gap: 8,
+            gap: 10,
+            width: '100%',
+            padding: '0 4px',
           }}
         >
           <Avatar
-            size={28}
+            size={32}
             radius="xl"
             style={{
-              background: 'var(--flock-bg-surface)',
-              border: '1px solid var(--flock-border-dim)',
+              background: 'linear-gradient(135deg, var(--flock-accent) 0%, #3b82f6 100%)',
+              border: '1px solid rgba(21, 90, 239, 0.15)',
+              boxShadow: '0 2px 8px rgba(21, 90, 239, 0.15)',
               flexShrink: 0,
             }}
           >
-            <IconUser size={14} color="var(--flock-text-dim)" />
+            <IconUser size={16} color="white" />
           </Avatar>
           <Paper
             p="xs"
@@ -74,16 +77,46 @@ export function ExecutionRoundItem({
       {round.steps.length > 0 && (
         <Box
           style={{
-            borderRadius: 10,
-            border: '1px solid var(--flock-border-subtle)',
-            overflow: 'hidden',
-            background: 'var(--flock-bg-surface)',
-            alignSelf: 'flex-start',
-            width: 'fit-content',
-            minWidth: 280,
-            maxWidth: '85%',
+            display: 'flex',
+            flexDirection: 'row',
+            alignItems: 'flex-start',
+            gap: 10,
+            width: '100%',
+            padding: '0 4px',
           }}
         >
+          <Avatar
+            size={32}
+            radius="xl"
+            style={{
+              background: 'var(--flock-accent)',
+              border: '1px solid rgba(21, 90, 239, 0.25)',
+              boxShadow: '0 2px 8px rgba(21, 90, 239, 0.2)',
+              flexShrink: 0,
+            }}
+          >
+            <IconRobot size={16} color="white" />
+          </Avatar>
+          <Box
+            style={{
+              flex: '1 1 0%',
+              minWidth: 0,
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'flex-start',
+            }}
+          >
+            <Box
+              style={{
+                borderRadius: 10,
+                border: '1px solid var(--flock-border-subtle)',
+                overflow: 'hidden',
+                background: 'var(--flock-bg-surface)',
+                width: 'fit-content',
+                minWidth: 280,
+                maxWidth: '100%',
+              }}
+            >
           {/* 组标题行 */}
           <Box
             onClick={() => setIsExpanded(prev => !prev)}
@@ -146,78 +179,119 @@ export function ExecutionRoundItem({
             </Stack>
           </Collapse>
         </Box>
+          </Box>
+        </Box>
       )}
 
       {/* answer / human 步骤在折叠组外显示 */}
       {roundProminentSteps.map((step) => {
-        if (step.isInterrupt) {
-          return (
-            <HumanReviewCard
-              key={`prominent-${step.id}`}
-              interruptData={step.interruptData ?? {}}
-              onResume={trackedResume}
-              isDark={isDark}
-              isResolved={step.interruptResolved}
-              resolvedActionLabel={step.resolvedActionLabel}
-              resolvedFeedback={step.resolvedFeedback}
-              displayName={step.displayName}
-            />
-          );
-        }
+        const renderContent = () => {
+          if (step.isInterrupt) {
+            return (
+              <HumanReviewCard
+                key={`prominent-${step.id}`}
+                interruptData={step.interruptData ?? {}}
+                onResume={trackedResume}
+                isDark={isDark}
+                isResolved={step.interruptResolved}
+                resolvedActionLabel={step.resolvedActionLabel}
+                resolvedFeedback={step.resolvedFeedback}
+                displayName={step.displayName}
+              />
+            );
+          }
 
-        const answerCfg = nodeConfig['answer'];
-        return (
-          <Box
-            key={`prominent-${step.id}`}
-            style={{
-              borderRadius: 10,
-              border: '1px solid var(--flock-border-subtle)',
-              overflow: 'hidden',
-              background: 'var(--flock-bg-surface)',
-              alignSelf: 'flex-start',
-              width: 'fit-content',
-              maxWidth: '85%',
-            }}
-          >
+          const answerCfg = nodeConfig['answer'];
+          return (
             <Box
+              key={`prominent-${step.id}`}
               style={{
-                padding: '7px 12px',
-                background: isDark ? 'rgba(255,255,255,0.03)' : 'rgba(0,0,0,0.02)',
-                borderBottom: '1px solid var(--flock-border-subtle)',
-                display: 'flex',
-                alignItems: 'center',
-                gap: 7,
+                borderRadius: 10,
+                border: '1px solid var(--flock-border-subtle)',
+                overflow: 'hidden',
+                background: 'var(--flock-bg-surface)',
+                width: 'fit-content',
+                maxWidth: '100%',
               }}
             >
               <Box
                 style={{
-                  width: 20, height: 20, borderRadius: 5,
-                  background: answerCfg.colorHex,
-                  display: 'flex', alignItems: 'center', justifyContent: 'center',
-                  flexShrink: 0,
+                  padding: '7px 12px',
+                  background: isDark ? 'rgba(255,255,255,0.03)' : 'rgba(0,0,0,0.02)',
+                  borderBottom: '1px solid var(--flock-border-subtle)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 7,
                 }}
               >
-                <IconMessageCircle size={11} color="#fff" />
-              </Box>
-              <Text size="xs" fw={600} style={{ color: 'var(--flock-text-bright)', flex: 1, fontSize: 12 }}>
-                {step.displayName}
-              </Text>
-              {step.status === 'running' && (
-                <Box style={{ animation: 'spin 1s linear infinite', display: 'flex' }}>
-                  <IconCheck size={13} style={{ color: '#3b82f6' }} />
+                <Box
+                  style={{
+                    width: 20, height: 20, borderRadius: 5,
+                    background: answerCfg.colorHex,
+                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    flexShrink: 0,
+                  }}
+                >
+                  <IconMessageCircle size={11} color="#fff" />
                 </Box>
-              )}
-            </Box>
-            <Box style={{ padding: '10px 14px' }}>
-              {step.outputText ? (
-                <Box className="markdown-body">
-                  <ReactMarkdown>{step.outputText}</ReactMarkdown>
-                </Box>
-              ) : (
-                <Text size="xs" c="dimmed" style={{ fontStyle: 'italic', fontSize: 11 }}>
-                  {t('workflow.execution.generating', '生成中...')}
+                <Text size="xs" fw={600} style={{ color: 'var(--flock-text-bright)', flex: 1, fontSize: 12 }}>
+                  {step.displayName}
                 </Text>
-              )}
+                {step.status === 'running' && (
+                  <Box style={{ animation: 'spin 1s linear infinite', display: 'flex' }}>
+                    <IconCheck size={13} style={{ color: '#3b82f6' }} />
+                  </Box>
+                )}
+              </Box>
+              <Box style={{ padding: '10px 14px' }}>
+                {step.outputText ? (
+                  <Box className="markdown-body">
+                    <ReactMarkdown>{step.outputText}</ReactMarkdown>
+                  </Box>
+                ) : (
+                  <Text size="xs" c="dimmed" style={{ fontStyle: 'italic', fontSize: 11 }}>
+                    {t('workflow.execution.generating', '生成中...')}
+                  </Text>
+                )}
+              </Box>
+            </Box>
+          );
+        };
+
+        return (
+          <Box
+            key={`wrapper-${step.id}`}
+            style={{
+              display: 'flex',
+              flexDirection: 'row',
+              alignItems: 'flex-start',
+              gap: 10,
+              width: '100%',
+              padding: '0 4px',
+            }}
+          >
+            <Avatar
+              size={32}
+              radius="xl"
+              style={{
+                background: 'var(--flock-accent)',
+                border: '1px solid rgba(21, 90, 239, 0.25)',
+                boxShadow: '0 2px 8px rgba(21, 90, 239, 0.2)',
+                flexShrink: 0,
+              }}
+            >
+              <IconRobot size={16} color="white" />
+            </Avatar>
+            <Box
+              style={{
+                flex: '1 1 0%',
+                minWidth: 0,
+                display: 'flex',
+                flexDirection: 'column',
+                alignItems: 'flex-start',
+              }}
+            >
+              {renderContent()}
             </Box>
           </Box>
         );
