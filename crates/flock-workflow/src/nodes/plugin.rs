@@ -36,9 +36,17 @@ pub fn make_plugin_node(
                 other => other.clone(),
             };
 
-            let tool = ctx.tools.get(tool_name).ok_or_else(|| {
-                RunnableError::Node(format!("Tool not found: {}", tool_name))
-            })?;
+            let tool = match ctx.tools.get(tool_name) {
+                Some(t) => t,
+                None => {
+                    let err_msg = format!("Tool not found: {}", tool_name);
+                    ctx.sink.emit_error(&err_msg);
+                    if let Ok(mut guard) = ctx.has_error.lock() {
+                        *guard = Some(err_msg.clone());
+                    }
+                    return Err(RunnableError::Node(err_msg));
+                }
+            };
 
             let res = tool.execute(tool_args_json).await;
 

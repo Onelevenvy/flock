@@ -549,6 +549,7 @@ pub async fn run_workflow(
         workflow_id: workflow_id.clone(),
         approval_manager,
         cancel_flag: cancel_flag.clone(),
+        has_error: Arc::new(std::sync::Mutex::new(None)),
     });
 
     // 6. 构建 Graph
@@ -677,6 +678,13 @@ pub async fn run_workflow(
                         "workflow_id": workflow_id_clone,
                         "thread_id": thread_id_val_clone.clone(),
                         "interrupt": first_interrupt,
+                    }));
+                } else if let Some(err_msg) = ctx.has_error.lock().ok().and_then(|guard| guard.clone()) {
+                    let _ = app_clone.emit("workflow-event", serde_json::json!({
+                        "type": "workflow_error",
+                        "workflow_id": workflow_id_clone,
+                        "thread_id": thread_id_val_clone.clone(),
+                        "error": err_msg,
                     }));
                 } else {
                     let end_ts = chrono::Utc::now().timestamp_millis();

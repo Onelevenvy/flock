@@ -128,6 +128,7 @@ pub struct WorkflowNodeContext {
     pub workflow_id: String,
     pub approval_manager: Arc<flock_core::ipc_interface::approval::ToolApprovalManager>,
     pub cancel_flag: std::sync::Arc<std::sync::atomic::AtomicBool>,
+    pub has_error: std::sync::Arc<std::sync::Mutex<Option<String>>>,
 }
 /// Resolve the model for a node: use node-specific model if configured,
 /// otherwise fall back to the default provider.

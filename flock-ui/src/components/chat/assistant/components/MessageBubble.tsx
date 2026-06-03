@@ -153,7 +153,6 @@ export function MessageBubble({ message }: MessageBubbleProps) {
         </Avatar>
       )}
 
-      {/* 内容区 */}
       <Box
         style={{
           flex: isUser ? '0 1 auto' : '1 1 0%',

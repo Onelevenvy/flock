@@ -85,6 +85,13 @@ pub fn make_code_node(
                 }
             }).await;
 
+            if let Err(ref e) = result {
+                ctx.sink.emit_error(e);
+                if let Ok(mut guard) = ctx.has_error.lock() {
+                    *guard = Some(e.clone());
+                }
+            }
+
             result.map_err(|e| RunnableError::Node(e))
         })
     }
