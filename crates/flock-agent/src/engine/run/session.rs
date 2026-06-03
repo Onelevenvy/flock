@@ -56,9 +56,9 @@ impl AgentEngine {
             session.updated_at = chrono::Utc::now();
             match mgr.save_metadata(session).await {
                 Ok(Some(new_title)) => {
-                    log::info!("[summary] Session title updated in database to fallback: {}", new_title);
+                    // log::info!("[summary] Session title updated in database to fallback: {}", new_title);
                     if let Some(ref writer) = self.protocol_writer {
-                        log::info!("[summary] Emitting instant fallback TitleUpdated event for thread {}", session.id);
+                        // log::info!("[summary] Emitting instant fallback TitleUpdated event for thread {}", session.id);
                         let _ = writer.emit(&flock_core::ipc_interface::events::ProtocolEvent::TitleUpdated {
                             thread_id: session.id.clone(),
                             title: new_title,

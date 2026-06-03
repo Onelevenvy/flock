@@ -19,7 +19,7 @@ pub async fn trigger_job_execution(
     agent_state: SharedAgentState,
     app: AppHandle,
 ) -> anyhow::Result<()> {
-    log::info!("[CronScheduler] Triggering job: {}", job_id);
+    // log::info!("[CronScheduler] Triggering job: {}", job_id);
 
     let job = db.get_cron_job(job_id).await?
         .ok_or_else(|| anyhow::anyhow!("Job {} not found", job_id))?;
@@ -127,7 +127,7 @@ pub async fn trigger_job_execution(
             }
 
             let _ = app.emit("cron-job-updated", job_id);
-            log::info!("[CronScheduler] Workflow job {} execution finished.", job_id);
+            // log::info!("[CronScheduler] Workflow job {} execution finished.", job_id);
             return Ok(());
         }
     }
@@ -139,7 +139,7 @@ pub async fn trigger_job_execution(
     // 3. 启动 Agent
     let extra_args = vec![];
     let selected_assistant = job.assistant_id.clone().unwrap_or_else(|| "__xiaof__".to_string());
-    let emitter = Arc::new(crate::ipc::emitter::TauriProtocolEmitter::new(app.clone()));
+    let emitter = Arc::new(crate::ipc::emitter::TauriProtocolEmitter::new(app.clone(), conv_id.clone()));
     let output = emitter.clone() as Arc<dyn flock_agent::sinks::OutputSink + Send + Sync>;
     if let Err(e) = crate::commands::assistant::start_agent_engine(
         db.clone(),
@@ -253,7 +253,7 @@ pub async fn trigger_job_execution(
     }
 
     let _ = app.emit("cron-job-updated", job_id);
-    log::info!("[CronScheduler] Job {} execution finished successfully.", job_id);
+    // log::info!("[CronScheduler] Job {} execution finished successfully.", job_id);
 
     Ok(())
 }

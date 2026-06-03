@@ -15,7 +15,7 @@ pub async fn run_background_summary(
     default_provider: Arc<dyn BaseChatModel>,
     protocol_writer: Option<Arc<dyn flock_core::ipc_interface::writer::ProtocolEmitter>>,
 ) -> anyhow::Result<()> {
-    log::info!("[summary] Starting background auto-summary task for thread: {}", thread_id);
+    // log::info!("[summary] Starting background auto-summary task for thread: {}", thread_id);
 
     // 1. Fetch existing summary to check if it's already customized
     let existing_sum: Option<String> = sqlx::query_scalar(
@@ -27,7 +27,7 @@ pub async fn run_background_summary(
     .unwrap_or(None);
 
     let existing_sum = existing_sum.unwrap_or_default();
-    log::info!("[summary] Current thread summary in DB: {:?}", existing_sum);
+    // log::info!("[summary] Current thread summary in DB: {:?}", existing_sum);
 
     // Generate a default summary (first user message truncated)
     let default_sum = messages

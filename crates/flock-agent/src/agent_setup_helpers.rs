@@ -96,17 +96,17 @@ pub async fn load_and_filter_skills(
         if let Some(ref allowed) = ov.allowed_skill_names {
             if allowed.is_empty() {
                 skills.clear();
-                log::info!("Assistant: no skills bound, skill tool disabled.");
+                // log::info!("Assistant: no skills bound, skill tool disabled.");
                 false
             } else {
                 let allowed_set: std::collections::HashSet<&str> =
                     allowed.iter().map(|s| s.as_str()).collect();
                 skills.retain(|s| allowed_set.contains(s.name.as_str()));
-                log::info!(
-                    "Assistant: filtered skills to {:?}, {} remaining.",
-                    allowed,
-                    skills.len()
-                );
+                // log::info!(
+                    // "Assistant: filtered skills to {:?}, {} remaining.",
+                    // allowed,
+                    // skills.len()
+                // );
                 !skills.is_empty()
             }
         } else {

@@ -214,7 +214,11 @@ function handleToolResultPreview(
 // ─── Individual Event Handlers ───
 
 function handleReady(event: Extract<ProtocolEvent, { type: 'ready' }>, set: SetFn) {
-  set({ status: 'ready', capabilities: event.capabilities });
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  set((prev: any) => ({
+    status: prev.status === 'thinking' ? 'thinking' : 'ready',
+    capabilities: event.capabilities,
+  }));
 }
 
 function handleStreamStart(event: Extract<ProtocolEvent, { type: 'stream_start' }>, set: SetFn) {
@@ -559,7 +563,11 @@ export async function loadAgentHistory(
         return c;
       }),
     }));
-    set({ messages: formattedHistory, pendingApprovals: [], playbackIndex: -1 });
+    set((prev: any) => ({
+      messages: formattedHistory,
+      pendingApprovals: prev.pendingApprovals || [],
+      playbackIndex: -1,
+    }));
 
     const hasScreenshots = formattedHistory.some((msg) =>
       msg.chunks?.some((chunk: any) => {
@@ -585,6 +593,10 @@ export async function loadAgentHistory(
     }
   } catch (e) {
     console.error('Failed to load history:', e);
-    set({ messages: [], pendingApprovals: [], playbackIndex: -1 });
+    set((prev: any) => ({
+      messages: [],
+      pendingApprovals: prev.pendingApprovals || [],
+      playbackIndex: -1,
+    }));
   }
 }

@@ -150,11 +150,11 @@ impl AgentBuilder {
             }).map_err(|e| anyhow::anyhow!(e))?)
         };
 
-        log::info!(
-            "Building agent with provider type: {:?}, model: {}",
-            self.config.provider,
-            self.config.model
-        );
+        // log::info!(
+        //     "Building agent with provider type: {:?}, model: {}",
+        //     self.config.provider,
+        //     self.config.model
+        // );
 
         let memory_dir = if self.assistant_overrides.is_some() {
             None
@@ -174,7 +174,10 @@ impl AgentBuilder {
             flock_tools::init_file_cache(Arc::clone(cache));
         }
 
-        flock_tools::init_workspace_dir(cwd_path.to_path_buf());
+        let sid = self.resume_session.as_ref()
+            .map(|s| s.id.clone())
+            .unwrap_or_else(|| "default".to_string());
+        flock_tools::init_workspace_dir(&sid, cwd_path.to_path_buf());
         let tool_set = flock_tools::all_tools();
         let mut registry = tool_set.registry;
         let provider_infos = tool_set.provider_infos;

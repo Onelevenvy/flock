@@ -136,26 +136,47 @@ export const useAgentStore = create<AgentStore>((set, get) => {
     },
 
     handleEvent: (event: ProtocolEvent) => {
-      let eventSessionId = 'default';
-      if (event.type === 'ready') {
-        if (event.session_id) {
-          eventSessionId = event.session_id;
-        } else {
-          eventSessionId = getActiveSessionId();
+      let eventSessionId: string;
+
+      // 后端现在对所有 assistant 事件都注入了 session_id
+      // 优先使用它，确保并发多 session 时事件路由正确
+      const backendSessionId = (event as any).session_id as string | undefined;
+
+      if (backendSessionId && backendSessionId !== 'default') {
+        // assistant 路径：后端明确给出了 session_id，直接使用
+        eventSessionId = backendSessionId;
+        // 如果携带 msg_id，顺便建立映射（方便后续 workflow 等旁路查找）
+        if ('msg_id' in event && (event as any).msg_id) {
+          const mid = (event as any).msg_id as string;
+          if (!get().msgIdToSessionId[mid]) {
+            set((s: any) => ({
+              msgIdToSessionId: { ...s.msgIdToSessionId, [mid]: eventSessionId }
+            }));
+          }
         }
-      } else if ('msg_id' in event && event.msg_id) {
-        const mapped = get().msgIdToSessionId[event.msg_id];
+      } else if ('msg_id' in event && (event as any).msg_id) {
+        // workflow 路径：前端提前通过 registerMessageSession 注册了映射
+        const mid = (event as any).msg_id as string;
+        const mapped = get().msgIdToSessionId[mid];
         if (mapped) {
           eventSessionId = mapped;
         } else {
+          // 最后回退：用当前活跃 session（单 session 场景或 workflow start 前）
           eventSessionId = getActiveSessionId();
           set((s: any) => ({
-            msgIdToSessionId: { ...s.msgIdToSessionId, [event.msg_id as any]: eventSessionId }
+            msgIdToSessionId: { ...s.msgIdToSessionId, [mid]: eventSessionId }
           }));
         }
       } else {
         eventSessionId = getActiveSessionId();
       }
+
+      console.log('[handleEvent] Routing event:', event.type, {
+        event,
+        backendSessionId,
+        eventSessionId,
+        activeConversationId: getActiveSessionId(),
+      });
 
       const customGet = () => {
         const state = get();
@@ -187,6 +208,13 @@ export const useAgentStore = create<AgentStore>((set, get) => {
           const nextSessions = { ...state.sessions, [eventSessionId]: updatedSession };
           const currentActiveId = getActiveSessionId();
           
+          console.log('[handleEvent] customSet updating session:', eventSessionId, {
+            prevMessages: prevSession.messages,
+            sessionUpdateMessages: sessionUpdate.messages,
+            updatedSessionMessages: updatedSession.messages,
+            currentActiveId,
+          });
+          
           if (eventSessionId === currentActiveId) {
             return {
               ...globalUpdate,
@@ -214,6 +242,12 @@ export const useAgentStore = create<AgentStore>((set, get) => {
 
     loadHistory: async (workspaceId: string, convId: string) => {
       get().switchSession(convId);
+
+      const session = getSessionState(get(), convId);
+      if (session && (session.status === 'thinking' || session.status === 'connecting')) {
+        console.log('[loadHistory] Session is active/running, skipping DB history load to prevent overwrite:', convId);
+        return;
+      }
 
       const customSet = (updater: any) => {
         set((state: any) => {
