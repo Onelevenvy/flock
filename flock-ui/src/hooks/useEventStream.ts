@@ -4,6 +4,8 @@ import { useAgentStore } from '@/store/agentStore';
 import { ProtocolEvent } from '@/types/protocol';
 import { useQueryClient } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
+import { useWorkspaceStore } from '@/store/workspaceStore';
+import { invoke } from '@tauri-apps/api/core';
 
 /**
  * 监听 Tauri 事件流，将 Agent 发来的 JSON 事件解析后分发到 store
@@ -29,6 +31,16 @@ export function useEventStream() {
           try {
             const parsed: ProtocolEvent = JSON.parse(event.payload);
             handleEvent(parsed);
+            if (parsed.type === 'stream_end') {
+              const activeConversationId = useWorkspaceStore.getState().activeConversationId;
+              if (activeConversationId) {
+                const updatedMessages = useAgentStore.getState().messages;
+                invoke('save_conversation_messages', {
+                  convId: activeConversationId,
+                  messages: updatedMessages,
+                }).catch((err) => console.warn('Failed to save conversation messages on stream_end:', err));
+              }
+            }
           } catch (e) {
             console.error('[agent-event] JSON parse error:', e, event.payload);
           }
@@ -96,6 +108,16 @@ export function useEventStream() {
               case 'workflow_done':
                 setStatus('ready');
                 handleEvent({ type: 'stream_end', msg_id: msgId });
+                {
+                  const activeConversationId = useWorkspaceStore.getState().activeConversationId;
+                  if (activeConversationId) {
+                    const updatedMessages = useAgentStore.getState().messages;
+                    invoke('save_conversation_messages', {
+                      convId: activeConversationId,
+                      messages: updatedMessages,
+                    }).catch((err) => console.warn('Failed to save conversation messages on workflow_done:', err));
+                  }
+                }
                 break;
 
               case 'workflow_error':
@@ -109,6 +131,16 @@ export function useEventStream() {
                     text: t('chat.aborted', '\n\n*🚫 Dialogue aborted by user*'),
                   });
                   handleEvent({ type: 'stream_end', msg_id: msgId });
+                  {
+                    const activeConversationId = useWorkspaceStore.getState().activeConversationId;
+                    if (activeConversationId) {
+                      const updatedMessages = useAgentStore.getState().messages;
+                      invoke('save_conversation_messages', {
+                        convId: activeConversationId,
+                        messages: updatedMessages,
+                      }).catch((err) => console.warn('Failed to save conversation messages on workflow cancelled:', err));
+                    }
+                  }
                   break;
                 }
                 handleEvent({

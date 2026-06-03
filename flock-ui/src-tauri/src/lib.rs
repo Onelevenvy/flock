@@ -94,6 +94,7 @@ pub fn run() {
             commands::update_conversation_title,
             commands::delete_conversation,
             commands::load_conversation_history,
+            commands::save_conversation_messages,
             // 文件
             commands::list_workspace_files,
             commands::read_workspace_file,
