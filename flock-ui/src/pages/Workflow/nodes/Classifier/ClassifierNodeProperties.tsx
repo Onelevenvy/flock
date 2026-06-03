@@ -58,6 +58,7 @@ export function ClassifierNodeProperties({ node, onDataChange, modelOptions, mod
                 size="xs"
                 variant="subtle"
                 color="red"
+                disabled={categories.filter((c) => c.category_id !== 'others_category').length <= 1}
                 onClick={() => {
                   const next = categories.filter((_, idx) => idx !== i);
                   onDataChange(node.id, 'categories', next);

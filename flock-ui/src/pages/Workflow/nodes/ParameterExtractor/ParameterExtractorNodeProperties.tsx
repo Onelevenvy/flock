@@ -243,13 +243,12 @@ export function ParameterExtractorNodeProperties({
             size="26px"
             radius="md"
             variant="filled"
-            color="red"
             onClick={handleOpenAdd}
             styles={{
               root: {
-                background: '#e02424',
+                background: 'var(--flock-accent)',
                 '&:hover': {
-                  background: '#c81e1e',
+                  background: 'var(--flock-accent-hover, #1049c4)',
                 }
               }
             }}
