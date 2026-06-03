@@ -242,13 +242,19 @@ pub async fn run_workflow(
         .map_err(|e| e.to_string())?
         .ok_or_else(|| format!("Workflow {} not found", workflow_id))?;
 
+    let cancel_flag = Arc::new(std::sync::atomic::AtomicBool::new(false));
+    let cancel_flag_clone = cancel_flag.clone();
+
     // 2. 如果之前已经在运行，先取消之前的实例
     {
         let mut executions = execution_state.executions.lock().unwrap();
-        if let Some((handle, cancel_flag)) = executions.remove(&workflow_id) {
-            cancel_flag.store(true, std::sync::atomic::Ordering::SeqCst);
+        if let Some((handle, old_cancel_flag)) = executions.remove(&workflow_id) {
+            old_cancel_flag.store(true, std::sync::atomic::Ordering::SeqCst);
             handle.abort();
         }
+        // 立即放入一个 dummy 的 join_handle 并关联当前真正的 cancel_flag，解决并发快速点击/调用导致的竞争问题
+        let dummy_handle = tokio::spawn(async {});
+        executions.insert(workflow_id.clone(), (dummy_handle, cancel_flag_clone.clone()));
     }
 
     // 3. 构建 model provider 和配置
@@ -266,6 +272,8 @@ pub async fn run_workflow(
     let config = flock_core::config::settings::Config::resolve_from_db(&cli_args, db.inner().clone())
         .await
         .map_err(|e| e.to_string())?;
+
+    if cancel_flag.load(std::sync::atomic::Ordering::SeqCst) { return Ok(()); }
 
     let provider: Arc<dyn BaseChatModel> = Arc::from(flock_core::model_factory::create_model(flock_core::model_factory::ModelProviderParams {
         provider_type: config.provider.to_string(),
@@ -305,6 +313,7 @@ pub async fn run_workflow(
         }
         Err(e) => log::warn!("[workflow] Failed to list providers: {}", e),
     }
+    if cancel_flag.load(std::sync::atomic::Ordering::SeqCst) { return Ok(()); }
     let model_factory: Arc<dyn ModelFactory> = Arc::new(CachedModelFactory::new(
         model_registry,
         config.provider.to_string(),
@@ -331,9 +340,11 @@ pub async fn run_workflow(
     // 自动为工作流切换至当前激活工作空间的 working directory，解决不能选择工作空间的问题
     let thread_id_val = thread_id.unwrap_or_else(|| workflow_id.clone());
 
+    if cancel_flag.load(std::sync::atomic::Ordering::SeqCst) { return Ok(()); }
+
     // 重点：如果是全新启动工作流运行（不是 resume 打断），彻底清空 sqlite checkpointer 里旧状态 records，防止 aborted 时脏状态残留导致数据串了和参数叠加
     if resume_value.is_none() {
-        log::info!("[workflow] Fresh run detected. Purging old checkpoints for thread: {}", thread_id_val);
+        // log::info!("[workflow] Fresh run detected. Purging old checkpoints for thread: {}", thread_id_val);
         let _ = sqlx::query("DELETE FROM checkpoints WHERE thread_id = ?1")
             .bind(&thread_id_val)
             .execute(db.pool())
@@ -345,6 +356,7 @@ pub async fn run_workflow(
     }
 
     let mut final_workdir: Option<std::path::PathBuf> = None;
+    if cancel_flag.load(std::sync::atomic::Ordering::SeqCst) { return Ok(()); }
     let row = sqlx::query("SELECT workspace_id, cwd, summary FROM session_metadata WHERE thread_id = ?1")
         .bind(&thread_id_val)
         .fetch_optional(db.pool())
@@ -404,6 +416,7 @@ pub async fn run_workflow(
                     title_to_use = format!("{}...", truncated);
                 }
                 
+                if cancel_flag.load(std::sync::atomic::Ordering::SeqCst) { return Ok(()); }
                 let _ = sqlx::query("UPDATE session_metadata SET summary = ?1 WHERE thread_id = ?2")
                     .bind(&title_to_use)
                     .bind(&thread_id_val)
@@ -487,6 +500,7 @@ pub async fn run_workflow(
         raw_paths.push(std::path::PathBuf::from(d));
     }
 
+    if cancel_flag.load(std::sync::atomic::Ordering::SeqCst) { return Ok(()); }
     let skills = flock_skills::loader::load_all_skills(&workdir, &[], false, None, &raw_paths).await;
     let mut tools_reg = all_tools().registry;
     if !skills.is_empty() {
@@ -523,8 +537,6 @@ pub async fn run_workflow(
 
     let approval_manager = agent_state.lock().await.approval_manager.clone();
 
-    let cancel_flag = Arc::new(std::sync::atomic::AtomicBool::new(false));
-    let cancel_flag_clone = cancel_flag.clone();
 
     let ctx = Arc::new(WorkflowNodeContext {
         provider: provider.clone(),
@@ -536,7 +548,7 @@ pub async fn run_workflow(
         env_vars,
         workflow_id: workflow_id.clone(),
         approval_manager,
-        cancel_flag,
+        cancel_flag: cancel_flag.clone(),
     });
 
     // 6. 构建 Graph
@@ -618,7 +630,11 @@ pub async fn run_workflow(
     let db_for_task = db.inner().clone();
     let thread_id_val_clone = thread_id_val.clone();
 
+    let cancel_flag_for_run = cancel_flag.clone();
     let join_handle = tokio::spawn(async move {
+        if cancel_flag_for_run.load(std::sync::atomic::Ordering::SeqCst) {
+            return;
+        }
         let start_ts = chrono::Utc::now().timestamp_millis();
         sink.push_event(serde_json::json!({
             "type": "info",
@@ -641,7 +657,7 @@ pub async fn run_workflow(
 
         let mut astream = graph.astream(&initial_input, &config, vec![StreamMode::Updates]);
         while let Some(part) = astream.next().await {
-            log::info!("[workflow] step update: {:?}", part);
+            // log::info!("[workflow] step update: {:?}", part);
             let _ = app_clone.emit("workflow-event", serde_json::json!({
                 "type": "workflow_progress",
                 "workflow_id": workflow_id_clone,
@@ -873,7 +889,11 @@ pub async fn run_workflow(
     // 10. 存储 JoinHandle
     {
         let mut executions = execution_state.executions.lock().unwrap();
-        executions.insert(workflow_id, (join_handle, cancel_flag_clone));
+        if cancel_flag.load(std::sync::atomic::Ordering::SeqCst) {
+            join_handle.abort();
+        } else {
+            executions.insert(workflow_id, (join_handle, cancel_flag_clone));
+        }
     }
 
     Ok(())
@@ -885,10 +905,10 @@ pub async fn stop_workflow(
     execution_state: State<'_, Arc<WorkflowExecutionState>>,
     workflow_id: String,
 ) -> Result<(), String> {
-    log::info!("[workflow] stop_workflow command received for workflow_id: {}", workflow_id);
+    // log::info!("[workflow] stop_workflow command received for workflow_id: {}", workflow_id);
     let mut executions = execution_state.executions.lock().unwrap();
     if let Some((handle, cancel_flag)) = executions.remove(&workflow_id) {
-        log::info!("[workflow] Found active execution handle for {}, aborting it...", workflow_id);
+        // log::info!("[workflow] Found active execution handle for {}, aborting it...", workflow_id);
         cancel_flag.store(true, std::sync::atomic::Ordering::SeqCst);
         handle.abort();
     } else {

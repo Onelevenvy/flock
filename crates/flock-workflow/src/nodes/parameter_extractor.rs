@@ -125,6 +125,8 @@ pub fn make_parameter_extractor_node(
                         LgMessage::human(user_prompt),
                     ];
 
+                    ctx.sink.emit_text_delta(&node_id, "*🔍 Extracting parameters...*\n");
+
                     let model = resolve_model(&node_data, &ctx);
                     let mut rx = model.astream(&messages[..], &config);
                     let mut assistant_text = String::new();
@@ -134,6 +136,11 @@ pub fn make_parameter_extractor_node(
                             return Err("Workflow execution cancelled by user".to_string());
                         }
                         let msg = msg_res.map_err(|e| format!("{}", e))?;
+                        if let Some(thinking) = msg.thinking() {
+                            if !thinking.is_empty() {
+                                ctx.sink.emit_thinking(&node_id, thinking);
+                            }
+                        }
                         if let Some(content) = msg.text() {
                             if !content.is_empty() {
                                 assistant_text.push_str(content);

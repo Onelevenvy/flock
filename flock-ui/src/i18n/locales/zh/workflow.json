@@ -19,7 +19,10 @@
     "run": "运行节点",
     "steps": "步骤",
     "generating": "生成中...",
-    "hint": "输出将显示在执行面板中。点击工具栏的播放按钮打开。"
+    "hint": "输出将显示在执行面板中。点击工具栏的播放按钮打开。",
+    "mockVariablesTitle": "配置调试变量",
+    "mockValuePlaceholder": "输入模拟值",
+    "runDebug": "运行"
   },
   "insertNode": "在此处插入节点",
   "autoLayout": "画布整理",

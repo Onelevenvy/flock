@@ -59,8 +59,10 @@ impl<'a> VariableScope<'a> {
     /// Resolve a variable path to a typed variable.
     /// Paths: "start.query", "sys.query", "env.API_KEY", "node_id.field"
     pub fn resolve(&self, path: &str) -> Option<TypedVariable> {
+        let path = path.trim();
         // System variables: sys.*
         if let Some(var_name) = path.strip_prefix("sys.") {
+            let var_name = var_name.trim();
             return self.system_vars.get(var_name).map(|v| TypedVariable {
                 name: var_name.to_string(),
                 var_type: VariableType::from_json_value(v),
@@ -70,6 +72,7 @@ impl<'a> VariableScope<'a> {
 
         // Environment variables: env.*
         if let Some(var_name) = path.strip_prefix("env.") {
+            let var_name = var_name.trim();
             return self.env_vars.get(var_name).map(|v| TypedVariable {
                 name: var_name.to_string(),
                 var_type: VariableType::from_json_value(v),
@@ -86,20 +89,51 @@ impl<'a> VariableScope<'a> {
             });
         }
 
-        // Node output references: node_id.field
-        let parts: Vec<&str> = path.split('.').collect();
+        // Node output references: node_id.field1.field2...
+        let parts: Vec<&str> = path.split('.').map(|s| s.trim()).collect();
         if parts.len() < 2 {
             return None;
         }
         let node_id = parts[0];
-        let field = parts[1];
 
         self.state.node_outputs.get(node_id).and_then(|node_out| {
-            node_out.get(field).map(|val| TypedVariable {
-                name: format!("{}.{}", node_id, field),
-                var_type: VariableType::from_json_value(val),
-                value: val.clone(),
-            })
+            // 1. Try to traverse path sequentially: parts[1], parts[2], ...
+            let mut current_val = node_out;
+            let mut resolved = true;
+            for &field in &parts[1..] {
+                if let Some(next_val) = current_val.get(field) {
+                    current_val = next_val;
+                } else {
+                    resolved = false;
+                    break;
+                }
+            }
+
+            if resolved {
+                return Some(TypedVariable {
+                    name: path.to_string(),
+                    var_type: VariableType::from_json_value(current_val),
+                    value: current_val.clone(),
+                });
+            }
+
+            // 2. Fallback: If not fully resolved, check if it's a parameter_extractor style node,
+            // where the actual variables are nested inside "parameters" field.
+            // For example: ${parameterExtractor.expression} instead of ${parameterExtractor.parameters.expression}
+            if parts.len() == 2 {
+                let field = parts[1];
+                if let Some(params_obj) = node_out.get("parameters") {
+                    if let Some(val) = params_obj.get(field) {
+                        return Some(TypedVariable {
+                            name: path.to_string(),
+                            var_type: VariableType::from_json_value(val),
+                            value: val.clone(),
+                        });
+                    }
+                }
+            }
+
+            None
         })
     }
 
@@ -122,10 +156,21 @@ pub fn resolve_and_interpolate(template: &str, scope: &VariableScope) -> String 
     }).into_owned()
 }
 
-/// Interpolate all string values in a JSON tree.
+/// Interpolate all string values in a JSON tree, preserving raw variable types for single variable placeholders.
 pub fn resolve_and_interpolate_json(val: &JsonValue, scope: &VariableScope) -> JsonValue {
     match val {
-        JsonValue::String(s) => JsonValue::String(resolve_and_interpolate(s, scope)),
+        JsonValue::String(s) => {
+            let trimmed = s.trim();
+            if trimmed.starts_with("${") && trimmed.ends_with('}') {
+                let inner = &trimmed[2..trimmed.len() - 1];
+                if !inner.contains("${") && !inner.contains('}') {
+                    if let Some(tv) = scope.resolve(inner) {
+                        return tv.value;
+                    }
+                }
+            }
+            JsonValue::String(resolve_and_interpolate(s, scope))
+        }
         JsonValue::Array(arr) => JsonValue::Array(
             arr.iter().map(|item| resolve_and_interpolate_json(item, scope)).collect()
         ),
@@ -140,7 +185,6 @@ pub fn resolve_and_interpolate_json(val: &JsonValue, scope: &VariableScope) -> J
     }
 }
 
-/// Build system variables from state and context.
 pub fn build_system_vars(
     state: &WorkflowState,
     workflow_id: &str,
@@ -157,4 +201,55 @@ pub fn build_system_vars(
             .into()
     ));
     vars
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use serde_json::json;
+
+    #[test]
+    fn test_variable_resolve() {
+        let state = WorkflowState {
+            input_msg: "hello".to_string(),
+            messages: vec![],
+            node_outputs: json!({
+                "parameterExtractor": {
+                    "parameters": {
+                        "expression": "1 + 1"
+                    }
+                },
+                "otherNode": {
+                    "result": "success"
+                }
+            }),
+            current_node: "".to_string(),
+            quit_requested: false,
+            env_vars: json!({}),
+        };
+
+        let system_vars = HashMap::new();
+        let env_vars = HashMap::new();
+        let scope = VariableScope::new(&state, &system_vars, &env_vars);
+
+        // Test normal resolve
+        let v1 = scope.resolve("otherNode.result").unwrap();
+        assert_eq!(v1.value, json!("success"));
+
+        // Test multi-level resolve
+        let v2 = scope.resolve("parameterExtractor.parameters.expression").unwrap();
+        assert_eq!(v2.value, json!("1 + 1"));
+
+        // Test fallback resolve
+        let v3 = scope.resolve("parameterExtractor.expression").unwrap();
+        assert_eq!(v3.value, json!("1 + 1"));
+
+        // Test trim resolve
+        let v4 = scope.resolve("  parameterExtractor.expression  ").unwrap();
+        assert_eq!(v4.value, json!("1 + 1"));
+
+        // Test trim with dots
+        let v5 = scope.resolve("parameterExtractor . expression").unwrap();
+        assert_eq!(v5.value, json!("1 + 1"));
+    }
 }

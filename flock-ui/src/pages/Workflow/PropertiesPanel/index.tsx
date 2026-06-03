@@ -11,28 +11,22 @@ import {
   ThemeIcon,
   Tooltip,
   Tabs,
-
 } from '@mantine/core';
 import { IconX, IconPlayerPlay, IconSettings, IconHistory } from '@tabler/icons-react';
 import { useTranslation } from 'react-i18next';
 import { nodeConfig, type NodeType } from '@/pages/Workflow/nodeConfig';
 import { useAvailableModels } from '@/hooks/useAvailableModels';
 import { useAvailableTools } from '@/hooks/useAvailableTools';
-import { useState } from 'react';
-
-import { useWorkflowQuery } from '@/hooks/useWorkflow';
-
-// 引入公共组件
-
+import { useState, useMemo, useEffect } from 'react';
 
 import { ToolsIcon } from '@/components/Common/Icons';
 import { useWorkflowStore } from '@/store/workflowStore';
 import { useWorkflowRuntime } from '@/hooks/useWorkflowRuntime';
 
-// 引入属性配置组件注册表
-import { nodePropertiesMap } from '../nodes/propertiesMap';
 import { RetryTimeoutFields } from './RetryTimeoutFields';
-import { useMemo } from 'react';
+import { NodeSpecificFields } from './NodeSpecificFields';
+import { LastRunPanel } from './LastRunPanel';
+import { extractVariables, type DebugVariable } from './helper';
 
 export interface PropertiesPanelProps {
   node: Node;
@@ -53,7 +47,6 @@ export function PropertiesPanel({ node, onClose, onDataChange }: PropertiesPanel
   const activeWorkflowId = useWorkflowStore((s) => s.activeWorkflowId);
   const activeExecutionThreadId = useWorkflowStore((s) => s.activeExecutionThreadId);
 
-
   const { debugNode, status: executionStatus } = useWorkflowRuntime({
     workflowId: activeWorkflowId,
     threadId: activeExecutionThreadId,
@@ -62,6 +55,46 @@ export function PropertiesPanel({ node, onClose, onDataChange }: PropertiesPanel
 
   const debugResults = useWorkflowStore((s) => s.debugResults);
   const debugResult = debugResults[node.id];
+
+  const [missingVars, setMissingVars] = useState<DebugVariable[]>([]);
+
+  // Automatically extract variables when node changes to prepare the debug variables form
+  useEffect(() => {
+    const vars = extractVariables(node.data);
+    setMissingVars(vars);
+  }, [node.id, node.data]);
+
+  const executeDebug = async (mockOutputs: Record<string, any>) => {
+    const envVars: Record<string, any> = {};
+    let inputMsg = "";
+
+    if (mockOutputs["env"]) {
+      Object.assign(envVars, mockOutputs["env"]);
+    }
+    if (mockOutputs["start"] && mockOutputs["start"]["query"] !== undefined) {
+      inputMsg = mockOutputs["start"]["query"];
+    }
+
+    const payload = {
+      input_msg: inputMsg,
+      node_outputs: mockOutputs,
+      env_vars: envVars,
+    };
+
+    setActiveTab('last-run');
+    if (debugNode) {
+      await debugNode(node.id, JSON.stringify(payload));
+    }
+  };
+
+  const handleRun = async () => {
+    // If the node has dependencies, navigate to Last Run to let them fill/see the inline form
+    if (missingVars.length > 0) {
+      setActiveTab('last-run');
+    } else {
+      await executeDebug({});
+    }
+  };
 
   const toolIcon = useMemo(() => {
     if (type === 'plugin') {
@@ -79,21 +112,6 @@ export function PropertiesPanel({ node, onClose, onDataChange }: PropertiesPanel
 
   if (!cfg) return null;
   const Icon = cfg.icon;
-
-  const handleRun = async () => {
-    // 自动静默保存已经由 FlowCanvas 的 useEffect 效果托管。
-    // 在此处，我们直接触发后端执行 debug 即可。
-    const payload = {
-      input_msg: "",
-      node_outputs: {} as Record<string, any>,
-      env_vars: {} as Record<string, any>,
-    };
-
-    setActiveTab('last-run');
-    if (debugNode) {
-      await debugNode(node.id, JSON.stringify(payload));
-    }
-  };
 
   return (
     <Box
@@ -168,7 +186,7 @@ export function PropertiesPanel({ node, onClose, onDataChange }: PropertiesPanel
             {t('workflow.debugPanel.tabSetup', 'SETTINGS')}
           </Tabs.Tab>
           <Tabs.Tab value="last-run" leftSection={<IconHistory size={12} />}>
-            {t('workflow.debugPanel.tabLastRun', 'LAST RUN')}
+            {t('workflow.debugPanel.tabLastRun', 'DEBUG')}
           </Tabs.Tab>
         </Tabs.List>
 
@@ -209,176 +227,14 @@ export function PropertiesPanel({ node, onClose, onDataChange }: PropertiesPanel
 
         {/* Tab 2: Last Run */}
         <Tabs.Panel value="last-run">
-          <ScrollArea style={{ flex: 1 }} px="md" py="sm">
-            {!debugResult ? (
-              <Box style={{ padding: 24, textAlign: 'center' }}>
-                <Text size="xs" c="dimmed">
-                  {t('workflow.debugPanel.noRunResult', 'No run results yet. Click the play button to run this node.')}
-                </Text>
-              </Box>
-            ) : (
-              <Stack gap="sm">
-                {/* Status Bar */}
-                <Box
-                  style={{
-                    padding: '8px 12px',
-                    borderRadius: 8,
-                    background: debugResult.status === 'done'
-                      ? 'var(--flock-accent-soft, rgba(21, 90, 239, 0.08))'
-                      : debugResult.status === 'running'
-                        ? 'rgba(34, 139, 230, 0.08)'
-                        : 'rgba(250, 82, 82, 0.08)',
-                    border: `1px solid ${debugResult.status === 'done'
-                        ? 'var(--flock-accent)'
-                        : debugResult.status === 'running'
-                          ? '#228be6'
-                          : '#fa5252'
-                      }`,
-                    display: 'flex',
-                    justifyContent: 'space-between',
-                    alignItems: 'center',
-                  }}
-                >
-                  <Group gap="xs">
-                    <span style={{
-                      width: 6,
-                      height: 6,
-                      borderRadius: '50%',
-                      background: debugResult.status === 'done' ? '#40c057' : debugResult.status === 'running' ? '#228be6' : '#fa5252'
-                    }} />
-                    <Text size="xs" fw={700} style={{
-                      color: debugResult.status === 'done' ? 'var(--flock-accent)' : debugResult.status === 'running' ? '#228be6' : '#fa5252',
-                      fontSize: 10,
-                    }}>
-                      {debugResult.status === 'done' ? 'SUCCESS' : debugResult.status === 'running' ? 'RUNNING' : 'FAILED'}
-                    </Text>
-                  </Group>
-                  {debugResult.duration !== undefined && (
-                    <Text size="xs" c="dimmed" style={{ fontSize: 10 }}>
-                      {(debugResult.duration / 1000).toFixed(3)}s
-                    </Text>
-                  )}
-                </Box>
-
-                {/* Input JSON Block */}
-                {debugResult.input && (
-                  <Box>
-                    <Text size="xs" fw={600} mb={4} style={{ color: 'var(--flock-text-bright)' }}>
-                      {t('workflow.debugPanel.inputData', 'Input')}
-                    </Text>
-                    <Box
-                      style={{
-                        maxHeight: 150,
-                        overflow: 'auto',
-                        padding: 8,
-                        borderRadius: 8,
-                        background: 'var(--flock-bg-raised, rgba(0,0,0,0.02))',
-                        border: '1px solid var(--flock-border-subtle)',
-                      }}
-                    >
-                      <pre style={{ margin: 0, fontSize: 10, fontFamily: 'monospace', whiteSpace: 'pre-wrap', wordBreak: 'break-all', color: 'var(--flock-text-secondary)' }}>
-                        {JSON.stringify(debugResult.input, null, 2)}
-                      </pre>
-                    </Box>
-                  </Box>
-                )}
-
-                {/* Output JSON Block */}
-                <Box>
-                  <Text size="xs" fw={600} mb={4} style={{ color: 'var(--flock-text-bright)' }}>
-                    {t('workflow.debugPanel.outputData', 'Output')}
-                  </Text>
-                  <Box
-                      style={{
-                        maxHeight: 180,
-                        overflow: 'auto',
-                        padding: 8,
-                        borderRadius: 8,
-                        background: 'var(--flock-bg-raised, rgba(0,0,0,0.02))',
-                        border: '1px solid var(--flock-border-subtle)',
-                      }}
-                    >
-                    <pre style={{ margin: 0, fontSize: 10, fontFamily: 'monospace', whiteSpace: 'pre-wrap', wordBreak: 'break-all', color: 'var(--flock-text-secondary)' }}>
-                      {debugResult.status === 'running'
-                        ? 'Running...'
-                        : debugResult.error
-                          ? debugResult.error
-                          : JSON.stringify(debugResult.output, null, 2)}
-                    </pre>
-                  </Box>
-                </Box>
-
-                {/* Metadata Details */}
-                <Divider />
-                <Box style={{ fontSize: 11 }}>
-                  <Text size="xs" fw={600} mb={6} style={{ color: 'var(--flock-text-bright)' }}>
-                    {t('workflow.debugPanel.metaTitle', 'Metadata')}
-                  </Text>
-                  <Stack gap={6}>
-                    <Group justify="space-between">
-                      <Text size="xs" c="dimmed" style={{ fontSize: 10 }}>{t('workflow.debugPanel.metaStatus', 'Status')}</Text>
-                      <Text size="xs" fw={500} style={{ fontSize: 10 }}>{debugResult.status.toUpperCase()}</Text>
-                    </Group>
-                    <Group justify="space-between">
-                      <Text size="xs" c="dimmed" style={{ fontSize: 10 }}>{t('workflow.debugPanel.metaStartTime', 'Start Time')}</Text>
-                      <Text size="xs" fw={500} style={{ fontSize: 10 }}>{new Date(debugResult.startTime).toLocaleTimeString()}</Text>
-                    </Group>
-                    {debugResult.duration !== undefined && (
-                      <Group justify="space-between">
-                        <Text size="xs" c="dimmed" style={{ fontSize: 10 }}>{t('workflow.debugPanel.metaDuration', 'Duration')}</Text>
-                        <Text size="xs" fw={500} style={{ fontSize: 10 }}>{(debugResult.duration / 1000).toFixed(3)}s</Text>
-                      </Group>
-                    )}
-                  </Stack>
-                </Box>
-              </Stack>
-            )}
-          </ScrollArea>
+          <LastRunPanel
+            debugResult={debugResult}
+            variables={missingVars}
+            onRun={executeDebug}
+            isRunning={executionStatus === 'running'}
+          />
         </Tabs.Panel>
       </Tabs>
     </Box>
-  );
-}
-
-interface NodeSpecificFieldsProps {
-  node: Node;
-  onDataChange: (nodeId: string, key: string, value: unknown) => void;
-  modelOptions: any[];
-  modelsLoading: boolean;
-  toolOptions: any[];
-  toolsLoading: boolean;
-}
-
-function NodeSpecificFields({
-  node,
-  onDataChange,
-  modelOptions,
-  modelsLoading,
-  toolOptions,
-  toolsLoading,
-}: NodeSpecificFieldsProps) {
-  const { t } = useTranslation();
-  const type = node.type as NodeType;
-
-  if (type === 'end') {
-    return (
-      <Text size="xs" c="dimmed" ta="center" py="sm">
-        {t('workflow.properties.noConfig')}
-      </Text>
-    );
-  }
-
-  const PropertiesComponent = nodePropertiesMap[type];
-  if (!PropertiesComponent) return null;
-
-  return (
-    <PropertiesComponent
-      node={node}
-      onDataChange={onDataChange}
-      modelOptions={modelOptions}
-      modelsLoading={modelsLoading}
-      toolOptions={toolOptions}
-      toolsLoading={toolsLoading}
-    />
   );
 }

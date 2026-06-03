@@ -143,9 +143,8 @@ export function PluginNodeProperties({ node, onDataChange }: PluginNodePropertie
 
               return (
                 <Box key={key} style={{ width: '100%' }}>
-                  {/* Dify 极智属性 Label 排版 */}
                   <Stack gap={2} mb={4}>
-                    <Group gap={4} align="center" style={{ display: 'inline-flex' }}>
+                    <Group gap={6} align="center" style={{ display: 'inline-flex' }}>
                       <Text size="xs" fw={700} style={{ color: 'var(--flock-text-bright)', textTransform: 'lowercase' }}>
                         {key}
                       </Text>
@@ -154,6 +153,19 @@ export function PluginNodeProperties({ node, onDataChange }: PluginNodePropertie
                           *
                         </Text>
                       )}
+                      <Badge
+                        size="xs"
+                        color="gray"
+                        variant="light"
+                        style={{
+                          fontSize: 9,
+                          textTransform: 'capitalize',
+                          borderRadius: 4,
+                          height: 14,
+                        }}
+                      >
+                        {details.type || 'string'}
+                      </Badge>
                     </Group>
                     {details.description && (
                       <Tooltip label={details.description} position="top-start" multiline w={260} withArrow openDelay={200}>
@@ -174,32 +186,14 @@ export function PluginNodeProperties({ node, onDataChange }: PluginNodePropertie
                     )}
                   </Stack>
 
-                  {/* 输入行：横向铺满，右侧带数据类型 Badge */}
-                  <Box style={{ width: '100%', position: 'relative' }}>
+                  {/* 输入行：横向铺满 */}
+                  <Box style={{ width: '100%' }}>
                     <VariableTextInput
                       currentNodeId={node.id}
                       value={paramValue}
                       onChange={(val) => handleParamValueChange(key, val)}
                       placeholder={t('workflow.properties.plugin.paramPlaceholder', 'Type or press / to insert variable')}
                     />
-                    {/* 右侧数据类型极简 Badge */}
-                    <Badge
-                      size="xs"
-                      color="gray"
-                      variant="light"
-                      style={{
-                        position: 'absolute',
-                        right: 8,
-                        top: 6,
-                        pointerEvents: 'none',
-                        fontSize: 9,
-                        textTransform: 'capitalize',
-                        borderRadius: 4,
-                        height: 16,
-                      }}
-                    >
-                      {details.type || 'string'}
-                    </Badge>
                   </Box>
                 </Box>
               );

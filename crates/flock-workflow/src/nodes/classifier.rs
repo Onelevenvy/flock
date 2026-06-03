@@ -105,6 +105,8 @@ Assistant:
                         LgMessage::human(user_prompt),
                     ];
 
+                    ctx.sink.emit_text_delta(&node_id, "*🔍 Classifying intent...*\n");
+
                     let model = resolve_model(&node_data, &ctx);
                     let mut rx = model.astream(&messages[..], &config);
                     let mut assistant_text = String::new();
@@ -114,6 +116,11 @@ Assistant:
                             return Err("Workflow execution cancelled by user".to_string());
                         }
                         let msg = msg_res.map_err(|e| format!("{}", e))?;
+                        if let Some(thinking) = msg.thinking() {
+                            if !thinking.is_empty() {
+                                ctx.sink.emit_thinking(&node_id, thinking);
+                            }
+                        }
                         if let Some(content) = msg.text() {
                             if !content.is_empty() {
                                 assistant_text.push_str(content);
@@ -174,7 +181,7 @@ Assistant:
                         .find(|c| c.id == final_matched_id)
                         .map(|c| c.name.as_str())
                         .unwrap_or("未知");
-                    ctx.sink.emit_text_delta(&node_id, &format!("意图分类结果: `{}`", display_name));
+                    ctx.sink.emit_text_delta(&node_id, &format!("Classified category: `{}`\n", display_name));
 
                     let mut outputs = state.node_outputs.clone();
                     if !outputs.is_object() {

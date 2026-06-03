@@ -17,7 +17,10 @@
     "input": "Test Input",
     "inputPlaceholder": "Enter test input for this node...",
     "run": "Run Node",
-    "hint": "Output will appear in the execution panel. Open it via the play button in the toolbar."
+    "hint": "Output will appear in the execution panel. Open it via the play button in the toolbar.",
+    "mockVariablesTitle": "Configure Debug Variables",
+    "mockValuePlaceholder": "Enter mock value",
+    "runDebug": "Run"
   },
   "insertNode": "Insert Node Here",
   "autoLayout": "Auto Layout",

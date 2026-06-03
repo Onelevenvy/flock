@@ -51,6 +51,8 @@ pub fn make_llm_workflow_node(
                         messages.push(LgMessage::human(user_prompt.clone()));
                     }
 
+                    ctx.sink.emit_text_delta(&node_id, "*🔍 Thinking...*\n");
+
                     let model = resolve_model(&node_data, &ctx);
                     let mut rx = model.astream(&messages[..], &config);
                     let mut assistant_text = String::new();

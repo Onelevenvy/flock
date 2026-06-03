@@ -244,4 +244,39 @@ export function resolveVariableDetails(match: string, matchedVar?: VariableOptio
   };
 }
 
+export interface DebugVariable {
+  fullPath: string;
+  nodeId: string;
+  field: string;
+  value: string;
+}
+
+export function extractVariables(data: unknown): DebugVariable[] {
+  if (!data) return [];
+  const serialized = JSON.stringify(data);
+  const regex = /\$\{([^}]+)\}/g;
+  const matches = new Set<string>();
+  let match;
+  while ((match = regex.exec(serialized)) !== null) {
+    matches.add(match[1].trim());
+  }
+
+  const vars: DebugVariable[] = [];
+  matches.forEach((p) => {
+    if (p.startsWith('sys.')) {
+      return;
+    }
+    const parts = p.split('.').map((s) => s.trim());
+    if (parts.length >= 2) {
+      const nodeId = parts[0];
+      const field = parts[parts.length - 1];
+      if (!vars.some((v) => v.nodeId === nodeId && v.field === field)) {
+        vars.push({ fullPath: p, nodeId, field, value: '' });
+      }
+    }
+  });
+  return vars;
+}
+
+
 
