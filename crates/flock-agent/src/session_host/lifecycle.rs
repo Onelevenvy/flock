@@ -1,8 +1,6 @@
 use std::path::PathBuf;
 use std::sync::Arc;
 use std::sync::atomic::{AtomicBool, Ordering};
-use std::time::Instant;
-use tokio::sync::mpsc;
 use anyhow::Result;
 use tokio::sync::Mutex;
 
@@ -10,62 +8,19 @@ use crate::agent_setup::{AgentBuilder, AssistantOverrides};
 use crate::sinks::OutputSink;
 use flock_core::config::settings::{CliArgs, Config};
 use flock_core::db::DbManager;
-use crate::session_host::state::{AgentState, SessionCommand, SessionHandle};
-use crate::session_host::actor::run_session_actor;
+use crate::session_host::state::{AgentState, ActiveSession, SessionMetadata};
 
-/// 启动 Agent 引擎 (解耦 Tauri, 接收抽象的 db_manager, emitter & output)
-pub async fn start_agent(
+/// 辅助函数：根据当前会话配置和环境构建 AgentEngine
+async fn build_session_engine(
     db_manager: Arc<DbManager>,
-    state: Arc<Mutex<AgentState>>,
     workdir: PathBuf,
     session_id: Option<String>,
     assistant_id: Option<String>,
     extra_args: Vec<String>,
+    approval_manager: Arc<flock_core::ipc_interface::approval::ToolApprovalManager>,
     protocol_emitter: Arc<dyn flock_core::ipc_interface::writer::ProtocolEmitter + Send + Sync>,
     output: Arc<dyn OutputSink + Send + Sync>,
-) -> Result<()> {
-    let sid = session_id.clone().unwrap_or_else(|| "default".to_string());
-    let force_restart = extra_args.iter().any(|arg| arg == "--force-restart");
-
-    let max_cached: usize = db_manager.get_config("max_cached_sessions").await.unwrap_or(10);
-
-    // 1. 检查该会话是否已经加载到内存中
-    {
-        let mut s = state.lock().await;
-        if let Some(handle) = s.sessions.get_mut(&sid) {
-            if force_restart {
-                log::info!("Force restarting session {}...", sid);
-                let _ = handle.tx.send(SessionCommand::Stop).await;
-                s.sessions.remove(&sid);
-            } else if handle.workdir == workdir && handle.assistant_id == assistant_id {
-                log::info!("Agent already started for session: {}, updating last used time.", sid);
-                handle.last_used = Instant::now();
-                return Ok(());
-            } else {
-                log::info!("Session {} config changed, stopping old actor...", sid);
-                let _ = handle.tx.send(SessionCommand::Stop).await;
-                s.sessions.remove(&sid);
-            }
-        }
-
-        // 2. 如果超出了最大缓存数限制，逐出最久未使用的闲置会话
-        if s.sessions.len() >= max_cached {
-            let oldest_idle_key = s.sessions.iter()
-                .filter(|(_, v)| !v.is_running.load(Ordering::SeqCst))
-                .min_by_key(|(_, v)| v.last_used)
-                .map(|(k, _)| k.clone());
-
-            if let Some(key_to_evict) = oldest_idle_key {
-                log::info!("Evicting idle cached session {} to respect max_cached_sessions limit of {}", key_to_evict, max_cached);
-                if let Some(handle) = s.sessions.remove(&key_to_evict) {
-                    let _ = handle.tx.send(SessionCommand::Stop).await;
-                }
-            } else {
-                log::warn!("Could not evict any session because all cached sessions are currently running!");
-            }
-        }
-    }
-
+) -> Result<(crate::engine::AgentEngine, bool, bool)> {
     let mut provider = None;
     let mut api_key = None;
     let mut project_dir = None;
@@ -76,7 +31,6 @@ pub async fn start_agent(
             "--provider" => provider = iter.next().cloned(),
             "--api-key" => api_key = iter.next().cloned(),
             "--project-dir" => project_dir = iter.next().map(PathBuf::from),
-            "--force-restart" => {}
             _ => {}
         }
     }
@@ -133,11 +87,6 @@ pub async fn start_agent(
         config.model,
         config.base_url
     );
-
-    let approval_manager = {
-        let s = state.lock().await;
-        s.approval_manager.clone()
-    };
 
     flock_tools::init_global_emitter(protocol_emitter.clone());
     flock_tools::init_global_approval_manager(approval_manager.clone());
@@ -226,7 +175,38 @@ pub async fn start_agent(
     engine.set_approval_manager(approval_manager);
     engine.set_protocol_writer(protocol_emitter.clone());
 
-    let provider_name = config.provider_label.clone();
+    Ok((engine, is_resumed, result.has_mcp))
+}
+
+/// 启动 Agent 引擎
+pub async fn start_agent(
+    db_manager: Arc<DbManager>,
+    state: Arc<Mutex<AgentState>>,
+    workdir: PathBuf,
+    session_id: Option<String>,
+    assistant_id: Option<String>,
+    extra_args: Vec<String>,
+    protocol_emitter: Arc<dyn flock_core::ipc_interface::writer::ProtocolEmitter + Send + Sync>,
+    output: Arc<dyn OutputSink + Send + Sync>,
+) -> Result<()> {
+    let sid = session_id.clone().unwrap_or_else(|| "default".to_string());
+    let approval_manager = {
+        let s = state.lock().await;
+        s.approval_manager.clone()
+    };
+
+    let (mut engine, is_resumed, has_mcp) = build_session_engine(
+        db_manager.clone(),
+        workdir.clone(),
+        session_id.clone(),
+        assistant_id.clone(),
+        extra_args.clone(),
+        approval_manager,
+        protocol_emitter.clone(),
+        output.clone(),
+    ).await?;
+
+    let provider_name = engine.provider_label.clone();
     if !is_resumed {
         log::info!("Initializing new session...");
         engine.init_session(&provider_name, &workdir.to_string_lossy(), session_id.as_deref()).await?;
@@ -247,36 +227,20 @@ pub async fn start_agent(
                 effort_levels: engine.compat().effort_levels().to_vec(),
                 modes: vec!["default".into(), "auto_edit".into(), "yolo".into()],
                 current_mode: s.approval_manager.current_mode(),
-                mcp: result.has_mcp,
+                mcp: has_mcp,
             },
         };
         let _ = protocol_emitter.emit(&ready_event);
     }
 
-    let (tx, rx) = mpsc::channel(100);
-    let is_running = Arc::new(AtomicBool::new(false));
-    let cancel_flag = Arc::new(AtomicBool::new(false));
-
-    engine.set_cancel_flag(cancel_flag.clone());
-
-    let is_running_clone = is_running.clone();
-    let cancel_flag_clone = cancel_flag.clone();
-    let sid_str = sid.clone();
-    tokio::spawn(async move {
-        run_session_actor(sid_str, engine, rx, is_running_clone, cancel_flag_clone).await;
-    });
-
     {
         let mut s = state.lock().await;
-        s.sessions.insert(
-            sid.clone(),
-            SessionHandle {
-                tx,
+        s.metadata.insert(
+            sid,
+            SessionMetadata {
                 workdir,
                 assistant_id,
-                is_running,
-                cancel_flag,
-                last_used: Instant::now(),
+                extra_args,
             },
         );
     }
@@ -284,153 +248,114 @@ pub async fn start_agent(
     Ok(())
 }
 
-/// 停止 Agent
+/// 停止 Agent 运行
 pub async fn stop_agent(state: Arc<Mutex<AgentState>>, session_id: Option<String>) -> Result<()> {
-    let s = state.lock().await;
+    let mut s = state.lock().await;
     let sid = session_id.unwrap_or_else(|| "default".to_string());
-    if let Some(handle) = s.sessions.get(&sid) {
+    if let Some(active) = s.sessions.remove(&sid) {
         log::info!("Cancelling agent engine run for session: {}", sid);
-        // 先触发 cancel，打断正在阻塞运行的 engine，但并不从缓存中移除，确保后续可继续交互
-        handle.cancel_flag.store(true, Ordering::SeqCst);
+        active.cancel_flag.store(true, Ordering::SeqCst);
+        active.join_handle.abort();
     }
     Ok(())
 }
 
-/// 发送消息
+/// 发送消息（无状态运行）
 pub async fn send_message(
     state: Arc<Mutex<AgentState>>,
     session_id: Option<String>,
     msg_id: String,
     content: String,
     db_manager: Arc<DbManager>,
+    protocol_emitter: Arc<dyn flock_core::ipc_interface::writer::ProtocolEmitter + Send + Sync>,
+    output: Arc<dyn OutputSink + Send + Sync>,
 ) -> Result<()> {
     let sid = session_id.unwrap_or_else(|| "default".to_string());
     log::info!("Sending message [{}] for session {}: {}", msg_id, sid, content);
 
-    let max_running: usize = db_manager.get_config("max_running_sessions").await.unwrap_or(4);
-
-    let tx = {
+    // 1. 获取会话元数据与运行状态检查
+    let (workdir, assistant_id, extra_args) = {
         let s = state.lock().await;
-        
-        let running_count = s.sessions.iter()
-            .filter(|(k, v)| k.as_str() != sid.as_str() && v.is_running.load(Ordering::SeqCst))
-            .count();
-
-        if running_count >= max_running {
-            log::warn!("Rejected message for session {}: too many running tasks ({})", sid, running_count);
-            anyhow::bail!("当前有太多会话在并发运行（最大限制为 {}），请稍等其他对话执行完毕后再试。", max_running);
-        }
-
-        if let Some(handle) = s.sessions.get(&sid) {
-            if handle.is_running.load(Ordering::SeqCst) {
+        if let Some(h) = s.sessions.get(&sid) {
+            if h.is_running.load(Ordering::SeqCst) {
                 anyhow::bail!("当前会话正在执行中，请等待回复完成后再发送消息。");
             }
-            handle.tx.clone()
+        }
+        if let Some(m) = s.metadata.get(&sid) {
+            (m.workdir.clone(), m.assistant_id.clone(), m.extra_args.clone())
         } else {
-            anyhow::bail!("会话尚未启动，请先初始化")
+            anyhow::bail!("会话 {} 尚未启动，请先初始化", sid);
         }
     };
 
+    // 2. 最大运行限制检查
+    let max_running: usize = db_manager.get_config("max_running_sessions").await.unwrap_or(4);
     {
-        let mut s = state.lock().await;
-        if let Some(handle) = s.sessions.get_mut(&sid) {
-            handle.last_used = Instant::now();
-        }
-    }
-
-    tx.send(SessionCommand::SendMessage { msg_id, content }).await
-        .map_err(|e| anyhow::anyhow!("Failed to route message to actor: {}", e))?;
-
-    Ok(())
-}
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-    use std::sync::atomic::Ordering;
-    use std::time::{Duration, Instant};
-    use tokio::sync::mpsc;
-
-    fn create_mock_session(is_running: bool, last_used: Instant) -> (SessionHandle, mpsc::Receiver<SessionCommand>) {
-        let (tx, rx) = mpsc::channel(10);
-        (
-            SessionHandle {
-                tx,
-                workdir: PathBuf::from("mock_dir"),
-                assistant_id: None,
-                is_running: Arc::new(AtomicBool::new(is_running)),
-                cancel_flag: Arc::new(AtomicBool::new(false)),
-                last_used,
-            },
-            rx,
-        )
-    }
-
-    #[tokio::test]
-    async fn test_max_cached_sessions_eviction() {
-        let mut state = AgentState::new();
-        let max_cached = 10;
-
-        // 1. 创建 10 个 session，并插入
-        let mut rxs = Vec::new();
-        let now = Instant::now();
-        for i in 1..=10 {
-            // 设置不同的 last_used 时间，i 越小，last_used 越早（越旧）
-            let last_used = now - Duration::from_secs(100 - i);
-            let (handle, rx) = create_mock_session(false, last_used);
-            state.sessions.insert(format!("session_{}", i), handle);
-            rxs.push(rx);
-        }
-
-        assert_eq!(state.sessions.len(), 10);
-
-        // 2. 模拟新 session 准备插入，触发驱逐逻辑
-        let oldest_idle_key = state.sessions.iter()
-            .filter(|(_, v)| !v.is_running.load(Ordering::SeqCst))
-            .min_by_key(|(_, v)| v.last_used)
-            .map(|(k, _)| k.clone());
-
-        // 预期最旧的（session_1，因为 last_used 最早，为 now - 99s）被选出
-        assert_eq!(oldest_idle_key, Some("session_1".to_string()));
-
-        if let Some(key_to_evict) = oldest_idle_key {
-            if let Some(handle) = state.sessions.remove(&key_to_evict) {
-                let _ = handle.tx.send(SessionCommand::Stop).await;
-            }
-        }
-
-        // 检查驱逐后，session_1 是否已被移除，剩余数量是否为 9
-        assert_eq!(state.sessions.len(), 9);
-        assert!(!state.sessions.contains_key("session_1"));
-
-        // 检查驱逐的 session_1 确实收到了 Stop 命令
-        let mut rx_1 = rxs.remove(0);
-        let cmd = rx_1.recv().await;
-        assert!(matches!(cmd, Some(SessionCommand::Stop)));
-    }
-
-    #[test]
-    fn test_max_running_sessions_limit() {
-        let mut state = AgentState::new();
-        let max_running = 4;
-        let sid = "new_session".to_string();
-
-        // 模拟 4 个并发运行的会话
-        for i in 1..=4 {
-            let (handle, _) = create_mock_session(true, Instant::now());
-            state.sessions.insert(format!("run_{}", i), handle);
-        }
-
-        // 新建一个会话来发送消息
-        let (new_handle, _) = create_mock_session(false, Instant::now());
-        state.sessions.insert(sid.clone(), new_handle);
-
-        // 模拟 send_message 中的并发计数判断
-        let running_count = state.sessions.iter()
+        let s = state.lock().await;
+        let running_count = s.sessions.iter()
             .filter(|(k, v)| k.as_str() != sid.as_str() && v.is_running.load(Ordering::SeqCst))
             .count();
-
-        // 因为已有 4 个运行，所以预期会被拒绝
-        assert!(running_count >= max_running);
+        if running_count >= max_running {
+            anyhow::bail!("当前有太多会话在并发运行（最大限制为 {}），请稍等其他对话执行完毕后再试。", max_running);
+        }
     }
+
+    let approval_manager = {
+        let s = state.lock().await;
+        s.approval_manager.clone()
+    };
+
+    // 3. 构建单次运行的 Engine
+    let (mut engine, _, _) = build_session_engine(
+        db_manager.clone(),
+        workdir,
+        Some(sid.clone()),
+        assistant_id,
+        extra_args,
+        approval_manager,
+        protocol_emitter,
+        output,
+    ).await?;
+
+    let is_running = Arc::new(AtomicBool::new(true));
+    let cancel_flag = Arc::new(AtomicBool::new(false));
+    engine.set_cancel_flag(cancel_flag.clone());
+
+    let is_running_clone = is_running.clone();
+    let cancel_flag_clone = cancel_flag.clone();
+    let sid_clone = sid.clone();
+    let content_clone = content.clone();
+    let msg_id_clone = msg_id.clone();
+
+    // 4. 异步拉起单次运行
+    let join_handle = tokio::spawn(async move {
+        let run_result = flock_core::CURRENT_SESSION_ID.scope(sid_clone.clone(), async {
+            engine.run(&content_clone, &msg_id_clone).await
+        }).await;
+
+        if let Err(err) = run_result {
+            if matches!(err, crate::engine::AgentError::UserAborted) || cancel_flag_clone.load(Ordering::SeqCst) {
+                log::info!("Agent run for session {} aborted by user.", sid_clone);
+                engine.output().emit_stream_end(&msg_id_clone, 0, 0, 0, 0, 0);
+            } else {
+                log::error!("Agent run error for session {}: {}", sid_clone, err);
+                engine.output().emit_error(&format!("Agent 运行出错: {}", err));
+            }
+        }
+        is_running_clone.store(false, Ordering::SeqCst);
+    });
+
+    {
+        let mut s = state.lock().await;
+        s.sessions.insert(
+            sid,
+            ActiveSession {
+                join_handle,
+                cancel_flag,
+                is_running,
+            },
+        );
+    }
+
+    Ok(())
 }

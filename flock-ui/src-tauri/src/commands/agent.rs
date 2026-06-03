@@ -72,7 +72,9 @@ pub async fn send_message(
     content: String,
 ) -> Result<(), String> {
     let db_manager = app.state::<Arc<flock_core::db::DbManager>>().inner().clone();
-    assistant::send_message(state.inner().clone(), session_id, msg_id, content, db_manager)
+    let emitter = Arc::new(crate::ipc::emitter::TauriProtocolEmitter::new(app.clone()));
+    let output = emitter.clone() as Arc<dyn flock_agent::sinks::OutputSink + Send + Sync>;
+    assistant::send_message(state.inner().clone(), session_id, msg_id, content, db_manager, emitter, output)
         .await
         .map_err(|e| e.to_string())
 }
@@ -176,7 +178,7 @@ pub async fn get_workdir(
 ) -> Result<Option<String>, String> {
     let s = state.lock().await;
     let sid = session_id.unwrap_or_else(|| "default".to_string());
-    Ok(s.sessions.get(&sid).map(|h| h.workdir.to_string_lossy().to_string()))
+    Ok(s.metadata.get(&sid).map(|h| h.workdir.to_string_lossy().to_string()))
 }
 
 /// 手动销毁当前活跃的 Daytona 沙盒（并清除内存缓存）

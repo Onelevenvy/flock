@@ -3,7 +3,7 @@ use tokio::sync::Mutex;
 use anyhow::Result;
 use flock_core::ipc_interface::approval::ToolApprovalResult;
 use flock_core::ipc_interface::commands::{ApprovalScope, SessionMode};
-use crate::session_host::state::{AgentState, SessionCommand};
+use crate::session_host::state::AgentState;
 
 /// 批准工具调用
 pub async fn approve_tool(
@@ -48,9 +48,9 @@ pub async fn set_mode(state: Arc<Mutex<AgentState>>, mode: String) -> Result<()>
     Ok(())
 }
 
-/// 更新配置
+/// 更新配置 (无状态模式下配置变化主要通过数据库持久化，此接口做日志记录)
 pub async fn set_config(
-    state: Arc<Mutex<AgentState>>,
+    _state: Arc<Mutex<AgentState>>,
     session_id: Option<String>,
     model: Option<String>,
     thinking: Option<String>,
@@ -58,16 +58,9 @@ pub async fn set_config(
     effort: Option<String>,
     compaction: Option<String>,
 ) -> Result<()> {
-    let s = state.lock().await;
-    let sid = session_id.unwrap_or_else(|| "default".to_string());
-    if let Some(handle) = s.sessions.get(&sid) {
-        let _ = handle.tx.send(SessionCommand::SetConfig {
-            model,
-            thinking,
-            thinking_budget,
-            effort,
-            compaction,
-        }).await;
-    }
+    log::info!(
+        "set_config called for session={:?}, model={:?}, thinking={:?}, thinking_budget={:?}, effort={:?}, compaction={:?}",
+        session_id, model, thinking, thinking_budget, effort, compaction
+    );
     Ok(())
 }

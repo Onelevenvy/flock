@@ -148,8 +148,8 @@ pub async fn trigger_job_execution(
         Some(conv_id.clone()),
         Some(selected_assistant),
         extra_args,
-        emitter,
-        output,
+        emitter.clone(),
+        output.clone(),
     ).await {
         db.update_cron_job_status(
             job_id,
@@ -168,7 +168,7 @@ pub async fn trigger_job_execution(
     for _ in 0..30 {
         tokio::time::sleep(Duration::from_millis(200)).await;
         let s = agent_state.lock().await;
-        if s.sessions.contains_key(&conv_id) {
+        if s.metadata.contains_key(&conv_id) {
             handle_exists = true;
             break;
         }
@@ -203,6 +203,8 @@ pub async fn trigger_job_execution(
         msg_id,
         prompt_content,
         db.clone(),
+        emitter,
+        output,
     ).await {
         db.update_cron_job_status(
             job_id,
