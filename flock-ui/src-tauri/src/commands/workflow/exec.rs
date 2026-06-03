@@ -273,6 +273,8 @@ pub async fn run_workflow(
         .await
         .map_err(|e| e.to_string())?;
 
+    if cancel_flag.load(std::sync::atomic::Ordering::SeqCst) { return Ok(()); }
+
     let provider: Arc<dyn BaseChatModel> = Arc::from(flock_core::model_factory::create_model(flock_core::model_factory::ModelProviderParams {
         provider_type: config.provider.to_string(),
         model: config.model.clone(),
@@ -311,6 +313,7 @@ pub async fn run_workflow(
         }
         Err(e) => log::warn!("[workflow] Failed to list providers: {}", e),
     }
+    if cancel_flag.load(std::sync::atomic::Ordering::SeqCst) { return Ok(()); }
     let model_factory: Arc<dyn ModelFactory> = Arc::new(CachedModelFactory::new(
         model_registry,
         config.provider.to_string(),
@@ -337,6 +340,8 @@ pub async fn run_workflow(
     // 自动为工作流切换至当前激活工作空间的 working directory，解决不能选择工作空间的问题
     let thread_id_val = thread_id.unwrap_or_else(|| workflow_id.clone());
 
+    if cancel_flag.load(std::sync::atomic::Ordering::SeqCst) { return Ok(()); }
+
     // 重点：如果是全新启动工作流运行（不是 resume 打断），彻底清空 sqlite checkpointer 里旧状态 records，防止 aborted 时脏状态残留导致数据串了和参数叠加
     if resume_value.is_none() {
         // log::info!("[workflow] Fresh run detected. Purging old checkpoints for thread: {}", thread_id_val);
@@ -351,6 +356,7 @@ pub async fn run_workflow(
     }
 
     let mut final_workdir: Option<std::path::PathBuf> = None;
+    if cancel_flag.load(std::sync::atomic::Ordering::SeqCst) { return Ok(()); }
     let row = sqlx::query("SELECT workspace_id, cwd, summary FROM session_metadata WHERE thread_id = ?1")
         .bind(&thread_id_val)
         .fetch_optional(db.pool())
@@ -410,6 +416,7 @@ pub async fn run_workflow(
                     title_to_use = format!("{}...", truncated);
                 }
                 
+                if cancel_flag.load(std::sync::atomic::Ordering::SeqCst) { return Ok(()); }
                 let _ = sqlx::query("UPDATE session_metadata SET summary = ?1 WHERE thread_id = ?2")
                     .bind(&title_to_use)
                     .bind(&thread_id_val)
@@ -493,6 +500,7 @@ pub async fn run_workflow(
         raw_paths.push(std::path::PathBuf::from(d));
     }
 
+    if cancel_flag.load(std::sync::atomic::Ordering::SeqCst) { return Ok(()); }
     let skills = flock_skills::loader::load_all_skills(&workdir, &[], false, None, &raw_paths).await;
     let mut tools_reg = all_tools().registry;
     if !skills.is_empty() {
