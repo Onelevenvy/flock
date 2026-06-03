@@ -39,7 +39,7 @@ pub fn setup_pet_overlay(app: &mut tauri::App) -> Result<(), Box<dyn std::error:
     .build()
     {
         Ok(pet_win) => {
-            log::info!("Pet overlay window created successfully");
+            // log::info!("Pet overlay window created successfully");
             
             // Bind to main window close requested events to shut down overlay window as well
             let main_label = "main";

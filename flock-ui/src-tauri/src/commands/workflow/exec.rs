@@ -457,7 +457,7 @@ pub async fn run_workflow(
 
     if workdir.exists() {
         // 同步助手处理：初始化 tools 的全局工作空间路径，让内置工具正确寻址和识别
-        flock_tools::init_workspace_dir(workdir.clone());
+        flock_tools::init_workspace_dir(&thread_id_val, workdir.clone());
 
         if let Err(e) = std::env::set_current_dir(&workdir) {
             log::warn!("Failed to set current dir to {:?}: {}", workdir, e);
@@ -829,7 +829,7 @@ pub async fn run_workflow(
                 let mut updated_title = None;
 
                 if enable_summary.unwrap_or(false) {
-                    let protocol_emitter_for_summary: Arc<dyn flock_core::ipc_interface::writer::ProtocolEmitter> = Arc::new(crate::ipc::emitter::TauriProtocolEmitter::new(app_clone.clone()));
+                    let protocol_emitter_for_summary: Arc<dyn flock_core::ipc_interface::writer::ProtocolEmitter> = Arc::new(crate::ipc::emitter::TauriProtocolEmitter::new(app_clone.clone(), thread_id_val_clone_inner.clone()));
                     if let Err(e) = flock_agent::engine::summary::run_background_summary(
                         db_for_task.clone(),
                         thread_id_val_clone_inner.clone(),

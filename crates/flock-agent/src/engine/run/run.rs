@@ -69,7 +69,7 @@ pub async fn prepare_run(
     engine.messages.push(new_user_msg_struct.clone());
 
     if is_first_turn {
-        log::info!("[summary] First turn detected. Saving user message and triggering immediate auto-summary.");
+        // log::info!("[summary] First turn detected. Saving user message and triggering immediate auto-summary.");
         engine.save_session().await;
     }
 

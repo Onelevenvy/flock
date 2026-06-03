@@ -77,6 +77,23 @@ export function WorkspaceSection() {
       return;
     }
 
+    if (sessionId) {
+      const session = useAgentStore.getState().sessions[sessionId];
+      if (
+        session &&
+        (session.status === 'ready' ||
+          session.status === 'connecting' ||
+          session.status === 'thinking')
+      ) {
+        console.log(
+          '[startAgentForWorkspace] Session is already active or ready, skipping start_agent:',
+          sessionId,
+          session.status
+        );
+        return;
+      }
+    }
+
     try {
       setWorkdir(wsPath);
       setStatus('connecting');

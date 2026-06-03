@@ -106,48 +106,109 @@ pub fn get_db_manager() -> Option<Arc<DbManager>> {
     GLOBAL_DB_MANAGER.get().cloned()
 }
 
-static GLOBAL_APPROVAL_MANAGER: OnceLock<Arc<flock_core::ipc_interface::approval::ToolApprovalManager>> = OnceLock::new();
+static EMITTER_REGISTRY: std::sync::LazyLock<std::sync::RwLock<std::collections::HashMap<String, Arc<dyn flock_core::ipc_interface::writer::ProtocolEmitter + Send + Sync>>>> =
+    std::sync::LazyLock::new(|| std::sync::RwLock::new(std::collections::HashMap::new()));
 
-/// Initialize the global approval manager for tools.
-pub fn init_global_approval_manager(mgr: Arc<flock_core::ipc_interface::approval::ToolApprovalManager>) {
-    let _ = GLOBAL_APPROVAL_MANAGER.set(mgr);
-}
+static APPROVAL_REGISTRY: std::sync::LazyLock<std::sync::RwLock<std::collections::HashMap<String, Arc<flock_core::ipc_interface::approval::ToolApprovalManager>>>> =
+    std::sync::LazyLock::new(|| std::sync::RwLock::new(std::collections::HashMap::new()));
 
-/// Get the global approval manager if initialized.
-pub fn get_global_approval_manager() -> Option<Arc<flock_core::ipc_interface::approval::ToolApprovalManager>> {
-    GLOBAL_APPROVAL_MANAGER.get().cloned()
-}
+static WORKSPACE_REGISTRY: std::sync::LazyLock<std::sync::RwLock<std::collections::HashMap<String, PathBuf>>> =
+    std::sync::LazyLock::new(|| std::sync::RwLock::new(std::collections::HashMap::new()));
 
-static GLOBAL_EMITTER: OnceLock<Arc<dyn flock_core::ipc_interface::writer::ProtocolEmitter>> = OnceLock::new();
-
-/// Initialize the global emitter for tools.
-pub fn init_global_emitter(emitter: Arc<dyn flock_core::ipc_interface::writer::ProtocolEmitter>) {
-    let _ = GLOBAL_EMITTER.set(emitter);
-}
-
-/// Get the global emitter if initialized.
-pub fn get_global_emitter() -> Option<Arc<dyn flock_core::ipc_interface::writer::ProtocolEmitter>> {
-    GLOBAL_EMITTER.get().cloned()
-}
-
-static GLOBAL_WORKSPACE_DIR: OnceLock<std::sync::RwLock<Option<PathBuf>>> = OnceLock::new();
-
-/// Initialize the active workspace directory for tool calculations.
-pub fn init_workspace_dir(dir: PathBuf) {
-    if let Some(lock) = GLOBAL_WORKSPACE_DIR.get() {
-        if let Ok(mut writer) = lock.write() {
-            *writer = Some(dir);
-        }
-    } else {
-        let _ = GLOBAL_WORKSPACE_DIR.set(std::sync::RwLock::new(Some(dir)));
+/// Initialize the global emitter for a specific session/thread.
+pub fn init_global_emitter(session_id: &str, emitter: Arc<dyn flock_core::ipc_interface::writer::ProtocolEmitter + Send + Sync>) {
+    if let Ok(mut map) = EMITTER_REGISTRY.write() {
+        map.insert(session_id.to_string(), emitter);
     }
 }
 
-/// Get the active workspace directory if set.
+pub fn unregister_global_emitter(session_id: &str) {
+    if let Ok(mut map) = EMITTER_REGISTRY.write() {
+        map.remove(session_id);
+    }
+}
+
+/// Get the global emitter for the current session context.
+pub fn get_global_emitter() -> Option<Arc<dyn flock_core::ipc_interface::writer::ProtocolEmitter + Send + Sync>> {
+    // 1. Try task-local session ID
+    if let Ok(session_id) = flock_core::CURRENT_SESSION_ID.try_with(|id| id.clone()) {
+        if let Ok(map) = EMITTER_REGISTRY.read() {
+            if let Some(emitter) = map.get(&session_id) {
+                return Some(emitter.clone());
+            }
+        }
+    }
+    // 2. Fallback: if task-local not set or not found, return the first available emitter in the registry
+    if let Ok(map) = EMITTER_REGISTRY.read() {
+        if let Some(emitter) = map.values().next() {
+            return Some(emitter.clone());
+        }
+    }
+    None
+}
+
+/// Initialize the global approval manager for a specific session/thread.
+pub fn init_global_approval_manager(session_id: &str, mgr: Arc<flock_core::ipc_interface::approval::ToolApprovalManager>) {
+    if let Ok(mut map) = APPROVAL_REGISTRY.write() {
+        map.insert(session_id.to_string(), mgr);
+    }
+}
+
+pub fn unregister_global_approval_manager(session_id: &str) {
+    if let Ok(mut map) = APPROVAL_REGISTRY.write() {
+        map.remove(session_id);
+    }
+}
+
+/// Get the global approval manager for the current session context.
+pub fn get_global_approval_manager() -> Option<Arc<flock_core::ipc_interface::approval::ToolApprovalManager>> {
+    // 1. Try task-local session ID
+    if let Ok(session_id) = flock_core::CURRENT_SESSION_ID.try_with(|id| id.clone()) {
+        if let Ok(map) = APPROVAL_REGISTRY.read() {
+            if let Some(mgr) = map.get(&session_id) {
+                return Some(mgr.clone());
+            }
+        }
+    }
+    // 2. Fallback: return first available approval manager
+    if let Ok(map) = APPROVAL_REGISTRY.read() {
+        if let Some(mgr) = map.values().next() {
+            return Some(mgr.clone());
+        }
+    }
+    None
+}
+
+/// Initialize the active workspace directory for a specific session/thread.
+pub fn init_workspace_dir(session_id: &str, dir: PathBuf) {
+    if let Ok(mut map) = WORKSPACE_REGISTRY.write() {
+        map.insert(session_id.to_string(), dir);
+    }
+}
+
+pub fn unregister_workspace_dir(session_id: &str) {
+    if let Ok(mut map) = WORKSPACE_REGISTRY.write() {
+        map.remove(session_id);
+    }
+}
+
+/// Get the active workspace directory for the current session context.
 pub fn get_workspace_dir() -> Option<PathBuf> {
-    GLOBAL_WORKSPACE_DIR.get()
-        .and_then(|lock| lock.read().ok())
-        .and_then(|reader| reader.clone())
+    // 1. Try task-local session ID
+    if let Ok(session_id) = flock_core::CURRENT_SESSION_ID.try_with(|id| id.clone()) {
+        if let Ok(map) = WORKSPACE_REGISTRY.read() {
+            if let Some(dir) = map.get(&session_id) {
+                return Some(dir.clone());
+            }
+        }
+    }
+    // 2. Fallback: return first available workspace dir
+    if let Ok(map) = WORKSPACE_REGISTRY.read() {
+        if let Some(dir) = map.values().next() {
+            return Some(dir.clone());
+        }
+    }
+    None
 }
 
 /// Send an info message to the client.

@@ -125,7 +125,7 @@ pub fn make_llm_node(
             final_messages.extend(messages);
 
             let mut rx = provider.astream(&final_messages[..], &config);
-            log::info!("[node:llm] Stream started for provider={}", ctx.provider_label);
+            // log::info!("[node:llm] Stream started for provider={}", ctx.provider_label);
 
             let mut assistant_text = String::new();
             let mut thinking_text = String::new();
@@ -179,7 +179,7 @@ pub fn make_llm_node(
                 }
 
                 for tc in msg.tool_calls() {
-                   log::info!("[node:llm] Received tool call: {}", tc.name);
+                //    log::info!("[node:llm] Received tool call: {}", tc.name);
                    tool_calls.push(ContentBlock::ToolUse {
                        name: tc.name.clone(),
                        input: tc.args.clone(),
@@ -188,12 +188,12 @@ pub fn make_llm_node(
                 }
 
                 if let Some(usage) = msg.usage() {
-                    log::info!("[node:llm] Received usage: {:?}", usage);
+                    // log::info!("[node:llm] Received usage: {:?}", usage);
                     turn_input_tokens = usage.prompt_tokens as u64;
                     turn_output_tokens = usage.completion_tokens as u64;
                 }
             }
-            log::info!("[node:llm] Stream completed. Assistant text len: {}, Tool calls: {}", assistant_text.len(), tool_calls.len());
+            // log::info!("[node:llm] Stream completed. Assistant text len: {}, Tool calls: {}", assistant_text.len(), tool_calls.len());
 
             let msgs_for_estimate: Vec<Message> =
                 state.messages.iter().filter_map(|v| serde_json::from_value(v.clone()).ok()).collect();

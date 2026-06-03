@@ -3,24 +3,42 @@ use flock_agent::sinks::OutputSink;
 use flock_core::ipc_interface::events::{ErrorInfo, ProtocolEvent, Usage};
 use flock_core::ipc_interface::writer::ProtocolEmitter;
 
-/// Tauri 实现的 ProtocolEmitter & OutputSink，将事件通过 Tauri Emitter 发送给前端
+/// Tauri 实现的 ProtocolEmitter & OutputSink，将事件通过 Tauri Emitter 发送给前端。
+///
+/// 每条事件都会自动注入 `session_id` 字段，保证并发多 session 时前端能正确路由。
+/// 优先级：task-local CURRENT_SESSION_ID（engine.run 内部） > 构造时绑定的 session_id（start/cleanup 阶段）。
 pub struct TauriProtocolEmitter {
     app: AppHandle,
+    /// 当 task-local 作用域不可用时（如 start_agent、cleanup task）使用此值作为 session_id
+    session_id: String,
 }
 
 impl TauriProtocolEmitter {
-    pub fn new(app: AppHandle) -> Self {
-        Self { app }
+    pub fn new(app: AppHandle, session_id: String) -> Self {
+        Self { app, session_id }
     }
 }
 
 impl ProtocolEmitter for TauriProtocolEmitter {
     fn emit(&self, event: &ProtocolEvent) -> std::io::Result<()> {
-        let json = serde_json::to_string(event).map_err(|e| {
-            std::io::Error::new(
-                std::io::ErrorKind::Other,
-                format!("Failed to serialize event: {}", e),
-            )
+        // 优先使用 task-local（engine.run 内正确反映当前并发 session）
+        // 若不在作用域（如 start_agent 阶段、drop 清理 task）则退回到构造时绑定的 session_id
+        let session_id = flock_core::CURRENT_SESSION_ID
+            .try_with(|id| id.clone())
+            .unwrap_or_else(|_| self.session_id.clone());
+
+        log::info!("[TauriProtocolEmitter::emit] Emitting event: {:?}, session_id: {}", event, session_id);
+
+        let mut value = serde_json::to_value(event).map_err(|e| {
+            std::io::Error::new(std::io::ErrorKind::Other, format!("Failed to serialize event: {e}"))
+        })?;
+        if let Some(obj) = value.as_object_mut() {
+            // or_insert_with：不覆盖 Ready 事件自带的 session_id
+            obj.entry("session_id")
+                .or_insert_with(|| serde_json::Value::String(session_id));
+        }
+        let json = serde_json::to_string(&value).map_err(|e| {
+            std::io::Error::new(std::io::ErrorKind::Other, format!("Failed to serialize event: {e}"))
         })?;
         let _ = self.app.emit("agent-event", json);
         Ok(())

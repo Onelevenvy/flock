@@ -32,12 +32,18 @@ export function useEventStream() {
             const parsed: ProtocolEvent = JSON.parse(event.payload);
             handleEvent(parsed);
             if (parsed.type === 'stream_end') {
-              const activeConversationId = useWorkspaceStore.getState().activeConversationId;
-              if (activeConversationId) {
-                const updatedMessages = useAgentStore.getState().messages;
+              // 使用后端注入的 session_id，确保后台 session 的消息也能正确保存
+              const sessionId = (parsed as any).session_id as string | undefined;
+              const convId = (sessionId && sessionId !== 'default')
+                ? sessionId
+                : useWorkspaceStore.getState().activeConversationId;
+              if (convId) {
+                const storeState = useAgentStore.getState();
+                // 保存该 session 自己的消息，而不是当前激活 session 的消息
+                const sessionMessages = storeState.sessions[convId]?.messages ?? storeState.messages;
                 invoke('save_conversation_messages', {
-                  convId: activeConversationId,
-                  messages: updatedMessages,
+                  convId,
+                  messages: sessionMessages,
                 }).catch((err) => console.warn('Failed to save conversation messages on stream_end:', err));
               }
             }
@@ -66,6 +72,7 @@ export function useEventStream() {
             let payload: {
               type: string;
               workflow_id: string;
+              thread_id?: string;
               node_id?: string;
               text?: string;
               error?: string;
@@ -78,6 +85,9 @@ export function useEventStream() {
             }
 
             const msgId = payload.workflow_id;
+            if (payload.thread_id) {
+              useAgentStore.getState().registerMessageSession(msgId, payload.thread_id);
+            }
 
             switch (payload.type) {
               case 'workflow_start':
@@ -109,12 +119,14 @@ export function useEventStream() {
                 setStatus('ready');
                 handleEvent({ type: 'stream_end', msg_id: msgId });
                 {
-                  const activeConversationId = useWorkspaceStore.getState().activeConversationId;
-                  if (activeConversationId) {
-                    const updatedMessages = useAgentStore.getState().messages;
+                  // 用 thread_id（真实 session）保存，不用活跃 session
+                  const convId = payload.thread_id || useWorkspaceStore.getState().activeConversationId;
+                  if (convId) {
+                    const storeState = useAgentStore.getState();
+                    const sessionMessages = storeState.sessions[convId]?.messages ?? storeState.messages;
                     invoke('save_conversation_messages', {
-                      convId: activeConversationId,
-                      messages: updatedMessages,
+                      convId,
+                      messages: sessionMessages,
                     }).catch((err) => console.warn('Failed to save conversation messages on workflow_done:', err));
                   }
                 }
@@ -132,12 +144,13 @@ export function useEventStream() {
                   });
                   handleEvent({ type: 'stream_end', msg_id: msgId });
                   {
-                    const activeConversationId = useWorkspaceStore.getState().activeConversationId;
-                    if (activeConversationId) {
-                      const updatedMessages = useAgentStore.getState().messages;
+                    const convId = payload.thread_id || useWorkspaceStore.getState().activeConversationId;
+                    if (convId) {
+                      const storeState = useAgentStore.getState();
+                      const sessionMessages = storeState.sessions[convId]?.messages ?? storeState.messages;
                       invoke('save_conversation_messages', {
-                        convId: activeConversationId,
-                        messages: updatedMessages,
+                        convId,
+                        messages: sessionMessages,
                       }).catch((err) => console.warn('Failed to save conversation messages on workflow cancelled:', err));
                     }
                   }

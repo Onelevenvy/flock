@@ -22,7 +22,6 @@ pub struct ActiveSession {
     pub join_handle: tokio::task::JoinHandle<()>,
     pub cancel_flag: Arc<AtomicBool>,
     pub is_running: Arc<AtomicBool>,
-    pub msg_id: String,
 }
 
 /// 全局 Agent 状态，目前在 Tauri 层直接管理维护，看齐 Workflow 极简架构
@@ -123,18 +122,19 @@ async fn build_session_engine(
         config.base_url
     );
 
-    flock_tools::init_global_emitter(protocol_emitter.clone());
-    flock_tools::init_global_approval_manager(approval_manager.clone());
+    let sid = session_id.clone().unwrap_or_else(|| "default".to_string());
+    flock_tools::init_global_emitter(&sid, protocol_emitter.clone());
+    flock_tools::init_global_approval_manager(&sid, approval_manager.clone());
 
     let mut bootstrap = AgentBuilder::new(config.clone(), workdir.to_string_lossy(), output.clone());
 
     if let Some(ref asst_id) = assistant_id {
         match db_manager.get_assistant(asst_id).await {
             Ok(Some(asst)) => {
-                log::info!(
-                    "Applying assistant overrides: name={:?}, tools={:?}, skills={:?}",
-                    asst.name, asst.tools, asst.skills
-                );
+                // log::info!(
+                //     "Applying assistant overrides: name={:?}, tools={:?}, skills={:?}",
+                //     asst.name, asst.tools, asst.skills
+                // );
                 let enabled_tools: Vec<String> = asst
                     .tools
                     .into_iter()
@@ -336,7 +336,7 @@ pub async fn send_message_to_engine(
         assistant_id,
         extra_args,
         approval_manager,
-        protocol_emitter,
+        protocol_emitter.clone(),
         output,
     ).await?;
 
@@ -355,6 +355,8 @@ pub async fn send_message_to_engine(
         session_id: String,
         msg_id: String,
         cancel_flag: Arc<AtomicBool>,
+        /// 捕获 per-session emitter，保证 cleanup task 发出的 StreamEnd 带正确 session_id
+        protocol_emitter: Arc<dyn flock_core::ipc_interface::writer::ProtocolEmitter + Send + Sync>,
     }
 
     impl Drop for SessionCleanupGuard {
@@ -363,16 +365,18 @@ pub async fn send_message_to_engine(
             let session_id = self.session_id.clone();
             let msg_id = self.msg_id.clone();
             let cancel_flag = self.cancel_flag.clone();
+            let emitter = self.protocol_emitter.clone();
             tokio::spawn(async move {
                 let mut s = state.lock().await;
                 s.sessions.remove(&session_id);
+                flock_tools::unregister_global_emitter(&session_id);
+                flock_tools::unregister_global_approval_manager(&session_id);
+                flock_tools::unregister_workspace_dir(&session_id);
                 if cancel_flag.load(Ordering::SeqCst) {
-                    if let Some(emitter) = flock_tools::get_global_emitter() {
-                        let _ = emitter.emit(&flock_core::ipc_interface::events::ProtocolEvent::StreamEnd {
-                            msg_id,
-                            usage: None,
-                        });
-                    }
+                    let _ = emitter.emit(&flock_core::ipc_interface::events::ProtocolEvent::StreamEnd {
+                        msg_id,
+                        usage: None,
+                    });
                 }
             });
         }
@@ -382,6 +386,8 @@ pub async fn send_message_to_engine(
     let cancel_flag_clone2 = cancel_flag.clone();
     let sid_clone2 = sid.clone();
     let msg_id_clone2 = msg_id.clone();
+    // 为 cleanup guard 准备一份 per-session emitter 的 ProtocolEmitter 克隆
+    let emitter_for_guard = protocol_emitter.clone();
 
     // 4. 异步拉起单次运行
     let join_handle = tokio::spawn(async move {
@@ -390,6 +396,7 @@ pub async fn send_message_to_engine(
             session_id: sid_clone2,
             msg_id: msg_id_clone2,
             cancel_flag: cancel_flag_clone2,
+            protocol_emitter: emitter_for_guard,
         };
 
         let run_result = flock_core::CURRENT_SESSION_ID.scope(sid_clone.clone(), async {
@@ -416,7 +423,6 @@ pub async fn send_message_to_engine(
                 join_handle,
                 cancel_flag,
                 is_running,
-                msg_id,
             },
         );
     }
@@ -510,7 +516,8 @@ pub async fn start_agent(
     }
 
     let db_manager = app.state::<Arc<flock_core::db::DbManager>>().inner().clone();
-    let emitter = Arc::new(crate::ipc::emitter::TauriProtocolEmitter::new(app.clone()));
+    let sid_str = session_id.clone().unwrap_or_else(|| "default".to_string());
+    let emitter = Arc::new(crate::ipc::emitter::TauriProtocolEmitter::new(app.clone(), sid_str));
     let output = emitter.clone() as Arc<dyn flock_agent::sinks::OutputSink + Send + Sync>;
 
     start_agent_engine(
@@ -548,7 +555,8 @@ pub async fn send_message(
     content: String,
 ) -> Result<(), String> {
     let db_manager = app.state::<Arc<flock_core::db::DbManager>>().inner().clone();
-    let emitter = Arc::new(crate::ipc::emitter::TauriProtocolEmitter::new(app.clone()));
+    let sid_str = session_id.clone().unwrap_or_else(|| "default".to_string());
+    let emitter = Arc::new(crate::ipc::emitter::TauriProtocolEmitter::new(app.clone(), sid_str));
     let output = emitter.clone() as Arc<dyn flock_agent::sinks::OutputSink + Send + Sync>;
     send_message_to_engine(state.inner().clone(), session_id, msg_id, content, db_manager, emitter, output)
         .await

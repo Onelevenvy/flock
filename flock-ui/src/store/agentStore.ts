@@ -1,5 +1,6 @@
 import { create } from 'zustand';
 import { useUiStore } from './uiStore';
+import { useWorkspaceStore } from './workspaceStore';
 import {
   AgentStatus,
   Capabilities,
@@ -9,6 +10,17 @@ import {
   ProtocolEvent,
 } from '@/types/protocol';
 import { handleAgentEvent, loadAgentHistory } from './agentEventHandlers';
+
+export interface SessionState {
+  status: AgentStatus;
+  capabilities: Capabilities | null;
+  workdir: string;
+  errorMessage: string | null;
+  messages: ChatMessage[];
+  pendingApprovals: PendingApproval[];
+  humanTakeover: HumanTakeoverInfo | null;
+  playbackIndex: number;
+}
 
 export interface AgentStore {
   status: AgentStatus;
@@ -20,69 +32,313 @@ export interface AgentStore {
   humanTakeover: HumanTakeoverInfo | null;
   playbackIndex: number;
 
-  setStatus: (status: AgentStatus) => void;
-  setWorkdir: (dir: string) => void;
-  setError: (msg: string | null) => void;
-  setCapabilities: (caps: Capabilities) => void;
-  setPlaybackIndex: (index: number) => void;
-  addUserMessage: (id: string, content: string) => void;
+  sessions: Record<string, SessionState>;
+  msgIdToSessionId: Record<string, string>;
+
+  setStatus: (status: AgentStatus, sessionId?: string) => void;
+  setWorkdir: (dir: string, sessionId?: string) => void;
+  setError: (msg: string | null, sessionId?: string) => void;
+  setCapabilities: (caps: Capabilities, sessionId?: string) => void;
+  setPlaybackIndex: (index: number, sessionId?: string) => void;
+  addUserMessage: (id: string, content: string, sessionId?: string) => void;
   handleEvent: (event: ProtocolEvent) => void;
-  removePendingApproval: (call_id: string) => void;
-  addPendingApproval: (approval: PendingApproval) => void;
-  clearHumanTakeover: () => void;
-  clearMessages: () => void;
+  removePendingApproval: (call_id: string, sessionId?: string) => void;
+  addPendingApproval: (approval: PendingApproval, sessionId?: string) => void;
+  clearHumanTakeover: (sessionId?: string) => void;
+  clearMessages: (sessionId?: string) => void;
   loadHistory: (workspaceId: string, convId: string) => Promise<void>;
+  switchSession: (sessionId: string) => void;
+  registerMessageSession: (msgId: string, sessionId: string) => void;
 }
 
-export const useAgentStore = create<AgentStore>((set, get) => ({
-  status: 'disconnected',
-  capabilities: null,
-  workdir: '',
-  errorMessage: null,
-  messages: [],
-  pendingApprovals: [],
-  humanTakeover: null,
-  playbackIndex: -1,
+const getActiveSessionId = () => {
+  return useWorkspaceStore.getState().activeConversationId || 'default';
+};
 
-  setStatus: (status) => set({ status }),
-  setWorkdir: (dir) => set({ workdir: dir }),
-  setError: (msg) => set({ errorMessage: msg }),
-  setCapabilities: (caps) => set({ capabilities: caps }),
-  setPlaybackIndex: (playbackIndex) => set({ playbackIndex }),
+const getSessionState = (state: any, sessId: string): SessionState => {
+  return state.sessions[sessId] || {
+    status: 'disconnected',
+    capabilities: null,
+    workdir: '',
+    errorMessage: null,
+    messages: [],
+    pendingApprovals: [],
+    humanTakeover: null,
+    playbackIndex: -1,
+  };
+};
 
-  addUserMessage: (id, content) =>
-    set((state) => ({
-      messages: [
-        ...state.messages,
-        {
-          id,
-          role: 'user',
-          chunks: [{ kind: 'text', text: content }],
-          streaming: false,
-          timestamp: Date.now(),
-        },
-      ],
-    })),
+export const useAgentStore = create<AgentStore>((set, get) => {
+  const updateSessionState = (
+    sessId: string,
+    updater: Partial<SessionState> | ((prev: SessionState) => Partial<SessionState>)
+  ) => {
+    set((state: any) => {
+      const prevSession = getSessionState(state, sessId);
+      const partialUpdate = typeof updater === 'function' ? updater(prevSession) : updater;
+      const updatedSession = { ...prevSession, ...partialUpdate };
+      const nextSessions = { ...state.sessions, [sessId]: updatedSession };
+      
+      const currentActiveId = getActiveSessionId();
+      if (sessId === currentActiveId) {
+        return {
+          sessions: nextSessions,
+          status: updatedSession.status,
+          capabilities: updatedSession.capabilities,
+          workdir: updatedSession.workdir,
+          errorMessage: updatedSession.errorMessage,
+          messages: updatedSession.messages,
+          pendingApprovals: updatedSession.pendingApprovals,
+          humanTakeover: updatedSession.humanTakeover,
+          playbackIndex: updatedSession.playbackIndex,
+        };
+      } else {
+        return {
+          sessions: nextSessions,
+        };
+      }
+    });
+  };
 
-  handleEvent: (event: ProtocolEvent) => handleAgentEvent(event, get, set),
+  return {
+    status: 'disconnected',
+    capabilities: null,
+    workdir: '',
+    errorMessage: null,
+    messages: [],
+    pendingApprovals: [],
+    humanTakeover: null,
+    playbackIndex: -1,
 
-  loadHistory: (workspaceId: string, convId: string) =>
-    loadAgentHistory(workspaceId, convId, set),
+    sessions: {},
+    msgIdToSessionId: {},
 
-  removePendingApproval: (call_id) =>
-    set((s) => ({
-      pendingApprovals: s.pendingApprovals.filter((p) => p.call_id !== call_id),
-    })),
+    setStatus: (status, sessionId) => updateSessionState(sessionId || getActiveSessionId(), { status }),
+    setWorkdir: (dir, sessionId) => updateSessionState(sessionId || getActiveSessionId(), { workdir: dir }),
+    setError: (msg, sessionId) => updateSessionState(sessionId || getActiveSessionId(), { errorMessage: msg }),
+    setCapabilities: (caps, sessionId) => updateSessionState(sessionId || getActiveSessionId(), { capabilities: caps }),
+    setPlaybackIndex: (playbackIndex, sessionId) => updateSessionState(sessionId || getActiveSessionId(), { playbackIndex }),
 
-  addPendingApproval: (approval) =>
-    set((s) => ({
-      pendingApprovals: [...s.pendingApprovals, approval],
-    })),
+    addUserMessage: (id, content, sessionId) => {
+      const targetSessionId = sessionId || getActiveSessionId();
+      updateSessionState(targetSessionId, (prev) => ({
+        messages: [
+          ...prev.messages,
+          {
+            id,
+            role: 'user',
+            chunks: [{ kind: 'text', text: content }],
+            streaming: false,
+            timestamp: Date.now(),
+          },
+        ],
+      }));
+    },
 
-  clearHumanTakeover: () => set({ humanTakeover: null }),
+    handleEvent: (event: ProtocolEvent) => {
+      let eventSessionId: string;
 
-  clearMessages: () => {
-    useUiStore.getState().closeEnvironment();
-    set({ messages: [], pendingApprovals: [] });
-  },
-}));
+      // 后端现在对所有 assistant 事件都注入了 session_id
+      // 优先使用它，确保并发多 session 时事件路由正确
+      const backendSessionId = (event as any).session_id as string | undefined;
+
+      if (backendSessionId && backendSessionId !== 'default') {
+        // assistant 路径：后端明确给出了 session_id，直接使用
+        eventSessionId = backendSessionId;
+        // 如果携带 msg_id，顺便建立映射（方便后续 workflow 等旁路查找）
+        if ('msg_id' in event && (event as any).msg_id) {
+          const mid = (event as any).msg_id as string;
+          if (!get().msgIdToSessionId[mid]) {
+            set((s: any) => ({
+              msgIdToSessionId: { ...s.msgIdToSessionId, [mid]: eventSessionId }
+            }));
+          }
+        }
+      } else if ('msg_id' in event && (event as any).msg_id) {
+        // workflow 路径：前端提前通过 registerMessageSession 注册了映射
+        const mid = (event as any).msg_id as string;
+        const mapped = get().msgIdToSessionId[mid];
+        if (mapped) {
+          eventSessionId = mapped;
+        } else {
+          // 最后回退：用当前活跃 session（单 session 场景或 workflow start 前）
+          eventSessionId = getActiveSessionId();
+          set((s: any) => ({
+            msgIdToSessionId: { ...s.msgIdToSessionId, [mid]: eventSessionId }
+          }));
+        }
+      } else {
+        eventSessionId = getActiveSessionId();
+      }
+
+      console.log('[handleEvent] Routing event:', event.type, {
+        event,
+        backendSessionId,
+        eventSessionId,
+        activeConversationId: getActiveSessionId(),
+      });
+
+      const customGet = () => {
+        const state = get();
+        const session = getSessionState(state, eventSessionId);
+        return {
+          ...state,
+          ...session,
+        };
+      };
+
+      const customSet = (updater: any) => {
+        set((state: any) => {
+          const prevSession = getSessionState(state, eventSessionId);
+          const update = typeof updater === 'function' ? updater({ ...state, ...prevSession }) : updater;
+          
+          const sessionKeys = ['status', 'capabilities', 'workdir', 'errorMessage', 'messages', 'pendingApprovals', 'humanTakeover', 'playbackIndex'];
+          const sessionUpdate: any = {};
+          const globalUpdate: any = {};
+          
+          for (const key of Object.keys(update)) {
+            if (sessionKeys.includes(key)) {
+              sessionUpdate[key] = update[key];
+            } else {
+              globalUpdate[key] = update[key];
+            }
+          }
+          
+          const updatedSession = { ...prevSession, ...sessionUpdate };
+          const nextSessions = { ...state.sessions, [eventSessionId]: updatedSession };
+          const currentActiveId = getActiveSessionId();
+          
+          console.log('[handleEvent] customSet updating session:', eventSessionId, {
+            prevMessages: prevSession.messages,
+            sessionUpdateMessages: sessionUpdate.messages,
+            updatedSessionMessages: updatedSession.messages,
+            currentActiveId,
+          });
+          
+          if (eventSessionId === currentActiveId) {
+            return {
+              ...globalUpdate,
+              sessions: nextSessions,
+              status: updatedSession.status,
+              capabilities: updatedSession.capabilities,
+              workdir: updatedSession.workdir,
+              errorMessage: updatedSession.errorMessage,
+              messages: updatedSession.messages,
+              pendingApprovals: updatedSession.pendingApprovals,
+              humanTakeover: updatedSession.humanTakeover,
+              playbackIndex: updatedSession.playbackIndex,
+            };
+          } else {
+            return {
+              ...globalUpdate,
+              sessions: nextSessions,
+            };
+          }
+        });
+      };
+
+      handleAgentEvent(event, customGet, customSet);
+    },
+
+    loadHistory: async (workspaceId: string, convId: string) => {
+      get().switchSession(convId);
+
+      const session = getSessionState(get(), convId);
+      if (session && (session.status === 'thinking' || session.status === 'connecting')) {
+        console.log('[loadHistory] Session is active/running, skipping DB history load to prevent overwrite:', convId);
+        return;
+      }
+
+      const customSet = (updater: any) => {
+        set((state: any) => {
+          const prevSession = getSessionState(state, convId);
+          const update = typeof updater === 'function' ? updater({ ...state, ...prevSession }) : updater;
+          
+          const sessionKeys = ['status', 'capabilities', 'workdir', 'errorMessage', 'messages', 'pendingApprovals', 'humanTakeover', 'playbackIndex'];
+          const sessionUpdate: any = {};
+          const globalUpdate: any = {};
+          
+          for (const key of Object.keys(update)) {
+            if (sessionKeys.includes(key)) {
+              sessionUpdate[key] = update[key];
+            } else {
+              globalUpdate[key] = update[key];
+            }
+          }
+          
+          const updatedSession = { ...prevSession, ...sessionUpdate };
+          const nextSessions = { ...state.sessions, [convId]: updatedSession };
+          const currentActiveId = getActiveSessionId();
+          
+          if (convId === currentActiveId) {
+            return {
+              ...globalUpdate,
+              sessions: nextSessions,
+              status: updatedSession.status,
+              capabilities: updatedSession.capabilities,
+              workdir: updatedSession.workdir,
+              errorMessage: updatedSession.errorMessage,
+              messages: updatedSession.messages,
+              pendingApprovals: updatedSession.pendingApprovals,
+              humanTakeover: updatedSession.humanTakeover,
+              playbackIndex: updatedSession.playbackIndex,
+            };
+          } else {
+            return {
+              ...globalUpdate,
+              sessions: nextSessions,
+            };
+          }
+        });
+      };
+
+      await loadAgentHistory(workspaceId, convId, customSet);
+    },
+
+    removePendingApproval: (call_id, sessionId) => {
+      const targetSessionId = sessionId || getActiveSessionId();
+      updateSessionState(targetSessionId, (prev) => ({
+        pendingApprovals: prev.pendingApprovals.filter((p) => p.call_id !== call_id),
+      }));
+    },
+
+    addPendingApproval: (approval, sessionId) => {
+      const targetSessionId = sessionId || getActiveSessionId();
+      updateSessionState(targetSessionId, (prev) => ({
+        pendingApprovals: [...prev.pendingApprovals, approval],
+      }));
+    },
+
+    clearHumanTakeover: (sessionId) => {
+      updateSessionState(sessionId || getActiveSessionId(), { humanTakeover: null });
+    },
+
+    clearMessages: (sessionId) => {
+      useUiStore.getState().closeEnvironment();
+      updateSessionState(sessionId || getActiveSessionId(), { messages: [], pendingApprovals: [] });
+    },
+
+    switchSession: (sessionId) => {
+      set((state: any) => {
+        const session = getSessionState(state, sessionId);
+        return {
+          status: session.status,
+          capabilities: session.capabilities,
+          workdir: session.workdir,
+          errorMessage: session.errorMessage,
+          messages: session.messages,
+          pendingApprovals: session.pendingApprovals,
+          humanTakeover: session.humanTakeover,
+          playbackIndex: session.playbackIndex,
+        };
+      });
+    },
+
+    registerMessageSession: (msgId, sessionId) => {
+      set((state: any) => ({
+        msgIdToSessionId: { ...state.msgIdToSessionId, [msgId]: sessionId }
+      }));
+    }
+  };
+});
+

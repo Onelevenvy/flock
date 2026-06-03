@@ -133,7 +133,7 @@ pub async fn debug_node(
         let _ = std::fs::create_dir_all(&debug_dir);
     }
     if debug_dir.exists() {
-        flock_tools::init_workspace_dir(debug_dir.clone());
+        flock_tools::init_workspace_dir(&format!("debug:{}:{}", workflow_id, node_id), debug_dir.clone());
         if let Err(e) = std::env::set_current_dir(&debug_dir) {
             log::warn!("[debug_node] Failed to set current dir to {:?}: {}", debug_dir, e);
         } else {
