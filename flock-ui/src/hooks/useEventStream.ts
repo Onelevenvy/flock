@@ -66,6 +66,7 @@ export function useEventStream() {
             let payload: {
               type: string;
               workflow_id: string;
+              thread_id?: string;
               node_id?: string;
               text?: string;
               error?: string;
@@ -78,6 +79,9 @@ export function useEventStream() {
             }
 
             const msgId = payload.workflow_id;
+            if (payload.thread_id) {
+              useAgentStore.getState().registerMessageSession(msgId, payload.thread_id);
+            }
 
             switch (payload.type) {
               case 'workflow_start':

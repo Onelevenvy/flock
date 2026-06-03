@@ -129,6 +129,7 @@ export function AssistantChatInput() {
     }
 
     try {
+      useAgentStore.getState().registerMessageSession(streamMsgId, activeConversationId || 'default');
       await invoke('send_message', {
         sessionId: activeConversationId || null,
         msgId: streamMsgId,
