@@ -35,6 +35,7 @@ pub fn setup_pet_overlay(app: &mut tauri::App) -> Result<(), Box<dyn std::error:
     .skip_taskbar(true)
     .resizable(false)
     .shadow(false)
+    .visible(false)
     .build()
     {
         Ok(pet_win) => {
