@@ -1,6 +1,6 @@
 use tauri::{AppHandle, Emitter};
 use flock_agent::sinks::OutputSink;
-use flock_core::ipc_interface::events::{Capabilities, ErrorInfo, ProtocolEvent, Usage};
+use flock_core::ipc_interface::events::{ErrorInfo, ProtocolEvent, Usage};
 use flock_core::ipc_interface::writer::ProtocolEmitter;
 
 /// Tauri 实现的 ProtocolEmitter & OutputSink，将事件通过 Tauri Emitter 发送给前端
@@ -11,36 +11,6 @@ pub struct TauriProtocolEmitter {
 impl TauriProtocolEmitter {
     pub fn new(app: AppHandle) -> Self {
         Self { app }
-    }
-
-    fn build_capabilities(
-        compat: &flock_core::config::compat::ProviderCompat,
-        has_mcp: bool,
-        current_mode: &str,
-    ) -> Capabilities {
-        Capabilities {
-            tool_approval: true,
-            thinking: compat.supports_thinking(),
-            effort: compat.supports_effort(),
-            effort_levels: compat.effort_levels().to_vec(),
-            modes: vec!["default".into(), "auto_edit".into(), "yolo".into()],
-            current_mode: current_mode.to_string(),
-            mcp: has_mcp,
-        }
-    }
-
-    pub fn emit_ready(
-        &self,
-        compat: &flock_core::config::compat::ProviderCompat,
-        has_mcp: bool,
-        session_id: Option<String>,
-        current_mode: &str,
-    ) {
-        let _ = self.emit(&ProtocolEvent::Ready {
-            version: "0.1.0".to_string(),
-            session_id,
-            capabilities: Self::build_capabilities(compat, has_mcp, current_mode),
-        });
     }
 }
 

@@ -7,7 +7,6 @@ use crate::SharedDbManager;
 use super::utils::{imported_skills_dir, has_skill_md, copy_dir_all, get_skill_name};
 use sqlx::Row;
 
-const EXTRA_SKILL_DIRS_KEY: &str = "extra_skill_dirs";
 
 /// Serializable skill info for the frontend.
 #[derive(Debug, Clone, Serialize)]
