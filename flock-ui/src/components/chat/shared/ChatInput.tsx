@@ -86,6 +86,7 @@ export function ChatInput({
         >
           <Textarea
             ref={textareaRef}
+            variant="unstyled"
             placeholder={placeholder}
             value={value}
             onChange={(e) => onChange(e.currentTarget.value)}
