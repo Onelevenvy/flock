@@ -1,9 +1,9 @@
 import { useState, useCallback, useEffect } from 'react';
-import { invoke } from '@tauri-apps/api/core';
 import { notifications } from '@mantine/notifications';
 import { useTranslation } from 'react-i18next';
 import { useUiStore } from '@/store/uiStore';
 import { formatError } from '@/utils/error';
+import { fileService } from '@/services/fileService';
 
 export interface FileEntry {
   path: string;
@@ -26,11 +26,7 @@ export function useWorkspaceFiles(workspaceId: string | null) {
     }
     setLoading(true);
     try {
-      const items = await invoke<FileEntry[]>('list_workspace_files', {
-        workspaceId,
-        relativePath: '',
-        recursive: true,
-      });
+      const items = await fileService.listWorkspaceFiles(workspaceId, '', true);
       setFiles(items);
       if (items.length > 0) {
         setFileTreeOpen(true);
@@ -54,11 +50,7 @@ export function useWorkspaceFiles(workspaceId: string | null) {
   const createFile = useCallback(async (relativePath: string) => {
     if (!workspaceId) return;
     try {
-      await invoke('create_workspace_file', {
-        workspaceId,
-        relativePath,
-        content: '',
-      });
+      await fileService.createWorkspaceFile(workspaceId, relativePath, '');
       notifications.show({
         title: t('chat.workspace.createSuccess'),
         message: t('chat.workspace.createSuccessDesc', { type: t('chat.workspace.file'), name: relativePath }),
@@ -78,10 +70,7 @@ export function useWorkspaceFiles(workspaceId: string | null) {
   const createDirectory = useCallback(async (relativePath: string) => {
     if (!workspaceId) return;
     try {
-      await invoke('create_workspace_directory', {
-        workspaceId,
-        relativePath,
-      });
+      await fileService.createWorkspaceDirectory(workspaceId, relativePath);
       notifications.show({
         title: t('chat.workspace.createSuccess'),
         message: t('chat.workspace.createSuccessDesc', { type: t('sidebar.workspace'), name: relativePath }),
@@ -109,11 +98,7 @@ export function useWorkspaceFiles(workspaceId: string | null) {
       const contentArray = Array.from(uint8Array);
 
       try {
-        await invoke('upload_workspace_file', {
-          workspaceId,
-          relativePath: file.name,
-          content: contentArray,
-        });
+        await fileService.uploadWorkspaceFile(workspaceId, file.name, contentArray);
         notifications.show({
           title: t('chat.workspace.uploadSuccess'),
           message: t('chat.workspace.uploadSuccessDesc', { name: file.name }),
@@ -138,10 +123,7 @@ export function useWorkspaceFiles(workspaceId: string | null) {
     const confirmMsg = t('chat.workspace.deleteFileConfirm', { type: typeStr, name });
     if (window.confirm(confirmMsg)) {
       try {
-        await invoke('delete_workspace_file_or_dir', {
-          workspaceId,
-          relativePath,
-        });
+        await fileService.deleteWorkspaceFileOrDir(workspaceId, relativePath);
         notifications.show({
           title: t('chat.workspace.delete') + t('common.success'),
           message: t('chat.workspace.deleteSuccess', { name }),

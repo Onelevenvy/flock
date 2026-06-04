@@ -1,35 +1,9 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { invoke } from '@tauri-apps/api/core';
 import type { CronJob } from '@/pages/Schedule/types';
-
-// ==================== CronJob Queries & Mutations ====================
-
-export interface UpsertCronJobInput {
-  id: string | null;
-  name: string;
-  description: string;
-  enabled: boolean;
-  schedule_kind: string;
-  schedule_value: string;
-  schedule_desc: string;
-  execution_mode: string;
-  prompt: string;
-  workspace_id: string;
-  assistant_id?: string | null;
-  workflow_id?: string | null;
-}
-
+import { cronService, type I18nString, type RawCronJob, type UpsertCronJobInput } from '@/services/cronService';
 import { useTranslation } from 'react-i18next';
 
-export interface I18nString {
-  zh: string;
-  en: string;
-}
-
-type RawCronJob = Omit<CronJob, 'name' | 'description'> & {
-  name: I18nString | string;
-  description: I18nString | string;
-};
+// ==================== CronJob Queries & Mutations ====================
 
 function parseCronMultiLang(fieldVal: I18nString | string | undefined | null, lang: string): string {
   if (!fieldVal) return '';
@@ -57,7 +31,7 @@ export function useCronJobsQuery() {
   return useQuery<CronJob[]>({
     queryKey: ['cron_jobs', currentLang],
     queryFn: async () => {
-      const data = await invoke<RawCronJob[]>('list_cron_jobs');
+      const data = await cronService.listCronJobs();
       return data.map(job => ({
         ...job,
         name: parseCronMultiLang(job.name, currentLang),
@@ -79,7 +53,7 @@ export function useCreateCronJobMutation() {
         name: { zh: input.name, en: input.name },
         description: { zh: input.description, en: input.description },
       };
-      return invoke<CronJob>('create_cron_job', { input: payload });
+      return cronService.createCronJob(payload);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['cron_jobs'] });
@@ -97,7 +71,7 @@ export function useUpdateCronJobMutation() {
         name: { zh: input.name, en: input.name },
         description: { zh: input.description, en: input.description },
       };
-      return invoke<CronJob>('update_cron_job', { id, input: payload });
+      return cronService.updateCronJob(id, payload);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['cron_jobs'] });
@@ -109,7 +83,7 @@ export function useUpdateCronJobMutation() {
 export function useDeleteCronJobMutation() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: (id: string) => invoke('delete_cron_job', { id }),
+    mutationFn: (id: string) => cronService.deleteCronJob(id),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['cron_jobs'] });
     },
@@ -121,7 +95,7 @@ export function useToggleCronJobMutation() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: ({ id, enabled }: { id: string; enabled: boolean }) =>
-      invoke('set_cron_job_enabled', { id, enabled }),
+      cronService.setCronJobEnabled(id, enabled),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['cron_jobs'] });
     },
@@ -132,7 +106,7 @@ export function useToggleCronJobMutation() {
 export function useRunCronJobNowMutation() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: (id: string) => invoke('run_cron_job_now', { id }),
+    mutationFn: (id: string) => cronService.runCronJobNow(id),
     onSuccess: () => {
       // 延迟刷新，让后台启动有一点时间
       setTimeout(() => {
