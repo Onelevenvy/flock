@@ -1,5 +1,7 @@
 {
   "toggleSidebar": "切换侧边栏",
+  "toggleFileTree": "切换文件树",
+  "toggleEnvironment": "切换运行环境",
   "toggleComputer": "显示/隐藏电脑桌面",
   "agentStatus": "Agent: {{status}}",
   "status": {

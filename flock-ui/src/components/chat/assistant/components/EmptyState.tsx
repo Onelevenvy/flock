@@ -61,37 +61,7 @@ export function EmptyState() {
         </Stack>
       ) : (
         <Stack align="center" gap="md">
-          <Box
-            style={{
-              width: 64,
-              height: 64,
-              borderRadius: 16,
-              background: 'var(--flock-accent-soft)',
-              border: '1px solid var(--flock-border-subtle)',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-            }}
-          >
-            <IconMessage size={28} color="rgba(21, 90, 239, 0.6)" />
-          </Box>
-          <Stack align="center" gap={6}>
-            <Text fw={500} size="md" c="var(--flock-text-primary)">
-              {activeWs?.name}
-            </Text>
-            <Text size="sm" c="dimmed" style={{ textAlign: 'center', maxWidth: 280 }}>
-              {t('chat.startNewConv')}
-            </Text>
-          </Stack>
-          <Button
-            variant="light"
-            color="blue"
-            size="sm"
-            leftSection={<IconPlus size={14} />}
-            onClick={handleNewConv}
-          >
-            {t('chat.newConv')}
-          </Button>
+            
         </Stack>
       )}
     </Box>

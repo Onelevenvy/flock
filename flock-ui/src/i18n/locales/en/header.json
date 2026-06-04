@@ -1,5 +1,7 @@
 {
   "toggleSidebar": "Toggle Sidebar",
+  "toggleFileTree": "Toggle File Tree",
+  "toggleEnvironment": "Toggle Environment",
   "toggleComputer": "Show/Hide Computer",
   "agentStatus": "Agent: {{status}}",
   "status": {
