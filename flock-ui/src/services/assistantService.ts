@@ -1,5 +1,5 @@
 import { invoke } from '@tauri-apps/api/core';
-import type { Assistant, UpsertAssistant } from '@/types/assistant';
+import type { Assistant } from '@/types/assistant';
 
 export interface I18nString {
   zh: string;
@@ -16,11 +16,11 @@ export const assistantService = {
     return await invoke<RawAssistant[]>('list_assistants');
   },
 
-  async createAssistant(payload: any): Promise<Assistant> {
+  async createAssistant(payload: unknown): Promise<Assistant> {
     return await invoke<Assistant>('create_assistant', { input: payload });
   },
 
-  async updateAssistant(id: string, payload: any): Promise<Assistant> {
+  async updateAssistant(id: string, payload: unknown): Promise<Assistant> {
     return await invoke<Assistant>('update_assistant', { id, input: payload });
   },
 

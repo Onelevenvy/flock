@@ -31,11 +31,11 @@ export const cronService = {
     return await invoke<RawCronJob[]>('list_cron_jobs');
   },
 
-  async createCronJob(payload: any): Promise<CronJob> {
+  async createCronJob(payload: unknown): Promise<CronJob> {
     return await invoke<CronJob>('create_cron_job', { input: payload });
   },
 
-  async updateCronJob(id: string, payload: any): Promise<CronJob> {
+  async updateCronJob(id: string, payload: unknown): Promise<CronJob> {
     return await invoke<CronJob>('update_cron_job', { id, input: payload });
   },
 

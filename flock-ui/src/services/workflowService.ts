@@ -28,11 +28,11 @@ export const workflowService = {
     return await invoke<RawWorkflowRecord | null>('get_workflow', { id });
   },
 
-  async createWorkflow(payload: any): Promise<WorkflowRecord> {
+  async createWorkflow(payload: unknown): Promise<WorkflowRecord> {
     return await invoke<WorkflowRecord>('create_workflow', { input: payload });
   },
 
-  async updateWorkflow(id: string, payload: any): Promise<WorkflowRecord> {
+  async updateWorkflow(id: string, payload: unknown): Promise<WorkflowRecord> {
     return await invoke<WorkflowRecord>('update_workflow', { id, input: payload });
   },
 
