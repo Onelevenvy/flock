@@ -1,5 +1,6 @@
 import { useCallback, useState } from 'react';
 import { invoke } from '@tauri-apps/api/core';
+import { taskService } from '@/services/taskService';
 import { useTranslation } from 'react-i18next';
 import { notifications } from '@mantine/notifications';
 import { useAgentStore } from '@/store/agentStore';
@@ -62,7 +63,7 @@ export function useStartAgent() {
       // 因为在 MainLayout 里面，当 currentView === 'home' 且 activeConversationId 不为空时，会自动进入 WorkspaceView（对话页面）
       setCurrentView('home');
 
-      await invoke('start_agent', {
+      await taskService.startAgent({
         workdir: activeWorkspace.path,
         sessionId: conversation.id,
         assistantId: assistant.id === '__xiaof__' ? null : assistant.id,

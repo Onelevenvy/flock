@@ -3,6 +3,7 @@ use std::sync::atomic::{AtomicBool, Ordering};
 use std::collections::HashMap;
 use tokio::sync::Mutex;
 use tokio::task::JoinHandle;
+use tauri::State;
 
 pub struct ActiveTask {
     pub join_handle: JoinHandle<()>,
@@ -71,4 +72,13 @@ impl ExecutionManager {
         let mut lock = self.tasks.lock().await;
         lock.remove(task_id);
     }
+}
+
+/// Tauri command to query if a task is running in the unified execution manager.
+#[tauri::command]
+pub async fn is_task_running_cmd(
+    execution_manager: State<'_, Arc<ExecutionManager>>,
+    task_id: String,
+) -> Result<bool, String> {
+    Ok(execution_manager.is_task_running(&task_id).await)
 }

@@ -33,7 +33,6 @@ export interface AgentStore {
   playbackIndex: number;
 
   sessions: Record<string, SessionState>;
-  msgIdToSessionId: Record<string, string>;
 
   setStatus: (status: AgentStatus, sessionId?: string) => void;
   setWorkdir: (dir: string, sessionId?: string) => void;
@@ -48,7 +47,6 @@ export interface AgentStore {
   clearMessages: (sessionId?: string) => void;
   loadHistory: (workspaceId: string, convId: string) => Promise<void>;
   switchSession: (sessionId: string) => void;
-  registerMessageSession: (msgId: string, sessionId: string) => void;
 }
 
 const getActiveSessionId = () => {
@@ -111,7 +109,6 @@ export const useAgentStore = create<AgentStore>((set, get) => {
     playbackIndex: -1,
 
     sessions: {},
-    msgIdToSessionId: {},
 
     setStatus: (status, sessionId) => updateSessionState(sessionId || getActiveSessionId(), { status }),
     setWorkdir: (dir, sessionId) => updateSessionState(sessionId || getActiveSessionId(), { workdir: dir }),
@@ -136,44 +133,10 @@ export const useAgentStore = create<AgentStore>((set, get) => {
     },
 
     handleEvent: (event: ProtocolEvent) => {
-      let eventSessionId: string;
-
-      // 后端现在对所有 assistant 事件都注入了 session_id
-      // 优先使用它，确保并发多 session 时事件路由正确
-      const backendSessionId = (event as any).session_id as string | undefined;
-
-      if (backendSessionId && backendSessionId !== 'default') {
-        // assistant 路径：后端明确给出了 session_id，直接使用
-        eventSessionId = backendSessionId;
-        // 如果携带 msg_id，顺便建立映射（方便后续 workflow 等旁路查找）
-        if ('msg_id' in event && (event as any).msg_id) {
-          const mid = (event as any).msg_id as string;
-          if (!get().msgIdToSessionId[mid]) {
-            set((s: any) => ({
-              msgIdToSessionId: { ...s.msgIdToSessionId, [mid]: eventSessionId }
-            }));
-          }
-        }
-      } else if ('msg_id' in event && (event as any).msg_id) {
-        // workflow 路径：前端提前通过 registerMessageSession 注册了映射
-        const mid = (event as any).msg_id as string;
-        const mapped = get().msgIdToSessionId[mid];
-        if (mapped) {
-          eventSessionId = mapped;
-        } else {
-          // 最后回退：用当前活跃 session（单 session 场景或 workflow start 前）
-          eventSessionId = getActiveSessionId();
-          set((s: any) => ({
-            msgIdToSessionId: { ...s.msgIdToSessionId, [mid]: eventSessionId }
-          }));
-        }
-      } else {
-        eventSessionId = getActiveSessionId();
-      }
+      const eventSessionId = (event as any).session_id || getActiveSessionId();
 
       console.log('[handleEvent] Routing event:', event.type, {
         event,
-        backendSessionId,
         eventSessionId,
         activeConversationId: getActiveSessionId(),
       });
@@ -332,12 +295,6 @@ export const useAgentStore = create<AgentStore>((set, get) => {
           playbackIndex: session.playbackIndex,
         };
       });
-    },
-
-    registerMessageSession: (msgId, sessionId) => {
-      set((state: any) => ({
-        msgIdToSessionId: { ...state.msgIdToSessionId, [msgId]: sessionId }
-      }));
     }
   };
 });

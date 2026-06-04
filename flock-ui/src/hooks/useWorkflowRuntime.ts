@@ -8,6 +8,7 @@
 import { useEffect, useRef, useCallback } from 'react';
 import { listen } from '@tauri-apps/api/event';
 import { invoke } from '@tauri-apps/api/core';
+import { taskService } from '@/services/taskService';
 import { useTranslation } from 'react-i18next';
 import { useWorkflowStore } from '@/store/workflowStore';
 import { useWorkspaceStore } from '@/store/workspaceStore';
@@ -500,13 +501,11 @@ export function useWorkflowRuntime({
     });
 
     try {
-      await invoke('run_workflow', {
+      await taskService.runWorkflow({
         workflowId,
         input,
         threadId: activeTid,
-        thread_id: activeTid,
         useDraft: isDebug,
-        use_draft: isDebug,
       });
     } catch (e) {
       store.setThreadStatus(activeTid, 'error');
@@ -546,13 +545,11 @@ export function useWorkflowRuntime({
     dispatch(activeTid, resumeUserMsg);
 
     try {
-      await invoke('run_workflow', {
+      await taskService.runWorkflow({
         workflowId,
         resumeValue: choiceValue,
         threadId: activeTid,
-        thread_id: activeTid,
         useDraft: isDebug,
-        use_draft: isDebug,
       });
     } catch (e) {
       store.setThreadStatus(activeTid, 'error');
@@ -576,7 +573,7 @@ export function useWorkflowRuntime({
       : threadId;
     try {
       console.log("[useWorkflowRuntime] Invoking stop_workflow with workflowId:", workflowId);
-      await invoke('stop_workflow', { workflowId });
+      await taskService.stopWorkflow(workflowId);
       console.log("[useWorkflowRuntime] stop_workflow command executed successfully on backend.");
       
       // 同时重置 AgentStore 的状态，以防全局状态处于 thinking 或连接中

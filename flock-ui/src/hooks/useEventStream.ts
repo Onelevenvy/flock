@@ -85,25 +85,23 @@ export function useEventStream() {
             }
 
             const msgId = payload.workflow_id;
-            if (payload.thread_id) {
-              useAgentStore.getState().registerMessageSession(msgId, payload.thread_id);
-            }
+            const sessionId = payload.thread_id;
 
             switch (payload.type) {
               case 'workflow_start':
                 setStatus('thinking');
-                handleEvent({ type: 'stream_start', msg_id: msgId });
+                handleEvent({ type: 'stream_start', msg_id: msgId, session_id: sessionId } as any);
                 break;
 
               case 'text_delta':
                 if (payload.text) {
-                  handleEvent({ type: 'text_delta', text: payload.text, msg_id: msgId });
+                  handleEvent({ type: 'text_delta', text: payload.text, msg_id: msgId, session_id: sessionId } as any);
                 }
                 break;
 
               case 'thinking':
                 if (payload.text) {
-                  handleEvent({ type: 'thinking', text: payload.text, msg_id: msgId });
+                  handleEvent({ type: 'thinking', text: payload.text, msg_id: msgId, session_id: sessionId } as any);
                 }
                 break;
 
@@ -112,12 +110,13 @@ export function useEventStream() {
                   type: 'info',
                   msg_id: msgId,
                   message: `▶️ Running node: [${payload.node_id}]`,
-                });
+                  session_id: sessionId,
+                } as any);
                 break;
 
               case 'workflow_done':
                 setStatus('ready');
-                handleEvent({ type: 'stream_end', msg_id: msgId });
+                handleEvent({ type: 'stream_end', msg_id: msgId, session_id: sessionId } as any);
                 {
                   // 用 thread_id（真实 session）保存，不用活跃 session
                   const convId = payload.thread_id || useWorkspaceStore.getState().activeConversationId;
@@ -141,8 +140,9 @@ export function useEventStream() {
                     type: 'text_delta',
                     msg_id: msgId,
                     text: t('chat.aborted', '\n\n*🚫 Dialogue aborted by user*'),
-                  });
-                  handleEvent({ type: 'stream_end', msg_id: msgId });
+                    session_id: sessionId,
+                  } as any);
+                  handleEvent({ type: 'stream_end', msg_id: msgId, session_id: sessionId } as any);
                   {
                     const convId = payload.thread_id || useWorkspaceStore.getState().activeConversationId;
                     if (convId) {
@@ -159,12 +159,13 @@ export function useEventStream() {
                 handleEvent({
                   type: 'error',
                   msg_id: msgId,
+                  session_id: sessionId,
                   error: {
                     code: 'WORKFLOW_ERROR',
                     message: errMsg,
                     retryable: true,
                   },
-                });
+                } as any);
                 break;
 
               case 'workflow_interrupted':
@@ -175,8 +176,9 @@ export function useEventStream() {
                   type: 'human_takeover',
                   call_id: 'workflow_interrupt',
                   msg_id: msgId,
+                  session_id: sessionId,
                   message: typeof interruptData === 'string' ? interruptData : JSON.stringify(interruptData),
-                });
+                } as any);
                 break;
             }
           } catch (e) {
