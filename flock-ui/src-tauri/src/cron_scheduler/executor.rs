@@ -1,5 +1,4 @@
 use std::sync::Arc;
-use std::sync::atomic::Ordering;
 use std::time::Duration;
 use chrono::Local;
 use tauri::{AppHandle, Emitter, Manager};
@@ -67,7 +66,7 @@ pub async fn trigger_job_execution(
     if let Some(ref workflow_id) = job.workflow_id {
         if !workflow_id.trim().is_empty() {
             let db_state = app.state::<SharedDbManager>();
-            let exec_state = app.state::<Arc<crate::commands::WorkflowExecutionState>>();
+            let exec_state = app.state::<Arc<crate::commands::ExecutionManager>>();
             let agent_state_state = app.state::<SharedAgentState>();
 
             // 设置为静默自动审批 YOLO 模式
@@ -105,8 +104,7 @@ pub async fn trigger_job_execution(
 
             for _ in 0..1800 { // 最多执行 15 分钟
                 tokio::time::sleep(Duration::from_secs(1)).await;
-                let executions = exec_state.executions.lock().unwrap();
-                if !executions.contains_key(workflow_id) {
+                if !exec_state.is_task_running(workflow_id).await {
                     run_success = true;
                     break;
                 }
@@ -197,8 +195,10 @@ pub async fn trigger_job_execution(
     let msg_id = format!("msg_{}", uuid_like());
     let prompt_content = job.prompt.clone();
 
+    let exec_mgr = app.state::<Arc<crate::commands::ExecutionManager>>().inner().clone();
     if let Err(e) = crate::commands::assistant::send_message_to_engine(
         agent_state.clone(),
+        exec_mgr,
         Some(conv_id.clone()),
         msg_id,
         prompt_content,
@@ -221,18 +221,12 @@ pub async fn trigger_job_execution(
     // 7. 轮询等待 Agent 运行结束
     tokio::time::sleep(Duration::from_secs(1)).await;
     let mut run_success = false;
-    let mut run_error_msg = None;
 
+    let exec_mgr = app.state::<Arc<crate::commands::ExecutionManager>>().inner().clone();
     for _ in 0..1800 { // 最多执行 15 分钟
         tokio::time::sleep(Duration::from_secs(1)).await;
-        let s = agent_state.lock().await;
-        if let Some(handle) = s.sessions.get(&conv_id) {
-            if !handle.is_running.load(Ordering::SeqCst) {
-                run_success = true;
-                break;
-            }
-        } else {
-            run_error_msg = Some("Session evicted during execution");
+        if !exec_mgr.is_task_running(&conv_id).await {
+            run_success = true;
             break;
         }
     }
@@ -245,10 +239,10 @@ pub async fn trigger_job_execution(
         let _ = db.set_cron_job_enabled(job_id, false).await;
     }
 
-    if run_success && run_error_msg.is_none() {
+    if run_success {
         db.update_cron_job_status(job_id, "ok", None, Some(now_ms), next_run, Some(&conv_id)).await?;
     } else {
-        let err_desc = run_error_msg.unwrap_or("Job execution timeout (15 mins limit)");
+        let err_desc = "Job execution timeout (15 mins limit)";
         db.update_cron_job_status(job_id, "error", Some(err_desc), Some(now_ms), next_run, Some(&conv_id)).await?;
     }
 

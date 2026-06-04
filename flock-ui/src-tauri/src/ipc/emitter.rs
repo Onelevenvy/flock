@@ -27,7 +27,7 @@ impl ProtocolEmitter for TauriProtocolEmitter {
             .try_with(|id| id.clone())
             .unwrap_or_else(|_| self.session_id.clone());
 
-        log::info!("[TauriProtocolEmitter::emit] Emitting event: {:?}, session_id: {}", event, session_id);
+        // log::info!("[TauriProtocolEmitter::emit] Emitting event: {:?}, session_id: {}", event, session_id);
 
         let mut value = serde_json::to_value(event).map_err(|e| {
             std::io::Error::new(std::io::ErrorKind::Other, format!("Failed to serialize event: {e}"))

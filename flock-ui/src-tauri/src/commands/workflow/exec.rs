@@ -2,7 +2,6 @@ use std::sync::Arc;
 use std::sync::Mutex;
 use std::collections::HashMap;
 use sqlx::Row;
-use tokio::task::JoinHandle;
 use tauri::{AppHandle, State, Emitter};
 use serde_json::Value as JsonValue;
 use tokio_stream::StreamExt;
@@ -19,18 +18,8 @@ use flock_core::model_factory::{CachedModelFactory, ModelFactory};
 use flock_tools::all_tools;
 use crate::SharedDbManager;
 use crate::commands::SharedAgentState;
-
-pub struct WorkflowExecutionState {
-    pub executions: Mutex<HashMap<String, (JoinHandle<()>, Arc<std::sync::atomic::AtomicBool>)>>,
-}
-
-impl WorkflowExecutionState {
-    pub fn new() -> Self {
-        Self {
-            executions: Mutex::new(HashMap::new()),
-        }
-    }
-}
+use crate::commands::ExecutionManager;
+use crate::commands::common::resolve_workspace_env;
 
 pub(crate) struct TauriWorkflowSink {
     pub(crate) app: AppHandle,
@@ -229,7 +218,7 @@ impl WorkflowSink for TauriWorkflowSink {
 pub async fn run_workflow(
     app: AppHandle,
     db: State<'_, SharedDbManager>,
-    execution_state: State<'_, Arc<WorkflowExecutionState>>,
+    execution_manager: State<'_, Arc<ExecutionManager>>,
     agent_state: State<'_, SharedAgentState>,
     workflow_id: String,
     input: Option<String>,
@@ -244,18 +233,10 @@ pub async fn run_workflow(
 
     let cancel_flag = Arc::new(std::sync::atomic::AtomicBool::new(false));
     let cancel_flag_clone = cancel_flag.clone();
+    let is_running = Arc::new(std::sync::atomic::AtomicBool::new(true));
 
     // 2. 如果之前已经在运行，先取消之前的实例
-    {
-        let mut executions = execution_state.executions.lock().unwrap();
-        if let Some((handle, old_cancel_flag)) = executions.remove(&workflow_id) {
-            old_cancel_flag.store(true, std::sync::atomic::Ordering::SeqCst);
-            handle.abort();
-        }
-        // 立即放入一个 dummy 的 join_handle 并关联当前真正的 cancel_flag，解决并发快速点击/调用导致的竞争问题
-        let dummy_handle = tokio::spawn(async {});
-        executions.insert(workflow_id.clone(), (dummy_handle, cancel_flag_clone.clone()));
-    }
+    execution_manager.cancel_task(&workflow_id).await;
 
     // 3. 构建 model provider 和配置
     let cli_args = flock_core::config::settings::CliArgs {
@@ -321,7 +302,7 @@ pub async fn run_workflow(
         if config.base_url.is_empty() { None } else { Some(config.base_url.clone()) },
     ));
 
-    // 5. 初始化 Checkpointer（无论是调试还是普通，都统一使用 SqliteSaver 以持久化和跨调用周期保存状态，实现连续多轮提问和完美的打断恢复）
+    // 5. 初始化 Checkpointer
     let checkpointer: Arc<dyn BaseCheckpointSaver> = {
         let db_path_str = config.db_path.to_string_lossy().to_string();
         let conn_str = format!("sqlite:{}", db_path_str);
@@ -337,14 +318,12 @@ pub async fn run_workflow(
         }
     };
 
-    // 自动为工作流切换至当前激活工作空间的 working directory，解决不能选择工作空间的问题
     let thread_id_val = thread_id.unwrap_or_else(|| workflow_id.clone());
 
     if cancel_flag.load(std::sync::atomic::Ordering::SeqCst) { return Ok(()); }
 
-    // 重点：如果是全新启动工作流运行（不是 resume 打断），彻底清空 sqlite checkpointer 里旧状态 records，防止 aborted 时脏状态残留导致数据串了和参数叠加
+    // 重点：如果是全新启动工作流运行（不是 resume 打断），彻底清空 sqlite checkpointer 里旧状态 records
     if resume_value.is_none() {
-        // log::info!("[workflow] Fresh run detected. Purging old checkpoints for thread: {}", thread_id_val);
         let _ = sqlx::query("DELETE FROM checkpoints WHERE thread_id = ?1")
             .bind(&thread_id_val)
             .execute(db.pool())
@@ -355,116 +334,12 @@ pub async fn run_workflow(
             .await;
     }
 
-    let mut final_workdir: Option<std::path::PathBuf> = None;
     if cancel_flag.load(std::sync::atomic::Ordering::SeqCst) { return Ok(()); }
-    let row = sqlx::query("SELECT workspace_id, cwd, summary FROM session_metadata WHERE thread_id = ?1")
-        .bind(&thread_id_val)
-        .fetch_optional(db.pool())
+
+    // 使用公共提取出的 resolve_workspace_env
+    let workdir = resolve_workspace_env(&*db, &thread_id_val, input.as_deref(), Some(&app))
         .await
         .map_err(|e| e.to_string())?;
-
-    if let Some(r) = row {
-        let workspace_id: String = r.get("workspace_id");
-        let cwd: String = r.get("cwd");
-        let existing_summary: String = r.get("summary");
-        
-        let is_placeholder = |s: &str| {
-            let s = s.trim();
-            if s.starts_with("对话") {
-                let rest = s.strip_prefix("对话").unwrap().trim();
-                if !rest.is_empty() && rest.chars().all(|c| c.is_ascii_digit()) {
-                    return true;
-                }
-            }
-            if s.starts_with("Session") {
-                let rest = s.strip_prefix("Session").unwrap().trim();
-                if !rest.is_empty() && (rest.chars().all(|c| c.is_ascii_digit() || c == '_' || c == '-') || rest.starts_with("conv_")) {
-                    return true;
-                }
-            }
-            false
-        };
-
-        // 实时更新：如果当前是占位标题，且此次有首次输入的 input (即首句提问)，立刻将标题修改并通知前端，实现侧边栏实时改变
-        if let Some(ref input_str) = input {
-            if !input_str.is_empty() && (existing_summary.is_empty() || is_placeholder(&existing_summary)) {
-                let mut title_to_use = input_str.clone();
-                
-                // 智能解包工作流首句提问 JSON 结构，提取诸如 {"query":"旅游"} 中的 "旅游" 纯文本
-                if let Ok(parsed_json) = serde_json::from_str::<serde_json::Value>(&title_to_use) {
-                    if let Some(obj) = parsed_json.as_object() {
-                        let found_val = obj.get("query")
-                            .or_else(|| obj.get("q"))
-                            .or_else(|| obj.get("input"))
-                            .and_then(|v| v.as_str())
-                            .map(|s| s.to_string());
-                        
-                        if let Some(val) = found_val {
-                            title_to_use = val;
-                        } else if let Some((_, first_val)) = obj.iter().next() {
-                            if let Some(s) = first_val.as_str() {
-                                title_to_use = s.to_string();
-                            } else {
-                                title_to_use = first_val.to_string();
-                            }
-                        }
-                    }
-                }
-
-                if title_to_use.chars().count() > 80 {
-                    let truncated: String = title_to_use.chars().take(77).collect();
-                    title_to_use = format!("{}...", truncated);
-                }
-                
-                if cancel_flag.load(std::sync::atomic::Ordering::SeqCst) { return Ok(()); }
-                let _ = sqlx::query("UPDATE session_metadata SET summary = ?1 WHERE thread_id = ?2")
-                    .bind(&title_to_use)
-                    .bind(&thread_id_val)
-                    .execute(db.pool())
-                    .await;
-
-                let title_updated_event = serde_json::json!({
-                    "type": "title_updated",
-                    "thread_id": thread_id_val.clone(),
-                    "title": title_to_use,
-                });
-                let _ = app.emit("agent-event", serde_json::to_string(&title_updated_event).unwrap_or_default()).ok();
-            }
-        }
-
-        let workdir = if !cwd.is_empty() {
-            std::path::PathBuf::from(cwd)
-        } else if !workspace_id.is_empty() {
-            flock_core::config::db_path::workspace_root().join(workspace_id)
-        } else {
-            std::path::PathBuf::new()
-        };
-        if workdir.exists() && workdir.as_os_str().len() > 0 {
-            final_workdir = Some(workdir);
-        }
-    }
-
-    // 调试模式或无会话绑定时的绝妙处理：退回到专属的 debug 工作区，确保不污染其他项目
-    let workdir = if let Some(wd) = final_workdir {
-        wd
-    } else {
-        let debug_dir = flock_core::config::db_path::workspace_root().join("debug");
-        if !debug_dir.exists() {
-            let _ = std::fs::create_dir_all(&debug_dir);
-        }
-        debug_dir
-    };
-
-    if workdir.exists() {
-        // 同步助手处理：初始化 tools 的全局工作空间路径，让内置工具正确寻址和识别
-        flock_tools::init_workspace_dir(&thread_id_val, workdir.clone());
-
-        if let Err(e) = std::env::set_current_dir(&workdir) {
-            log::warn!("Failed to set current dir to {:?}: {}", workdir, e);
-        } else {
-            log::info!("Successfully set current dir and initialized debug/session workspace to {:?}", workdir);
-        }
-    }
 
     // 6. 实例化 Sink & Context
     let accumulated_text = Arc::new(Mutex::new(String::new()));
@@ -519,7 +394,6 @@ pub async fn run_workflow(
     let tools = Arc::new(tools_reg);
 
     let use_draft_val = use_draft.unwrap_or(false);
-    // 优先从已发布的 published_config 中获取，如果为空（例如第一次创建还未发布过）或者明确要求使用草稿，则 fallback 到草稿 config
     let config_to_run = if use_draft_val {
         &wf_record.config
     } else if wf_record.published_config.get("nodes").and_then(|n| n.as_array()).map(|a| !a.is_empty()).unwrap_or(false) {
@@ -536,7 +410,6 @@ pub async fn run_workflow(
         .unwrap_or_default();
 
     let approval_manager = agent_state.lock().await.approval_manager.clone();
-
 
     let ctx = Arc::new(WorkflowNodeContext {
         provider: provider.clone(),
@@ -627,7 +500,7 @@ pub async fn run_workflow(
     // 9. 启动后台 Tokio 任务
     let app_clone = app.clone();
     let workflow_id_clone = workflow_id.clone();
-    let execution_state_clone = execution_state.inner().clone();
+    let execution_manager_clone = execution_manager.inner().clone();
     let db_for_task = db.inner().clone();
     let thread_id_val_clone = thread_id_val.clone();
 
@@ -658,7 +531,6 @@ pub async fn run_workflow(
 
         let mut astream = graph.astream(&initial_input, &config, vec![StreamMode::Updates]);
         while let Some(part) = astream.next().await {
-            // log::info!("[workflow] step update: {:?}", part);
             let _ = app_clone.emit("workflow-event", serde_json::json!({
                 "type": "workflow_progress",
                 "workflow_id": workflow_id_clone,
@@ -880,18 +752,14 @@ pub async fn run_workflow(
             });
         }
 
-        let mut executions = execution_state_clone.executions.lock().unwrap();
-        executions.remove(&workflow_id_clone);
+        execution_manager_clone.unregister_task(&workflow_id_clone).await;
     });
 
     // 10. 存储 JoinHandle
-    {
-        let mut executions = execution_state.executions.lock().unwrap();
-        if cancel_flag.load(std::sync::atomic::Ordering::SeqCst) {
-            join_handle.abort();
-        } else {
-            executions.insert(workflow_id, (join_handle, cancel_flag_clone));
-        }
+    if cancel_flag.load(std::sync::atomic::Ordering::SeqCst) {
+        join_handle.abort();
+    } else {
+        execution_manager.register_task(workflow_id, join_handle, cancel_flag_clone, is_running).await;
     }
 
     Ok(())
@@ -900,17 +768,9 @@ pub async fn run_workflow(
 /// 停止工作流
 #[tauri::command]
 pub async fn stop_workflow(
-    execution_state: State<'_, Arc<WorkflowExecutionState>>,
+    execution_manager: State<'_, Arc<ExecutionManager>>,
     workflow_id: String,
 ) -> Result<(), String> {
-    // log::info!("[workflow] stop_workflow command received for workflow_id: {}", workflow_id);
-    let mut executions = execution_state.executions.lock().unwrap();
-    if let Some((handle, cancel_flag)) = executions.remove(&workflow_id) {
-        // log::info!("[workflow] Found active execution handle for {}, aborting it...", workflow_id);
-        cancel_flag.store(true, std::sync::atomic::Ordering::SeqCst);
-        handle.abort();
-    } else {
-        log::warn!("[workflow] No active execution handle found for workflow_id: {} in executions map! Current keys: {:?}", workflow_id, executions.keys().collect::<Vec<_>>());
-    }
+    execution_manager.cancel_task(&workflow_id).await;
     Ok(())
 }
