@@ -1,8 +1,10 @@
 # Flock
 
-English | [简体中文](docs/README_zh.md)
+A desktop multi-agent harness built with Rust, Tauri, and React, powered by langgraph-rust.
 
-A multi AI agent desktop application built with Rust and Tauri.
+**Visual Workflow | Multi-Agent Harness | Built-in Agent | Safe Sandbox & VNC | Cross-Platform | Any API Key**
+
+English | [简体中文](docs/README_zh.md)
 
 ![Flock Main Screenshot](./docs/resources/main.png)
 ![Flock Chat Screenshot](./docs/resources/chat.png)
@@ -10,134 +12,135 @@ A multi AI agent desktop application built with Rust and Tauri.
 ![Flock Assistants Screenshot](./docs/resources/assistants.png)
 ![Flock Workflow Screenshot](./docs/resources/workflow.png)
 
-
 > **Note**: This project is built on top of [langgraph-rust](https://github.com/Onelevenvy/langgraph-rust), which is my personal Rust implementation of the LangGraph framework.
-
+>
 > **Refactoring History**: Flock has been completely rewritten from the ground up. The original version was a Python-based application using LangGraph, LangChain, and FastAPI as the backend. The current version is a native desktop application with a Rust backend, powered by Tauri for the desktop shell. This rewrite brings significant improvements in performance, reliability, and user experience.
-
+> 
 > **Legacy Code**: The original Python codebase is preserved in the `legacy/python` branch for reference.
 
-## Overview
+---
 
-Flock is a desktop application that provides an interactive interface for AI agents with tool orchestration, sandbox execution, visual workflow, and browser/computer-use capabilities. It supports multiple LLM providers and features a rich set of built-in tools, skills system, and memory management.
+## 📋 Quick Navigation
 
-## Features
+[Multi-Agent Harness & Workflow](#-multi-agent-harness--workflow) · [Core Features](#-core-features) · [Architecture](#-architecture) · [Quick Start](#-quick-start)
 
-- **Multi-Provider Support**: OpenAI-compatible, Anthropic, AWS Bedrock, Google Vertex
-- **Tool Orchestration**: Built-in tools (Read, Write, Edit, Bash, Grep, Glob) + MCP server integration
-- **Sandbox Execution**: Cloud-based sandbox containers for isolated code execution, with VNC desktop streaming and human takeover
-- **Visual Workflow**: ReactFlow-based workflow builder with 10 node types, conditional routing, and streaming execution with human-in-the-loop
-- **Browser Tools**: Playwright-based web automation inside the sandbox — navigate, click, fill forms, with captcha detection and human takeover
-- **Computer Use**: xdotool-based GUI automation — mouse, keyboard, screenshots, with full visual feedback loop
-- **Skills System**: Reusable prompt templates with YAML frontmatter, hot-reload support
-- **Memory System**: Persistent cross-session memory (user, feedback, project, reference types)
-- **Session Management**: Conversation history with SQLite-backed persistence
-- **Desktop UI**: Modern interface built with React, TypeScript, and Mantine UI
-- **Internationalization**: Multi-language support (Chinese/English)
+---
 
-## Architecture
+## 🤝 Multi-Agent Harness & Workflow — Visual Orchestration for AI Agents
 
-### Rust Backend
+Flock is more than just a chat client. It's a comprehensive **multi-agent harness** combined with a powerful **Visual Workflow Editor**. It orchestrates and runs AI agents locally or inside sandbox containers to read/write files, execute bash commands, browse the web, and run complex pipelines. You see everything the agent does, and you're always in control.
 
-| Crate | Purpose |
-|-------|---------|
-| `flock-core` | Core types, configuration, database, IPC interface, cryptography |
-| `flock-agent` | Agent engine, session management, tool execution, memory, graph orchestration, workflow engine |
-| `flock-tools` | Tool registry, built-in tools, MCP integration, sandbox tools  |
-| `flock-skills` | Skill discovery, loading, frontmatter parsing, hooks, permissions |
-| `flock-ui/src-tauri` | Tauri desktop app backend |
+| Capability / Feature | Traditional Chat Clients | Flock (Multi-Agent Harness) |
+| :--- | :---: | :---: |
+| **Visual Workflow Builder** | No | **Yes** — ReactFlow editor with 10+ node types & streaming execution |
+| **AI Operating on Files** | Limited or No | **Yes** — Built-in agent with full filesystem, grep, and glob access |
+| **Multi-Step Autonomy** | No | **Yes** — Autonomous LangGraph-rust execution loop with approval prompts |
+| **Scheduled Task Automation** | No | **Yes** — Native Cron scheduler for 24/7 unattended workflows |
+| **Multi-Agent Collaboration** | No | **Yes** — Auto-detects & orchestrates multiple agents in team networks |
+| **Open Source & Extensible** | Rarely | **Yes** — Free, built with Rust & Tauri, fully extensible |
 
-### Frontend Stack
+---
 
-- React 18 + TypeScript
-- Mantine UI v8
-- Zustand (state management)
-- React Query (server state)
-- react-markdown + react-syntax-highlighter
-- i18next (internationalization)
+## 🌟 Core Features
 
-## Getting Started
+### 🕸️ Visual Workflow Editor (ReactFlow Engine)
+* **Drag-and-Drop Canvas**: Design complex pipelines visually by connecting custom agent and logic nodes.
+* **10 Node Types Shipped**:
+  * `start` & `answer`: Define workflow inputs and final delivery parameters.
+  * `llm` & `agent`: Pure inference nodes and tool-enabled LangGraph agents.
+  * `classifier` & `ifelse`: Semantic routing routers and conditional branch checkers.
+  * `code`: Custom JS/Python code runners to execute arbitrary transformations.
+  * `human`: Interactive interrupts asking for manual feedback or input.
+  * `plugin` & `parameter_extractor`: Expose custom tools/plugins and extract structured data.
+* **Version Control & Execution History**: Easily manage multiple versions of your visual workflows, track historical execution paths, and debug states incrementally.
+
+### 👥 Human-in-the-Loop (HITL) & Safe Interaction
+* **Interactive Tool Approvals**: Crucial actions (like writing files, running bash scripts, or modifying configurations) require explicit user approval before execution. You can inspect the plan, approve, or deny on the fly.
+* **VNC Screen Takeover**: Directly interact with sandboxed browser and OS interfaces. When the agent gets stuck on captchas, you can take over mouse/keyboard controls seamlessly.
+* **Workflow Breakpoints (`human` node)**: Place manual intervention checkpoints in the visual flow to request human decisions, form submissions, or variable modifications before proceeding.
+
+### 🌐 Browser Automation & Computer Use
+* **Playwright Browser**: Scrape web data, click links, and bypass forms using an isolated browser execution engine.
+* **Computer Use**: Command virtual desktops using OS-level commands (`xdotool`). The agent monitors framebuffer screen feeds and handles mouse/keyboard events.
+
+### 🤖 Built-in Agent — Zero Configuration
+* **Out of the box**: No external CLI tools to download or configure. Paste any API Key (OpenAI, Gemini, Anthropic Claude, AWS Bedrock, or Ollama/local) and start immediately.
+* **Skill Extensions**: Extensible via YAML-frontmatter prompts that support Hot-Reloading on file changes.
+
+### 🔒 Safe Sandbox Environment
+* **Isolated Environment**: Executes risky shell scripts and code execution safely inside isolated environment containers.
+* **VNC Streaming**: Stream sandbox desktops directly into the UI via WebSockets for full visual inspection of the running environment.
+
+### 🔌 MCP & Scheduled Tasks
+* **MCP (Model Context Protocol)**: Connect to third-party MCP servers once; all assistants and workflows automatically inherit the newly exposed schemas and tools.
+* **Scheduled Cron Tasks**: Set it once, the agent executes scheduled tasks on autopilot. Supports standard cron syntax for automated system maintenance, daily file aggregation, or report generation.
+
+---
+
+## 🏗️ Architecture
+
+```mermaid
+graph TD
+    UI[Tauri Desktop UI - React + Mantine] <-->|IPC / Tauri Command| TauriHost[src-tauri Core]
+    TauriHost <-->|IPC Interface / JSON Protocol| AgentEngine[flock-agent - LangGraph Core]
+    AgentEngine -->|Graph State Machine| StateGraph[langgraph-rust]
+    AgentEngine <-->|SQLite Checkpointer| DB[(SQLite Database)]
+    AgentEngine <-->|Discovery / Frontmatter| Skills[flock-skills]
+    
+    AgentEngine <-->|Tool Execution| Registry[flock-tools - Tool Registry]
+    Registry <-->|Local Host| Builtin[Built-in Tools: Bash, Files, Grep]
+    Registry <-->|Model Context Protocol| MCP[MCP Server Registry]
+    Registry <-->|Isolated Container| Sandbox[Sandbox Client]
+    
+    Sandbox <-->|X11 / VNC Server| VNC[x11vnc + websockify] <-->|Websocket Stream| UI
+    Sandbox <-->|Playwright / xdotool| Browser[Browser & OS Controls]
+```
+
+### Module Breakdown
+
+| Crate | Directory | Purpose |
+|-------|-----------|---------|
+| `flock-core` | `crates/flock-core` | Shared configuration schemas, SQLite DB models, encryption utilities, and IPC channels. |
+| `flock-agent` | `crates/flock-agent` | The core agent executor loop, LangGraph state engine, checkpointer, and memory system. |
+| `flock-workflow`| `crates/flock-workflow` | Workflow node logic and JSON-to-LangGraph AST compiler. |
+| `flock-tools` | `crates/flock-tools` | Built-in and sandboxed tools, VNC web socket proxies, and sandbox managers. |
+| `flock-skills` | `crates/flock-skills` | System prompts loader supporting variable injection and watcher-based hot-reload. |
+| `flock-ui` | `flock-ui` | React application featuring Zustand, i18next, and ReactFlow editor. |
+
+---
+
+## 🚀 Quick Start
 
 ### Prerequisites
+* **Rust**: `1.77.2` or later
+* **Node.js**: `18.x` or later
 
-- Rust 1.77.2+
-- Node.js 18+
-- npm or yarn
+### Install & Run
 
-#### Dependencies
+1. **Clone the Repository**
+   ```bash
+   git clone https://github.com/Onelevenvy/flock.git
+   cd flock
+   ```
 
-This project relies on [langgraph-rust](https://github.com/Onelevenvy/langgraph-rust), which is automatically resolved as a Git dependency in `Cargo.toml`.
+2. **Install Frontend Dependencies**
+   ```bash
+   cd flock-ui
+   npm install
+   ```
 
-### Build & Run
+3. **Start Development App**
+   ```bash
+   npm run tauri dev
+   ```
 
-```bash
-# Clone the repository
-git clone https://github.com/Onelevenvy/flock.git
-cd flock
+4. **Run Backend Tests**
+   ```bash
+   cargo test --workspace
+   ```
 
-# Install frontend dependencies
-cd flock-ui
-npm install
-cd ..
+---
 
-# Build and run the desktop app
-cd flock-ui
-npm run tauri dev
-```
+## 📄 License
 
-### Development
-
-```bash
-# Build Rust backend
-cargo build
-
-# Run tests
-cargo test
-
-# Lint
-cargo clippy --workspace
-
-# Frontend development
-cd flock-ui
-npm run dev
-npm run lint
-```
-
-## LangGraph Integration
-
-This project leverages [langgraph-rust](https://github.com/Onelevenvy/langgraph-rust) for agent graph orchestration. The LangGraph framework provides:
-
-- State management for agent conversations
-- Tool execution flow control
-- Checkpointing for conversation persistence
-- Pre-built agent patterns
-
-While langgraph-rust is not the official LangGraph Rust implementation, it provides the core features needed for building AI agents with tool orchestration capabilities.
-
-## Roadmap
-
-- [x] **Sandbox**: Cloud-based isolated execution environment (Daytona) with VNC desktop and human takeover
-- [ ] **Workflow**: Visual workflow builder for complex agent orchestration
-- [x] **Browser Tools**: Playwright-based web automation with captcha detection and human takeover
-- [x] **Computer Use**: xdotool-based GUI automation with visual feedback loop
-- [x] **Scheduled Tasks**: Automated task execution with cron-like scheduling
-- [ ] **Multi-Agent**: Support for multiple agents collaborating on tasks
-- [ ] **Extensions**: Integration with Claude Code, OpenCode, OpenClaw, Hermes, and other third-party agents
-
-## License
-
-This project is licensed under the Apache License, Version 2.0 - see the [LICENSE](LICENSE) file for details.
-
-## Acknowledgments
-
-- [LangGraph](https://github.com/langchain-ai/langgraph) - The original Python framework that inspired langgraph-rust
-- [Tauri](https://tauri.app/) - Desktop application framework
-- [Mantine](https://mantine.dev/) - React UI component library
-
-## Contributing
-
-Contributions are welcome! Please feel free to submit a Pull Request.
-
-## Contact
-
-For questions or feedback, please open an issue on GitHub.
+Licensed under the Apache License, Version 2.0. See [LICENSE](LICENSE) for details.
