@@ -1,7 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { invoke } from '@tauri-apps/api/core';
 import type { WorkspaceInfo, ConversationInfo } from '@/types/workspace';
 import { useWorkspaceStore } from '@/store/workspaceStore';
+import { workspaceService } from '@/services/workspaceService';
 
 // ==================== Workspace Queries & Mutations ====================
 
@@ -9,7 +9,7 @@ import { useWorkspaceStore } from '@/store/workspaceStore';
 export function useWorkspacesQuery() {
   return useQuery<WorkspaceInfo[]>({
     queryKey: ['workspaces'],
-    queryFn: () => invoke<WorkspaceInfo[]>('list_workspaces'),
+    queryFn: () => workspaceService.listWorkspaces(),
     staleTime: 10 * 60 * 1000, // 工作空间变化不频繁，可以缓存 10 分钟
   });
 }
@@ -18,7 +18,7 @@ export function useWorkspacesQuery() {
 export function useCreateWorkspaceMutation() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: (name: string) => invoke<WorkspaceInfo>('create_workspace', { name }),
+    mutationFn: (name: string) => workspaceService.createWorkspace(name),
     onSuccess: (newWs) => {
       // 失效工作空间列表，自动重新拉取
       queryClient.invalidateQueries({ queryKey: ['workspaces'] });
@@ -32,7 +32,7 @@ export function useCreateWorkspaceMutation() {
 export function useDeleteWorkspaceMutation() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: (id: string) => invoke('delete_workspace', { id }),
+    mutationFn: (id: string) => workspaceService.deleteWorkspace(id),
     onSuccess: (_, deletedId) => {
       queryClient.invalidateQueries({ queryKey: ['workspaces'] });
       
@@ -51,7 +51,10 @@ export function useDeleteWorkspaceMutation() {
 export function useConversationsQuery(workspaceId: string | null) {
   return useQuery<ConversationInfo[]>({
     queryKey: ['conversations', workspaceId],
-    queryFn: () => invoke<ConversationInfo[]>('list_conversations', { workspaceId }),
+    queryFn: () => {
+      if (!workspaceId) return [];
+      return workspaceService.listConversations(workspaceId);
+    },
     enabled: !!workspaceId, // 只有在有激活工作区时才发起请求
     staleTime: 2 * 60 * 1000, // 会话列表可缓存 2 分钟
   });
@@ -62,7 +65,7 @@ export function useCreateConversationMutation() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: ({ workspaceId, title = '', assistantId }: { workspaceId: string; title?: string; assistantId?: string | null }) =>
-      invoke<ConversationInfo>('create_conversation', { workspaceId, title, assistantId }),
+      workspaceService.createConversation(workspaceId, title, assistantId),
     onSuccess: (newConv, variables) => {
       // 刷新该工作区下的会话缓存
       queryClient.invalidateQueries({ queryKey: ['conversations', variables.workspaceId] });
@@ -80,7 +83,7 @@ export function useDeleteConversationMutation() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: ({ workspaceId, convId }: { workspaceId: string; convId: string }) =>
-      invoke('delete_conversation', { workspaceId, convId }),
+      workspaceService.deleteConversation(workspaceId, convId),
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries({ queryKey: ['conversations', variables.workspaceId] });
       
@@ -98,7 +101,7 @@ export function useUpdateConversationTitleMutation() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: ({ workspaceId, convId, title }: { workspaceId: string; convId: string; title: string }) =>
-      invoke('update_conversation_title', { workspaceId, convId, title }),
+      workspaceService.updateConversationTitle(workspaceId, convId, title),
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries({ queryKey: ['conversations', variables.workspaceId] });
     },

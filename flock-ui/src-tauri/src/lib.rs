@@ -65,11 +65,12 @@ pub fn run() {
             Ok(())
         })
         .manage(agent_state)
-        .manage(Arc::new(commands::WorkflowExecutionState::new()))
+        .manage(Arc::new(commands::ExecutionManager::new()))
         .invoke_handler(tauri::generate_handler![
             // Agent 控制
             commands::start_agent,
             commands::stop_agent,
+            commands::is_task_running_cmd,
             commands::send_message,
             commands::approve_tool,
             commands::deny_tool,

@@ -1,4 +1,5 @@
 import { invoke } from '@tauri-apps/api/core';
+import { taskService } from '@/services/taskService';
 import { useAgentStore } from '@/store/agentStore';
 import { useWorkspaceStore } from '@/store/workspaceStore';
 import type { ConversationInfo, WorkspaceInfo } from '@/types/workspace';
@@ -40,7 +41,7 @@ export async function reconnectCurrentAgent(workspaces: WorkspaceInfo[]) {
   agentStore.setError(null);
 
   try {
-    await invoke('start_agent', {
+    await taskService.startAgent({
       workdir: workspace.path,
       sessionId,
       assistantId: assistantId === '__xiaof__' ? null : assistantId,

@@ -457,10 +457,14 @@ function handleConfigChanged(event: Extract<ProtocolEvent, { type: 'config_chang
   set({ capabilities: event.capabilities });
 }
 
+let titleUpdatedTimeout: NodeJS.Timeout | null = null;
 function handleTitleUpdated() {
   const activeWorkspaceId = useWorkspaceStore.getState().activeWorkspaceId;
   if (activeWorkspaceId) {
-    queryClient.invalidateQueries({ queryKey: ['conversations', activeWorkspaceId] });
+    if (titleUpdatedTimeout) clearTimeout(titleUpdatedTimeout);
+    titleUpdatedTimeout = setTimeout(() => {
+      queryClient.invalidateQueries({ queryKey: ['conversations', activeWorkspaceId] });
+    }, 300);
   }
 }
 

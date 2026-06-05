@@ -6,6 +6,7 @@ import {
   Box,
 } from '@mantine/core';
 import { invoke } from '@tauri-apps/api/core';
+import { taskService } from '@/services/taskService';
 import { useTranslation } from 'react-i18next';
 import { useAgentStore } from '@/store/agentStore';
 import { useWorkspaceStore } from '@/store/workspaceStore';
@@ -112,11 +113,12 @@ export function AssistantChatInput() {
 
     const assistants = useWorkspaceStore.getState().conversationAssistants;
     const activeAsst = activeConversationId ? assistants[activeConversationId] : null;
+
     if (activeAsst && activeAsst.startsWith('workflow:')) {
       const workflowId = activeAsst.replace('workflow:', '');
       setStatus('thinking');
       try {
-        await invoke('run_workflow', {
+        await taskService.runWorkflow({
           workflowId,
           input: content,
           threadId: activeConversationId,
@@ -129,7 +131,6 @@ export function AssistantChatInput() {
     }
 
     try {
-      useAgentStore.getState().registerMessageSession(streamMsgId, activeConversationId || 'default');
       await invoke('send_message', {
         sessionId: activeConversationId || null,
         msgId: streamMsgId,
@@ -152,7 +153,7 @@ export function AssistantChatInput() {
     if (activeAsst && activeAsst.startsWith('workflow:')) {
       const workflowId = activeAsst.replace('workflow:', '');
       try {
-        await invoke('stop_workflow', { workflowId });
+        await taskService.stopWorkflow(workflowId);
         setStatus('ready');
         if (activeMsgId) {
           state.handleEvent({
@@ -173,7 +174,7 @@ export function AssistantChatInput() {
     }
 
     try {
-      await invoke('stop_agent', { sessionId: activeConversationId || null });
+      await taskService.stopAgent(activeConversationId || null);
       setStatus('ready');
       if (activeMsgId) {
         state.handleEvent({
@@ -223,7 +224,7 @@ export function AssistantChatInput() {
               const assistantId = activeConversationId ? (assistants[activeConversationId] || null) : null;
               setStatus('connecting');
               try {
-                await invoke('start_agent', {
+                await taskService.startAgent({
                   workdir: targetWs.path,
                   sessionId: activeConversationId || null,
                   assistantId: assistantId === '__xiaof__' ? null : assistantId,

@@ -1,17 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { invoke } from '@tauri-apps/api/core';
 import { useTranslation } from 'react-i18next';
 import type { Assistant, UpsertAssistant } from '@/types/assistant';
-
-export interface I18nString {
-  zh: string;
-  en: string;
-}
-
-type RawAssistant = Omit<Assistant, 'name' | 'description'> & {
-  name: I18nString;
-  description: I18nString;
-};
+import { assistantService, type I18nString, type RawAssistant } from '@/services/assistantService';
 
 function parseMultiLang(fieldVal: I18nString | undefined | null, lang: string): string {
   if (!fieldVal) return '';
@@ -28,7 +18,7 @@ export function useAssistantsQuery() {
   return useQuery<Assistant[]>({
     queryKey: ['assistants', currentLang],
     queryFn: async () => {
-      const data = await invoke<RawAssistant[]>('list_assistants');
+      const data = await assistantService.listAssistants();
       return data.map(a => ({
         ...a,
         name: parseMultiLang(a.name, currentLang),
@@ -57,7 +47,7 @@ export function useCreateAssistantMutation() {
         sort_order: userAssistants.length,
       };
       
-      return invoke<Assistant>('create_assistant', { input: payload });
+      return assistantService.createAssistant(payload);
     },
     onSuccess: () => {
       // 成功后，自动让 'assistants' 的查询缓存失效并重新拉取最新数据
@@ -76,7 +66,7 @@ export function useUpdateAssistantMutation() {
         name: { zh: input.name, en: input.name },
         description: { zh: input.description, en: input.description },
       };
-      return invoke<Assistant>('update_assistant', { id, input: payload });
+      return assistantService.updateAssistant(id, payload);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['assistants'] });
@@ -88,7 +78,7 @@ export function useUpdateAssistantMutation() {
 export function useDeleteAssistantMutation() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: (id: string) => invoke('delete_assistant', { id }),
+    mutationFn: (id: string) => assistantService.deleteAssistant(id),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['assistants'] });
     },
