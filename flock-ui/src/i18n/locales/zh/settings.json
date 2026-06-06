@@ -68,7 +68,8 @@
     "showModels": "查看可用模型",
     "disableModelTooltip": "点击关闭模型",
     "enableModelTooltip": "点击启用模型",
-    "activateProviderTooltip": "请先完成供应商连接测试以激活"
+    "activateProviderTooltip": "请先完成供应商连接测试以激活",
+    "supportsVision": "支持视觉功能"
   },
   "provider": {
     "activatingTitle": "正在激活供应商",

@@ -7,6 +7,7 @@ import {
   Button,
   Group,
   Text,
+  Switch,
 } from '@mantine/core';
 import { invoke } from '@tauri-apps/api/core';
 import { notifications } from '@mantine/notifications';
@@ -31,6 +32,7 @@ export default function CustomModelSettings({ provider, onClose, onSaved }: Prop
   const [modelName, setModelName] = useState('');
   const [baseUrl, setBaseUrl] = useState('');
   const [apiKey, setApiKey] = useState('');
+  const [supportsVision, setSupportsVision] = useState(false);
   const [saving, setSaving] = useState(false);
 
   const handleSave = async () => {
@@ -59,6 +61,7 @@ export default function CustomModelSettings({ provider, onClose, onSaved }: Prop
         modelName: modelName.trim(),
         baseUrl: baseUrl.trim(),
         apiKey: apiKey.trim(),
+        capabilities: supportsVision ? ['vision'] : [],
       });
 
       // Show success message
@@ -154,6 +157,19 @@ export default function CustomModelSettings({ provider, onClose, onSaved }: Prop
             input: {
               background: 'var(--flock-bg-surface)',
               color: 'var(--flock-text-primary)',
+            },
+          }}
+        />
+
+        <Switch
+          label={t('settings.model.supportsVision', 'Supports Vision')}
+          checked={supportsVision}
+          onChange={(e) => setSupportsVision(e.currentTarget.checked)}
+          color="blue"
+          styles={{
+            label: {
+              color: 'var(--flock-text-primary)',
+              fontWeight: 500,
             },
           }}
         />
