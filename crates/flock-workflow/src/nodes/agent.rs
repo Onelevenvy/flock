@@ -3,7 +3,7 @@ use serde_json::{json, Value as JsonValue};
 use langgraph::prelude::RunnableConfig;
 use langgraph::runnable::RunnableError;
 use tokio_stream::StreamExt;
-use langgraph_prebuilt::types::Message as LgMessage;
+use langgraph::prebuilt::types::Message as LgMessage;
 use flock_core::ipc_interface::events::ProtocolEvent;
 use flock_core::ipc_interface::writer::ProtocolEmitter;
 use flock_core::types::message::ContentBlock;
@@ -153,7 +153,7 @@ pub fn make_agent_workflow_node(
                     }
 
                     let tool_defs = ctx.tools.to_tool_defs_filtered(|t| tool_names.contains(&t.name().to_string()));
-                    let bound_tools: Vec<_> = tool_defs.into_iter().map(|t| langgraph_prebuilt::ToolDef {
+                    let bound_tools: Vec<_> = tool_defs.into_iter().map(|t| langgraph::prebuilt::ToolDef {
                         name: t.name,
                         description: t.description,
                         parameters: t.input_schema,
@@ -196,20 +196,20 @@ pub fn make_agent_workflow_node(
                         }
 
                         let mut blocks = vec![
-                            langgraph_prebuilt::types::ContentBlock::Text {
+                            langgraph::prebuilt::types::ContentBlock::Text {
                                 text: user_prompt.clone(),
                             }
                         ];
                         for (mime, data) in &extracted_images {
-                            blocks.push(langgraph_prebuilt::types::ContentBlock::ImageUrl {
-                                image_url: langgraph_prebuilt::types::ImageUrl {
+                            blocks.push(langgraph::prebuilt::types::ContentBlock::ImageUrl {
+                                image_url: langgraph::prebuilt::types::ImageUrl {
                                     url: format!("data:{};base64,{}", mime, data),
                                     detail: None,
                                 },
                             });
                         }
                         LgMessage::Human {
-                            content: langgraph_prebuilt::types::MessageContent::Blocks(blocks),
+                            content: langgraph::prebuilt::types::MessageContent::Blocks(blocks),
                             id: None,
                         }
                     } else {
@@ -323,7 +323,7 @@ pub fn make_agent_workflow_node(
                                     if let ContentBlock::ToolResult { tool_use_id, content, is_error } = block {
                                         let tool_msg = LgMessage::Tool {
                                             tool_call_id: tool_use_id,
-                                            content: langgraph_prebuilt::types::MessageContent::Text(content),
+                                            content: langgraph::prebuilt::types::MessageContent::Text(content),
                                             name: None,
                                             id: None,
                                             status: if is_error { "error".to_string() } else { "success".to_string() },

@@ -4,7 +4,7 @@ use std::sync::Arc;
 use flock_core::config::settings::Config;
 use flock_core::model_factory::{create_model, ModelProviderParams};
 use flock_tools::mcp::manager::McpManager;
-use langgraph_prebuilt::BaseChatModel;
+use langgraph::prebuilt::BaseChatModel;
 use crate::engine::AgentEngine;
 use crate::sinks::OutputSink;
 use crate::session::Session;

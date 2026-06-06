@@ -8,8 +8,8 @@
 use flock_core::config::compression::CompressionConfig;
 use flock_core::types::compact::{CompressionMetadata, CompressionTrigger};
 use flock_core::types::message::{ContentBlock, Message, Role};
-use langgraph_checkpoint::config::RunnableConfig;
-use langgraph_prebuilt::BaseChatModel;
+use langgraph::checkpoint::config::RunnableConfig;
+use langgraph::prebuilt::BaseChatModel;
 
 use super::prompt::{
     build_compact_prompt, build_summary_content,
@@ -97,11 +97,11 @@ pub async fn autocompact(
     let messages_summarized = messages.len();
 
     // Build messages for the mod LLM call: conversation + summary prompt
-    let mut conv_messages: Vec<langgraph_prebuilt::Message> = messages.iter()
+    let mut conv_messages: Vec<langgraph::prebuilt::Message> = messages.iter()
         .filter_map(|m| serde_json::from_value(serde_json::to_value(m).ok()?).ok())
         .collect();
     
-    conv_messages.push(langgraph_prebuilt::Message::human(build_compact_prompt()));
+    conv_messages.push(langgraph::prebuilt::Message::human(build_compact_prompt()));
 
     let mut ptl_attempts = 0u32;
     let runnable_config = RunnableConfig::new();
@@ -116,7 +116,7 @@ pub async fn autocompact(
                      let conversation_part = &conv_messages[..conv_messages.len() - 1];
                      match truncate_for_retry(conversation_part) {
                          Some(mut truncated) => {
-                             truncated.push(langgraph_prebuilt::Message::human(build_compact_prompt()));
+                             truncated.push(langgraph::prebuilt::Message::human(build_compact_prompt()));
                              conv_messages = truncated;
                              continue;
                          }
@@ -181,7 +181,7 @@ pub async fn autocompact(
 /// Truncate the oldest ~20% of messages for PTL retry.
 ///
 /// Returns `None` if there are too few messages to truncate meaningfully.
-fn truncate_for_retry(messages: &[langgraph_prebuilt::Message]) -> Option<Vec<langgraph_prebuilt::Message>> {
+fn truncate_for_retry(messages: &[langgraph::prebuilt::Message]) -> Option<Vec<langgraph::prebuilt::Message>> {
     if messages.len() < 2 {
         return None;
     }
@@ -195,8 +195,8 @@ fn truncate_for_retry(messages: &[langgraph_prebuilt::Message]) -> Option<Vec<la
     let mut result = Vec::with_capacity(remaining.len() + 1);
 
     // Ensure the first message is User role for API compatibility
-    if !matches!(remaining.first(), Some(langgraph_prebuilt::Message::Human { .. })) {
-        result.push(langgraph_prebuilt::Message::human("[earlier conversation truncated for compaction retry]"));
+    if !matches!(remaining.first(), Some(langgraph::prebuilt::Message::Human { .. })) {
+        result.push(langgraph::prebuilt::Message::human("[earlier conversation truncated for compaction retry]"));
     }
 
     result.extend_from_slice(remaining);

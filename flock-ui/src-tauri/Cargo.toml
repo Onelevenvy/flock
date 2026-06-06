@@ -22,11 +22,7 @@ flock-agent.workspace = true
 flock-tools.workspace = true
 flock-skills.workspace = true
 flock-workflow.workspace = true
-langgraph-prebuilt.workspace = true
-langgraph-providers.workspace = true
 langgraph.workspace = true
-langgraph-checkpoint.workspace = true
-langgraph-checkpoint-sqlite.workspace = true
 tokio-stream.workspace = true
 sqlx.workspace = true
 

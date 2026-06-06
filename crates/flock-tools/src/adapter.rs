@@ -3,7 +3,7 @@ use serde_json::Value;
 
 use flock_core::ipc_interface::events::ToolCategory;
 use flock_core::types::tool::{JsonSchema, ToolResult};
-use langgraph_prebuilt::BaseTool;
+use langgraph::prebuilt::BaseTool;
 
 use crate::Tool;
 
@@ -64,7 +64,7 @@ impl Tool for LangGraphToolAdapter {
     }
 
     async fn execute(&self, input: Value) -> ToolResult {
-        let config = langgraph_checkpoint::config::RunnableConfig::new();
+        let config = langgraph::checkpoint::config::RunnableConfig::new();
         match self.inner.ainvoke(&input, &config).await {
             Ok(content) => ToolResult {
                 content: match content {

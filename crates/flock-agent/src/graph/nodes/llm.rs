@@ -5,7 +5,7 @@ use serde_json::{json, Value as JsonValue};
 
 use flock_core::ipc_interface::events::ToolCategory;
 use flock_core::types::message::{ContentBlock, Message, Role};
-use langgraph_prebuilt::types::Message as LgMessage;
+use langgraph::prebuilt::types::Message as LgMessage;
 use crate::context_compression::estimate;
 use super::types::NodeContext;
 use super::helpers::parse_state;
@@ -114,7 +114,7 @@ pub fn make_llm_node(
                     } else {
                         t.name() != "ExitPlanMode"
                     }
-                }).into_iter().map(|t| langgraph_prebuilt::ToolDef {
+                }).into_iter().map(|t| langgraph::prebuilt::ToolDef {
                     name: t.name,
                     description: t.description,
                     parameters: t.input_schema,

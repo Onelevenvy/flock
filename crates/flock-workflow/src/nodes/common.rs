@@ -3,7 +3,7 @@ use std::future::Future;
 use std::sync::Arc;
 use serde_json::{json, Value as JsonValue};
 use regex::Regex;
-use langgraph_prebuilt::BaseChatModel;
+use langgraph::prebuilt::BaseChatModel;
 use flock_core::db::DbManager;
 use flock_core::model_factory::{ModelFactory, ModelLlmParams};
 use flock_tools::registry::ToolRegistry;

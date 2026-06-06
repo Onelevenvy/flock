@@ -3,7 +3,7 @@ use serde_json::{json, Value as JsonValue};
 use langgraph::prelude::RunnableConfig;
 use langgraph::runnable::RunnableError;
 use tokio_stream::StreamExt;
-use langgraph_prebuilt::types::Message as LgMessage;
+use langgraph::prebuilt::types::Message as LgMessage;
 use super::common::{WorkflowNodeContext, parse_state, interpolate_string_with_context, resolve_model, parse_retry_config, parse_timeout_config, execute_with_retry};
 
 pub fn make_parameter_extractor_node(

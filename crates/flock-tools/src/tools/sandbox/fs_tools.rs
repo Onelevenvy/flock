@@ -2,7 +2,7 @@ use crate::adapter::LangGraphToolAdapter;
 use crate::Tool;
 use crate::daytona::fs::DaytonaFs;
 use flock_core::ipc_interface::events::ToolCategory;
-use langgraph_derive::tool;
+use langgraph::tool;
 
 /// Reads a file from the Daytona sandbox filesystem.
 ///

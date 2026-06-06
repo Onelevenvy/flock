@@ -2,7 +2,7 @@ use crate::adapter::LangGraphToolAdapter;
 use crate::Tool;
 use flock_core::ipc_interface::events::ToolCategory;
 use flock_core::types::tool::{ProviderInfo, I18nString};
-use langgraph_derive::tool;
+use langgraph::tool;
 
 /// Evaluates a math expression locally using meval.
 ///

@@ -2,7 +2,7 @@ use std::sync::Arc;
 use serde_json::{json, Value as JsonValue};
 use langgraph::prelude::RunnableConfig;
 use langgraph::runnable::RunnableError;
-use langgraph_prebuilt::types::Message as LgMessage;
+use langgraph::prebuilt::types::Message as LgMessage;
 use super::common::{WorkflowNodeContext, parse_state, interpolate_string_with_context};
 
 pub fn make_human_node(

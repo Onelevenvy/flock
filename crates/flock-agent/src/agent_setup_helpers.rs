@@ -6,7 +6,7 @@ use flock_core::config::settings::Config;
 use flock_skills::types::SkillMetadata;
 use flock_tools::mcp::manager::McpManager;
 use flock_tools::registry::ToolRegistry;
-use langgraph_prebuilt::BaseChatModel;
+use langgraph::prebuilt::BaseChatModel;
 
 use super::agent_setup::AssistantOverrides;
 use super::sinks::OutputSink;

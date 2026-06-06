@@ -4,7 +4,7 @@ use std::sync::Arc;
 
 use langgraph::graph::{CompiledStateGraph, GraphError, StateGraph};
 use langgraph::prelude::*;
-use langgraph_checkpoint::checkpoint::base::BaseCheckpointSaver;
+use langgraph::checkpoint::checkpoint::base::BaseCheckpointSaver;
 
 use super::nodes::{
     make_compaction_node,

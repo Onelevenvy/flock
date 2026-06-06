@@ -7,7 +7,7 @@ use crate::daytona::{
 };
 use flock_core::db::DbManager;
 use flock_core::ipc_interface::events::ToolCategory;
-use langgraph_derive::tool;
+use langgraph::tool;
 use base64::{Engine as _, engine::general_purpose};
 
 /// Execute an xdotool command in the sandbox desktop environment.

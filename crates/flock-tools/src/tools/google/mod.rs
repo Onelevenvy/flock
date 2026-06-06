@@ -2,7 +2,7 @@ use crate::adapter::LangGraphToolAdapter;
 use crate::Tool;
 use flock_core::ipc_interface::events::ToolCategory;
 use flock_core::types::tool::{ProviderInfo, I18nString};
-use langgraph_derive::tool;
+use langgraph::tool;
 use serde_json::Value;
 
 /// Translate text using Google Translate.

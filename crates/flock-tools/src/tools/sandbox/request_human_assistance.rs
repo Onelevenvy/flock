@@ -5,7 +5,7 @@ use crate::daytona::{
     start_computer_use_in_sandbox, ensure_vnc_running_in_sandbox
 };
 use flock_core::ipc_interface::events::ToolCategory;
-use langgraph_derive::tool;
+use langgraph::tool;
 
 /// Proactively requests manual human takeover and displays the collaborative remote VNC panel.
 ///

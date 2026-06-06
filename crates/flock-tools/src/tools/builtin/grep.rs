@@ -1,7 +1,7 @@
 use crate::adapter::LangGraphToolAdapter;
 use crate::Tool;
 use flock_core::ipc_interface::events::ToolCategory;
-use langgraph_derive::tool;
+use langgraph::tool;
 use tokio::process::Command;
 
 /// Searches file contents using regex patterns (powered by ripgrep).

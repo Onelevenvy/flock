@@ -1,5 +1,5 @@
 use std::sync::Arc;
-use langgraph_prebuilt::BaseChatModel;
+use langgraph::prebuilt::BaseChatModel;
 use flock_core::types::message::{ContentBlock, Message, Role};
 
 #[derive(Debug, serde::Deserialize, serde::Serialize)]
@@ -142,12 +142,12 @@ pub async fn run_background_summary(
     ];
 
     // Convert via existing to_langgraph_message helper to ensure decoupling from concrete model types
-    let conv_messages: Vec<langgraph_prebuilt::types::Message> = messages_for_llm
+    let conv_messages: Vec<langgraph::prebuilt::types::Message> = messages_for_llm
         .into_iter()
         .map(crate::graph::to_langgraph_message)
         .collect();
 
-    let runnable_config = langgraph_checkpoint::config::RunnableConfig::new();
+    let runnable_config = langgraph::checkpoint::config::RunnableConfig::new();
 
     // 4. Run LLM call using streaming (astream) to robustly collect content and bypass non-streaming gateway bugs
     let response_text = if use_custom_provider {

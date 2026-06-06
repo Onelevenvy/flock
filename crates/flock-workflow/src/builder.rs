@@ -5,7 +5,7 @@ use std::collections::HashMap;
 use langgraph::graph::{CompiledStateGraph, GraphError, StateGraph};
 use langgraph::prelude::*;
 use langgraph::runnable::RoutingFn;
-use langgraph_checkpoint::checkpoint::base::BaseCheckpointSaver;
+use langgraph::checkpoint::checkpoint::base::BaseCheckpointSaver;
 use serde_json::Value as JsonValue;
 
 use super::state::WorkflowState;

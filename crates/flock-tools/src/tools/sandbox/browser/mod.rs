@@ -9,7 +9,7 @@ use crate::daytona::{
     DISPLAY_ID,
 };
 use flock_core::ipc_interface::events::ToolCategory;
-use langgraph_derive::tool;
+use langgraph::tool;
 use base64::{Engine as _, engine::general_purpose};
 
 use helpers::{clean_b64_from_output, extract_and_save_screenshot, extract_page_title, extract_dom_tree, screenshot_image_md};

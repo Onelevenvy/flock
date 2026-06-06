@@ -2,7 +2,7 @@ use crate::adapter::LangGraphToolAdapter;
 use crate::Tool;
 use crate::daytona::{get_or_create_active_sandbox, execute_command_in_sandbox};
 use flock_core::ipc_interface::events::ToolCategory;
-use langgraph_derive::tool;
+use langgraph::tool;
 use std::path::Path;
 use base64::{Engine as _, engine::general_purpose};
 
