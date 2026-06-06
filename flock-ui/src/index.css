@@ -25,15 +25,15 @@ body, input, button, select, textarea {
 /* ---- Light theme (default) ---- */
 [data-theme="light"] {
   color-scheme: light;
-  --flock-bg-deepest: #f0f2f5;
-  --flock-bg-deep: rgba(240, 242, 245, 0.9);
-  --flock-bg-base: rgba(255, 255, 255, 0.7);
-  --flock-bg-raised: rgba(255, 255, 255, 0.85);
-  --flock-bg-surface: rgba(249, 250, 251, 0.6);
-  --flock-bg-hover: rgba(16, 24, 40, 0.05);
-  --flock-border-subtle: rgba(16, 24, 40, 0.04);
-  --flock-border-dim: rgba(16, 24, 40, 0.07);
-  --flock-border-base: rgba(16, 24, 40, 0.12);
+  --flock-bg-deepest: #f2f4f7;
+  --flock-bg-deep: rgba(242, 244, 247, 0.9);
+  --flock-bg-base: #ffffff;
+  --flock-bg-raised: #ffffff;
+  --flock-bg-surface: #f9fafb;
+  --flock-bg-hover: rgba(16, 24, 40, 0.04);
+  --flock-border-subtle: rgba(16, 24, 40, 0.05);
+  --flock-border-dim: rgba(16, 24, 40, 0.08);
+  --flock-border-base: rgba(16, 24, 40, 0.14);
   --flock-text-muted: #9ca3af; /* zinc-400 */
   --flock-text-dim: #6b7280; /* zinc-500 */
   --flock-text-secondary: #3f3f46; /* zinc-700 */
@@ -47,15 +47,15 @@ body, input, button, select, textarea {
 /* ---- Dark theme ---- */
 [data-theme="dark"] {
   color-scheme: dark;
-  --flock-bg-deepest: #121214; /* Dify app-detail-bg core titanium dark */
-  --flock-bg-deep: rgba(22, 22, 24, 0.9);
-  --flock-bg-base: rgba(30, 30, 33, 0.65);
-  --flock-bg-raised: rgba(38, 38, 41, 0.8);
-  --flock-bg-surface: rgba(22, 22, 24, 0.6);
+  --flock-bg-deepest: #161618; /* Dify app-detail-bg core titanium dark */
+  --flock-bg-deep: #1c1c1f;
+  --flock-bg-base: #222225;
+  --flock-bg-raised: #2a2b2f;
+  --flock-bg-surface: #1c1c1f;
   --flock-bg-hover: rgba(255, 255, 255, 0.06);
   --flock-border-subtle: rgba(255, 255, 255, 0.04);
   --flock-border-dim: rgba(255, 255, 255, 0.08);
-  --flock-border-base: rgba(255, 255, 255, 0.12);
+  --flock-border-base: rgba(255, 255, 255, 0.15);
   --flock-text-muted: #52525b; /* zinc-600 */
   --flock-text-dim: #a1a1aa; /* zinc-400 */
   --flock-text-secondary: #d4d4d8; /* zinc-300 */
@@ -391,4 +391,27 @@ body {
   100% {
     box-shadow: 0 0 20px rgba(34, 139, 230, 0.8), 0 0 4px var(--flock-accent);
   }
+}
+
+/* ---- Codex Glassmorphic Panels ---- */
+.glass-panel-base {
+  backdrop-filter: blur(20px) saturate(190%) !important;
+  -webkit-backdrop-filter: blur(20px) saturate(190%) !important;
+}
+[data-theme="light"] .glass-panel-base {
+  background: rgba(255, 255, 255, 0.72) !important;
+}
+[data-theme="dark"] .glass-panel-base {
+  background: rgba(34, 34, 37, 0.72) !important;
+}
+
+.glass-panel-surface {
+  backdrop-filter: blur(20px) saturate(190%) !important;
+  -webkit-backdrop-filter: blur(20px) saturate(190%) !important;
+}
+[data-theme="light"] .glass-panel-surface {
+  background: rgba(249, 250, 251, 0.65) !important;
+}
+[data-theme="dark"] .glass-panel-surface {
+  background: rgba(28, 28, 31, 0.65) !important;
 }

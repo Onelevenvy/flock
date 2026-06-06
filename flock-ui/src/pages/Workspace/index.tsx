@@ -88,15 +88,13 @@ export function WorkspaceView() {
         <>
           {/* 中间：预览沙盒卡片 */}
           <Box
+            className="glass-panel-base"
             style={{
               flex: 1,
               display: 'flex',
               flexDirection: 'column',
               overflow: 'hidden',
               minWidth: 0,
-              background: 'var(--flock-bg-base)',
-              backdropFilter: 'blur(20px) saturate(190%)',
-              WebkitBackdropFilter: 'blur(20px) saturate(190%)',
               borderRadius: '16px',
               border: '1px solid var(--flock-border-subtle)',
               boxShadow: '0 4px 20px rgba(0, 0, 0, 0.03)',
@@ -107,15 +105,13 @@ export function WorkspaceView() {
 
           {/* 右侧：窄版 Chat 面板 */}
           <Box
+            className="glass-panel-surface"
             style={{
               width: 420,
               flexShrink: 0,
               display: 'flex',
               flexDirection: 'column',
               overflow: 'hidden',
-              background: 'var(--flock-bg-surface)',
-              backdropFilter: 'blur(20px) saturate(190%)',
-              WebkitBackdropFilter: 'blur(20px) saturate(190%)',
               borderRadius: '16px',
               border: '1px solid var(--flock-border-subtle)',
               boxShadow: '0 4px 20px rgba(0, 0, 0, 0.03)',
@@ -128,15 +124,13 @@ export function WorkspaceView() {
       ) : (
         /* 无预览时：主面板占满剩余空间 */
         <Box
+          className="glass-panel-surface"
           style={{
             flex: 1,
             display: 'flex',
             flexDirection: 'column',
             overflow: 'hidden',
             minWidth: 0,
-            background: 'var(--flock-bg-surface)',
-            backdropFilter: 'blur(20px) saturate(190%)',
-            WebkitBackdropFilter: 'blur(20px) saturate(190%)',
             borderRadius: '16px',
             border: '1px solid var(--flock-border-subtle)',
             boxShadow: '0 4px 20px rgba(0, 0, 0, 0.03)',
