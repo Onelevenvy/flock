@@ -457,7 +457,7 @@ function handleConfigChanged(event: Extract<ProtocolEvent, { type: 'config_chang
   set({ capabilities: event.capabilities });
 }
 
-let titleUpdatedTimeout: NodeJS.Timeout | null = null;
+let titleUpdatedTimeout: any = null;
 function handleTitleUpdated() {
   const activeWorkspaceId = useWorkspaceStore.getState().activeWorkspaceId;
   if (activeWorkspaceId) {

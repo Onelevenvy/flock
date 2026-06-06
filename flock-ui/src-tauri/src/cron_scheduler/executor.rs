@@ -81,7 +81,7 @@ pub async fn trigger_job_execution(
                 exec_state.clone(),
                 agent_state_state,
                 workflow_id.clone(),
-                Some(job.prompt.clone()),
+                Some(serde_json::Value::String(job.prompt.clone())),
                 None,
                 Some(conv_id.clone()),
                 None,
@@ -202,6 +202,7 @@ pub async fn trigger_job_execution(
         Some(conv_id.clone()),
         msg_id,
         prompt_content,
+        None, // attachments
         db.clone(),
         emitter,
         output,

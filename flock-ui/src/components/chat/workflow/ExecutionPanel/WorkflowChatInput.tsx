@@ -1,14 +1,18 @@
 import { Box, Text } from '@mantine/core';
 import { ChatInput } from '@/components/chat/shared/ChatInput';
 import { useTranslation } from 'react-i18next';
+import { useChatAttachments } from '@/hooks/useChatAttachments';
 
 interface WorkflowChatInputProps {
   isInterrupted: boolean;
   status: string;
   inputVal: string;
   setInputVal: (val: string) => void;
-  handleStart: () => void;
+  handleStart: (text: string, attachments?: any[]) => void;
   stopWorkflow: () => void;
+  fileInputEnabled?: boolean;
+  imageInputEnabled?: boolean;
+  maxFileCount?: number;
 }
 
 export function WorkflowChatInput({
@@ -18,15 +22,47 @@ export function WorkflowChatInput({
   setInputVal,
   handleStart,
   stopWorkflow,
+  fileInputEnabled = false,
+  imageInputEnabled = false,
+  maxFileCount = 5,
 }: WorkflowChatInputProps) {
   const { t } = useTranslation();
 
+  const {
+    attachments,
+    addFile,
+    removeFile,
+    clearFiles,
+    isUploading,
+  } = useChatAttachments({
+    allow_file_upload: fileInputEnabled,
+    allow_image_upload: imageInputEnabled,
+    max_file_count: maxFileCount,
+    max_file_size_mb: 10,
+    allowed_mime_types: [],
+  });
+
   const isStreaming = status === 'running';
-  const canSend = inputVal.trim().length > 0 && status !== 'running';
+  const canSend = (inputVal.trim().length > 0 || attachments.length > 0) && status !== 'running';
 
   const placeholder = isStreaming
     ? t('chat.agentThinking')
     : t('chat.inputPlaceholderShort');
+
+  const onSend = () => {
+    handleStart(
+      inputVal,
+      attachments.map(att => ({
+        id: att.id,
+        kind: att.kind,
+        name: att.name,
+        mime_type: att.mime_type,
+        size: att.size,
+        data_base64: att.data_base64 || null,
+      }))
+    );
+    clearFiles();
+  };
 
   return (
     <Box
@@ -40,13 +76,18 @@ export function WorkflowChatInput({
       <ChatInput
         value={inputVal}
         onChange={setInputVal}
-        onSend={handleStart}
+        onSend={onSend}
         onStop={stopWorkflow}
         isStreaming={isStreaming}
-        disabled={status === 'running'}
+        disabled={status === 'running' || isUploading}
         placeholder={placeholder}
         isInterrupted={isInterrupted}
         interruptedMessage={t('workflow.execution.waitingHint', 'Waiting for your selection above...')}
+        attachments={attachments}
+        onAddFile={addFile}
+        onRemoveFile={removeFile}
+        allowFileUpload={fileInputEnabled}
+        allowImageUpload={imageInputEnabled}
         leftExtra={
           inputVal.length > 0 ? (
             <Text size="xs" style={{ color: 'var(--flock-text-dim)', fontSize: 11, flexShrink: 0, whiteSpace: 'nowrap' }}>
@@ -71,3 +112,4 @@ export function WorkflowChatInput({
     </Box>
   );
 }
+

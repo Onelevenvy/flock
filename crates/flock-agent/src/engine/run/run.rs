@@ -9,6 +9,34 @@ use flock_core::types::message::{ContentBlock, Message, Role, StopReason, TokenU
 use crate::engine::{AgentEngine, AgentResult, AgentError};
 use crate::graph::{build_agent_graph, AgentState, NodeContext};
 
+use std::path::PathBuf;
+use serde::{Deserialize, Serialize};
+
+#[derive(Serialize, Deserialize, Debug, Clone)]
+pub struct UserAttachment {
+    pub id: String,
+    pub kind: String, // "image" | "file"
+    pub name: String,
+    pub mime_type: String,
+    pub size: u64,
+    pub data_base64: Option<String>,
+}
+
+fn clean_base64(data_b64: &str) -> &str {
+    if let Some(pos) = data_b64.find(',') {
+        &data_b64[pos + 1..]
+    } else {
+        data_b64
+    }
+}
+
+fn decode_base64(data_b64: &str) -> Result<Vec<u8>, anyhow::Error> {
+    use base64::{Engine as _, engine::general_purpose};
+    let clean = clean_base64(data_b64);
+    general_purpose::STANDARD.decode(clean.trim())
+        .map_err(|e| anyhow::anyhow!("Base64 decode error: {}", e))
+}
+
 pub async fn prepare_run(
     engine: &mut AgentEngine,
     user_input: &str,
@@ -55,10 +83,83 @@ pub async fn prepare_run(
         engine.graph = Some(app);
     }
 
+    // Try parsing user_input as JSON
+    let (parsed_text, attachments) = if let Ok(json_val) = serde_json::from_str::<serde_json::Value>(user_input) {
+        if let Some(obj) = json_val.as_object() {
+            let text = obj.get("text").and_then(|v| v.as_str()).unwrap_or(user_input).to_string();
+            let attachments: Option<Vec<UserAttachment>> = obj.get("attachments")
+                .and_then(|v| serde_json::from_value(v.clone()).ok());
+            (text, attachments)
+        } else {
+            (user_input.to_string(), None)
+        }
+    } else {
+        (user_input.to_string(), None)
+    };
+
+    let session_id = engine.current_session.as_ref()
+        .map(|s| s.id.clone())
+        .unwrap_or_else(|| engine.thread_id.clone());
+
+    let cwd = engine.current_session.as_ref()
+        .map(|s| PathBuf::from(&s.cwd));
+
+    let mut file_notices = String::new();
+
+    if let Some(ref atts) = attachments {
+        for att in atts {
+            if att.kind == "file" {
+                if let Some(ref data_b64) = att.data_base64 {
+                    if let Ok(bytes) = decode_base64(data_b64) {
+                        if let Some(ref cwd_path) = cwd {
+                            let attachments_dir = cwd_path.join(".flock").join("attachments").join(&session_id);
+                            if let Err(e) = std::fs::create_dir_all(&attachments_dir) {
+                                log::error!("[engine] Failed to create attachments dir: {}", e);
+                            }
+                            let target_file_in_attachments = attachments_dir.join(&att.name);
+                            if let Err(e) = std::fs::write(&target_file_in_attachments, &bytes) {
+                                log::error!("[engine] Failed to write attachment file: {}", e);
+                            }
+
+                            let target_file_in_cwd = cwd_path.join(&att.name);
+                            if let Err(e) = std::fs::write(&target_file_in_cwd, &bytes) {
+                                log::error!("[engine] Failed to copy file to workspace root: {}", e);
+                            } else {
+                                log::info!("[engine] Successfully saved file {} to workspace root", att.name);
+                            }
+                        }
+                    }
+                }
+                file_notices.push_str(&format!("[已上传工作空间文件: {}] (如果需要读取文件内容，请调用 Read 工具读取)\n", att.name));
+            }
+        }
+    }
+
+    let mut content_blocks = Vec::new();
+    let mut text_content = parsed_text;
+    if !file_notices.is_empty() {
+        text_content = format!("{}{}", file_notices, text_content);
+    }
+    content_blocks.push(ContentBlock::Text { text: text_content });
+
+    if let Some(ref atts) = attachments {
+        for att in atts {
+            if att.kind == "image" {
+                if let Some(ref data_b64) = att.data_base64 {
+                    let cleaned = clean_base64(data_b64).to_string();
+                    content_blocks.push(ContentBlock::Image {
+                        media_type: att.mime_type.clone(),
+                        data: cleaned,
+                    });
+                }
+            }
+        }
+    }
+
     // Build user message early to trigger instant auto-summary
     let new_user_msg_struct = Message::now(
         Role::User,
-        vec![ContentBlock::Text { text: user_input.to_string() }],
+        content_blocks,
     );
 
     let is_first_turn = engine.messages.iter()

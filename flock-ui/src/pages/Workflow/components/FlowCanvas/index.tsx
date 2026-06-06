@@ -30,6 +30,7 @@ import { PropertiesPanel } from '@/pages/Workflow/PropertiesPanel';
 import { ExecutionPanel } from '@/components/chat/workflow/ExecutionPanel';
 import { EnvironmentVarsPanel } from '@/pages/Workflow/components/EnvironmentVarsPanel';
 import { useWorkflowRuntime } from '@/hooks/useWorkflowRuntime';
+import { FileTreePanel } from '@/pages/Workspace/components/FileTreePanel';
 
 import { useFlowLayout } from './hooks/useFlowLayout';
 import { useNodeInsertion } from './hooks/useNodeInsertion';
@@ -98,6 +99,7 @@ export function FlowCanvas({ workflowId, workflowData, onBack }: FlowCanvasProps
   });
 
   const [showExecution, setShowExecution] = useState(false);
+  const [showDebugWorkspace, setShowDebugWorkspace] = useState(false);
   const [showMinimap, setShowMinimap] = useState(false);
   const [showNodePalette, setShowNodePalette] = useState(false);
   const [showEnvVars, setShowEnvVars] = useState(false);
@@ -511,6 +513,13 @@ export function FlowCanvas({ workflowId, workflowData, onBack }: FlowCanvasProps
           />
         )}
 
+        {showExecution && showDebugWorkspace && (
+          <FileTreePanel
+            workspaceIdOverride="debug"
+            isOpenOverride={true}
+          />
+        )}
+
         {showExecution && (
           <ExecutionPanel
             status={executionStatus}
@@ -526,6 +535,8 @@ export function FlowCanvas({ workflowId, workflowData, onBack }: FlowCanvasProps
             resumeWorkflow={resumeWorkflow}
             onClearExecution={clearExecution}
             activeInterrupt={executionActiveInterrupt}
+            showDebugWorkspace={showDebugWorkspace}
+            onToggleDebugWorkspace={() => setShowDebugWorkspace(prev => !prev)}
           />
         )}
       </Box>

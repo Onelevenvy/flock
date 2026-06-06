@@ -5,6 +5,16 @@ use std::sync::atomic::{AtomicBool, Ordering};
 use anyhow::Result;
 use tokio::sync::Mutex;
 
+#[derive(serde::Deserialize, serde::Serialize, Clone, Debug)]
+pub struct UserAttachment {
+    pub id: String,
+    pub kind: String, // "image" | "file"
+    pub name: String,
+    pub mime_type: String,
+    pub size: u64,
+    pub data_base64: Option<String>,
+}
+
 use flock_agent::agent_setup::{AgentBuilder, AssistantOverrides};
 use flock_agent::sinks::OutputSink;
 use flock_core::config::settings::{CliArgs, Config};
@@ -279,12 +289,26 @@ pub async fn send_message_to_engine(
     session_id: Option<String>,
     msg_id: String,
     content: String,
+    attachments: Option<Vec<UserAttachment>>,
     db_manager: Arc<DbManager>,
     protocol_emitter: Arc<dyn flock_core::ipc_interface::writer::ProtocolEmitter + Send + Sync>,
     output: Arc<dyn OutputSink + Send + Sync>,
 ) -> Result<()> {
     let sid = session_id.unwrap_or_else(|| "default".to_string());
     log::info!("Sending message [{}] for session {}: {}", msg_id, sid, content);
+
+    let run_content = if let Some(ref atts) = attachments {
+        if !atts.is_empty() {
+            serde_json::json!({
+                "text": content,
+                "attachments": atts,
+            }).to_string()
+        } else {
+            content.clone()
+        }
+    } else {
+        content.clone()
+    };
 
     // 1. 获取会话元数据与运行状态检查
     let (workdir, assistant_id, extra_args) = {
@@ -325,7 +349,7 @@ pub async fn send_message_to_engine(
     let cancel_flag_for_spawn = cancel_flag.clone();
     let cancel_flag_for_check = cancel_flag.clone();
     let sid_clone = sid.clone();
-    let content_clone = content.clone();
+    let content_clone = run_content.clone();
     let msg_id_clone = msg_id.clone();
 
     struct SessionCleanupGuard {
@@ -528,12 +552,13 @@ pub async fn send_message(
     session_id: Option<String>,
     msg_id: String,
     content: String,
+    attachments: Option<Vec<UserAttachment>>,
 ) -> Result<(), String> {
     let db_manager = app.state::<Arc<flock_core::db::DbManager>>().inner().clone();
     let sid_str = session_id.clone().unwrap_or_else(|| "default".to_string());
     let emitter = Arc::new(crate::ipc::emitter::TauriProtocolEmitter::new(app.clone(), sid_str));
     let output = emitter.clone() as Arc<dyn flock_agent::sinks::OutputSink + Send + Sync>;
-    send_message_to_engine(state.inner().clone(), execution_manager.inner().clone(), session_id, msg_id, content, db_manager, emitter, output)
+    send_message_to_engine(state.inner().clone(), execution_manager.inner().clone(), session_id, msg_id, content, attachments, db_manager, emitter, output)
         .await
         .map_err(|e| e.to_string())
 }

@@ -24,11 +24,19 @@ import { useWorkspacesQuery } from '@/hooks/useWorkspaces';
 import { useWorkspaceFiles } from '@/hooks/useWorkspaceFiles';
 import { FileTreeItem } from './components/FileTreeItem';
 
-export function FileTreePanel() {
+interface FileTreePanelProps {
+  workspaceIdOverride?: string;
+  isOpenOverride?: boolean;
+}
+
+export function FileTreePanel({ workspaceIdOverride, isOpenOverride }: FileTreePanelProps) {
   const { t } = useTranslation();
   const { isFileTreeOpen } = useUiStore();
   const { activeWorkspaceId } = useWorkspaceStore();
   const { data: workspaces = [] } = useWorkspacesQuery();
+
+  const targetWorkspaceId = workspaceIdOverride !== undefined ? workspaceIdOverride : activeWorkspaceId;
+  const isPanelOpen = isOpenOverride !== undefined ? isOpenOverride : isFileTreeOpen;
 
   const {
     files,
@@ -38,7 +46,7 @@ export function FileTreePanel() {
     createDirectory,
     uploadFile,
     deleteFileOrDir,
-  } = useWorkspaceFiles(activeWorkspaceId);
+  } = useWorkspaceFiles(targetWorkspaceId, workspaceIdOverride !== undefined);
 
   // 新建文件和文件夹状态
   const [isCreating, setIsCreating] = useState<'file' | 'dir' | null>(null);
@@ -49,7 +57,7 @@ export function FileTreePanel() {
   const [showSearchInput, setShowSearchInput] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
 
-  const activeWs = workspaces.find((w) => w.id === activeWorkspaceId);
+  const activeWs = workspaces.find((w) => w.id === targetWorkspaceId);
 
   // 新建提交
   const handleCreateKeyDown = async (e: React.KeyboardEvent<HTMLInputElement>) => {
@@ -113,21 +121,25 @@ export function FileTreePanel() {
 
   const displayFiles = filterFiles(files);
 
+  const activeWsName = targetWorkspaceId === 'debug'
+    ? t('workflow.execution.debugWorkspace', 'Debug Workspace')
+    : (activeWs?.name || targetWorkspaceId);
+
   return (
     <Box
+      className={isPanelOpen ? "glass-panel-base" : undefined}
       style={{
-        width: isFileTreeOpen ? 260 : 0,
-        minWidth: isFileTreeOpen ? 260 : 0,
+        width: isPanelOpen ? 260 : 0,
+        minWidth: isPanelOpen ? 260 : 0,
         height: '100%',
-        background: 'var(--flock-bg-base)',
-        border: isFileTreeOpen ? '1px solid var(--flock-border-subtle)' : 'none',
-        borderRadius: isFileTreeOpen ? '16px' : '0',
-        boxShadow: isFileTreeOpen ? '0 4px 20px rgba(0, 0, 0, 0.03)' : 'none',
+        border: isPanelOpen ? '1px solid var(--flock-border-subtle)' : 'none',
+        borderRadius: isPanelOpen ? '16px' : '0',
+        boxShadow: isPanelOpen ? '0 4px 20px rgba(0, 0, 0, 0.03)' : 'none',
         display: 'flex',
         flexDirection: 'column',
         overflow: 'hidden',
         transition: 'all 0.2s ease',
-        marginRight: isFileTreeOpen ? 0 : -12,
+        marginRight: isPanelOpen ? 0 : -12,
       }}
     >
       {/* 隐藏的上传 Input */}
@@ -148,9 +160,9 @@ export function FileTreePanel() {
           <Text size="xs" fw={700} style={{ color: 'var(--flock-text-secondary)', letterSpacing: '0.05em', textTransform: 'uppercase' }}>
             {t('sidebar.workspace')}
           </Text>
-          {activeWs && (
+          {targetWorkspaceId && (
             <Text size="xs" c="dimmed" style={{ opacity: 0.5, fontSize: 10, marginTop: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-              {activeWs.name}
+              {activeWsName}
             </Text>
           )}
         </Box>
@@ -249,7 +261,7 @@ export function FileTreePanel() {
 
       {/* 文件树内容 */}
       <ScrollArea style={{ flex: 1 }} py={4}>
-        {!activeWorkspaceId ? (
+        {!targetWorkspaceId ? (
           <Box py={24} style={{ textAlign: 'center' }}>
             <Text size="xs" c="dimmed">{t('chat.workspace.selectWorkspace')}</Text>
           </Box>
@@ -313,7 +325,7 @@ export function FileTreePanel() {
                 <FileTreeItem
                   key={entry.path}
                   entry={entry}
-                  workspaceId={activeWorkspaceId}
+                  workspaceId={targetWorkspaceId}
                   depth={0}
                   onDelete={deleteFileOrDir}
                 />

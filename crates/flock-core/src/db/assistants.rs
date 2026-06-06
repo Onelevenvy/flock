@@ -24,6 +24,7 @@ pub struct AssistantRecord {
     pub sort_order: i64,
     pub created_at: String,
     pub updated_at: String,
+    pub input_config: String,
 }
 
 /// Input for creating or updating an assistant.
@@ -40,6 +41,7 @@ pub struct UpsertAssistant {
     pub skills: Vec<String>,
     pub is_builtin: bool,
     pub sort_order: i64,
+    pub input_config: Option<String>,
 }
 
 impl DbManager {
@@ -47,7 +49,7 @@ impl DbManager {
     pub async fn list_assistants(&self) -> anyhow::Result<Vec<AssistantRecord>> {
         let rows = sqlx::query(
             "SELECT id, name, icon, description, model, system_prompt,
-                    tools, disabled_tools, skills, is_builtin, sort_order, created_at, updated_at
+                    tools, disabled_tools, skills, is_builtin, sort_order, created_at, updated_at, input_config
              FROM assistant
              ORDER BY is_builtin DESC, sort_order ASC, created_at ASC",
         )
@@ -65,7 +67,7 @@ impl DbManager {
     pub async fn get_assistant(&self, id: &str) -> anyhow::Result<Option<AssistantRecord>> {
         let row = sqlx::query(
             "SELECT id, name, icon, description, model, system_prompt,
-                    tools, disabled_tools, skills, is_builtin, sort_order, created_at, updated_at
+                    tools, disabled_tools, skills, is_builtin, sort_order, created_at, updated_at, input_config
              FROM assistant WHERE id = ?1",
         )
         .bind(id)
@@ -89,12 +91,13 @@ impl DbManager {
         let tools_json = serde_json::to_string(&input.tools)?;
         let disabled_tools_json = serde_json::to_string(&input.disabled_tools)?;
         let skills_json = serde_json::to_string(&input.skills)?;
+        let input_config_val = input.input_config.clone().unwrap_or_else(|| "{}".to_string());
 
         sqlx::query(
             "INSERT INTO assistant
              (id, name, icon, description, model, system_prompt, tools, disabled_tools, skills,
-              is_builtin, sort_order, created_at, updated_at)
-             VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, ?12, ?12)",
+              is_builtin, sort_order, created_at, updated_at, input_config)
+             VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, ?12, ?12, ?13)",
         )
         .bind(&id)
         .bind(&name_json)
@@ -108,6 +111,7 @@ impl DbManager {
         .bind(input.is_builtin as i64)
         .bind(input.sort_order)
         .bind(&now)
+        .bind(&input_config_val)
         .execute(self.pool())
         .await?;
 
@@ -125,6 +129,7 @@ impl DbManager {
             sort_order: input.sort_order,
             created_at: now.clone(),
             updated_at: now,
+            input_config: input_config_val,
         })
     }
 
@@ -136,13 +141,14 @@ impl DbManager {
         let tools_json = serde_json::to_string(&input.tools)?;
         let disabled_tools_json = serde_json::to_string(&input.disabled_tools)?;
         let skills_json = serde_json::to_string(&input.skills)?;
+        let input_config_val = input.input_config.clone().unwrap_or_else(|| "{}".to_string());
 
         let rows_affected = sqlx::query(
             "UPDATE assistant SET
                 name = ?1, icon = ?2, description = ?3, model = ?4,
                 system_prompt = ?5, tools = ?6, disabled_tools = ?7, skills = ?8,
-                sort_order = ?9, updated_at = ?10
-             WHERE id = ?11",
+                sort_order = ?9, updated_at = ?10, input_config = ?11
+             WHERE id = ?12",
         )
         .bind(&name_json)
         .bind(&input.icon)
@@ -154,6 +160,7 @@ impl DbManager {
         .bind(&skills_json)
         .bind(input.sort_order)
         .bind(&now)
+        .bind(&input_config_val)
         .bind(id)
         .execute(self.pool())
         .await?
@@ -188,6 +195,7 @@ impl DbManager {
             let tools_json = serde_json::to_string(&asst.tools)?;
             let disabled_tools_json = serde_json::to_string(&asst.disabled_tools)?;
             let skills_json = serde_json::to_string(&asst.skills)?;
+            let input_config_val = asst.input_config.clone().unwrap_or_else(|| "{}".to_string());
             let now = chrono::Utc::now().to_rfc3339();
 
             // Insert if not exists; on conflict update only metadata fields.
@@ -195,8 +203,8 @@ impl DbManager {
             sqlx::query(
                 "INSERT INTO assistant
                  (id, name, icon, description, model, system_prompt, tools, disabled_tools, skills,
-                  is_builtin, sort_order, created_at, updated_at)
-                 VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, 1, ?10, ?11, ?11)
+                  is_builtin, sort_order, created_at, updated_at, input_config)
+                 VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, 1, ?10, ?11, ?11, ?12)
                  ON CONFLICT(id) DO UPDATE SET
                     name        = excluded.name,
                     icon        = excluded.icon,
@@ -215,6 +223,7 @@ impl DbManager {
             .bind(&skills_json)
             .bind(order as i64)
             .bind(&now)
+            .bind(&input_config_val)
             .execute(self.pool())
             .await?;
         }
@@ -253,6 +262,7 @@ fn parse_row(row: &sqlx::sqlite::SqliteRow) -> anyhow::Result<AssistantRecord> {
         sort_order: row.get("sort_order"),
         created_at: row.get("created_at"),
         updated_at: row.get("updated_at"),
+        input_config: row.try_get::<String, _>("input_config").unwrap_or_else(|_| "{}".to_string()),
     })
 }
 

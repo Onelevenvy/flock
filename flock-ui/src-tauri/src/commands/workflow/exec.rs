@@ -221,7 +221,7 @@ pub async fn run_workflow(
     execution_manager: State<'_, Arc<ExecutionManager>>,
     agent_state: State<'_, SharedAgentState>,
     workflow_id: String,
-    input: Option<String>,
+    input: Option<serde_json::Value>,
     resume_value: Option<JsonValue>,
     thread_id: Option<String>,
     use_draft: Option<bool>,
@@ -336,8 +336,16 @@ pub async fn run_workflow(
 
     if cancel_flag.load(std::sync::atomic::Ordering::SeqCst) { return Ok(()); }
 
+    let input_str_for_env = input.as_ref().map(|val| {
+        if let Some(s) = val.as_str() {
+            s.to_string()
+        } else {
+            val.to_string()
+        }
+    });
+
     // 使用公共提取出的 resolve_workspace_env
-    let workdir = resolve_workspace_env(&*db, &thread_id_val, input.as_deref(), Some(&app))
+    let workdir = resolve_workspace_env(&*db, &thread_id_val, input_str_for_env.as_deref(), Some(&app))
         .await
         .map_err(|e| e.to_string())?;
 
@@ -453,20 +461,32 @@ pub async fn run_workflow(
     } else {
         let mut start_outputs = serde_json::json!({});
 
-        if let Some(ref inp_str) = input {
-            if let Ok(parsed_json) = serde_json::from_str::<serde_json::Value>(inp_str) {
-                if parsed_json.is_object() {
-                    start_outputs = parsed_json.clone();
-                    if let Some(q) = parsed_json.get("query").and_then(|v| v.as_str()) {
-                        input_msg = q.to_string();
+        if let Some(ref inp_val) = input {
+            if inp_val.is_object() {
+                start_outputs = inp_val.clone();
+                if let Some(q) = inp_val.get("query").and_then(|v| v.as_str()) {
+                    input_msg = q.to_string();
+                } else if let Some(q) = inp_val.get("text").and_then(|v| v.as_str()) {
+                    input_msg = q.to_string();
+                }
+            } else if let Some(inp_str) = inp_val.as_str() {
+                if let Ok(parsed_json) = serde_json::from_str::<serde_json::Value>(inp_str) {
+                    if parsed_json.is_object() {
+                        start_outputs = parsed_json.clone();
+                        if let Some(q) = parsed_json.get("query").and_then(|v| v.as_str()) {
+                            input_msg = q.to_string();
+                        }
+                    } else {
+                        input_msg = inp_str.to_string();
+                        start_outputs["query"] = serde_json::Value::String(inp_str.to_string());
                     }
                 } else {
-                    input_msg = inp_str.clone();
-                    start_outputs["query"] = serde_json::Value::String(inp_str.clone());
+                    input_msg = inp_str.to_string();
+                    start_outputs["query"] = serde_json::Value::String(inp_str.to_string());
                 }
             } else {
-                input_msg = inp_str.clone();
-                start_outputs["query"] = serde_json::Value::String(inp_str.clone());
+                input_msg = inp_val.to_string();
+                start_outputs["query"] = inp_val.clone();
             }
         }
 

@@ -1,4 +1,4 @@
-import { Modal, Group, ThemeIcon, Text, ScrollArea, Stack, TextInput, Textarea, Select, Divider, MultiSelect, Button, Tabs, Box } from '@mantine/core';
+import { Modal, Group, ThemeIcon, Text, ScrollArea, Stack, TextInput, Textarea, Select, Divider, MultiSelect, Button, Tabs, Box, Switch, Tooltip } from '@mantine/core';
 import { IconEdit, IconPlus, IconCheck } from '@tabler/icons-react';
 import { useTranslation } from 'react-i18next';
 import { type Assistant, type UpsertAssistant } from '@/types/assistant';
@@ -30,6 +30,11 @@ export function AssistantFormModal({
     selectedTools, setSelectedTools,
     disabledTools, setDisabledTools,
     selectedSkills, setSelectedSkills,
+    allowFileUpload, setAllowFileUpload,
+    allowImageUpload, setAllowImageUpload,
+    maxFileCount, setMaxFileCount,
+    maxFileSizeMb, setMaxFileSizeMb,
+    supportsVision,
     saving,
     activeTab, setActiveTab,
     modelSelectData,
@@ -214,6 +219,79 @@ export function AssistantFormModal({
                 </Box>
               </Tabs.Panel>
             </Tabs>
+          </Stack>
+
+          <Divider color="var(--flock-border-subtle)" />
+
+          <Stack gap="sm">
+            <Text size="sm" fw={600}>{t('assistant.form.inputSettingsTitle', '输入设置 (Input Settings)')}</Text>
+            
+            <Group grow align="flex-start">
+              <Switch
+                label={t('assistant.form.allowFileUpload', '允许文件上传')}
+                description={t('assistant.form.allowFileUploadDesc', '允许上传常规文件')}
+                checked={allowFileUpload}
+                onChange={(event) => setAllowFileUpload(event.currentTarget.checked)}
+                disabled={isBuiltin}
+              />
+              
+              <Tooltip label={!supportsVision ? t('assistant.form.visionNotSupported', '所选模型不支持视觉能力') : ''} disabled={supportsVision} position="top">
+                <div>
+                  <Switch
+                    label={t('assistant.form.allowImageUpload', '允许图片上传')}
+                    description={t('assistant.form.allowImageUploadDesc', '支持视觉模型开启')}
+                    checked={allowImageUpload && supportsVision}
+                    onChange={(event) => setAllowImageUpload(event.currentTarget.checked)}
+                    disabled={isBuiltin || !supportsVision}
+                  />
+                </div>
+              </Tooltip>
+            </Group>
+
+            {(allowFileUpload || (allowImageUpload && supportsVision)) && (
+              <Group gap="md" mt="xs">
+                <Stack gap={2} style={{ flex: 1 }}>
+                  <Text size="xs" fw={500}>{t('assistant.form.maxFileCountLimit', '最大上传数量')}</Text>
+                  <input
+                    type="number"
+                    min={1}
+                    max={20}
+                    value={maxFileCount}
+                    onChange={(e) => setMaxFileCount(Math.max(1, parseInt(e.target.value) || 1))}
+                    disabled={isBuiltin}
+                    style={{
+                      background: 'var(--flock-bg-surface)',
+                      border: '1px solid var(--flock-border-dim)',
+                      borderRadius: '4px',
+                      padding: '6px 10px',
+                      color: 'var(--flock-text-primary)',
+                      fontSize: 13,
+                      outline: 'none',
+                    }}
+                  />
+                </Stack>
+                <Stack gap={2} style={{ flex: 1 }}>
+                  <Text size="xs" fw={500}>{t('assistant.form.maxFileSizeMbLimit', '最大文件大小 (MB)')}</Text>
+                  <input
+                    type="number"
+                    min={1}
+                    max={100}
+                    value={maxFileSizeMb}
+                    onChange={(e) => setMaxFileSizeMb(Math.max(1, parseInt(e.target.value) || 1))}
+                    disabled={isBuiltin}
+                    style={{
+                      background: 'var(--flock-bg-surface)',
+                      border: '1px solid var(--flock-border-dim)',
+                      borderRadius: '4px',
+                      padding: '6px 10px',
+                      color: 'var(--flock-text-primary)',
+                      fontSize: 13,
+                      outline: 'none',
+                    }}
+                  />
+                </Stack>
+              </Group>
+            )}
           </Stack>
 
           <Divider color="var(--flock-border-subtle)" />

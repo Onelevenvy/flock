@@ -165,5 +165,14 @@
     "failed": "失败",
     "toolExecuted": "工具 {{name}} 执行{{status}}"
   },
-  "viewStepsPlayback": "查看步骤回放"
+  "viewStepsPlayback": "查看步骤回放",
+  "upload": {
+    "titleFailed": "上传失败",
+    "disabledImages": "该助手/工作流已禁用图片上传",
+    "disabledFiles": "该助手/工作流已禁用文件上传",
+    "maxCountReached": "最多只能上传 {{count}} 个附件",
+    "maxSizeExceeded": "文件大小不能超过 {{size}}MB",
+    "unsupportedFormat": "不支持的文件格式: {{type}}",
+    "readFailed": "读取文件失败，请重试"
+  }
 }

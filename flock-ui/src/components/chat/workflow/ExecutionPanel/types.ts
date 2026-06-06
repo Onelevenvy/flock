@@ -66,4 +66,6 @@ export interface ExecutionPanelProps {
   workflowName?: string;
   activeInterrupt?: any | null;
   onClearExecution?: () => void;
+  showDebugWorkspace?: boolean;
+  onToggleDebugWorkspace?: () => void;
 }

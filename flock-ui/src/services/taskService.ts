@@ -11,7 +11,7 @@ export interface StartAgentParams {
 
 export interface RunWorkflowParams {
   workflowId: string;
-  input?: string | null;
+  input?: any;
   resumeValue?: unknown;
   threadId?: string | null;
   useDraft?: boolean;

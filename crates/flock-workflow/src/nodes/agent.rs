@@ -7,7 +7,7 @@ use langgraph_prebuilt::types::Message as LgMessage;
 use flock_core::ipc_interface::events::ProtocolEvent;
 use flock_core::ipc_interface::writer::ProtocolEmitter;
 use flock_core::types::message::ContentBlock;
-use super::common::{WorkflowNodeContext, parse_state, interpolate_string_with_context, resolve_model, parse_retry_config, parse_timeout_config, execute_with_retry, WorkflowSink};
+use super::common::{WorkflowNodeContext, parse_state, interpolate_string_with_context, resolve_model, parse_retry_config, parse_timeout_config, execute_with_retry, WorkflowSink, extract_images_from_outputs, check_model_vision_capability};
 
 struct WorkflowEmitter {
     sink: Arc<dyn WorkflowSink>,
@@ -175,8 +175,48 @@ pub fn make_agent_workflow_node(
                     }
 
                     let mut run_messages = Vec::new();
-                    if !user_prompt.is_empty() {
-                        let human_msg = LgMessage::human(user_prompt.clone());
+                    let extracted_images = extract_images_from_outputs(&state.node_outputs);
+                    let human_msg = if !extracted_images.is_empty() {
+                        let configured_model = node_data.get("model")
+                            .and_then(|v| v.as_str())
+                            .filter(|s| !s.is_empty());
+                        let model_name = if let Some(m) = configured_model {
+                            m.to_string()
+                        } else {
+                            let default_model: Option<String> = sqlx::query_scalar(
+                                "SELECT value FROM config WHERE key = 'model'"
+                            )
+                            .fetch_optional(ctx.db.pool())
+                            .await
+                            .unwrap_or(None);
+                            default_model.unwrap_or_else(|| "gpt-4o".to_string())
+                        };
+                        if !check_model_vision_capability(&ctx.db, &model_name).await {
+                            return Err(format!("The resolved model '{}' does not support vision capability, but image inputs were provided. Please switch to a vision-capable model or remove the images.", model_name));
+                        }
+
+                        let mut blocks = vec![
+                            langgraph_prebuilt::types::ContentBlock::Text {
+                                text: user_prompt.clone(),
+                            }
+                        ];
+                        for (mime, data) in &extracted_images {
+                            blocks.push(langgraph_prebuilt::types::ContentBlock::ImageUrl {
+                                image_url: langgraph_prebuilt::types::ImageUrl {
+                                    url: format!("data:{};base64,{}", mime, data),
+                                    detail: None,
+                                },
+                            });
+                        }
+                        LgMessage::Human {
+                            content: langgraph_prebuilt::types::MessageContent::Blocks(blocks),
+                            id: None,
+                        }
+                    } else {
+                        LgMessage::human(user_prompt.clone())
+                    };
+
+                    if !user_prompt.is_empty() || !extracted_images.is_empty() {
                         local_messages.push(human_msg.clone());
                         run_messages.push(human_msg);
                     }

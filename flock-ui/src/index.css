@@ -66,11 +66,15 @@ body, input, button, select, textarea {
   --mantine-color-dimmed: #a1a1aa;
 }
 
+html {
+  background: transparent !important;
+}
+
 body {
   margin: 0;
   padding: 0;
   min-height: 100vh;
-  background: var(--flock-bg-deepest);
+  background: transparent !important;
   color: var(--flock-text-secondary);
   overflow: hidden;
 }
@@ -79,6 +83,11 @@ body {
   height: 100vh;
   display: flex;
   flex-direction: column;
+  background: var(--flock-bg-deepest);
+  border-radius: 12px;
+  overflow: hidden;
+  border: 1px solid var(--flock-border-base);
+  box-shadow: 0 12px 36px rgba(0, 0, 0, 0.28);
 }
 
 /* ---- Scrollbar ---- */
@@ -382,4 +391,27 @@ body {
   100% {
     box-shadow: 0 0 20px rgba(34, 139, 230, 0.8), 0 0 4px var(--flock-accent);
   }
+}
+
+/* ---- Codex Glassmorphic Panels ---- */
+.glass-panel-base {
+  backdrop-filter: blur(20px) saturate(190%) !important;
+  -webkit-backdrop-filter: blur(20px) saturate(190%) !important;
+}
+[data-theme="light"] .glass-panel-base {
+  background: rgba(255, 255, 255, 0.72) !important;
+}
+[data-theme="dark"] .glass-panel-base {
+  background: rgba(34, 34, 37, 0.72) !important;
+}
+
+.glass-panel-surface {
+  backdrop-filter: blur(20px) saturate(190%) !important;
+  -webkit-backdrop-filter: blur(20px) saturate(190%) !important;
+}
+[data-theme="light"] .glass-panel-surface {
+  background: rgba(249, 250, 251, 0.65) !important;
+}
+[data-theme="dark"] .glass-panel-surface {
+  background: rgba(28, 28, 31, 0.65) !important;
 }

@@ -1,7 +1,16 @@
 import { useRef, KeyboardEvent } from 'react';
 import { Box, Group, Button, Textarea, Tooltip, ActionIcon, Text } from '@mantine/core';
-import { IconSend, IconPlayerStop } from '@tabler/icons-react';
+import { IconSend, IconPlayerStop, IconPaperclip, IconPhoto, IconX } from '@tabler/icons-react';
 import { useTranslation } from 'react-i18next';
+
+export interface ChatAttachment {
+  id: string;
+  kind: 'image' | 'file';
+  name: string;
+  mime_type: string;
+  size: number;
+  data_base64?: string;
+}
 
 interface ChatInputProps {
   value: string;
@@ -17,6 +26,13 @@ interface ChatInputProps {
   rightExtra?: React.ReactNode;
   stopLabel?: string;
   sendLabel?: string;
+  
+  // Attachments support
+  attachments?: ChatAttachment[];
+  onAddFile?: (file: File) => void;
+  onRemoveFile?: (id: string) => void;
+  allowFileUpload?: boolean;
+  allowImageUpload?: boolean;
 }
 
 export function ChatInput({
@@ -33,10 +49,19 @@ export function ChatInput({
   rightExtra,
   stopLabel,
   sendLabel,
+  attachments = [],
+  onAddFile,
+  onRemoveFile,
+  allowFileUpload = false,
+  allowImageUpload = false,
 }: ChatInputProps) {
   const { t } = useTranslation();
   const textareaRef = useRef<HTMLTextAreaElement>(null);
-  const canSend = value.trim().length > 0 && !disabled && !isStreaming;
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const imageInputRef = useRef<HTMLInputElement>(null);
+
+  const hasAttachments = attachments && attachments.length > 0;
+  const canSend = (value.trim().length > 0 || hasAttachments) && !disabled && !isStreaming;
 
   const handleKeyDown = (e: KeyboardEvent<HTMLTextAreaElement>) => {
     if (e.key === 'Enter' && !e.shiftKey) {
@@ -44,6 +69,22 @@ export function ChatInput({
       if (canSend) {
         onSend();
       }
+    }
+  };
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file && onAddFile) {
+      onAddFile(file);
+      e.target.value = '';
+    }
+  };
+
+  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file && onAddFile) {
+      onAddFile(file);
+      e.target.value = '';
     }
   };
 
@@ -84,6 +125,64 @@ export function ChatInput({
             transition: 'border-color 0.15s, box-shadow 0.15s',
           }}
         >
+          {/* Attachments Preview */}
+          {hasAttachments && (
+            <Group gap="xs" mb="xs" wrap="wrap">
+              {attachments.map((att) => (
+                <Box
+                  key={att.id}
+                  style={{
+                    position: 'relative',
+                    background: 'var(--flock-bg-surface)',
+                    border: '1px solid var(--flock-border-dim)',
+                    borderRadius: 8,
+                    padding: att.kind === 'image' ? 0 : '4px 8px',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: 6,
+                    height: 48,
+                    overflow: 'hidden',
+                  }}
+                >
+                  {att.kind === 'image' && att.data_base64 ? (
+                    <img
+                      src={att.data_base64}
+                      alt={att.name}
+                      style={{
+                        height: '100%',
+                        width: 48,
+                        objectFit: 'cover',
+                      }}
+                    />
+                  ) : (
+                    <IconPaperclip size={16} style={{ color: 'var(--flock-accent)' }} />
+                  )}
+                  {att.kind !== 'image' && (
+                    <Text size="xs" style={{ maxWidth: 100, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                      {att.name}
+                    </Text>
+                  )}
+                  <ActionIcon
+                    size="xs"
+                    color="gray"
+                    variant="subtle"
+                    onClick={() => onRemoveFile?.(att.id)}
+                    style={{
+                      position: att.kind === 'image' ? 'absolute' : 'static',
+                      top: 2,
+                      right: 2,
+                      background: att.kind === 'image' ? 'rgba(0,0,0,0.5)' : 'transparent',
+                      color: att.kind === 'image' ? '#fff' : 'inherit',
+                      borderRadius: '50%',
+                    }}
+                  >
+                    <IconX size={10} />
+                  </ActionIcon>
+                </Box>
+              ))}
+            </Group>
+          )}
+
           <Textarea
             ref={textareaRef}
             variant="unstyled"
@@ -118,6 +217,51 @@ export function ChatInput({
           <Group justify="space-between" mt={6} wrap="nowrap" style={{ width: '100%', height: 32 }}>
             <Group gap={8} wrap="nowrap" style={{ flexShrink: 1, minWidth: 0 }}>
               {leftExtra}
+
+              {/* Paperclip Button */}
+              {allowFileUpload && onAddFile && (
+                <>
+                  <Tooltip label={t('chat.upload.fileBtn', '上传文件')} withArrow>
+                    <ActionIcon
+                      size="md"
+                      variant="subtle"
+                      color="gray"
+                      onClick={() => fileInputRef.current?.click()}
+                    >
+                      <IconPaperclip size={16} />
+                    </ActionIcon>
+                  </Tooltip>
+                  <input
+                    type="file"
+                    ref={fileInputRef}
+                    onChange={handleFileChange}
+                    style={{ display: 'none' }}
+                  />
+                </>
+              )}
+
+              {/* Photo Button */}
+              {allowImageUpload && onAddFile && (
+                <>
+                  <Tooltip label={t('chat.upload.imageBtn', '上传图片')} withArrow>
+                    <ActionIcon
+                      size="md"
+                      variant="subtle"
+                      color="gray"
+                      onClick={() => imageInputRef.current?.click()}
+                    >
+                      <IconPhoto size={16} />
+                    </ActionIcon>
+                  </Tooltip>
+                  <input
+                    type="file"
+                    accept="image/*"
+                    ref={imageInputRef}
+                    onChange={handleImageChange}
+                    style={{ display: 'none' }}
+                  />
+                </>
+              )}
             </Group>
 
             <Group gap={6} wrap="nowrap" style={{ flexShrink: 0 }}>

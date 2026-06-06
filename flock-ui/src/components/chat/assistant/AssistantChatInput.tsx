@@ -15,6 +15,10 @@ import { v4 as uuidv4 } from 'uuid';
 import { IconShieldCheck, IconBolt, IconFlame } from '@tabler/icons-react';
 import { ActionIcon, Tooltip, Menu, Button } from '@mantine/core';
 import { ActiveModelPicker } from '@/components/Common/ActiveModelPicker';
+import { useChatAttachments } from '@/hooks/useChatAttachments';
+import { AssistantInputConfig } from '@/types/assistant';
+import { useAssistantsQuery } from '@/hooks/useAssistants';
+import { useWorkflowQuery, useWorkflowsQuery } from '@/hooks/useWorkflow';
 
 const MODE_OPTIONS = [
   { value: 'default', labelKey: 'chat.mode.default', labelDefault: 'Approval Mode', icon: IconShieldCheck, color: 'blue' },
@@ -88,8 +92,61 @@ export function AssistantChatInput() {
   const setError = useAgentStore((s) => s.setError);
   const { activeWorkspaceId, activeConversationId } = useWorkspaceStore();
   const { data: workspaces = [] } = useWorkspacesQuery();
+
+  const conversationAssistants = useWorkspaceStore((s) => s.conversationAssistants);
+  const activeAsstId = activeConversationId ? conversationAssistants[activeConversationId] : null;
+  const isWorkflow = !!activeAsstId?.startsWith('workflow:');
+  const workflowId = isWorkflow && activeAsstId ? activeAsstId.replace('workflow:', '') : null;
+
+  const { data: assistants = [] } = useAssistantsQuery();
+  const { data: workflows = [] } = useWorkflowsQuery();
+  const activeWorkflow = isWorkflow ? workflows.find(w => w.id === workflowId) : null;
+
+  let inputConfig: AssistantInputConfig = {
+    allow_file_upload: true,
+    allow_image_upload: true,
+    max_file_count: 5,
+    max_file_size_mb: 10,
+    allowed_mime_types: [],
+  };
+
+  if (isWorkflow) {
+    const startNode = activeWorkflow?.config?.nodes?.find(n => n.type === 'start');
+    inputConfig = {
+      allow_file_upload: !!startNode?.data?.file_input_enabled,
+      allow_image_upload: !!startNode?.data?.image_input_enabled,
+      max_file_count: (startNode?.data?.max_file_count as number) ?? 5,
+      max_file_size_mb: 10,
+      allowed_mime_types: [],
+    };
+  } else if (activeAsstId && activeAsstId !== '__xiaof__') {
+    const activeAssistant = assistants.find(a => a.id === activeAsstId);
+    if (activeAssistant) {
+      try {
+        const parsed = JSON.parse(activeAssistant.input_config || '{}');
+        inputConfig = {
+          allow_file_upload: parsed.allow_file_upload ?? true,
+          allow_image_upload: parsed.allow_image_upload ?? true,
+          max_file_count: parsed.max_file_count ?? 5,
+          max_file_size_mb: parsed.max_file_size_mb ?? 10,
+          allowed_mime_types: parsed.allowed_mime_types || [],
+        };
+      } catch (e) {
+        // Fallback to default
+      }
+    }
+  }
+
+  const {
+    attachments,
+    addFile,
+    removeFile,
+    clearFiles,
+    isUploading,
+  } = useChatAttachments(inputConfig);
+
   const isStreaming = status === 'thinking';
-  const canSend = status === 'ready' && value.trim().length > 0 && !!activeWorkspaceId;
+  const canSend = status === 'ready' && (value.trim().length > 0 || attachments.length > 0) && !!activeWorkspaceId;
 
   const placeholder = !activeWorkspaceId
     ? t('chat.chooseWorkspace')
@@ -109,7 +166,17 @@ export function AssistantChatInput() {
     const userUiId = `user-${uuidv4()}`;
     const streamMsgId = uuidv4();
     setValue('');
-    addUserMessage(userUiId, content);
+
+    // Format UI message with attachment indicator if any
+    let displayContent = content;
+    if (attachments.length > 0) {
+      const names = attachments.map(a => a.name).join(', ');
+      displayContent = `${content}\n\n*[📎 Attachments: ${names}]*`;
+    }
+    addUserMessage(userUiId, displayContent);
+
+    const currentAttachments = [...attachments];
+    clearFiles();
 
     const assistants = useWorkspaceStore.getState().conversationAssistants;
     const activeAsst = activeConversationId ? assistants[activeConversationId] : null;
@@ -120,7 +187,17 @@ export function AssistantChatInput() {
       try {
         await taskService.runWorkflow({
           workflowId,
-          input: content,
+          input: {
+            text: content,
+            attachments: currentAttachments.map(att => ({
+              id: att.id,
+              kind: att.kind,
+              name: att.name,
+              mime_type: att.mime_type,
+              size: att.size,
+              data_base64: att.data_base64 || null,
+            })),
+          },
           threadId: activeConversationId,
         });
       } catch (e: any) {
@@ -134,7 +211,15 @@ export function AssistantChatInput() {
       await invoke('send_message', {
         sessionId: activeConversationId || null,
         msgId: streamMsgId,
-        content
+        content,
+        attachments: currentAttachments.map(att => ({
+          id: att.id,
+          kind: att.kind,
+          name: att.name,
+          mime_type: att.mime_type,
+          size: att.size,
+          data_base64: att.data_base64 || null,
+        })),
       });
     } catch (e: any) {
       console.error('send_message error:', e);
@@ -250,8 +335,13 @@ export function AssistantChatInput() {
         onSend={handleSend}
         onStop={handleStop}
         isStreaming={isStreaming}
-        disabled={!activeWorkspaceId || status === 'disconnected' || status === 'connecting'}
+        disabled={!activeWorkspaceId || status === 'disconnected' || status === 'connecting' || isUploading}
         placeholder={placeholder}
+        attachments={attachments}
+        onAddFile={addFile}
+        onRemoveFile={removeFile}
+        allowFileUpload={inputConfig.allow_file_upload}
+        allowImageUpload={inputConfig.allow_image_upload}
         leftExtra={
           <>
             <ActiveModelPicker />

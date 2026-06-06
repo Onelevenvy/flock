@@ -14,12 +14,12 @@ export function Sidebar() {
   return (
     <>
       <Box
+        className="glass-panel-base"
         style={{
           width: 260,
           display: 'flex',
           flexDirection: 'column',
           height: '100%',
-          background: 'var(--flock-bg-base)',
           border: '1px solid var(--flock-border-subtle)',
           borderRadius: '16px',
           boxShadow: '0 4px 20px rgba(0, 0, 0, 0.03)',
