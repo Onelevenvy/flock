@@ -26,7 +26,5 @@ anyhow.workspace      = true
 
 # LangGraph graph runtime
 langgraph.workspace                   = true
-langgraph-derive.workspace            = true
-langgraph-prebuilt.workspace          = true
 
 workspace-hack.workspace = true

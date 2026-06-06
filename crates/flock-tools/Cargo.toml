@@ -13,8 +13,6 @@ repository.workspace = true
 flock-core.workspace     = true
 
 langgraph.workspace = true
-langgraph-prebuilt.workspace = true
-langgraph-checkpoint.workspace = true
 
 tokio.workspace       = true
 futures.workspace     = true
