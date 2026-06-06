@@ -210,6 +210,7 @@ impl DbManager {
                     icon        = excluded.icon,
                     description = excluded.description,
                     sort_order  = excluded.sort_order,
+                    input_config = excluded.input_config,
                     updated_at  = excluded.updated_at",
             )
             .bind(id)

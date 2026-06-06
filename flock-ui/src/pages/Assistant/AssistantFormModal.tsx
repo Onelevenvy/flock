@@ -79,12 +79,11 @@ export function AssistantFormModal({
               {t('assistant.form.nameAndAvatar')}
             </Text>
             <Group gap="xs" style={{ width: '100%', alignItems: 'center' }}>
-              <IconPicker value={icon} onChange={setIcon} disabled={isBuiltin} />
+              <IconPicker value={icon} onChange={setIcon} />
               <TextInput
                 placeholder={t('assistant.form.namePlaceholder')}
                 value={name}
                 onChange={(e) => setName(e.currentTarget.value)}
-                disabled={isBuiltin}
                 style={{ flex: 1 }}
                 styles={{
                   input: {
@@ -103,7 +102,6 @@ export function AssistantFormModal({
             value={description}
             onChange={(e) => setDescription(e.currentTarget.value)}
             rows={2}
-            disabled={isBuiltin}
             styles={{
               input: {
                 background: 'var(--flock-bg-surface)',
@@ -232,7 +230,6 @@ export function AssistantFormModal({
                 description={t('assistant.form.allowFileUploadDesc', '允许上传常规文件')}
                 checked={allowFileUpload}
                 onChange={(event) => setAllowFileUpload(event.currentTarget.checked)}
-                disabled={isBuiltin}
               />
               
               <Tooltip label={!supportsVision ? t('assistant.form.visionNotSupported', '所选模型不支持视觉能力') : ''} disabled={supportsVision} position="top">
@@ -242,7 +239,7 @@ export function AssistantFormModal({
                     description={t('assistant.form.allowImageUploadDesc', '支持视觉模型开启')}
                     checked={allowImageUpload && supportsVision}
                     onChange={(event) => setAllowImageUpload(event.currentTarget.checked)}
-                    disabled={isBuiltin || !supportsVision}
+                    disabled={!supportsVision}
                   />
                 </div>
               </Tooltip>
@@ -258,7 +255,6 @@ export function AssistantFormModal({
                     max={20}
                     value={maxFileCount}
                     onChange={(e) => setMaxFileCount(Math.max(1, parseInt(e.target.value) || 1))}
-                    disabled={isBuiltin}
                     style={{
                       background: 'var(--flock-bg-surface)',
                       border: '1px solid var(--flock-border-dim)',
@@ -278,7 +274,6 @@ export function AssistantFormModal({
                     max={100}
                     value={maxFileSizeMb}
                     onChange={(e) => setMaxFileSizeMb(Math.max(1, parseInt(e.target.value) || 1))}
-                    disabled={isBuiltin}
                     style={{
                       background: 'var(--flock-bg-surface)',
                       border: '1px solid var(--flock-border-dim)',
