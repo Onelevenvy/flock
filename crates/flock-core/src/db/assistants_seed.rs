@@ -26,7 +26,7 @@ pub fn builtin_assistants() -> Vec<UpsertAssistant> {
             skills: vec![],
             is_builtin: true,
             sort_order: 0,
-            input_config: None,
+            input_config: Some(r#"{"allow_file_upload":true,"allow_image_upload":true,"max_file_count":5,"max_file_size_mb":10,"allowed_mime_types":[]}"#.to_string()),
         },
         UpsertAssistant {
             id: Some("builtin-writer".to_string()),
@@ -51,7 +51,7 @@ pub fn builtin_assistants() -> Vec<UpsertAssistant> {
             skills: vec![],
             is_builtin: true,
             sort_order: 1,
-            input_config: None,
+            input_config: Some(r#"{"allow_file_upload":true,"allow_image_upload":true,"max_file_count":5,"max_file_size_mb":10,"allowed_mime_types":[]}"#.to_string()),
         },
         UpsertAssistant {
             id: Some("builtin-analyst".to_string()),
@@ -76,7 +76,7 @@ pub fn builtin_assistants() -> Vec<UpsertAssistant> {
             skills: vec![],
             is_builtin: true,
             sort_order: 2,
-            input_config: None,
+            input_config: Some(r#"{"allow_file_upload":true,"allow_image_upload":true,"max_file_count":5,"max_file_size_mb":10,"allowed_mime_types":[]}"#.to_string()),
         },
         UpsertAssistant {
             id: Some("builtin-computer-use".to_string()),
@@ -102,7 +102,7 @@ pub fn builtin_assistants() -> Vec<UpsertAssistant> {
             skills: vec![],
             is_builtin: true,
             sort_order: 3,
-            input_config: None,
+            input_config: Some(r#"{"allow_file_upload":true,"allow_image_upload":true,"max_file_count":5,"max_file_size_mb":10,"allowed_mime_types":[]}"#.to_string()),
         },
     ]
 }

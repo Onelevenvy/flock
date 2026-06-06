@@ -68,7 +68,8 @@
     "showModels": "Show models",
     "disableModelTooltip": "Click to disable model",
     "enableModelTooltip": "Click to enable model",
-    "activateProviderTooltip": "Please complete provider connection test to activate"
+    "activateProviderTooltip": "Please complete provider connection test to activate",
+    "supportsVision": "Supports Vision"
   },
   "provider": {
     "activatingTitle": "Activating Provider",

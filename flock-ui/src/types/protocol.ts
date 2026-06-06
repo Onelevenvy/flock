@@ -93,7 +93,12 @@ export interface InfoChunk {
   message: string;
 }
 
-export type MessageChunk = TextChunk | ThinkingChunk | ToolRequestChunk | InfoChunk;
+export interface ImageChunk {
+  kind: 'image';
+  text: string;
+}
+
+export type MessageChunk = TextChunk | ThinkingChunk | ToolRequestChunk | InfoChunk | ImageChunk;
 
 export interface ChatMessage {
   id: string;           // msg_id（user 消息自生成，assistant 来自 stream_start）

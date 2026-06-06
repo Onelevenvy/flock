@@ -173,7 +173,7 @@ export function AssistantChatInput() {
       const names = attachments.map(a => a.name).join(', ');
       displayContent = `${content}\n\n*[📎 Attachments: ${names}]*`;
     }
-    addUserMessage(userUiId, displayContent);
+    addUserMessage(userUiId, displayContent, attachments);
 
     const currentAttachments = [...attachments];
     clearFiles();

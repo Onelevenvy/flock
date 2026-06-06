@@ -296,6 +296,7 @@ pub async fn upsert_custom_model(
     model_name: String,
     base_url: String,
     api_key: String,
+    capabilities: Option<Vec<String>>,
 ) -> Result<(), String> {
     let db_inner = db.inner().clone();
     
@@ -317,7 +318,7 @@ pub async fn upsert_custom_model(
         provider_id: provider_id.clone(),
         model_name,
         categories: vec!["chat".to_string()],
-        capabilities: vec![],
+        capabilities: capabilities.unwrap_or_default(),
         is_online: true,
         meta: Some(meta),
         created_at: String::new(), // Will be handled by DB

@@ -142,6 +142,18 @@ impl DbManager {
                                     .map(|s| s.to_string()),
                             });
                         }
+                        "image" => {
+                            let media_type = obj.get("media_type").and_then(|v| v.as_str()).unwrap_or("image/png").to_string();
+                            let data = obj.get("data").and_then(|v| v.as_str()).unwrap_or("").to_string();
+                            chunks.push(MessageChunk {
+                                kind: "image".to_string(),
+                                text: Some(format!("data:{};base64,{}", media_type, data)),
+                                call_id: None,
+                                tool: None,
+                                status: None,
+                                result: None,
+                            });
+                        }
                         _ => {}
                     }
                 }
@@ -149,7 +161,7 @@ impl DbManager {
 
             let has_visible_content = chunks
                 .iter()
-                .any(|c| matches!(c.kind.as_str(), "text" | "thinking" | "tool_request"));
+                .any(|c| matches!(c.kind.as_str(), "text" | "thinking" | "tool_request" | "image"));
 
             if !has_visible_content || role == "tool" {
                 continue;

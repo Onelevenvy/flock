@@ -39,7 +39,7 @@ export interface AgentStore {
   setError: (msg: string | null, sessionId?: string) => void;
   setCapabilities: (caps: Capabilities, sessionId?: string) => void;
   setPlaybackIndex: (index: number, sessionId?: string) => void;
-  addUserMessage: (id: string, content: string, sessionId?: string) => void;
+  addUserMessage: (id: string, content: string, attachments?: any[], sessionId?: string) => void;
   handleEvent: (event: ProtocolEvent) => void;
   removePendingApproval: (call_id: string, sessionId?: string) => void;
   addPendingApproval: (approval: PendingApproval, sessionId?: string) => void;
@@ -116,15 +116,23 @@ export const useAgentStore = create<AgentStore>((set, get) => {
     setCapabilities: (caps, sessionId) => updateSessionState(sessionId || getActiveSessionId(), { capabilities: caps }),
     setPlaybackIndex: (playbackIndex, sessionId) => updateSessionState(sessionId || getActiveSessionId(), { playbackIndex }),
 
-    addUserMessage: (id, content, sessionId) => {
+    addUserMessage: (id, content, attachments, sessionId) => {
       const targetSessionId = sessionId || getActiveSessionId();
+      const chunks: any[] = [{ kind: 'text', text: content }];
+      if (attachments && attachments.length > 0) {
+        attachments.forEach((att: any) => {
+          if (att.kind === 'image' && att.data_base64) {
+            chunks.push({ kind: 'image', text: att.data_base64 });
+          }
+        });
+      }
       updateSessionState(targetSessionId, (prev) => ({
         messages: [
           ...prev.messages,
           {
             id,
             role: 'user',
-            chunks: [{ kind: 'text', text: content }],
+            chunks,
             streaming: false,
             timestamp: Date.now(),
           },
