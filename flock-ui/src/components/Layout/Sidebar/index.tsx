@@ -20,6 +20,8 @@ export function Sidebar() {
           flexDirection: 'column',
           height: '100%',
           background: 'var(--flock-bg-base)',
+          backdropFilter: 'blur(20px) saturate(190%)',
+          WebkitBackdropFilter: 'blur(20px) saturate(190%)',
           border: '1px solid var(--flock-border-subtle)',
           borderRadius: '16px',
           boxShadow: '0 4px 20px rgba(0, 0, 0, 0.03)',

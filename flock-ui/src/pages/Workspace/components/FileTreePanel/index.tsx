@@ -132,6 +132,8 @@ export function FileTreePanel({ workspaceIdOverride, isOpenOverride }: FileTreeP
         minWidth: isPanelOpen ? 260 : 0,
         height: '100%',
         background: 'var(--flock-bg-base)',
+        backdropFilter: 'blur(20px) saturate(190%)',
+        WebkitBackdropFilter: 'blur(20px) saturate(190%)',
         border: isPanelOpen ? '1px solid var(--flock-border-subtle)' : 'none',
         borderRadius: isPanelOpen ? '16px' : '0',
         boxShadow: isPanelOpen ? '0 4px 20px rgba(0, 0, 0, 0.03)' : 'none',

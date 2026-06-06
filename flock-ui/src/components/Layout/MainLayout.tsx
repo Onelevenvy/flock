@@ -74,6 +74,8 @@ export function MainLayout() {
               overflow: 'hidden',
               minWidth: 0,
               background: 'var(--flock-bg-surface)',
+              backdropFilter: 'blur(20px) saturate(190%)',
+              WebkitBackdropFilter: 'blur(20px) saturate(190%)',
               borderRadius: '16px',
               border: '1px solid var(--flock-border-subtle)',
               boxShadow: '0 4px 20px rgba(0, 0, 0, 0.03)',
