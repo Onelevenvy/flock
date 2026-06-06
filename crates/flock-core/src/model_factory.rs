@@ -2,9 +2,9 @@ use std::collections::HashMap;
 use std::sync::{Arc, RwLock};
 
 use serde_json::json;
-use langgraph_prebuilt::BaseChatModel;
-use langgraph_providers::openai::{OpenAIModel, OpenAIModelConfig};
-use langgraph_providers::anthropic::{AnthropicModel, AnthropicModelConfig};
+use langgraph::prebuilt::BaseChatModel;
+use langgraph::providers::openai::{OpenAIModel, OpenAIModelConfig};
+use langgraph::providers::anthropic::{AnthropicModel, AnthropicModelConfig};
 
 /// Parameters for creating a model provider.
 pub struct ModelProviderParams {

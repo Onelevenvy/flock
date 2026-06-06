@@ -2,7 +2,7 @@ use crate::adapter::LangGraphToolAdapter;
 use crate::Tool;
 use flock_core::config::shell::shell_command;
 use flock_core::ipc_interface::events::ToolCategory;
-use langgraph_derive::tool;
+use langgraph::tool;
 use std::time::Duration;
 
 const DEFAULT_TIMEOUT_MS: u64 = 120_000;

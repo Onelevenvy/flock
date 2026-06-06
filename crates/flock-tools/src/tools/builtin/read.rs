@@ -3,7 +3,7 @@ use crate::file_cache::file_mtime_ms;
 use crate::Tool;
 use flock_core::ipc_interface::events::ToolCategory;
 use flock_core::types::file_state::FileState;
-use langgraph_derive::tool;
+use langgraph::tool;
 use std::path::Path;
 
 /// Stub returned when a file has not changed since the model last read it.

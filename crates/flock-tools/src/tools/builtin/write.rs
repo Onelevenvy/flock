@@ -2,7 +2,7 @@ use crate::adapter::LangGraphToolAdapter;
 use crate::file_cache::update_cache_after_write;
 use crate::Tool;
 use flock_core::ipc_interface::events::ToolCategory;
-use langgraph_derive::tool;
+use langgraph::tool;
 use std::path::Path;
 
 /// Writes content to a file, creating parent directories if needed.

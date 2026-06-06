@@ -3,7 +3,7 @@ use serde_json::{json, Value as JsonValue};
 use langgraph::prelude::RunnableConfig;
 use langgraph::runnable::RunnableError;
 use tokio_stream::StreamExt;
-use langgraph_prebuilt::types::Message as LgMessage;
+use langgraph::prebuilt::types::Message as LgMessage;
 use super::common::{WorkflowNodeContext, parse_state, interpolate_string_with_context, resolve_model, parse_retry_config, parse_timeout_config, execute_with_retry, extract_images_from_outputs, check_model_vision_capability};
 
 pub fn make_llm_workflow_node(
@@ -68,20 +68,20 @@ pub fn make_llm_workflow_node(
                         }
 
                         let mut blocks = vec![
-                            langgraph_prebuilt::types::ContentBlock::Text {
+                            langgraph::prebuilt::types::ContentBlock::Text {
                                 text: user_prompt.clone(),
                             }
                         ];
                         for (mime, data) in &extracted_images {
-                            blocks.push(langgraph_prebuilt::types::ContentBlock::ImageUrl {
-                                image_url: langgraph_prebuilt::types::ImageUrl {
+                            blocks.push(langgraph::prebuilt::types::ContentBlock::ImageUrl {
+                                image_url: langgraph::prebuilt::types::ImageUrl {
                                     url: format!("data:{};base64,{}", mime, data),
                                     detail: None,
                                 },
                             });
                         }
                         LgMessage::Human {
-                            content: langgraph_prebuilt::types::MessageContent::Blocks(blocks),
+                            content: langgraph::prebuilt::types::MessageContent::Blocks(blocks),
                             id: None,
                         }
                     } else {

@@ -1,5 +1,5 @@
 use std::sync::Arc;
-use langgraph_prebuilt::BaseChatModel;
+use langgraph::prebuilt::BaseChatModel;
 use flock_core::config::compression::CompressionConfig;
 use flock_core::types::llm::ThinkingConfig;
 use flock_tools::registry::ToolRegistry;

@@ -9,9 +9,9 @@
 //!
 //! This ensures maximum robustness with minimum boilerplate.
 
-use langgraph_derive::langgraph_state;
+use langgraph::langgraph_state;
 // Required for the compiler to recognize the #[channel] attribute
-pub use langgraph_derive::StateGraph; 
+pub use langgraph::StateGraph; 
 use serde_json::Value as JsonValue;
 
 use flock_core::types::message::TokenUsage;

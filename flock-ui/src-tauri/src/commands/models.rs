@@ -78,7 +78,7 @@ pub async fn test_provider_connection(
     db: State<'_, SharedDbManager>,
     provider_id: String,
 ) -> Result<String, String> {
-    use langgraph_prebuilt::BaseChatModel;
+    use langgraph::prebuilt::BaseChatModel;
     use flock_core::model_factory::{create_model, ModelProviderParams};
 
     // 1. 从数据库获取 provider 信息
@@ -121,8 +121,8 @@ pub async fn test_provider_connection(
         response_format: None,
     }).map_err(|e| format!("创建模型失败: {}", e))?;
 
-    let test_msg = langgraph_prebuilt::Message::Human {
-        content: langgraph_prebuilt::MessageContent::Text("Hi, reply with just 'OK'.".to_string()),
+    let test_msg = langgraph::prebuilt::Message::Human {
+        content: langgraph::prebuilt::MessageContent::Text("Hi, reply with just 'OK'.".to_string()),
         id: None,
     };
 
@@ -370,8 +370,8 @@ pub async fn test_custom_model_connection(
         response_format: None,
     }).map_err(|e| format!("创建模型实例失败: {}", e))?;
 
-    let test_msg = langgraph_prebuilt::Message::Human {
-        content: langgraph_prebuilt::MessageContent::Text("Hi, reply with just 'OK'.".to_string()),
+    let test_msg = langgraph::prebuilt::Message::Human {
+        content: langgraph::prebuilt::MessageContent::Text("Hi, reply with just 'OK'.".to_string()),
         id: None,
     };
 

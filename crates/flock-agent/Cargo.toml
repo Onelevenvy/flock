@@ -37,9 +37,7 @@ regex.workspace       = true
 langgraph.workspace                   = true
 langgraph-derive.workspace            = true
 langgraph-checkpoint.workspace        = true
-langgraph-checkpoint-sqlite.workspace = true
 langgraph-prebuilt.workspace          = true
-langgraph-providers.workspace         = true
 
 uuid.workspace           = true
 sqlx.workspace           = true

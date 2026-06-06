@@ -8,10 +8,10 @@ use tokio_stream::StreamExt;
 
 use langgraph::prelude::RunnableConfig;
 use langgraph::types::StreamMode;
-use langgraph_checkpoint::checkpoint::base::BaseCheckpointSaver;
-use langgraph_checkpoint::checkpoint::memory::InMemorySaver;
-use langgraph_checkpoint_sqlite::SqliteSaver;
-use langgraph_prebuilt::BaseChatModel;
+use langgraph::checkpoint::checkpoint::base::BaseCheckpointSaver;
+use langgraph::checkpoint::checkpoint::memory::InMemorySaver;
+use langgraph::sqlite::SqliteSaver;
+use langgraph::prebuilt::BaseChatModel;
 
 use flock_workflow::{build_workflow_graph, WorkflowNodeContext, WorkflowSink};
 use flock_core::model_factory::{CachedModelFactory, ModelFactory};

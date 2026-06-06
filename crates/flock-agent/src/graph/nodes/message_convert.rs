@@ -1,5 +1,5 @@
 use flock_core::types::message::{ContentBlock, Message, Role};
-use langgraph_prebuilt::types::Message as LgMessage;
+use langgraph::prebuilt::types::Message as LgMessage;
 
 /// Convert a Flock `Message` into a LangGraph `LgMessage`.
 ///
@@ -19,11 +19,11 @@ pub fn to_langgraph_message(flock_msg: Message) -> LgMessage {
         match block {
             ContentBlock::Text { text: t } => {
                 text.push_str(&t);
-                lg_blocks.push(langgraph_prebuilt::types::ContentBlock::Text { text: t });
+                lg_blocks.push(langgraph::prebuilt::types::ContentBlock::Text { text: t });
             }
             ContentBlock::Thinking { thinking: t } => thinking = Some(t),
             ContentBlock::ToolUse { id, name, input } => {
-                tool_calls.push(langgraph_prebuilt::ToolCall {
+                tool_calls.push(langgraph::prebuilt::ToolCall {
                     id: Some(id),
                     name,
                     args: input,
@@ -36,14 +36,14 @@ pub fn to_langgraph_message(flock_msg: Message) -> LgMessage {
             } => {
                 tool_call_id_opt = Some(tool_use_id);
                 is_error_opt = is_error;
-                lg_blocks.push(langgraph_prebuilt::types::ContentBlock::Text {
+                lg_blocks.push(langgraph::prebuilt::types::ContentBlock::Text {
                     text: content.clone(),
                 });
                 text.push_str(&content);
             }
             ContentBlock::Image { media_type, data } => {
-                lg_blocks.push(langgraph_prebuilt::types::ContentBlock::ImageUrl {
-                    image_url: langgraph_prebuilt::types::ImageUrl {
+                lg_blocks.push(langgraph::prebuilt::types::ContentBlock::ImageUrl {
+                    image_url: langgraph::prebuilt::types::ImageUrl {
                         url: format!("data:{};base64,{}", media_type, data),
                         detail: None,
                     },
@@ -55,7 +55,7 @@ pub fn to_langgraph_message(flock_msg: Message) -> LgMessage {
     if let Some(tool_use_id) = tool_call_id_opt {
         return LgMessage::Tool {
             tool_call_id: tool_use_id,
-            content: langgraph_prebuilt::types::MessageContent::Blocks(lg_blocks),
+            content: langgraph::prebuilt::types::MessageContent::Blocks(lg_blocks),
             name: None,
             id: None,
             status: if is_error_opt {
@@ -72,12 +72,12 @@ pub fn to_langgraph_message(flock_msg: Message) -> LgMessage {
             let has_image = lg_blocks.iter().any(|b| {
                 matches!(
                     b,
-                    langgraph_prebuilt::types::ContentBlock::ImageUrl { .. }
+                    langgraph::prebuilt::types::ContentBlock::ImageUrl { .. }
                 )
             });
             if has_image {
                 LgMessage::Human {
-                    content: langgraph_prebuilt::types::MessageContent::Blocks(lg_blocks),
+                    content: langgraph::prebuilt::types::MessageContent::Blocks(lg_blocks),
                     id: None,
                 }
             } else {
@@ -108,7 +108,7 @@ pub fn to_langgraph_message(flock_msg: Message) -> LgMessage {
             }
         }
         Role::Tool => LgMessage::System {
-            content: langgraph_prebuilt::types::MessageContent::Text(
+            content: langgraph::prebuilt::types::MessageContent::Text(
                 "unknown tool result".to_string(),
             ),
             id: None,

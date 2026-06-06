@@ -11,7 +11,7 @@ use flock_tools::builtin::grep::GrepTool;
 use flock_tools::builtin::read::ReadTool;
 use flock_tools::builtin::write::WriteTool;
 use flock_tools::registry::ToolRegistry;
-use langgraph_prebuilt::BaseChatModel;
+use langgraph::prebuilt::BaseChatModel;
 
 use crate::engine::AgentEngine;
 use crate::sinks::null_sink::NullSink;

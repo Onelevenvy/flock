@@ -8,8 +8,7 @@ repository.workspace = true
 
 [dependencies]
 # Dependencies from merged crates
-langgraph-prebuilt.workspace = true
-langgraph-providers.workspace = true
+langgraph.workspace          = true
 serde.workspace      = true
 serde_json.workspace = true
 async-trait.workspace = true

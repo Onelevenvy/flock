@@ -2,8 +2,8 @@
 //!
 //! Using `#[langgraph_state]` automates StateGraph channels generation.
 
-use langgraph_derive::langgraph_state;
-pub use langgraph_derive::StateGraph;
+use langgraph::langgraph_state;
+pub use langgraph::StateGraph;
 use serde_json::Value as JsonValue;
 
 #[langgraph_state]
