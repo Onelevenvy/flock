@@ -222,3 +222,100 @@ pub fn parse_state(input: &JsonValue) -> WorkflowState {
         }
     })
 }
+
+pub async fn check_model_vision_capability(db: &flock_core::db::DbManager, model_name: &str) -> bool {
+    let query_res: Result<Option<String>, sqlx::Error> = sqlx::query_scalar(
+        "SELECT capabilities FROM model WHERE model_name = ?1 OR id = ?1"
+    )
+    .bind(model_name)
+    .fetch_optional(db.pool())
+    .await;
+    
+    if let Ok(Some(caps_json)) = query_res {
+        if let Ok(caps) = serde_json::from_str::<Vec<String>>(&caps_json) {
+            return caps.contains(&"vision".to_string());
+        }
+    }
+    
+    // Fallback/defaults: some standard models support vision
+    let model_lower = model_name.to_lowercase();
+    if model_lower.contains("gpt-4o") || model_lower.contains("claude-3") || model_lower.contains("gemini-1.5") || model_lower.contains("vl") || model_lower.contains("vision") {
+        return true;
+    }
+    
+    false
+}
+
+pub fn extract_images_from_outputs(node_outputs: &JsonValue) -> Vec<(String, String)> {
+    let mut result = Vec::new();
+    // Check "start" key
+    if let Some(start_obj) = node_outputs.get("start").and_then(|v| v.as_object()) {
+        extract_from_object(start_obj, &mut result);
+    }
+    // Also check other keys in node_outputs to be robust
+    if let Some(outputs_obj) = node_outputs.as_object() {
+        for (k, v) in outputs_obj {
+            if k != "start" {
+                if let Some(obj) = v.as_object() {
+                    extract_from_object(obj, &mut result);
+                }
+            }
+        }
+    }
+    result
+}
+
+fn extract_from_object(obj: &serde_json::Map<String, JsonValue>, result: &mut Vec<(String, String)>) {
+    // Look for fields like "images", "image", "attachments"
+    for key in &["images", "image", "attachments"] {
+        if let Some(val) = obj.get(*key) {
+            if let Some(arr) = val.as_array() {
+                for item in arr {
+                    if let Some(item_obj) = item.as_object() {
+                        let url = item_obj.get("url").and_then(|v| v.as_str())
+                            .or_else(|| item_obj.get("data").and_then(|v| v.as_str()))
+                            .or_else(|| item_obj.get("data_base64").and_then(|v| v.as_str()));
+                        if let Some(url_str) = url {
+                            if let Some((mime, data)) = parse_image_url(url_str) {
+                                result.push((mime, data));
+                            }
+                        }
+                    } else if let Some(url_str) = item.as_str() {
+                        if let Some((mime, data)) = parse_image_url(url_str) {
+                            result.push((mime, data));
+                        }
+                    }
+                }
+            } else if let Some(item_obj) = val.as_object() {
+                let url = item_obj.get("url").and_then(|v| v.as_str())
+                    .or_else(|| item_obj.get("data").and_then(|v| v.as_str()))
+                    .or_else(|| item_obj.get("data_base64").and_then(|v| v.as_str()));
+                if let Some(url_str) = url {
+                    if let Some((mime, data)) = parse_image_url(url_str) {
+                        result.push((mime, data));
+                    }
+                }
+            } else if let Some(url_str) = val.as_str() {
+                if let Some((mime, data)) = parse_image_url(url_str) {
+                    result.push((mime, data));
+                }
+            }
+        }
+    }
+}
+
+fn parse_image_url(url: &str) -> Option<(String, String)> {
+    if url.starts_with("data:") {
+        // format: data:image/png;base64,iVBORw0KGgoAAAANSU...
+        if let Some(comma_pos) = url.find(',') {
+            let prefix = &url[..comma_pos];
+            let data = &url[comma_pos + 1..];
+            let mime = prefix.strip_prefix("data:")?
+                .split(';')
+                .next()?
+                .to_string();
+            return Some((mime, data.to_string()));
+        }
+    }
+    None
+}

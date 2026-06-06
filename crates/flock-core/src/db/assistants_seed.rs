@@ -26,6 +26,7 @@ pub fn builtin_assistants() -> Vec<UpsertAssistant> {
             skills: vec![],
             is_builtin: true,
             sort_order: 0,
+            input_config: None,
         },
         UpsertAssistant {
             id: Some("builtin-writer".to_string()),
@@ -50,6 +51,7 @@ pub fn builtin_assistants() -> Vec<UpsertAssistant> {
             skills: vec![],
             is_builtin: true,
             sort_order: 1,
+            input_config: None,
         },
         UpsertAssistant {
             id: Some("builtin-analyst".to_string()),
@@ -74,6 +76,7 @@ pub fn builtin_assistants() -> Vec<UpsertAssistant> {
             skills: vec![],
             is_builtin: true,
             sort_order: 2,
+            input_config: None,
         },
         UpsertAssistant {
             id: Some("builtin-computer-use".to_string()),
@@ -99,6 +102,7 @@ pub fn builtin_assistants() -> Vec<UpsertAssistant> {
             skills: vec![],
             is_builtin: true,
             sort_order: 3,
+            input_config: None,
         },
     ]
 }

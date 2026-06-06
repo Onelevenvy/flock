@@ -17,7 +17,15 @@ models:
     model_name: Pro/deepseek-ai/DeepSeek-V3.2
     categories: ["chat"]
     capabilities: []
-  - id: siliconflow:Qwen/Qwen2.5-7B-Instruct
-    model_name: Qwen/Qwen2.5-7B-Instruct
+  - id: siliconflow:Qwen/Qwen3.5-35B-A3B
+    model_name: Qwen/Qwen3.5-35B-A3B
     categories: ["chat"]
-    capabilities: []
+    capabilities: ["vision"]
+  - id: siliconflow:Pro/moonshotai/Kimi-K2.5
+    model_name: Pro/moonshotai/Kimi-K2.5
+    categories: ["chat"]
+    capabilities: ["vision"]
+  - id: siliconflow:nex-agi/Nex-N2-Pro
+    model_name: nex-agi/Nex-N2-Pro
+    categories: ["chat"]
+    capabilities: ["vision"]

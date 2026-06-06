@@ -178,4 +178,9 @@ pub const MIGRATIONS: &[(i64, &str, &str)] = &[
             created_at  TEXT NOT NULL DEFAULT (datetime('now'))
         );",
     ),
+    (
+        2,
+        "add_assistant_input_config",
+        "ALTER TABLE assistant ADD COLUMN input_config TEXT NOT NULL DEFAULT '{}';",
+    ),
 ];

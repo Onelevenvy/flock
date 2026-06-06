@@ -164,5 +164,14 @@
     "failed": "Failed",
     "toolExecuted": "Tool {{name}} execution {{status}}"
   },
-  "viewStepsPlayback": "View Steps Playback"
+  "viewStepsPlayback": "View Steps Playback",
+  "upload": {
+    "titleFailed": "Upload Failed",
+    "disabledImages": "Image upload is disabled for this assistant/workflow",
+    "disabledFiles": "File upload is disabled for this assistant/workflow",
+    "maxCountReached": "You can only upload up to {{count}} attachments",
+    "maxSizeExceeded": "File size cannot exceed {{size}}MB",
+    "unsupportedFormat": "Unsupported file format: {{type}}",
+    "readFailed": "Failed to read file, please try again"
+  }
 }

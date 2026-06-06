@@ -4,7 +4,7 @@ use langgraph::prelude::RunnableConfig;
 use langgraph::runnable::RunnableError;
 use tokio_stream::StreamExt;
 use langgraph_prebuilt::types::Message as LgMessage;
-use super::common::{WorkflowNodeContext, parse_state, interpolate_string_with_context, resolve_model, parse_retry_config, parse_timeout_config, execute_with_retry};
+use super::common::{WorkflowNodeContext, parse_state, interpolate_string_with_context, resolve_model, parse_retry_config, parse_timeout_config, execute_with_retry, extract_images_from_outputs, check_model_vision_capability};
 
 pub fn make_llm_workflow_node(
     node_id: String,
@@ -47,8 +47,49 @@ pub fn make_llm_workflow_node(
                             messages.push(lg_msg);
                         }
                     }
-                    if !user_prompt.is_empty() {
-                        messages.push(LgMessage::human(user_prompt.clone()));
+                    let extracted_images = extract_images_from_outputs(&state.node_outputs);
+                    let human_msg = if !extracted_images.is_empty() {
+                        let configured_model = node_data.get("model")
+                            .and_then(|v| v.as_str())
+                            .filter(|s| !s.is_empty());
+                        let model_name = if let Some(m) = configured_model {
+                            m.to_string()
+                        } else {
+                            let default_model: Option<String> = sqlx::query_scalar(
+                                "SELECT value FROM config WHERE key = 'model'"
+                            )
+                            .fetch_optional(ctx.db.pool())
+                            .await
+                            .unwrap_or(None);
+                            default_model.unwrap_or_else(|| "gpt-4o".to_string())
+                        };
+                        if !check_model_vision_capability(&ctx.db, &model_name).await {
+                            return Err(format!("The resolved model '{}' does not support vision capability, but image inputs were provided. Please switch to a vision-capable model or remove the images.", model_name));
+                        }
+
+                        let mut blocks = vec![
+                            langgraph_prebuilt::types::ContentBlock::Text {
+                                text: user_prompt.clone(),
+                            }
+                        ];
+                        for (mime, data) in &extracted_images {
+                            blocks.push(langgraph_prebuilt::types::ContentBlock::ImageUrl {
+                                image_url: langgraph_prebuilt::types::ImageUrl {
+                                    url: format!("data:{};base64,{}", mime, data),
+                                    detail: None,
+                                },
+                            });
+                        }
+                        LgMessage::Human {
+                            content: langgraph_prebuilt::types::MessageContent::Blocks(blocks),
+                            id: None,
+                        }
+                    } else {
+                        LgMessage::human(user_prompt.clone())
+                    };
+
+                    if !user_prompt.is_empty() || !extracted_images.is_empty() {
+                        messages.push(human_msg.clone());
                     }
 
                     ctx.sink.emit_text_delta(&node_id, "\u{200b}");
@@ -92,7 +133,7 @@ pub fn make_llm_workflow_node(
                         "node_outputs": outputs,
                         "current_node": node_id,
                         "messages": [
-                            LgMessage::human(user_prompt),
+                            human_msg,
                             LgMessage::ai(assistant_text)
                         ],
                     }))

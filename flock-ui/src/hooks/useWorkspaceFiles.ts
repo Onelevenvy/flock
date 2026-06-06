@@ -13,7 +13,7 @@ export interface FileEntry {
   children?: FileEntry[];
 }
 
-export function useWorkspaceFiles(workspaceId: string | null) {
+export function useWorkspaceFiles(workspaceId: string | null, disableAutoOpenClose = false) {
   const { t } = useTranslation();
   const { fileTreeRefreshKey, setFileTreeOpen, triggerFileTreeRefresh } = useUiStore();
   const [files, setFiles] = useState<FileEntry[]>([]);
@@ -21,25 +21,27 @@ export function useWorkspaceFiles(workspaceId: string | null) {
 
   const loadFiles = useCallback(async () => {
     if (!workspaceId) {
-      setFileTreeOpen(false);
+      if (!disableAutoOpenClose) setFileTreeOpen(false);
       return;
     }
     setLoading(true);
     try {
       const items = await fileService.listWorkspaceFiles(workspaceId, '', true);
       setFiles(items);
-      if (items.length > 0) {
-        setFileTreeOpen(true);
-      } else {
-        setFileTreeOpen(false);
+      if (!disableAutoOpenClose) {
+        if (items.length > 0) {
+          setFileTreeOpen(true);
+        } else {
+          setFileTreeOpen(false);
+        }
       }
     } catch {
       setFiles([]);
-      setFileTreeOpen(false);
+      if (!disableAutoOpenClose) setFileTreeOpen(false);
     } finally {
       setLoading(false);
     }
-  }, [workspaceId, setFileTreeOpen]);
+  }, [workspaceId, setFileTreeOpen, disableAutoOpenClose]);
 
   useEffect(() => {
     if (workspaceId) {

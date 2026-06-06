@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Group, Stack, Text, ActionIcon, Button, Badge, Modal, Select, TextInput, NumberInput, Switch } from '@mantine/core';
+import { Group, Stack, Text, ActionIcon, Button, Badge, Modal, Select, TextInput, NumberInput, Switch, Divider } from '@mantine/core';
 import { IconTrash, IconPlus } from '@tabler/icons-react';
 import { useTranslation } from 'react-i18next';
 
@@ -274,6 +274,52 @@ export function StartNodeProperties({ node, onDataChange }: StartNodePropertiesP
           </Group>
         </Stack>
       </Modal>
+
+      <Divider color="var(--flock-border-subtle)" my="sm" />
+
+      <Stack gap="xs">
+        <Text size="xs" fw={600} c="dimmed">
+          {t('workflow.properties.start.inputSettings', 'INPUT SETTINGS')}
+        </Text>
+
+        <Switch
+          label={t('workflow.properties.start.allowFileUpload', '允许文件输入')}
+          description={t('workflow.properties.start.allowFileUploadDesc', '允许工作流运行前传入文件')}
+          checked={(node.data.file_input_enabled as boolean) ?? false}
+          onChange={(e) => onDataChange(node.id, 'file_input_enabled', e.currentTarget.checked)}
+          size="xs"
+        />
+
+        <Switch
+          label={t('workflow.properties.start.allowImageUpload', '允许图片输入')}
+          description={t('workflow.properties.start.allowImageUploadDesc', '允许工作流运行前传入图片')}
+          checked={(node.data.image_input_enabled as boolean) ?? false}
+          onChange={(e) => onDataChange(node.id, 'image_input_enabled', e.currentTarget.checked)}
+          size="xs"
+        />
+
+        {(((node.data.file_input_enabled as boolean) ?? false) || ((node.data.image_input_enabled as boolean) ?? false)) && (
+          <Stack gap={2}>
+            <Text size="xs" fw={500}>{t('workflow.properties.start.maxFileCountLimit', '最大文件数量')}</Text>
+            <input
+              type="number"
+              min={1}
+              max={20}
+              value={(node.data.max_file_count as number) ?? 5}
+              onChange={(e) => onDataChange(node.id, 'max_file_count', Math.max(1, parseInt(e.target.value) || 1))}
+              style={{
+                background: 'var(--flock-bg-surface)',
+                border: '1px solid var(--flock-border-dim)',
+                borderRadius: '4px',
+                padding: '6px 10px',
+                color: 'var(--flock-text-primary)',
+                fontSize: 12,
+                outline: 'none',
+              }}
+            />
+          </Stack>
+        )}
+      </Stack>
     </Stack>
   );
 }

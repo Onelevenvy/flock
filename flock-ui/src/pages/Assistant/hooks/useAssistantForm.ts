@@ -50,8 +50,23 @@ export function useAssistantForm(
   const [skillSelectData, setSkillSelectData] = useState<{ value: string; label: string }[]>([]);
   const [loadingOptions, setLoadingOptions] = useState(false);
 
+  // Upload/Input configs
+  const [allowFileUpload, setAllowFileUpload] = useState(true);
+  const [allowImageUpload, setAllowImageUpload] = useState(true);
+  const [maxFileCount, setMaxFileCount] = useState(5);
+  const [maxFileSizeMb, setMaxFileSizeMb] = useState(10);
+
   const isEditing = !!initial;
   const isBuiltin = initial?.is_builtin ?? false;
+
+  const selectedModelInfo = models.find((m) => `${m.provider_id}:${m.model_name}` === model);
+  const supportsVision = selectedModelInfo ? selectedModelInfo.capabilities.includes('vision') : true;
+
+  useEffect(() => {
+    if (!supportsVision) {
+      setAllowImageUpload(false);
+    }
+  }, [supportsVision]);
 
   useEffect(() => {
     if (!opened) return;
@@ -65,6 +80,19 @@ export function useAssistantForm(
       setSelectedTools(initial.tools);
       setDisabledTools(initial.disabled_tools || []);
       setSelectedSkills(initial.skills);
+
+      try {
+        const parsed = JSON.parse(initial.input_config || '{}');
+        setAllowFileUpload(parsed.allow_file_upload ?? true);
+        setAllowImageUpload(parsed.allow_image_upload ?? true);
+        setMaxFileCount(parsed.max_file_count ?? 5);
+        setMaxFileSizeMb(parsed.max_file_size_mb ?? 10);
+      } catch (e) {
+        setAllowFileUpload(true);
+        setAllowImageUpload(true);
+        setMaxFileCount(5);
+        setMaxFileSizeMb(10);
+      }
     } else {
       setName('');
       setIcon('🤖');
@@ -74,6 +102,10 @@ export function useAssistantForm(
       setSelectedTools([]);
       setDisabledTools([]);
       setSelectedSkills([]);
+      setAllowFileUpload(true);
+      setAllowImageUpload(true);
+      setMaxFileCount(5);
+      setMaxFileSizeMb(10);
     }
   }, [opened, initial]);
 
@@ -135,6 +167,13 @@ export function useAssistantForm(
     }
     setSaving(true);
     try {
+      const inputConfigObj = {
+        allow_file_upload: allowFileUpload,
+        allow_image_upload: allowImageUpload && supportsVision,
+        max_file_count: maxFileCount,
+        max_file_size_mb: maxFileSizeMb,
+        allowed_mime_types: [],
+      };
       await onSave({
         name: name.trim(),
         icon,
@@ -144,6 +183,7 @@ export function useAssistantForm(
         tools: selectedTools,
         disabled_tools: disabledTools,
         skills: selectedSkills,
+        input_config: JSON.stringify(inputConfigObj),
       });
       onClose();
     } catch {
@@ -162,6 +202,11 @@ export function useAssistantForm(
     selectedTools, setSelectedTools,
     disabledTools, setDisabledTools,
     selectedSkills, setSelectedSkills,
+    allowFileUpload, setAllowFileUpload,
+    allowImageUpload, setAllowImageUpload,
+    maxFileCount, setMaxFileCount,
+    maxFileSizeMb, setMaxFileSizeMb,
+    supportsVision,
     saving,
     activeTab, setActiveTab,
     modelSelectData,

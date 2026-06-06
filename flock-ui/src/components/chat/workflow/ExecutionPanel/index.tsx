@@ -27,6 +27,8 @@ export function ExecutionPanel({
   workflowName,
   activeInterrupt: externalActiveInterrupt,
   onClearExecution,
+  showDebugWorkspace,
+  onToggleDebugWorkspace,
 }: ExecutionPanelProps) {
   const { t } = useTranslation();
   const theme = useUiStore((s) => s.theme);
@@ -168,7 +170,7 @@ export function ExecutionPanel({
     setInputVal('');
   };
 
-  const handleStart = () => {
+  const handleStart = (text: string, attachmentsList?: any[]) => {
     const missing = customVars.filter((v: any) => v.required && (formInputs[v.name] === undefined || formInputs[v.name] === ''));
     if (missing.length > 0) {
       alert(t('workflow.execution.missingParams', {
@@ -178,7 +180,10 @@ export function ExecutionPanel({
       return;
     }
     const payload: Record<string, any> = { ...formInputs };
-    payload['query'] = inputVal;
+    payload['query'] = text;
+    if (attachmentsList && attachmentsList.length > 0) {
+      payload['attachments'] = attachmentsList;
+    }
     startWorkflow(JSON.stringify(payload));
     setInputVal('');
   };
@@ -221,6 +226,8 @@ export function ExecutionPanel({
           onClear={handleClear}
           onStop={stopWorkflow}
           onClose={onClose}
+          showDebugWorkspace={showDebugWorkspace}
+          onToggleDebugWorkspace={onToggleDebugWorkspace}
         />
       )}
 
@@ -370,16 +377,25 @@ export function ExecutionPanel({
         <ToolApprovalInline approval={firstPending} />
 
         {/* Bottom input area */}
-        {!showInitialForm && (
-          <WorkflowChatInput
-            isInterrupted={isInterrupted}
-            status={status}
-            inputVal={inputVal}
-            setInputVal={setInputVal}
-            handleStart={handleStart}
-            stopWorkflow={stopWorkflow}
-          />
-        )}
+        {!showInitialForm && (() => {
+          const startNode = nodes.find((n: any) => n.type === 'start');
+          const fileInputEnabled = startNode?.data?.file_input_enabled as boolean ?? false;
+          const imageInputEnabled = startNode?.data?.image_input_enabled as boolean ?? false;
+          const maxFileCount = startNode?.data?.max_file_count as number ?? 5;
+          return (
+            <WorkflowChatInput
+              isInterrupted={isInterrupted}
+              status={status}
+              inputVal={inputVal}
+              setInputVal={setInputVal}
+              handleStart={handleStart}
+              stopWorkflow={stopWorkflow}
+              fileInputEnabled={fileInputEnabled}
+              imageInputEnabled={imageInputEnabled}
+              maxFileCount={maxFileCount}
+            />
+          );
+        })()}
       </Box>
     </Box>
   );

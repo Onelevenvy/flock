@@ -1,5 +1,5 @@
-import { Group, Text, Badge, Button, ActionIcon } from '@mantine/core';
-import { IconTerminal2, IconPlus, IconPlayerStop, IconX } from '@tabler/icons-react';
+import { Group, Text, Badge, Button, ActionIcon, Tooltip } from '@mantine/core';
+import { IconTerminal2, IconPlus, IconPlayerStop, IconX, IconFolder } from '@tabler/icons-react';
 import { useTranslation } from 'react-i18next';
 
 interface ExecutionPanelHeaderProps {
@@ -12,6 +12,8 @@ interface ExecutionPanelHeaderProps {
   onClear: () => void;
   onStop: () => void;
   onClose?: () => void;
+  showDebugWorkspace?: boolean;
+  onToggleDebugWorkspace?: () => void;
 }
 
 export function ExecutionPanelHeader({
@@ -24,6 +26,8 @@ export function ExecutionPanelHeader({
   onClear,
   onStop,
   onClose,
+  showDebugWorkspace = false,
+  onToggleDebugWorkspace,
 }: ExecutionPanelHeaderProps) {
   const { t } = useTranslation();
 
@@ -59,6 +63,18 @@ export function ExecutionPanelHeader({
       </Group>
 
       <Group gap="xs">
+        {onToggleDebugWorkspace && (
+          <Tooltip label={showDebugWorkspace ? t('workflow.execution.hideWorkspace', '隐藏调试文件') : t('workflow.execution.showWorkspace', '显示调试文件')} withArrow>
+            <ActionIcon
+              variant={showDebugWorkspace ? "light" : "subtle"}
+              size="sm"
+              color={showDebugWorkspace ? "blue" : "gray"}
+              onClick={onToggleDebugWorkspace}
+            >
+              <IconFolder size={14} />
+            </ActionIcon>
+          </Tooltip>
+        )}
         {!isEmbedded && status !== 'running' && !isInterrupted && hasMessages && (
           <Button
             size="xs"
@@ -80,3 +96,4 @@ export function ExecutionPanelHeader({
     </Group>
   );
 }
+

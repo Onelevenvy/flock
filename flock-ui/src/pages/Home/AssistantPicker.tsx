@@ -21,6 +21,7 @@ export const XIAOF_AGENT: Assistant = {
   sort_order: -1,
   created_at: '',
   updated_at: '',
+  input_config: '{}',
 };
 
 export function AssistantPicker({
