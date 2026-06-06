@@ -80,7 +80,26 @@ function ChunkRenderer({ chunk, isStreaming }: ChunkRendererProps) {
     );
   }
   if (chunk.kind === 'thinking') {
+    if (!chunk.text || !chunk.text.trim()) return null;
     return <ThinkingBlock text={chunk.text} defaultCollapsed={!isStreaming} />;
+  }
+  if (chunk.kind === 'image') {
+    return (
+      <Box mt={6} style={{ maxWidth: '100%', borderRadius: 8, overflow: 'hidden' }}>
+        <img
+          src={chunk.text}
+          alt="Attachment"
+          style={{
+            maxWidth: '100%',
+            maxHeight: 300,
+            objectFit: 'contain',
+            borderRadius: 8,
+            display: 'block',
+            border: '1px solid var(--flock-border-dim)',
+          }}
+        />
+      </Box>
+    );
   }
   if (chunk.kind === 'tool_request') {
     return <ToolCard chunk={chunk} />;
