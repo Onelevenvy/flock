@@ -127,11 +127,11 @@ export function FileTreePanel({ workspaceIdOverride, isOpenOverride }: FileTreeP
 
   return (
     <Box
+      className={isPanelOpen ? "glass-panel-base" : undefined}
       style={{
         width: isPanelOpen ? 260 : 0,
         minWidth: isPanelOpen ? 260 : 0,
         height: '100%',
-        background: 'var(--flock-bg-base)',
         border: isPanelOpen ? '1px solid var(--flock-border-subtle)' : 'none',
         borderRadius: isPanelOpen ? '16px' : '0',
         boxShadow: isPanelOpen ? '0 4px 20px rgba(0, 0, 0, 0.03)' : 'none',
