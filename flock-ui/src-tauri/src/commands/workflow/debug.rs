@@ -7,8 +7,8 @@ use tokio_stream::StreamExt;
 
 use langgraph::prelude::RunnableConfig;
 use langgraph::types::StreamMode;
-use langgraph::checkpoint::checkpoint::base::BaseCheckpointSaver;
-use langgraph::checkpoint::checkpoint::memory::InMemorySaver;
+use langgraph::checkpoint::BaseCheckpointSaver;
+use langgraph::checkpoint::InMemorySaver;
 use langgraph::prebuilt::BaseChatModel;
 
 use flock_workflow::{build_debug_node_graph, WorkflowNodeContext};
