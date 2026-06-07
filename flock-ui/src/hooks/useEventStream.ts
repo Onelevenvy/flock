@@ -160,6 +160,8 @@ export function useEventStream() {
                   type: 'error',
                   msg_id: msgId,
                   session_id: sessionId,
+                  nodeId: payload.node_id,
+                  content: errMsg,
                   error: {
                     code: 'WORKFLOW_ERROR',
                     message: errMsg,

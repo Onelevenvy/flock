@@ -359,7 +359,8 @@ pub fn make_agent_workflow_node(
             }).await;
 
             if let Err(ref e) = result {
-                ctx.sink.emit_error(e);
+                log::error!("[workflow Agent node {}] execution error: {}", node_id, e);
+                ctx.sink.emit_node_error(&node_id, e);
                 if let Ok(mut guard) = ctx.has_error.lock() {
                     *guard = Some(e.clone());
                 }

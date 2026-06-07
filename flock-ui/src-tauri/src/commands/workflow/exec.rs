@@ -169,6 +169,22 @@ impl WorkflowSink for TauriWorkflowSink {
             "message": msg,
         }));
     }
+    fn emit_node_error(&self, node_id: &str, msg: &str) {
+        let ts = chrono::Utc::now().timestamp_millis();
+        self.push_event(serde_json::json!({
+            "type": "error",
+            "content": format!("❌ Execution error: {}", msg),
+            "nodeId": node_id,
+            "timestamp": ts
+        }));
+        let _ = self.app.emit("workflow-event", serde_json::json!({
+            "type": "error",
+            "workflow_id": &self.workflow_id,
+            "thread_id": &self.thread_id,
+            "node_id": node_id,
+            "message": msg,
+        }));
+    }
     fn emit_tool_request(&self, call_id: &str, tool_name: &str, category: &flock_core::ipc_interface::events::ToolCategory, tool_args: &JsonValue) {
         let _ = self.app.emit("workflow-event", serde_json::json!({
             "type": "tool_request",

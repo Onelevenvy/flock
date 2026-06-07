@@ -112,6 +112,9 @@ pub trait WorkflowSink: Send + Sync {
     fn emit_text_delta(&self, node_id: &str, text: &str);
     fn emit_thinking(&self, node_id: &str, text: &str);
     fn emit_error(&self, msg: &str);
+    fn emit_node_error(&self, _node_id: &str, msg: &str) {
+        self.emit_error(msg);
+    }
     fn emit_tool_request(&self, _call_id: &str, _tool_name: &str, _category: &flock_core::ipc_interface::events::ToolCategory, _tool_args: &JsonValue) {}
     fn emit_tool_running(&self, _call_id: &str, _tool_name: &str, _tool_args: &JsonValue) {}
     fn emit_tool_result(&self, _call_id: &str, _tool_name: &str, _status: &str, _output: &str) {}
