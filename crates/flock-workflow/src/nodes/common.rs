@@ -223,27 +223,8 @@ pub fn parse_state(input: &JsonValue) -> WorkflowState {
     })
 }
 
-pub async fn check_model_vision_capability(db: &flock_core::db::DbManager, model_name: &str) -> bool {
-    let query_res: Result<Option<String>, sqlx::Error> = sqlx::query_scalar(
-        "SELECT capabilities FROM model WHERE model_name = ?1 OR id = ?1"
-    )
-    .bind(model_name)
-    .fetch_optional(db.pool())
-    .await;
-    
-    if let Ok(Some(caps_json)) = query_res {
-        if let Ok(caps) = serde_json::from_str::<Vec<String>>(&caps_json) {
-            return caps.contains(&"vision".to_string());
-        }
-    }
-    
-    // Fallback/defaults: some standard models support vision
-    let model_lower = model_name.to_lowercase();
-    if model_lower.contains("gpt-4o") || model_lower.contains("claude-3") || model_lower.contains("gemini-1.5") || model_lower.contains("vl") || model_lower.contains("vision") {
-        return true;
-    }
-    
-    false
+pub async fn check_model_vision_capability(_db: &flock_core::db::DbManager, _model_name: &str) -> bool {
+    true
 }
 
 pub fn extract_images_from_outputs(node_outputs: &JsonValue) -> Vec<(String, String)> {

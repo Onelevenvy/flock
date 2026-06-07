@@ -24,9 +24,15 @@ export function StartNodeProperties({ node, onDataChange }: StartNodePropertiesP
   const [editingVarName, setEditingVarName] = useState<string | null>(null);
 
   // Default variables list
-  const variables = (node.data.variables as VariableConfig[]) ?? [
+  let variables = (node.data.variables as VariableConfig[]) ?? [
     { type: 'string', name: 'query', label: 'Query', required: true }
   ];
+  if (!variables.some(v => v.name === 'attachments')) {
+    variables = [
+      ...variables,
+      { type: 'files', name: 'attachments', label: 'Attachments', required: false }
+    ];
+  }
 
   // Modal form states
   const [fieldType, setFieldType] = useState('string');
@@ -143,7 +149,7 @@ export function StartNodeProperties({ node, onDataChange }: StartNodePropertiesP
                 {v.label} · {v.type}
               </Text>
             </Stack>
-            {v.name !== 'query' && (
+            {v.name !== 'query' && v.name !== 'attachments' && (
               <ActionIcon
                 variant="subtle"
                 color="red"
@@ -186,7 +192,7 @@ export function StartNodeProperties({ node, onDataChange }: StartNodePropertiesP
             value={fieldType}
             onChange={(v) => setFieldType(v ?? 'string')}
             size="xs"
-            disabled={editingVarName === 'query'}
+            disabled={editingVarName === 'query' || editingVarName === 'attachments'}
           />
 
           <TextInput
@@ -263,7 +269,7 @@ export function StartNodeProperties({ node, onDataChange }: StartNodePropertiesP
             checked={required}
             onChange={(e) => setRequired(e.currentTarget.checked)}
             size="xs"
-            disabled={editingVarName === 'query'}
+            disabled={editingVarName === 'query' || editingVarName === 'attachments'}
           />
 
           <Group justify="flex-end" gap="xs" mt="md">
