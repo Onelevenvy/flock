@@ -62,31 +62,41 @@ export function getAvailableVariables(
     const nodeType = node.type;
 
     if (nodeType === 'start') {
-      const startVars = (node.data?.variables as any[]) || [];
-      if (startVars.length > 0) {
-        startVars.forEach((v) => {
-          const mapFieldTypeToVariableType = (t: string): any => {
-            if (t === 'number') return 'number';
-            if (t === 'boolean') return 'boolean';
-            return 'string';
-          };
-          vars.push({
-            label: `${nodeLabel} (${v.name})`,
-            value: `\${${node.id}.${v.name}}`,
-            nodeId: node.id,
-            nodeName: nodeLabel,
-            varType: mapFieldTypeToVariableType(v.type),
-          });
-        });
-      } else {
-        vars.push({
+      vars.push(
+        {
           label: `${nodeLabel} (query)`,
           value: `\${${node.id}.query}`,
           nodeId: node.id,
           nodeName: nodeLabel,
           varType: 'string',
+        },
+        {
+          label: `${nodeLabel} (attachments)`,
+          value: `\${${node.id}.attachments}`,
+          nodeId: node.id,
+          nodeName: nodeLabel,
+          varType: 'array',
+        }
+      );
+
+      const startVars = (node.data?.variables as any[]) || [];
+      startVars.forEach((v) => {
+        if (v.name === 'query' || v.name === 'attachments') return;
+        const mapFieldTypeToVariableType = (t: string): any => {
+          if (t === 'number') return 'number';
+          if (t === 'boolean') return 'boolean';
+          if (t === 'file') return 'object';
+          if (t === 'files') return 'array';
+          return 'string';
+        };
+        vars.push({
+          label: `${nodeLabel} (${v.name})`,
+          value: `\${${node.id}.${v.name}}`,
+          nodeId: node.id,
+          nodeName: nodeLabel,
+          varType: mapFieldTypeToVariableType(v.type),
         });
-      }
+      });
     } else if (nodeType === 'classifier') {
       vars.push({
         label: `${nodeLabel} (category_id)`,

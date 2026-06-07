@@ -77,6 +77,17 @@ export function StartParametersForm({
             />
           );
         }
+        if (v.type === 'file' || v.type === 'files') {
+          return (
+            <TextInput
+              key={v.name}
+              label={label}
+              disabled
+              placeholder="请通过右侧下方输入框的附件按钮上传文件/图片"
+              size="xs"
+            />
+          );
+        }
         return (
           <TextInput
             key={v.name}

@@ -180,6 +180,8 @@ export function StartNodeProperties({ node, onDataChange }: StartNodePropertiesP
               { value: 'number', label: t('workflow.properties.start.number', 'Number') },
               { value: 'boolean', label: t('workflow.properties.start.boolean', 'Boolean') },
               { value: 'select', label: t('workflow.properties.start.select', 'Options (Dropdown Select)') },
+              { value: 'file', label: t('workflow.properties.start.file', 'File') },
+              { value: 'files', label: t('workflow.properties.start.files', 'File List') },
             ]}
             value={fieldType}
             onChange={(v) => setFieldType(v ?? 'string')}
