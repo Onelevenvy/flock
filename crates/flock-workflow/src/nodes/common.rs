@@ -272,12 +272,23 @@ fn extract_from_object(obj: &serde_json::Map<String, JsonValue>, result: &mut Ve
             if let Some(arr) = val.as_array() {
                 for item in arr {
                     if let Some(item_obj) = item.as_object() {
+                        let kind = item_obj.get("kind").and_then(|v| v.as_str()).unwrap_or("");
+                        let mime_type = item_obj.get("mime_type").and_then(|v| v.as_str())
+                            .or_else(|| item_obj.get("mime").and_then(|v| v.as_str()))
+                            .unwrap_or("image/jpeg");
                         let url = item_obj.get("url").and_then(|v| v.as_str())
                             .or_else(|| item_obj.get("data").and_then(|v| v.as_str()))
                             .or_else(|| item_obj.get("data_base64").and_then(|v| v.as_str()));
                         if let Some(url_str) = url {
                             if let Some((mime, data)) = parse_image_url(url_str) {
                                 result.push((mime, data));
+                            } else if kind == "image" || mime_type.starts_with("image/") {
+                                let clean = if let Some(pos) = url_str.find(',') {
+                                    &url_str[pos + 1..]
+                                } else {
+                                    url_str
+                                };
+                                result.push((mime_type.to_string(), clean.to_string()));
                             }
                         }
                     } else if let Some(url_str) = item.as_str() {
@@ -287,12 +298,23 @@ fn extract_from_object(obj: &serde_json::Map<String, JsonValue>, result: &mut Ve
                     }
                 }
             } else if let Some(item_obj) = val.as_object() {
+                let kind = item_obj.get("kind").and_then(|v| v.as_str()).unwrap_or("");
+                let mime_type = item_obj.get("mime_type").and_then(|v| v.as_str())
+                    .or_else(|| item_obj.get("mime").and_then(|v| v.as_str()))
+                    .unwrap_or("image/jpeg");
                 let url = item_obj.get("url").and_then(|v| v.as_str())
                     .or_else(|| item_obj.get("data").and_then(|v| v.as_str()))
                     .or_else(|| item_obj.get("data_base64").and_then(|v| v.as_str()));
                 if let Some(url_str) = url {
                     if let Some((mime, data)) = parse_image_url(url_str) {
                         result.push((mime, data));
+                    } else if kind == "image" || mime_type.starts_with("image/") {
+                        let clean = if let Some(pos) = url_str.find(',') {
+                            &url_str[pos + 1..]
+                        } else {
+                            url_str
+                        };
+                        result.push((mime_type.to_string(), clean.to_string()));
                     }
                 }
             } else if let Some(url_str) = val.as_str() {

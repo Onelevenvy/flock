@@ -344,10 +344,50 @@ pub async fn run_workflow(
         }
     });
 
-    // 使用公共提取出的 resolve_workspace_env
     let workdir = resolve_workspace_env(&*db, &thread_id_val, input_str_for_env.as_deref(), Some(&app))
         .await
         .map_err(|e| e.to_string())?;
+
+    // 保存附件文件到工作空间
+    if let Some(ref inp_val) = input {
+        if let Some(attachments) = inp_val.get("attachments").and_then(|v| v.as_array()) {
+            for att in attachments {
+                let kind = att.get("kind").and_then(|v| v.as_str()).unwrap_or("");
+                let name = att.get("name").and_then(|v| v.as_str()).unwrap_or("");
+                let data_base64 = att.get("data_base64").and_then(|v| v.as_str());
+
+                if kind == "file" || kind == "image" {
+                    if !name.is_empty() {
+                        if let Some(data_b64) = data_base64 {
+                            let clean = if let Some(pos) = data_b64.find(',') {
+                                &data_b64[pos + 1..]
+                            } else {
+                                data_b64
+                            };
+                            use base64::{Engine as _, engine::general_purpose};
+                            if let Ok(bytes) = general_purpose::STANDARD.decode(clean.trim()) {
+                                let target_file = workdir.join(name);
+                                if let Err(e) = std::fs::write(&target_file, &bytes) {
+                                    log::error!("[workflow] Failed to write attachment file {}: {}", name, e);
+                                } else {
+                                    log::info!("[workflow] Saved attachment {} to workspace root: {:?}", name, target_file);
+                                }
+
+                                let attachments_dir = workdir.join(".flock").join("attachments").join(&thread_id_val);
+                                if let Err(e) = std::fs::create_dir_all(&attachments_dir) {
+                                    log::error!("[workflow] Failed to create attachments dir: {}", e);
+                                }
+                                let target_in_attachments = attachments_dir.join(name);
+                                if let Err(e) = std::fs::write(&target_in_attachments, &bytes) {
+                                    log::error!("[workflow] Failed to write file to attachments dir: {}", e);
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
 
     // 6. 实例化 Sink & Context
     let accumulated_text = Arc::new(Mutex::new(String::new()));
