@@ -2,7 +2,7 @@ use flock_core::config::hooks::HookEngine;
 use flock_core::config::settings::Config;
 use flock_core::types::message::TokenUsage;
 use flock_tools::registry::ToolRegistry;
-use langgraph::checkpoint::checkpoint::base::BaseCheckpointSaver;
+use langgraph::checkpoint::BaseCheckpointSaver;
 use langgraph::sqlite::SqliteSaver;
 use langgraph::prebuilt::BaseChatModel;
 use langgraph::providers::openai::{OpenAIModel, OpenAIModelConfig};
@@ -105,7 +105,7 @@ impl AgentEngine {
         output: &Arc<dyn OutputSink>,
         db_path: &str,
     ) -> Arc<dyn BaseCheckpointSaver> {
-        use langgraph::checkpoint::checkpoint::memory::InMemorySaver;
+        use langgraph::checkpoint::InMemorySaver;
         let conn_str = format!("sqlite:{}", db_path);
         match SqliteSaver::from_conn_string(&conn_str).await {
             Ok(saver) => {

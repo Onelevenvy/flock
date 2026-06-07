@@ -5,7 +5,7 @@ use flock_core::config::compression::CompressionConfig;
 use flock_core::config::hooks::HookEngine;
 use flock_core::config::plan::PlanConfig;
 use langgraph::graph::CompiledStateGraph;
-use langgraph::checkpoint::checkpoint::base::BaseCheckpointSaver;
+use langgraph::checkpoint::BaseCheckpointSaver;
 use langgraph::prebuilt::BaseChatModel;
 
 use flock_core::types::message::{Message, StopReason, TokenUsage};

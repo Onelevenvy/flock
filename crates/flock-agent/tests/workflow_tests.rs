@@ -7,7 +7,7 @@ use flock_core::config::settings::ProviderType;
 use flock_core::model_factory::{create_model, ModelProviderParams};
 use flock_tools::registry::ToolRegistry;
 use flock_core::db::DbManager;
-use langgraph::checkpoint::checkpoint::memory::InMemorySaver;
+use langgraph::checkpoint::InMemorySaver;
 use langgraph::prelude::*;
 
 struct MockWorkflowSink;
