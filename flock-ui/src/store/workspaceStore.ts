@@ -34,12 +34,17 @@ export const useWorkspaceStore = create<WorkspaceStore>()(
       setActiveConversation: (id) => set({ activeConversationId: id }),
 
       setConversationAssistant: (convId, assistantId) =>
-        set((state) => ({
-          conversationAssistants: {
-            ...state.conversationAssistants,
-            [convId]: assistantId,
-          },
-        })),
+        set((state) => {
+          if (state.conversationAssistants[convId] === assistantId) {
+            return {};
+          }
+          return {
+            conversationAssistants: {
+              ...state.conversationAssistants,
+              [convId]: assistantId,
+            },
+          };
+        }),
 
       setSelectedHomeAssistantId: (id) => set({ selectedHomeAssistantId: id }),
 

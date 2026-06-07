@@ -254,13 +254,11 @@ export function ExecutionPanel({
                 minHeight: '100%',
               }}
             >
-              {/* 方案 B：极致高档的悬浮毛玻璃启动卡片 */}
               <Box
                 style={{
                   width: '100%',
                   maxWidth: 420,
-                  background: isDark ? 'rgba(28, 28, 30, 0.75)' : 'rgba(255, 255, 255, 0.85)',
-                  backdropFilter: 'blur(16px)',
+                  background: isDark ? 'var(--flock-bg-surface)' : 'var(--flock-bg-surface)',
                   border: '1px solid var(--flock-border-subtle)',
                   boxShadow: isDark 
                     ? '0 12px 36px rgba(0, 0, 0, 0.4), 0 0 1px rgba(255, 255, 255, 0.15) inset' 

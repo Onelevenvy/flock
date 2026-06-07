@@ -81,7 +81,6 @@ export function ActionOverlay({ info }: { info: ScreenshotInfo }) {
           <Box
             style={{
               background: 'rgba(0, 0, 0, 0.85)',
-              backdropFilter: 'blur(6px)',
               border: '1px solid rgba(52, 199, 89, 0.4)',
               color: '#34c759',
               padding: '4px 8px',

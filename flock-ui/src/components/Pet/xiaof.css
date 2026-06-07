@@ -129,8 +129,6 @@
 .xiaof-bubble {
   position: relative;
   background: rgba(15, 23, 42, 0.92);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
   border: 1px solid rgba(255,255,255,0.12);
   border-radius: 12px;
   padding: 8px 12px;
@@ -171,8 +169,6 @@
   align-self: center;
   margin-bottom: 8px;
   background: rgba(15, 23, 42, 0.96);
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
   border: 1px solid rgba(255,255,255,0.14);
   border-radius: 10px;
   padding: 8px 10px;

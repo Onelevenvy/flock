@@ -226,8 +226,21 @@ pub fn parse_state(input: &JsonValue) -> WorkflowState {
     })
 }
 
-pub async fn check_model_vision_capability(_db: &flock_core::db::DbManager, _model_name: &str) -> bool {
-    true
+pub async fn check_model_vision_capability(db: &flock_core::db::DbManager, model_name: &str) -> bool {
+    use sqlx::Row;
+    let query_str = "SELECT capabilities FROM model WHERE model_name = ?1";
+    if let Ok(Some(row)) = sqlx::query(query_str)
+        .bind(model_name)
+        .fetch_optional(db.pool())
+        .await
+    {
+        if let Ok(caps_str) = row.try_get::<String, _>("capabilities") {
+            if let Ok(caps) = serde_json::from_str::<Vec<String>>(&caps_str) {
+                return caps.iter().any(|c| c.eq_ignore_ascii_case("vision"));
+            }
+        }
+    }
+    false
 }
 
 pub fn extract_images_from_outputs(node_outputs: &JsonValue) -> Vec<(String, String)> {

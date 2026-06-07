@@ -2,7 +2,7 @@
 
 /* Mantine Modal blur overlay */
 .mantine-Modal-overlay {
-  backdrop-filter: blur(4px);
+  /* removed blur */
 }
 
 /* Mantine ScrollArea */
@@ -26,8 +26,6 @@
   background: var(--flock-bg-raised) !important;
   border: 1px solid var(--flock-border-dim) !important;
   border-radius: 10px !important;
-  backdrop-filter: blur(16px) saturate(180%) !important;
-  -webkit-backdrop-filter: blur(16px) saturate(180%) !important;
 }
 
 .mantine-Select-option:hover {
@@ -44,8 +42,6 @@
   border: 1px solid var(--flock-border-dim) !important;
   border-radius: 10px !important;
   box-shadow: 0 8px 32px rgba(0, 0, 0, 0.12);
-  backdrop-filter: blur(16px) saturate(180%) !important;
-  -webkit-backdrop-filter: blur(16px) saturate(180%) !important;
 }
 
 .mantine-Menu-item:hover {
@@ -57,8 +53,6 @@
   border-radius: 12px !important;
   border: 1px solid var(--flock-border-dim) !important;
   background: var(--flock-bg-raised) !important;
-  backdrop-filter: blur(16px) saturate(180%) !important;
-  -webkit-backdrop-filter: blur(16px) saturate(180%) !important;
   box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
 }
 
@@ -68,8 +62,6 @@
   border: 1px solid var(--flock-border-base) !important;
   border-radius: 16px !important;
   overflow: hidden !important;
-  backdrop-filter: blur(24px) saturate(190%) !important;
-  -webkit-backdrop-filter: blur(24px) saturate(190%) !important;
   box-shadow: 0 16px 48px rgba(0, 0, 0, 0.22) !important;
 }
 
