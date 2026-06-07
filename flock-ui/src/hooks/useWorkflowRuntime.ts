@@ -340,6 +340,7 @@ export function useWorkflowRuntime({
                 dispatch(activeTid, {
                   type: 'error',
                   content: `❌ Execution error: ${payload.error || payload.text || (payload as any).message || 'Unknown error'}`,
+                  nodeId: payload.node_id,
                   timestamp,
                 });
                 break;
