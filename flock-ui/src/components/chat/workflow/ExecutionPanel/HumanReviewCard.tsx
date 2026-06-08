@@ -67,7 +67,7 @@ export function HumanReviewCard({
       style={{
         borderRadius: 10,
         border: cardBorder,
-        overflow: 'hidden',
+        overflow: 'clip',
         opacity: isResolved ? 0.8 : 1,
         background: 'var(--flock-bg-surface)',
       }}

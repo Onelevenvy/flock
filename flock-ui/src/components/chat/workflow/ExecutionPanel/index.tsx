@@ -210,7 +210,11 @@ export function ExecutionPanel({
         flexShrink: isEmbedded ? undefined : 0,
         display: 'flex',
         flexDirection: 'column',
-        overflow: 'hidden',
+        // Use overflow:'clip' instead of 'hidden' to avoid WebKit hit-testing coordinate
+        // mismatch on macOS (nested overflow:hidden creates compositing layers that break
+        // click dispatch in WKWebView). overflow:'clip' clips content without creating a
+        // scroll container or new stacking context.
+        overflow: 'clip',
         boxShadow: isEmbedded ? 'none' : '-2px 0 12px rgba(0, 0, 0, 0.08)',
       }}
     >
