@@ -71,6 +71,11 @@ export function WorkflowChatInput({
         padding: '12px 16px 14px',
         flexShrink: 0,
         width: '100%',
+        // Ensure this container creates its own stacking context so the Stop button
+        // inside ChatInput is not blocked by compositing layers from sibling ScrollArea
+        // or ancestor overflow:hidden containers on macOS WebKit.
+        position: 'relative',
+        zIndex: 1,
       }}
     >
       <ChatInput

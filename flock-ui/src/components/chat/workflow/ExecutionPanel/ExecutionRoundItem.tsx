@@ -110,9 +110,7 @@ export function ExecutionRoundItem({
               style={{
                 borderRadius: 10,
                 border: '1px solid var(--flock-border-subtle)',
-                // overflow:'clip' instead of 'hidden' — avoids WebKit macOS hit-testing
-                // coordinate mismatch when nested inside ScrollArea + overflow:hidden parents
-                overflow: 'clip',
+                overflow: 'hidden',
                 background: 'var(--flock-bg-surface)',
                 width: 'fit-content',
                 minWidth: 280,
@@ -210,9 +208,7 @@ export function ExecutionRoundItem({
               style={{
                 borderRadius: 10,
                 border: '1px solid var(--flock-border-subtle)',
-                // overflow:'clip' instead of 'hidden' — avoids WebKit macOS hit-testing
-                // coordinate mismatch when nested inside ScrollArea + overflow:hidden parents
-                overflow: 'clip',
+                overflow: 'hidden',
                 background: 'var(--flock-bg-surface)',
                 width: 'fit-content',
                 maxWidth: '100%',

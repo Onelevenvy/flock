@@ -125,7 +125,7 @@ export function WorkflowStepItem({ step, isDark }: WorkflowStepItemProps) {
       style={{
         borderRadius: 7,
         border: '1px solid var(--flock-border-subtle)',
-        overflow: 'clip',
+        overflow: 'hidden',
         background: 'var(--flock-bg-surface)',
       }}
     >
