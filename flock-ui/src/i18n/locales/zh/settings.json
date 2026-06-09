@@ -16,7 +16,7 @@
     "pet": "XiaoF 伴侣宠物外观与行为设置"
   },
   "developing": "功能开发中...",
-  "version": "Flock CLI v0.2.0",
+  "version": "Flock CLI v0.3.0",
   "xiaof": {
     "saveSuccess": "XIAOF Agent 配置更新已生效",
     "loading": "正在加载 XIAOF 智能体设置...",

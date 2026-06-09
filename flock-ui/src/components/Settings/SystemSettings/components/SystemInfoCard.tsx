@@ -70,7 +70,7 @@ export function SystemInfoCard({ t, workdir, dbPath }: SystemInfoCardProps) {
               </Text>
               <Text size="xs" c="dimmed">|</Text>
               <Text size="sm" fw={500}>
-                {t('systemSettings.clientVersion')}: <span style={{ fontWeight: 600 }}>v0.2.0</span>
+                {t('systemSettings.clientVersion')}: <span style={{ fontWeight: 600 }}>v0.3.0</span>
               </Text>
             </Group>
           </div>
