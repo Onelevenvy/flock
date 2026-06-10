@@ -75,7 +75,8 @@ export function WorkflowChatInput({
         // inside ChatInput is not blocked by compositing layers from sibling ScrollArea
         // or ancestor overflow:hidden containers on macOS WebKit.
         position: 'relative',
-        zIndex: 1,
+        zIndex: 2,
+        transform: 'translate3d(0, 0, 0)',
       }}
     >
       <ChatInput
