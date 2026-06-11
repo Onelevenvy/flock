@@ -109,6 +109,8 @@ pub async fn prepare_run(
     if let Some(ref atts) = attachments {
         for att in atts {
             if att.kind == "file" {
+                let mut is_text = false;
+                let mut text_content = String::new();
                 if let Some(ref data_b64) = att.data_base64 {
                     if let Ok(bytes) = decode_base64(data_b64) {
                         if let Some(ref cwd_path) = cwd {
@@ -128,9 +130,26 @@ pub async fn prepare_run(
                                 log::info!("[engine] Successfully saved file {} to workspace root", att.name);
                             }
                         }
+
+                        if let Ok(utf8_str) = std::str::from_utf8(&bytes) {
+                            is_text = true;
+                            text_content = utf8_str.to_string();
+                        }
                     }
                 }
-                file_notices.push_str(&format!("[已上传工作空间文件: {}] (如果需要读取文件内容，请调用 Read 工具读取)\n", att.name));
+
+                if is_text {
+                    let ext = std::path::Path::new(&att.name)
+                        .extension()
+                        .and_then(|s| s.to_str())
+                        .unwrap_or("");
+                    file_notices.push_str(&format!(
+                        "[已上传工作空间文件: {}]\n内容:\n```{}\n{}\n```\n",
+                        att.name, ext, text_content
+                    ));
+                } else {
+                    file_notices.push_str(&format!("[已上传工作空间文件: {}] (如果需要读取文件内容，请调用 Read 工具读取)\n", att.name));
+                }
             }
         }
     }

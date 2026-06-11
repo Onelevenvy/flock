@@ -150,9 +150,37 @@ function buildSteps(
 
     // ---- done / error ----
     if (msg.type === 'done' || msg.type === 'error') {
+      if (msg.type === 'error' && msg.nodeId) {
+        const errorNodeId = msg.nodeId;
+        let idx = nodeStepIndex[errorNodeId];
+        if (idx === undefined) {
+          const { displayName, nodeType } = resolveNodeDisplayName(errorNodeId, nodes);
+          const step: WorkflowStep = {
+            id: `step-${errorNodeId}`,
+            nodeId: errorNodeId,
+            nodeType,
+            displayName,
+            status: 'error',
+            outputText: `❌ 运行出错：${msg.content || 'Unknown error'}`,
+            thinkingText: '',
+            startTs: msg.timestamp,
+            isInterrupt: false,
+            interruptResolved: false,
+          };
+          nodeStepIndex[errorNodeId] = result.length;
+          result.push(step);
+        } else {
+          result[idx].status = 'error';
+          result[idx].outputText = `❌ 运行出错：${msg.content || 'Unknown error'}`;
+        }
+      }
+
       for (let i = 0; i < result.length; i++) {
         if (result[i].status === 'running') {
           result[i] = { ...result[i], status: msg.type === 'error' ? 'error' : 'done' };
+          if (msg.type === 'error' && !result[i].outputText) {
+            result[i].outputText = `❌ 运行出错：${msg.content || 'Unknown error'}`;
+          }
         }
       }
     }

@@ -122,7 +122,6 @@ export function MarkdownRenderer({ content }: MarkdownRendererProps) {
                 overflow: 'hidden',
                 margin: '16px 0',
                 background: isDark ? 'rgba(255, 255, 255, 0.02)' : 'rgba(0, 0, 0, 0.01)',
-                backdropFilter: 'blur(20px)',
                 border: isDark ? '1px solid rgba(255, 255, 255, 0.08)' : '1px solid rgba(0, 0, 0, 0.08)',
                 boxShadow: isDark ? '0 8px 32px 0 rgba(0, 0, 0, 0.37)' : '0 8px 24px 0 rgba(0, 0, 0, 0.08)',
                 transition: 'all 0.3s ease',

@@ -65,12 +65,21 @@ function AppInner() {
   // 同步对话与助手的数据库元数据映射关系，保证本地存储或后台新生成的对话状态在前端完全自动同步
   useEffect(() => {
     if (!conversationsFetched || conversations.length === 0) return;
+    const currentAssistants = useWorkspaceStore.getState().conversationAssistants;
+    let hasChanges = false;
+    const nextAssistants = { ...currentAssistants };
+
     conversations.forEach((conv) => {
-      if (conv.assistant_id) {
-        setConversationAssistant(conv.id, conv.assistant_id);
+      if (conv.assistant_id && currentAssistants[conv.id] !== conv.assistant_id) {
+        nextAssistants[conv.id] = conv.assistant_id;
+        hasChanges = true;
       }
     });
-  }, [conversations, conversationsFetched, setConversationAssistant]);
+
+    if (hasChanges) {
+      useWorkspaceStore.setState({ conversationAssistants: nextAssistants });
+    }
+  }, [conversations, conversationsFetched]);
 
   useEffect(() => {
     if (!activeConversationId || !conversationsFetched || conversationsFetching) return;

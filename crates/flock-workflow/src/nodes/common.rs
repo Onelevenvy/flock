@@ -112,6 +112,9 @@ pub trait WorkflowSink: Send + Sync {
     fn emit_text_delta(&self, node_id: &str, text: &str);
     fn emit_thinking(&self, node_id: &str, text: &str);
     fn emit_error(&self, msg: &str);
+    fn emit_node_error(&self, _node_id: &str, msg: &str) {
+        self.emit_error(msg);
+    }
     fn emit_tool_request(&self, _call_id: &str, _tool_name: &str, _category: &flock_core::ipc_interface::events::ToolCategory, _tool_args: &JsonValue) {}
     fn emit_tool_running(&self, _call_id: &str, _tool_name: &str, _tool_args: &JsonValue) {}
     fn emit_tool_result(&self, _call_id: &str, _tool_name: &str, _status: &str, _output: &str) {}
@@ -224,25 +227,19 @@ pub fn parse_state(input: &JsonValue) -> WorkflowState {
 }
 
 pub async fn check_model_vision_capability(db: &flock_core::db::DbManager, model_name: &str) -> bool {
-    let query_res: Result<Option<String>, sqlx::Error> = sqlx::query_scalar(
-        "SELECT capabilities FROM model WHERE model_name = ?1 OR id = ?1"
-    )
-    .bind(model_name)
-    .fetch_optional(db.pool())
-    .await;
-    
-    if let Ok(Some(caps_json)) = query_res {
-        if let Ok(caps) = serde_json::from_str::<Vec<String>>(&caps_json) {
-            return caps.contains(&"vision".to_string());
+    use sqlx::Row;
+    let query_str = "SELECT capabilities FROM model WHERE model_name = ?1";
+    if let Ok(Some(row)) = sqlx::query(query_str)
+        .bind(model_name)
+        .fetch_optional(db.pool())
+        .await
+    {
+        if let Ok(caps_str) = row.try_get::<String, _>("capabilities") {
+            if let Ok(caps) = serde_json::from_str::<Vec<String>>(&caps_str) {
+                return caps.iter().any(|c| c.eq_ignore_ascii_case("vision"));
+            }
         }
     }
-    
-    // Fallback/defaults: some standard models support vision
-    let model_lower = model_name.to_lowercase();
-    if model_lower.contains("gpt-4o") || model_lower.contains("claude-3") || model_lower.contains("gemini-1.5") || model_lower.contains("vl") || model_lower.contains("vision") {
-        return true;
-    }
-    
     false
 }
 
@@ -272,12 +269,23 @@ fn extract_from_object(obj: &serde_json::Map<String, JsonValue>, result: &mut Ve
             if let Some(arr) = val.as_array() {
                 for item in arr {
                     if let Some(item_obj) = item.as_object() {
+                        let kind = item_obj.get("kind").and_then(|v| v.as_str()).unwrap_or("");
+                        let mime_type = item_obj.get("mime_type").and_then(|v| v.as_str())
+                            .or_else(|| item_obj.get("mime").and_then(|v| v.as_str()))
+                            .unwrap_or("image/jpeg");
                         let url = item_obj.get("url").and_then(|v| v.as_str())
                             .or_else(|| item_obj.get("data").and_then(|v| v.as_str()))
                             .or_else(|| item_obj.get("data_base64").and_then(|v| v.as_str()));
                         if let Some(url_str) = url {
                             if let Some((mime, data)) = parse_image_url(url_str) {
                                 result.push((mime, data));
+                            } else if kind == "image" || mime_type.starts_with("image/") {
+                                let clean = if let Some(pos) = url_str.find(',') {
+                                    &url_str[pos + 1..]
+                                } else {
+                                    url_str
+                                };
+                                result.push((mime_type.to_string(), clean.to_string()));
                             }
                         }
                     } else if let Some(url_str) = item.as_str() {
@@ -287,12 +295,23 @@ fn extract_from_object(obj: &serde_json::Map<String, JsonValue>, result: &mut Ve
                     }
                 }
             } else if let Some(item_obj) = val.as_object() {
+                let kind = item_obj.get("kind").and_then(|v| v.as_str()).unwrap_or("");
+                let mime_type = item_obj.get("mime_type").and_then(|v| v.as_str())
+                    .or_else(|| item_obj.get("mime").and_then(|v| v.as_str()))
+                    .unwrap_or("image/jpeg");
                 let url = item_obj.get("url").and_then(|v| v.as_str())
                     .or_else(|| item_obj.get("data").and_then(|v| v.as_str()))
                     .or_else(|| item_obj.get("data_base64").and_then(|v| v.as_str()));
                 if let Some(url_str) = url {
                     if let Some((mime, data)) = parse_image_url(url_str) {
                         result.push((mime, data));
+                    } else if kind == "image" || mime_type.starts_with("image/") {
+                        let clean = if let Some(pos) = url_str.find(',') {
+                            &url_str[pos + 1..]
+                        } else {
+                            url_str
+                        };
+                        result.push((mime_type.to_string(), clean.to_string()));
                     }
                 }
             } else if let Some(url_str) = val.as_str() {

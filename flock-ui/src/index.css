@@ -395,23 +395,21 @@ body {
 
 /* ---- Codex Glassmorphic Panels ---- */
 .glass-panel-base {
-  backdrop-filter: blur(20px) saturate(190%) !important;
-  -webkit-backdrop-filter: blur(20px) saturate(190%) !important;
+  /* Remove backdrop-filter to prevent WebKit coordinate mismatch and click blockage on macOS scrollable panels */
 }
 [data-theme="light"] .glass-panel-base {
-  background: rgba(255, 255, 255, 0.72) !important;
+  background: var(--flock-bg-base) !important;
 }
 [data-theme="dark"] .glass-panel-base {
-  background: rgba(34, 34, 37, 0.72) !important;
+  background: var(--flock-bg-base) !important;
 }
 
 .glass-panel-surface {
-  backdrop-filter: blur(20px) saturate(190%) !important;
-  -webkit-backdrop-filter: blur(20px) saturate(190%) !important;
+  /* Remove backdrop-filter to prevent WebKit coordinate mismatch and click blockage on macOS scrollable panels */
 }
 [data-theme="light"] .glass-panel-surface {
-  background: rgba(249, 250, 251, 0.65) !important;
+  background: var(--flock-bg-surface) !important;
 }
 [data-theme="dark"] .glass-panel-surface {
-  background: rgba(28, 28, 31, 0.65) !important;
+  background: var(--flock-bg-surface) !important;
 }

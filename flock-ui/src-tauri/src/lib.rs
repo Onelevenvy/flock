@@ -62,6 +62,12 @@ pub fn run() {
             // ── Create pet overlay window (transparent, always-on-top, no frame) ──
             pet::setup_pet_overlay(app)?;
 
+            // ── macOS WKWebView touch/gesture conflict fix ──────────────────────
+            // The touch event block patch is injected via index.html <head> script
+            // so it runs before any JS library can register touch listeners.
+            // See: flock-ui/index.html for the actual patch code.
+            log::info!("[flock] macOS touch-event block patch is in index.html <head>");
+
             Ok(())
         })
         .manage(agent_state)

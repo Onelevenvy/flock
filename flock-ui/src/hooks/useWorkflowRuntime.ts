@@ -92,19 +92,31 @@ export function useWorkflowRuntime({
   // ── 追踪本轮已接收的消息（用于 node_done 补偿去重，不走 store 避免异步问题） ──
   const sentMessagesRef = useRef<WorkflowExecutionMessage[]>([]);
 
-  // ── 分发消息（同时写 store + 更新 ref + 实时增量持久化至 SQLite） ──
+  // ── pending 批量缓冲：防止每个 token 都触发 store 更新 + IPC 调用 ──
+  // On macOS WKWebView, rapidly calling invoke() and setState() for every single
+  // LLM token saturates the JS microtask queue, preventing click macrotasks from
+  // ever being processed — the UI appears completely frozen.
+  const pendingTextRef = useRef<{ nodeId?: string; content: string }[]>([]);
+  const pendingThinkingRef = useRef<{ nodeId?: string; content: string }[]>([]);
+  const rafRef = useRef<number | null>(null);
+
+  // ── 分发消息（写 store + 更新 ref；SQLite 保存延迟到节点完成时批量写入） ──
   const dispatch = useCallback((tid: string, msg: WorkflowExecutionMessage) => {
     sentMessagesRef.current = [...sentMessagesRef.current, msg];
     store.appendThreadMessage(tid, msg);
+    // NOTE: do NOT invoke save_workflow_messages here — calling IPC on every token
+    // floods the JS microtask queue and freezes the UI on macOS.
+  }, [store]);
 
-    if (!isDebug) {
-      const allMsgs = [...(store.threadExecutions[tid]?.messages ?? []), msg];
-      invoke('save_workflow_messages', {
-        threadId: tid,
-        messagesJson: JSON.stringify(allMsgs),
-      }).catch((e: unknown) => console.warn('[WorkflowRuntime] Failed to auto-save workflow messages:', e));
-    }
-  }, [store, isDebug]);
+  // ── 批量 save（仅在节点/工作流完成时调用，不在每个 token 调用） ──
+  const saveMessagesOnce = useCallback((tid: string) => {
+    if (isDebug) return;
+    const allMsgs = useWorkflowStore.getState().threadExecutions[tid]?.messages ?? [];
+    invoke('save_workflow_messages', {
+      threadId: tid,
+      messagesJson: JSON.stringify(allMsgs),
+    }).catch((e: unknown) => console.warn('[WorkflowRuntime] Failed to save workflow messages:', e));
+  }, [isDebug]);
 
   // ── 切换工作流时清理旧调试数据（仅调试模式） ──
   useEffect(() => {
@@ -167,7 +179,8 @@ export function useWorkflowRuntime({
       try {
         const fn = await listen<any>('workflow-event', (event) => {
           if (cancelled) return;
-          console.log("[useWorkflowRuntime] Raw event payload:", event.payload);
+          // NOTE: do NOT log raw payload here — console.log on every token also
+          // contributes to JS microtask saturation on macOS.
           try {
             let payload: WorkflowTauriEvent;
             if (typeof event.payload === 'string') {
@@ -232,12 +245,24 @@ export function useWorkflowRuntime({
                       }
                     }
                   } else {
-                    dispatch(activeTid, {
-                      type: 'text_delta',
-                      content: payload.text,
-                      nodeId: payload.node_id,
-                      timestamp,
-                    });
+                    // Batch text_delta updates via requestAnimationFrame to avoid
+                    // saturating the JS microtask queue with rapid Zustand re-renders.
+                    pendingTextRef.current.push({ nodeId: payload.node_id, content: payload.text });
+                    if (rafRef.current === null) {
+                      rafRef.current = requestAnimationFrame(() => {
+                        rafRef.current = null;
+                        const batched = pendingTextRef.current.splice(0);
+                        if (batched.length === 0) return;
+                        const combined = batched.map(b => b.content).join('');
+                        const nodeId = batched[batched.length - 1].nodeId;
+                        dispatch(activeTid, {
+                          type: 'text_delta',
+                          content: combined,
+                          nodeId,
+                          timestamp: Date.now(),
+                        });
+                      });
+                    }
                   }
                 }
                 break;
@@ -255,18 +280,42 @@ export function useWorkflowRuntime({
                       }
                     }
                   } else {
-                    dispatch(activeTid, {
-                      type: 'thinking',
-                      content: payload.text,
-                      nodeId: payload.node_id,
-                      timestamp,
-                    });
+                    // DO NOT dispatch thinking tokens to the store on every token.
+                    // Accumulate in ref only; flush to store on node_done to avoid
+                    // flooding the JS microtask queue (which freezes the UI on macOS).
+                    pendingThinkingRef.current.push({ nodeId: payload.node_id, content: payload.text });
                   }
                 }
                 break;
 
               case 'node_done': {
                 if (!isDebugSubflow) {
+                  // Flush accumulated thinking tokens to store as a single message
+                  const thinkingBatch = pendingThinkingRef.current.splice(0);
+                  if (thinkingBatch.length > 0) {
+                    const thinkingContent = thinkingBatch.map(b => b.content).join('');
+                    dispatch(activeTid, {
+                      type: 'thinking',
+                      content: thinkingContent,
+                      nodeId: payload.node_id,
+                      timestamp: timestamp - 1,
+                    });
+                  }
+                  // Flush any pending text_delta batch immediately
+                  if (rafRef.current !== null) {
+                    cancelAnimationFrame(rafRef.current);
+                    rafRef.current = null;
+                    const textBatch = pendingTextRef.current.splice(0);
+                    if (textBatch.length > 0) {
+                      dispatch(activeTid, {
+                        type: 'text_delta',
+                        content: textBatch.map(b => b.content).join(''),
+                        nodeId: textBatch[textBatch.length - 1].nodeId,
+                        timestamp,
+                      });
+                    }
+                  }
+
                   dispatch(activeTid, {
                     type: 'info',
                     content: `✅ Node [${payload.node_id}] finished.`,
@@ -292,6 +341,9 @@ export function useWorkflowRuntime({
                       }
                     }
                   }
+
+                  // Batch save to SQLite on node completion (not on every token)
+                  saveMessagesOnce(activeTid);
                 }
                 break;
               }
@@ -340,6 +392,7 @@ export function useWorkflowRuntime({
                 dispatch(activeTid, {
                   type: 'error',
                   content: `❌ Execution error: ${payload.error || payload.text || (payload as any).message || 'Unknown error'}`,
+                  nodeId: payload.node_id,
                   timestamp,
                 });
                 break;

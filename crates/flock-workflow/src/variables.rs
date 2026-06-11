@@ -136,11 +136,89 @@ impl<'a> VariableScope<'a> {
             None
         })
     }
+}
 
+fn format_single_attachment(obj: &serde_json::Map<String, JsonValue>) -> Option<String> {
+    if obj.contains_key("kind") && (obj.contains_key("name") || obj.contains_key("data_base64")) {
+        let kind = obj.get("kind").and_then(|v| v.as_str()).unwrap_or("");
+        let name = obj.get("name").and_then(|v| v.as_str()).unwrap_or("unnamed");
+        if kind == "image" {
+            return Some(format!("[Image: {}]", name));
+        } else if kind == "file" {
+            let mut text_extracted = false;
+            let mut file_content = String::new();
+            if let Some(data_b64) = obj.get("data_base64").and_then(|v| v.as_str()) {
+                let clean = if let Some(pos) = data_b64.find(',') {
+                    &data_b64[pos + 1..]
+                } else {
+                    data_b64
+                };
+                use base64::{Engine as _, engine::general_purpose};
+                if let Ok(bytes) = general_purpose::STANDARD.decode(clean.trim()) {
+                    if let Ok(utf8_str) = std::str::from_utf8(&bytes) {
+                        text_extracted = true;
+                        file_content = utf8_str.to_string();
+                    }
+                }
+            }
+
+            if text_extracted {
+                let ext = std::path::Path::new(name)
+                    .extension()
+                    .and_then(|s| s.to_str())
+                    .unwrap_or("");
+                return Some(format!("### File: {}\n```{}\n{}\n```", name, ext, file_content));
+            } else {
+                return Some(format!("[File: {} (binary)]", name));
+            }
+        }
+    }
+    None
+}
+
+fn format_attachments(arr: &[JsonValue]) -> Option<String> {
+    if arr.is_empty() {
+        return Some("".to_string());
+    }
+
+    let mut is_attachments = false;
+    let mut formatted = Vec::new();
+
+    for item in arr {
+        if let Some(obj) = item.as_object() {
+            if let Some(s) = format_single_attachment(obj) {
+                is_attachments = true;
+                formatted.push(s);
+            }
+        }
+    }
+
+    if is_attachments {
+        Some(formatted.join("\n\n"))
+    } else {
+        None
+    }
+}
+
+impl<'a> VariableScope<'a> {
     /// Resolve a variable and return its string representation.
     pub fn resolve_string(&self, path: &str) -> Option<String> {
         self.resolve(path).map(|tv| match &tv.value {
             JsonValue::String(s) => s.clone(),
+            JsonValue::Array(arr) => {
+                if let Some(formatted) = format_attachments(arr) {
+                    formatted
+                } else {
+                    tv.value.to_string()
+                }
+            }
+            JsonValue::Object(obj) => {
+                if let Some(formatted) = format_single_attachment(obj) {
+                    formatted
+                } else {
+                    tv.value.to_string()
+                }
+            }
             other => other.to_string(),
         })
     }

@@ -68,21 +68,19 @@ export function FlowCanvas({ workflowId, workflowData, onBack }: FlowCanvasProps
     setDirty(true);
   };
 
-  const {
-    nodes,
-    edges,
-    isDirty,
-    selectedNodeId,
-    setNodes,
-    setEdges,
-    setDirty,
-    setSelectedNodeId,
-    updateNodeData,
-    environmentVariables,
-    pendingStartQuery,
-    setPendingStartQuery,
-    activeExecutionThreadId,
-  } = useWorkflowStore();
+  const nodes = useWorkflowStore((s) => s.nodes);
+  const edges = useWorkflowStore((s) => s.edges);
+  const isDirty = useWorkflowStore((s) => s.isDirty);
+  const selectedNodeId = useWorkflowStore((s) => s.selectedNodeId);
+  const setNodes = useWorkflowStore((s) => s.setNodes);
+  const setEdges = useWorkflowStore((s) => s.setEdges);
+  const setDirty = useWorkflowStore((s) => s.setDirty);
+  const setSelectedNodeId = useWorkflowStore((s) => s.setSelectedNodeId);
+  const updateNodeData = useWorkflowStore((s) => s.updateNodeData);
+  const environmentVariables = useWorkflowStore((s) => s.environmentVariables);
+  const pendingStartQuery = useWorkflowStore((s) => s.pendingStartQuery);
+  const setPendingStartQuery = useWorkflowStore((s) => s.setPendingStartQuery);
+  const activeExecutionThreadId = useWorkflowStore((s) => s.activeExecutionThreadId);
 
   const {
     messages: executionMessages,

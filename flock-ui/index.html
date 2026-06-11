@@ -5,6 +5,39 @@
     <link rel="icon" type="image/svg+xml" href="/vite.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Flock</title>
+    <script>
+      /**
+       * macOS WKWebView touch/gesture recognizer deadlock fix.
+       *
+       * Problem: On macOS with Tauri decorations:false + transparent:true,
+       * WKWebView's native gesture recognizers conflict with touch event listeners
+       * registered by JS libraries (Mantine, ReactFlow, etc.). When this conflict
+       * is triggered during heavy async work (workflow execution), the entire
+       * WebView input processing freezes — ALL clicks stop working, including
+       * native OS window buttons. Console shows:
+       *   "error messaging the mach port for IMKCFRunLoopWakeUpReliable"
+       *
+       * Fix: Block ALL touch event listener registration. Desktop apps don't use
+       * touch events; this prevents WKWebView from entering the broken gesture state.
+       * Source: https://stackoverflow.com/questions/tauri-macos-webview-click-freeze
+       */
+      (function patchMacOSTouchEvents() {
+        var _origAEL = EventTarget.prototype.addEventListener;
+        EventTarget.prototype.addEventListener = function(type, listener, options) {
+          if (type === 'touchstart' || type === 'touchend' ||
+              type === 'touchmove' || type === 'touchcancel') {
+            return; // desktop app — no touch needed, prevents WKWebView gesture deadlock
+          }
+          return _origAEL.call(this, type, listener, options);
+        };
+
+        // ── Diagnostic counters (open DevTools and check window.__FLOCK_DIAG__) ──
+        window.__FLOCK_DIAG__ = { wfEvents: 0, startTime: Date.now() };
+        document.addEventListener('tauri://workflow-event', function() {
+          window.__FLOCK_DIAG__.wfEvents++;
+        });
+      })();
+    </script>
   </head>
   <body>
     <div id="root">
