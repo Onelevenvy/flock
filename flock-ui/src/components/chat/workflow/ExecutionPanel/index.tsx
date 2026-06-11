@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
-import { Box, Text, Stack, Button, Divider, Group } from '@mantine/core';
+import { Box, Text, ScrollArea, Stack, Button, Divider, Group } from '@mantine/core';
 import { useTranslation } from 'react-i18next';
 import { IconCheck, IconPlayerPlay, IconPlayerStop } from '@tabler/icons-react';
 import { useWorkflowStore } from '@/store/workflowStore';
@@ -210,12 +210,8 @@ export function ExecutionPanel({
         flexShrink: isEmbedded ? undefined : 0,
         display: 'flex',
         flexDirection: 'column',
-        // IMPORTANT (macOS WebKit fix): Do NOT add overflow:hidden or boxShadow here.
-        // On macOS WebKit + Tauri frameless transparent window, overflow:hidden on an
-        // ancestor creates a compositing layer that shifts hit-test coordinates for all
-        // descendants, making clicks completely non-functional. The parent container
-        // (glass-panel-surface) handles clipping. We use native div scroll instead of
-        // Mantine ScrollArea to avoid the same compositing issue inside scroll containers.
+        overflow: 'hidden',
+        boxShadow: isEmbedded ? 'none' : '-2px 0 12px rgba(0, 0, 0, 0.08)',
       }}
     >
       {/* Panel header */}
@@ -246,8 +242,8 @@ export function ExecutionPanel({
         }}
       >
         {showInitialForm ? (
-          // Native div scroll — avoids macOS WebKit compositing layer hit-test bug
-          <div style={{ flex: 1, overflowY: 'auto', padding: '16px' }}>
+          /* 初始前置参数配置卡片 */
+          <ScrollArea style={{ flex: 1 }} p="md">
             <Box
               style={{
                 display: 'flex',
@@ -258,11 +254,13 @@ export function ExecutionPanel({
                 minHeight: '100%',
               }}
             >
+              {/* 方案 B：极致高档的悬浮毛玻璃启动卡片 */}
               <Box
                 style={{
                   width: '100%',
                   maxWidth: 420,
-                  background: isDark ? 'var(--flock-bg-surface)' : 'var(--flock-bg-surface)',
+                  background: isDark ? 'rgba(28, 28, 30, 0.75)' : 'rgba(255, 255, 255, 0.85)',
+                  backdropFilter: 'blur(16px)',
                   border: '1px solid var(--flock-border-subtle)',
                   boxShadow: isDark 
                     ? '0 12px 36px rgba(0, 0, 0, 0.4), 0 0 1px rgba(255, 255, 255, 0.15) inset' 
@@ -339,7 +337,7 @@ export function ExecutionPanel({
                 </Button>
               </Box>
             </Box>
-          </div>
+          </ScrollArea>
         ) : showEmptyState ? (
           /* 真正的初始闲置空状态 */
           <Box
@@ -358,14 +356,8 @@ export function ExecutionPanel({
             </Text>
           </Box>
         ) : (
-          // Native div scroll — avoids macOS WebKit compositing layer hit-test bug
-          <div
-            style={{
-              flex: 1,
-              overflowY: 'auto',
-              padding: '16px',
-            }}
-          >
+          /* 有执行记录时或正在启动运行中（按轮次渲染：用户气泡 + 工作流折叠组 + answer/human 卡片） */
+          <ScrollArea style={{ flex: 1 }} px="md" py="md">
             <Stack gap={12}>
               {rounds.map((round) => (
                 <ExecutionRoundItem
@@ -378,7 +370,7 @@ export function ExecutionPanel({
               ))}
             </Stack>
             <div ref={bottomRef as any} />
-          </div>
+          </ScrollArea>
         )}
 
         {/* Tool approval card */}

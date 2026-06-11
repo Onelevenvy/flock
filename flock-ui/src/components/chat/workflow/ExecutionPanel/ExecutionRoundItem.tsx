@@ -149,7 +149,6 @@ export function ExecutionRoundItem({
                   border: `2px solid ${status === 'running' ? '#3b82f6' : '#6b7280'}`,
                   flexShrink: 0,
                   animation: status === 'running' ? 'pulse 1.5s ease-in-out infinite' : 'none',
-                  pointerEvents: 'none',
                 }}
               />
             )}
@@ -239,7 +238,7 @@ export function ExecutionRoundItem({
                   {step.displayName}
                 </Text>
                 {step.status === 'running' && (
-                  <Box style={{ animation: 'spin 1s linear infinite', display: 'flex', pointerEvents: 'none' }}>
+                  <Box style={{ animation: 'spin 1s linear infinite', display: 'flex' }}>
                     <IconCheck size={13} style={{ color: '#3b82f6' }} />
                   </Box>
                 )}

@@ -81,7 +81,7 @@ function StatusIcon({ status }: { status: WorkflowStep['status'] }) {
   }
   if (status === 'running') {
     return (
-      <Box style={{ flexShrink: 0, animation: 'spin 1s linear infinite', display: 'flex', pointerEvents: 'none' }}>
+      <Box style={{ flexShrink: 0, animation: 'spin 1s linear infinite', display: 'flex' }}>
         <IconLoader2 size={15} style={{ color: '#3b82f6' }} />
       </Box>
     );
