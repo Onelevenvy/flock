@@ -28,6 +28,13 @@ pub(crate) struct TauriWorkflowSink {
     pub(crate) accumulated_text: Arc<Mutex<String>>,
     pub(crate) accumulated_thinking: Arc<Mutex<String>>,
     pub(crate) events_log: Arc<Mutex<Vec<JsonValue>>>,
+    /// Throttle state: tracks the last time a text_delta/thinking event was emitted.
+    /// On macOS, app.emit() must dispatch to the main thread via mach port; emitting
+    /// every single LLM token floods the run loop and causes IMKCFRunLoopWakeUpReliable
+    /// errors, freezing the entire UI. We batch tokens into at most one emit per 50ms.
+    pub(crate) last_text_emit: Arc<Mutex<std::time::Instant>>,
+    pub(crate) pending_text: Arc<Mutex<(String, String)>>,    // (node_id, accumulated)
+    pub(crate) pending_thinking: Arc<Mutex<(String, String)>>, // (node_id, accumulated)
 }
 
 impl TauriWorkflowSink {
@@ -70,6 +77,44 @@ impl WorkflowSink for TauriWorkflowSink {
                 if lock.is_empty() {
                     lock.push_str(txt);
                 }
+            }
+        }
+
+        // Flush any pending text_delta buffer before node_done so throttled tokens aren't lost
+        if let Ok(mut pending) = self.pending_text.lock() {
+            if !pending.1.is_empty() {
+                let batch_text = pending.1.clone();
+                let batch_node = pending.0.clone();
+                pending.1.clear();
+                self.push_event(serde_json::json!({
+                    "type": "text_delta", "content": batch_text,
+                    "nodeId": batch_node, "timestamp": ts
+                }));
+                let _ = self.app.emit("workflow-event", serde_json::json!({
+                    "type": "text_delta",
+                    "workflow_id": &self.workflow_id,
+                    "thread_id": &self.thread_id,
+                    "node_id": batch_node,
+                    "text": batch_text,
+                }));
+            }
+        }
+        if let Ok(mut pending) = self.pending_thinking.lock() {
+            if !pending.1.is_empty() {
+                let batch_text = pending.1.clone();
+                let batch_node = pending.0.clone();
+                pending.1.clear();
+                self.push_event(serde_json::json!({
+                    "type": "thinking", "content": batch_text,
+                    "nodeId": batch_node, "timestamp": ts
+                }));
+                let _ = self.app.emit("workflow-event", serde_json::json!({
+                    "type": "thinking",
+                    "workflow_id": &self.workflow_id,
+                    "thread_id": &self.thread_id,
+                    "node_id": batch_node,
+                    "text": batch_text,
+                }));
             }
         }
 
@@ -121,39 +166,104 @@ impl WorkflowSink for TauriWorkflowSink {
         if let Ok(mut lock) = self.accumulated_text.lock() {
             lock.push_str(text);
         }
-        let ts = chrono::Utc::now().timestamp_millis();
-        self.push_event(serde_json::json!({
-            "type": "text_delta",
-            "content": text,
-            "nodeId": node_id,
-            "timestamp": ts
-        }));
-        let _ = self.app.emit("workflow-event", serde_json::json!({
-            "type": "text_delta",
-            "workflow_id": &self.workflow_id,
-            "thread_id": &self.thread_id,
-            "node_id": node_id,
-            "text": text,
-        }));
+        // Accumulate into pending buffer
+        if let Ok(mut pending) = self.pending_text.lock() {
+            if pending.0 != node_id {
+                // Node changed — flush old pending immediately before switching
+                if !pending.1.is_empty() {
+                    let old_node = pending.0.clone();
+                    let old_text = pending.1.clone();
+                    let ts = chrono::Utc::now().timestamp_millis();
+                    self.push_event(serde_json::json!({
+                        "type": "text_delta", "content": old_text,
+                        "nodeId": old_node, "timestamp": ts
+                    }));
+                    let _ = self.app.emit("workflow-event", serde_json::json!({
+                        "type": "text_delta",
+                        "workflow_id": &self.workflow_id,
+                        "thread_id": &self.thread_id,
+                        "node_id": old_node,
+                        "text": old_text,
+                    }));
+                    pending.1.clear();
+                }
+                pending.0 = node_id.to_string();
+            }
+            pending.1.push_str(text);
+        }
+        // Throttle: emit at most once every 50ms
+        let should_emit = if let Ok(mut last) = self.last_text_emit.lock() {
+            let elapsed = last.elapsed();
+            if elapsed >= std::time::Duration::from_millis(50) {
+                *last = std::time::Instant::now();
+                true
+            } else {
+                false
+            }
+        } else { true };
+
+        if should_emit {
+            if let Ok(mut pending) = self.pending_text.lock() {
+                if !pending.1.is_empty() {
+                    let batch_text = pending.1.clone();
+                    let batch_node = pending.0.clone();
+                    pending.1.clear();
+                    let ts = chrono::Utc::now().timestamp_millis();
+                    self.push_event(serde_json::json!({
+                        "type": "text_delta", "content": batch_text,
+                        "nodeId": batch_node, "timestamp": ts
+                    }));
+                    let _ = self.app.emit("workflow-event", serde_json::json!({
+                        "type": "text_delta",
+                        "workflow_id": &self.workflow_id,
+                        "thread_id": &self.thread_id,
+                        "node_id": batch_node,
+                        "text": batch_text,
+                    }));
+                }
+            }
+        }
     }
     fn emit_thinking(&self, node_id: &str, text: &str) {
         if let Ok(mut lock) = self.accumulated_thinking.lock() {
             lock.push_str(text);
         }
-        let ts = chrono::Utc::now().timestamp_millis();
-        self.push_event(serde_json::json!({
-            "type": "thinking",
-            "content": text,
-            "nodeId": node_id,
-            "timestamp": ts
-        }));
-        let _ = self.app.emit("workflow-event", serde_json::json!({
-            "type": "thinking",
-            "workflow_id": &self.workflow_id,
-            "thread_id": &self.thread_id,
-            "node_id": node_id,
-            "text": text,
-        }));
+        // Same 50ms throttle for thinking tokens
+        if let Ok(mut pending) = self.pending_thinking.lock() {
+            pending.0 = node_id.to_string();
+            pending.1.push_str(text);
+        }
+        let should_emit = if let Ok(mut last) = self.last_text_emit.lock() {
+            let elapsed = last.elapsed();
+            if elapsed >= std::time::Duration::from_millis(50) {
+                *last = std::time::Instant::now();
+                true
+            } else {
+                false
+            }
+        } else { true };
+
+        if should_emit {
+            if let Ok(mut pending) = self.pending_thinking.lock() {
+                if !pending.1.is_empty() {
+                    let batch_text = pending.1.clone();
+                    let batch_node = pending.0.clone();
+                    pending.1.clear();
+                    let ts = chrono::Utc::now().timestamp_millis();
+                    self.push_event(serde_json::json!({
+                        "type": "thinking", "content": batch_text,
+                        "nodeId": batch_node, "timestamp": ts
+                    }));
+                    let _ = self.app.emit("workflow-event", serde_json::json!({
+                        "type": "thinking",
+                        "workflow_id": &self.workflow_id,
+                        "thread_id": &self.thread_id,
+                        "node_id": batch_node,
+                        "text": batch_text,
+                    }));
+                }
+            }
+        }
     }
     fn emit_error(&self, msg: &str) {
         let ts = chrono::Utc::now().timestamp_millis();
@@ -416,6 +526,9 @@ pub async fn run_workflow(
         accumulated_text: accumulated_text.clone(),
         accumulated_thinking: accumulated_thinking.clone(),
         events_log: Arc::new(Mutex::new(Vec::new())),
+        last_text_emit: Arc::new(Mutex::new(std::time::Instant::now())),
+        pending_text: Arc::new(Mutex::new((String::new(), String::new()))),
+        pending_thinking: Arc::new(Mutex::new((String::new(), String::new()))),
     });
 
     // 动态加载所有 skills 并注册 SkillTool 供工作流使用
@@ -606,13 +719,14 @@ pub async fn run_workflow(
         }));
 
         let mut astream = graph.astream(&initial_input, &config, vec![StreamMode::Updates]);
-        while let Some(part) = astream.next().await {
-            let _ = app_clone.emit("workflow-event", serde_json::json!({
-                "type": "workflow_progress",
-                "workflow_id": workflow_id_clone,
-                "thread_id": thread_id_val_clone.clone(),
-                "output": part,
-            }));
+        // Drive the stream to completion. We intentionally do NOT emit a workflow_progress
+        // event for every update — on macOS, each app.emit() must dispatch to the main thread
+        // via mach port, and emitting every single graph step floods the run loop, causing
+        // IMKCFRunLoopWakeUpReliable errors that freeze the entire UI.
+        // Fine-grained events (node_start, node_done, text_delta, etc.) are emitted by the
+        // WorkflowSink callbacks, which are already throttled.
+        while let Some(_part) = astream.next().await {
+            // intentionally empty — sink callbacks handle all UI events
         }
 
         // astream 结束，查看当前的最新的 snapshot 以确定状态

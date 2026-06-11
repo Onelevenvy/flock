@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
-import { Box, Text, ScrollArea, Stack, Button, Divider, Group } from '@mantine/core';
+import { Box, Text, Stack, Button, Divider, Group } from '@mantine/core';
 import { useTranslation } from 'react-i18next';
 import { IconCheck, IconPlayerPlay, IconPlayerStop } from '@tabler/icons-react';
 import { useWorkflowStore } from '@/store/workflowStore';
@@ -210,10 +210,12 @@ export function ExecutionPanel({
         flexShrink: isEmbedded ? undefined : 0,
         display: 'flex',
         flexDirection: 'column',
-        // Do NOT add overflow or boxShadow here — on macOS WebKit, overflow:hidden
-        // combined with boxShadow creates an extra compositing layer that misaligns
-        // hit-test coordinates, blocking clicks on Stop button and Collapse toggles
-        // in WorkflowChatInput. The parent glass-panel-surface already clips overflow.
+        // IMPORTANT (macOS WebKit fix): Do NOT add overflow:hidden or boxShadow here.
+        // On macOS WebKit + Tauri frameless transparent window, overflow:hidden on an
+        // ancestor creates a compositing layer that shifts hit-test coordinates for all
+        // descendants, making clicks completely non-functional. The parent container
+        // (glass-panel-surface) handles clipping. We use native div scroll instead of
+        // Mantine ScrollArea to avoid the same compositing issue inside scroll containers.
       }}
     >
       {/* Panel header */}
@@ -244,8 +246,8 @@ export function ExecutionPanel({
         }}
       >
         {showInitialForm ? (
-          /* 初始前置参数配置卡片 */
-          <ScrollArea style={{ flex: 1 }} p="md">
+          // Native div scroll — avoids macOS WebKit compositing layer hit-test bug
+          <div style={{ flex: 1, overflowY: 'auto', padding: '16px' }}>
             <Box
               style={{
                 display: 'flex',
@@ -337,7 +339,7 @@ export function ExecutionPanel({
                 </Button>
               </Box>
             </Box>
-          </ScrollArea>
+          </div>
         ) : showEmptyState ? (
           /* 真正的初始闲置空状态 */
           <Box
@@ -356,8 +358,14 @@ export function ExecutionPanel({
             </Text>
           </Box>
         ) : (
-          /* 有执行记录时或正在启动运行中（按轮次渲染：用户气泡 + 工作流折叠组 + answer/human 卡片） */
-          <ScrollArea style={{ flex: 1, position: 'relative', zIndex: 1, transform: 'translate3d(0, 0, 0)' }} px="md" py="md">
+          // Native div scroll — avoids macOS WebKit compositing layer hit-test bug
+          <div
+            style={{
+              flex: 1,
+              overflowY: 'auto',
+              padding: '16px',
+            }}
+          >
             <Stack gap={12}>
               {rounds.map((round) => (
                 <ExecutionRoundItem
@@ -370,7 +378,7 @@ export function ExecutionPanel({
               ))}
             </Stack>
             <div ref={bottomRef as any} />
-          </ScrollArea>
+          </div>
         )}
 
         {/* Tool approval card */}

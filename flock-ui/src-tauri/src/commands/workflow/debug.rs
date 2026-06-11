@@ -100,6 +100,9 @@ pub async fn debug_node(
         accumulated_text: Arc::new(Mutex::new(String::new())),
         accumulated_thinking: Arc::new(Mutex::new(String::new())),
         events_log: Arc::new(Mutex::new(Vec::new())),
+        last_text_emit: Arc::new(Mutex::new(std::time::Instant::now())),
+        pending_text: Arc::new(Mutex::new((String::new(), String::new()))),
+        pending_thinking: Arc::new(Mutex::new((String::new(), String::new()))),
     });
     let tools = Arc::new(all_tools().registry);
 
@@ -189,13 +192,9 @@ pub async fn debug_node(
         }));
 
         let mut astream = graph.astream(&initial_input, &config, vec![StreamMode::Updates]);
-        while let Some(part) = astream.next().await {
-            let _ = app_clone.emit("workflow-event", serde_json::json!({
-                "type": "debug_progress",
-                "workflow_id": workflow_id,
-                "node_id": node_id,
-                "output": part,
-            }));
+        // Do NOT emit debug_progress for every step — same macOS mach port flood issue
+        while let Some(_part) = astream.next().await {
+            // sink callbacks handle fine-grained events
         }
 
         match graph.get_state(&config) {

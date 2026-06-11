@@ -353,7 +353,11 @@ export function FlowCanvas({ workflowId, workflowData, onBack }: FlowCanvasProps
         flex: 1,
         display: 'flex',
         flexDirection: 'column',
-        overflow: 'hidden',
+        // Use overflow:clip instead of overflow:hidden — on macOS WebKit + Tauri frameless
+        // transparent windows, overflow:hidden creates a compositing layer that shifts
+        // hit-test coordinates for descendants, making all clicks non-functional.
+        // overflow:clip achieves the same visual clipping without triggering this bug.
+        overflow: 'clip',
         minWidth: 0,
         background: 'var(--flock-bg-base)',
         borderRadius: 16,
@@ -420,7 +424,7 @@ export function FlowCanvas({ workflowId, workflowData, onBack }: FlowCanvasProps
       </Group>
 
       {/* ── Canvas area ─────────────────────────────────────────────────── */}
-      <Box style={{ flex: 1, display: 'flex', overflow: 'hidden', background: 'var(--flock-bg-deepest)' }}>
+      <Box style={{ flex: 1, display: 'flex', overflow: 'clip', minHeight: 0, background: 'var(--flock-bg-deepest)' }}>
         <Box style={{ flex: 1, position: 'relative' }}>
           {/* ── Left Floating Toolbar ── */}
           <LeftToolbar

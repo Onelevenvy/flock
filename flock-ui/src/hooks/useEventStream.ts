@@ -84,103 +84,16 @@ export function useEventStream() {
               payload = event.payload as typeof payload;
             }
 
-            const msgId = payload.workflow_id;
-            const sessionId = payload.thread_id;
-
             switch (payload.type) {
               case 'workflow_start':
                 setStatus('thinking');
-                handleEvent({ type: 'stream_start', msg_id: msgId, session_id: sessionId } as any);
-                break;
-
-              case 'text_delta':
-                if (payload.text) {
-                  handleEvent({ type: 'text_delta', text: payload.text, msg_id: msgId, session_id: sessionId } as any);
-                }
-                break;
-
-              case 'thinking':
-                if (payload.text) {
-                  handleEvent({ type: 'thinking', text: payload.text, msg_id: msgId, session_id: sessionId } as any);
-                }
-                break;
-
-              case 'node_start':
-                handleEvent({
-                  type: 'info',
-                  msg_id: msgId,
-                  message: `▶️ Running node: [${payload.node_id}]`,
-                  session_id: sessionId,
-                } as any);
                 break;
 
               case 'workflow_done':
-                setStatus('ready');
-                handleEvent({ type: 'stream_end', msg_id: msgId, session_id: sessionId } as any);
-                {
-                  // 用 thread_id（真实 session）保存，不用活跃 session
-                  const convId = payload.thread_id || useWorkspaceStore.getState().activeConversationId;
-                  if (convId) {
-                    const storeState = useAgentStore.getState();
-                    const sessionMessages = storeState.sessions[convId]?.messages ?? storeState.messages;
-                    invoke('save_conversation_messages', {
-                      convId,
-                      messages: sessionMessages,
-                    }).catch((err) => console.warn('Failed to save conversation messages on workflow_done:', err));
-                  }
-                }
-                break;
-
               case 'workflow_error':
               case 'error':
-                setStatus('ready');
-                const errMsg = payload.error || payload.text || (payload as any).message || 'Unknown error';
-                if (errMsg.includes('Workflow execution cancelled by user')) {
-                  handleEvent({
-                    type: 'text_delta',
-                    msg_id: msgId,
-                    text: t('chat.aborted', '\n\n*🚫 Dialogue aborted by user*'),
-                    session_id: sessionId,
-                  } as any);
-                  handleEvent({ type: 'stream_end', msg_id: msgId, session_id: sessionId } as any);
-                  {
-                    const convId = payload.thread_id || useWorkspaceStore.getState().activeConversationId;
-                    if (convId) {
-                      const storeState = useAgentStore.getState();
-                      const sessionMessages = storeState.sessions[convId]?.messages ?? storeState.messages;
-                      invoke('save_conversation_messages', {
-                        convId,
-                        messages: sessionMessages,
-                      }).catch((err) => console.warn('Failed to save conversation messages on workflow cancelled:', err));
-                    }
-                  }
-                  break;
-                }
-                handleEvent({
-                  type: 'error',
-                  msg_id: msgId,
-                  session_id: sessionId,
-                  nodeId: payload.node_id,
-                  content: errMsg,
-                  error: {
-                    code: 'WORKFLOW_ERROR',
-                    message: errMsg,
-                    retryable: true,
-                  },
-                } as any);
-                break;
-
               case 'workflow_interrupted':
                 setStatus('ready');
-                const rawInterrupt = payload.interrupt as Record<string, unknown> | null | undefined;
-                const interruptData = rawInterrupt?.value ?? rawInterrupt;
-                handleEvent({
-                  type: 'human_takeover',
-                  call_id: 'workflow_interrupt',
-                  msg_id: msgId,
-                  session_id: sessionId,
-                  message: typeof interruptData === 'string' ? interruptData : JSON.stringify(interruptData),
-                } as any);
                 break;
             }
           } catch (e) {
