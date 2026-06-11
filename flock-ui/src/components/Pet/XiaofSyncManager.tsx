@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 import { listen } from '@tauri-apps/api/event';
 import { invoke } from '@tauri-apps/api/core';
 import { usePetStore } from '@/store/petStore';
@@ -17,36 +17,39 @@ export function XiaofSyncManager() {
   const removePendingApproval = useAgentStore((s) => s.removePendingApproval);
 
   // 1. 实时同步基本状态 (mood, pendingCount, enabled, bubbleText, minimized, pendingTool, pendingCallId)
+  const lastStateRef = useRef<string>('');
   useEffect(() => {
     const firstPending = pendingApprovals[0];
-    invoke('sync_pet_state', {
-      state: {
-        mood,
-        pendingCount,
-        enabled: enabled && mode === 'desktop',
-        bubbleText,
-        minimized,
-        pendingTool: firstPending ? firstPending.tool.name : null,
-        pendingCallId: firstPending ? firstPending.call_id : null,
-      }
-    }).catch((err) => console.error('[Pet Sync] Failed to sync pet state:', err));
+    const stateObj = {
+      mood,
+      pendingCount,
+      enabled: enabled && mode === 'desktop',
+      bubbleText,
+      minimized,
+      pendingTool: firstPending ? firstPending.tool.name : null,
+      pendingCallId: firstPending ? firstPending.call_id : null,
+    };
+    const stateStr = JSON.stringify(stateObj);
+    if (stateStr === lastStateRef.current) return;
+    lastStateRef.current = stateStr;
+
+    invoke('sync_pet_state', { state: stateObj })
+      .catch((err) => console.error('[Pet Sync] Failed to sync pet state:', err));
   }, [mood, pendingCount, enabled, mode, bubbleText, minimized, pendingApprovals]);
 
   // 2. 实时同步待审批的任务信息
+  const lastApprovalRef = useRef<string>('');
   useEffect(() => {
     const firstPending = pendingApprovals[0];
-    if (firstPending) {
-      invoke('sync_pet_pending_approval', {
-        approval: {
-          tool_name: firstPending.tool.name,
-          call_id: firstPending.call_id,
-        }
-      }).catch((err) => console.error('[Pet Sync] Failed to sync pending approval:', err));
-    } else {
-      invoke('sync_pet_pending_approval', {
-        approval: null
-      }).catch((err) => console.error('[Pet Sync] Failed to clear pending approval:', err));
-    }
+    const approvalObj = firstPending
+      ? { tool_name: firstPending.tool.name, call_id: firstPending.call_id }
+      : null;
+    const approvalStr = JSON.stringify(approvalObj);
+    if (approvalStr === lastApprovalRef.current) return;
+    lastApprovalRef.current = approvalStr;
+
+    invoke('sync_pet_pending_approval', { approval: approvalObj })
+      .catch((err) => console.error('[Pet Sync] Failed to sync pending approval:', err));
   }, [pendingApprovals]);
 
   // 3. 监听来自悬浮宠物的双击最小化事件，回写到 store
