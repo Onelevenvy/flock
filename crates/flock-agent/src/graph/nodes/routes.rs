@@ -28,8 +28,6 @@ pub fn route_after_llm(input: &JsonValue) -> String {
         })
         .unwrap_or(false);
 
-    eprintln!("[route] route_after_llm: has_tools={}", has_tools);
-
     if has_tools {
         "tools".to_string()
     } else {
@@ -41,7 +39,6 @@ pub fn route_after_llm(input: &JsonValue) -> String {
 pub fn route_after_tools(input: &JsonValue) -> String {
     // quit 时 FlockToolNode 设置了 quit_requested=true
     if input.get("quit_requested").and_then(|v| v.as_bool()).unwrap_or(false) {
-        eprintln!("[route] route_after_tools: quit_requested=true, routing to END");
         return langgraph::constants::END.to_string();
     }
     "compaction".to_string()
