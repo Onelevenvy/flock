@@ -1308,6 +1308,7 @@ dependencies = [
  "tauri-plugin-shell",
  "tokio",
  "tokio-stream",
+ "uuid",
  "workspace-hack",
 ]
 

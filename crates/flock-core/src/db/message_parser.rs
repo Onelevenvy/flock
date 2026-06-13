@@ -6,6 +6,12 @@ impl DbManager {
     /// Load conversation history (messages) for a given session/thread.
     /// Returns parsed ChatMessage chunks suitable for UI display.
     pub async fn load_conversation_messages(&self, conv_id: &str) -> anyhow::Result<Vec<ChatMessage>> {
+        let cwd_row: Option<String> = sqlx::query_scalar("SELECT cwd FROM session_metadata WHERE thread_id = ?1")
+            .bind(conv_id)
+            .fetch_optional(self.pool())
+            .await?;
+        let cwd_path = cwd_row.filter(|s| !s.is_empty()).map(std::path::PathBuf::from);
+
         let row = sqlx::query("SELECT messages FROM session_metadata WHERE thread_id = ?1")
             .bind(conv_id)
             .fetch_optional(self.pool())
@@ -145,9 +151,29 @@ impl DbManager {
                         "image" => {
                             let media_type = obj.get("media_type").and_then(|v| v.as_str()).unwrap_or("image/png").to_string();
                             let data = obj.get("data").and_then(|v| v.as_str()).unwrap_or("").to_string();
+                            let image_src = if data.starts_with(".flock/attachments/") {
+                                if let Some(ref cwd_p) = cwd_path {
+                                    let full_path = cwd_p.join(&data);
+                                    if let Ok(bytes) = std::fs::read(&full_path) {
+                                        use base64::Engine;
+                                        let base64_str = base64::engine::general_purpose::STANDARD.encode(&bytes);
+                                        format!("data:{};base64,{}", media_type, base64_str)
+                                    } else {
+                                        format!("data:{};base64,", media_type)
+                                    }
+                                } else {
+                                    format!("data:{};base64,", media_type)
+                                }
+                            } else {
+                                if data.starts_with("data:") {
+                                    data
+                                } else {
+                                    format!("data:{};base64,{}", media_type, data)
+                                }
+                            };
                             chunks.push(MessageChunk {
                                 kind: "image".to_string(),
-                                text: Some(format!("data:{};base64,{}", media_type, data)),
+                                text: Some(image_src),
                                 call_id: None,
                                 tool: None,
                                 status: None,
