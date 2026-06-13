@@ -22,6 +22,7 @@ async-trait.workspace = true
 anyhow.workspace      = true
 thiserror.workspace   = true
 reqwest.workspace     = true
+log.workspace         = true
 glob.workspace        = true
 lru.workspace         = true
 meval.workspace       = true

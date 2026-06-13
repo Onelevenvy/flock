@@ -1352,6 +1352,7 @@ dependencies = [
  "glob",
  "ignore",
  "langgraph",
+ "log",
  "lru",
  "md-5",
  "meval",
