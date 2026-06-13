@@ -5,8 +5,8 @@ pub fn parse_state(input: &JsonValue) -> AgentState {
     match serde_json::from_value(input.clone()) {
         Ok(state) => state,
         Err(e) => {
-            eprintln!(
-                "[WARN][parse_state] failed to deserialize AgentState: {}. \
+            log::warn!(
+                "[parse_state] failed to deserialize AgentState: {}. \
                  Hint: add #[serde(default)] to all fields in AgentState. \
                  Returning default state (messages will be empty!).",
                 e

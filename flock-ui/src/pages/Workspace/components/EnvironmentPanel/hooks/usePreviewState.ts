@@ -88,7 +88,7 @@ export function usePreviewFileState(
         relativePath: targetScreenshotPath,
       })
         .then((path) => { setScreenshotAbsPath(path); })
-        .catch((e) => { console.log('Failed to get screenshot path:', e); });
+        .catch((e) => { console.error('Failed to get screenshot path:', e); });
     }
   }, [activeWorkspaceId, targetScreenshotPath]);
 

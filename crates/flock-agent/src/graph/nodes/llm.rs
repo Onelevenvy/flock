@@ -20,24 +20,6 @@ pub fn make_llm_node(
     move |input: JsonValue, config: RunnableConfig| {
         let ctx = ctx.clone();
         Box::pin(async move {
-            ctx.output.emit_info("[node] >>> entering llm");
-            // ── DEBUG STEP 1: 打印 raw input ──
-            if ctx.debug_mode {
-                let msgs_raw = input.get("messages");
-                let msgs_len = msgs_raw.and_then(|v| v.as_array()).map(|a| a.len()).unwrap_or(0);
-                let msgs_type = match msgs_raw {
-                    None => "MISSING",
-                    Some(v) if v.is_array() => "Array",
-                    Some(v) if v.is_null() => "Null",
-                    _ => "Other",
-                };
-                eprintln!("[DEBUG][llm] raw input.messages type={} len={}", msgs_type, msgs_len);
-                // 也打印 input 里所有 key
-                if let Some(obj) = input.as_object() {
-                    let keys: Vec<&str> = obj.keys().map(|s| s.as_str()).collect();
-                    eprintln!("[DEBUG][llm] raw input keys={:?}", keys);
-                }
-            }
             let state = parse_state(&input);
             let _msg_id = ctx.msg_id.lock().unwrap().clone();
 
@@ -49,53 +31,12 @@ pub fn make_llm_node(
                 }
             }
 
-            // ── DEBUG: 打印 state.messages 信息帮助诊断记忆混乱 ──────────────
-            if ctx.debug_mode {
-                eprintln!("[DEBUG][llm] state.messages count = {}", state.messages.len());
-                for (i, raw_msg) in state.messages.iter().enumerate() {
-                    let role = raw_msg.get("role").and_then(|v| v.as_str()).unwrap_or(
-                        raw_msg.get("type").and_then(|v| v.as_str()).unwrap_or("?")
-                    );
-                    // 内容摘要：char-safe，取前60字
-                    let content_summary = {
-                        let content_str = raw_msg.get("content")
-                            .map(|c| c.to_string())
-                            .unwrap_or_default();
-                        let truncated: String = content_str.chars().take(60).collect();
-                        if content_str.chars().count() > 60 {
-                            format!("{}...", truncated)
-                        } else {
-                            truncated
-                        }
-                    };
-                    let has_tc = raw_msg.get("tool_calls")
-                        .and_then(|v| v.as_array())
-                        .map(|a| a.len())
-                        .unwrap_or(0);
-                    eprintln!("[DEBUG][llm]   msg[{}] role={} tool_calls={} content={}", i, role, has_tc, content_summary);
-                }
-            }
-
             let messages: Vec<LgMessage> = state.messages.iter()
                 .filter_map(|v| {
                     let flock_msg: Message = serde_json::from_value(v.clone()).ok()?;
                     Some(to_langgraph_message(flock_msg))
                 })
                 .collect();
-
-            if ctx.debug_mode {
-                eprintln!("[DEBUG][llm] converted LgMessages count = {}", messages.len());
-                for (i, lm) in messages.iter().enumerate() {
-                    let type_str = match lm {
-                        LgMessage::Human { .. } => "Human",
-                        LgMessage::Ai { tool_calls, .. } => if tool_calls.is_empty() { "Ai" } else { "Ai+ToolCalls" },
-                        LgMessage::Tool { tool_call_id: _tool_call_id, .. } => "Tool",
-                        LgMessage::System { .. } => "System",
-                        _ => "Other",
-                    };
-                    eprintln!("[DEBUG][llm]   lmsg[{}] type={}", i, type_str);
-                }
-            }
 
             let system = if state.plan_mode_active {
                 format!(

@@ -97,7 +97,7 @@ pub async fn get_active_sandbox_vnc_url(
         match flock_tools::daytona::get_sandbox_vnc_url(&*db, &sandbox_id).await {
             Ok(url) => Ok(Some(url)),
             Err(e) => {
-                println!("{}", flock_core::tr(
+                log::warn!("{}", flock_core::tr(
                     &format!("获取动态 VNC URL 失败: {}。使用静态备用 URL...", e),
                     &format!("Failed to retrieve dynamic VNC URL: {}. Using static fallback URL...", e)
                 ));

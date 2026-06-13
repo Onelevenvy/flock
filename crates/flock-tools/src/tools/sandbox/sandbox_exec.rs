@@ -70,7 +70,7 @@ pub async fn sandbox_exec(
             let sandbox_id_clone = sandbox_id.clone();
             tokio::spawn(async move {
                 if let Err(e) = crate::daytona::sync::sync_down(&db_clone, &sandbox_id_clone, &ws_path).await {
-                    eprintln!("自动 Sync Down 失败: {}", e);
+                    log::warn!("自动 Sync Down 失败: {}", e);
                 }
             });
         }

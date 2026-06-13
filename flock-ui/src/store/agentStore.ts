@@ -203,7 +203,7 @@ export const useAgentStore = create<AgentStore>((set, get) => {
 
       const session = getSessionState(get(), convId);
       if (session && (session.status === 'thinking' || session.status === 'connecting')) {
-        console.log('[loadHistory] Session is active/running, skipping DB history load to prevent overwrite:', convId);
+        console.warn('[loadHistory] Session is active/running, skipping DB history load to prevent overwrite:', convId);
         return;
       }
 

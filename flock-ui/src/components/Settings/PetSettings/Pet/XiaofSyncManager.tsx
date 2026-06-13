@@ -6,11 +6,32 @@ import { useXiaofState } from '@/hooks/useXiaofState';
 import { useAgentStore } from '@/store/agentStore';
 
 /**
- * XiaofSyncManager
- * 作为一个无 DOM 渲染的背景管理器，将主窗口的状态和审批任务通过 Tauri Command 实时同步到 Rust。
- * 桌面悬浮宠物窗口 (XiaofOverlayApp) 接收全局事件并完成状态渲染及交互。
+ * XiaofDisabledSyncer
+ * 仅在桌宠关闭或不是桌面模式时，单次发送已关闭状态给 Rust 以关闭/隐藏悬浮窗口。
  */
-export function XiaofSyncManager() {
+function XiaofDisabledSyncer() {
+  useEffect(() => {
+    invoke('sync_pet_state', {
+      state: {
+        enabled: false,
+        mood: 'sleeping',
+        pendingCount: 0,
+        bubbleText: null,
+        minimized: false,
+        pendingTool: null,
+        pendingCallId: null,
+      }
+    }).catch((err) => console.error('[Pet Sync] Failed to sync disabled state:', err));
+  }, []);
+
+  return null;
+}
+
+/**
+ * XiaofActiveSyncManager
+ * 处于活跃状态下的同步逻辑，调用各类 Hook 监听状态变更并与后台进行通信。
+ */
+function XiaofActiveSyncManager() {
   const { enabled, minimized, mode, setMinimized } = usePetStore();
   const { mood, bubbleText, pendingCount } = useXiaofState();
   const pendingApprovals = useAgentStore((s) => s.pendingApprovals);
@@ -92,3 +113,19 @@ export function XiaofSyncManager() {
 
   return null;
 }
+
+/**
+ * XiaofSyncManager
+ * 作为一个无 DOM 渲染的背景管理器，根据是否启用有条件地加载活跃的管理器或静默关闭器。
+ */
+export function XiaofSyncManager() {
+  const { enabled, mode } = usePetStore();
+  const isSyncActive = enabled && mode === 'desktop';
+
+  if (!isSyncActive) {
+    return <XiaofDisabledSyncer />;
+  }
+
+  return <XiaofActiveSyncManager />;
+}
+

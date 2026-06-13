@@ -21,19 +21,18 @@ export function useXiaofState(): XiaofState {
   const status = useAgentStore((s) => s.status);
   const pendingApprovals = useAgentStore((s) => s.pendingApprovals);
   const humanTakeover = useAgentStore((s) => s.humanTakeover);
-  const messages = useAgentStore((s) => s.messages);
 
-  // Detect if any tool is currently running
-  const isToolRunning = useMemo(() => {
-    for (const msg of messages) {
+  // Detect if any tool is currently running via a fine-grained selector
+  const isToolRunning = useAgentStore((s) => {
+    for (const msg of s.messages) {
       for (const chunk of msg.chunks) {
         if (chunk.kind === 'tool_request' && chunk.status === 'running') {
-          return chunk.tool?.name ?? null;
+          return chunk.tool?.name ?? 'unknown';
         }
       }
     }
     return null;
-  }, [messages]);
+  });
 
   const pendingCount = pendingApprovals.length;
 
@@ -61,3 +60,4 @@ export function useXiaofState(): XiaofState {
 
   return { mood, bubbleText, pendingCount };
 }
+
