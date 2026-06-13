@@ -51,11 +51,21 @@ export function useEventStream() {
             console.error('[agent-event] JSON parse error:', e, event.payload);
           }
         });
+        if (cancelled) {
+          agentUnlisten();
+          return;
+        }
+        unlistenRefs.current.push(agentUnlisten);
 
         const stoppedUnlisten = await listen('agent-stopped', () => {
           if (cancelled) return;
           setStatus('disconnected');
         });
+        if (cancelled) {
+          stoppedUnlisten();
+          return;
+        }
+        unlistenRefs.current.push(stoppedUnlisten);
 
         const stderrUnlisten = await listen<string>('agent-stderr', (event) => {
           if (cancelled) return;
@@ -65,6 +75,11 @@ export function useEventStream() {
             setError(`Agent stderr: ${line}`);
           }
         });
+        if (cancelled) {
+          stderrUnlisten();
+          return;
+        }
+        unlistenRefs.current.push(stderrUnlisten);
 
         const workflowUnlisten = await listen<unknown>('workflow-event', (event) => {
           if (cancelled) return;
@@ -100,23 +115,22 @@ export function useEventStream() {
             console.error('[workflow-event] map error:', e, event.payload);
           }
         });
+        if (cancelled) {
+          workflowUnlisten();
+          return;
+        }
+        unlistenRefs.current.push(workflowUnlisten);
 
         const cronUnlisten = await listen<string>('cron-job-updated', () => {
           if (cancelled) return;
           queryClient.invalidateQueries({ queryKey: ['cron_jobs'] });
           queryClient.invalidateQueries({ queryKey: ['conversations'] });
         });
-
-        if (!cancelled) {
-          unlistenRefs.current = [agentUnlisten, stoppedUnlisten, stderrUnlisten, workflowUnlisten, cronUnlisten];
-        } else {
-          // 如果组件已经卸载，立刻清理
-          agentUnlisten();
-          stoppedUnlisten();
-          stderrUnlisten();
-          workflowUnlisten();
+        if (cancelled) {
           cronUnlisten();
+          return;
         }
+        unlistenRefs.current.push(cronUnlisten);
       } catch (e) {
         // 在非 Tauri 环境（如浏览器 dev）下忽略
         console.warn('[useEventStream] Failed to set up Tauri listeners:', e);

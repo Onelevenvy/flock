@@ -65,29 +65,33 @@ interface UseWorkflowRuntimeOptions {
   isDebug?: boolean;
 }
 
+const EMPTY_ARRAY: WorkflowExecutionMessage[] = [];
+
 export function useWorkflowRuntime({
   workflowId,
   threadId,
   isDebug = false,
 }: UseWorkflowRuntimeOptions) {
   const { t } = useTranslation();
-  const store = useWorkflowStore();
+
+  // ── 细粒度 Selector 订阅，使用静态的 EMPTY_ARRAY 避免 [] 引用变化引起的无限重绘 ──
+  const messages = useWorkflowStore(useCallback((s) => (threadId && s.threadExecutions[threadId]?.messages) || EMPTY_ARRAY, [threadId]));
+  const status = useWorkflowStore(useCallback((s) => (threadId && s.threadExecutions[threadId]?.status) || 'idle', [threadId]));
+  const activeInterrupt = useWorkflowStore(useCallback((s) => (threadId && s.threadExecutions[threadId]?.interrupt) || null, [threadId]));
+
+  const appendThreadMessage = useWorkflowStore((s) => s.appendThreadMessage);
+  const setThreadStatus = useWorkflowStore((s) => s.setThreadStatus);
+  const setThreadInterrupt = useWorkflowStore((s) => s.setThreadInterrupt);
+  const clearExecutionAction = useWorkflowStore((s) => s.clearExecution);
+  const clearThreadExecution = useWorkflowStore((s) => s.clearThreadExecution);
+  const setActiveExecutionThreadId = useWorkflowStore((s) => s.setActiveExecutionThreadId);
+  const setDebugResult = useWorkflowStore((s) => s.setDebugResult);
 
   // ── 当前 threadId 的快捷读取 ──
   const getThread = useCallback(() => {
     if (!threadId) return null;
-    return store.threadExecutions[threadId] ?? { messages: [], status: 'idle', interrupt: null };
-  }, [threadId, store.threadExecutions]);
-
-  const messages = threadId
-    ? (store.threadExecutions[threadId]?.messages ?? [])
-    : [];
-  const status = threadId
-    ? (store.threadExecutions[threadId]?.status ?? 'idle')
-    : 'idle';
-  const activeInterrupt = threadId
-    ? (store.threadExecutions[threadId]?.interrupt ?? null)
-    : null;
+    return useWorkflowStore.getState().threadExecutions[threadId] ?? { messages: [], status: 'idle', interrupt: null };
+  }, [threadId]);
 
   // ── 追踪本轮已接收的消息（用于 node_done 补偿去重，不走 store 避免异步问题） ──
   const sentMessagesRef = useRef<WorkflowExecutionMessage[]>([]);
@@ -103,10 +107,10 @@ export function useWorkflowRuntime({
   // ── 分发消息（写 store + 更新 ref；SQLite 保存延迟到节点完成时批量写入） ──
   const dispatch = useCallback((tid: string, msg: WorkflowExecutionMessage) => {
     sentMessagesRef.current = [...sentMessagesRef.current, msg];
-    store.appendThreadMessage(tid, msg);
+    appendThreadMessage(tid, msg);
     // NOTE: do NOT invoke save_workflow_messages here — calling IPC on every token
     // floods the JS microtask queue and freezes the UI on macOS.
-  }, [store]);
+  }, [appendThreadMessage]);
 
   // ── 批量 save（仅在节点/工作流完成时调用，不在每个 token 调用） ──
   const saveMessagesOnce = useCallback((tid: string) => {
@@ -121,11 +125,11 @@ export function useWorkflowRuntime({
   // ── 切换工作流时清理旧调试数据（仅调试模式） ──
   useEffect(() => {
     if (isDebug) {
-      store.clearExecution();
+      clearExecutionAction();
     }
-  }, [workflowId]);
+  }, [workflowId, isDebug, clearExecutionAction]);
 
-  // ── 追踪当前的 threadId 动态值，避免监听器 useEffect 因 threadId 变化频繁销毁和异步重建造成事件漏单 ──
+  // ── 追踪当前的 threadId 动态值，避免监听器 useEffect 因 threadId 变化频繁销毁 and 异步重建造成事件漏单 ──
   const threadIdRef = useRef<string | null>(threadId);
   useEffect(() => {
     threadIdRef.current = threadId;
@@ -137,7 +141,7 @@ export function useWorkflowRuntime({
     if (!activeTid || isDebug) return;
 
     // 如果内存中已有消息记录，不重复加载
-    const currentExec = store.threadExecutions[activeTid];
+    const currentExec = useWorkflowStore.getState().threadExecutions[activeTid];
     if (currentExec && currentExec.messages.length > 0) return;
 
     async function loadHistory(tid: string) {
@@ -211,8 +215,8 @@ export function useWorkflowRuntime({
 
             switch (payload.type) {
               case 'workflow_start':
-                store.setThreadStatus(activeTid, 'running');
-                store.setThreadInterrupt(activeTid, null);
+                setThreadStatus(activeTid, 'running');
+                setThreadInterrupt(activeTid, null);
                 dispatch(activeTid, {
                   type: 'info',
                   content: `🚀 Workflow started...`,
@@ -235,13 +239,13 @@ export function useWorkflowRuntime({
                 if (payload.text) {
                   if (isDebugSubflow) {
                     // 调试子流：写入 debugResults
-                    const targetId = store.debugTarget?.nodeId;
+                    const targetId = useWorkflowStore.getState().debugTarget?.nodeId;
                     if (targetId) {
-                      const prev = store.debugResults[targetId];
+                      const prev = useWorkflowStore.getState().debugResults[targetId];
                       if (prev) {
                         const currentOutput = (prev.output && typeof prev.output === 'object') ? { ...prev.output } : {};
                         currentOutput.response = (currentOutput.response || '') + payload.text;
-                        store.setDebugResult(targetId, { ...prev, output: currentOutput });
+                        setDebugResult(targetId, { ...prev, output: currentOutput });
                       }
                     }
                   } else {
@@ -270,13 +274,13 @@ export function useWorkflowRuntime({
               case 'thinking':
                 if (payload.text) {
                   if (isDebugSubflow) {
-                    const targetId = store.debugTarget?.nodeId;
+                    const targetId = useWorkflowStore.getState().debugTarget?.nodeId;
                     if (targetId) {
-                      const prev = store.debugResults[targetId];
+                      const prev = useWorkflowStore.getState().debugResults[targetId];
                       if (prev) {
                         const currentOutput = (prev.output && typeof prev.output === 'object') ? { ...prev.output } : {};
                         currentOutput.thinking = (currentOutput.thinking || '') + payload.text;
-                        store.setDebugResult(targetId, { ...prev, output: currentOutput });
+                        setDebugResult(targetId, { ...prev, output: currentOutput });
                       }
                     }
                   } else {
@@ -352,8 +356,8 @@ export function useWorkflowRuntime({
                 const rawInterrupt = payload.interrupt as any;
                 const interruptData = rawInterrupt?.value ?? rawInterrupt;
                 console.log(`[WorkflowRuntime] workflow_interrupted event details:`, interruptData);
-                store.setThreadStatus(activeTid, 'idle');
-                store.setThreadInterrupt(activeTid, interruptData);
+                setThreadStatus(activeTid, 'idle');
+                setThreadInterrupt(activeTid, interruptData);
                 dispatch(activeTid, {
                   type: 'interrupt' as any,
                   content: JSON.stringify(interruptData),
@@ -363,14 +367,14 @@ export function useWorkflowRuntime({
               }
 
               case 'workflow_done':
-                store.setThreadStatus(activeTid, 'done');
-                store.setThreadInterrupt(activeTid, null);
+                setThreadStatus(activeTid, 'done');
+                setThreadInterrupt(activeTid, null);
                 dispatch(activeTid, {
                   type: 'info',
                   content: `🎉 Workflow execution completed successfully.`,
                   timestamp,
                 });
-                // 将完整消息数组保存到 SQLite（原生格式），确保重启后历史界面与当前完全一致
+                // 将完整消息数组保存 to SQLite（原生格式），确保重启后历史界面与当前完全一致
                 if (!isDebug) {
                   const msgs = useWorkflowStore.getState().threadExecutions[activeTid]?.messages ?? [];
                   invoke('save_workflow_messages', {
@@ -384,11 +388,11 @@ export function useWorkflowRuntime({
               case 'error':
                 const isUserCancel = (payload.error || payload.text || (payload as any).message || '').includes('Workflow execution cancelled by user');
                 if (isUserCancel) {
-                  store.setThreadStatus(activeTid, 'idle');
+                  setThreadStatus(activeTid, 'idle');
                   break;
                 }
-                store.setThreadStatus(activeTid, 'error');
-                store.setThreadInterrupt(activeTid, null);
+                setThreadStatus(activeTid, 'error');
+                setThreadInterrupt(activeTid, null);
                 dispatch(activeTid, {
                   type: 'error',
                   content: `❌ Execution error: ${payload.error || payload.text || (payload as any).message || 'Unknown error'}`,
@@ -427,7 +431,7 @@ export function useWorkflowRuntime({
               // ── 调试专属事件 ──
               case 'debug_start':
                 if (isDebug) {
-                  store.setThreadStatus(activeTid, 'running');
+                  setThreadStatus(activeTid, 'running');
                   dispatch(activeTid, {
                     type: 'info',
                     content: `🔍 Debugging node [${payload.node_id}]...`,
@@ -439,12 +443,12 @@ export function useWorkflowRuntime({
 
               case 'debug_done': {
                 if (isDebug) {
-                  store.setThreadStatus(activeTid, 'done');
-                  const targetId = payload.node_id || store.debugTarget?.nodeId || '';
-                  const prev = targetId ? store.debugResults[targetId] : null;
+                  setThreadStatus(activeTid, 'done');
+                  const targetId = payload.node_id || useWorkflowStore.getState().debugTarget?.nodeId || '';
+                  const prev = targetId ? useWorkflowStore.getState().debugResults[targetId] : null;
                   const startTime = prev?.startTime || Date.now();
                   if (targetId) {
-                    store.setDebugResult(targetId, {
+                    setDebugResult(targetId, {
                       status: 'done',
                       input: prev?.input || null,
                       output: payload.output,
@@ -464,11 +468,11 @@ export function useWorkflowRuntime({
 
               case 'debug_error': {
                 if (isDebug) {
-                  store.setThreadStatus(activeTid, 'error');
-                  const targetId = payload.node_id || store.debugTarget?.nodeId || '';
-                  const prev = targetId ? store.debugResults[targetId] : null;
+                  setThreadStatus(activeTid, 'error');
+                  const targetId = payload.node_id || useWorkflowStore.getState().debugTarget?.nodeId || '';
+                  const prev = targetId ? useWorkflowStore.getState().debugResults[targetId] : null;
                   if (targetId) {
-                    store.setDebugResult(targetId, {
+                    setDebugResult(targetId, {
                       status: 'error',
                       input: prev?.input || null,
                       output: null,
@@ -507,15 +511,15 @@ export function useWorkflowRuntime({
       cancelled = true;
       unlisten?.();
     };
-  }, [workflowId, isDebug]);
+  }, [workflowId, isDebug, setThreadStatus, setThreadInterrupt, setDebugResult, dispatch]);
 
   // ── startWorkflow ──
   const startWorkflow = useCallback(async (input: string) => {
     if (!workflowId) return;
 
     // 触发强制自动保存如果存在未保存的修改
-    const saveRef = store.saveDraftRef?.current;
-    if (saveRef && store.isDirty) {
+    const saveRef = useWorkflowStore.getState().saveDraftRef?.current;
+    if (saveRef && useWorkflowStore.getState().isDirty) {
       await saveRef();
     }
 
@@ -523,16 +527,16 @@ export function useWorkflowRuntime({
     if (isDebug && !activeTid) {
       // 调试模式：无活跃 threadId 时才全新生成并清空
       activeTid = `${workflowId}_run_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`;
-      store.clearExecution();
-      store.setActiveExecutionThreadId(activeTid);
+      clearExecutionAction();
+      setActiveExecutionThreadId(activeTid);
     }
     if (!activeTid) return;
 
     // 清空本轮消息追踪
     sentMessagesRef.current = [];
 
-    store.setThreadStatus(activeTid, 'running');
-    store.setThreadInterrupt(activeTid, null);
+    setThreadStatus(activeTid, 'running');
+    setThreadInterrupt(activeTid, null);
 
     // 提取 user 显示文本
     let userMsgContent = input;
@@ -566,14 +570,14 @@ export function useWorkflowRuntime({
         useDraft: isDebug,
       });
     } catch (e) {
-      store.setThreadStatus(activeTid, 'error');
+      setThreadStatus(activeTid, 'error');
       dispatch(activeTid, {
         type: 'error',
         content: `Failed to start workflow: ${e}`,
         timestamp: Date.now(),
       });
     }
-  }, [workflowId, threadId, isDebug, store, dispatch]);
+  }, [workflowId, threadId, isDebug, dispatch, clearExecutionAction, setActiveExecutionThreadId, setThreadStatus, setThreadInterrupt]);
 
   // ── resumeWorkflow ──
   const resumeWorkflow = useCallback(async (
@@ -583,11 +587,11 @@ export function useWorkflowRuntime({
   ) => {
     if (!workflowId) return;
     const activeTid = isDebug
-      ? (store.activeExecutionThreadId ?? `${workflowId}:debug`)
+      ? (useWorkflowStore.getState().activeExecutionThreadId ?? `${workflowId}:debug`)
       : threadId;
     if (!activeTid) return;
 
-    store.setThreadStatus(activeTid, 'running');
+    setThreadStatus(activeTid, 'running');
 
     // 将 resume 动作派出为一条 user 消息保入 store，并附带 resolvedActionLabel 平套字段
     // 这样 save_workflow_messages 能完整保存 Human 节点展示所需的信息
@@ -610,14 +614,14 @@ export function useWorkflowRuntime({
         useDraft: isDebug,
       });
     } catch (e) {
-      store.setThreadStatus(activeTid, 'error');
+      setThreadStatus(activeTid, 'error');
       dispatch(activeTid, {
         type: 'error',
         content: `Failed to resume workflow: ${e}`,
         timestamp: Date.now(),
       });
     }
-  }, [workflowId, threadId, isDebug, store, dispatch]);
+  }, [workflowId, threadId, isDebug, dispatch, setThreadStatus]);
 
   // ── stopWorkflow ──
   const stopWorkflow = useCallback(async () => {
@@ -627,7 +631,7 @@ export function useWorkflowRuntime({
       return;
     }
     const activeTid = isDebug
-      ? (store.activeExecutionThreadId ?? `${workflowId}:debug`)
+      ? (useWorkflowStore.getState().activeExecutionThreadId ?? `${workflowId}:debug`)
       : threadId;
     try {
       console.log("[useWorkflowRuntime] Invoking stop_workflow with workflowId:", workflowId);
@@ -638,7 +642,7 @@ export function useWorkflowRuntime({
       useAgentStore.getState().setStatus('ready');
 
       if (activeTid) {
-        store.setThreadStatus(activeTid, 'idle');
+        setThreadStatus(activeTid, 'idle');
         dispatch(activeTid, {
           type: 'text_delta',
           content: t('chat.aborted'),
@@ -655,30 +659,30 @@ export function useWorkflowRuntime({
         });
       }
     }
-  }, [workflowId, threadId, isDebug, store, dispatch]);
+  }, [workflowId, threadId, isDebug, dispatch, setThreadStatus, t]);
 
   // ── debugNode（调试专属） ──
   const debugNode = useCallback(async (nodeId: string, input?: string) => {
     if (!workflowId || !isDebug) return;
 
     // 调试单个节点也触发强制自动保存
-    const saveRef = store.saveDraftRef?.current;
-    if (saveRef && store.isDirty) {
+    const saveRef = useWorkflowStore.getState().saveDraftRef?.current;
+    if (saveRef && useWorkflowStore.getState().isDirty) {
       await saveRef();
     }
 
     const activeTid = isDebug
-      ? (store.activeExecutionThreadId ?? `${workflowId}:debug`)
+      ? (useWorkflowStore.getState().activeExecutionThreadId ?? `${workflowId}:debug`)
       : threadId;
     if (!activeTid) return;
 
-    store.clearExecution();
-    store.setThreadStatus(activeTid, 'running');
+    clearExecutionAction();
+    setThreadStatus(activeTid, 'running');
 
     let parsedInput = null;
     try { if (input) parsedInput = JSON.parse(input); } catch {}
 
-    store.setDebugResult(nodeId, {
+    setDebugResult(nodeId, {
       status: 'running',
       input: parsedInput,
       output: null,
@@ -699,8 +703,8 @@ export function useWorkflowRuntime({
         input: input ?? '',
       });
     } catch (e) {
-      store.setThreadStatus(activeTid, 'error');
-      store.setDebugResult(nodeId, {
+      setThreadStatus(activeTid, 'error');
+      setDebugResult(nodeId, {
         status: 'error',
         input: parsedInput,
         output: null,
@@ -713,17 +717,17 @@ export function useWorkflowRuntime({
         timestamp: Date.now(),
       });
     }
-  }, [workflowId, threadId, isDebug, store, dispatch]);
+  }, [workflowId, threadId, isDebug, dispatch, clearExecutionAction, setThreadStatus, setDebugResult]);
 
   // ── clearExecution（清理当前 thread） ──
   const clearExecution = useCallback(() => {
     if (isDebug) {
-      store.clearExecution(); // 同时重置 activeExecutionThreadId
+      clearExecutionAction(); // 同时重置 activeExecutionThreadId
     } else if (threadId) {
-      store.clearThreadExecution(threadId);
+      clearThreadExecution(threadId);
     }
     sentMessagesRef.current = [];
-  }, [isDebug, threadId, store]);
+  }, [isDebug, threadId, clearExecutionAction, clearThreadExecution]);
 
   return {
     messages,

@@ -83,6 +83,10 @@ impl DbManager {
             .execute(&pool)
             .await?;
 
+        sqlx::query("PRAGMA synchronous=NORMAL")
+            .execute(&pool)
+            .await?;
+
         let mgr = Self { pool, db_path };
         mgr.run_migrations().await?;
         mgr.seed_builtin_providers().await?;
