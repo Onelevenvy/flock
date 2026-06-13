@@ -1,3 +1,4 @@
+import { memo } from 'react';
 import { Box, Stack, Paper, Text, Group, Avatar, Loader, Badge, Button } from '@mantine/core';
 import { IconUser, IconRobot } from '@tabler/icons-react';
 import { useTranslation } from 'react-i18next';
@@ -56,7 +57,9 @@ interface ChunkRendererProps {
   isStreaming: boolean;
 }
 
-function ChunkRenderer({ chunk, isStreaming }: ChunkRendererProps) {
+// memo 包裹：只有当 chunk 内容或 isStreaming 变化时才重新渲染
+// 对于历史 chunk（非最后一个）isStreaming=false，内容不变，完全跳过渲染
+const ChunkRenderer = memo(function ChunkRenderer({ chunk, isStreaming }: ChunkRendererProps) {
   if (chunk.kind === 'text') {
     return (
       <Box className="markdown-body" style={{ fontSize: 14, lineHeight: 1.7 }}>
@@ -111,7 +114,7 @@ function ChunkRenderer({ chunk, isStreaming }: ChunkRendererProps) {
     return <InfoGroupRenderer infos={[chunk]} isStreaming={isStreaming} />;
   }
   return null;
-}
+});
 
 interface MessageBubbleProps {
   message: ChatMessage;

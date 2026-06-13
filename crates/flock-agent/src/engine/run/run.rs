@@ -227,6 +227,29 @@ impl AgentEngine {
     pub async fn run(&mut self, user_input: &str, msg_id: &str) -> Result<AgentResult, AgentError> {
         let (initial_json, config) = prepare_run(self, user_input, msg_id).await?;
 
+        // ── 批量 token 缓冲 ──────────────────────────────────────────────────
+        // 每积累 BATCH_SIZE 个 token 才统一 emit 一次，减少 IPC 调用开销。
+        // 值越小越流畅但 IPC 越频繁，值越大越节省 IPC 但打字机延迟增大。
+        // 4 表示约每 4 个 token emit 一次，对 deepseek/claude 高吞吐场景效果明显。
+        const BATCH_SIZE: usize = 4;
+        let mut text_buf = String::new();
+        let mut thinking_buf = String::new();
+        let mut batch_count: usize = 0;
+
+        macro_rules! flush_batch {
+            () => {
+                if !thinking_buf.is_empty() {
+                    self.output.emit_thinking(&thinking_buf, msg_id);
+                    thinking_buf.clear();
+                }
+                if !text_buf.is_empty() {
+                    self.output.emit_text_delta(&text_buf, msg_id);
+                    text_buf.clear();
+                }
+                batch_count = 0;
+            };
+        }
+
         let mut stream = self.graph.as_ref().unwrap().astream(
             &initial_json,
             &config,
@@ -236,6 +259,7 @@ impl AgentEngine {
         while let Some(part_res) = stream.next().await {
             // Check if execution was canceled
             if self.cancel_flag.load(Ordering::Relaxed) {
+                flush_batch!();
                 self.output.emit_info("[engine] cancel_flag is set during stream, aborting run");
                 self.sync_and_save_session(&config).await;
                 return Err(AgentError::UserAborted);
@@ -247,15 +271,26 @@ impl AgentEngine {
                         let type_str = part_res.data.get("type").and_then(|v| v.as_str()).unwrap_or("content");
                         if let Some(chunk) = part_res.data.get("chunk").and_then(|v| v.as_str()) {
                             if type_str == "thinking" {
-                                self.output.emit_thinking(chunk, msg_id);
+                                thinking_buf.push_str(chunk);
                             } else {
-                                self.output.emit_text_delta(chunk, msg_id);
+                                text_buf.push_str(chunk);
+                            }
+                            batch_count += 1;
+                            if batch_count >= BATCH_SIZE {
+                                flush_batch!();
                             }
                         }
                     }
                 }
+            } else {
+                // 非 token 事件到达（Updates mode：tool_request、stream_end 等），先 flush 缓冲
+                flush_batch!();
             }
         }
+
+        // 流结束后确保剩余缓冲全部发出
+        flush_batch!();
+
 
         // Stream completed, check if any internal error was raised (like user cancellation in FlockToolNode)
         let err_opt = self.has_error.lock().unwrap().clone();

@@ -1,3 +1,4 @@
+import { memo } from 'react';
 import {
   Box,
   Text,
@@ -66,7 +67,7 @@ function normalizeFileSrc(src: string): string {
   return convertFileSrc(normPath);
 }
 
-export function MarkdownRenderer({ content }: MarkdownRendererProps) {
+export const MarkdownRenderer = memo(function MarkdownRenderer({ content }: MarkdownRendererProps) {
   const { t } = useTranslation();
   const theme = useUiStore((s) => s.theme);
   const isDark = theme === 'dark';
@@ -196,4 +197,4 @@ export function MarkdownRenderer({ content }: MarkdownRendererProps) {
       {processedContent}
     </ReactMarkdown>
   );
-}
+});
