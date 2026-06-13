@@ -60,7 +60,6 @@ export function useEventStream() {
         const stderrUnlisten = await listen<string>('agent-stderr', (event) => {
           if (cancelled) return;
           const line = event.payload;
-          console.debug('[flock stderr]', line);
           if (line.toLowerCase().includes('error') || line.toLowerCase().includes('failed')) {
             setError(`Agent stderr: ${line}`);
           }

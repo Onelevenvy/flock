@@ -205,8 +205,6 @@ export function useWorkflowRuntime({
               return;
             }
 
-            console.log(`[WorkflowRuntime] Received event type: "${payload.type}" for threadId: "${activeTid}", nodeId: "${payload.node_id ?? ''}"`);
-
             const timestamp = Date.now();
 
             switch (payload.type) {
@@ -351,7 +349,6 @@ export function useWorkflowRuntime({
               case 'workflow_interrupted': {
                 const rawInterrupt = payload.interrupt as any;
                 const interruptData = rawInterrupt?.value ?? rawInterrupt;
-                console.log(`[WorkflowRuntime] workflow_interrupted event details:`, interruptData);
                 store.setThreadStatus(activeTid, 'idle');
                 store.setThreadInterrupt(activeTid, interruptData);
                 dispatch(activeTid, {
@@ -398,7 +395,6 @@ export function useWorkflowRuntime({
                 break;
 
               case 'tool_request': {
-                console.log("[useWorkflowRuntime] tool_request payload:", payload);
                 if (payload.call_id && payload.tool_name) {
                   useAgentStore.getState().addPendingApproval({
                     call_id: payload.call_id!,
@@ -621,7 +617,6 @@ export function useWorkflowRuntime({
 
   // ── stopWorkflow ──
   const stopWorkflow = useCallback(async () => {
-    console.log("[useWorkflowRuntime] stopWorkflow clicked! workflowId:", workflowId, "threadId:", threadId, "isDebug:", isDebug);
     if (!workflowId) {
       console.warn("[useWorkflowRuntime] stopWorkflow failed: workflowId is null or empty");
       return;
@@ -630,9 +625,7 @@ export function useWorkflowRuntime({
       ? (store.activeExecutionThreadId ?? `${workflowId}:debug`)
       : threadId;
     try {
-      console.log("[useWorkflowRuntime] Invoking stop_workflow with workflowId:", workflowId);
       await taskService.stopWorkflow(workflowId);
-      console.log("[useWorkflowRuntime] stop_workflow command executed successfully on backend.");
       
       // 同时重置 AgentStore 的状态，以防全局状态处于 thinking 或连接中
       useAgentStore.getState().setStatus('ready');
