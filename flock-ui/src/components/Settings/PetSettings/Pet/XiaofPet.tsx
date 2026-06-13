@@ -29,7 +29,7 @@ const MOOD_DOT_COLOR: Record<string, string> = {
   error:    '#ef4444',
 };
 
-export function XiaofPet() {
+function XiaofActivePet() {
   const { t } = useTranslation();
   const { enabled, minimized, position, bubbleEnabled, setMinimized, setPosition } = usePetStore();
   const { mood, bubbleText, pendingCount } = useXiaofState();
@@ -172,8 +172,6 @@ export function XiaofPet() {
     await invoke('deny_tool', { callId: approval.call_id, reason: 'User denied via XiaoF' });
   }, [pendingApprovals, removePendingApproval]);
 
-  if (!enabled) return null;
-
   const firstPending = pendingApprovals[0];
   const showApprovePopup = showPopup && pendingCount > 0 && !isDragging;
   const showActiveBubble = showBubble && !showPopup && !isDragging && bubbleText;
@@ -261,3 +259,12 @@ export function XiaofPet() {
     </div>
   );
 }
+
+export function XiaofPet() {
+  const { enabled } = usePetStore();
+  
+  if (!enabled) return null;
+  
+  return <XiaofActivePet />;
+}
+

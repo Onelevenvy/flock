@@ -2,18 +2,18 @@ import { Switch, Slider, Stack, Text, Group, Button, Box, Paper, Divider, Segmen
 import { IconPaw, IconBubble, IconRefresh } from '@tabler/icons-react';
 import { useTranslation } from 'react-i18next';
 import { usePetStore } from '@/store/petStore';
-import { XiaofCharacter } from '@/components/Pet/XiaofCharacter';
+import { XiaofCharacter } from '@/components/Settings/PetSettings/Pet/XiaofCharacter';
 import type { XiaofMood } from '@/hooks/useXiaofState';
 import { useState } from 'react';
 
 const MOOD_PREVIEWS: { mood: XiaofMood; labelKey: string }[] = [
-  { mood: 'idle',     labelKey: 'pet.status.idle' },
+  { mood: 'idle', labelKey: 'pet.status.idle' },
   { mood: 'thinking', labelKey: 'pet.status.thinking' },
-  { mood: 'working',  labelKey: 'pet.status.working' },
-  { mood: 'waiting',  labelKey: 'pet.status.waiting' },
-  { mood: 'error',    labelKey: 'pet.status.error' },
+  { mood: 'working', labelKey: 'pet.status.working' },
+  { mood: 'waiting', labelKey: 'pet.status.waiting' },
+  { mood: 'error', labelKey: 'pet.status.error' },
   { mood: 'sleeping', labelKey: 'pet.status.sleeping' },
-  { mood: 'waking',   labelKey: 'pet.status.waking' },
+  { mood: 'waking', labelKey: 'pet.status.waking' },
   { mood: 'takeover', labelKey: 'pet.status.takeover' },
 ];
 
@@ -201,11 +201,11 @@ export default function PetSettings() {
 
 const PREVIEW_GLOW: Record<XiaofMood, string> = {
   sleeping: '0 0 20px rgba(107,114,128,0.3)',
-  waking:   '0 0 24px rgba(139,92,246,0.5)',
-  idle:     '0 0 24px rgba(6,182,212,0.4)',
+  waking: '0 0 24px rgba(139,92,246,0.5)',
+  idle: '0 0 24px rgba(6,182,212,0.4)',
   thinking: '0 0 24px rgba(245,158,11,0.5)',
-  working:  '0 0 24px rgba(16,185,129,0.5)',
-  waiting:  '0 0 28px rgba(249,115,22,0.7)',
+  working: '0 0 24px rgba(16,185,129,0.5)',
+  waiting: '0 0 28px rgba(249,115,22,0.7)',
   takeover: '0 0 28px rgba(236,72,153,0.6)',
-  error:    '0 0 24px rgba(239,68,68,0.5)',
+  error: '0 0 24px rgba(239,68,68,0.5)',
 };
