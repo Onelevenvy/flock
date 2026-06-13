@@ -11,6 +11,7 @@ interface ExecutionRoundItemProps {
   round: {
     index: number;
     userText?: string;
+    attachments?: any[];
     steps: any[];
   };
   status: string;
@@ -69,6 +70,31 @@ export function ExecutionRoundItem({
             <Text size="sm" style={{ color: 'var(--flock-text-primary)', lineHeight: 1.6, whiteSpace: 'pre-wrap', wordBreak: 'break-word' }}>
               {round.userText}
             </Text>
+            {round.attachments && round.attachments.length > 0 && (
+              <Stack gap={6} mt={6}>
+                {round.attachments.map((att: any) => {
+                  if (att.kind === 'image' && att.data_base64) {
+                    return (
+                      <Box key={att.id} style={{ maxWidth: '100%', borderRadius: 8, overflow: 'hidden' }}>
+                        <img
+                          src={att.data_base64}
+                          alt={att.name}
+                          style={{
+                            maxWidth: '100%',
+                            maxHeight: 200,
+                            objectFit: 'contain',
+                            borderRadius: 8,
+                            display: 'block',
+                            border: '1px solid var(--flock-border-dim)',
+                          }}
+                        />
+                      </Box>
+                    );
+                  }
+                  return null;
+                })}
+              </Stack>
+            )}
           </Paper>
         </Box>
       )}

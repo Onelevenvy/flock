@@ -288,6 +288,7 @@ function buildRounds(
       index: i,
       userText: g.userMsg?.content,
       userTimestamp: g.userMsg?.timestamp,
+      attachments: (g.userMsg as any)?.attachments,
       steps: roundSteps,
     };
   });

@@ -515,6 +515,11 @@ pub async fn run_workflow(
         }
     }
 
+    let attachments_list = input.as_ref()
+        .and_then(|inp| inp.get("attachments").and_then(|v| v.as_array()))
+        .cloned()
+        .unwrap_or_default();
+
     // 6. 实例化 Sink & Context
     let accumulated_text = Arc::new(Mutex::new(String::new()));
     let accumulated_thinking = Arc::new(Mutex::new(String::new()));
@@ -813,6 +818,7 @@ pub async fn run_workflow(
             let final_text_clone = final_text.clone();
             let final_thinking_clone = final_thinking.clone();
             let provider_for_summary = provider.clone();
+            let attachments_clone = attachments_list.clone();
 
             tokio::spawn(async move {
                 let existing_row: Option<(String, String)> = sqlx::query_as(
@@ -830,17 +836,41 @@ pub async fn run_workflow(
 
                 let mut db_messages: Vec<serde_json::Value> = Vec::new();
 
-                if !input_msg_clone.is_empty() {
-                    db_messages.push(serde_json::json!({
-                        "role": "user",
-                        "content": [
-                            {
-                                "type": "text",
-                                "text": input_msg_clone
+                if !input_msg_clone.is_empty() || !attachments_clone.is_empty() {
+                    let mut content_blocks = Vec::new();
+                    if !input_msg_clone.is_empty() {
+                        content_blocks.push(serde_json::json!({
+                            "type": "text",
+                            "text": input_msg_clone
+                        }));
+                    }
+                    for att in &attachments_clone {
+                        let kind = att.get("kind").and_then(|v| v.as_str()).unwrap_or("");
+                        if kind == "image" {
+                            let name = att.get("name").and_then(|v| v.as_str()).unwrap_or("");
+                            if !name.is_empty() {
+                                let relative_path = std::path::Path::new(".flock")
+                                    .join("attachments")
+                                    .join(&thread_id_val_clone_inner)
+                                    .join(name)
+                                    .to_string_lossy()
+                                    .to_string();
+                                let mime_type = att.get("mime_type").and_then(|v| v.as_str()).unwrap_or("image/png");
+                                content_blocks.push(serde_json::json!({
+                                    "type": "image",
+                                    "media_type": mime_type,
+                                    "data": relative_path
+                                }));
                             }
-                        ],
-                        "timestamp": chrono::Utc::now().to_rfc3339()
-                    }));
+                        }
+                    }
+                    if !content_blocks.is_empty() {
+                        db_messages.push(serde_json::json!({
+                            "role": "user",
+                            "content": content_blocks,
+                            "timestamp": chrono::Utc::now().to_rfc3339()
+                        }));
+                    }
                 }
 
                 if !final_text_clone.is_empty() || !final_thinking_clone.is_empty() {

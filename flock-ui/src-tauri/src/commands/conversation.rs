@@ -27,6 +27,13 @@ pub async fn save_conversation_messages(
     conv_id: String,
     messages: Vec<FrontendChatMessage>,
 ) -> Result<(), String> {
+    let cwd_row: Option<String> = sqlx::query_scalar("SELECT cwd FROM session_metadata WHERE thread_id = ?1")
+        .bind(&conv_id)
+        .fetch_optional(db.pool())
+        .await
+        .map_err(|e| e.to_string())?;
+    let cwd_path = cwd_row.filter(|s| !s.is_empty()).map(std::path::PathBuf::from);
+
     let mut db_messages: Vec<Message> = Vec::new();
 
     for m in messages {
@@ -51,6 +58,70 @@ pub async fn save_conversation_messages(
                 "thinking" => {
                     if let Some(thinking) = chunk.text {
                         content_blocks.push(ContentBlock::Thinking { thinking });
+                    }
+                }
+                "image" => {
+                    if let Some(ref data) = chunk.text {
+                        if data.starts_with(".flock/attachments/") {
+                            content_blocks.push(ContentBlock::Image {
+                                media_type: "image/png".to_string(),
+                                data: data.clone(),
+                            });
+                        } else if let Some(ref cwd_p) = cwd_path {
+                            let (media_type, base64_data) = if data.starts_with("data:") {
+                                if let Some(comma_idx) = data.find(',') {
+                                    let header = &data[..comma_idx];
+                                    let base64_part = &data[comma_idx + 1..];
+                                    let mime = header.strip_prefix("data:")
+                                        .and_then(|h| h.strip_suffix(";base64"))
+                                        .unwrap_or("image/png");
+                                    (mime.to_string(), base64_part.to_string())
+                                } else {
+                                    ("image/png".to_string(), data.clone())
+                                }
+                            } else {
+                                ("image/png".to_string(), data.clone())
+                            };
+
+                            if let Ok(bytes) = base64::Engine::decode(
+                                &base64::engine::general_purpose::STANDARD,
+                                base64_data.trim(),
+                            ) {
+                                let ext = match media_type.as_str() {
+                                    "image/jpeg" | "image/jpg" => "jpg",
+                                    "image/gif" => "gif",
+                                    "image/webp" => "webp",
+                                    _ => "png",
+                                };
+                                let unique_filename = format!("{}.{}", uuid::Uuid::new_v4(), ext);
+                                let relative_dir = std::path::Path::new(".flock")
+                                    .join("attachments")
+                                    .join(&conv_id);
+                                let absolute_dir = cwd_p.join(&relative_dir);
+
+                                if let Err(e) = std::fs::create_dir_all(&absolute_dir) {
+                                    log::error!("Failed to create attachments dir: {:?}", e);
+                                }
+                                let absolute_file = absolute_dir.join(&unique_filename);
+                                if let Err(e) = std::fs::write(&absolute_file, &bytes) {
+                                    log::error!("Failed to write image attachment to disk: {:?}", e);
+                                }
+
+                                let db_relative_path = relative_dir.join(&unique_filename)
+                                    .to_string_lossy()
+                                    .to_string();
+
+                                content_blocks.push(ContentBlock::Image {
+                                    media_type,
+                                    data: db_relative_path,
+                                });
+                            }
+                        } else {
+                            content_blocks.push(ContentBlock::Image {
+                                media_type: "image/png".to_string(),
+                                data: data.clone(),
+                            });
+                        }
                     }
                 }
                 "tool_request" => {

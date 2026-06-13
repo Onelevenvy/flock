@@ -28,6 +28,7 @@ export interface WorkflowExecutionMessage {
   content: string;
   nodeId?: string;
   timestamp: number;
+  attachments?: any[];
 }
 
 /** 单个线程的执行状态 */

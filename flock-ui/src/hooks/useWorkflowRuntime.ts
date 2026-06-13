@@ -536,6 +536,7 @@ export function useWorkflowRuntime({
 
     // 提取 user 显示文本
     let userMsgContent = input;
+    let attachments: any[] = [];
     try {
       if (input.trim().startsWith('{')) {
         const parsed = JSON.parse(input);
@@ -544,12 +545,16 @@ export function useWorkflowRuntime({
         } else {
           userMsgContent = Object.entries(parsed).map(([k, v]) => `${k}: ${v}`).join('\n');
         }
+        if (parsed.attachments && Array.isArray(parsed.attachments)) {
+          attachments = parsed.attachments;
+        }
       }
     } catch (_) {}
 
     dispatch(activeTid, {
       type: 'user',
       content: userMsgContent,
+      attachments,
       timestamp: Date.now(),
     });
 
