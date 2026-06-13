@@ -7,7 +7,7 @@ import App from './App'
 import { ErrorBoundary } from './components/Common/ErrorBoundary';
 import './index.css';
 import './i18n';
-import { XiaofOverlayApp } from './components/Pet/XiaofOverlayApp'
+import { XiaofOverlayApp } from './components/Settings/PetSettings/Pet/XiaofOverlayApp'
 
 // 捕获顶层未捕获的错误
 window.onerror = (msg, url, line, col, error) => {

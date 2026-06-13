@@ -12,7 +12,7 @@ import { XIAOF_AGENT } from './AssistantPicker';
 import { WorkspacePicker } from './WorkspacePicker';
 import { ExplorerAppCard } from './components/ExplorerAppCard';
 import { useStartAgent } from '@/hooks/useStartAgent';
-import { XiaofCharacter } from '@/components/Pet/XiaofCharacter';
+import { XiaofCharacter } from '@/components/Settings/PetSettings/Pet/XiaofCharacter';
 import { useXiaofState } from '@/hooks/useXiaofState';
 
 export function HomeView() {
