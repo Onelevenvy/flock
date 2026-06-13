@@ -17,17 +17,17 @@ impl TauriProtocolEmitter {
     pub fn new(app: AppHandle, session_id: String) -> Self {
         Self { app, session_id }
     }
+
+    fn get_session_id(&self) -> String {
+        flock_core::CURRENT_SESSION_ID
+            .try_with(|id| id.clone())
+            .unwrap_or_else(|_| self.session_id.clone())
+    }
 }
 
 impl ProtocolEmitter for TauriProtocolEmitter {
     fn emit(&self, event: &ProtocolEvent) -> std::io::Result<()> {
-        // 优先使用 task-local（engine.run 内正确反映当前并发 session）
-        // 若不在作用域（如 start_agent 阶段、drop 清理 task）则退回到构造时绑定的 session_id
-        let session_id = flock_core::CURRENT_SESSION_ID
-            .try_with(|id| id.clone())
-            .unwrap_or_else(|_| self.session_id.clone());
-
-        // log::info!("[TauriProtocolEmitter::emit] Emitting event: {:?}, session_id: {}", event, session_id);
+        let session_id = self.get_session_id();
 
         let mut value = serde_json::to_value(event).map_err(|e| {
             std::io::Error::new(std::io::ErrorKind::Other, format!("Failed to serialize event: {e}"))
@@ -125,5 +125,62 @@ impl OutputSink for TauriProtocolEmitter {
             msg_id: String::new(),
             message: msg.to_string(),
         });
+    }
+}
+
+/// 批量 token emitter，将高频 text_delta / thinking 合并后再发给前端，
+/// 显著减少 IPC 调用次数，提高打字机流畅度。
+///
+/// 使用方式：在 engine run 循环里构造 BatchEmitter，
+/// 每次收到 token chunk 调用 push_text / push_thinking，
+/// 在下一个非流 chunk（tool_request/stream_end）到来前调用 flush。
+pub struct BatchEmitter<'a> {
+    inner: &'a TauriProtocolEmitter,
+    msg_id: String,
+    text_buf: String,
+    thinking_buf: String,
+}
+
+impl<'a> BatchEmitter<'a> {
+    pub fn new(inner: &'a TauriProtocolEmitter, msg_id: &str) -> Self {
+        Self {
+            inner,
+            msg_id: msg_id.to_string(),
+            text_buf: String::new(),
+            thinking_buf: String::new(),
+        }
+    }
+
+    /// 追加一段 text_delta token
+    pub fn push_text(&mut self, text: &str) {
+        self.text_buf.push_str(text);
+    }
+
+    /// 追加一段 thinking token
+    pub fn push_thinking(&mut self, text: &str) {
+        self.thinking_buf.push_str(text);
+    }
+
+    /// 将缓冲区内容一次性发给前端，清空缓冲
+    pub fn flush(&mut self) {
+        if !self.thinking_buf.is_empty() {
+            let _ = self.inner.emit(&ProtocolEvent::Thinking {
+                text: std::mem::take(&mut self.thinking_buf),
+                msg_id: self.msg_id.clone(),
+            });
+        }
+        if !self.text_buf.is_empty() {
+            let _ = self.inner.emit(&ProtocolEvent::TextDelta {
+                text: std::mem::take(&mut self.text_buf),
+                msg_id: self.msg_id.clone(),
+            });
+        }
+    }
+}
+
+impl<'a> Drop for BatchEmitter<'a> {
+    fn drop(&mut self) {
+        // 确保析构时缓冲区不丢失
+        self.flush();
     }
 }

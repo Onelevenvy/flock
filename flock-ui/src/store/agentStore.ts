@@ -143,12 +143,6 @@ export const useAgentStore = create<AgentStore>((set, get) => {
     handleEvent: (event: ProtocolEvent) => {
       const eventSessionId = (event as any).session_id || getActiveSessionId();
 
-      console.log('[handleEvent] Routing event:', event.type, {
-        event,
-        eventSessionId,
-        activeConversationId: getActiveSessionId(),
-      });
-
       const customGet = () => {
         const state = get();
         const session = getSessionState(state, eventSessionId);
@@ -178,14 +172,7 @@ export const useAgentStore = create<AgentStore>((set, get) => {
           const updatedSession = { ...prevSession, ...sessionUpdate };
           const nextSessions = { ...state.sessions, [eventSessionId]: updatedSession };
           const currentActiveId = getActiveSessionId();
-          
-          console.log('[handleEvent] customSet updating session:', eventSessionId, {
-            prevMessages: prevSession.messages,
-            sessionUpdateMessages: sessionUpdate.messages,
-            updatedSessionMessages: updatedSession.messages,
-            currentActiveId,
-          });
-          
+
           if (eventSessionId === currentActiveId) {
             return {
               ...globalUpdate,
