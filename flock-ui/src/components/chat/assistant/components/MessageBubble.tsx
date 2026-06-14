@@ -146,13 +146,12 @@ export function MessageBubble({ message }: MessageBubbleProps) {
         padding: '0 4px',
       }}
     >
-      {/* 头像 */}
       {isUser ? (
         <Avatar
           size={32}
           radius="xl"
           style={{
-            background: 'linear-gradient(135deg, var(--flock-accent) 0%, #3b82f6 100%)',
+            background: 'var(--flock-accent)',
             border: '1px solid rgba(21, 90, 239, 0.15)',
             boxShadow: '0 2px 8px rgba(21, 90, 239, 0.15)',
             flexShrink: 0,
@@ -214,7 +213,6 @@ export function MessageBubble({ message }: MessageBubbleProps) {
                 <Text size="xs" c="dimmed">{t('chat.thinking')}</Text>
               </Group>
             )}
-
             {/* 双向联动：一键拉起沙盒回放时间轴并跳转到指定步骤 */}
             {hasScreenshots && !message.streaming && (
               <Group mt="xs" gap="xs">
@@ -222,20 +220,21 @@ export function MessageBubble({ message }: MessageBubbleProps) {
                   size="xs"
                   variant="light"
                   color="teal"
-                  leftSection={<span style={{ display: 'inline-block', width: 6, height: 6, borderRadius: '50%', background: '#0ca678' }} />}
+                  leftSection={<span style={{ display: 'inline-block', width: 6, height: 6, borderRadius: '50%', background: 'var(--mantine-color-teal-6)' }} />}
                   styles={{
                     root: {
                       fontSize: '11px',
                       height: '24px',
                       padding: '0 8px',
-                      background: 'rgba(12, 166, 120, 0.08)',
-                      border: '1px solid rgba(12, 166, 120, 0.25)',
+                      background: 'rgba(20, 184, 166, 0.08)',
+                      border: '1px solid rgba(20, 184, 166, 0.25)',
                       transition: 'all 0.2s ease',
                       '&:hover': {
-                        background: 'rgba(12, 166, 120, 0.15)',
+                        background: 'rgba(20, 184, 166, 0.15)',
                       }
                     }
                   }}
+
                   onClick={() => {
                     const allMessages = useAgentStore.getState().messages;
                     const allScreenshots = extractScreenshotsStructured(allMessages);

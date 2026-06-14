@@ -126,14 +126,14 @@ export function McpServerDetailPanel({
             </Text>
             {server.is_connected ? (
               <Group gap={4}>
-                <Box style={{ width: 8, height: 8, borderRadius: '50%', background: '#51cf66' }} />
+                <Box style={{ width: 8, height: 8, borderRadius: '50%', background: 'var(--mantine-color-teal-6)' }} />
                 <Text size="xs" c="dimmed">
                   {t('skills.mcp.connectedWithTools', { count: server.tool_count })}
                 </Text>
               </Group>
             ) : (
               <Group gap={4}>
-                <Box style={{ width: 8, height: 8, borderRadius: '50%', background: '#ff6b6b' }} />
+                <Box style={{ width: 8, height: 8, borderRadius: '50%', background: 'var(--mantine-color-red-6)' }} />
                 <Text size="xs" c="dimmed">
                   {t('skills.mcp.disconnected')}
                 </Text>

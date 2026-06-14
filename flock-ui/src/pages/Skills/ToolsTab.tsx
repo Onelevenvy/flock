@@ -55,6 +55,7 @@ export function ToolsTab() {
             {filteredProviders.map((provider) => (
               <Box
                 key={provider.id}
+                className="hover-card-lift"
                 p="md"
                 onClick={(e) => { e.stopPropagation(); setSelectedProvider(provider); }}
                 style={{
@@ -62,20 +63,9 @@ export function ToolsTab() {
                   border: `1px solid ${selectedProvider?.id === provider.id ? 'var(--flock-accent)' : 'var(--flock-border-subtle)'}`,
                   background: selectedProvider?.id === provider.id ? 'var(--flock-accent-soft)' : 'var(--flock-bg-raised)',
                   cursor: 'pointer',
-                  transition: 'transform 0.18s ease, border-color 0.18s ease, box-shadow 0.18s ease',
-                  boxShadow: '0 8px 24px rgba(15, 23, 42, 0.05)',
-                }}
-                onMouseEnter={(e) => {
-                  e.currentTarget.style.transform = 'translateY(-2px)';
-                  e.currentTarget.style.borderColor = 'var(--flock-accent)';
-                  e.currentTarget.style.boxShadow = '0 14px 36px rgba(21, 90, 239, 0.14)';
-                }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.transform = 'translateY(0)';
-                  e.currentTarget.style.borderColor = selectedProvider?.id === provider.id ? 'var(--flock-accent)' : 'var(--flock-border-subtle)';
-                  e.currentTarget.style.boxShadow = '0 8px 24px rgba(15, 23, 42, 0.05)';
                 }}
               >
+
                 <Group gap="sm" mb="sm">
                   <Box
                     style={{

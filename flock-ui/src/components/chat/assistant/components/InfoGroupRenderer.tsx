@@ -75,12 +75,11 @@ export function InfoItem({ info }: { info: InfoChunk }) {
 
   const isSuccess = info.message.includes('已就绪') || info.message.includes('成功') || info.message.includes('完成');
   const isError = info.message.includes('失败') || info.message.includes('出错') || info.message.includes('健康状态') || info.message.includes('失效');
-
   return (
     <Box style={{ marginBottom: 6 }}>
       <Group gap={6} align="center" wrap="nowrap">
-        {isSuccess && <Text size="xs" fw={800} style={{ color: '#0ca678', display: 'flex', alignItems: 'center' }}>✓</Text>}
-        {isError && <Text size="xs" fw={800} style={{ color: '#f03e3e', display: 'flex', alignItems: 'center' }}>✗</Text>}
+        {isSuccess && <Text size="xs" fw={800} style={{ color: 'var(--mantine-color-teal-6)', display: 'flex', alignItems: 'center' }}>✓</Text>}
+        {isError && <Text size="xs" fw={800} style={{ color: 'var(--mantine-color-red-6)', display: 'flex', alignItems: 'center' }}>✗</Text>}
         {!isSuccess && !isError && <span style={{ display: 'inline-block', width: 6, height: 6, borderRadius: '50%', background: 'var(--flock-accent)', marginRight: 2 }} />}
         
         <Text
@@ -172,11 +171,11 @@ export function InfoGroupRenderer({ infos, isStreaming }: InfoGroupRendererProps
     status = 'success';
   }
 
-  const borderLeftColor = 
-    status === 'success' 
-      ? '#0ca678' 
-      : status === 'error' 
-      ? '#f03e3e' 
+  const borderLeftColor =
+    status === 'success'
+      ? 'var(--mantine-color-teal-6)'
+      : status === 'error'
+      ? 'var(--mantine-color-red-6)'
       : 'var(--flock-accent)';
 
   let summaryTitle = '';
@@ -211,17 +210,18 @@ export function InfoGroupRenderer({ infos, isStreaming }: InfoGroupRendererProps
         onClick={() => setCollapsed(v => !v)}
       >
         {status === 'running' && <Loader size={12} type="dots" color="var(--flock-accent)" />}
-        {status === 'success' && <Text size="xs" fw={800} style={{ color: '#0ca678', display: 'inline-flex', alignItems: 'center' }}>✓</Text>}
-        {status === 'error' && <Text size="xs" fw={800} style={{ color: '#f03e3e', display: 'inline-flex', alignItems: 'center' }}>✗</Text>}
+        {status === 'success' && <Text size="xs" fw={800} style={{ color: 'var(--mantine-color-teal-6)', display: 'inline-flex', alignItems: 'center' }}>✓</Text>}
+        {status === 'error' && <Text size="xs" fw={800} style={{ color: 'var(--mantine-color-red-6)', display: 'inline-flex', alignItems: 'center' }}>✗</Text>}
 
         <Text
           size="xs"
           fw={600}
           style={{
-            color: status === 'success' ? '#0ca678' : status === 'error' ? '#f03e3e' : 'var(--flock-text-primary)',
+            color: status === 'success' ? 'var(--mantine-color-teal-6)' : status === 'error' ? 'var(--mantine-color-red-6)' : 'var(--flock-text-primary)',
             flexShrink: 0,
           }}
         >
+
           {summaryTitle}
         </Text>
 

@@ -203,27 +203,17 @@ export function SkillsTab() {
             {filteredSkills.map((skill) => (
               <Box
                 key={skill.name}
+                className="hover-card-lift"
                 p="md"
                 onClick={(e) => { e.stopPropagation(); setSelectedSkill(skill); }}
                 style={{
                   borderRadius: 18,
-                  border: `1px solid ${selectedSkill?.name === skill.name ? 'var(--mantine-color-teal-4)' : 'var(--flock-border-subtle)'}`,
+                  border: `1px solid ${selectedSkill?.name === skill.name ? 'var(--flock-accent)' : 'var(--flock-border-subtle)'}`,
                   background: selectedSkill?.name === skill.name ? 'var(--flock-accent-soft)' : 'var(--flock-bg-raised)',
                   cursor: 'pointer',
-                  transition: 'transform 0.18s ease, border-color 0.18s ease, box-shadow 0.18s ease',
-                  boxShadow: '0 8px 24px rgba(15, 23, 42, 0.05)',
-                }}
-                onMouseEnter={(e) => {
-                  e.currentTarget.style.transform = 'translateY(-2px)';
-                  e.currentTarget.style.borderColor = 'var(--flock-accent)';
-                  e.currentTarget.style.boxShadow = '0 14px 36px rgba(21, 90, 239, 0.14)';
-                }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.transform = 'translateY(0)';
-                  e.currentTarget.style.borderColor = selectedSkill?.name === skill.name ? 'var(--mantine-color-teal-4)' : 'var(--flock-border-subtle)';
-                  e.currentTarget.style.boxShadow = '0 8px 24px rgba(15, 23, 42, 0.05)';
                 }}
               >
+
                 <Group gap="sm" mb="sm" wrap="nowrap" justify="space-between" align="center">
                   <Group gap="sm" wrap="nowrap" style={{ flex: 1, minWidth: 0 }}>
                     <ThemeIcon size={46} radius={14} variant="light" color="teal">

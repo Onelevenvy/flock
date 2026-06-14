@@ -18,6 +18,7 @@ export function AssistantCard({
 
   return (
     <Box
+      className="hover-card-lift"
       p="md"
       onClick={onEdit}
       style={{
@@ -27,20 +28,8 @@ export function AssistantCard({
         display: 'flex',
         flexDirection: 'column',
         gap: 14,
-        transition: 'transform 0.18s ease, border-color 0.18s ease, box-shadow 0.18s ease',
         position: 'relative',
         cursor: 'pointer',
-        boxShadow: '0 8px 24px rgba(15, 23, 42, 0.05)',
-      }}
-      onMouseEnter={(e) => {
-        e.currentTarget.style.transform = 'translateY(-2px)';
-        e.currentTarget.style.borderColor = 'var(--flock-accent)';
-        e.currentTarget.style.boxShadow = '0 14px 36px rgba(21, 90, 239, 0.14)';
-      }}
-      onMouseLeave={(e) => {
-        e.currentTarget.style.transform = 'translateY(0)';
-        e.currentTarget.style.borderColor = 'var(--flock-border-subtle)';
-        e.currentTarget.style.boxShadow = '0 8px 24px rgba(15, 23, 42, 0.05)';
       }}
     >
       <Group gap="sm" wrap="nowrap" justify="space-between">

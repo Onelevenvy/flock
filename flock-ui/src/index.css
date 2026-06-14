@@ -299,17 +299,16 @@ body {
 .hover-bg-raised:hover {
   background: var(--flock-bg-hover);
 }
-
 /* ---- Card hover lift effect ---- */
 .hover-card-lift {
-  transition: all 0.28s cubic-bezier(0.25, 0.8, 0.25, 1) !important;
+  box-shadow: 0 8px 24px rgba(15, 23, 42, 0.05) !important;
+  transition: transform 0.18s ease, border-color 0.18s ease, box-shadow 0.18s ease !important;
 }
 .hover-card-lift:hover {
-  transform: translateY(-4px) scale(1.012);
-  box-shadow: 0 12px 24px rgba(21, 90, 239, 0.08), 0 4px 12px rgba(0, 0, 0, 0.03) !important;
+  transform: translateY(-2px) !important;
   border-color: var(--flock-accent) !important;
+  box-shadow: 0 14px 36px rgba(21, 90, 239, 0.14) !important;
 }
-
 /* ---- Close button rotate effect ---- */
 .hover-rotate-close:hover {
   transform: rotate(90deg);
