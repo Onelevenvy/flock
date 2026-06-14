@@ -69,20 +69,21 @@
 
 ## 4. 核心组件与交互动效 (Component Behaviors)
 
-### 4.1 卡片微立体悬浮三阶反馈 (`Hover Lift Effect`)
-这是系统交互设计的精髓。任何可互动的卡片组件（如助手卡片、MCP服务卡片、动作面板等）在悬浮时，必须触发以下三阶视觉动效：
-1.  **一阶：微缩放** —— 极轻微的整体膨胀（放大为原尺寸 of `1.012` 倍），呈现张力。
-2.  **二阶：轻量上浮** —— 平滑上浮 `4px`（`translateY(-4px)`）。
-3.  **三阶：蓝青外发光** —— 卡片边框颜色柔和过渡到高亮状态，并散发出淡淡的品牌蓝柔和发光投影。
+### 4.1 卡片微立体悬浮反馈 (`Hover Lift Effect`)
+这是系统交互设计的精髓。任何可互动的卡片组件（如助手卡片、工作流卡片、MCP服务卡片等）在悬浮时，均应采用平滑立体的微上浮效果（即首页卡片交互规范）：
+1.  **轻量上浮** —— 平滑上浮 `2px`（`translateY(-2px)`）。
+2.  **边框高亮** —— 卡片边框颜色柔和过渡到品牌高亮色 `var(--flock-accent)`。
+3.  **蓝青外发光投影** —— 投影平滑加深并带上淡淡的品牌蓝柔和发光投影。
 *   **核心样式实现**：
     ```css
     .hover-card-lift {
-      transition: all 0.28s cubic-bezier(0.25, 0.8, 0.25, 1) !important;
+      box-shadow: 0 8px 24px rgba(15, 23, 42, 0.05) !important;
+      transition: transform 0.18s ease, border-color 0.18s ease, box-shadow 0.18s ease !important;
     }
     .hover-card-lift:hover {
-      transform: translateY(-4px) scale(1.012);
-      box-shadow: 0 12px 24px rgba(21, 90, 239, 0.08), 0 4px 12px rgba(0, 0, 0, 0.03) !important;
+      transform: translateY(-2px) !important;
       border-color: var(--flock-accent) !important;
+      box-shadow: 0 14px 36px rgba(21, 90, 239, 0.14) !important;
     }
     ```
 

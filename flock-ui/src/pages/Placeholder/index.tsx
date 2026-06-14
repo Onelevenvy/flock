@@ -25,28 +25,18 @@ export function PlaceholderPage({ title, icon: Icon, description }: PlaceholderP
       }}
     >
       <Box
+        className="hover-card-lift"
         style={{
           padding: '48px 64px',
           borderRadius: 24,
           background: 'var(--flock-bg-raised)',
           border: '1px solid var(--flock-border-subtle)',
-          boxShadow: '0 8px 24px rgba(15, 23, 42, 0.05)',
           display: 'flex',
           flexDirection: 'column',
           alignItems: 'center',
-          transition: 'transform 0.18s ease, border-color 0.18s ease, box-shadow 0.18s ease',
-        }}
-        onMouseEnter={(e) => {
-          e.currentTarget.style.transform = 'translateY(-2px)';
-          e.currentTarget.style.borderColor = 'var(--flock-accent)';
-          e.currentTarget.style.boxShadow = '0 14px 36px rgba(21, 90, 239, 0.14)';
-        }}
-        onMouseLeave={(e) => {
-          e.currentTarget.style.transform = 'translateY(0)';
-          e.currentTarget.style.borderColor = 'var(--flock-border-subtle)';
-          e.currentTarget.style.boxShadow = '0 8px 24px rgba(15, 23, 42, 0.05)';
         }}
       >
+
         <Stack align="center" gap="md">
           <Box
             style={{

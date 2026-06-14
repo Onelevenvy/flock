@@ -25,6 +25,7 @@ export function ExplorerAppCard({
 
   return (
     <UnstyledButton
+      className="hover-card-lift"
       onClick={onClick}
       disabled={disabled}
       style={{
@@ -36,21 +37,8 @@ export function ExplorerAppCard({
         borderRadius: 18,
         background: 'var(--flock-bg-raised)',
         border: '1px solid var(--flock-border-subtle)',
-        boxShadow: '0 8px 24px rgba(15, 23, 42, 0.05)',
         opacity: disabled ? 0.55 : 1,
         cursor: disabled ? 'not-allowed' : 'pointer',
-        transition: 'transform 0.18s ease, border-color 0.18s ease, box-shadow 0.18s ease',
-      }}
-      onMouseEnter={(e) => {
-        if (disabled) return;
-        e.currentTarget.style.transform = 'translateY(-2px)';
-        e.currentTarget.style.borderColor = 'var(--flock-accent)';
-        e.currentTarget.style.boxShadow = '0 14px 36px rgba(21, 90, 239, 0.14)';
-      }}
-      onMouseLeave={(e) => {
-        e.currentTarget.style.transform = 'translateY(0)';
-        e.currentTarget.style.borderColor = 'var(--flock-border-subtle)';
-        e.currentTarget.style.boxShadow = '0 8px 24px rgba(15, 23, 42, 0.05)';
       }}
     >
       <Group justify="space-between" align="flex-start" wrap="nowrap">
@@ -90,10 +78,9 @@ export function ExplorerAppCard({
         size="xs"
         radius="md"
         variant={type === 'assistant' ? 'light' : 'filled'}
-        color={type === 'assistant' ? 'blue' : 'teal'}
+        color={type === 'assistant' ? 'blue' : 'blue'}
         leftSection={<ActionIcon size={14} />}
         disabled={disabled}
-        style={type === 'workflow' ? { background: 'var(--flock-accent)' } : undefined}
       >
         {type === 'assistant' ? t('home.explorer.startChat') : t('home.explorer.runWorkflow')}
       </Button>

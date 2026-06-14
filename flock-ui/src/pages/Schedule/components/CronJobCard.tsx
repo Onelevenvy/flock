@@ -54,9 +54,9 @@ export function CronJobCard({
     : ((matchedA as any)?.name || job.assistant_id);
   const aIcon = (matchedA as any)?.icon || '🤖';
   const isRunning = job.enabled && job.last_status !== 'error';
-
   return (
     <Box
+      className="hover-card-lift"
       p="md"
       style={{
         borderRadius: 18,
@@ -65,21 +65,11 @@ export function CronJobCard({
         display: 'flex',
         flexDirection: 'column',
         gap: 14,
-        transition: 'transform 0.18s ease, border-color 0.18s ease, box-shadow 0.18s ease',
         position: 'relative',
-        boxShadow: '0 8px 24px rgba(15, 23, 42, 0.05)',
-      }}
-      onMouseEnter={(e) => {
-        e.currentTarget.style.transform = 'translateY(-2px)';
-        e.currentTarget.style.borderColor = 'var(--flock-accent)';
-        e.currentTarget.style.boxShadow = '0 14px 36px rgba(21, 90, 239, 0.14)';
-      }}
-      onMouseLeave={(e) => {
-        e.currentTarget.style.transform = 'translateY(0)';
-        e.currentTarget.style.borderColor = 'var(--flock-border-subtle)';
-        e.currentTarget.style.boxShadow = '0 8px 24px rgba(15, 23, 42, 0.05)';
       }}
     >
+
+
       {/* 卡片头：图标 + 名称 + 菜单 */}
       <Group gap="sm" wrap="nowrap" justify="space-between">
         <Group gap="sm" wrap="nowrap" style={{ minWidth: 0 }}>
@@ -103,9 +93,12 @@ export function CronJobCard({
               {/* 状态呼吸灯 */}
               <Box
                 style={{
-                  width: 7, height: 7, borderRadius: '50%', flexShrink: 0,
-                  background: job.enabled ? (isRunning ? '#0ca678' : '#fa5252') : '#52525b',
-                  boxShadow: job.enabled && isRunning ? '0 0 6px rgba(12,166,120,0.6)' : 'none',
+                  width: 7,
+                  height: 7,
+                  borderRadius: '50%',
+                  flexShrink: 0,
+                  background: job.enabled ? (isRunning ? 'var(--mantine-color-teal-6)' : 'var(--mantine-color-red-6)') : 'var(--flock-text-muted)',
+                  boxShadow: job.enabled && isRunning ? '0 0 6px var(--mantine-color-teal-6)' : 'none',
                   animation: job.enabled && isRunning ? 'pulse 2.4s infinite' : 'none',
                 }}
               />
