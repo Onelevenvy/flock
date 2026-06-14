@@ -73,6 +73,7 @@ const CATEGORY_CONFIG: Record<
 export function ToolApprovalInline({ approval }: ToolApprovalInlineProps) {
   const { t } = useTranslation();
   const removePendingApproval = useAgentStore((s) => s.removePendingApproval);
+  const clearHumanTakeover = useAgentStore((s) => s.clearHumanTakeover);
   const theme = useUiStore((s) => s.theme);
   const isDark = theme === 'dark';
   const [feedback, setFeedback] = React.useState('');
@@ -137,25 +138,50 @@ export function ToolApprovalInline({ approval }: ToolApprovalInlineProps) {
     async (scope: 'once' | 'always') => {
       if (!approval) return;
       removePendingApproval(approval.call_id);
+      clearHumanTakeover();
       let payload = '';
       if (isAskHuman) {
         if (fields.length > 0) {
           payload = JSON.stringify(formValues);
+          try {
+            const summaryLines = fields.map((f) => {
+              const val = formValues[f.id];
+              let valStr = '';
+              if (f.type === 'boolean') {
+                valStr = val ? '是' : '否';
+              } else if (f.type === 'multi-select') {
+                valStr = Array.isArray(val) ? val.join(', ') : '';
+              } else {
+                valStr = String(val);
+              }
+              return `- **${f.label}**: ${valStr || '(无)'}`;
+            });
+            const summary = `**已提交表单信息**:\n${summaryLines.join('\n')}`;
+            const msgId = `user-form-${Date.now()}`;
+            useAgentStore.getState().addUserMessage(msgId, summary, []);
+          } catch (e) {
+            console.error('Failed to add user message:', e);
+          }
         } else {
           payload = feedback.trim() || 'Confirmed';
         }
       }
       await invoke('approve_tool', { callId: approval.call_id, scope, feedback: payload || null });
     },
-    [approval, removePendingApproval, isAskHuman, fields, formValues, feedback]
+    [approval, removePendingApproval, clearHumanTakeover, isAskHuman, fields, formValues, feedback]
   );
 
   const handleDeny = useCallback(async () => {
     if (!approval) return;
     const reason = feedback.trim() || 'User denied';
     removePendingApproval(approval.call_id);
+    clearHumanTakeover();
+    if (isAskHuman) {
+      const msgId = `user-deny-${Date.now()}`;
+      useAgentStore.getState().addUserMessage(msgId, `**已拒绝提供信息**: ${reason}`, []);
+    }
     await invoke('deny_tool', { callId: approval.call_id, reason });
-  }, [approval, removePendingApproval, feedback]);
+  }, [approval, removePendingApproval, clearHumanTakeover, feedback, isAskHuman]);
 
   const getOptionLabel = (opt: any): string => {
     if (typeof opt === 'string') return opt;
