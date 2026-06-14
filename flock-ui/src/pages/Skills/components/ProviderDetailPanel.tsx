@@ -123,7 +123,7 @@ export function ProviderDetailPanel({
             </Text>
             {provider.is_available ? (
               <Group gap={4}>
-                <Box style={{ width: 8, height: 8, borderRadius: '50%', background: '#51cf66' }} />
+                <Box style={{ width: 8, height: 8, borderRadius: '50%', background: 'var(--mantine-color-teal-6)' }} />
                 <Text size="xs" c="dimmed">
                   {t('skills.tools.available')}
                 </Text>
