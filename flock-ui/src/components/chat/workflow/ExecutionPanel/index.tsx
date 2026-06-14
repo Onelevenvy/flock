@@ -58,7 +58,7 @@ export function ExecutionPanel({
 
   const activeApproval = useMemo(() => {
     if (firstPending) return firstPending;
-    if (humanTakeover && humanTakeover.fields) {
+    if (humanTakeover && (humanTakeover.fields || !humanTakeover.remote_url)) {
       return {
         call_id: humanTakeover.call_id,
         msg_id: humanTakeover.msg_id,
