@@ -17,7 +17,23 @@ pub struct AskHumanField {
 /// Ask the user for clarification, text input, form data, or multiple choice selections.
 ///
 /// Use this tool when you lack critical information, need user preferences/decisions, or require
-/// interactive inputs to proceed. You can specify a custom prompt and fields for the user to fill out.
+/// interactive inputs to proceed. You can specify a custom prompt and a list of fields for the user to fill out.
+///
+/// Supported field types in `fields`:
+/// - "text": Single-line text input.
+/// - "textarea": Multi-line text input.
+/// - "select": Single selection from `options` (rendered as flat clickable buttons).
+/// - "multi-select": Multiple selections from `options` (rendered as checkable toggle buttons).
+/// - "boolean": Checkbox/Switch.
+///
+/// Example:
+/// prompt="Please provide your contact details and preferences"
+/// fields=[
+///   {"id": "name", "label": "Full Name", "type": "text", "required": true},
+///   {"id": "destination", "label": "Preferred Destination", "type": "select", "options": ["Paris", "Tokyo"], "required": true},
+///   {"id": "dietary", "label": "Dietary Restrictions", "type": "multi-select", "options": ["Vegetarian", "Gluten-Free"]},
+///   {"id": "subscribe", "label": "Subscribe to newsletter?", "type": "boolean"}
+/// ]
 ///
 /// @param prompt A description of what you need from the user (e.g. "Please enter your flight details").
 /// @param fields Optional list of structured input fields/choices to present to the user.

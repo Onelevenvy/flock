@@ -82,9 +82,16 @@ export function ToolApprovalInline({ approval }: ToolApprovalInlineProps) {
     setFeedback('');
     if (approval?.tool?.name === 'AskHuman') {
       const initialValues: Record<string, any> = {};
-      const fields = (approval.tool.args as any)?.fields as AskHumanField[] | undefined;
-      if (fields) {
-        fields.forEach((f) => {
+      let fields = (approval.tool.args as any)?.fields;
+      if (typeof fields === 'string') {
+        try {
+          fields = JSON.parse(fields);
+        } catch {
+          fields = null;
+        }
+      }
+      if (Array.isArray(fields)) {
+        (fields as AskHumanField[]).forEach((f) => {
           if (f.type === 'boolean') {
             initialValues[f.id] = false;
           } else if (f.type === 'multi-select') {
@@ -100,9 +107,16 @@ export function ToolApprovalInline({ approval }: ToolApprovalInlineProps) {
 
   const isFormValid = useCallback(() => {
     if (approval?.tool?.name !== 'AskHuman') return true;
-    const fields = (approval.tool.args as any)?.fields as AskHumanField[] | undefined;
-    if (!fields) return true;
-    for (const f of fields) {
+    let fields = (approval.tool.args as any)?.fields;
+    if (typeof fields === 'string') {
+      try {
+        fields = JSON.parse(fields);
+      } catch {
+        fields = null;
+      }
+    }
+    if (!Array.isArray(fields)) return true;
+    for (const f of (fields as AskHumanField[])) {
       if (f.required) {
         const val = formValues[f.id];
         if (f.type === 'multi-select') {
@@ -123,8 +137,15 @@ export function ToolApprovalInline({ approval }: ToolApprovalInlineProps) {
       removePendingApproval(approval.call_id);
       let payload = '';
       if (approval.tool.name === 'AskHuman') {
-        const fields = (approval.tool.args as any)?.fields as AskHumanField[] | undefined;
-        if (fields && fields.length > 0) {
+        let fields = (approval.tool.args as any)?.fields;
+        if (typeof fields === 'string') {
+          try {
+            fields = JSON.parse(fields);
+          } catch {
+            fields = null;
+          }
+        }
+        if (Array.isArray(fields) && fields.length > 0) {
           payload = JSON.stringify(formValues);
         } else {
           payload = feedback.trim() || 'Confirmed';
@@ -141,6 +162,24 @@ export function ToolApprovalInline({ approval }: ToolApprovalInlineProps) {
     removePendingApproval(approval.call_id);
     await invoke('deny_tool', { callId: approval.call_id, reason });
   }, [approval, removePendingApproval, feedback]);
+
+  const getOptionLabel = (opt: any): string => {
+    if (typeof opt === 'string') return opt;
+    if (typeof opt === 'number') return String(opt);
+    if (opt && typeof opt === 'object') {
+      return opt.label || opt.name || opt.value || opt.id || JSON.stringify(opt);
+    }
+    return '';
+  };
+
+  const getOptionValue = (opt: any): string => {
+    if (typeof opt === 'string') return opt;
+    if (typeof opt === 'number') return String(opt);
+    if (opt && typeof opt === 'object') {
+      return opt.value || opt.id || opt.key || opt.label || JSON.stringify(opt);
+    }
+    return '';
+  };
 
   const handleSelectToggle = (fieldId: string, val: string) => {
     setFormValues((prev) => ({
@@ -187,6 +226,21 @@ export function ToolApprovalInline({ approval }: ToolApprovalInlineProps) {
     return () => window.removeEventListener('keydown', handleKey);
   }, [approval, handleApprove, handleDeny]);
 
+  const fields = React.useMemo(() => {
+    const rawFields = (approval?.tool?.args as any)?.fields;
+    if (!rawFields) return [];
+    if (Array.isArray(rawFields)) return rawFields as AskHumanField[];
+    if (typeof rawFields === 'string') {
+      try {
+        const parsed = JSON.parse(rawFields);
+        if (Array.isArray(parsed)) return parsed as AskHumanField[];
+      } catch (e) {
+        console.error('Failed to parse fields:', e);
+      }
+    }
+    return [];
+  }, [approval?.tool?.args]);
+
   if (!approval) return null;
 
   const { tool } = approval;
@@ -204,7 +258,7 @@ export function ToolApprovalInline({ approval }: ToolApprovalInlineProps) {
     return null;
   })();
 
-  const hasFields = isAskHuman && ((tool.args as any)?.fields as AskHumanField[] | undefined)?.length;
+  const hasFields = isAskHuman && fields.length > 0;
 
   return (
     <Box
@@ -261,7 +315,7 @@ export function ToolApprovalInline({ approval }: ToolApprovalInlineProps) {
             <Text size="xs" fw={500} c="var(--flock-text-bright)">
               {(tool.args as any)?.prompt}
             </Text>
-            {((tool.args as any)?.fields as AskHumanField[] | undefined)?.map((field) => (
+            {fields.map((field) => (
               <Box key={field.id} style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
                 <Text size="xs" fw={600} style={{ display: 'flex', gap: 2, color: 'var(--flock-text-muted)' }}>
                   {field.label}
@@ -283,15 +337,17 @@ export function ToolApprovalInline({ approval }: ToolApprovalInlineProps) {
                   />
                 ) : field.type === 'select' ? (
                   <Group gap="xs" mt={2}>
-                    {field.options?.map((opt) => {
-                      const isSelected = formValues[field.id] === opt;
+                    {(Array.isArray(field.options) ? field.options : [])?.map((opt) => {
+                      const optVal = getOptionValue(opt);
+                      const optLabel = getOptionLabel(opt);
+                      const isSelected = formValues[field.id] === optVal;
                       return (
                         <Button
-                          key={opt}
+                          key={optVal}
                           size="xs"
                           variant={isSelected ? 'filled' : 'outline'}
                           color={isSelected ? 'blue' : 'gray'}
-                          onClick={() => handleSelectToggle(field.id, opt)}
+                          onClick={() => handleSelectToggle(field.id, optVal)}
                           styles={{
                             root: {
                               height: '28px',
@@ -299,22 +355,24 @@ export function ToolApprovalInline({ approval }: ToolApprovalInlineProps) {
                             }
                           }}
                         >
-                          {opt}
+                          {optLabel}
                         </Button>
                       );
                     })}
                   </Group>
                 ) : field.type === 'multi-select' ? (
                   <Group gap="xs" mt={2}>
-                    {field.options?.map((opt) => {
-                      const isSelected = (formValues[field.id] as string[])?.includes(opt);
+                    {(Array.isArray(field.options) ? field.options : [])?.map((opt) => {
+                      const optVal = getOptionValue(opt);
+                      const optLabel = getOptionLabel(opt);
+                      const isSelected = (formValues[field.id] as string[])?.includes(optVal);
                       return (
                         <Button
-                          key={opt}
+                          key={optVal}
                           size="xs"
                           variant={isSelected ? 'filled' : 'outline'}
                           color={isSelected ? 'blue' : 'gray'}
-                          onClick={() => handleMultiSelectToggle(field.id, opt)}
+                          onClick={() => handleMultiSelectToggle(field.id, optVal)}
                           styles={{
                             root: {
                               height: '28px',
@@ -322,7 +380,7 @@ export function ToolApprovalInline({ approval }: ToolApprovalInlineProps) {
                             }
                           }}
                         >
-                          {isSelected ? `✓ ${opt}` : opt}
+                          {isSelected ? `✓ ${optLabel}` : optLabel}
                         </Button>
                       );
                     })}
