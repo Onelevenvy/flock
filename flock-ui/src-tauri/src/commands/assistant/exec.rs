@@ -433,13 +433,14 @@ pub async fn approve_tool_call(
     state: Arc<Mutex<AgentState>>,
     call_id: String,
     scope: String,
+    feedback: Option<String>,
 ) -> Result<()> {
     let s = state.lock().await;
     let scope = match scope.as_str() {
         "always" => ApprovalScope::Always,
         _ => ApprovalScope::Once,
     };
-    s.approval_manager.approve(&call_id, scope);
+    s.approval_manager.approve(&call_id, scope, feedback);
     Ok(())
 }
 

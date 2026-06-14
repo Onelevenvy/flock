@@ -124,7 +124,7 @@ pub async fn handle_interactive(
 
         let rx = app_mgr.request_approval(&cid, &ToolCategory::Exec);
         match rx.await {
-            Ok(flock_core::ipc_interface::approval::ToolApprovalResult::Approved) => {
+            Ok(flock_core::ipc_interface::approval::ToolApprovalResult::Approved { .. }) => {
                 crate::emit_info(&flock_core::tr(
                     "收到前端已完成操作指令，正在恢复 Agent 自动执行。",
                     "Received completion signal from frontend. Resuming automated Agent execution.",

@@ -18,6 +18,8 @@ pub enum ProtocolCommand {
         call_id: String,
         #[serde(default)]
         scope: ApprovalScope,
+        #[serde(default)]
+        feedback: Option<String>,
     },
     ToolDeny {
         call_id: String,

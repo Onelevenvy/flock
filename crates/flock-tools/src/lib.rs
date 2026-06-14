@@ -31,6 +31,7 @@ pub fn all_tools() -> ToolSet {
     reg.register(builtin::bash::BashTool::new());
     reg.register(builtin::grep::GrepTool::new());
     reg.register(builtin::glob::GlobTool::new());
+    reg.register(builtin::ask_human::AskHumanToolImpl::new());
 
     // --- sandbox ---
     infos.push(sandbox::provider_info());

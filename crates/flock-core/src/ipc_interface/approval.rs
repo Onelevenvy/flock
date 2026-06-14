@@ -7,7 +7,7 @@ use tokio::sync::oneshot;
 
 /// Result of a tool approval request
 pub enum ToolApprovalResult {
-    Approved,
+    Approved { feedback: Option<String> },
     Denied { reason: String },
 }
 
@@ -57,7 +57,7 @@ impl ToolApprovalManager {
         rx
     }
 
-    pub fn approve(&self, call_id: &str, scope: ApprovalScope) {
+    pub fn approve(&self, call_id: &str, scope: ApprovalScope, feedback: Option<String>) {
         let pending = self
             .pending
             .lock()
@@ -68,7 +68,7 @@ impl ToolApprovalManager {
             if matches!(scope, ApprovalScope::Always) {
                 self.add_auto_approve(&pending.category);
             }
-            let _ = pending.tx.send(ToolApprovalResult::Approved);
+            let _ = pending.tx.send(ToolApprovalResult::Approved { feedback });
         }
     }
 

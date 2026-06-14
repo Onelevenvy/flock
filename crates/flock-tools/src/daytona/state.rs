@@ -21,6 +21,7 @@ pub fn emit_human_takeover(call_id: &str, msg_id: &str, message: &str, remote_ur
             msg_id: msg_id.to_string(),
             message: message.to_string(),
             remote_url,
+            fields: None,
         });
     }
 }

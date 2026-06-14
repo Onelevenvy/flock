@@ -1,3 +1,4 @@
+pub mod ask_human;
 pub mod bash;
 pub mod edit;
 pub mod glob;

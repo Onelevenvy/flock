@@ -7,8 +7,9 @@ pub async fn approve_tool(
     state: State<'_, SharedAgentState>,
     call_id: String,
     scope: String,
+    feedback: Option<String>,
 ) -> Result<(), String> {
-    assistant::approve_tool_call(state.inner().clone(), call_id, scope)
+    assistant::approve_tool_call(state.inner().clone(), call_id, scope, feedback)
         .await
         .map_err(|e| e.to_string())
 }
@@ -40,7 +41,7 @@ pub async fn resume_tool(
     } else {
         "once".to_string()
     };
-    assistant::approve_tool_call(state.inner().clone(), call_id, scope)
+    assistant::approve_tool_call(state.inner().clone(), call_id, scope, None)
         .await
         .map_err(|e| e.to_string())
 }

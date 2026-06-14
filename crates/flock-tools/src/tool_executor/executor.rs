@@ -32,7 +32,7 @@ pub async fn run_tools(
             let futures: Vec<_> = batch.calls
                 .iter()
                 .map(|call| {
-                    execute_single(registry, call, hooks_shared, compaction_level, toon_enabled, msg_id)
+                    execute_single(registry, call, hooks_shared, compaction_level, toon_enabled, msg_id, None)
                 })
                 .collect();
             let batch_results = futures::future::join_all(futures).await;
@@ -54,6 +54,7 @@ pub async fn run_tools(
                         compaction_level,
                         toon_enabled,
                         msg_id,
+                        None,
                     )
                     .await;
                 }
@@ -79,6 +80,7 @@ pub async fn execute_single(
     compaction_level: flock_core::context_compression::CompressionLevel,
     toon_enabled: bool,
     msg_id: &str,
+    feedback: Option<String>,
 ) -> (Vec<ContentBlock>, Option<ContextModifier>) {
     let ContentBlock::ToolUse { id, name, input } = call else {
         unreachable!("execute_single called with non-ToolUse block")
@@ -105,6 +107,9 @@ pub async fn execute_single(
             if let Some(obj) = input_val.as_object_mut() {
                 obj.insert("call_id".to_string(), serde_json::Value::String(id.clone()));
                 obj.insert("msg_id".to_string(), serde_json::Value::String(msg_id.to_string()));
+                if let Some(fb) = &feedback {
+                    obj.insert("feedback".to_string(), serde_json::Value::String(fb.clone()));
+                }
             }
             let r = tool.execute(input_val).await;
             let modifier = if r.is_error {
@@ -177,6 +182,7 @@ pub async fn execute_tool_calls_with_approval(
     for batch in group_calls(registry, tool_calls) {
         if batch.is_concurrent {
             let mut approved_calls = Vec::new();
+            let mut feedbacks = std::collections::HashMap::new();
             
             for call in &batch.calls {
                 let ContentBlock::ToolUse { id, name, input } = call else { continue };
@@ -202,7 +208,12 @@ pub async fn execute_tool_calls_with_approval(
 
                     let rx = approval_manager.request_approval(id, &category);
                     match rx.await {
-                        Ok(ToolApprovalResult::Approved) => approved_calls.push(call),
+                        Ok(ToolApprovalResult::Approved { feedback }) => {
+                            approved_calls.push(call);
+                            if let Some(fb) = feedback {
+                                feedbacks.insert(id.clone(), fb);
+                            }
+                        }
                         Ok(ToolApprovalResult::Denied { reason }) => {
                             let _ = writer.emit(&ProtocolEvent::ToolCancelled {
                                 msg_id: msg_id.to_string(),
@@ -240,7 +251,12 @@ pub async fn execute_tool_calls_with_approval(
             let futures: Vec<_> = approved_calls
                 .iter()
                 .map(|call| {
-                    execute_single(registry, call, hooks_shared, compaction_level, toon_enabled, msg_id)
+                    let call_id = match call {
+                        ContentBlock::ToolUse { id, .. } => id.clone(),
+                        _ => String::new(),
+                    };
+                    let fb = feedbacks.get(&call_id).cloned();
+                    execute_single(registry, call, hooks_shared, compaction_level, toon_enabled, msg_id, fb)
                 })
                 .collect();
 
@@ -278,6 +294,7 @@ pub async fn execute_tool_calls_with_approval(
                     && !allow_list.contains(&name.to_string())
                     && !approval_manager.is_auto_approved(&category.to_string());
 
+                let mut current_feedback = None;
                 if needs_approval {
                     let _ = writer.emit(&ProtocolEvent::ToolRequest {
                         msg_id: msg_id.to_string(),
@@ -292,7 +309,9 @@ pub async fn execute_tool_calls_with_approval(
 
                     let rx = approval_manager.request_approval(id, &category);
                     match rx.await {
-                        Ok(ToolApprovalResult::Approved) => { /* continue */ }
+                        Ok(ToolApprovalResult::Approved { feedback }) => {
+                            current_feedback = feedback;
+                        }
                         Ok(ToolApprovalResult::Denied { reason }) => {
                             let _ = writer.emit(&ProtocolEvent::ToolCancelled {
                                 msg_id: msg_id.to_string(),
@@ -322,7 +341,7 @@ pub async fn execute_tool_calls_with_approval(
                 let modifier;
                 {
                     let hooks_shared: Option<&HookEngine> = hooks.as_deref();
-                    (blocks, modifier) = execute_single(registry, call, hooks_shared, compaction_level, toon_enabled, msg_id).await;
+                    (blocks, modifier) = execute_single(registry, call, hooks_shared, compaction_level, toon_enabled, msg_id, current_feedback).await;
                 }
 
                 if let Some(ContentBlock::ToolResult { content, is_error, .. }) = blocks.first() {

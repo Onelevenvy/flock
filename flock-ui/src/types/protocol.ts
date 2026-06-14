@@ -47,7 +47,7 @@ export type ProtocolEvent =
   | { type: 'config_changed'; capabilities: Capabilities }
   | { type: 'mcp_ready'; name: string; tools: string[] }
   | { type: 'title_updated'; thread_id: string; title: string }
-  | { type: 'human_takeover'; call_id: string; msg_id: string; message: string; remote_url?: string }
+  | { type: 'human_takeover'; call_id: string; msg_id: string; message: string; remote_url?: string; fields?: any }
   | { type: 'pong' };
 
 /** 人工接管状态 */
@@ -60,6 +60,8 @@ export interface HumanTakeoverInfo {
   message: string;
   /** 可选：远程桌面/浏览器代理 URL，供前端 VNC 面板展示 */
   remote_url?: string;
+  /** 可选表单交互字段 */
+  fields?: any;
 }
 
 // ============================================================
