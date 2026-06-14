@@ -143,25 +143,6 @@ export function ToolApprovalInline({ approval }: ToolApprovalInlineProps) {
       if (isAskHuman) {
         if (fields.length > 0) {
           payload = JSON.stringify(formValues);
-          try {
-            const summaryLines = fields.map((f) => {
-              const val = formValues[f.id];
-              let valStr = '';
-              if (f.type === 'boolean') {
-                valStr = val ? '是' : '否';
-              } else if (f.type === 'multi-select') {
-                valStr = Array.isArray(val) ? val.join(', ') : '';
-              } else {
-                valStr = String(val);
-              }
-              return `- **${f.label}**: ${valStr || '(无)'}`;
-            });
-            const summary = `**已提交表单信息**:\n${summaryLines.join('\n')}`;
-            const msgId = `user-form-${Date.now()}`;
-            useAgentStore.getState().addUserMessage(msgId, summary, []);
-          } catch (e) {
-            console.error('Failed to add user message:', e);
-          }
         } else {
           payload = feedback.trim() || 'Confirmed';
         }
