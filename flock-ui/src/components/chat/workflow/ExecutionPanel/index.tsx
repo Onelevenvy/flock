@@ -13,9 +13,12 @@ import { ExecutionPanelHeader } from './ExecutionPanelHeader';
 import { ExecutionRoundItem } from './ExecutionRoundItem';
 import { WorkflowChatInput } from './WorkflowChatInput';
 
+const EMPTY_PENDING_APPROVALS: any[] = [];
+
 export function ExecutionPanel({
   status,
   messages,
+  threadId,
   onClose,
   startWorkflow,
   stopWorkflow,
@@ -37,8 +40,20 @@ export function ExecutionPanel({
   const [inputVal, setInputVal] = useState('');
   const bottomRef = useRef<HTMLDivElement>(null);
 
-  const pendingApprovals = useAgentStore((s) => s.pendingApprovals);
-  const humanTakeover = useAgentStore((s) => s.humanTakeover);
+  const pendingApprovals = useAgentStore((s) => {
+    if (threadId) {
+      return s.sessions[threadId]?.pendingApprovals ?? EMPTY_PENDING_APPROVALS;
+    }
+    return s.pendingApprovals ?? EMPTY_PENDING_APPROVALS;
+  });
+
+  const humanTakeover = useAgentStore((s) => {
+    if (threadId) {
+      return s.sessions[threadId]?.humanTakeover ?? null;
+    }
+    return s.humanTakeover ?? null;
+  });
+
   const firstPending = pendingApprovals[0] ?? null;
 
   const activeApproval = useMemo(() => {

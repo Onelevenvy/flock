@@ -37,6 +37,7 @@ export function WorkflowChatPanel({
     <ExecutionPanel
       status={status}
       messages={messages}
+      threadId={threadId}
       startWorkflow={startWorkflow}
       stopWorkflow={stopWorkflow}
       resumeWorkflow={resumeWorkflow}

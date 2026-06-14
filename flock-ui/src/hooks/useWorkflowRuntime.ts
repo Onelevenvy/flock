@@ -411,7 +411,7 @@ export function useWorkflowRuntime({
                     },
                     msg_id: activeTid,
                     is_workflow: true,
-                  });
+                  }, activeTid);
                 }
                 break;
               }
@@ -420,7 +420,7 @@ export function useWorkflowRuntime({
               case 'tool_result':
               case 'tool_cancelled': {
                 if (payload.call_id) {
-                  useAgentStore.getState().removePendingApproval(payload.call_id);
+                  useAgentStore.getState().removePendingApproval(payload.call_id, activeTid);
                 }
                 break;
               }
