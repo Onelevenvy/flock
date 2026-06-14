@@ -231,6 +231,26 @@
       "params": {
         "query": "搜索查询关键字或短语"
       }
+    },
+    "AskHuman": {
+      "name": "人工交互 (AskHuman)",
+      "description": "向用户发起人工交互，以获取用户澄清、多行/单行表单输入或进行选项选择。",
+      "params": {
+        "prompt": "描述向用户寻求什么信息",
+        "fields": "自定义表单字段列表（可选）",
+        "call_id": "调用 ID（内部参数）",
+        "msg_id": "消息 ID（内部参数）",
+        "feedback": "反馈内容（内部参数）"
+      }
+    },
+    "RequestHumanAssistance": {
+      "name": "请求人工协助 (RequestHumanAssistance)",
+      "description": "主动请求人工手动接管并显示协作式远程 VNC 面板，以便用户协助解决验证码、登录、支付等自动化难以克服的障碍。",
+      "params": {
+        "reason": "具体需要人工处理的原因说明",
+        "call_id": "调用 ID（内部参数）",
+        "msg_id": "消息 ID（内部参数）"
+      }
     }
   }
 }

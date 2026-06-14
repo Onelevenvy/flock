@@ -107,5 +107,27 @@
     "importZipBtn": "Import Zip/Skill Archive",
     "duplicateSkillWarning": "This skill already exists. Continuing will overwrite the existing skill. Are you sure you want to proceed?",
     "duplicateSkillError": "This skill already exists! Please delete the existing skill from the list first before importing again."
+  },
+  "tools_i18n": {
+    "AskHuman": {
+      "name": "Ask Human",
+      "description": "Ask the user for clarification, text input, form data, or multiple choice selections.",
+      "params": {
+        "prompt": "Description of what information you seek from the user",
+        "fields": "Custom list of form fields (optional)",
+        "call_id": "Call ID (Internal)",
+        "msg_id": "Message ID (Internal)",
+        "feedback": "Feedback Response (Internal)"
+      }
+    },
+    "RequestHumanAssistance": {
+      "name": "Request Human Assistance",
+      "description": "Proactively request manual human takeover and display the collaborative remote VNC panel.",
+      "params": {
+        "reason": "Specific reason explaining what needs human action",
+        "call_id": "Call ID (Internal)",
+        "msg_id": "Message ID (Internal)"
+      }
+    }
   }
 }
