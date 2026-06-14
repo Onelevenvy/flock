@@ -236,7 +236,7 @@ pub async fn computer_use(
 
                 let rx = app_mgr.request_approval(&cid, &ToolCategory::Exec);
                 match rx.await {
-                    Ok(flock_core::ipc_interface::approval::ToolApprovalResult::Approved) => {
+                    Ok(flock_core::ipc_interface::approval::ToolApprovalResult::Approved { .. }) => {
                         crate::emit_info(&flock_core::tr("收到前端已完成操作指令，正在恢复 Agent 自动执行。", "Received completion instruction from frontend, resuming automated Agent execution."));
                         result_msg = "人工接管操作已顺利完成，用户已确认！Agent 已经成功从暂停点恢复，并继续自动执行后续流程。".to_string();
                     }

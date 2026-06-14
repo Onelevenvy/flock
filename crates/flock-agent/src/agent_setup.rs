@@ -225,7 +225,11 @@ impl AgentBuilder {
         if let Some(ref ov) = self.assistant_overrides {
             if let Some(ref allowed_providers) = ov.allowed_tool_providers {
                 log::info!("Assistant: restricting tools to names: {:?}", allowed_providers);
-                registry.retain_by_providers(allowed_providers);
+                let mut whitelist = allowed_providers.clone();
+                if !whitelist.contains(&"AskHuman".to_string()) {
+                    whitelist.push("AskHuman".to_string());
+                }
+                registry.retain_by_providers(&whitelist);
             }
         }
 

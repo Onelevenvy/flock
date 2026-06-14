@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import {
   Paper,
   Group,
@@ -63,6 +63,41 @@ export function ToolCard({ chunk }: ToolCardProps) {
   const catIcon = CATEGORY_ICON[chunk.tool.category];
   const statusCfg = STATUS_CONFIG[chunk.status] || STATUS_CONFIG.pending;
   const statusLabel = t(statusCfg.key);
+
+  const isAskHuman = chunk.tool.name === 'AskHuman';
+
+  const parsedAskHumanResult = useMemo(() => {
+    if (!isAskHuman || !chunk.result) return null;
+    let fields: any[] = [];
+    const rawFields = (chunk.tool.args as any)?.fields;
+    if (Array.isArray(rawFields)) fields = rawFields;
+    else if (typeof rawFields === 'string') {
+      try {
+        fields = JSON.parse(rawFields);
+      } catch {}
+    }
+    if (!Array.isArray(fields) || fields.length === 0) return null;
+
+    let values: Record<string, any> = {};
+    try {
+      values = JSON.parse(chunk.result);
+    } catch {
+      return null;
+    }
+
+    return fields.map((f: any) => {
+      const val = values[f.id];
+      let valStr = '';
+      if (f.type === 'boolean') {
+        valStr = val ? '是' : '否';
+      } else if (f.type === 'multi-select') {
+        valStr = Array.isArray(val) ? val.join(', ') : '';
+      } else {
+        valStr = String(val ?? '');
+      }
+      return { label: f.label, value: valStr || '(空)' };
+    });
+  }, [isAskHuman, chunk.result, chunk.tool.args]);
 
   return (
     <Paper
@@ -154,6 +189,35 @@ export function ToolCard({ chunk }: ToolCardProps) {
                   {chunk.result}
                 </Box>
               </Box>
+            </Box>
+          )}
+
+          {/* 针对 AskHuman 提交后的表单结果渲染，放在参数和输出后面 */}
+          {parsedAskHumanResult && (
+            <Box
+              style={{
+                marginTop: 4,
+                padding: '8px 12px',
+                backgroundColor: 'var(--flock-accent-soft)',
+                border: '1px solid var(--flock-border-subtle)',
+                borderRadius: 6,
+              }}
+            >
+              <Text size="xs" fw={600} mb={6} style={{ color: 'var(--flock-accent)' }}>
+                已提交表单信息:
+              </Text>
+              <Stack gap={4}>
+                {parsedAskHumanResult.map((item, idx) => (
+                  <Group key={idx} justify="space-between" gap="xs">
+                    <Text size="xs" style={{ color: 'var(--flock-text-muted)', fontSize: 11 }}>
+                      {item.label}
+                    </Text>
+                    <Text size="xs" fw={500} style={{ color: 'var(--flock-text-bright)', fontSize: 11 }}>
+                      {item.value}
+                    </Text>
+                  </Group>
+                ))}
+              </Stack>
             </Box>
           )}
         </Stack>

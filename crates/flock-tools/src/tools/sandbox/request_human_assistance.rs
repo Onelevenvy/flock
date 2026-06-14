@@ -69,7 +69,7 @@ pub async fn request_human_assistance(
         // 挂起并等待前端 approve_tool 事件（用户点击“我已完成操作”）
         let rx = app_mgr.request_approval(&cid, &ToolCategory::Exec);
         match rx.await {
-            Ok(flock_core::ipc_interface::approval::ToolApprovalResult::Approved) => {
+            Ok(flock_core::ipc_interface::approval::ToolApprovalResult::Approved { .. }) => {
                 crate::emit_info(&flock_core::tr("用户已在前端完成人工确认，大模型恢复自动运转。", "User confirmed manually on the frontend. Resuming automated model execution."));
                 return Ok(format!("人工接管顺利完成。用户已确认可以继续，之前接管原因: {}", reason));
             }

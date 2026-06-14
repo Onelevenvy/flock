@@ -14,12 +14,12 @@ async fn test_agent_tool_approval() {
     let approval_manager_clone = approval_manager.clone();
     tokio::spawn(async move {
         tokio::time::sleep(std::time::Duration::from_millis(50)).await;
-        approval_manager_clone.approve(call_id, ApprovalScope::Once);
+        approval_manager_clone.approve(call_id, ApprovalScope::Once, None);
     });
     
     // 3. 阻塞等待审批结果，断言返回的是 Approved
     let result = rx.await.unwrap();
-    assert!(matches!(result, ToolApprovalResult::Approved));
+    assert!(matches!(result, ToolApprovalResult::Approved { .. }));
 }
 
 #[tokio::test(flavor = "multi_thread")]

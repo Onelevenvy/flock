@@ -18,6 +18,8 @@ pub enum ProtocolCommand {
         call_id: String,
         #[serde(default)]
         scope: ApprovalScope,
+        #[serde(default)]
+        feedback: Option<String>,
     },
     ToolDeny {
         call_id: String,
@@ -59,7 +61,7 @@ pub enum ProtocolCommand {
     Ping,
 }
 
-#[derive(Debug, Deserialize, Default, PartialEq, Eq)]
+#[derive(Debug, Clone, Deserialize, Default, PartialEq, Eq)]
 #[serde(rename_all = "snake_case")]
 pub enum ApprovalScope {
     #[default]

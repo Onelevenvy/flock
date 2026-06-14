@@ -99,3 +99,18 @@ tools:
       path:
         zh: 开始检索的目录绝对路径
         en: The start directory path to search
+  AskHuman:
+    name:
+      zh: 人工交互
+      en: Ask Human
+    description:
+      zh: 向用户发起人工交互，以获取用户澄清、多行/单行表单输入或进行选项选择。
+      en: Ask the user for clarification, text input, form data, or multiple choice selections.
+    params:
+      prompt:
+        zh: 描述向用户寻求什么信息
+        en: A description of what you need from the user
+      fields:
+        zh: 自定义表单字段列表（可选）
+        en: Optional list of structured input fields/choices
+

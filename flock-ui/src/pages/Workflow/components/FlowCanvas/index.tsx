@@ -522,6 +522,7 @@ export function FlowCanvas({ workflowId, workflowData, onBack }: FlowCanvasProps
           <ExecutionPanel
             status={executionStatus}
             messages={executionMessages}
+            threadId={activeExecutionThreadId}
             onClose={() => setShowExecution(false)}
             startWorkflow={async (input) => {
               if (isDirty) {

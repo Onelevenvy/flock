@@ -31,6 +31,7 @@ pub fn all_tools() -> ToolSet {
     reg.register(builtin::bash::BashTool::new());
     reg.register(builtin::grep::GrepTool::new());
     reg.register(builtin::glob::GlobTool::new());
+    reg.register(builtin::ask_human::AskHumanToolImpl::new());
 
     // --- sandbox ---
     infos.push(sandbox::provider_info());
@@ -177,6 +178,41 @@ pub fn get_global_approval_manager() -> Option<Arc<flock_core::ipc_interface::ap
         }
     }
     None
+}
+
+/// Approve a tool call across all registered approval managers.
+/// Returns true if the call_id was found and resolved.
+pub fn approve_by_global_registry(
+    call_id: &str,
+    scope: flock_core::ipc_interface::approval::ApprovalScope,
+    feedback: Option<String>,
+) -> bool {
+    if let Ok(map) = APPROVAL_REGISTRY.read() {
+        for mgr in map.values() {
+            if mgr.has_pending(call_id) {
+                mgr.approve(call_id, scope, feedback);
+                return true;
+            }
+        }
+    }
+    false
+}
+
+/// Deny a tool call across all registered approval managers.
+/// Returns true if the call_id was found and resolved.
+pub fn deny_by_global_registry(
+    call_id: &str,
+    result: flock_core::ipc_interface::approval::ToolApprovalResult,
+) -> bool {
+    if let Ok(map) = APPROVAL_REGISTRY.read() {
+        for mgr in map.values() {
+            if mgr.has_pending(call_id) {
+                mgr.resolve(call_id, result);
+                return true;
+            }
+        }
+    }
+    false
 }
 
 /// Initialize the active workspace directory for a specific session/thread.

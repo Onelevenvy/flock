@@ -475,6 +475,7 @@ function handleHumanTakeover(event: Extract<ProtocolEvent, { type: 'human_takeov
       msg_id: event.msg_id,
       message: event.message,
       remote_url: event.remote_url,
+      fields: event.fields,
     },
   });
   if (event.remote_url) {

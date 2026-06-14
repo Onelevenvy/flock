@@ -55,6 +55,7 @@ export interface WorkflowStep {
 export interface ExecutionPanelProps {
   status: 'idle' | 'running' | 'done' | 'error';
   messages: any[];
+  threadId?: string | null;
   onClose?: () => void;
   startWorkflow: (input: string) => void | Promise<void>;
   stopWorkflow: () => void | Promise<void>;

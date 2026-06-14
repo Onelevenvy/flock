@@ -433,13 +433,20 @@ pub async fn approve_tool_call(
     state: Arc<Mutex<AgentState>>,
     call_id: String,
     scope: String,
+    feedback: Option<String>,
 ) -> Result<()> {
-    let s = state.lock().await;
-    let scope = match scope.as_str() {
+    let scope_enum = match scope.as_str() {
         "always" => ApprovalScope::Always,
         _ => ApprovalScope::Once,
     };
-    s.approval_manager.approve(&call_id, scope);
+
+    // First, try to approve using the global registry (e.g. for workflows)
+    if flock_tools::approve_by_global_registry(&call_id, scope_enum.clone(), feedback.clone()) {
+        return Ok(());
+    }
+
+    let s = state.lock().await;
+    s.approval_manager.approve(&call_id, scope_enum, feedback);
     Ok(())
 }
 
@@ -449,13 +456,17 @@ pub async fn deny_tool_call(
     call_id: String,
     reason: Option<String>,
 ) -> Result<()> {
+    let denied_result = ToolApprovalResult::Denied {
+        reason: reason.unwrap_or_else(|| "User denied".to_string()),
+    };
+
+    // First, try to deny using the global registry (e.g. for workflows)
+    if flock_tools::deny_by_global_registry(&call_id, denied_result.clone()) {
+        return Ok(());
+    }
+
     let s = state.lock().await;
-    s.approval_manager.resolve(
-        &call_id,
-        ToolApprovalResult::Denied {
-            reason: reason.unwrap_or_else(|| "User denied".to_string()),
-        },
-    );
+    s.approval_manager.resolve(&call_id, denied_result);
     Ok(())
 }
 

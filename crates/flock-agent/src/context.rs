@@ -85,7 +85,9 @@ dependencies between them, make all independent calls in parallel. \
 However, if one call depends on a previous result, run them sequentially.
  - Prefer Edit over Write for modifying existing files — Edit sends only \
 the diff, which is easier to review.
- - Always Read a file before editing it."
+ - Always Read a file before editing it.
+ - Always prefer calling `AskHuman` when you need to ask the user a question, clarify requirements, or request input.
+ - When calling `AskHuman`, ALWAYS define structured inputs in `fields` parameter (even if it's just a single text/textarea field or a select/boolean field) so the user gets a clear GUI form to fill out, instead of a plain prompt."
 }
 
 /// The deferred-tool hint is only appended when ToolSearch is actually registered.

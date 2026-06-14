@@ -25,11 +25,34 @@ function AssistantChatContent() {
   const humanTakeover = useAgentStore((s) => s.humanTakeover);
   const firstPending = pendingApprovals[0] ?? null;
 
+  const activeApproval = useMemo(() => {
+    if (firstPending) return firstPending;
+    if (humanTakeover && humanTakeover.fields) {
+      return {
+        call_id: humanTakeover.call_id,
+        msg_id: humanTakeover.msg_id,
+        tool: {
+          name: 'AskHuman',
+          category: 'exec' as const,
+          args: {
+            prompt: humanTakeover.message,
+            fields: humanTakeover.fields,
+          },
+          description: 'Ask the user for clarification, text input, form data, or multiple choice selections.',
+        },
+        is_workflow: false,
+      };
+    }
+    return null;
+  }, [firstPending, humanTakeover]);
+
+  const showTakeoverBanner = humanTakeover && !humanTakeover.fields;
+
   return (
     <Box style={{ display: 'flex', flexDirection: 'column', flex: 1, overflow: 'hidden' }}>
       <AssistantChatPanel messages={messages} />
-      <ToolApprovalInline approval={firstPending} />
-      {humanTakeover && <HumanTakeoverBanner takeover={humanTakeover} />}
+      <ToolApprovalInline approval={activeApproval} />
+      {showTakeoverBanner && <HumanTakeoverBanner takeover={humanTakeover} />}
       <AssistantChatInput />
     </Box>
   );

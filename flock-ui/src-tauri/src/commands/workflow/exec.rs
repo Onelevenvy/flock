@@ -602,10 +602,14 @@ pub async fn run_workflow(
         debug_mode: true,
         env_vars,
         workflow_id: workflow_id.clone(),
-        approval_manager,
+        approval_manager: approval_manager.clone(),
         cancel_flag: cancel_flag.clone(),
         has_error: Arc::new(std::sync::Mutex::new(None)),
     });
+
+    let workflow_emitter = Arc::new(crate::ipc::emitter::TauriProtocolEmitter::new(app.clone(), thread_id_val.clone()));
+    flock_tools::init_global_emitter(&thread_id_val, workflow_emitter.clone());
+    flock_tools::init_global_approval_manager(&thread_id_val, ctx.approval_manager.clone());
 
     // 6. 构建 Graph
     let graph = build_workflow_graph(config_to_run, ctx.clone(), checkpointer)
@@ -723,16 +727,19 @@ pub async fn run_workflow(
             "thread_id": thread_id_val_clone.clone(),
         }));
 
-        let mut astream = graph.astream(&initial_input, &config, vec![StreamMode::Updates]);
-        // Drive the stream to completion. We intentionally do NOT emit a workflow_progress
-        // event for every update — on macOS, each app.emit() must dispatch to the main thread
-        // via mach port, and emitting every single graph step floods the run loop, causing
-        // IMKCFRunLoopWakeUpReliable errors that freeze the entire UI.
-        // Fine-grained events (node_start, node_done, text_delta, etc.) are emitted by the
-        // WorkflowSink callbacks, which are already throttled.
-        while let Some(_part) = astream.next().await {
-            // intentionally empty — sink callbacks handle all UI events
-        }
+        let thread_id_val_for_scope = thread_id_val_clone.clone();
+        let _ = flock_core::CURRENT_SESSION_ID.scope(thread_id_val_for_scope, async {
+            let mut astream = graph.astream(&initial_input, &config, vec![StreamMode::Updates]);
+            // Drive the stream to completion. We intentionally do NOT emit a workflow_progress
+            // event for every update — on macOS, each app.emit() must dispatch to the main thread
+            // via mach port, and emitting every single graph step floods the run loop, causing
+            // IMKCFRunLoopWakeUpReliable errors that freeze the entire UI.
+            // Fine-grained events (node_start, node_done, text_delta, etc.) are emitted by the
+            // WorkflowSink callbacks, which are already throttled.
+            while let Some(_part) = astream.next().await {
+                // intentionally empty — sink callbacks handle all UI events
+            }
+        }).await;
 
         // astream 结束，查看当前的最新的 snapshot 以确定状态
         match graph.get_state(&config) {
@@ -972,6 +979,8 @@ pub async fn run_workflow(
             });
         }
 
+        flock_tools::unregister_global_emitter(&thread_id_val_clone);
+        flock_tools::unregister_global_approval_manager(&thread_id_val_clone);
         execution_manager_clone.unregister_task(&workflow_id_clone).await;
     });
 

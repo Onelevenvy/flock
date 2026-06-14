@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useRef } from 'react';
+import { useState, useEffect, useCallback, useRef, useMemo } from 'react';
 import { Box, Text, ScrollArea, Stack, Button, Divider, Group } from '@mantine/core';
 import { useTranslation } from 'react-i18next';
 import { IconCheck, IconPlayerPlay, IconPlayerStop } from '@tabler/icons-react';
@@ -13,9 +13,12 @@ import { ExecutionPanelHeader } from './ExecutionPanelHeader';
 import { ExecutionRoundItem } from './ExecutionRoundItem';
 import { WorkflowChatInput } from './WorkflowChatInput';
 
+const EMPTY_PENDING_APPROVALS: any[] = [];
+
 export function ExecutionPanel({
   status,
   messages,
+  threadId,
   onClose,
   startWorkflow,
   stopWorkflow,
@@ -37,8 +40,42 @@ export function ExecutionPanel({
   const [inputVal, setInputVal] = useState('');
   const bottomRef = useRef<HTMLDivElement>(null);
 
-  const pendingApprovals = useAgentStore((s) => s.pendingApprovals);
+  const pendingApprovals = useAgentStore((s) => {
+    if (threadId) {
+      return s.sessions[threadId]?.pendingApprovals ?? EMPTY_PENDING_APPROVALS;
+    }
+    return s.pendingApprovals ?? EMPTY_PENDING_APPROVALS;
+  });
+
+  const humanTakeover = useAgentStore((s) => {
+    if (threadId) {
+      return s.sessions[threadId]?.humanTakeover ?? null;
+    }
+    return s.humanTakeover ?? null;
+  });
+
   const firstPending = pendingApprovals[0] ?? null;
+
+  const activeApproval = useMemo(() => {
+    if (firstPending) return firstPending;
+    if (humanTakeover && (humanTakeover.fields || !humanTakeover.remote_url)) {
+      return {
+        call_id: humanTakeover.call_id,
+        msg_id: humanTakeover.msg_id,
+        tool: {
+          name: 'AskHuman',
+          category: 'exec' as const,
+          args: {
+            prompt: humanTakeover.message,
+            fields: humanTakeover.fields,
+          },
+          description: 'Ask the user for clarification, text input, form data, or multiple choice selections.',
+        },
+        is_workflow: true,
+      };
+    }
+    return null;
+  }, [firstPending, humanTakeover]);
 
   const storeNodes = useWorkflowStore((s) => s.nodes);
   const nodes = externalNodes ?? storeNodes;
@@ -374,7 +411,7 @@ export function ExecutionPanel({
         )}
 
         {/* Tool approval card */}
-        <ToolApprovalInline approval={firstPending} />
+        <ToolApprovalInline approval={activeApproval} />
 
         {/* Bottom input area */}
         {!showInitialForm && (() => {

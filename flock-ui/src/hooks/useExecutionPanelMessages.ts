@@ -109,12 +109,50 @@ function buildSteps(
       continue;
     }
 
+    // ---- info 消息 (node_start / node_done) ----
+    if (msg.type === 'info' && msg.nodeId) {
+      const rawNodeId = msg.nodeId;
+      let idx = nodeStepIndex[rawNodeId];
+      if (idx === undefined) {
+        // 当全新的节点开始运行时，将其余运行中的节点标记为 done
+        for (let i = 0; i < result.length; i++) {
+          if (result[i].status === 'running') {
+            result[i] = { ...result[i], status: 'done' };
+          }
+        }
+
+        const { displayName, nodeType } = resolveNodeDisplayName(rawNodeId, nodes);
+        const step: WorkflowStep = {
+          id: `step-${rawNodeId}`,
+          nodeId: rawNodeId,
+          nodeType,
+          displayName,
+          status: 'running',
+          outputText: '',
+          thinkingText: '',
+          startTs: msg.timestamp,
+          isInterrupt: false,
+          interruptResolved: false,
+        };
+        idx = result.length;
+        nodeStepIndex[rawNodeId] = idx;
+        result.push(step);
+      }
+
+      const step = { ...result[idx] };
+      if (msg.content.includes('finished')) {
+        step.status = 'done';
+      }
+      result[idx] = step;
+      continue;
+    }
+
     // ---- text_delta / thinking ----
     if (msg.type === 'text_delta' || msg.type === 'thinking') {
       const rawNodeId = msg.nodeId ?? 'assistant';
       let idx = nodeStepIndex[rawNodeId];
       if (idx === undefined) {
-        // 当全新的节点开始生成输出时，说明上一个处于 running 状态的节点已流转完毕，将其标记为 done
+        // 当全新的节点开始生成输出时，说明上一个处于 running 状态 of 节点已流转完毕，将其标记为 done
         for (let i = 0; i < result.length; i++) {
           if (result[i].status === 'running') {
             result[i] = { ...result[i], status: 'done' };
