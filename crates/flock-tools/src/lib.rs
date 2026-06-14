@@ -180,6 +180,41 @@ pub fn get_global_approval_manager() -> Option<Arc<flock_core::ipc_interface::ap
     None
 }
 
+/// Approve a tool call across all registered approval managers.
+/// Returns true if the call_id was found and resolved.
+pub fn approve_by_global_registry(
+    call_id: &str,
+    scope: flock_core::ipc_interface::approval::ApprovalScope,
+    feedback: Option<String>,
+) -> bool {
+    if let Ok(map) = APPROVAL_REGISTRY.read() {
+        for mgr in map.values() {
+            if mgr.has_pending(call_id) {
+                mgr.approve(call_id, scope, feedback);
+                return true;
+            }
+        }
+    }
+    false
+}
+
+/// Deny a tool call across all registered approval managers.
+/// Returns true if the call_id was found and resolved.
+pub fn deny_by_global_registry(
+    call_id: &str,
+    result: flock_core::ipc_interface::approval::ToolApprovalResult,
+) -> bool {
+    if let Ok(map) = APPROVAL_REGISTRY.read() {
+        for mgr in map.values() {
+            if mgr.has_pending(call_id) {
+                mgr.resolve(call_id, result);
+                return true;
+            }
+        }
+    }
+    false
+}
+
 /// Initialize the active workspace directory for a specific session/thread.
 pub fn init_workspace_dir(session_id: &str, dir: PathBuf) {
     if let Ok(mut map) = WORKSPACE_REGISTRY.write() {

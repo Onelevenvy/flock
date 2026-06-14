@@ -6,6 +6,7 @@ use tokio::sync::oneshot;
 
 
 /// Result of a tool approval request
+#[derive(Debug, Clone)]
 pub enum ToolApprovalResult {
     Approved { feedback: Option<String> },
     Denied { reason: String },
@@ -55,6 +56,14 @@ impl ToolApprovalManager {
             );
         }
         rx
+    }
+
+    pub fn has_pending(&self, call_id: &str) -> bool {
+        if let Ok(pending) = self.pending.lock() {
+            pending.contains_key(call_id)
+        } else {
+            false
+        }
     }
 
     pub fn approve(&self, call_id: &str, scope: ApprovalScope, feedback: Option<String>) {
