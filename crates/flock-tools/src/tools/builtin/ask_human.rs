@@ -40,13 +40,23 @@ pub struct AskHumanField {
 #[tool("AskHuman")]
 pub async fn ask_human(
     prompt: String,
-    fields: Option<Vec<AskHumanField>>,
+    fields: Option<serde_json::Value>,
     call_id: Option<String>,
     msg_id: Option<String>,
 ) -> Result<String, String> {
+    let parsed_fields: Option<Vec<AskHumanField>> = match &fields {
+        Some(serde_json::Value::String(s)) => {
+            serde_json::from_str(s).ok()
+        }
+        Some(v) => {
+            serde_json::from_value(v.clone()).ok()
+        }
+        None => None,
+    };
+
     if let (Some(cid), Some(mid), Some(app_mgr)) = (call_id, msg_id, crate::get_global_approval_manager()) {
         if let Some(emitter) = crate::get_global_emitter() {
-            let fields_json = fields.as_ref().map(|f| serde_json::to_value(f).unwrap_or(serde_json::Value::Null));
+            let fields_json = parsed_fields.as_ref().map(|f| serde_json::to_value(f).unwrap_or(serde_json::Value::Null));
             let _ = emitter.emit(&flock_core::ipc_interface::events::ProtocolEvent::HumanTakeover {
                 call_id: cid.clone(),
                 msg_id: mid.clone(),
