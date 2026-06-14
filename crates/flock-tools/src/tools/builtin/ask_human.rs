@@ -19,6 +19,8 @@ pub struct AskHumanField {
 /// Use this tool when you lack critical information, need user preferences/decisions, or require
 /// interactive inputs to proceed. You can specify a custom prompt and a list of fields for the user to fill out.
 ///
+/// CRITICAL: Always prefer providing structured input fields in the `fields` parameter (even if it's just a single text/textarea field) rather than leaving it empty, so the user gets a clear GUI form to fill out instead of a plain text question.
+///
 /// Supported field types in `fields`:
 /// - "text": Single-line text input.
 /// - "textarea": Multi-line text input.
@@ -36,7 +38,7 @@ pub struct AskHumanField {
 /// ]
 ///
 /// @param prompt A description of what you need from the user (e.g. "Please enter your flight details").
-/// @param fields Optional list of structured input fields/choices to present to the user.
+/// @param fields Structured input fields/choices to present to the user. ALWAYS prefer providing this parameter (even if it's just a single text or textarea field) to render a structured GUI form for the user.
 #[tool("AskHuman")]
 pub async fn ask_human(
     prompt: String,
