@@ -41,9 +41,16 @@ pub struct AskHumanField {
 pub async fn ask_human(
     prompt: String,
     fields: Option<serde_json::Value>,
+    feedback: Option<String>,
     call_id: Option<String>,
     msg_id: Option<String>,
 ) -> Result<String, String> {
+    if let Some(ref fb) = feedback {
+        if !fb.is_empty() {
+            return Ok(fb.clone());
+        }
+    }
+
     let parsed_fields: Option<Vec<AskHumanField>> = match &fields {
         Some(serde_json::Value::String(s)) => {
             serde_json::from_str(s).ok()
