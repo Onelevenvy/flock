@@ -56,10 +56,6 @@ pub async fn sandbox_exec(
         final_cmd
     };
 
-    crate::emit_info(&flock_core::tr(
-        &format!("正在沙盒中执行命令: {}...", command),
-        &format!("Executing command in sandbox: {}...", command)
-    ));
     let (output, exit_code) = execute_command_in_sandbox(&db, &sandbox_id, &cmd_with_timeout).await
         .map_err(|e| format!("沙盒命令执行失败: {}", e))?;
 

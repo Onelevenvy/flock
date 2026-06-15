@@ -29,7 +29,6 @@ pub async fn destroy_active_sandbox(db: &DbManager) -> anyhow::Result<()> {
         }
     }
 
-    crate::emit_info(&flock_core::tr(&format!("正在销毁 Daytona 沙盒 {}...", sandbox_id), &format!("Destroying Daytona sandbox {}...", sandbox_id)));
     let del_url = format!("{}/api/sandbox/{}", base, sandbox_id);
     match client.delete(&del_url)
         .header("Authorization", format!("Bearer {}", api_key))
@@ -37,9 +36,7 @@ pub async fn destroy_active_sandbox(db: &DbManager) -> anyhow::Result<()> {
         .await
     {
         Ok(resp) => {
-            if resp.status().is_success() {
-                crate::emit_info(&flock_core::tr(&format!("Daytona 沙盒 {} 已销毁。", sandbox_id), &format!("Daytona sandbox {} has been destroyed.", sandbox_id)));
-            } else {
+            if !resp.status().is_success() {
                 let status = resp.status();
                 let body = resp.text().await.unwrap_or_default();
                 crate::emit_info(&flock_core::tr(&format!("销毁沙盒返回非成功状态 (HTTP {}): {}", status, body), &format!("Destroying sandbox returned non-success status (HTTP {}): {}", status, body)));
@@ -108,10 +105,6 @@ pub async fn get_or_create_active_sandbox(db: &DbManager) -> anyhow::Result<Stri
                 "mountPath": mount_path
             }
         ]);
-        crate::emit_info(&flock_core::tr(
-            &format!("Volume {} 将挂载到 {}", vid, mount_path),
-            &format!("Volume {} will be mounted to {}", vid, mount_path)
-        ));
     }
 
     let create_url = format!("{}/api/sandbox", base);
@@ -246,12 +239,7 @@ pub async fn get_or_create_active_sandbox(db: &DbManager) -> anyhow::Result<Stri
     let ensure_workspace_cmd = "mkdir -p /workspace && ls -la /workspace";
     match crate::daytona::execute_command_in_sandbox(db, &sandbox_id, ensure_workspace_cmd).await {
         Ok((out, code)) => {
-            if code == 0 {
-                crate::emit_info(&flock_core::tr(
-                    &format!("/workspace 目录已就绪: {}", out),
-                    &format!("/workspace directory is ready: {}", out)
-                ));
-            } else {
+            if code != 0 {
                 crate::emit_info(&flock_core::tr(
                     &format!("创建 /workspace 目录失败 (退出码 {}): {}", code, out),
                     &format!("Failed to create /workspace directory (exit code {}): {}", code, out)

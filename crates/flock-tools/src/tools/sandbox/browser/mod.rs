@@ -174,11 +174,6 @@ async fn execute_regular_action(
         display = DISPLAY_ID
     );
 
-    let display_url = url.as_deref().unwrap_or("当前页面");
-    crate::emit_info(&flock_core::tr(
-        &format!("正在沙盒中执行网页操作并渲染: {}...", display_url),
-        &format!("Executing page actions and rendering in sandbox: {}...", display_url),
-    ));
     let (stdout_stderr, exit_code) = execute_command_in_sandbox(db, sandbox_id, &run_cmd)
         .await
         .map_err(|e| format!("浏览器工具执行出错: {}", e))?;

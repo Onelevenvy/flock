@@ -141,15 +141,6 @@ pub fn make_llm_node(
             let local_estimate = estimate::estimate_tokens_from_messages(&msgs_for_estimate, Some(&system));
             let effective_watermark = if turn_input_tokens > 0 { turn_input_tokens } else { local_estimate };
 
-            if local_estimate > turn_input_tokens && turn_input_tokens > 0
-                && local_estimate.saturating_sub(turn_input_tokens) > 10_000
-            {
-                ctx.output.emit_info(&format!(
-                    "Token watermark override: provider={}, local_estimate={}, using={}",
-                    turn_input_tokens, local_estimate, effective_watermark
-                ));
-            }
-
             let mut assistant_content: Vec<ContentBlock> = Vec::new();
             if !thinking_text.is_empty() {
                 assistant_content.push(ContentBlock::Thinking { thinking: thinking_text });
@@ -176,10 +167,6 @@ pub fn make_llm_node(
                 state.total_output_tokens
             };
 
-            ctx.output.emit_info(&format!(
-                "[node] <<< exiting llm (tool_calls={})",
-                tool_calls.len()
-            ));
 
             Ok(json!({
                 "messages":                     [assistant_json],

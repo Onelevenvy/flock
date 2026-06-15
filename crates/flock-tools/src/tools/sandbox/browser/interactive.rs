@@ -70,12 +70,6 @@ pub async fn handle_interactive(
     );
     let _ = execute_command_in_sandbox(db, sandbox_id, &check_and_start_cmd).await;
 
-    // Run security check script and auto-navigate
-    crate::emit_info(&flock_core::tr(
-        &format!("正在远程浏览器中打开网页并分析安全要素: {}...", url),
-        &format!("Opening web page in remote browser and analyzing security elements: {}...", url),
-    ));
-
     let (need_takeover, has_password, has_captcha, screenshot_saved) =
         run_security_check(db, sandbox_id, session_id, name_id, url).await?;
 
@@ -97,10 +91,6 @@ pub async fn handle_interactive(
     };
 
     if !need_takeover {
-        crate::emit_info(&flock_core::tr(
-            "网页分析完毕：未检测到输入密码、验证码等敏感校验元素。自动跳过人机接管。",
-            "Page analysis complete: No sensitive verification elements (password inputs, captchas) detected. Skipping human takeover automatically.",
-        ));
         return Ok(format!(
             "人机协同远程桌面已拉起！网页分析完成：未检测到输入密码 (has_password: {})、验证码 (has_captcha: {}) 等敏感验证元素。**为了提高大模型执行效率，已自动跳过人工接管，Agent 继续流式自动运转。**{}\n\n[Remote VNC Link]({})",
             has_password, has_captcha, image_md, proxy_url
