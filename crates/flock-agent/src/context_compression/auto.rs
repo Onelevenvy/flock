@@ -152,19 +152,9 @@ pub async fn autocompact(
         serde_json::to_string(&metadata).expect("CompactMetadata serialization cannot fail")
     );
 
-    let boundary_msg = Message::new(
-        Role::User,
-        vec![ContentBlock::Text {
-            text: boundary_text,
-        }],
-    );
+    let boundary_msg = Message::human(boundary_text);
 
-    let summary_msg = Message::new(
-        Role::User,
-        vec![ContentBlock::Text {
-            text: summary_content,
-        }],
-    );
+    let summary_msg = Message::human(summary_content);
 
     state.record_success();
 

@@ -71,6 +71,60 @@ impl Message {
             timestamp: Some(Utc::now()),
         }
     }
+
+    /// 创建带有文本内容的 System 消息（不带时间戳）。
+    pub fn system(text: impl Into<String>) -> Self {
+        Self::new(Role::System, vec![ContentBlock::Text { text: text.into() }])
+    }
+
+    /// 创建带有文本内容的 User（Human）消息（不带时间戳）。
+    pub fn human(text: impl Into<String>) -> Self {
+        Self::new(Role::User, vec![ContentBlock::Text { text: text.into() }])
+    }
+
+    /// 创建带有文本内容的 Assistant（AI）消息（不带时间戳）。
+    pub fn ai(text: impl Into<String>) -> Self {
+        Self::new(Role::Assistant, vec![ContentBlock::Text { text: text.into() }])
+    }
+
+    /// 创建 Tool 结果消息（不带时间戳）。
+    pub fn tool_result(tool_use_id: impl Into<String>, content: impl Into<String>, is_error: bool) -> Self {
+        Self::new(
+            Role::Tool,
+            vec![ContentBlock::ToolResult {
+                tool_use_id: tool_use_id.into(),
+                content: content.into(),
+                is_error,
+            }],
+        )
+    }
+
+    /// 创建带有文本内容的 System 消息（带当前 UTC 时间戳）。
+    pub fn system_now(text: impl Into<String>) -> Self {
+        Self::now(Role::System, vec![ContentBlock::Text { text: text.into() }])
+    }
+
+    /// 创建带有文本内容的 User（Human）消息（带当前 UTC 时间戳）。
+    pub fn human_now(text: impl Into<String>) -> Self {
+        Self::now(Role::User, vec![ContentBlock::Text { text: text.into() }])
+    }
+
+    /// 创建带有文本内容的 Assistant（AI）消息（带当前 UTC 时间戳）。
+    pub fn ai_now(text: impl Into<String>) -> Self {
+        Self::now(Role::Assistant, vec![ContentBlock::Text { text: text.into() }])
+    }
+
+    /// 创建 Tool 结果消息（带当前 UTC 时间戳）。
+    pub fn tool_result_now(tool_use_id: impl Into<String>, content: impl Into<String>, is_error: bool) -> Self {
+        Self::now(
+            Role::Tool,
+            vec![ContentBlock::ToolResult {
+                tool_use_id: tool_use_id.into(),
+                content: content.into(),
+                is_error,
+            }],
+        )
+    }
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
