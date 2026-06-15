@@ -37,7 +37,6 @@ pub async fn code_execution(code: String) -> Result<String, String> {
         b64_code
     );
 
-    crate::emit_info(&flock_core::tr("正在沙盒中执行代码...", "Executing code in sandbox..."));
     let (stdout_stderr, exit_code) = execute_command_in_sandbox(&db, &sandbox_id, &setup_and_run_cmd).await
         .map_err(|e| format!("代码执行失败: {}", e))?;
 

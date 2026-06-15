@@ -91,7 +91,8 @@ export default function ModelProviderPage() {
 
       {addingCustomModel && (
         <CustomModelSettings
-          provider={addingCustomModel}
+          provider={addingCustomModel.provider}
+          model={addingCustomModel.model}
           onClose={() => setAddingCustomModel(null)}
           onSaved={loadData}
         />

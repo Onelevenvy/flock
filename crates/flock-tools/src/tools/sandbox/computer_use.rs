@@ -57,10 +57,6 @@ async fn capture_desktop_screenshot(
             );
 
             let abs_path_str = ss_path.to_string_lossy().to_string();
-            crate::emit_info(&flock_core::tr(
-                "远程桌面最新状态已成功截取并拉回工作区预览！",
-                "Latest remote desktop screenshot captured and synced to workspace!",
-            ));
             return (format!("\n\n![桌面截图](file:///{})", abs_path_str), true);
         }
     }
@@ -153,10 +149,6 @@ pub async fn computer_use(
     // --- exec action: 直接在沙盒内执行 shell 命令，无需启动 VNC 桌面 ---
     if act == "exec" {
         let cmd = command.ok_or_else(|| "`exec` action 需要提供 `command` 参数。例如：command=\"mkdir /workspace/my_project\"".to_string())?;
-        crate::emit_info(&flock_core::tr(
-            &format!("正在沙盒中执行命令: {}...", cmd),
-            &format!("Executing command in sandbox: {}...", cmd)
-        ));
         let (output, exit_code) = execute_command_in_sandbox(&db, &sandbox_id, &cmd).await
             .map_err(|e| format!("沙盒命令执行失败: {}", e))?;
 
@@ -307,8 +299,6 @@ pub async fn computer_use(
         }
     }
 
-    // 4. Capture desktop screenshot after action
-    crate::emit_info(&flock_core::tr("正在捕获当前远程桌面截图并渲染预览...", "Capturing current remote desktop screenshot for preview..."));
     let (image_md, _screenshot_saved) = capture_desktop_screenshot(&db, &sandbox_id, &session_id, &name_id).await;
 
     let proxy_url = match crate::daytona::get_sandbox_vnc_url(&db, &sandbox_id).await {

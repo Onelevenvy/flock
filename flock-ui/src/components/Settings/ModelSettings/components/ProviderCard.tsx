@@ -19,6 +19,7 @@ import {
   IconX,
   IconPlug,
   IconTrash,
+  IconEdit,
 } from '@tabler/icons-react';
 import { TFunction } from 'i18next';
 import { ModelProvider, ModelItem } from '@/components/Settings/ModelSettings/types';
@@ -35,7 +36,7 @@ interface ProviderCardProps {
   testResult: { id: string; ok: boolean; msg: string } | null;
   handleTestConnection: (providerId: string) => Promise<void>;
   setEditingProvider: (provider: ModelProvider | null) => void;
-  setAddingCustomModel: (provider: ModelProvider | null) => void;
+  setAddingCustomModel: (value: { provider: ModelProvider; model?: ModelItem } | null) => void;
   setExpanded: React.Dispatch<React.SetStateAction<Record<string, boolean>>>;
   handleDeleteModel: (modelId: string, providerId: string) => Promise<void>;
   handleToggleOnline: (modelId: string, currentOnline: boolean) => Promise<void>;
@@ -199,7 +200,7 @@ export function ProviderCard({
               </Badge>
             )}
             {(provider.id === 'openai_compatible' || provider.id === 'anthropic_compatible') && (
-              <Button variant="light" size="xs" color="blue" onClick={() => { setAddingCustomModel(provider); setExpanded((prev) => ({ ...prev, [provider.id]: true })); }}>
+              <Button variant="light" size="xs" color="blue" onClick={() => { setAddingCustomModel({ provider }); setExpanded((prev) => ({ ...prev, [provider.id]: true })); }}>
                 {t('settings.model.addCustomModel', 'Add Custom Model')}
               </Button>
             )}
@@ -287,16 +288,28 @@ export function ProviderCard({
                   >
                     <Group gap="sm">
                       {(provider.id === 'openai_compatible' || provider.id === 'anthropic_compatible') && (
-                        <Tooltip label={t('common.delete', 'Delete')}>
-                          <ActionIcon
-                            variant="subtle"
-                            color="red"
-                            size="sm"
-                            onClick={() => handleDeleteModel(model.id, provider.id)}
-                          >
-                            <IconTrash size={16} />
-                          </ActionIcon>
-                        </Tooltip>
+                        <>
+                          <Tooltip label={t('common.edit', 'Edit')}>
+                            <ActionIcon
+                              variant="subtle"
+                              color="blue"
+                              size="sm"
+                              onClick={() => setAddingCustomModel({ provider, model })}
+                            >
+                              <IconEdit size={16} />
+                            </ActionIcon>
+                          </Tooltip>
+                          <Tooltip label={t('common.delete', 'Delete')}>
+                            <ActionIcon
+                              variant="subtle"
+                              color="red"
+                              size="sm"
+                              onClick={() => handleDeleteModel(model.id, provider.id)}
+                            >
+                              <IconTrash size={16} />
+                            </ActionIcon>
+                          </Tooltip>
+                        </>
                       )}
                       <Switch
                         size="md"

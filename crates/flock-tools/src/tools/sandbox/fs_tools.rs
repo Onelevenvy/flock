@@ -25,7 +25,6 @@ use langgraph::tool;
 #[tool("SandboxRead")]
 pub async fn sandbox_read(path: String) -> Result<String, String> {
     let db = crate::get_db_manager().ok_or_else(|| "Database manager not initialized".to_string())?;
-    crate::emit_info(&flock_core::tr(&format!("正在沙盒中读取文件: {}...", path), &format!("Reading file in sandbox: {}...", path)));
     DaytonaFs::read_file(&db, &path).await.map_err(|e| format!("读取失败: {}", e))
 }
 
@@ -50,8 +49,6 @@ pub async fn sandbox_read(path: String) -> Result<String, String> {
 #[tool("SandboxWrite")]
 pub async fn sandbox_write(path: String, content: String) -> Result<String, String> {
     let db = crate::get_db_manager().ok_or_else(|| "Database manager not initialized".to_string())?;
-    crate::emit_info(&flock_core::tr(&format!("正在沙盒中写入文件: {}...", path), &format!("Writing file in sandbox: {}...", path)));
-
     // Write to cloud sandbox
     DaytonaFs::write_file(&db, &path, &content).await.map_err(|e| format!("写入失败: {}", e))?;
 
@@ -69,13 +66,8 @@ pub async fn sandbox_write(path: String, content: String) -> Result<String, Stri
         }
 
         // Write file to local workspace
-        match std::fs::write(&local_path, &content) {
-            Ok(_) => {
-                crate::emit_info(&flock_core::tr(&format!("文件已同步到本地: {}", local_path.display()), &format!("File synced to local: {}", local_path.display())));
-            }
-            Err(e) => {
-                crate::emit_info(&flock_core::tr(&format!("同步到本地失败: {} (文件仍在云端沙盒中)", e), &format!("Sync to local failed: {} (File remains in sandbox)", e)));
-            }
+        if let Err(e) = std::fs::write(&local_path, &content) {
+            crate::emit_info(&flock_core::tr(&format!("同步到本地失败: {} (文件仍在云端沙盒中)", e), &format!("Sync to local failed: {} (File remains in sandbox)", e)));
         }
     }
 
@@ -104,8 +96,6 @@ pub async fn sandbox_write(path: String, content: String) -> Result<String, Stri
 #[tool("SandboxEdit")]
 pub async fn sandbox_edit(path: String, old_text: String, new_text: String) -> Result<String, String> {
     let db = crate::get_db_manager().ok_or_else(|| "Database manager not initialized".to_string())?;
-    crate::emit_info(&flock_core::tr(&format!("正在沙盒中编辑文件: {}...", path), &format!("Editing file in sandbox: {}...", path)));
-
     let content = DaytonaFs::read_file(&db, &path).await.map_err(|e| format!("读取失败: {}", e))?;
     if !content.contains(&old_text) {
         return Err("The old_text was not found in the file.".to_string());
@@ -128,13 +118,8 @@ pub async fn sandbox_edit(path: String, old_text: String, new_text: String) -> R
         }
 
         // Write file to local workspace
-        match std::fs::write(&local_path, &new_content) {
-            Ok(_) => {
-                crate::emit_info(&flock_core::tr(&format!("文件已同步到本地: {}", local_path.display()), &format!("File synced to local: {}", local_path.display())));
-            }
-            Err(e) => {
-                crate::emit_info(&flock_core::tr(&format!("同步到本地失败: {} (文件仍在云端沙盒中)", e), &format!("Sync to local failed: {} (File remains in sandbox)", e)));
-            }
+        if let Err(e) = std::fs::write(&local_path, &new_content) {
+            crate::emit_info(&flock_core::tr(&format!("同步到本地失败: {} (文件仍在云端沙盒中)", e), &format!("Sync to local failed: {} (File remains in sandbox)", e)));
         }
     }
 
