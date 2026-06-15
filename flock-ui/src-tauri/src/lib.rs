@@ -128,6 +128,7 @@ pub fn run() {
             commands::set_active_model,
             commands::upsert_custom_model,
             commands::test_custom_model_connection,
+            commands::get_custom_model_details,
             // 系统配置
             commands::get_app_config,
             commands::set_app_config,

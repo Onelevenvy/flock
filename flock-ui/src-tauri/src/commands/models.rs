@@ -288,18 +288,37 @@ pub async fn set_active_model(
     Ok(())
 }
 
-/// 创建自定义模型并加密其专属 API Key
+/// 创建或更新自定义模型并加密其专属 API Key
 #[tauri::command]
 pub async fn upsert_custom_model(
     db: State<'_, SharedDbManager>,
     provider_id: String,
     model_name: String,
     base_url: String,
-    api_key: String,
+    mut api_key: String,
     capabilities: Option<Vec<String>>,
+    original_model_name: Option<String>,
 ) -> Result<(), String> {
     let db_inner = db.inner().clone();
     
+    // If api_key is masked, retrieve the old one
+    if api_key == "••••••••" {
+        let old_name = original_model_name.as_ref().unwrap_or(&model_name);
+        if let Ok(Some(old_model)) = db_inner.get_model(&provider_id, old_name).await {
+            if let Some(meta) = old_model.meta {
+                let enc_key = meta.get("api_key_encrypted").and_then(|v| v.as_str());
+                let nonce = meta.get("api_key_nonce").and_then(|v| v.as_str());
+                if let (Some(ct), Some(n)) = (enc_key, nonce) {
+                    let salt = db_inner.get_or_create_salt().await
+                        .map_err(|e| format!("无法获取加密盐: {}", e))?;
+                    if let Ok(decrypted) = flock_core::crypto::decrypt_value(ct, n, &salt) {
+                        api_key = decrypted;
+                    }
+                }
+            }
+        }
+    }
+
     // Encrypt the custom API key
     let salt = db_inner.get_or_create_salt().await
         .map_err(|e| format!("无法获取加密盐: {}", e))?;
@@ -312,6 +331,14 @@ pub async fn upsert_custom_model(
         "api_key_encrypted": encrypted_key,
         "api_key_nonce": nonce,
     });
+
+    // If the model name changed, delete the old model first
+    if let Some(ref old_name) = original_model_name {
+        if old_name != &model_name {
+            let old_id = format!("{}:{}", provider_id, old_name);
+            let _ = db_inner.delete_model(&old_id).await;
+        }
+    }
 
     let model = flock_core::db::Model {
         id: format!("{}:{}", provider_id, model_name),
@@ -346,10 +373,29 @@ pub async fn test_custom_model_connection(
     provider_id: String,
     model_name: String,
     base_url: String,
-    api_key: String,
+    mut api_key: String,
+    original_model_name: Option<String>,
 ) -> Result<String, String> {
     let db_inner = db.inner().clone();
     
+    // If api_key is masked, retrieve the old one
+    if api_key == "••••••••" {
+        let old_name = original_model_name.as_ref().unwrap_or(&model_name);
+        if let Ok(Some(old_model)) = db_inner.get_model(&provider_id, old_name).await {
+            if let Some(meta) = old_model.meta {
+                let enc_key = meta.get("api_key_encrypted").and_then(|v| v.as_str());
+                let nonce = meta.get("api_key_nonce").and_then(|v| v.as_str());
+                if let (Some(ct), Some(n)) = (enc_key, nonce) {
+                    let salt = db_inner.get_or_create_salt().await
+                        .map_err(|e| format!("无法获取加密盐: {}", e))?;
+                    if let Ok(decrypted) = flock_core::crypto::decrypt_value(ct, n, &salt) {
+                        api_key = decrypted;
+                    }
+                }
+            }
+        }
+    }
+
     // 1. 获取 provider 以得知 provider_type
     let provider = db_inner.get_provider(&provider_id).await
         .map_err(|e| format!("数据库错误: {}", e))?
@@ -380,4 +426,39 @@ pub async fn test_custom_model_connection(
         Ok(_) => Ok("连接成功!".to_string()),
         Err(e) => Err(format!("连接失败: {}", e)),
     }
+}
+
+#[derive(serde::Serialize, serde::Deserialize)]
+pub struct CustomModelDetails {
+    pub base_url: String,
+    pub api_key: String,
+}
+
+/// 获取自定义模型解密配置详情
+#[tauri::command]
+pub async fn get_custom_model_details(
+    db: State<'_, SharedDbManager>,
+    provider_id: String,
+    model_name: String,
+) -> Result<Option<CustomModelDetails>, String> {
+    let db_inner = db.inner().clone();
+    let model = db_inner.get_model(&provider_id, &model_name).await
+        .map_err(|e| e.to_string())?;
+    
+    let Some(model) = model else { return Ok(None); };
+    let Some(meta) = model.meta else { return Ok(None); };
+
+    let base_url = meta.get("base_url").and_then(|v| v.as_str()).unwrap_or_default().to_string();
+    let enc_key = meta.get("api_key_encrypted").and_then(|v| v.as_str());
+    let nonce = meta.get("api_key_nonce").and_then(|v| v.as_str());
+
+    let api_key = match (enc_key, nonce) {
+        (Some(_), Some(_)) => "••••••••".to_string(),
+        _ => String::new(),
+    };
+
+    Ok(Some(CustomModelDetails {
+        base_url,
+        api_key,
+    }))
 }

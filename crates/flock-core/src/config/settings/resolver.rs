@@ -141,13 +141,22 @@ impl Config {
 
         // Check active_model (set by UI) to override default provider/model
         let active_model: Option<serde_json::Value> = db.get_config("active_model").await;
-        let (active_provider, active_model_name) = if let Some(am) = active_model {
+        let (mut active_provider, active_model_name) = if let Some(am) = active_model {
             let p = am.get("provider_id").and_then(|v| v.as_str()).map(|s| s.to_string());
             let m = am.get("model_name").and_then(|v| v.as_str()).map(|s| s.to_string());
             (p, m)
         } else {
             (None, None)
         };
+
+        // If default model is not set, try to find the first authenticated provider
+        if active_provider.is_none() && (default_cfg.model.is_none() || default_cfg.model.as_ref().map(|s| s.is_empty()).unwrap_or(true)) {
+            if let Ok(providers) = db.list_providers().await {
+                if let Some(first_auth_prov) = providers.iter().find(|p| p.is_available) {
+                    active_provider = Some(first_auth_prov.id.clone());
+                }
+            }
+        }
 
         // Determine provider: CLI > active_model > default
         let provider_str = cli.provider.as_deref()
@@ -197,18 +206,27 @@ impl Config {
             });
 
         // Determine model: CLI > active_model > provider config > default
-        let model = cli
+        let mut model_opt = cli
             .model
             .clone()
             .or(active_model_name.clone())
             .or(provider_config.model.clone())
-            .or(default_cfg.model.clone())
-            .unwrap_or_else(|| match provider {
-                ProviderType::Anthropic => "claude-sonnet-4-20250514".into(),
-                ProviderType::OpenAI => "gpt-4o".into(),
-                ProviderType::Bedrock => "anthropic.claude-sonnet-4-20250514-v1:0".into(),
-                ProviderType::Vertex => "claude-sonnet-4@20250514".into(),
-            });
+            .or(default_cfg.model.clone());
+
+        if model_opt.is_none() {
+            if let Ok(models) = db.list_models(&provider_label).await {
+                if let Some(first_online_model) = models.iter().find(|m| m.is_online) {
+                    model_opt = Some(first_online_model.model_name.clone());
+                }
+            }
+        }
+
+        let model = model_opt.unwrap_or_else(|| match provider {
+            ProviderType::Anthropic => "claude-sonnet-4-20250514".into(),
+            ProviderType::OpenAI => "gpt-4o".into(),
+            ProviderType::Bedrock => "anthropic.claude-sonnet-4-20250514-v1:0".into(),
+            ProviderType::Vertex => "claude-sonnet-4@20250514".into(),
+        });
 
         let max_tokens = cli.max_tokens.unwrap_or(default_cfg.max_tokens);
         let max_turns = cli.max_turns.or(default_cfg.max_turns);

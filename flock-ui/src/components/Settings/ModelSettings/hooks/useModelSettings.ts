@@ -17,7 +17,10 @@ export function useModelSettings() {
   const [expanded, setExpanded] = useState<Record<string, boolean>>({});
   const [loading, setLoading] = useState(true);
   const [editingProvider, setEditingProvider] = useState<ModelProvider | null>(null);
-  const [addingCustomModel, setAddingCustomModel] = useState<ModelProvider | null>(null);
+  const [addingCustomModel, setAddingCustomModel] = useState<{
+    provider: ModelProvider;
+    model?: ModelItem;
+  } | null>(null);
   const [testingProvider, setTestingProvider] = useState<string | null>(null);
   const [testResult, setTestResult] = useState<{ id: string; ok: boolean; msg: string } | null>(null);
   const [connectedProviders, setConnectedProviders] = useState<Set<string>>(new Set());
@@ -33,8 +36,6 @@ export function useModelSettings() {
         invoke<SummaryModelConfig | null>('get_app_config', { key: 'summary_model' }),
       ]);
       setProviders(list);
-      if (def) setDefaultCfg(def);
-      if (summary) setSummaryCfg(summary);
 
       const connected = new Set<string>();
       const models: Record<string, ModelItem[]> = {};
@@ -47,6 +48,28 @@ export function useModelSettings() {
       }
       setModelsMap(models);
       setConnectedProviders(connected);
+
+      // Check if default model is set. If not, auto-set to first authenticated provider's first model.
+      let resolvedDefault = def;
+      if (!def || !def.model) {
+        const firstAvailableProvider = list.find(p => p.is_available);
+        if (firstAvailableProvider) {
+          const providerModels = models[firstAvailableProvider.id] || [];
+          const firstOnlineModel = providerModels.find(m => m.is_online);
+          if (firstOnlineModel) {
+            const newDefault = {
+              provider: firstAvailableProvider.id,
+              model: firstOnlineModel.model_name
+            };
+            await invoke('set_app_config', { key: 'default', value: newDefault });
+            await invoke('set_active_model', { providerId: firstAvailableProvider.id, modelName: firstOnlineModel.model_name });
+            resolvedDefault = newDefault;
+          }
+        }
+      }
+
+      if (resolvedDefault) setDefaultCfg(resolvedDefault);
+      if (summary) setSummaryCfg(summary);
 
       // Invalidate React Query cache when settings data refreshes
       queryClient.invalidateQueries({ queryKey: ['model_providers'] });
