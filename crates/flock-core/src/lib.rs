@@ -27,10 +27,12 @@ pub fn get_locale() -> String {
         .unwrap_or_else(|| "zh".to_string())
 }
 
-/// Helper function to select Chinese or English string based on current locale.
 pub fn tr(zh: &str, en: &str) -> String {
-    let locale = get_locale();
-    if locale.starts_with("zh") {
+    let is_zh = GLOBAL_LOCALE.get()
+        .and_then(|lock| lock.read().ok())
+        .map(|reader| reader.starts_with("zh"))
+        .unwrap_or(true);
+    if is_zh {
         zh.to_string()
     } else {
         en.to_string()

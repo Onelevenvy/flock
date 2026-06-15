@@ -153,7 +153,7 @@ impl super::DbManager {
             .fetch_all(self.pool())
             .await?;
 
-        let salt = self.get_or_create_salt().await?;
+        let salt = self.salt();
 
         let mut providers = Vec::new();
         for r in rows {
@@ -195,7 +195,7 @@ impl super::DbManager {
             .await?;
 
         let Some(r) = r else { return Ok(None) };
-        let salt = self.get_or_create_salt().await?;
+        let salt = self.salt();
         let api_key = decrypt_api_key_from_row(&r, &salt);
 
         let provider_name_str: String = r.get("provider_name");
@@ -223,7 +223,7 @@ impl super::DbManager {
     }
 
     pub async fn upsert_provider(&self, provider: &ModelProvider) -> anyhow::Result<()> {
-        let salt = self.get_or_create_salt().await?;
+        let salt = self.salt();
 
         let (enc_key, nonce) = if let Some(ref key) = provider.api_key {
             if key.is_empty() {
