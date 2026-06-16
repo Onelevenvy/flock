@@ -185,7 +185,7 @@ impl super::DbManager {
             .fetch_all(self.pool())
             .await?;
 
-        let salt = self.get_or_create_salt().await?;
+        let salt = self.salt();
 
         let mut providers = Vec::new();
         for r in rows {
@@ -249,7 +249,7 @@ impl super::DbManager {
         provider_id: &str,
         credentials_json: &str,
     ) -> anyhow::Result<()> {
-        let salt = self.get_or_create_salt().await?;
+        let salt = self.salt();
         let (enc, nonce) = if credentials_json.is_empty() {
             (None, None)
         } else {

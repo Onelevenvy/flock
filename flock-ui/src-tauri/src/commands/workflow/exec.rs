@@ -15,6 +15,7 @@ use langgraph::prebuilt::BaseChatModel;
 
 use flock_workflow::{build_workflow_graph, WorkflowNodeContext, WorkflowSink};
 use flock_core::model_factory::{CachedModelFactory, ModelFactory};
+use flock_core::types::message::{ContentBlock, Message, Role};
 use flock_tools::all_tools;
 use crate::SharedDbManager;
 use crate::commands::SharedAgentState;
@@ -842,14 +843,10 @@ pub async fn run_workflow(
                 };
 
                 let mut db_messages: Vec<serde_json::Value> = Vec::new();
-
                 if !input_msg_clone.is_empty() || !attachments_clone.is_empty() {
                     let mut content_blocks = Vec::new();
                     if !input_msg_clone.is_empty() {
-                        content_blocks.push(serde_json::json!({
-                            "type": "text",
-                            "text": input_msg_clone
-                        }));
+                        content_blocks.push(ContentBlock::Text { text: input_msg_clone });
                     }
                     for att in &attachments_clone {
                         let kind = att.get("kind").and_then(|v| v.as_str()).unwrap_or("");
@@ -863,44 +860,30 @@ pub async fn run_workflow(
                                     .to_string_lossy()
                                     .to_string();
                                 let mime_type = att.get("mime_type").and_then(|v| v.as_str()).unwrap_or("image/png");
-                                content_blocks.push(serde_json::json!({
-                                    "type": "image",
-                                    "media_type": mime_type,
-                                    "data": relative_path
-                                }));
+                                content_blocks.push(ContentBlock::Image {
+                                    media_type: mime_type.to_string(),
+                                    data: relative_path,
+                                });
                             }
                         }
                     }
                     if !content_blocks.is_empty() {
-                        db_messages.push(serde_json::json!({
-                            "role": "user",
-                            "content": content_blocks,
-                            "timestamp": chrono::Utc::now().to_rfc3339()
-                        }));
+                        let user_msg = Message::now(Role::User, content_blocks);
+                        db_messages.push(serde_json::to_value(&user_msg).unwrap_or(serde_json::Value::Null));
                     }
                 }
 
                 if !final_text_clone.is_empty() || !final_thinking_clone.is_empty() {
                     let mut content_blocks = Vec::new();
                     if !final_thinking_clone.is_empty() {
-                        content_blocks.push(serde_json::json!({
-                            "type": "thinking",
-                            "thinking": final_thinking_clone
-                        }));
+                        content_blocks.push(ContentBlock::Thinking { thinking: final_thinking_clone });
                     }
                     if !final_text_clone.is_empty() {
-                        content_blocks.push(serde_json::json!({
-                            "type": "text",
-                            "text": final_text_clone
-                        }));
+                        content_blocks.push(ContentBlock::Text { text: final_text_clone });
                     }
-                    db_messages.push(serde_json::json!({
-                        "role": "assistant",
-                        "content": content_blocks,
-                        "timestamp": chrono::Utc::now().to_rfc3339()
-                    }));
+                    let assistant_msg = Message::now(Role::Assistant, content_blocks);
+                    db_messages.push(serde_json::to_value(&assistant_msg).unwrap_or(serde_json::Value::Null));
                 }
-
                 let enable_summary: Option<bool> = db_for_task.get_config("enable_title_summary").await;
                 
                 let is_placeholder = |s: &str| {

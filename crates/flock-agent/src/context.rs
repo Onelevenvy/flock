@@ -257,7 +257,7 @@ pub fn trim_message_history(messages: &mut Vec<Message>, keep_tail: usize) {
         summarized_count
     );
 
-    let summary_msg = Message::new(Role::User, vec![ContentBlock::Text { text: summary_text }]);
+    let summary_msg = Message::human(summary_text);
 
     let tail: Vec<Message> = messages.drain(tail_start..).collect();
     messages.truncate(1); // keep first message

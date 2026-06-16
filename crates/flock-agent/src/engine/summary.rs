@@ -125,20 +125,9 @@ pub async fn run_background_summary(
         first_user_query
     );
 
-    // Construct standard flock Message list first (existing unified pattern)
     let messages_for_llm = vec![
-        Message::new(
-            Role::System,
-            vec![ContentBlock::Text {
-                text: "你是一个对话主题总结助手。请直接输出这笔对话的最简短主题，不要有任何多余的标点符号或前缀解释。".to_string(),
-            }],
-        ),
-        Message::new(
-            Role::User,
-            vec![ContentBlock::Text {
-                text: summary_prompt,
-            }],
-        ),
+        Message::system("你是一个对话主题总结助手。请直接输出这笔对话的最简短主题，不要有任何多余的标点符号或前缀解释。"),
+        Message::human(summary_prompt),
     ];
 
     // Convert via existing to_langgraph_message helper to ensure decoupling from concrete model types

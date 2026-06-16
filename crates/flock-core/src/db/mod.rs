@@ -54,6 +54,7 @@ pub use workflow::{WorkflowRecord, UpsertWorkflow, WorkflowVersionRecord};
 pub struct DbManager {
     pool: SqlitePool,
     db_path: PathBuf,
+    salt: Vec<u8>,
 }
 
 impl DbManager {
@@ -87,8 +88,11 @@ impl DbManager {
             .execute(&pool)
             .await?;
 
-        let mgr = Self { pool, db_path };
-        mgr.run_migrations().await?;
+        let mgr_temp = Self { pool: pool.clone(), db_path: db_path.clone(), salt: Vec::new() };
+        mgr_temp.run_migrations().await?;
+        let salt = mgr_temp.get_or_create_salt().await?;
+
+        let mgr = Self { pool, db_path, salt };
         mgr.seed_builtin_providers().await?;
         mgr.seed_builtin_assistants(&assistants_seed::builtin_assistants()).await?;
         mgr.seed_builtin_workflows(&workflow_seed::builtin_workflows()).await?;
@@ -141,6 +145,10 @@ impl DbManager {
 
     /// Get or create the encryption salt. Returns the salt bytes.
     pub async fn get_or_create_salt(&self) -> Result<Vec<u8>> {
+        if !self.salt.is_empty() {
+            return Ok(self.salt.clone());
+        }
+
         let row = sqlx::query("SELECT key_salt FROM encryption_meta WHERE id = 1")
             .fetch_optional(&self.pool)
             .await?;
@@ -171,6 +179,10 @@ impl DbManager {
             .await?;
 
         Ok(salt.to_vec())
+    }
+
+    pub fn salt(&self) -> &[u8] {
+        &self.salt
     }
 
     // ---- Accessors ----
