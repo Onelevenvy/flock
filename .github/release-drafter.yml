@@ -65,8 +65,6 @@ version-resolver:
   minor:
     labels:
       - 'minor'
-      - 'feature'
-      - 'feat'
   patch:
     labels:
       - 'patch'
@@ -77,6 +75,8 @@ version-resolver:
       - 'refactor'
       - 'ci'
       - 'build'
+      - 'feat'
+      - 'feature'
   default: patch
 template: |
   ## What's Changed

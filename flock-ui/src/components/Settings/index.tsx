@@ -24,6 +24,7 @@ import SystemSettings from './SystemSettings';
 import SandboxSettings from './SandboxSettings';
 import PetSettings from './PetSettings';
 import { useTranslation } from 'react-i18next';
+import pkg from '../../../package.json';
 
 interface Props {
   opened: boolean;
@@ -152,7 +153,7 @@ export default function SettingsModal({ opened, onClose }: Props) {
 
           <Box style={{ position: 'absolute', bottom: 24, left: 16, right: 16 }}>
             <Divider mb="sm" color="dark.5" />
-            <Text size="xs" c="dimmed" ta="center">{t('settings.version')}</Text>
+            <Text size="xs" c="dimmed" ta="center">{t('settings.version', { version: pkg.version })}</Text>
           </Box>
         </Box>
 

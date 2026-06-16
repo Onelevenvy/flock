@@ -16,7 +16,7 @@
     "pet": "XiaoF companion pet appearance & behavior settings"
   },
   "developing": "Developing...",
-  "version": "Flock CLI v0.3.0",
+  "version": "Flock v{{version}}",
   "xiaof": {
     "saveSuccess": "XIAOF Agent configuration updated successfully",
     "loading": "Loading XIAOF agent settings...",

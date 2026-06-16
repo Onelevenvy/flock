@@ -846,7 +846,7 @@ pub async fn run_workflow(
                 if !input_msg_clone.is_empty() || !attachments_clone.is_empty() {
                     let mut content_blocks = Vec::new();
                     if !input_msg_clone.is_empty() {
-                        content_blocks.push(ContentBlock::Text { text: input_msg_clone });
+                        content_blocks.push(ContentBlock::Text { text: input_msg_clone.clone() });
                     }
                     for att in &attachments_clone {
                         let kind = att.get("kind").and_then(|v| v.as_str()).unwrap_or("");
