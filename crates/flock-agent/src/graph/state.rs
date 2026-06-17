@@ -88,6 +88,7 @@ impl AgentState {
         allow_list: Vec<String>,
         plan_mode_active: bool,
         pre_plan_allow_list: Vec<String>,
+        compact_consecutive_failures: u32,
         messages: Vec<JsonValue>,
     ) -> Self {
         Self {
@@ -103,7 +104,7 @@ impl AgentState {
             allow_list,
             plan_mode_active,
             pre_plan_allow_list,
-            compact_consecutive_failures: 0,
+            compact_consecutive_failures,
             quit_requested: false,
         }
     }

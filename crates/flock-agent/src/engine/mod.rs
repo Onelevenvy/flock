@@ -59,7 +59,7 @@ pub struct AgentEngine {
     pub(crate) toon_enabled: bool,
     /// Shared msg_id threaded into NodeContext so nodes can emit output events
     /// with the correct message identifier without requiring engine mutability.
-    pub(crate) graph_msg_id: Arc<Mutex<String>>,
+    pub(crate) graph_msg_id: Arc<std::sync::RwLock<String>>,
     pub(crate) turns: usize,
     /// Persistent SQLite checkpointer — shared across all `run()` calls so
     /// LangGraph automatically manages the full conversation history.

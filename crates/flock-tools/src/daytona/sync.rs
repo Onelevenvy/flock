@@ -78,16 +78,9 @@ pub async fn sync_down(db: &DbManager, sandbox_id: &str, local_workspace: &Path)
             for entry in entries {
                 if let Ok(entry) = entry {
                     if let Ok(path) = entry.path() {
-                        // 标准化路径：清除 tar 包中带有的前置 "./" 或 ".\" 标记以保持一致
                         let mut rel_path = path.to_path_buf();
-                        if rel_path.starts_with("./") {
-                            if let Ok(stripped) = rel_path.strip_prefix("./") {
-                                rel_path = stripped.to_path_buf();
-                            }
-                        } else if rel_path.starts_with(".\\") {
-                            if let Ok(stripped) = rel_path.strip_prefix(".\\") {
-                                rel_path = stripped.to_path_buf();
-                            }
+                        if let Ok(stripped) = rel_path.strip_prefix(".") {
+                            rel_path = stripped.to_path_buf();
                         }
                         remote_files.insert(rel_path);
                     }

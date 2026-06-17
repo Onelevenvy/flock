@@ -167,7 +167,7 @@ export function ExecutionPanel({
         setInputVal('');
       }
     }
-  }, [pendingStartInput, pendingStartQuery, initialQuery, status, messages.length, customVars.length, startWorkflow]);
+  }, [pendingStartInput, pendingStartQuery, initialQuery, status, messages.length, customVars.length, startWorkflow, formInputs]);
 
   const handleResume = useCallback((choice: string, feedback?: string, actionLabel?: string) => {
     const payload: Record<string, unknown> = { choice };

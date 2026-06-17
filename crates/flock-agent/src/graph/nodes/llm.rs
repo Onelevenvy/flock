@@ -21,7 +21,7 @@ pub fn make_llm_node(
         let ctx = ctx.clone();
         Box::pin(async move {
             let state = parse_state(&input);
-            let _msg_id = ctx.msg_id.lock().unwrap().clone();
+            let _msg_id = ctx.msg_id.read().unwrap().clone();
 
             if let Some(limit) = ctx.max_turns {
                 if state.turns as usize >= limit {
@@ -73,6 +73,8 @@ pub fn make_llm_node(
             let mut tool_calls: Vec<ContentBlock> = Vec::new();
             let mut turn_input_tokens: u64 = 0;
             let mut turn_output_tokens: u64 = 0;
+            // NOTE: turn_cache_creation and turn_cache_read remain 0 because the underlying
+            // langgraph library's `LlmUsage` only exposes prompt_tokens and completion_tokens.
             let mut turn_cache_creation: u64 = 0;
             let mut turn_cache_read: u64 = 0;
 

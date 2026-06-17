@@ -50,7 +50,7 @@ pub async fn prepare_run(
     log::info!("[engine] Starting run for msg_id={}, input_len={}", msg_id, user_input.len());
 
     // Update shared msg_id so nodes emit events with the right ID
-    *engine.graph_msg_id.lock().unwrap() = msg_id.to_string();
+    *engine.graph_msg_id.write().unwrap() = msg_id.to_string();
 
     // Lazily build the graph once and reuse across turns
     if engine.graph.is_none() {
@@ -206,6 +206,7 @@ pub async fn prepare_run(
         engine.allow_list.clone(),
         engine.plan_state.is_active,
         engine.plan_state.pre_plan_allow_list.clone(),
+        engine.compact_state.consecutive_failures,
         vec![new_user_msg],
     );
 
