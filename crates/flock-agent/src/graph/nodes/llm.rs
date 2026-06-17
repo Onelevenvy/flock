@@ -73,8 +73,6 @@ pub fn make_llm_node(
             let mut tool_calls: Vec<ContentBlock> = Vec::new();
             let mut turn_input_tokens: u64 = 0;
             let mut turn_output_tokens: u64 = 0;
-            // NOTE: turn_cache_creation and turn_cache_read remain 0 because the underlying
-            // langgraph library's `LlmUsage` only exposes prompt_tokens and completion_tokens.
             let mut turn_cache_creation: u64 = 0;
             let mut turn_cache_read: u64 = 0;
 
@@ -134,6 +132,12 @@ pub fn make_llm_node(
                     // log::info!("[node:llm] Received usage: {:?}", usage);
                     turn_input_tokens = usage.prompt_tokens as u64;
                     turn_output_tokens = usage.completion_tokens as u64;
+                    if let Some(creation) = usage.cache_creation_tokens {
+                        turn_cache_creation = creation as u64;
+                    }
+                    if let Some(read) = usage.cache_read_tokens {
+                        turn_cache_read = read as u64;
+                    }
                 }
             }
             // log::info!("[node:llm] Stream completed. Assistant text len: {}, Tool calls: {}", assistant_text.len(), tool_calls.len());
