@@ -909,7 +909,7 @@ dependencies = [
  "libc",
  "option-ext",
  "redox_users",
- "windows-sys 0.59.0",
+ "windows-sys 0.61.2",
 ]
 
 [[package]]
@@ -1117,7 +1117,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "39cab71617ae0d63f51a36d69f866391735b51691dbda63cf6f96d042b63efeb"
 dependencies = [
  "libc",
- "windows-sys 0.59.0",
+ "windows-sys 0.61.2",
 ]
 
 [[package]]
@@ -2409,7 +2409,7 @@ checksum = "3640c1c38b8e4e43584d8df18be5fc6b0aa314ce6ebf51b53313d4306cca8e46"
 dependencies = [
  "hermit-abi",
  "libc",
- "windows-sys 0.59.0",
+ "windows-sys 0.61.2",
 ]
 
 [[package]]
@@ -2562,7 +2562,9 @@ dependencies = [
 
 [[package]]
 name = "langgraph"
-version = "0.2.3"
+version = "0.2.4"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "b925fdc6a07842f54e4426e33185e8f7d16c80574df819ceb4d6f8bee8111615"
 dependencies = [
  "async-trait",
  "dotenvy",
@@ -2581,7 +2583,9 @@ dependencies = [
 
 [[package]]
 name = "langgraph-checkpoint-rs"
-version = "0.2.3"
+version = "0.2.4"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "b6c5f0b99933e702eaf866532674ded639c48c74f827fa4fe13f36f62aac69af"
 dependencies = [
  "async-trait",
  "chrono",
@@ -2598,7 +2602,9 @@ dependencies = [
 
 [[package]]
 name = "langgraph-checkpoint-sqlite-rs"
-version = "0.2.3"
+version = "0.2.4"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "f42b44e047d9a154f3468388f26bc8e24a82fee5754b6b3c95f6f61ac58aceb7"
 dependencies = [
  "async-trait",
  "langgraph-checkpoint-rs",
@@ -2612,7 +2618,9 @@ dependencies = [
 
 [[package]]
 name = "langgraph-core-rs"
-version = "0.2.3"
+version = "0.2.4"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "b093199fc4fcbfe719a8e9520904a7605c612873a11bbef142acd6da816bf67e"
 dependencies = [
  "async-trait",
  "chrono",
@@ -2629,7 +2637,9 @@ dependencies = [
 
 [[package]]
 name = "langgraph-derive"
-version = "0.2.3"
+version = "0.2.4"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "905351183a865abd688e2eb2082718d85d9c68ef6ddc6072470e686d11c34932"
 dependencies = [
  "proc-macro2",
  "quote",
@@ -2638,7 +2648,9 @@ dependencies = [
 
 [[package]]
 name = "langgraph-prebuilt"
-version = "0.2.3"
+version = "0.2.4"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "78b81cc1770264db55f009ff284f5184822c40da1bd608e0dba29ef3628d11df"
 dependencies = [
  "async-stream",
  "async-trait",
@@ -2654,7 +2666,9 @@ dependencies = [
 
 [[package]]
 name = "langgraph-providers"
-version = "0.2.3"
+version = "0.2.4"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "717f701cb7e3c13d1f0daa1d1729d7cd555760ca059874910c0a28d63130e082"
 dependencies = [
  "async-stream",
  "async-trait",
@@ -3395,7 +3409,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "7d8fae84b431384b68627d0f9b3b1245fcf9f46f6c0e3dc902e9dce64edd1967"
 dependencies = [
  "libc",
- "windows-sys 0.45.0",
+ "windows-sys 0.61.2",
 ]
 
 [[package]]
@@ -3813,7 +3827,7 @@ dependencies = [
  "once_cell",
  "socket2",
  "tracing",
- "windows-sys 0.59.0",
+ "windows-sys 0.60.2",
 ]
 
 [[package]]
@@ -4275,7 +4289,7 @@ dependencies = [
  "errno",
  "libc",
  "linux-raw-sys",
- "windows-sys 0.59.0",
+ "windows-sys 0.61.2",
 ]
 
 [[package]]
@@ -5609,7 +5623,7 @@ dependencies = [
  "getrandom 0.4.2",
  "once_cell",
  "rustix",
- "windows-sys 0.59.0",
+ "windows-sys 0.61.2",
 ]
 
 [[package]]
@@ -6560,7 +6574,7 @@ version = "0.1.11"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "c2a7b1c03c876122aa43f3020e6c3c3ee5c05081c9a00739faf7503aeba10d22"
 dependencies = [
- "windows-sys 0.59.0",
+ "windows-sys 0.61.2",
 ]
 
 [[package]]
