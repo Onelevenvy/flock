@@ -274,22 +274,28 @@ function handleThinking(event: Extract<ProtocolEvent, { type: 'thinking' }>, set
 }
 
 function handleToolRequest(event: Extract<ProtocolEvent, { type: 'tool_request' }>, set: SetFn) {
-  set((s: any) => ({
-    messages: s.messages.map((m: ChatMessage) => {
-      if (m.id !== event.msg_id) return m;
-      const toolChunk: ToolRequestChunk = {
-        kind: 'tool_request',
-        call_id: event.call_id,
-        tool: event.tool,
-        status: 'pending',
-      };
-      return { ...m, chunks: [...m.chunks, toolChunk] };
-    }),
-    pendingApprovals: [
-      ...s.pendingApprovals,
-      { call_id: event.call_id, tool: event.tool, msg_id: event.msg_id },
-    ],
-  }));
+  set((s: any) => {
+    const isDuplicate = s.pendingApprovals.some((p: any) => p.call_id === event.call_id);
+    const pendingApprovals = isDuplicate
+      ? s.pendingApprovals
+      : [...s.pendingApprovals, { call_id: event.call_id, tool: event.tool, msg_id: event.msg_id }];
+
+    return {
+      messages: s.messages.map((m: ChatMessage) => {
+        if (m.id !== event.msg_id) return m;
+        const exists = m.chunks.some((c: any) => c.kind === 'tool_request' && c.call_id === event.call_id);
+        if (exists) return m;
+        const toolChunk: ToolRequestChunk = {
+          kind: 'tool_request',
+          call_id: event.call_id,
+          tool: event.tool,
+          status: 'pending',
+        };
+        return { ...m, chunks: [...m.chunks, toolChunk] };
+      }),
+      pendingApprovals,
+    };
+  });
 }
 
 function handleToolRunning(event: Extract<ProtocolEvent, { type: 'tool_running' }>, set: SetFn, get: GetFn, screenshotPath: string) {

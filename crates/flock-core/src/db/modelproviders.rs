@@ -227,7 +227,7 @@ impl super::DbManager {
 
         let (enc_key, nonce) = if let Some(ref key) = provider.api_key {
             if key.is_empty() {
-                (None, None)
+                (Some("$DELETE$".to_string()), Some("$DELETE$".to_string()))
             } else {
                 let (ct, n) = crypto::encrypt_value(key, &salt)?;
                 (Some(ct), Some(n))
@@ -245,11 +245,22 @@ impl super::DbManager {
             "INSERT INTO model_provider
                 (id, provider_name, provider_type, base_url, api_key_encrypted, api_key_nonce,
                  icon, description, test_model, is_available, created_at, updated_at)
-             VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, datetime('now'), datetime('now'))
+             VALUES (?1, ?2, ?3, ?4,
+                     CASE WHEN ?5 = '$DELETE$' THEN NULL ELSE ?5 END,
+                     CASE WHEN ?6 = '$DELETE$' THEN NULL ELSE ?6 END,
+                     ?7, ?8, ?9, ?10, datetime('now'), datetime('now'))
              ON CONFLICT(id) DO UPDATE SET
                 provider_name = ?2, provider_type = ?3, base_url = ?4,
-                api_key_encrypted = COALESCE(?5, api_key_encrypted),
-                api_key_nonce = COALESCE(?6, api_key_nonce),
+                api_key_encrypted = CASE
+                    WHEN ?5 = '$DELETE$' THEN NULL
+                    WHEN ?5 IS NOT NULL THEN ?5
+                    ELSE api_key_encrypted
+                END,
+                api_key_nonce = CASE
+                    WHEN ?6 = '$DELETE$' THEN NULL
+                    WHEN ?6 IS NOT NULL THEN ?6
+                    ELSE api_key_nonce
+                END,
                 icon = ?7, description = ?8, test_model = ?9, is_available = ?10,
                 updated_at = datetime('now')",
         )

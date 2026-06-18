@@ -23,7 +23,7 @@ pub struct NodeContext {
     /// Output sink for streaming events — carries the same sink as the engine.
     pub output: Arc<dyn OutputSink>,
     /// Current message ID — used for output events (same value as engine's current_msg_id).
-    pub msg_id: Arc<std::sync::Mutex<String>>,
+    pub msg_id: Arc<std::sync::RwLock<String>>,
     /// Current session ID for plan saving.
     pub session_id: Option<String>,
     /// Shared flag for plan mode (synced with tools).

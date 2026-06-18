@@ -277,6 +277,7 @@ export const useAgentStore = create<AgentStore>((set, get) => {
     },
 
     switchSession: (sessionId) => {
+      useWorkspaceStore.getState().setActiveConversation(sessionId);
       set((state: any) => {
         const session = getSessionState(state, sessionId);
         return {
@@ -288,6 +289,10 @@ export const useAgentStore = create<AgentStore>((set, get) => {
           pendingApprovals: session.pendingApprovals,
           humanTakeover: session.humanTakeover,
           playbackIndex: session.playbackIndex,
+          sessions: {
+            ...state.sessions,
+            [sessionId]: session,
+          },
         };
       });
     }

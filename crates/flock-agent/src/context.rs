@@ -23,6 +23,8 @@ pub struct SystemPromptCache {
     pub(crate) last_plan_mode: bool,
     /// Track last toon_enabled value to detect changes.
     pub(crate) last_toon_enabled: bool,
+    /// Track last skills signatures to detect changes.
+    pub(crate) last_skills: Vec<String>,
     /// Whether to include tool usage guidance in the system prompt.
     pub include_tool_guidance: bool,
     /// Whether to inject AGENTS.md in the system prompt.
@@ -39,6 +41,7 @@ impl SystemPromptCache {
             joined: None,
             last_plan_mode: false,
             last_toon_enabled: false,
+            last_skills: Vec::new(),
             include_tool_guidance: true,
             inject_agents_md: true,
             include_tool_search_hint: true,
@@ -215,6 +218,16 @@ pub fn build_system_prompt(
         .filter(|s| !s.disable_model_invocation)
         .cloned()
         .collect();
+
+    let skill_sigs: Vec<String> = visible_skills
+        .iter()
+        .map(|s| format!("{}:{}", s.name, s.content))
+        .collect();
+
+    if cache.last_skills != skill_sigs {
+        cache.invalidate("skills");
+        cache.last_skills = skill_sigs;
+    }
 
     if !visible_skills.is_empty() {
         let skills_section = cache.sections.entry("skills").or_insert_with(|| {

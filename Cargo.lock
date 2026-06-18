@@ -2562,9 +2562,9 @@ dependencies = [
 
 [[package]]
 name = "langgraph"
-version = "0.2.3"
+version = "0.2.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "f1c5bbc237f27eac7c631f1943116b16922d7ea0a237cc51c8dccf7fb3243e48"
+checksum = "b925fdc6a07842f54e4426e33185e8f7d16c80574df819ceb4d6f8bee8111615"
 dependencies = [
  "async-trait",
  "dotenvy",
@@ -2583,9 +2583,9 @@ dependencies = [
 
 [[package]]
 name = "langgraph-checkpoint-rs"
-version = "0.2.3"
+version = "0.2.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "e76fe8898c11437b80db4ce74ec069cdc4cebfc194a772966b54bdb13040b81e"
+checksum = "b6c5f0b99933e702eaf866532674ded639c48c74f827fa4fe13f36f62aac69af"
 dependencies = [
  "async-trait",
  "chrono",
@@ -2602,9 +2602,9 @@ dependencies = [
 
 [[package]]
 name = "langgraph-checkpoint-sqlite-rs"
-version = "0.2.3"
+version = "0.2.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "04872c8c37c279fb507216b4b8aa2fe0f6293ea7258f2d6fb481974c8991262d"
+checksum = "f42b44e047d9a154f3468388f26bc8e24a82fee5754b6b3c95f6f61ac58aceb7"
 dependencies = [
  "async-trait",
  "langgraph-checkpoint-rs",
@@ -2618,9 +2618,9 @@ dependencies = [
 
 [[package]]
 name = "langgraph-core-rs"
-version = "0.2.3"
+version = "0.2.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "2511fef1cbd681e316a10a7d6901fe16a69c4c8a09b1c612ce80cec7b5b70d3e"
+checksum = "b093199fc4fcbfe719a8e9520904a7605c612873a11bbef142acd6da816bf67e"
 dependencies = [
  "async-trait",
  "chrono",
@@ -2637,9 +2637,9 @@ dependencies = [
 
 [[package]]
 name = "langgraph-derive"
-version = "0.2.3"
+version = "0.2.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "95f8bc06f1adf63b5ee7b9c6f5f5e2936a0df54c96c087f976a69f7356a6a4d6"
+checksum = "905351183a865abd688e2eb2082718d85d9c68ef6ddc6072470e686d11c34932"
 dependencies = [
  "proc-macro2",
  "quote",
@@ -2648,9 +2648,9 @@ dependencies = [
 
 [[package]]
 name = "langgraph-prebuilt"
-version = "0.2.3"
+version = "0.2.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "f2c0b961604dcbe66d79690aff91207a15a86d40bf500a8d15fdb82c71c906da"
+checksum = "78b81cc1770264db55f009ff284f5184822c40da1bd608e0dba29ef3628d11df"
 dependencies = [
  "async-stream",
  "async-trait",
@@ -2666,9 +2666,9 @@ dependencies = [
 
 [[package]]
 name = "langgraph-providers"
-version = "0.2.3"
+version = "0.2.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "dc25e0c1be6352eddec99de2405cc35adeb9bcbaa3a9884effc0b6e803461d39"
+checksum = "717f701cb7e3c13d1f0daa1d1729d7cd555760ca059874910c0a28d63130e082"
 dependencies = [
  "async-stream",
  "async-trait",

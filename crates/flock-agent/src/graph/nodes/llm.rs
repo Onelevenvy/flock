@@ -21,7 +21,7 @@ pub fn make_llm_node(
         let ctx = ctx.clone();
         Box::pin(async move {
             let state = parse_state(&input);
-            let _msg_id = ctx.msg_id.lock().unwrap().clone();
+            let _msg_id = ctx.msg_id.read().unwrap().clone();
 
             if let Some(limit) = ctx.max_turns {
                 if state.turns as usize >= limit {
@@ -132,6 +132,12 @@ pub fn make_llm_node(
                     // log::info!("[node:llm] Received usage: {:?}", usage);
                     turn_input_tokens = usage.prompt_tokens as u64;
                     turn_output_tokens = usage.completion_tokens as u64;
+                    if let Some(creation) = usage.cache_creation_tokens {
+                        turn_cache_creation = creation as u64;
+                    }
+                    if let Some(read) = usage.cache_read_tokens {
+                        turn_cache_read = read as u64;
+                    }
                 }
             }
             // log::info!("[node:llm] Stream completed. Assistant text len: {}, Tool calls: {}", assistant_text.len(), tool_calls.len());

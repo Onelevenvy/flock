@@ -47,7 +47,7 @@ pub async fn ainvoke_impl(
         let writer = node.ctx.protocol_writer.as_ref()
             .expect("protocol_writer must be set when approval_manager is set");
         let auto_approve = node.ctx.auto_approve;
-        let msg_id = node.ctx.msg_id.lock().unwrap().clone();
+        let msg_id = node.ctx.msg_id.read().unwrap().clone();
 
         use std::sync::atomic::Ordering;
         use flock_tools::tool_executor::execute_tool_calls_with_approval;
@@ -229,7 +229,7 @@ pub async fn ainvoke_impl(
         "[node] tools: calling run_tools with {} tool_calls",
         tool_calls.len()
     ));
-    let msg_id = node.ctx.msg_id.lock().unwrap().clone();
+    let msg_id = node.ctx.msg_id.read().unwrap().clone();
     let outcome = match run_tools(
         &node.ctx.tools,
         &tool_calls,
