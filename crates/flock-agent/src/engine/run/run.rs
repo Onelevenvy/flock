@@ -51,9 +51,16 @@ pub async fn prepare_run(
 
     // Update shared msg_id so nodes emit events with the right ID
     *engine.graph_msg_id.write().unwrap() = msg_id.to_string();
-
+    *engine.graph_dynamic_context_reminder.write().unwrap() = engine.dynamic_context_reminder.clone();
+ 
     // Lazily build the graph once and reuse across turns
     if engine.graph.is_none() {
+        let middlewares: Vec<Arc<dyn crate::engine::run::middleware::AgentMiddleware>> = vec![
+            Arc::new(crate::engine::run::middleware::SystemMessageCoalescing),
+            Arc::new(crate::engine::run::middleware::ToolOutputBudget::default()),
+            Arc::new(crate::engine::run::middleware::DanglingToolRecovery),
+            Arc::new(crate::engine::run::middleware::DynamicContextReminder),
+        ];
         let ctx = Arc::new(NodeContext {
             provider: Arc::clone(&engine.provider),
             tools: Arc::clone(&engine.tools),
@@ -69,6 +76,7 @@ pub async fn prepare_run(
             max_turns: engine.max_turns,
             output: Arc::clone(&engine.output),
             msg_id: Arc::clone(&engine.graph_msg_id),
+            dynamic_context_reminder: Arc::clone(&engine.graph_dynamic_context_reminder),
             session_id: engine.current_session.as_ref().map(|s| s.id.clone()),
             plan_active_flag: engine.plan_active_flag.clone(),
             debug_mode: engine.debug_mode,
@@ -77,6 +85,7 @@ pub async fn prepare_run(
             cancel_flag: Arc::clone(&engine.cancel_flag),
             approval_manager: engine.approval_manager.clone(),
             protocol_writer: engine.protocol_writer.clone(),
+            middlewares,
         });
         let app = build_agent_graph(ctx, Arc::clone(&engine.checkpointer))
             .map_err(|e| AgentError::ApiError(format!("Graph build error: {e}")))?;
@@ -208,6 +217,7 @@ pub async fn prepare_run(
         engine.plan_state.pre_plan_allow_list.clone(),
         engine.compact_state.consecutive_failures,
         vec![new_user_msg],
+        engine.promoted_tools.clone(),
     );
 
     let initial_json = serde_json::to_value(&initial_state)
@@ -347,6 +357,7 @@ impl AgentEngine {
         self.allow_list = graph_state.allow_list.clone();
         self.plan_state.is_active = graph_state.plan_mode_active;
         self.plan_state.pre_plan_allow_list = graph_state.pre_plan_allow_list.clone();
+        self.promoted_tools = graph_state.promoted_tools.clone();
 
         if let Some(ref flag) = self.plan_active_flag {
             flag.store(

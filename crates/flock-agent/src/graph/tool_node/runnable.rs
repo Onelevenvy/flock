@@ -91,7 +91,7 @@ pub async fn ainvoke_impl(
             }
         };
 
-        let outcome = match outcome_res {
+        let mut outcome = match outcome_res {
             Ok(o) => o,
             Err(ExecutionControl::Quit) => {
                 node.ctx.output.emit_info("[node] <<< exiting tools due to cancel or quit");
@@ -101,6 +101,10 @@ pub async fn ainvoke_impl(
                 }));
             }
         };
+
+        for mw in &node.ctx.middlewares {
+            mw.post_tool_execution(&node.ctx, &mut outcome.results);
+        }
 
         // Emit tool results
         for result in &outcome.results {
@@ -126,6 +130,7 @@ pub async fn ainvoke_impl(
         let mut new_effort: Option<String> = None;
         let mut new_plan_active: Option<bool> = None;
         let mut new_pre_plan: Option<Vec<String>> = None;
+        let mut new_promoted_tools: Option<Vec<String>> = None;
 
         for modifier in outcome.modifiers.iter().flatten() {
             if let Some(ref m) = modifier.model {
@@ -137,6 +142,16 @@ pub async fn ainvoke_impl(
             for tool_name in &modifier.allowed_tools {
                 let list = new_allow_list.get_or_insert_with(|| {
                     input.get("allow_list")
+                        .and_then(|v| serde_json::from_value::<Vec<String>>(v.clone()).ok())
+                        .unwrap_or_default()
+                });
+                if !list.contains(tool_name) {
+                    list.push(tool_name.clone());
+                }
+            }
+            for tool_name in &modifier.promoted_tools {
+                let list = new_promoted_tools.get_or_insert_with(|| {
+                    input.get("promoted_tools")
                         .and_then(|v| serde_json::from_value::<Vec<String>>(v.clone()).ok())
                         .unwrap_or_default()
                 });
@@ -215,6 +230,9 @@ pub async fn ainvoke_impl(
             if let Some(pre_plan) = new_pre_plan {
                 obj.insert("pre_plan_allow_list".to_string(), json!(pre_plan));
             }
+            if let Some(promoted) = new_promoted_tools {
+                obj.insert("promoted_tools".to_string(), json!(promoted));
+            }
         }
 
         node.ctx.output.emit_info(&format!(
@@ -230,10 +248,10 @@ pub async fn ainvoke_impl(
         tool_calls.len()
     ));
     let msg_id = node.ctx.msg_id.read().unwrap().clone();
-    let outcome = match run_tools(
+    let mut outcome = match run_tools(
         &node.ctx.tools,
         &tool_calls,
-        None, // No hooks in graph node mode
+        None,
         node.ctx.compaction_level,
         node.ctx.toon_enabled,
         &msg_id,
@@ -246,6 +264,10 @@ pub async fn ainvoke_impl(
             return Ok(json!({}));
         }
     };
+
+    for mw in &node.ctx.middlewares {
+        mw.post_tool_execution(&node.ctx, &mut outcome.results);
+    }
 
     // Emit tool results
     for result in &outcome.results {
@@ -271,6 +293,7 @@ pub async fn ainvoke_impl(
     let mut new_effort: Option<String> = None;
     let mut new_plan_active: Option<bool> = None;
     let mut new_pre_plan: Option<Vec<String>> = None;
+    let mut new_promoted_tools: Option<Vec<String>> = None;
 
     for modifier in outcome.modifiers.iter().flatten() {
         if let Some(ref m) = modifier.model {
@@ -282,6 +305,16 @@ pub async fn ainvoke_impl(
         for tool_name in &modifier.allowed_tools {
             let list = new_allow_list.get_or_insert_with(|| {
                 input.get("allow_list")
+                    .and_then(|v| serde_json::from_value::<Vec<String>>(v.clone()).ok())
+                    .unwrap_or_default()
+            });
+            if !list.contains(tool_name) {
+                list.push(tool_name.clone());
+            }
+        }
+        for tool_name in &modifier.promoted_tools {
+            let list = new_promoted_tools.get_or_insert_with(|| {
+                input.get("promoted_tools")
                     .and_then(|v| serde_json::from_value::<Vec<String>>(v.clone()).ok())
                     .unwrap_or_default()
             });
@@ -359,6 +392,9 @@ pub async fn ainvoke_impl(
         }
         if let Some(pre_plan) = new_pre_plan {
             obj.insert("pre_plan_allow_list".to_string(), json!(pre_plan));
+        }
+        if let Some(promoted) = new_promoted_tools {
+            obj.insert("promoted_tools".to_string(), json!(promoted));
         }
     }
 

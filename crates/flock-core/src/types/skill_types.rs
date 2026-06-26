@@ -46,6 +46,9 @@ pub struct ContextModifier {
     /// Signal a plan-mode state transition (enter or exit).
     /// None = no transition.
     pub plan_mode_transition: Option<PlanModeTransition>,
+
+    /// Additional tools to promote (loading their deferred schemas).
+    pub promoted_tools: Vec<String>,
 }
 
 impl ContextModifier {
@@ -55,5 +58,6 @@ impl ContextModifier {
             && self.effort.is_none()
             && self.allowed_tools.is_empty()
             && self.plan_mode_transition.is_none()
+            && self.promoted_tools.is_empty()
     }
 }

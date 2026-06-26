@@ -96,6 +96,9 @@ impl AgentEngine {
             db_manager: config.db_manager.clone(),
             cancel_flag: Arc::new(std::sync::atomic::AtomicBool::new(false)),
             has_error: Arc::new(Mutex::new(None)),
+            promoted_tools: Vec::new(),
+            dynamic_context_reminder: config.dynamic_context_reminder.clone(),
+            graph_dynamic_context_reminder: Arc::new(std::sync::RwLock::new(config.dynamic_context_reminder.clone())),
         }
     }
 
@@ -222,6 +225,9 @@ impl AgentEngine {
             db_manager: config.db_manager.clone(),
             cancel_flag: Arc::new(std::sync::atomic::AtomicBool::new(false)),
             has_error: Arc::new(Mutex::new(None)),
+            promoted_tools: Vec::new(),
+            dynamic_context_reminder: config.dynamic_context_reminder.clone(),
+            graph_dynamic_context_reminder: Arc::new(std::sync::RwLock::new(config.dynamic_context_reminder.clone())),
         }
     }
 }

@@ -32,6 +32,7 @@ fn create_test_config(base_url: String, db_path: PathBuf, db_manager: Arc<DbMana
         debug: DebugConfig::default(),
         db_path,
         db_manager: Some(db_manager),
+        dynamic_context_reminder: None,
     }
 }
 
