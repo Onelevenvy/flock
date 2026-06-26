@@ -75,6 +75,10 @@ pub struct AgentState {
     // ── Control flow ─────────────────────────────────────────────────────
     #[channel]
     pub quit_requested: bool,
+
+    // ── Deferred tool promotion ──────────────────────────────────────────
+    #[channel]
+    pub promoted_tools: Vec<String>,
 }
 
 impl AgentState {
@@ -90,6 +94,7 @@ impl AgentState {
         pre_plan_allow_list: Vec<String>,
         compact_consecutive_failures: u32,
         messages: Vec<JsonValue>,
+        promoted_tools: Vec<String>,
     ) -> Self {
         Self {
             messages,
@@ -106,6 +111,7 @@ impl AgentState {
             pre_plan_allow_list,
             compact_consecutive_failures,
             quit_requested: false,
+            promoted_tools,
         }
     }
 

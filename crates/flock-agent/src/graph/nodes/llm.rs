@@ -61,10 +61,21 @@ pub fn make_llm_node(
                     } else {
                         t.name() != "ExitPlanMode"
                     }
-                }).into_iter().map(|t| langgraph::prebuilt::ToolDef {
-                    name: t.name,
-                    description: t.description,
-                    parameters: t.input_schema,
+                }).into_iter().map(|t| {
+                    let parameters = if t.deferred && !state.promoted_tools.contains(&t.name) {
+                        serde_json::json!({
+                            "type": "object",
+                            "properties": {},
+                            "description": "Schema is hidden. You MUST call the ToolSearch tool with this tool's name as 'query' to load its schema and parameters before you can use it."
+                        })
+                    } else {
+                        t.input_schema.clone()
+                    };
+                    langgraph::prebuilt::ToolDef {
+                        name: t.name,
+                        description: t.description,
+                        parameters,
+                    }
                 }).collect()
             );
 

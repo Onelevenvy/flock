@@ -130,6 +130,7 @@ pub async fn ainvoke_impl(
         let mut new_effort: Option<String> = None;
         let mut new_plan_active: Option<bool> = None;
         let mut new_pre_plan: Option<Vec<String>> = None;
+        let mut new_promoted_tools: Option<Vec<String>> = None;
 
         for modifier in outcome.modifiers.iter().flatten() {
             if let Some(ref m) = modifier.model {
@@ -141,6 +142,16 @@ pub async fn ainvoke_impl(
             for tool_name in &modifier.allowed_tools {
                 let list = new_allow_list.get_or_insert_with(|| {
                     input.get("allow_list")
+                        .and_then(|v| serde_json::from_value::<Vec<String>>(v.clone()).ok())
+                        .unwrap_or_default()
+                });
+                if !list.contains(tool_name) {
+                    list.push(tool_name.clone());
+                }
+            }
+            for tool_name in &modifier.promoted_tools {
+                let list = new_promoted_tools.get_or_insert_with(|| {
+                    input.get("promoted_tools")
                         .and_then(|v| serde_json::from_value::<Vec<String>>(v.clone()).ok())
                         .unwrap_or_default()
                 });
@@ -219,6 +230,9 @@ pub async fn ainvoke_impl(
             if let Some(pre_plan) = new_pre_plan {
                 obj.insert("pre_plan_allow_list".to_string(), json!(pre_plan));
             }
+            if let Some(promoted) = new_promoted_tools {
+                obj.insert("promoted_tools".to_string(), json!(promoted));
+            }
         }
 
         node.ctx.output.emit_info(&format!(
@@ -279,6 +293,7 @@ pub async fn ainvoke_impl(
     let mut new_effort: Option<String> = None;
     let mut new_plan_active: Option<bool> = None;
     let mut new_pre_plan: Option<Vec<String>> = None;
+    let mut new_promoted_tools: Option<Vec<String>> = None;
 
     for modifier in outcome.modifiers.iter().flatten() {
         if let Some(ref m) = modifier.model {
@@ -290,6 +305,16 @@ pub async fn ainvoke_impl(
         for tool_name in &modifier.allowed_tools {
             let list = new_allow_list.get_or_insert_with(|| {
                 input.get("allow_list")
+                    .and_then(|v| serde_json::from_value::<Vec<String>>(v.clone()).ok())
+                    .unwrap_or_default()
+            });
+            if !list.contains(tool_name) {
+                list.push(tool_name.clone());
+            }
+        }
+        for tool_name in &modifier.promoted_tools {
+            let list = new_promoted_tools.get_or_insert_with(|| {
+                input.get("promoted_tools")
                     .and_then(|v| serde_json::from_value::<Vec<String>>(v.clone()).ok())
                     .unwrap_or_default()
             });
@@ -367,6 +392,9 @@ pub async fn ainvoke_impl(
         }
         if let Some(pre_plan) = new_pre_plan {
             obj.insert("pre_plan_allow_list".to_string(), json!(pre_plan));
+        }
+        if let Some(promoted) = new_promoted_tools {
+            obj.insert("promoted_tools".to_string(), json!(promoted));
         }
     }
 

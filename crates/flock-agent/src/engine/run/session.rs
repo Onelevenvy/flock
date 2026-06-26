@@ -128,6 +128,7 @@ impl AgentEngine {
                 serde_json::from_value(snapshot.values.clone()).unwrap_or_default();
             self.total_usage = graph_state.to_token_usage();
             self.compact_state.last_input_tokens = graph_state.last_input_tokens;
+            self.promoted_tools = graph_state.promoted_tools.clone();
             
             self.save_session().await;
         }

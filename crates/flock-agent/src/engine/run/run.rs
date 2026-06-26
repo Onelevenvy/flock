@@ -213,6 +213,7 @@ pub async fn prepare_run(
         engine.plan_state.pre_plan_allow_list.clone(),
         engine.compact_state.consecutive_failures,
         vec![new_user_msg],
+        engine.promoted_tools.clone(),
     );
 
     let initial_json = serde_json::to_value(&initial_state)
@@ -352,6 +353,7 @@ impl AgentEngine {
         self.allow_list = graph_state.allow_list.clone();
         self.plan_state.is_active = graph_state.plan_mode_active;
         self.plan_state.pre_plan_allow_list = graph_state.pre_plan_allow_list.clone();
+        self.promoted_tools = graph_state.promoted_tools.clone();
 
         if let Some(ref flag) = self.plan_active_flag {
             flag.store(
