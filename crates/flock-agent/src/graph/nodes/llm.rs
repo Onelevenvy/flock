@@ -38,7 +38,7 @@ pub fn make_llm_node(
                 })
                 .collect();
 
-            let system = if state.plan_mode_active {
+            let mut final_system_prompt = if state.plan_mode_active {
                 format!(
                     "{}\n\n{}",
                     ctx.system_prompt,
@@ -47,6 +47,12 @@ pub fn make_llm_node(
             } else {
                 ctx.system_prompt.clone()
             };
+
+            let mut final_messages = messages;
+
+            for mw in &ctx.middlewares {
+                mw.before_llm_call(&ctx, &mut final_system_prompt, &mut final_messages);
+            }
 
             let provider = ctx.provider.bind_tools(
                 ctx.tools.to_tool_defs_filtered(|t| {
@@ -62,10 +68,10 @@ pub fn make_llm_node(
                 }).collect()
             );
 
-            let mut final_messages = vec![LgMessage::system(system.clone())];
-            final_messages.extend(messages);
+            let mut lg_messages = vec![LgMessage::system(final_system_prompt.clone())];
+            lg_messages.extend(final_messages);
 
-            let mut rx = provider.astream(&final_messages[..], &config);
+            let mut rx = provider.astream(&lg_messages[..], &config);
             // log::info!("[node:llm] Stream started for provider={}", ctx.provider_label);
 
             let mut assistant_text = String::new();
@@ -144,7 +150,7 @@ pub fn make_llm_node(
 
             let msgs_for_estimate: Vec<Message> =
                 state.messages.iter().filter_map(|v| serde_json::from_value(v.clone()).ok()).collect();
-            let local_estimate = estimate::estimate_tokens_from_messages(&msgs_for_estimate, Some(&system));
+            let local_estimate = estimate::estimate_tokens_from_messages(&msgs_for_estimate, Some(&final_system_prompt));
             let effective_watermark = if turn_input_tokens > 0 { turn_input_tokens } else { local_estimate };
 
             let mut assistant_content: Vec<ContentBlock> = Vec::new();

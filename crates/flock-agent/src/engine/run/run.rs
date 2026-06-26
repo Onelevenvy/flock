@@ -54,6 +54,10 @@ pub async fn prepare_run(
 
     // Lazily build the graph once and reuse across turns
     if engine.graph.is_none() {
+        let middlewares: Vec<Arc<dyn crate::engine::run::middleware::AgentMiddleware>> = vec![
+            Arc::new(crate::engine::run::middleware::SystemMessageCoalescing),
+            Arc::new(crate::engine::run::middleware::ToolOutputBudget::default()),
+        ];
         let ctx = Arc::new(NodeContext {
             provider: Arc::clone(&engine.provider),
             tools: Arc::clone(&engine.tools),
@@ -77,6 +81,7 @@ pub async fn prepare_run(
             cancel_flag: Arc::clone(&engine.cancel_flag),
             approval_manager: engine.approval_manager.clone(),
             protocol_writer: engine.protocol_writer.clone(),
+            middlewares,
         });
         let app = build_agent_graph(ctx, Arc::clone(&engine.checkpointer))
             .map_err(|e| AgentError::ApiError(format!("Graph build error: {e}")))?;

@@ -91,7 +91,7 @@ pub async fn ainvoke_impl(
             }
         };
 
-        let outcome = match outcome_res {
+        let mut outcome = match outcome_res {
             Ok(o) => o,
             Err(ExecutionControl::Quit) => {
                 node.ctx.output.emit_info("[node] <<< exiting tools due to cancel or quit");
@@ -101,6 +101,10 @@ pub async fn ainvoke_impl(
                 }));
             }
         };
+
+        for mw in &node.ctx.middlewares {
+            mw.post_tool_execution(&node.ctx, &mut outcome.results);
+        }
 
         // Emit tool results
         for result in &outcome.results {
@@ -230,10 +234,10 @@ pub async fn ainvoke_impl(
         tool_calls.len()
     ));
     let msg_id = node.ctx.msg_id.read().unwrap().clone();
-    let outcome = match run_tools(
+    let mut outcome = match run_tools(
         &node.ctx.tools,
         &tool_calls,
-        None, // No hooks in graph node mode
+        None,
         node.ctx.compaction_level,
         node.ctx.toon_enabled,
         &msg_id,
@@ -246,6 +250,10 @@ pub async fn ainvoke_impl(
             return Ok(json!({}));
         }
     };
+
+    for mw in &node.ctx.middlewares {
+        mw.post_tool_execution(&node.ctx, &mut outcome.results);
+    }
 
     // Emit tool results
     for result in &outcome.results {
