@@ -21,7 +21,9 @@ pub async fn destroy_active_sandbox(db: &DbManager) -> anyhow::Result<()> {
 
     let provider = cfg.provider.as_deref().unwrap_or("e2b");
     if provider == "e2b" {
-        if let Err(e) = crate::daytona::e2b::destroy_e2b_sandbox(&cfg, &sandbox_id).await {
+        use crate::sandbox_provider::SandboxProvider;
+        let prov = crate::e2b_provider::E2BSandboxProvider;
+        if let Err(e) = prov.destroy_sandbox(&cfg, &sandbox_id).await {
             crate::emit_info(&flock_core::tr(&format!("销毁 E2B 沙盒请求失败: {}", e), &format!("Destroying E2B sandbox request failed: {}", e)));
         }
         *lock = None;
@@ -85,10 +87,26 @@ pub async fn get_or_create_active_sandbox(db: &DbManager) -> anyhow::Result<Stri
 
     let provider = cfg.provider.as_deref().unwrap_or("e2b");
     if provider == "e2b" {
-        crate::emit_info(&flock_core::tr("正在向 E2B 申请启动沙盒...", "Requesting to start sandbox from E2B..."));
-        let instance_id = crate::daytona::e2b::create_e2b_sandbox(&cfg).await?;
+        use crate::sandbox_provider::SandboxProvider;
+        let prov = crate::e2b_provider::E2BSandboxProvider;
+        let instance_id = prov.get_or_create_sandbox(&cfg).await?;
+        
+        // Prepare /workspace in E2B (E2B standard workspace is usually /home/user or similar, 
+        // but we enforce /workspace to maintain paths compatibility)
+        let ensure_workspace_cmd = "sudo mkdir -p /workspace && sudo chown -R user:user /workspace && mkdir -p /workspace";
+        if let Err(e) = prov.execute_command(&cfg, &instance_id, ensure_workspace_cmd).await {
+            crate::emit_info(&format!("E2B /workspace prep failed: {}", e));
+        }
+
         *lock = Some(instance_id.clone());
-        crate::emit_info(&flock_core::tr("E2B 沙盒已启动。", "E2B sandbox started."));
+
+        // Sync local files up
+        if let Some(ws_path) = crate::get_workspace_dir() {
+            if let Err(e) = crate::daytona::sync::sync_up(db, &instance_id, &ws_path).await {
+                crate::emit_info(&format!("Sync Up failed: {}", e));
+            }
+        }
+
         return Ok(instance_id);
     } else if provider == "local" {
         crate::emit_info(&flock_core::tr("正在启动本地 Mock 沙盒 (占位)...", "Starting local mock sandbox (placeholder)..."));
@@ -296,7 +314,9 @@ pub async fn get_or_create_active_sandbox(db: &DbManager) -> anyhow::Result<Stri
 pub async fn check_sandbox_alive(cfg: &SandboxConfig, id: &str) -> bool {
     let provider = cfg.provider.as_deref().unwrap_or("e2b");
     if provider == "e2b" {
-        return crate::daytona::e2b::check_e2b_alive(cfg, id).await;
+        use crate::sandbox_provider::SandboxProvider;
+        let prov = crate::e2b_provider::E2BSandboxProvider;
+        return prov.check_alive(cfg, id).await;
     } else if provider == "local" {
         return true;
     }

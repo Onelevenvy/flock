@@ -5,6 +5,10 @@ pub mod file_cache;
 pub mod tool_executor;
 
 pub mod daytona;
+pub mod sandbox_provider;
+pub mod e2b_provider;
+pub mod daytona_provider;
+pub mod local_provider;
 pub mod registry;
 pub mod tools;
 

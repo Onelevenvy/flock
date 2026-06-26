@@ -166,17 +166,21 @@ pub async fn test_sandbox_connection(
     }
 
     let client = reqwest::Client::new();
-    let url = if provider == "e2b" {
-        "https://api.e2b.dev/instances".to_string()
+    let (url, is_e2b) = if provider == "e2b" {
+        ("https://api.e2b.app/sandboxes".to_string(), true)
     } else {
         let base = flock_tools::daytona::get_api_base(&api_url);
-        format!("{}/api/sandbox", base)
+        (format!("{}/api/sandbox", base), false)
     };
 
-    let send_result = client.get(&url)
-        .header("Authorization", format!("Bearer {}", api_key))
-        .send()
-        .await;
+    let request_builder = client.get(&url);
+    let request_builder = if is_e2b {
+        request_builder.header("X-API-Key", &api_key)
+    } else {
+        request_builder.header("Authorization", format!("Bearer {}", api_key))
+    };
+
+    let send_result = request_builder.send().await;
 
     let res = match send_result {
         Ok(r) => r,
@@ -224,13 +228,13 @@ pub async fn create_playwright_snapshot(
     .map_err(|e| e.to_string())
 }
 
-/// 列出所有 Daytona 沙盒
+/// 列出所有 Daytona/E2B 沙盒
 #[tauri::command]
 pub async fn list_daytona_sandboxes(
     db: State<'_, SharedDbManager>,
 ) -> Result<serde_json::Value, String> {
     use flock_core::db::DbManager;
-    use flock_tools::daytona::{get_sandbox_config, get_api_base};
+    use flock_tools::daytona::get_sandbox_config;
 
     let db_ref: &DbManager = &*db;
     let cfg = match get_sandbox_config(db_ref).await {
@@ -238,7 +242,46 @@ pub async fn list_daytona_sandboxes(
         None => return Ok(serde_json::json!([])),
     };
 
-    let base = get_api_base(cfg.api_url.as_ref().unwrap());
+    let provider = cfg.provider.as_deref().unwrap_or("e2b");
+    if provider == "e2b" {
+        let api_key = cfg.e2b_api_key.as_ref().unwrap();
+        let client = reqwest::Client::new();
+        let url = "https://api.e2b.app/sandboxes";
+        let resp = client.get(url)
+            .header("X-API-Key", api_key)
+            .send()
+            .await
+            .map_err(|e| flock_core::tr(
+                &format!("请求 E2B 沙盒列表失败: {}", e),
+                &format!("Failed to request E2B sandbox list: {}", e)
+            ))?;
+
+        let text = resp.text().await.unwrap_or_default();
+        let list_val: serde_json::Value = serde_json::from_str(&text)
+            .map_err(|e| flock_core::tr(
+                &format!("解析 E2B 沙盒列表失败: {}", e),
+                &format!("Failed to parse E2B sandbox list: {}", e)
+            ))?;
+
+        // 统一字段映射，以匹配前端 Daytona 的渲染格式 (id, status, snapshot)
+        if let Some(arr) = list_val.as_array() {
+            let mapped: Vec<serde_json::Value> = arr.iter().map(|item| {
+                let id = item.get("sandboxID").and_then(|v| v.as_str()).unwrap_or_default();
+                let template_id = item.get("templateID").and_then(|v| v.as_str()).unwrap_or_default();
+                serde_json::json!({
+                    "id": id,
+                    "status": "running",
+                    "snapshot": template_id,
+                })
+            }).collect();
+            return Ok(serde_json::json!(mapped));
+        }
+        return Ok(serde_json::json!([]));
+    } else if provider == "local" {
+        return Ok(serde_json::json!([]));
+    }
+
+    let base = flock_tools::daytona::get_api_base(cfg.api_url.as_ref().unwrap());
     let api_key = cfg.api_key.as_ref().unwrap();
 
     let client = reqwest::Client::new();
@@ -262,20 +305,51 @@ pub async fn list_daytona_sandboxes(
     Ok(val)
 }
 
-/// 删除指定 Daytona 沙盒
+/// 删除指定 Daytona/E2B 沙盒
 #[tauri::command]
 pub async fn delete_daytona_sandbox(
     db: State<'_, SharedDbManager>,
     id: String,
 ) -> Result<(), String> {
     use flock_core::db::DbManager;
-    use flock_tools::daytona::{get_sandbox_config, get_api_base};
+    use flock_tools::daytona::get_sandbox_config;
 
     let db_ref: &DbManager = &*db;
     let cfg = get_sandbox_config(db_ref).await
         .ok_or_else(|| flock_core::tr("沙盒未配置或未启用", "Sandbox not configured or enabled"))?;
 
-    let base = get_api_base(cfg.api_url.as_ref().unwrap());
+    let provider = cfg.provider.as_deref().unwrap_or("e2b");
+    if provider == "e2b" {
+        let api_key = cfg.e2b_api_key.as_ref().unwrap();
+        let client = reqwest::Client::new();
+        let url = format!("https://api.e2b.app/sandboxes/{}", id);
+        let resp = client.delete(&url)
+            .header("X-API-Key", api_key)
+            .send()
+            .await
+            .map_err(|e| flock_core::tr(
+                &format!("发送删除 E2B 沙盒请求失败: {}", e),
+                &format!("Failed to send delete E2B sandbox request: {}", e)
+            ))?;
+
+        if resp.status().is_success() || resp.status().as_u16() == 204 {
+            if let Some(active_id) = flock_tools::daytona::get_active_sandbox_id().await {
+                if active_id == id {
+                    let _ = flock_tools::daytona::destroy_active_sandbox(db_ref).await;
+                }
+            }
+            return Ok(());
+        } else {
+            return Err(flock_core::tr(
+                &format!("删除 E2B 沙盒失败，HTTP 状态码: {}", resp.status()),
+                &format!("Failed to delete E2B sandbox, HTTP status code: {}", resp.status())
+            ));
+        }
+    } else if provider == "local" {
+        return Ok(());
+    }
+
+    let base = flock_tools::daytona::get_api_base(cfg.api_url.as_ref().unwrap());
     let api_key = cfg.api_key.as_ref().unwrap();
 
     let client = reqwest::Client::new();
@@ -337,13 +411,13 @@ pub async fn reuse_sandbox(
     ))
 }
 
-/// 列出所有 Daytona 快照
+/// 列出所有 Daytona/E2B 快照/自定义模板
 #[tauri::command]
 pub async fn list_daytona_snapshots(
     db: State<'_, SharedDbManager>,
 ) -> Result<serde_json::Value, String> {
     use flock_core::db::DbManager;
-    use flock_tools::daytona::{get_sandbox_config, get_api_base};
+    use flock_tools::daytona::get_sandbox_config;
 
     let db_ref: &DbManager = &*db;
     let cfg = match get_sandbox_config(db_ref).await {
@@ -351,7 +425,46 @@ pub async fn list_daytona_snapshots(
         None => return Ok(serde_json::json!([])),
     };
 
-    let base = get_api_base(cfg.api_url.as_ref().unwrap());
+    let provider = cfg.provider.as_deref().unwrap_or("e2b");
+    if provider == "e2b" {
+        // E2B 官方目前不支持通过统一 REST API 拉取公开公共模版，但用户可能有自己的 snapshots。
+        // 我们尝试拉取 E2B 自定义 snapshots 端点。
+        let api_key = cfg.e2b_api_key.as_ref().unwrap();
+        let client = reqwest::Client::new();
+        let url = "https://api.e2b.app/snapshots";
+        let resp = client.get(url)
+            .header("X-API-Key", api_key)
+            .send()
+            .await
+            .map_err(|e| flock_core::tr(
+                &format!("请求 E2B 快照列表失败: {}", e),
+                &format!("Failed to request E2B snapshot list: {}", e)
+            ))?;
+
+        let text = resp.text().await.unwrap_or_default();
+        let list_val: serde_json::Value = serde_json::from_str(&text)
+            .map_err(|e| flock_core::tr(
+                &format!("解析 E2B 快照列表失败: {}", e),
+                &format!("Failed to parse E2B snapshot list: {}", e)
+            ))?;
+
+        if let Some(arr) = list_val.as_array() {
+            let mapped: Vec<serde_json::Value> = arr.iter().map(|item| {
+                let id = item.get("snapshotID").or_else(|| item.get("id")).and_then(|v| v.as_str()).unwrap_or_default();
+                serde_json::json!({
+                    "id": id,
+                    "name": id,
+                    "status": "active"
+                })
+            }).collect();
+            return Ok(serde_json::json!(mapped));
+        }
+        return Ok(serde_json::json!([]));
+    } else if provider == "local" {
+        return Ok(serde_json::json!([]));
+    }
+
+    let base = flock_tools::daytona::get_api_base(cfg.api_url.as_ref().unwrap());
     let api_key = cfg.api_key.as_ref().unwrap();
 
     let client = reqwest::Client::new();
@@ -382,13 +495,39 @@ pub async fn delete_daytona_snapshot(
     id: String,
 ) -> Result<(), String> {
     use flock_core::db::DbManager;
-    use flock_tools::daytona::{get_sandbox_config, get_api_base};
+    use flock_tools::daytona::get_sandbox_config;
 
     let db_ref: &DbManager = &*db;
     let cfg = get_sandbox_config(db_ref).await
         .ok_or_else(|| flock_core::tr("沙盒未配置或未启用", "Sandbox not configured or enabled"))?;
 
-    let base = get_api_base(cfg.api_url.as_ref().unwrap());
+    let provider = cfg.provider.as_deref().unwrap_or("e2b");
+    if provider == "e2b" {
+        let api_key = cfg.e2b_api_key.as_ref().unwrap();
+        let client = reqwest::Client::new();
+        let url = format!("https://api.e2b.app/snapshots/{}", id);
+        let resp = client.delete(&url)
+            .header("X-API-Key", api_key)
+            .send()
+            .await
+            .map_err(|e| flock_core::tr(
+                &format!("发送删除 E2B 快照请求失败: {}", e),
+                &format!("Failed to send delete E2B snapshot request: {}", e)
+            ))?;
+
+        if resp.status().is_success() || resp.status().as_u16() == 204 {
+            return Ok(());
+        } else {
+            return Err(flock_core::tr(
+                &format!("删除 E2B 快照失败，HTTP 状态码: {}", resp.status()),
+                &format!("Failed to delete E2B snapshot, HTTP status code: {}", resp.status())
+            ));
+        }
+    } else if provider == "local" {
+        return Ok(());
+    }
+
+    let base = flock_tools::daytona::get_api_base(cfg.api_url.as_ref().unwrap());
     let api_key = cfg.api_key.as_ref().unwrap();
 
     let client = reqwest::Client::new();

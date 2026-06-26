@@ -33,7 +33,9 @@ pub async fn execute_command_in_sandbox(
 
     let provider = cfg.provider.as_deref().unwrap_or("e2b");
     if provider == "e2b" {
-        return crate::daytona::e2b::execute_in_e2b_sandbox(&cfg, sandbox_id, command).await;
+        use crate::sandbox_provider::SandboxProvider;
+        let prov = crate::e2b_provider::E2BSandboxProvider;
+        return prov.execute_command(&cfg, sandbox_id, command).await;
     } else if provider == "local" {
         return Ok((format!("Local mock execution placeholder: executing '{}'", command), 0));
     }
