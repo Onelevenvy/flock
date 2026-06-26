@@ -23,15 +23,20 @@ pub async fn handle_interactive(
 ) -> Result<String, String> {
     let proxy_url = match crate::daytona::get_sandbox_vnc_url(db, sandbox_id).await {
         Ok(u) => u,
-        Err(e) => {
-            crate::emit_info(&flock_core::tr(
-                &format!("获取动态 VNC URL 失败: {}。使用静态备用 URL...", e),
-                &format!("Failed to retrieve dynamic VNC URL: {}. Falling back to static VNC URL...", e),
-            ));
-            format!(
-                "https://{}-{}.proxy.app.daytona.io/vnc.html?autoconnect=true&resize=scale",
-                WEBSOCKIFY_PORT, sandbox_id
-            )
+        Err(_) => {
+            let is_e2b = if let Some(cfg) = crate::daytona::get_sandbox_config(db).await {
+                cfg.provider.as_deref().unwrap_or("e2b") == "e2b"
+            } else {
+                true
+            };
+            if is_e2b {
+                format!("https://6080-{}.e2b.app/vnc.html?autoconnect=true&resize=scale&skip-preview-warning=true&skip_preview_warning=true", sandbox_id)
+            } else {
+                format!(
+                    "https://{}-{}.proxy.app.daytona.io/vnc.html?autoconnect=true&resize=scale",
+                    WEBSOCKIFY_PORT, sandbox_id
+                )
+            }
         }
     };
 

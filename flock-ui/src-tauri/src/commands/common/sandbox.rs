@@ -96,12 +96,16 @@ pub async fn get_active_sandbox_vnc_url(
     if let Some(sandbox_id) = flock_tools::daytona::get_active_sandbox_id().await {
         match flock_tools::daytona::get_sandbox_vnc_url(&*db, &sandbox_id).await {
             Ok(url) => Ok(Some(url)),
-            Err(e) => {
-                log::warn!("{}", flock_core::tr(
-                    &format!("获取动态 VNC URL 失败: {}。使用静态备用 URL...", e),
-                    &format!("Failed to retrieve dynamic VNC URL: {}. Using static fallback URL...", e)
-                ));
-                Ok(Some(format!("https://6080-{}.proxy.app.daytona.io/vnc.html?autoconnect=true&resize=scale", sandbox_id)))
+            Err(_) => {
+                let fallback_url = match flock_tools::daytona::get_sandbox_config(&*db).await {
+                    Some(cfg) if cfg.provider.as_deref().unwrap_or("e2b") == "e2b" => {
+                        format!("https://6080-{}.e2b.app/vnc.html?autoconnect=true&resize=scale&skip-preview-warning=true&skip_preview_warning=true", sandbox_id)
+                    }
+                    _ => {
+                        format!("https://6080-{}.proxy.app.daytona.io/vnc.html?autoconnect=true&resize=scale", sandbox_id)
+                    }
+                };
+                Ok(Some(fallback_url))
             }
         }
     } else {

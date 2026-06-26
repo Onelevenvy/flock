@@ -127,3 +127,52 @@ async fn test_diagnose_sandbox() {
         }
     }
 }
+
+#[tokio::test]
+async fn test_diagnose_e2b_templates() {
+    let db = match DbManager::init().await {
+        Ok(d) => d,
+        Err(e) => {
+            println!("Failed to open DB: {}", e);
+            return;
+        }
+    };
+
+    // Load sandbox config (enabled or not)
+    let mut cfg: flock_core::config::settings::SandboxConfig = db.get_config("sandbox").await.unwrap();
+    if let (Some(ct), Some(n)) = (&cfg.e2b_api_key_encrypted, &cfg.e2b_api_key_nonce) {
+        if let Ok(salt) = db.get_or_create_salt().await {
+            if let Ok(decrypted) = flock_core::crypto::decrypt_value(ct, n, &salt) {
+                cfg.e2b_api_key = Some(decrypted);
+            }
+        }
+    }
+
+    let key = cfg.e2b_api_key.unwrap_or_default();
+    println!("Retrieved E2B Key length: {}", key.len());
+    if key.is_empty() {
+        println!("E2B API Key is empty in database!");
+        return;
+    }
+
+    println!("E2B Key starts with: {}", &key[..std::cmp::min(10, key.len())]);
+
+    let client = reqwest::Client::new();
+    let url = "https://api.e2b.app/templates";
+    let resp = match client.get(url)
+        .header("X-API-Key", &key)
+        .send()
+        .await
+    {
+        Ok(r) => r,
+        Err(e) => {
+            println!("HTTP Request failed: {}", e);
+            return;
+        }
+    };
+
+    let status = resp.status();
+    let text = resp.text().await.unwrap_or_default();
+    println!("HTTP Response Status: {}", status);
+    println!("HTTP Response Body: {}", text);
+}

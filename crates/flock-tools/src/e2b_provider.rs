@@ -61,25 +61,11 @@ impl SandboxProvider for E2BSandboxProvider {
 
         let client = reqwest::Client::new();
         let mut template_id = cfg.snapshot.as_deref()
-            .unwrap_or("browser")
+            .unwrap_or("base")
             .trim();
         if template_id.is_empty() {
-            template_id = "browser";
+            template_id = "base";
         }
-        
-        // 如果是 Daytona 生成的数字序列（如 "1234567890" 等纯数字，或者不含 hyphen 的 Daytona 快照），
-        // 或者不是官方默认推荐模板 (browser/base/code-interpreter) 且不包含常规自定义模板格式时，
-        // 自动回退到官方 "browser" 模板，防止参数串用报错。
-        let is_valid_e2b_template = template_id == "browser" 
-            || template_id == "base" 
-            || template_id == "code-interpreter"
-            || (template_id.contains('-') && template_id.len() > 5); // E2B 自定义模板通常带有连字符且较长
-            
-        let template_id = if is_valid_e2b_template {
-            template_id
-        } else {
-            "browser"
-        };
 
         let payload = E2BCreateSandboxRequest {
             template_id: template_id.to_string(),

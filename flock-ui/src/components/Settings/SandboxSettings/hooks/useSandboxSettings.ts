@@ -31,10 +31,36 @@ export function useSandboxSettings() {
   const [creatingSnapshot, setCreatingSnapshot] = useState(false);
   const [isAvailable, setIsAvailable] = useState(false);
   const [activeTab, setActiveTab] = useState<string>('config');
+  const [snapshotsList, setSnapshotsList] = useState<{ id: string; name: string }[]>([]);
+
+  const fetchSnapshotsList = async () => {
+    try {
+      const data = await invoke<any>('list_daytona_snapshots', {
+        provider,
+        apiKey: provider === 'e2b' ? e2bApiKey : apiKey,
+      });
+      let list: any[] = [];
+      if (Array.isArray(data)) {
+        list = data;
+      } else if (data && Array.isArray(data.items)) {
+        list = data.items;
+      } else if (data && Array.isArray(data.data)) {
+        list = data.data;
+      }
+      setSnapshotsList(list.map((item: any) => ({ id: item.id || item.name, name: item.name || item.id })));
+    } catch (e) {
+      console.error('Failed to fetch snapshots:', e);
+      setSnapshotsList([]);
+    }
+  };
 
   useEffect(() => {
     loadAll();
   }, []);
+
+  useEffect(() => {
+    fetchSnapshotsList();
+  }, [provider, e2bApiKey]);
 
   const loadAll = async () => {
     try {
@@ -215,6 +241,7 @@ export function useSandboxSettings() {
     creatingSnapshot,
     isAvailable,
     activeTab, setActiveTab,
+    snapshotsList,
     handleTestConnection,
     handleDisable,
     handleCreateSnapshot,

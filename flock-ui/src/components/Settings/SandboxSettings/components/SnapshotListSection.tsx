@@ -91,7 +91,7 @@ export function SnapshotListSection({
 
   useEffect(() => {
     fetchSnapshots();
-  }, []);
+  }, [provider]);
 
   const handleCopy = (text: string) => {
     navigator.clipboard.writeText(text);

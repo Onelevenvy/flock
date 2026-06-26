@@ -40,6 +40,7 @@ export default function SandboxSettings() {
     creatingSnapshot,
     isAvailable,
     activeTab, setActiveTab,
+    snapshotsList,
     handleTestConnection,
     handleDisable,
     handleCreateSnapshot,
@@ -91,28 +92,39 @@ export default function SandboxSettings() {
           </Alert>
         )}
 
-        <SegmentedControl
-          value={activeTab}
-          onChange={(val) => setActiveTab(val as any)}
-          data={[
-            { value: 'config', label: t('settings.sandbox.tabConfig') },
-            { value: 'instances', label: t('settings.sandbox.tabInstances'), disabled: !isAvailable },
-            { value: 'snapshots', label: t('settings.sandbox.tabSnapshots'), disabled: !isAvailable },
-          ]}
-          size="xs"
-          mb="lg"
-          styles={{
-            root: {
-              background: 'var(--flock-bg-surface)',
-              border: '1px solid var(--flock-border-dim)',
-              padding: 2,
-              borderRadius: 8,
-            },
-            control: {
-              minWidth: 100,
-            }
-          }}
-        />
+        {(() => {
+          const tabs = [
+            { value: 'config', label: t('settings.sandbox.tabConfig') }
+          ];
+          if (provider === 'daytona') {
+            tabs.push({ value: 'instances', label: t('settings.sandbox.tabInstances'), disabled: !isAvailable });
+          }
+          if (provider === 'daytona' || provider === 'e2b') {
+            tabs.push({ value: 'snapshots', label: t('settings.sandbox.tabSnapshots'), disabled: !isAvailable });
+          }
+          if (tabs.length <= 1) return null;
+
+          return (
+            <SegmentedControl
+              value={activeTab}
+              onChange={(val) => setActiveTab(val as any)}
+              data={tabs}
+              size="xs"
+              mb="lg"
+              styles={{
+                root: {
+                  background: 'var(--flock-bg-surface)',
+                  border: '1px solid var(--flock-border-dim)',
+                  padding: 2,
+                  borderRadius: 8,
+                },
+                control: {
+                  minWidth: 100,
+                }
+              }}
+            />
+          );
+        })()}
 
         {activeTab === 'config' && (
           <Stack gap="lg" mt="md">
@@ -141,13 +153,13 @@ export default function SandboxSettings() {
           </Stack>
         )}
 
-        {activeTab === 'instances' && isAvailable && (
+        {provider === 'daytona' && activeTab === 'instances' && isAvailable && (
           <Box mt="md">
             <SandboxListSection />
           </Box>
         )}
 
-        {activeTab === 'snapshots' && isAvailable && (
+        {(provider === 'daytona' || provider === 'e2b') && activeTab === 'snapshots' && isAvailable && (
           <Box mt="md">
             <SnapshotListSection
               provider={provider}

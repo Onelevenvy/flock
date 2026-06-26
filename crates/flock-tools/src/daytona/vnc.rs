@@ -173,7 +173,8 @@ pub async fn ensure_vnc_running_in_sandbox(db: &DbManager, sandbox_id: &str) -> 
     crate::emit_info(&flock_core::tr("检测到 VNC 服务未运行，手动拉起 Xvfb, VNC, noVNC...", "Detected VNC service not running, manually starting Xvfb, VNC, noVNC..."));
     let launch_cmd = format!("sh -c '\
         if command -v start-vnc >/dev/null 2>&1; then \
-            start-vnc; \
+            setsid nohup start-vnc >/tmp/vnc_start.log 2>&1 & \
+            sleep 2; \
         else \
             export DISPLAY={display} && \
             rm -f /tmp/.X0-lock && \
@@ -213,6 +214,14 @@ pub async fn get_sandbox_vnc_url(
 ) -> anyhow::Result<String> {
     let cfg = get_sandbox_config(db).await
         .ok_or_else(|| anyhow::anyhow!(flock_core::tr("云端 Daytona 沙箱未配置或未启用", "Cloud Daytona sandbox not configured or enabled")))?;
+
+    let provider = cfg.provider.as_deref().unwrap_or("e2b");
+    if provider == "e2b" {
+        return Ok(format!(
+            "https://6080-{}.e2b.app/vnc.html?autoconnect=true&resize=scale&skip-preview-warning=true&skip_preview_warning=true",
+            sandbox_id
+        ));
+    }
 
     let client = reqwest::Client::new();
     let base = get_api_base(cfg.api_url.as_ref().unwrap());

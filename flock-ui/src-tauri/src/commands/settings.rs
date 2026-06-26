@@ -240,10 +240,9 @@ pub async fn list_daytona_sandboxes(
     db: State<'_, SharedDbManager>,
 ) -> Result<serde_json::Value, String> {
     use flock_core::db::DbManager;
-    use flock_tools::daytona::get_sandbox_config;
 
     let db_ref: &DbManager = &*db;
-    let cfg = match get_sandbox_config(db_ref).await {
+    let cfg = match get_sandbox_config_regardless(db_ref).await {
         Some(c) => c,
         None => return Ok(serde_json::json!([])),
     };
@@ -421,23 +420,36 @@ pub async fn reuse_sandbox(
 #[tauri::command]
 pub async fn list_daytona_snapshots(
     db: State<'_, SharedDbManager>,
+    provider: Option<String>,
+    api_key: Option<String>,
 ) -> Result<serde_json::Value, String> {
     use flock_core::db::DbManager;
-    use flock_tools::daytona::get_sandbox_config;
 
-    let db_ref: &DbManager = &*db;
-    let cfg = match get_sandbox_config(db_ref).await {
-        Some(c) => c,
-        None => return Ok(serde_json::json!([])),
-    };
+    let active_provider = provider.unwrap_or_else(|| "e2b".to_string());
+    if active_provider == "e2b" {
+        let key = if let Some(ref k) = api_key {
+            if k.is_empty() {
+                let db_ref: &DbManager = &*db;
+                let cfg = get_sandbox_config_regardless(db_ref).await.unwrap_or_default();
+                cfg.e2b_api_key.unwrap_or_default()
+            } else {
+                k.clone()
+            }
+        } else {
+            let db_ref: &DbManager = &*db;
+            let cfg = get_sandbox_config_regardless(db_ref).await.unwrap_or_default();
+            cfg.e2b_api_key.unwrap_or_default()
+        };
 
-    let provider = cfg.provider.as_deref().unwrap_or("e2b");
-    if provider == "e2b" {
-        let api_key = cfg.e2b_api_key.as_ref().unwrap();
+        log::info!("list_daytona_snapshots: active_provider = E2B, key len = {}, key starts with: {}", key.len(), &key[..std::cmp::min(5, key.len())]);
+        if key.is_empty() {
+            return Ok(serde_json::json!([]));
+        }
+
         let client = reqwest::Client::new();
         let url = "https://api.e2b.app/templates";
         let resp = client.get(url)
-            .header("X-API-Key", api_key)
+            .header("X-API-Key", key)
             .send()
             .await
             .map_err(|e| flock_core::tr(
@@ -445,7 +457,39 @@ pub async fn list_daytona_snapshots(
                 &format!("Failed to request E2B template list: {}", e)
             ))?;
 
+        let status = resp.status();
         let text = resp.text().await.unwrap_or_default();
+        log::info!("list_daytona_snapshots: E2B templates status = {}, text = {}", status, text);
+        if !status.is_success() {
+            return Err(flock_core::tr(
+                &format!("E2B API 错误 ({}): {}", status, text),
+                &format!("E2B API error ({}): {}", status, text)
+            ));
+        }
+
+        let mut mapped: Vec<serde_json::Value> = vec![
+            serde_json::json!({
+                "id": "desktop",
+                "name": "desktop (GUI Desktop / VNC)",
+                "status": "active"
+            }),
+            serde_json::json!({
+                "id": "base",
+                "name": "base (Standard Python/Bash)",
+                "status": "active"
+            }),
+            serde_json::json!({
+                "id": "code-interpreter",
+                "name": "code-interpreter",
+                "status": "active"
+            }),
+            serde_json::json!({
+                "id": "browser",
+                "name": "browser",
+                "status": "active"
+            }),
+        ];
+
         let list_val: serde_json::Value = serde_json::from_str(&text)
             .map_err(|e| flock_core::tr(
                 &format!("解析 E2B 模板列表失败: {}", e),
@@ -453,20 +497,36 @@ pub async fn list_daytona_snapshots(
             ))?;
 
         if let Some(arr) = list_val.as_array() {
-            let mapped: Vec<serde_json::Value> = arr.iter().map(|item| {
-                let id = item.get("snapshotID").or_else(|| item.get("id")).and_then(|v| v.as_str()).unwrap_or_default();
-                serde_json::json!({
-                    "id": id,
-                    "name": id,
-                    "status": "active"
-                })
-            }).collect();
-            return Ok(serde_json::json!(mapped));
+            for item in arr {
+                let id = item.get("templateID")
+                    .or_else(|| item.get("snapshotID"))
+                    .or_else(|| item.get("id"))
+                    .and_then(|v| v.as_str())
+                    .unwrap_or_default();
+                let name = item.get("aliases")
+                    .and_then(|a| a.as_array())
+                    .and_then(|arr| arr.first())
+                    .and_then(|v| v.as_str())
+                    .unwrap_or(id);
+                if !id.is_empty() && !mapped.iter().any(|m| m.get("id").and_then(|v| v.as_str()) == Some(id)) {
+                    mapped.push(serde_json::json!({
+                        "id": id,
+                        "name": name,
+                        "status": "active"
+                    }));
+                }
+            }
         }
-        return Ok(serde_json::json!([]));
-    } else if provider == "local" {
+        return Ok(serde_json::json!(mapped));
+    } else if active_provider == "local" {
         return Ok(serde_json::json!([]));
     }
+
+    let db_ref: &DbManager = &*db;
+    let cfg = match get_sandbox_config_regardless(db_ref).await {
+        Some(c) => c,
+        None => return Ok(serde_json::json!([])),
+    };
 
     let base = flock_tools::daytona::get_api_base(cfg.api_url.as_ref().unwrap());
     let api_key = cfg.api_key.as_ref().unwrap();
@@ -499,11 +559,10 @@ pub async fn delete_daytona_snapshot(
     id: String,
 ) -> Result<(), String> {
     use flock_core::db::DbManager;
-    use flock_tools::daytona::get_sandbox_config;
 
     let db_ref: &DbManager = &*db;
-    let cfg = get_sandbox_config(db_ref).await
-        .ok_or_else(|| flock_core::tr("沙盒未配置或未启用", "Sandbox not configured or enabled"))?;
+    let cfg = get_sandbox_config_regardless(db_ref).await
+        .ok_or_else(|| flock_core::tr("沙盒未配置", "Sandbox not configured"))?;
 
     let provider = cfg.provider.as_deref().unwrap_or("e2b");
     if provider == "e2b" {
@@ -558,5 +617,29 @@ pub async fn delete_daytona_snapshot(
 #[tauri::command]
 pub fn set_locale(locale: String) {
     flock_core::set_locale(&locale);
+}
+
+async fn get_sandbox_config_regardless(db: &flock_core::db::DbManager) -> Option<flock_core::config::settings::SandboxConfig> {
+    let mut cfg: flock_core::config::settings::SandboxConfig = db.get_config("sandbox").await?;
+    
+    // Decrypt Daytona key
+    if let (Some(ct), Some(n)) = (&cfg.api_key_encrypted, &cfg.api_key_nonce) {
+        if let Ok(salt) = db.get_or_create_salt().await {
+            if let Ok(decrypted) = flock_core::crypto::decrypt_value(ct, n, &salt) {
+                cfg.api_key = Some(decrypted);
+            }
+        }
+    }
+    
+    // Decrypt E2B key
+    if let (Some(ct), Some(n)) = (&cfg.e2b_api_key_encrypted, &cfg.e2b_api_key_nonce) {
+        if let Ok(salt) = db.get_or_create_salt().await {
+            if let Ok(decrypted) = flock_core::crypto::decrypt_value(ct, n, &salt) {
+                cfg.e2b_api_key = Some(decrypted);
+            }
+        }
+    }
+    
+    Some(cfg)
 }
 
