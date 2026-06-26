@@ -280,6 +280,7 @@ impl Config {
             debug,
             db_path,
             db_manager: Some(db),
+            dynamic_context_reminder: None,
         })
     }
 }

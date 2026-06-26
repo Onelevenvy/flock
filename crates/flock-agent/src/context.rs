@@ -141,9 +141,7 @@ pub fn build_system_prompt(
         format!(
             "You are an AI assistant that can use tools to help with tasks.\n\
              You are powered by the model {model}.\n\
-             Working directory: {cwd}\n\
-             Current date: {}",
-            chrono::Local::now().format("%Y-%m-%d")
+             Working directory: {cwd}"
         )
     });
     parts.push(intro.clone());
@@ -278,3 +276,44 @@ pub fn trim_message_history(messages: &mut Vec<Message>, keep_tail: usize) {
     messages.extend(tail);
 }
 
+/// Builds the dynamic context reminder containing date, local time, project memory, and skills list.
+pub fn build_dynamic_context_reminder(
+    memory_dir: Option<&Path>,
+    skills: &[SkillMetadata],
+    context_window_tokens: Option<usize>,
+) -> String {
+    let mut parts = Vec::new();
+    
+    // Add current date and time
+    parts.push(format!(
+        "Current date: {}\nLocal time: {}",
+        chrono::Local::now().format("%Y-%m-%d"),
+        chrono::Local::now().format("%H:%M:%S")
+    ));
+
+    // Memory section
+    if let Some(dir) = memory_dir {
+        let memory_section = build_memory_prompt_minimal(dir);
+        if !memory_section.is_empty() {
+            parts.push(memory_section);
+        }
+    }
+
+    // Skills section
+    let visible_skills: Vec<SkillMetadata> = skills
+        .iter()
+        .filter(|s| !s.disable_model_invocation)
+        .cloned()
+        .collect();
+
+    if !visible_skills.is_empty() {
+        let listing = format_skills_within_budget(&visible_skills, context_window_tokens);
+        if !listing.is_empty() {
+            parts.push(format!(
+                "<system-reminder>\nThe following skills are available for use with the Skill tool:\n\n{listing}\n</system-reminder>"
+            ));
+        }
+    }
+
+    parts.join("\n\n")
+}

@@ -200,6 +200,7 @@ pub struct Config {
     pub debug: DebugConfig,
     pub db_path: PathBuf,
     pub db_manager: Option<Arc<DbManager>>,
+    pub dynamic_context_reminder: Option<String>,
 }
 
 impl Clone for Config {
@@ -229,6 +230,7 @@ impl Clone for Config {
             debug: self.debug.clone(),
             db_path: self.db_path.clone(),
             db_manager: self.db_manager.clone(),
+            dynamic_context_reminder: self.dynamic_context_reminder.clone(),
         }
     }
 }

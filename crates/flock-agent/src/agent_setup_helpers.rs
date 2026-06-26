@@ -160,13 +160,20 @@ pub fn build_effective_system_prompt(
         base_prompt,
         cwd,
         &config.model,
-        skills,
+        &[], // static system prompt omits skills for cache efficiency
         None,
-        memory_dir,
+        None, // static system prompt omits memory
         false,
         config.compact.toon,
     );
     config.system_prompt = Some(system_prompt);
+
+    let dynamic_reminder = crate::context::build_dynamic_context_reminder(
+        memory_dir,
+        skills,
+        None,
+    );
+    config.dynamic_context_reminder = Some(dynamic_reminder);
 }
 
 /// Register internal meta-tools: skill, spawn, plan, tool_search.

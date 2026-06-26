@@ -104,3 +104,115 @@ impl AgentMiddleware for ToolOutputBudget {
         }
     }
 }
+
+/// Automatically detects and resolves dangling tool calls (e.g. from user cancellation
+/// or errors) by appending placeholder Tool messages to maintain context schema validity.
+pub struct DanglingToolRecovery;
+
+impl AgentMiddleware for DanglingToolRecovery {
+    fn before_llm_call(
+        &self,
+        _ctx: &NodeContext,
+        _system_prompt: &mut String,
+        messages: &mut Vec<LgMessage>,
+    ) {
+        let mut called_ids = std::collections::HashSet::new();
+        let mut answered_ids = std::collections::HashSet::new();
+
+        for msg in messages.iter() {
+            match msg {
+                LgMessage::Ai { tool_calls, .. } => {
+                    for tc in tool_calls {
+                        if let Some(ref id) = tc.id {
+                            called_ids.insert(id.clone());
+                        }
+                    }
+                }
+                LgMessage::Tool { tool_call_id, .. } => {
+                    answered_ids.insert(tool_call_id.clone());
+                }
+                _ => {}
+            }
+        }
+
+        // Find which tool_call_ids were called but never answered
+        let mut missing_tool_messages = Vec::new();
+        for msg in messages.iter() {
+            if let LgMessage::Ai { tool_calls, .. } = msg {
+                for tc in tool_calls {
+                    if let Some(ref id) = tc.id {
+                        if !answered_ids.contains(id) {
+                            log::warn!(
+                                "[middleware] Dangling tool call detected for ID: {}, name: {}. Injecting dummy error result.",
+                                id,
+                                tc.name
+                            );
+                            missing_tool_messages.push(LgMessage::Tool {
+                                tool_call_id: id.clone(),
+                                content: MessageContent::Text(
+                                    "Tool execution was cancelled, interrupted, or failed to return a response.".to_string(),
+                                ),
+                                name: Some(tc.name.clone()),
+                                id: None,
+                                status: "error".to_string(),
+                            });
+                            // Mark it as answered to prevent duplicate additions
+                            answered_ids.insert(id.clone());
+                        }
+                    }
+                }
+            }
+        }
+
+        if !missing_tool_messages.is_empty() {
+            messages.extend(missing_tool_messages);
+        }
+    }
+}
+
+pub struct DynamicContextReminder;
+
+impl AgentMiddleware for DynamicContextReminder {
+    fn before_llm_call(
+        &self,
+        ctx: &NodeContext,
+        _system_prompt: &mut String,
+        messages: &mut Vec<LgMessage>,
+    ) {
+        let reminder_guard = ctx.dynamic_context_reminder.read().unwrap();
+        let Some(ref reminder_text) = *reminder_guard else {
+            return;
+        };
+        if reminder_text.is_empty() {
+            return;
+        }
+
+        // Find the first HumanMessage to inject the reminder into
+        for msg in messages.iter_mut() {
+            if let LgMessage::Human { content, .. } = msg {
+                log::info!("[middleware] Injecting dynamic context reminder into the first HumanMessage");
+                
+                // Construct the system reminder wrapper
+                let reminder_wrapped = format!(
+                    "=== DYNAMIC CONTEXT REMINDER ===\n{}\n=================================\n\n",
+                    reminder_text
+                );
+
+                match content {
+                    MessageContent::Text(text) => {
+                        *text = format!("{}{}", reminder_wrapped, text);
+                    }
+                    MessageContent::Blocks(blocks) => {
+                        blocks.insert(
+                            0,
+                            langgraph::prebuilt::types::ContentBlock::Text {
+                                text: reminder_wrapped,
+                            },
+                        );
+                    }
+                }
+                break;
+            }
+        }
+    }
+}

@@ -76,6 +76,8 @@ pub struct AgentEngine {
     pub(crate) cancel_flag: Arc<AtomicBool>,
     pub(crate) has_error: Arc<Mutex<Option<String>>>,
     pub(crate) promoted_tools: Vec<String>,
+    pub(crate) dynamic_context_reminder: Option<String>,
+    pub(crate) graph_dynamic_context_reminder: Arc<std::sync::RwLock<Option<String>>>,
 }
 
 #[derive(Debug)]
