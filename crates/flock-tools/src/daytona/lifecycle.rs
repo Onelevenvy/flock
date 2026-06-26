@@ -19,6 +19,18 @@ pub async fn destroy_active_sandbox(db: &DbManager) -> anyhow::Result<()> {
         None => return Ok(()),
     };
 
+    let provider = cfg.provider.as_deref().unwrap_or("e2b");
+    if provider == "e2b" {
+        if let Err(e) = crate::daytona::e2b::destroy_e2b_sandbox(&cfg, &sandbox_id).await {
+            crate::emit_info(&flock_core::tr(&format!("销毁 E2B 沙盒请求失败: {}", e), &format!("Destroying E2B sandbox request failed: {}", e)));
+        }
+        *lock = None;
+        return Ok(());
+    } else if provider == "local" {
+        *lock = None;
+        return Ok(());
+    }
+
     let client = reqwest::Client::new();
     let base = get_api_base(cfg.api_url.as_ref().unwrap());
     let api_key = cfg.api_key.as_ref().unwrap();
@@ -61,11 +73,27 @@ pub async fn get_or_create_active_sandbox(db: &DbManager) -> anyhow::Result<Stri
     
     if let Some(id) = lock.as_ref() {
         if check_sandbox_alive(&cfg, id).await {
-            let _ = set_sandbox_public(&cfg, id, true).await;
+            let provider = cfg.provider.as_deref().unwrap_or("e2b");
+            if provider == "daytona" {
+                let _ = set_sandbox_public(&cfg, id, true).await;
+            }
             return Ok(id.clone());
         }
-        crate::emit_info(&flock_core::tr(&format!("Daytona 沙盒 {} 已失效，准备重新创建...", id), &format!("Daytona sandbox {} has expired, preparing to recreate...", id)));
+        crate::emit_info(&flock_core::tr(&format!("沙盒 {} 已失效，准备重新创建...", id), &format!("Sandbox {} has expired, preparing to recreate...", id)));
         *lock = None;
+    }
+
+    let provider = cfg.provider.as_deref().unwrap_or("e2b");
+    if provider == "e2b" {
+        crate::emit_info(&flock_core::tr("正在向 E2B 申请启动沙盒...", "Requesting to start sandbox from E2B..."));
+        let instance_id = crate::daytona::e2b::create_e2b_sandbox(&cfg).await?;
+        *lock = Some(instance_id.clone());
+        crate::emit_info(&flock_core::tr("E2B 沙盒已启动。", "E2B sandbox started."));
+        return Ok(instance_id);
+    } else if provider == "local" {
+        crate::emit_info(&flock_core::tr("正在启动本地 Mock 沙盒 (占位)...", "Starting local mock sandbox (placeholder)..."));
+        *lock = Some("local".to_string());
+        return Ok("local".to_string());
     }
 
     crate::emit_info(&flock_core::tr("正在向云端申请启动沙盒...", "Requesting to start sandbox from the cloud..."));
@@ -266,6 +294,13 @@ pub async fn get_or_create_active_sandbox(db: &DbManager) -> anyhow::Result<Stri
 }
 
 pub async fn check_sandbox_alive(cfg: &SandboxConfig, id: &str) -> bool {
+    let provider = cfg.provider.as_deref().unwrap_or("e2b");
+    if provider == "e2b" {
+        return crate::daytona::e2b::check_e2b_alive(cfg, id).await;
+    } else if provider == "local" {
+        return true;
+    }
+
     let client = reqwest::Client::new();
     let base = get_api_base(cfg.api_url.as_ref().unwrap());
     let api_key = cfg.api_key.as_ref().unwrap();

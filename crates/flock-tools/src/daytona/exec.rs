@@ -29,7 +29,14 @@ pub async fn execute_command_in_sandbox(
     command: &str,
 ) -> anyhow::Result<(String, i32)> {
     let cfg = get_sandbox_config(db).await
-        .ok_or_else(|| anyhow::anyhow!("云端 Daytona 沙箱未配置或未启用"))?;
+        .ok_or_else(|| anyhow::anyhow!("沙箱未配置或未启用"))?;
+
+    let provider = cfg.provider.as_deref().unwrap_or("e2b");
+    if provider == "e2b" {
+        return crate::daytona::e2b::execute_in_e2b_sandbox(&cfg, sandbox_id, command).await;
+    } else if provider == "local" {
+        return Ok((format!("Local mock execution placeholder: executing '{}'", command), 0));
+    }
 
     let api_url = cfg.api_url.as_ref().unwrap().trim_end_matches('/');
     let api_key = cfg.api_key.as_ref().unwrap();

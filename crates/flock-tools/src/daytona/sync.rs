@@ -10,6 +10,11 @@ fn should_ignore(path: &Path) -> bool {
 }
 
 pub async fn sync_up(db: &DbManager, sandbox_id: &str, local_workspace: &Path) -> anyhow::Result<()> {
+    if let Some(cfg) = crate::daytona::config::get_sandbox_config(db).await {
+        if cfg.provider.as_deref().unwrap_or("e2b") == "local" {
+            return Ok(());
+        }
+    }
     // Create a temporary tarball
     let tar_path = std::env::temp_dir().join(format!("flock_sync_up_{}.tar.gz", sandbox_id));
     let tar_file = fs::File::create(&tar_path).context("Failed to create tar file")?;
@@ -52,6 +57,11 @@ pub async fn sync_up(db: &DbManager, sandbox_id: &str, local_workspace: &Path) -
 }
 
 pub async fn sync_down(db: &DbManager, sandbox_id: &str, local_workspace: &Path) -> anyhow::Result<()> {
+    if let Some(cfg) = crate::daytona::config::get_sandbox_config(db).await {
+        if cfg.provider.as_deref().unwrap_or("e2b") == "local" {
+            return Ok(());
+        }
+    }
     // Create a tarball in sandbox
     let cmd = "cd /workspace && tar -czf .flock_sync_down.tar.gz --exclude='.flock_sync_down.tar.gz' --exclude='.git' --exclude='node_modules' --exclude='target' .";
     execute_command_in_sandbox(db, sandbox_id, cmd).await?;

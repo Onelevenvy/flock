@@ -7,6 +7,8 @@ mod snapshot;
 mod constants;
 pub mod volume;
 pub mod fs;
+pub mod e2b;
+
 
 pub use state::{get_active_sandbox_id, emit_human_takeover, get_sandbox_id_mutex};
 pub use config::{get_sandbox_config, get_api_base};

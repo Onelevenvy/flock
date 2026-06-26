@@ -30,8 +30,10 @@ export default function SandboxSettings() {
   const { t } = useTranslation();
 
   const {
+    provider, setProvider,
     apiUrl, setApiUrl,
     apiKey, setApiKey,
+    e2bApiKey, setE2bApiKey,
     snapshot,
     testing,
     disabling,
@@ -115,16 +117,22 @@ export default function SandboxSettings() {
         {activeTab === 'config' && (
           <Stack gap="lg" mt="md">
             <SandboxCredentials
+              provider={provider}
+              onProviderChange={setProvider}
               apiUrl={apiUrl}
               apiKey={apiKey}
+              e2bApiKey={e2bApiKey}
               onApiUrlChange={setApiUrl}
               onApiKeyChange={setApiKey}
+              onE2bApiKeyChange={setE2bApiKey}
             />
             <Divider color="var(--flock-border-subtle)" mt="md" />
             <SandboxActions
+              provider={provider}
               isAvailable={isAvailable}
               apiUrl={apiUrl}
               apiKey={apiKey}
+              e2bApiKey={e2bApiKey}
               testing={testing}
               disabling={disabling}
               onTestConnection={handleTestConnection}

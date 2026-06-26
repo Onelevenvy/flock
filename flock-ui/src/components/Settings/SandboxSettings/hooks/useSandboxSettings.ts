@@ -7,8 +7,10 @@ import React from 'react';
 
 interface SandboxConfig {
   enabled: boolean;
+  provider: string | null;
   api_url: string | null;
   api_key: string | null;
+  e2b_api_key: string | null;
   snapshot: string | null;
 }
 
@@ -19,8 +21,10 @@ interface ToolProvider {
 
 export function useSandboxSettings() {
   const { t } = useTranslation();
+  const [provider, setProvider] = useState<'e2b' | 'daytona' | 'local'>('e2b');
   const [apiUrl, setApiUrl] = useState('https://app.daytona.io');
   const [apiKey, setApiKey] = useState('');
+  const [e2bApiKey, setE2bApiKey] = useState('');
   const [snapshot, setSnapshot] = useState('');
   const [testing, setTesting] = useState(false);
   const [disabling, setDisabling] = useState(false);
@@ -39,8 +43,10 @@ export function useSandboxSettings() {
         invoke<ToolProvider[]>('list_tool_providers'),
       ]);
       if (config) {
+        if (config.provider) setProvider(config.provider as any);
         if (config.api_url) setApiUrl(config.api_url);
         if (config.api_key) setApiKey(config.api_key);
+        if (config.e2b_api_key) setE2bApiKey(config.e2b_api_key);
         if (config.snapshot) setSnapshot(config.snapshot);
       }
       const sandboxProvider = providers.find((p) => p.id === 'sandbox');
@@ -55,8 +61,10 @@ export function useSandboxSettings() {
       key: 'sandbox',
       value: {
         enabled: isAvailable,
+        provider,
         api_url: apiUrl.trim(),
         api_key: apiKey.trim(),
+        e2b_api_key: e2bApiKey.trim(),
         snapshot: snapshot.trim() || null,
         ...overrides,
       },
@@ -64,7 +72,15 @@ export function useSandboxSettings() {
   };
 
   const handleTestConnection = async () => {
-    if (!apiUrl.trim() || !apiKey.trim()) {
+    if (provider === 'e2b' && !e2bApiKey.trim()) {
+      notifications.show({
+        title: t('common.failed'),
+        message: t('settings.sandbox.testMissingFields'),
+        color: 'yellow',
+      });
+      return;
+    }
+    if (provider === 'daytona' && (!apiUrl.trim() || !apiKey.trim())) {
       notifications.show({
         title: t('common.failed'),
         message: t('settings.sandbox.testMissingFields'),
@@ -77,8 +93,9 @@ export function useSandboxSettings() {
     try {
       await saveConfig({ enabled: true });
       await invoke<string>('test_sandbox_connection', {
-        apiUrl: apiUrl.trim(),
-        apiKey: apiKey.trim(),
+        provider,
+        apiUrl: provider === 'daytona' ? apiUrl.trim() : '',
+        apiKey: provider === 'e2b' ? e2bApiKey.trim() : (provider === 'daytona' ? apiKey.trim() : ''),
       });
       setIsAvailable(true);
       notifications.show({
@@ -177,8 +194,10 @@ export function useSandboxSettings() {
   };
 
   return {
+    provider, setProvider,
     apiUrl, setApiUrl,
     apiKey, setApiKey,
+    e2bApiKey, setE2bApiKey,
     snapshot,
     testing,
     disabling,
