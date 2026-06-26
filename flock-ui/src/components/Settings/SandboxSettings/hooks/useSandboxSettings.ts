@@ -151,16 +151,27 @@ export function useSandboxSettings() {
     }
 
     try {
-      await invoke<string>('create_playwright_snapshot', { snapshotName: snapName });
-      setSnapshot(snapName);
-      await saveConfig({ snapshot: snapName });
-      notifications.show({
-        title: t('settings.sandbox.snapshotDone'),
-        message: t('settings.sandbox.snapshotDoneMsg', { name: snapName }),
-        color: 'teal',
-        icon: React.createElement(IconCheck, { size: 18 }),
-        autoClose: 8000,
-      });
+      if (provider === 'e2b' || provider === 'local') {
+        setSnapshot(snapName);
+        await saveConfig({ snapshot: snapName });
+        notifications.show({
+          title: t('common.success'),
+          message: t('settings.sandbox.saveDefaultSuccess'),
+          color: 'teal',
+          icon: React.createElement(IconCheck, { size: 18 }),
+        });
+      } else {
+        await invoke<string>('create_playwright_snapshot', { snapshotName: snapName });
+        setSnapshot(snapName);
+        await saveConfig({ snapshot: snapName });
+        notifications.show({
+          title: t('settings.sandbox.snapshotDone'),
+          message: t('settings.sandbox.snapshotDoneMsg', { name: snapName }),
+          color: 'teal',
+          icon: React.createElement(IconCheck, { size: 18 }),
+          autoClose: 8000,
+        });
+      }
     } catch (e) {
       notifications.show({
         title: t('settings.sandbox.snapshotFailed'),

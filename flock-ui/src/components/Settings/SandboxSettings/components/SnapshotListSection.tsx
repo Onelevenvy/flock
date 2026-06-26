@@ -38,6 +38,7 @@ interface SnapshotItem {
 }
 
 interface SnapshotListSectionProps {
+  provider: 'e2b' | 'daytona' | 'local';
   currentDefaultSnapshot: string;
   onSetDefaultSnapshot: (name: string) => void;
   onCreateSnapshot: (name: string) => Promise<void>;
@@ -45,6 +46,7 @@ interface SnapshotListSectionProps {
 }
 
 export function SnapshotListSection({
+  provider,
   currentDefaultSnapshot,
   onSetDefaultSnapshot,
   onCreateSnapshot,
@@ -56,7 +58,7 @@ export function SnapshotListSection({
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [newSnapshotName, setNewSnapshotName] = useState('');
 
-  const defaultSnapshotName = 'flock-playwright';
+  const defaultSnapshotName = provider === 'e2b' ? 'browser' : 'flock-playwright';
 
   const fetchSnapshots = async () => {
     setLoading(true);
@@ -71,7 +73,9 @@ export function SnapshotListSection({
         list = data.data;
       }
       // Filter out system-managed templates
-      const userSnapshots = list.filter((snap: any) => !snap.general && !snap.system && !snap.isSystem);
+      const userSnapshots = provider === 'e2b' 
+        ? list 
+        : list.filter((snap: any) => !snap.general && !snap.system && !snap.isSystem);
       setSnapshots(userSnapshots);
     } catch (e) {
       console.error('获取快照列表失败:', e);
@@ -167,7 +171,7 @@ export function SnapshotListSection({
           <Group gap="xs">
             <IconCamera size={20} color="var(--flock-accent)" />
             <Text fw={700} size="md">
-              {t('settings.sandbox.createSnapshotTitle')}
+              {provider === 'e2b' ? 'E2B Custom Sandboxes / Templates' : t('settings.sandbox.createSnapshotTitle')}
             </Text>
           </Group>
         </Group>
@@ -186,12 +190,20 @@ export function SnapshotListSection({
             color={isExistingSnapshot ? 'teal' : 'blue'}
             onClick={handleCreate}
             loading={creatingSnapshot}
-            leftSection={isExistingSnapshot ? <IconCheck size={15} /> : <IconCamera size={15} />}
+            leftSection={
+              isExistingSnapshot 
+                ? <IconCheck size={15} /> 
+                : (provider === 'e2b' || provider === 'local') 
+                ? <IconStar size={15} /> 
+                : <IconCamera size={15} />
+            }
           >
             {isExistingSnapshot
               ? t('settings.sandbox.useExistingSnapshot')
               : creatingSnapshot
               ? t('settings.sandbox.snapshotCreating')
+              : (provider === 'e2b' || provider === 'local')
+              ? t('settings.sandbox.setAsDefault')
               : t('settings.sandbox.snapshotCreateBtn')}
           </Button>
         </Group>
@@ -204,7 +216,9 @@ export function SnapshotListSection({
           mb="lg"
           style={{ fontSize: 12 }}
         >
-          {t('settings.sandbox.snapshotHint')}
+          {provider === 'e2b'
+            ? 'E2B provides a pre-bundled "browser" template with all Playwright dependencies pre-installed. There is no need to manually compile browser dependencies. You can enter any of your custom E2B Template IDs above, click Star to set it as default and use it instantly.'
+            : t('settings.sandbox.snapshotHint')}
         </Alert>
       </Box>
 

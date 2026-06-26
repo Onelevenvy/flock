@@ -112,11 +112,17 @@ pub async fn set_app_config(
             &format!("Failed to save config '{}': {}", key, e)
         ))?;
 
-    // 当 sandbox 被禁用时，将其 provider 标记为不可用
+    // 当 sandbox 被禁用时，将其 provider 标记为不可用。同时，清空当前活跃沙盒的内存缓存。
     if key == "sandbox" {
         let enabled = final_value.get("enabled").and_then(|v| v.as_bool()).unwrap_or(false);
         if !enabled {
             let _ = db.set_tool_provider_available("sandbox", false).await;
+        }
+        
+        // 关键修复：清除旧的活跃沙盒缓存，防止状态穿透
+        let mutex = flock_tools::daytona::get_sandbox_id_mutex();
+        if let Ok(mut lock) = mutex.try_lock() {
+            *lock = None;
         }
     }
 
@@ -427,25 +433,23 @@ pub async fn list_daytona_snapshots(
 
     let provider = cfg.provider.as_deref().unwrap_or("e2b");
     if provider == "e2b" {
-        // E2B 官方目前不支持通过统一 REST API 拉取公开公共模版，但用户可能有自己的 snapshots。
-        // 我们尝试拉取 E2B 自定义 snapshots 端点。
         let api_key = cfg.e2b_api_key.as_ref().unwrap();
         let client = reqwest::Client::new();
-        let url = "https://api.e2b.app/snapshots";
+        let url = "https://api.e2b.app/templates";
         let resp = client.get(url)
             .header("X-API-Key", api_key)
             .send()
             .await
             .map_err(|e| flock_core::tr(
-                &format!("请求 E2B 快照列表失败: {}", e),
-                &format!("Failed to request E2B snapshot list: {}", e)
+                &format!("请求 E2B 模板列表失败: {}", e),
+                &format!("Failed to request E2B template list: {}", e)
             ))?;
 
         let text = resp.text().await.unwrap_or_default();
         let list_val: serde_json::Value = serde_json::from_str(&text)
             .map_err(|e| flock_core::tr(
-                &format!("解析 E2B 快照列表失败: {}", e),
-                &format!("Failed to parse E2B snapshot list: {}", e)
+                &format!("解析 E2B 模板列表失败: {}", e),
+                &format!("Failed to parse E2B template list: {}", e)
             ))?;
 
         if let Some(arr) = list_val.as_array() {

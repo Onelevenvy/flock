@@ -150,6 +150,7 @@ export default function SandboxSettings() {
         {activeTab === 'snapshots' && isAvailable && (
           <Box mt="md">
             <SnapshotListSection
+              provider={provider}
               currentDefaultSnapshot={snapshot}
               onSetDefaultSnapshot={handleSetDefaultSnapshot}
               onCreateSnapshot={handleCreateSnapshot}
