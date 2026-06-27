@@ -66,7 +66,7 @@ export function SnapshotListSection({
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [newSnapshotName, setNewSnapshotName] = useState('');
 
-  const defaultSnapshotName = provider === 'e2b' ? 'browser' : 'flock-playwright';
+  const defaultSnapshotName = provider === 'e2b' ? 'flock-e2b-desktop' : 'flock-daytona-desktop';
 
   const fetchSnapshots = async () => {
     setLoading(true);
@@ -207,8 +207,6 @@ export function SnapshotListSection({
             leftSection={
               isExistingSnapshot 
                 ? <IconCheck size={15} /> 
-                : provider === 'e2b'
-                ? <IconCpu size={15} />
                 : provider === 'local'
                 ? <IconStar size={15} />
                 : <IconCamera size={15} />
@@ -216,8 +214,6 @@ export function SnapshotListSection({
           >
             {isExistingSnapshot
               ? t('settings.sandbox.useExistingSnapshot')
-              : provider === 'e2b'
-              ? '初始化增强版云端沙盒 (自带VNC和浏览器)'
               : provider === 'local'
               ? t('settings.sandbox.setAsDefault')
               : t('settings.sandbox.snapshotCreateBtn')}
