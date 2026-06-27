@@ -12,6 +12,7 @@ interface SandboxConfig {
   api_url: string | null;
   api_key: string | null;
   e2b_api_key: string | null;
+  e2b_api_url: string | null;
   snapshot: string | null;
 }
 
@@ -26,6 +27,7 @@ export function useSandboxSettings() {
   const [apiUrl, setApiUrl] = useState('https://app.daytona.io');
   const [apiKey, setApiKey] = useState('');
   const [e2bApiKey, setE2bApiKey] = useState('');
+  const [e2bApiUrl, setE2bApiUrl] = useState('https://api.e2b.app');
   const [snapshot, setSnapshot] = useState('');
   const [testing, setTesting] = useState(false);
   const [disabling, setDisabling] = useState(false);
@@ -76,6 +78,7 @@ export function useSandboxSettings() {
         if (config.api_url) setApiUrl(config.api_url);
         if (config.api_key) setApiKey(config.api_key);
         if (config.e2b_api_key) setE2bApiKey(config.e2b_api_key);
+        if (config.e2b_api_url) setE2bApiUrl(config.e2b_api_url);
         if (config.snapshot) setSnapshot(config.snapshot);
       }
       const sandboxProvider = providers.find((p) => p.id === 'sandbox');
@@ -94,6 +97,7 @@ export function useSandboxSettings() {
         api_url: apiUrl.trim(),
         api_key: apiKey.trim(),
         e2b_api_key: e2bApiKey.trim(),
+        e2b_api_url: e2bApiUrl.trim(),
         snapshot: snapshot.trim() || null,
         ...overrides,
       },
@@ -101,7 +105,7 @@ export function useSandboxSettings() {
   };
 
   const handleTestConnection = async () => {
-    if (provider === 'e2b' && !e2bApiKey.trim()) {
+    if (provider === 'e2b' && (!e2bApiKey.trim() || !e2bApiUrl.trim())) {
       notifications.show({
         title: t('common.failed'),
         message: t('settings.sandbox.testMissingFields'),
@@ -123,7 +127,7 @@ export function useSandboxSettings() {
       await saveConfig({ enabled: true });
       await invoke<string>('test_sandbox_connection', {
         provider,
-        apiUrl: provider === 'daytona' ? apiUrl.trim() : '',
+        apiUrl: provider === 'e2b' ? e2bApiUrl.trim() : apiUrl.trim(),
         apiKey: provider === 'e2b' ? e2bApiKey.trim() : (provider === 'daytona' ? apiKey.trim() : ''),
       });
       setIsAvailable(true);
@@ -275,6 +279,7 @@ export function useSandboxSettings() {
     apiUrl, setApiUrl,
     apiKey, setApiKey,
     e2bApiKey, setE2bApiKey,
+    e2bApiUrl, setE2bApiUrl,
     snapshot,
     testing,
     disabling,

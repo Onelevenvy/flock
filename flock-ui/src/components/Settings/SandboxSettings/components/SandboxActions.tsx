@@ -14,6 +14,7 @@ interface SandboxActionsProps {
   apiUrl: string;
   apiKey: string;
   e2bApiKey: string;
+  e2bApiUrl: string;
   testing: boolean;
   disabling: boolean;
   onTestConnection: () => void;
@@ -26,6 +27,7 @@ export function SandboxActions({
   apiUrl,
   apiKey,
   e2bApiKey,
+  e2bApiUrl,
   testing,
   disabling,
   onTestConnection,
@@ -34,7 +36,7 @@ export function SandboxActions({
   const { t } = useTranslation();
 
   const isTestDisabled = () => {
-    if (provider === 'e2b') return !e2bApiKey.trim();
+    if (provider === 'e2b') return !e2bApiKey.trim() || !e2bApiUrl.trim();
     if (provider === 'daytona') return !apiUrl.trim() || !apiKey.trim();
     return false; // local is never disabled
   };

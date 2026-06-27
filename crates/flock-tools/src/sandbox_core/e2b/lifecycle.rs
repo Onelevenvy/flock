@@ -21,9 +21,10 @@ pub async fn check_alive(cfg: &SandboxConfig, sandbox_id: &str) -> bool {
         Some(k) => k,
         None => return false,
     };
+    let base_url = cfg.e2b_api_url.as_deref().unwrap_or("https://api.e2b.app").trim_end_matches('/');
 
     let client = reqwest::Client::new();
-    let url = format!("https://api.e2b.app/sandboxes/{}", sandbox_id);
+    let url = format!("{}/sandboxes/{}", base_url, sandbox_id);
 
     match client.get(&url)
         .header("X-API-Key", api_key)
@@ -39,6 +40,7 @@ pub async fn check_alive(cfg: &SandboxConfig, sandbox_id: &str) -> bool {
 pub async fn create_sandbox(cfg: &SandboxConfig) -> anyhow::Result<String> {
     let api_key = cfg.e2b_api_key.as_ref()
         .ok_or_else(|| anyhow::anyhow!("E2B API key is missing"))?;
+    let base_url = cfg.e2b_api_url.as_deref().unwrap_or("https://api.e2b.app").trim_end_matches('/');
 
     let template_id = cfg.snapshot.as_deref()
         .unwrap_or("")
@@ -57,7 +59,7 @@ pub async fn create_sandbox(cfg: &SandboxConfig) -> anyhow::Result<String> {
         &format!("Requesting E2B sandbox (template: {})...", template_id)
     ));
 
-    let url = "https://api.e2b.app/sandboxes";
+    let url = format!("{}/sandboxes", base_url);
     let resp = client.post(url)
         .header("X-API-Key", api_key)
         .json(&payload)
@@ -81,9 +83,10 @@ pub async fn create_sandbox(cfg: &SandboxConfig) -> anyhow::Result<String> {
 pub async fn destroy_sandbox(cfg: &SandboxConfig, sandbox_id: &str) -> anyhow::Result<()> {
     let api_key = cfg.e2b_api_key.as_ref()
         .ok_or_else(|| anyhow::anyhow!("E2B API key is missing"))?;
+    let base_url = cfg.e2b_api_url.as_deref().unwrap_or("https://api.e2b.app").trim_end_matches('/');
 
     let client = reqwest::Client::new();
-    let url = format!("https://api.e2b.app/sandboxes/{}", sandbox_id);
+    let url = format!("{}/sandboxes/{}", base_url, sandbox_id);
 
     let resp = client.delete(&url)
         .header("X-API-Key", api_key)

@@ -69,7 +69,7 @@ export function SnapshotListSection({
   const fetchSnapshots = async () => {
     setLoading(true);
     try {
-      const data = await invoke<any>('list_sandbox_templates');
+      const data = await invoke<any>('list_sandbox_templates', { provider });
       let list: SnapshotItem[] = [];
       if (Array.isArray(data)) {
         list = data;
@@ -191,6 +191,16 @@ export function SnapshotListSection({
             style={{ flex: 1 }}
             styles={{ input: { background: 'var(--flock-bg-surface)' } }}
           />
+          {provider === 'e2b' && (
+            <Button
+              variant="filled"
+              color="blue"
+              onClick={onBuildE2bTemplate}
+              loading={buildingE2b}
+            >
+              初始化增强版云端沙盒 (自带VNC和浏览器)
+            </Button>
+          )}
           <Button
             variant="filled"
             color={isExistingSnapshot ? 'teal' : 'blue'}
@@ -237,17 +247,6 @@ export function SnapshotListSection({
             {t('settings.sandbox.snapshots')}
           </Text>
           <Group gap="xs">
-            {provider === 'e2b' && (
-              <Button
-                variant="light"
-                color="blue"
-                size="xs"
-                loading={buildingE2b}
-                onClick={onBuildE2bTemplate}
-              >
-                初始化增强版云端沙盒 (自带VNC和浏览器)
-              </Button>
-            )}
             <Button
               variant="subtle"
               color="gray"

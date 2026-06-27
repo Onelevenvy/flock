@@ -156,6 +156,7 @@ pub struct SandboxConfig {
     pub e2b_api_key: Option<String>,
     pub e2b_api_key_encrypted: Option<String>,
     pub e2b_api_key_nonce: Option<String>,
+    pub e2b_api_url: Option<String>,
     pub snapshot: Option<String>,
 }
 

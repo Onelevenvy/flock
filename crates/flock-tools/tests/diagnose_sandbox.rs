@@ -1,6 +1,7 @@
 use std::path::PathBuf;
 use flock_core::db::DbManager;
-use flock_tools::sandbox_core::daytona::{get_sandbox_config, get_api_base, execute_command_in_sandbox};
+use flock_tools::sandbox_core::config::{get_sandbox_config, get_api_base};
+use flock_tools::sandbox_core::daytona::execute_command_in_sandbox;
 
 #[tokio::test]
 async fn test_diagnose_sandbox() {
@@ -200,10 +201,10 @@ async fn test_diagnose_e2b_sandbox() {
     cfg.snapshot = Some("k0wmnzir0zuzye6dndlw".to_string());
 
     use flock_tools::sandbox_core::provider::SandboxProvider;
-    let prov = flock_tools::sandbox_core::e2b_provider::E2BSandboxProvider;
+    let prov = flock_tools::sandbox_core::e2b::provider::E2bProvider;
     
     println!("Starting E2B sandbox with template k0wmnzir0zuzye6dndlw...");
-    let sandbox_id = match prov.get_or_create_sandbox(&cfg).await {
+    let sandbox_id = match prov.create_sandbox(&db, &cfg).await {
         Ok(id) => id,
         Err(e) => {
             println!("Failed to create sandbox: {}", e);
@@ -220,7 +221,7 @@ async fn test_diagnose_e2b_sandbox() {
 
     // 1. Check listening ports and env
     println!("\n--- Env and Path ---");
-    let env_out = match prov.execute_command(&cfg, &sandbox_id, "env && echo 'PATH IS:' && echo $PATH").await {
+    let env_out = match prov.execute_command(&db, &cfg, &sandbox_id, "env && echo 'PATH IS:' && echo $PATH").await {
         Ok((out, _)) => out,
         Err(e) => format!("Error executing env command: {}", e),
     };
@@ -228,7 +229,7 @@ async fn test_diagnose_e2b_sandbox() {
 
     // 2. Check installed debian packages
     println!("\n--- Debian Packages Check ---");
-    let dpkg_out = match prov.execute_command(&cfg, &sandbox_id, "dpkg -l | grep -iE 'vnc|xvfb|fluxbox|websockify|novnc'").await {
+    let dpkg_out = match prov.execute_command(&db, &cfg, &sandbox_id, "dpkg -l | grep -iE 'vnc|xvfb|fluxbox|websockify|novnc'").await {
         Ok((out, _)) => out,
         Err(e) => format!("Error executing dpkg command: {}", e),
     };
@@ -236,7 +237,7 @@ async fn test_diagnose_e2b_sandbox() {
 
     // 3. Check logs of vnc
     println!("\n--- VNC logs ---");
-    let log_out = match prov.execute_command(&cfg, &sandbox_id, "cat /tmp/vnc_start.log /tmp/websockify.log /tmp/x11vnc.log 2>/dev/null").await {
+    let log_out = match prov.execute_command(&db, &cfg, &sandbox_id, "cat /tmp/vnc_start.log /tmp/websockify.log /tmp/x11vnc.log 2>/dev/null").await {
         Ok((out, _)) => out,
         Err(e) => format!("Error executing cat command: {}", e),
     };
@@ -244,6 +245,6 @@ async fn test_diagnose_e2b_sandbox() {
 
     // Cleanup
     println!("\nDestroying sandbox...");
-    let _ = prov.destroy_sandbox(&cfg, &sandbox_id).await;
+    let _ = prov.destroy_sandbox(&db, &cfg, &sandbox_id).await;
     println!("Sandbox destroyed.");
 }

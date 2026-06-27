@@ -15,9 +15,7 @@ import {
   IconInfoCircle,
   IconPlugConnected,
   IconPlugConnectedX,
-  IconSettings,
-  IconCpu,
-  IconCamera,
+ 
 } from '@tabler/icons-react';
 import { useTranslation } from 'react-i18next';
 import { SandboxCredentials } from './components/SandboxCredentials';
@@ -34,6 +32,7 @@ export default function SandboxSettings() {
     apiUrl, setApiUrl,
     apiKey, setApiKey,
     e2bApiKey, setE2bApiKey,
+    e2bApiUrl, setE2bApiUrl,
     snapshot,
     testing,
     disabling,
@@ -137,9 +136,11 @@ export default function SandboxSettings() {
               apiUrl={apiUrl}
               apiKey={apiKey}
               e2bApiKey={e2bApiKey}
+              e2bApiUrl={e2bApiUrl}
               onApiUrlChange={setApiUrl}
               onApiKeyChange={setApiKey}
               onE2bApiKeyChange={setE2bApiKey}
+              onE2bApiUrlChange={setE2bApiUrl}
             />
             <Divider color="var(--flock-border-subtle)" mt="md" />
             <SandboxActions
@@ -148,6 +149,7 @@ export default function SandboxSettings() {
               apiUrl={apiUrl}
               apiKey={apiKey}
               e2bApiKey={e2bApiKey}
+              e2bApiUrl={e2bApiUrl}
               testing={testing}
               disabling={disabling}
               onTestConnection={handleTestConnection}

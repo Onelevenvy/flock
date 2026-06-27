@@ -195,7 +195,8 @@ pub async fn test_sandbox_connection(
 
     let client = reqwest::Client::new();
     let (url, is_e2b) = if provider == "e2b" {
-        ("https://api.e2b.app/sandboxes".to_string(), true)
+        let base_url = api_url.trim_end_matches('/');
+        (format!("{}/sandboxes", base_url), true)
     } else {
         let base = flock_tools::sandbox_core::config::get_api_base(&api_url);
         (format!("{}/api/sandbox", base), false)
@@ -389,18 +390,16 @@ pub async fn list_sandbox_templates(
 
     let active_provider = provider.unwrap_or_else(|| "e2b".to_string());
     if active_provider == "e2b" {
+        let db_ref: &DbManager = &*db;
+        let cfg = get_sandbox_config_regardless(db_ref).await.unwrap_or_default();
         let key = if let Some(ref k) = api_key {
             if k.is_empty() {
-                let db_ref: &DbManager = &*db;
-                let cfg = get_sandbox_config_regardless(db_ref).await.unwrap_or_default();
-                cfg.e2b_api_key.unwrap_or_default()
+                cfg.e2b_api_key.clone().unwrap_or_default()
             } else {
                 k.clone()
             }
         } else {
-            let db_ref: &DbManager = &*db;
-            let cfg = get_sandbox_config_regardless(db_ref).await.unwrap_or_default();
-            cfg.e2b_api_key.unwrap_or_default()
+            cfg.e2b_api_key.clone().unwrap_or_default()
         };
 
         log::info!("list_daytona_snapshots: active_provider = E2B, key len = {}, key starts with: {}", key.len(), &key[..std::cmp::min(5, key.len())]);
@@ -408,9 +407,11 @@ pub async fn list_sandbox_templates(
             return Ok(serde_json::json!([]));
         }
 
+        let base_url = cfg.e2b_api_url.as_deref().unwrap_or("https://api.e2b.app").trim_end_matches('/');
+
         let client = reqwest::Client::new();
-        let url = "https://api.e2b.app/templates";
-        let resp = client.get(url)
+        let url = format!("{}/templates", base_url);
+        let resp = client.get(&url)
             .header("X-API-Key", key)
             .send()
             .await
@@ -429,28 +430,7 @@ pub async fn list_sandbox_templates(
             ));
         }
 
-        let mut mapped: Vec<serde_json::Value> = vec![
-            serde_json::json!({
-                "id": "desktop",
-                "name": "desktop (GUI Desktop / VNC)",
-                "status": "active"
-            }),
-            serde_json::json!({
-                "id": "base",
-                "name": "base (Standard Python/Bash)",
-                "status": "active"
-            }),
-            serde_json::json!({
-                "id": "code-interpreter",
-                "name": "code-interpreter",
-                "status": "active"
-            }),
-            serde_json::json!({
-                "id": "browser",
-                "name": "browser",
-                "status": "active"
-            }),
-        ];
+        let mut mapped: Vec<serde_json::Value> = vec![];
 
         let list_val: serde_json::Value = serde_json::from_str(&text)
             .map_err(|e| flock_core::tr(
@@ -529,8 +509,9 @@ pub async fn delete_sandbox_template(
     let provider = cfg.provider.as_deref().unwrap_or("e2b");
     if provider == "e2b" {
         let api_key = cfg.e2b_api_key.as_ref().unwrap();
+        let base_url = cfg.e2b_api_url.as_deref().unwrap_or("https://api.e2b.app").trim_end_matches('/');
         let client = reqwest::Client::new();
-        let url = format!("https://api.e2b.app/snapshots/{}", id);
+        let url = format!("{}/snapshots/{}", base_url, id);
         let resp = client.delete(&url)
             .header("X-API-Key", api_key)
             .send()

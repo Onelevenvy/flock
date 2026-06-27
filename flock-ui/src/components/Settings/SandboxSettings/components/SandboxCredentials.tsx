@@ -21,9 +21,11 @@ interface SandboxCredentialsProps {
   apiUrl: string;
   apiKey: string;
   e2bApiKey: string;
+  e2bApiUrl: string;
   onApiUrlChange: (val: string) => void;
   onApiKeyChange: (val: string) => void;
   onE2bApiKeyChange: (val: string) => void;
+  onE2bApiUrlChange: (val: string) => void;
 }
 
 export function SandboxCredentials({
@@ -32,9 +34,11 @@ export function SandboxCredentials({
   apiUrl,
   apiKey,
   e2bApiKey,
+  e2bApiUrl,
   onApiUrlChange,
   onApiKeyChange,
   onE2bApiKeyChange,
+  onE2bApiUrlChange,
 }: SandboxCredentialsProps) {
   const { t } = useTranslation();
 
@@ -58,18 +62,33 @@ export function SandboxCredentials({
       />
 
       {provider === 'e2b' && (
-        <PasswordInput
-          label={
-            <Group gap={6} style={{ marginBottom: 4 }}>
-              <IconKey size={14} color="var(--flock-text-dim)" />
-              <Text size="sm" fw={500}>E2B API Key</Text>
-            </Group>
-          }
-          placeholder="e2b_..."
-          value={e2bApiKey}
-          onChange={(e) => onE2bApiKeyChange(e.currentTarget.value)}
-          styles={{ input: { background: 'var(--flock-bg-surface)' } }}
-        />
+        <>
+          <TextInput
+            label={
+              <Group gap={6} style={{ marginBottom: 4 }}>
+                <IconServer size={14} color="var(--flock-text-dim)" />
+                <Text size="sm" fw={500}>{t('settings.sandbox.apiUrl')}</Text>
+              </Group>
+            }
+            placeholder="https://api.e2b.app"
+            value={e2bApiUrl}
+            onChange={(e) => onE2bApiUrlChange(e.currentTarget.value)}
+            styles={{ input: { background: 'var(--flock-bg-surface)' } }}
+          />
+
+          <PasswordInput
+            label={
+              <Group gap={6} style={{ marginBottom: 4 }}>
+                <IconKey size={14} color="var(--flock-text-dim)" />
+                <Text size="sm" fw={500}>E2B API Key</Text>
+              </Group>
+            }
+            placeholder="e2b_..."
+            value={e2bApiKey}
+            onChange={(e) => onE2bApiKeyChange(e.currentTarget.value)}
+            styles={{ input: { background: 'var(--flock-bg-surface)' } }}
+          />
+        </>
       )}
 
       {provider === 'daytona' && (
