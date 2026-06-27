@@ -1,10 +1,12 @@
 use crate::daytona::{
-    execute_command_in_sandbox,
     start_computer_use_in_sandbox,
-    ensure_vnc_running_in_sandbox,
     DISPLAY_ID,
 };
-use crate::sandbox_manager::get_sandbox_vnc_url;
+use crate::sandbox_manager::{
+    execute_command_in_sandbox,
+    get_sandbox_vnc_url,
+    ensure_vnc_running_in_sandbox,
+};
 use flock_core::ipc_interface::events::ToolCategory;
 use flock_core::db::DbManager;
 use base64::{Engine as _, engine::general_purpose};

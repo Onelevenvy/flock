@@ -9,6 +9,7 @@ use std::sync::OnceLock;
 use tokio::sync::Mutex;
 use flock_core::db::DbManager;
 use crate::daytona::get_sandbox_config;
+use crate::sandbox_provider::SandboxProvider;
 
 static ACTIVE_SANDBOX_ID: OnceLock<Mutex<Option<String>>> = OnceLock::new();
 
@@ -22,24 +23,27 @@ pub async fn get_active_sandbox_id() -> Option<String> {
     lock.clone()
 }
 
-/// 清空活跃沙盒缓存（配置变更时调用）
 pub async fn clear_active_sandbox_id() {
     let mutex = get_sandbox_id_mutex();
     let mut lock = mutex.lock().await;
     *lock = None;
 }
 
-/// 检查沙盒是否存活（provider dispatch）
-pub async fn check_sandbox_alive(cfg: &flock_core::config::settings::SandboxConfig, id: &str) -> bool {
-    let provider = cfg.provider.as_deref().unwrap_or("e2b");
-    match provider {
-        "e2b" => crate::e2b::check_alive(cfg, id).await,
-        "local" => true,
-        _ => crate::daytona::check_sandbox_alive(cfg, id).await,
+/// 获取当前配置对应的 SandboxProvider 实现
+pub fn get_provider(provider_name: &str) -> Box<dyn SandboxProvider> {
+    match provider_name {
+        "e2b" => Box::new(crate::e2b::provider::E2bProvider),
+        "local" => Box::new(crate::local_provider::LocalSandboxProvider),
+        _ => Box::new(crate::daytona::provider::DaytonaProvider),
     }
 }
 
-/// 获取或创建活跃沙盒，返回 sandbox_id
+pub async fn check_sandbox_alive(cfg: &flock_core::config::settings::SandboxConfig, id: &str) -> bool {
+    let provider_name = cfg.provider.as_deref().unwrap_or("e2b");
+    let provider = get_provider(provider_name);
+    provider.check_alive(cfg, id).await
+}
+
 pub async fn get_or_create_active_sandbox(db: &DbManager) -> anyhow::Result<String> {
     let cfg = get_sandbox_config(db).await
         .ok_or_else(|| anyhow::anyhow!(flock_core::tr(
@@ -52,7 +56,8 @@ pub async fn get_or_create_active_sandbox(db: &DbManager) -> anyhow::Result<Stri
 
     if let Some(id) = lock.as_ref() {
         if check_sandbox_alive(&cfg, id).await {
-            // Daytona 需要额外 set_public
+            // Daytona 需要额外 set_public（这个也可以封装到 check_alive 或独立方法中，但为了兼容暂时保留这里，
+            // 更好的做法是将其放在 create_sandbox 内部，不过目前我们在检测到复用时也可能需要）
             if cfg.provider.as_deref().unwrap_or("e2b") == "daytona" {
                 let _ = crate::daytona::set_sandbox_public(&cfg, id, true).await;
             }
@@ -65,33 +70,21 @@ pub async fn get_or_create_active_sandbox(db: &DbManager) -> anyhow::Result<Stri
         *lock = None;
     }
 
-    let provider = cfg.provider.as_deref().unwrap_or("e2b");
-    let sandbox_id = match provider {
-        "e2b" => {
-            let id = crate::e2b::create_sandbox(&cfg).await?;
-            // 同步本地 workspace 到 E2B
-            if let Some(ws_path) = crate::get_workspace_dir() {
-                if let Err(e) = crate::daytona::sync::sync_up(db, &id, &ws_path).await {
-                    crate::emit_info(&format!("E2B Sync Up failed: {}", e));
-                }
-            }
-            id
+    let provider_name = cfg.provider.as_deref().unwrap_or("e2b");
+    let provider = get_provider(provider_name);
+    
+    let sandbox_id = provider.create_sandbox(db, &cfg).await?;
+    
+    if let Some(ws_path) = crate::get_workspace_dir() {
+        if let Err(e) = provider.sync_up(db, &sandbox_id, &ws_path).await {
+            crate::emit_info(&format!("Sync Up failed: {}", e));
         }
-        "local" => {
-            crate::emit_info(&flock_core::tr("正在启动本地 Mock 沙盒 (占位)...", "Starting local mock sandbox (placeholder)..."));
-            "local".to_string()
-        }
-        _ => {
-            // Daytona
-            crate::daytona::create_sandbox(db, &cfg).await?
-        }
-    };
+    }
 
     *lock = Some(sandbox_id.clone());
     Ok(sandbox_id)
 }
 
-/// 销毁当前活跃沙盒
 pub async fn destroy_active_sandbox(db: &DbManager) -> anyhow::Result<()> {
     let cfg = match get_sandbox_config(db).await {
         Some(c) => c,
@@ -106,38 +99,23 @@ pub async fn destroy_active_sandbox(db: &DbManager) -> anyhow::Result<()> {
         None => return Ok(()),
     };
 
-    let provider = cfg.provider.as_deref().unwrap_or("e2b");
-    match provider {
-        "e2b" => {
-            if let Err(e) = crate::e2b::destroy_sandbox(&cfg, &sandbox_id).await {
-                crate::emit_info(&flock_core::tr(
-                    &format!("销毁 E2B 沙盒请求失败: {}", e),
-                    &format!("Destroying E2B sandbox request failed: {}", e)
-                ));
-            }
+    let provider_name = cfg.provider.as_deref().unwrap_or("e2b");
+    let provider = get_provider(provider_name);
+
+    if let Some(ws_path) = crate::get_workspace_dir() {
+        if let Err(e) = provider.sync_down(db, &sandbox_id, &ws_path).await {
+            crate::emit_info(&format!("Sync Down failed: {}", e));
         }
-        "local" => {}
-        _ => {
-            // Daytona: sync down 然后销毁
-            if let Some(ws_path) = crate::get_workspace_dir() {
-                if let Err(e) = crate::daytona::sync::sync_down(db, &sandbox_id, &ws_path).await {
-                    crate::emit_info(&format!("Sync Down failed: {}", e));
-                }
-            }
-            if let Err(e) = crate::daytona::destroy_daytona_sandbox(&cfg, &sandbox_id).await {
-                crate::emit_info(&flock_core::tr(
-                    &format!("销毁 Daytona 沙盒请求失败: {}", e),
-                    &format!("Destroying Daytona sandbox request failed: {}", e)
-                ));
-            }
-        }
+    }
+
+    if let Err(e) = provider.destroy_sandbox(db, &cfg, &sandbox_id).await {
+        crate::emit_info(&format!("Destroying sandbox request failed: {}", e));
     }
 
     *lock = None;
     Ok(())
 }
 
-/// 在沙盒中执行命令（provider dispatch）
 pub async fn execute_command_in_sandbox(
     db: &DbManager,
     sandbox_id: &str,
@@ -146,15 +124,12 @@ pub async fn execute_command_in_sandbox(
     let cfg = get_sandbox_config(db).await
         .ok_or_else(|| anyhow::anyhow!("沙箱未配置或未启用"))?;
 
-    let provider = cfg.provider.as_deref().unwrap_or("e2b");
-    match provider {
-        "e2b" => crate::e2b::execute_command(&cfg, sandbox_id, command).await,
-        "local" => Ok((format!("Local mock execution placeholder: executing '{}'", command), 0)),
-        _ => crate::daytona::execute_command_in_sandbox(db, sandbox_id, command).await,
-    }
+    let provider_name = cfg.provider.as_deref().unwrap_or("e2b");
+    let provider = get_provider(provider_name);
+    
+    provider.execute_command(db, &cfg, sandbox_id, command).await
 }
 
-/// 获取沙盒 VNC URL（provider dispatch）
 pub async fn get_sandbox_vnc_url(db: &DbManager, sandbox_id: &str) -> anyhow::Result<String> {
     let cfg = get_sandbox_config(db).await
         .ok_or_else(|| anyhow::anyhow!(flock_core::tr(
@@ -162,10 +137,18 @@ pub async fn get_sandbox_vnc_url(db: &DbManager, sandbox_id: &str) -> anyhow::Re
             "Sandbox not configured or enabled"
         )))?;
 
-    let provider = cfg.provider.as_deref().unwrap_or("e2b");
-    match provider {
-        "e2b" => Ok(crate::e2b::exec::get_vnc_url(sandbox_id)),
-        "local" => anyhow::bail!("Local sandbox does not support VNC"),
-        _ => crate::daytona::get_sandbox_vnc_url(db, sandbox_id).await,
-    }
+    let provider_name = cfg.provider.as_deref().unwrap_or("e2b");
+    let provider = get_provider(provider_name);
+    
+    provider.get_vnc_url(db, &cfg, sandbox_id).await
+}
+
+pub async fn ensure_vnc_running_in_sandbox(db: &DbManager, sandbox_id: &str) -> anyhow::Result<()> {
+    let cfg = get_sandbox_config(db).await
+        .ok_or_else(|| anyhow::anyhow!("沙盒未配置"))?;
+
+    let provider_name = cfg.provider.as_deref().unwrap_or("e2b");
+    let provider = get_provider(provider_name);
+    
+    provider.ensure_vnc_running(db, &cfg, sandbox_id).await
 }

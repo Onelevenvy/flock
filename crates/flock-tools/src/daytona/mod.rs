@@ -7,6 +7,7 @@ mod snapshot;
 mod constants;
 pub mod volume;
 pub mod fs;
+pub mod provider;
 
 pub use state::emit_human_takeover;
 pub use config::{get_sandbox_config, get_api_base};

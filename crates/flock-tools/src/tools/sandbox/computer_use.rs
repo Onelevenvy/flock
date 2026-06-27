@@ -1,8 +1,8 @@
 use crate::adapter::LangGraphToolAdapter;
 use crate::Tool;
-use crate::sandbox_manager::{get_or_create_active_sandbox, execute_command_in_sandbox, get_sandbox_vnc_url};
+use crate::sandbox_manager::{get_or_create_active_sandbox, execute_command_in_sandbox, ensure_vnc_running_in_sandbox, get_sandbox_vnc_url};
 use crate::daytona::{
-    start_computer_use_in_sandbox, check_computer_use_status, ensure_vnc_running_in_sandbox,
+    start_computer_use_in_sandbox, check_computer_use_status,
     DISPLAY_ID,
 };
 use flock_core::db::DbManager;

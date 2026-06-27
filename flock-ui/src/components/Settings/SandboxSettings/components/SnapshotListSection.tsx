@@ -126,14 +126,14 @@ export function SnapshotListSection({
   };
 
   const handleCreate = async () => {
-    const name = newSnapshotName.trim() || defaultSnapshotName;
-    const existing = snapshots.find((s) => s.name === name);
+    const nameOrId = newSnapshotName.trim() || defaultSnapshotName;
+    const existing = snapshots.find((s) => s.name === nameOrId || s.id === nameOrId);
     if (existing) {
-      await onSetDefaultSnapshot(name);
+      await onSetDefaultSnapshot(existing.id);
       setNewSnapshotName('');
       return;
     }
-    await onCreateSnapshot(name);
+    await onCreateSnapshot(nameOrId);
     setNewSnapshotName('');
     fetchSnapshots();
   };
@@ -270,7 +270,7 @@ export function SnapshotListSection({
             </Table.Thead>
             <Table.Tbody>
               {snapshots.map((snap) => {
-                const isDefault = currentDefaultSnapshot === snap.name;
+                const isDefault = currentDefaultSnapshot === snap.name || currentDefaultSnapshot === snap.id;
                 return (
                   <Table.Tr key={snap.id} style={{ borderColor: 'var(--flock-border-subtle)' }}>
                     <Table.Td>
@@ -301,7 +301,7 @@ export function SnapshotListSection({
                             variant="subtle"
                             color={isDefault ? 'yellow' : 'gray'}
                             size="sm"
-                            onClick={() => onSetDefaultSnapshot(snap.name)}
+                            onClick={() => onSetDefaultSnapshot(snap.id)}
                           >
                             {isDefault ? <IconStarFilled size={14} /> : <IconStar size={14} />}
                           </ActionIcon>
