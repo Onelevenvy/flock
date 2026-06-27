@@ -399,7 +399,7 @@ pub async fn list_sandbox_templates(
         let db_ref: &DbManager = &*db;
         let cfg = get_sandbox_config_regardless(db_ref).await.unwrap_or_default();
         let key = if let Some(ref k) = api_key {
-            if k.is_empty() {
+            if k.is_empty() || k.contains('•') {
                 cfg.e2b_api_key.clone().unwrap_or_default()
             } else {
                 k.clone()
