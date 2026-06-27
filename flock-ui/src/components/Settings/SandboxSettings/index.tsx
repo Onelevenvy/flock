@@ -95,7 +95,7 @@ export default function SandboxSettings() {
         )}
 
         {(() => {
-          const tabs = [
+          const tabs: { value: string; label: string; disabled?: boolean }[] = [
             { value: 'config', label: t('settings.sandbox.tabConfig') }
           ];
           if (provider === 'daytona') {

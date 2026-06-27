@@ -142,6 +142,7 @@ pub async fn build_e2b_template(
 
     let template_id = flock_tools::sandbox_core::e2b::builder::build_enhanced_template(
         api_key,
+        cfg.e2b_api_url.as_deref(),
         move |log| {
             use tauri::Emitter;
             let _ = app.emit("e2b-build-log", log);
@@ -402,7 +403,7 @@ pub async fn list_sandbox_templates(
             cfg.e2b_api_key.clone().unwrap_or_default()
         };
 
-        log::info!("list_daytona_snapshots: active_provider = E2B, key len = {}, key starts with: {}", key.len(), &key[..std::cmp::min(5, key.len())]);
+        log::info!("list_daytona_snapshots: active_provider = E2B, key len = {}, key starts with: {}", key.len(), key.chars().take(5).collect::<String>());
         if key.is_empty() {
             return Ok(serde_json::json!([]));
         }

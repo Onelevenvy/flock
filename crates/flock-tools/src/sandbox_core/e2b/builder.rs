@@ -7,7 +7,7 @@ use tokio::process::Command;
 
 /// 自动构建 E2B 的专属桌面镜像（自带 VNC 和 Playwright）
 /// 构建日志将通过传入的回调函数 (on_log) 实时推送
-pub async fn build_enhanced_template<F>(api_key: &str, on_log: F) -> Result<String>
+pub async fn build_enhanced_template<F>(api_key: &str, api_url: Option<&str>, on_log: F) -> Result<String>
 where
     F: Fn(String) + Send + 'static,
 {
@@ -47,8 +47,8 @@ dockerfile = "Dockerfile"
     // 在 Windows 下需要调用 npx.cmd
     let npx_cmd = if cfg!(windows) { "npx.cmd" } else { "npx" };
     
-    let mut child = Command::new(npx_cmd)
-        .arg("-y")
+    let mut cmd = Command::new(npx_cmd);
+    cmd.arg("-y")
         .arg("@e2b/cli@latest")
         .arg("template")
         .arg("build")
@@ -57,8 +57,13 @@ dockerfile = "Dockerfile"
         .env("E2B_API_KEY", api_key)
         .current_dir(&builder_dir)
         .stdout(Stdio::piped())
-        .stderr(Stdio::piped())
-        .spawn()
+        .stderr(Stdio::piped());
+
+    if let Some(url) = api_url {
+        cmd.env("E2B_API_URL", url);
+    }
+
+    let mut child = cmd.spawn()
         .context("Failed to spawn npx @e2b/cli")?;
 
     let stdout = child.stdout.take().expect("Failed to open stdout");
