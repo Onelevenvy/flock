@@ -120,7 +120,7 @@ pub async fn set_app_config(
         }
         
         // 关键修复：清除旧的活跃沙盒缓存，防止状态穿透
-        let _ = flock_tools::sandbox_manager::clear_active_sandbox_id().await;
+        let _ = flock_tools::sandbox_core::manager::clear_active_sandbox_id().await;
     }
 
     Ok(())
@@ -132,7 +132,7 @@ pub async fn build_e2b_template(
     app: tauri::AppHandle,
     db: State<'_, SharedDbManager>,
 ) -> Result<String, String> {
-    use flock_tools::daytona::get_sandbox_config;
+    use flock_tools::sandbox_core::daytona::get_sandbox_config;
     
     let cfg = get_sandbox_config(&db).await
         .ok_or_else(|| "沙盒未配置".to_string())?;
@@ -140,7 +140,7 @@ pub async fn build_e2b_template(
     let api_key = cfg.e2b_api_key.as_deref().or(cfg.api_key.as_deref())
         .ok_or_else(|| "E2B API Key 未配置".to_string())?;
 
-    let template_id = flock_tools::e2b::builder::build_enhanced_template(
+    let template_id = flock_tools::sandbox_core::e2b::builder::build_enhanced_template(
         api_key,
         move |log| {
             use tauri::Emitter;
@@ -197,7 +197,7 @@ pub async fn test_sandbox_connection(
     let (url, is_e2b) = if provider == "e2b" {
         ("https://api.e2b.app/sandboxes".to_string(), true)
     } else {
-        let base = flock_tools::daytona::get_api_base(&api_url);
+        let base = flock_tools::sandbox_core::daytona::get_api_base(&api_url);
         (format!("{}/api/sandbox", base), false)
     };
 
@@ -248,7 +248,7 @@ pub async fn create_playwright_snapshot(
     db: State<'_, SharedDbManager>,
     snapshot_name: String,
 ) -> Result<String, String> {
-    flock_tools::daytona::create_playwright_snapshot(
+    flock_tools::sandbox_core::daytona::create_playwright_snapshot(
         &*db,
         &snapshot_name,
     )
@@ -275,7 +275,7 @@ pub async fn list_sandboxes(
         return Ok(serde_json::json!([]));
     }
 
-    let base = flock_tools::daytona::get_api_base(cfg.api_url.as_ref().unwrap());
+    let base = flock_tools::sandbox_core::daytona::get_api_base(cfg.api_url.as_ref().unwrap());
     let api_key = cfg.api_key.as_ref().unwrap();
 
     let client = reqwest::Client::new();
@@ -306,7 +306,7 @@ pub async fn delete_sandbox(
     id: String,
 ) -> Result<(), String> {
     use flock_core::db::DbManager;
-    use flock_tools::daytona::get_sandbox_config;
+    use flock_tools::sandbox_core::daytona::get_sandbox_config;
 
     let db_ref: &DbManager = &*db;
     let cfg = get_sandbox_config(db_ref).await
@@ -317,7 +317,7 @@ pub async fn delete_sandbox(
         return Ok(());
     }
 
-    let base = flock_tools::daytona::get_api_base(cfg.api_url.as_ref().unwrap());
+    let base = flock_tools::sandbox_core::daytona::get_api_base(cfg.api_url.as_ref().unwrap());
     let api_key = cfg.api_key.as_ref().unwrap();
 
     let client = reqwest::Client::new();
@@ -333,9 +333,9 @@ pub async fn delete_sandbox(
 
     if resp.status().is_success() {
         // 如果删除的是当前活跃的沙盒，清理本地缓存
-        if let Some(active_id) = flock_tools::sandbox_manager::get_active_sandbox_id().await {
+        if let Some(active_id) = flock_tools::sandbox_core::manager::get_active_sandbox_id().await {
             if active_id == id {
-                flock_tools::sandbox_manager::clear_active_sandbox_id().await;
+                flock_tools::sandbox_core::manager::clear_active_sandbox_id().await;
             }
         }
         Ok(())
@@ -356,11 +356,11 @@ pub async fn reuse_sandbox(
     use flock_core::db::DbManager;
 
     let db_ref: &DbManager = &*db;
-    let cfg = flock_tools::daytona::get_sandbox_config(db_ref).await
+    let cfg = flock_tools::sandbox_core::daytona::get_sandbox_config(db_ref).await
         .ok_or_else(|| flock_core::tr("沙盒未配置或未启用", "Sandbox not configured or enabled"))?;
 
     // 验证沙盒是否存活
-    if !flock_tools::sandbox_manager::check_sandbox_alive(&cfg, &sandbox_id).await {
+    if !flock_tools::sandbox_core::manager::check_sandbox_alive(&cfg, &sandbox_id).await {
         return Err(flock_core::tr(
             &format!("沙盒 {} 不存在或已停止", sandbox_id),
             &format!("Sandbox {} does not exist or has stopped", sandbox_id)
@@ -368,7 +368,7 @@ pub async fn reuse_sandbox(
     }
 
     // 设置为活跃沙盒
-    let mutex = flock_tools::sandbox_manager::get_sandbox_id_mutex();
+    let mutex = flock_tools::sandbox_core::manager::get_sandbox_id_mutex();
     let mut lock = mutex.lock().await;
     *lock = Some(sandbox_id.clone());
 
@@ -490,7 +490,7 @@ pub async fn list_sandbox_templates(
         None => return Ok(serde_json::json!([])),
     };
 
-    let base = flock_tools::daytona::get_api_base(cfg.api_url.as_ref().unwrap());
+    let base = flock_tools::sandbox_core::daytona::get_api_base(cfg.api_url.as_ref().unwrap());
     let api_key = cfg.api_key.as_ref().unwrap();
 
     let client = reqwest::Client::new();
@@ -552,7 +552,7 @@ pub async fn delete_sandbox_template(
         return Ok(());
     }
 
-    let base = flock_tools::daytona::get_api_base(cfg.api_url.as_ref().unwrap());
+    let base = flock_tools::sandbox_core::daytona::get_api_base(cfg.api_url.as_ref().unwrap());
     let api_key = cfg.api_key.as_ref().unwrap();
 
     let client = reqwest::Client::new();

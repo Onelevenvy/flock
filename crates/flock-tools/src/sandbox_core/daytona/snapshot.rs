@@ -1,6 +1,6 @@
 use flock_core::db::DbManager;
-use crate::daytona::config::{get_sandbox_config, get_api_base};
-use crate::daytona::{DISPLAY_ID, SCREEN_RESOLUTION, X11VNC_PORT, WEBSOCKIFY_PORT};
+use crate::sandbox_core::daytona::config::{get_sandbox_config, get_api_base};
+use crate::sandbox_core::daytona::{DISPLAY_ID, SCREEN_RESOLUTION, X11VNC_PORT, WEBSOCKIFY_PORT};
 
 /// 创建一个预装 Playwright 的 Daytona Snapshot
 pub async fn create_playwright_snapshot(

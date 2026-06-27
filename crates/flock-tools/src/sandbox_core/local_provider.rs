@@ -1,4 +1,4 @@
-use crate::sandbox_provider::SandboxProvider;
+use crate::sandbox_core::provider::SandboxProvider;
 use flock_core::config::settings::SandboxConfig;
 use flock_core::db::DbManager;
 use async_trait::async_trait;

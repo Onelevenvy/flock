@@ -6,7 +6,7 @@ use crate::commands::assistant::SharedAgentState;
 pub async fn destroy_sandbox(
     db: State<'_, crate::SharedDbManager>,
 ) -> Result<(), String> {
-    flock_tools::sandbox_manager::destroy_active_sandbox(&*db)
+    flock_tools::sandbox_core::manager::destroy_active_sandbox(&*db)
         .await
         .map_err(|e| e.to_string())
 }
@@ -17,7 +17,7 @@ pub async fn cleanup_all_sandboxes(
     db: State<'_, crate::SharedDbManager>,
 ) -> Result<String, String> {
     use flock_core::db::DbManager;
-    use flock_tools::daytona::{get_sandbox_config, get_api_base};
+    use flock_tools::sandbox_core::daytona::{get_sandbox_config, get_api_base};
 
     let db_ref: &DbManager = &*db;
     let cfg = get_sandbox_config(db_ref).await
@@ -79,7 +79,7 @@ pub async fn cleanup_all_sandboxes(
     }
 
     // 清除本地缓存
-    let _ = flock_tools::sandbox_manager::destroy_active_sandbox(db_ref).await;
+    let _ = flock_tools::sandbox_core::manager::destroy_active_sandbox(db_ref).await;
 
     Ok(flock_core::tr(
         &format!("清理完成：已销毁 {} 个沙盒，失败 {} 个。", deleted, failed),
@@ -93,11 +93,11 @@ pub async fn get_active_sandbox_vnc_url(
     _state: State<'_, SharedAgentState>,
     db: State<'_, crate::SharedDbManager>,
 ) -> Result<Option<String>, String> {
-    if let Some(sandbox_id) = flock_tools::sandbox_manager::get_active_sandbox_id().await {
-        match flock_tools::sandbox_manager::get_sandbox_vnc_url(&*db, &sandbox_id).await {
+    if let Some(sandbox_id) = flock_tools::sandbox_core::manager::get_active_sandbox_id().await {
+        match flock_tools::sandbox_core::manager::get_sandbox_vnc_url(&*db, &sandbox_id).await {
             Ok(url) => Ok(Some(url)),
             Err(_) => {
-                let fallback_url = match flock_tools::daytona::get_sandbox_config(&*db).await {
+                let fallback_url = match flock_tools::sandbox_core::daytona::get_sandbox_config(&*db).await {
                     Some(cfg) if cfg.provider.as_deref().unwrap_or("e2b") == "e2b" => {
                         format!("https://6080-{}.e2b.app/vnc.html?autoconnect=true&resize=scale&skip-preview-warning=true&skip_preview_warning=true", sandbox_id)
                     }

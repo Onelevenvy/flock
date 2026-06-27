@@ -8,8 +8,8 @@
 use std::sync::OnceLock;
 use tokio::sync::Mutex;
 use flock_core::db::DbManager;
-use crate::daytona::get_sandbox_config;
-use crate::sandbox_provider::SandboxProvider;
+use crate::sandbox_core::daytona::get_sandbox_config;
+use crate::sandbox_core::provider::SandboxProvider;
 
 static ACTIVE_SANDBOX_ID: OnceLock<Mutex<Option<String>>> = OnceLock::new();
 
@@ -32,9 +32,9 @@ pub async fn clear_active_sandbox_id() {
 /// 获取当前配置对应的 SandboxProvider 实现
 pub fn get_provider(provider_name: &str) -> Box<dyn SandboxProvider> {
     match provider_name {
-        "e2b" => Box::new(crate::e2b::provider::E2bProvider),
-        "local" => Box::new(crate::local_provider::LocalSandboxProvider),
-        _ => Box::new(crate::daytona::provider::DaytonaProvider),
+        "e2b" => Box::new(crate::sandbox_core::e2b::provider::E2bProvider),
+        "local" => Box::new(crate::sandbox_core::local_provider::LocalSandboxProvider),
+        _ => Box::new(crate::sandbox_core::daytona::provider::DaytonaProvider),
     }
 }
 
@@ -59,7 +59,7 @@ pub async fn get_or_create_active_sandbox(db: &DbManager) -> anyhow::Result<Stri
             // Daytona 需要额外 set_public（这个也可以封装到 check_alive 或独立方法中，但为了兼容暂时保留这里，
             // 更好的做法是将其放在 create_sandbox 内部，不过目前我们在检测到复用时也可能需要）
             if cfg.provider.as_deref().unwrap_or("e2b") == "daytona" {
-                let _ = crate::daytona::set_sandbox_public(&cfg, id, true).await;
+                let _ = crate::sandbox_core::daytona::set_sandbox_public(&cfg, id, true).await;
             }
             return Ok(id.clone());
         }

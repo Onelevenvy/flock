@@ -1,6 +1,6 @@
 use crate::workspace;
-use flock_tools::sandbox_manager::get_active_sandbox_id;
-use flock_tools::daytona::fs::DaytonaFs;
+use flock_tools::sandbox_core::manager::get_active_sandbox_id;
+use flock_tools::sandbox_core::daytona::fs::DaytonaFs;
 use std::path::PathBuf;
 
 async fn is_sandbox_active(_db: &crate::SharedDbManager) -> bool {
@@ -64,7 +64,7 @@ pub async fn list_workspace_files(
     }
 }
 
-fn map_daytona_entry(entry: flock_tools::daytona::fs::DaytonaFileEntry) -> workspace::FileEntry {
+fn map_daytona_entry(entry: flock_tools::sandbox_core::daytona::fs::DaytonaFileEntry) -> workspace::FileEntry {
     workspace::FileEntry {
         name: entry.name,
         path: entry.path,

@@ -1,6 +1,6 @@
 use std::path::PathBuf;
 use flock_core::db::DbManager;
-use flock_tools::daytona::{get_sandbox_config, get_api_base, execute_command_in_sandbox};
+use flock_tools::sandbox_core::daytona::{get_sandbox_config, get_api_base, execute_command_in_sandbox};
 
 #[tokio::test]
 async fn test_diagnose_sandbox() {
@@ -199,8 +199,8 @@ async fn test_diagnose_e2b_sandbox() {
     // Set template to the desktop template ID
     cfg.snapshot = Some("k0wmnzir0zuzye6dndlw".to_string());
 
-    use flock_tools::sandbox_provider::SandboxProvider;
-    let prov = flock_tools::e2b_provider::E2BSandboxProvider;
+    use flock_tools::sandbox_core::provider::SandboxProvider;
+    let prov = flock_tools::sandbox_core::e2b_provider::E2BSandboxProvider;
     
     println!("Starting E2B sandbox with template k0wmnzir0zuzye6dndlw...");
     let sandbox_id = match prov.get_or_create_sandbox(&cfg).await {
@@ -214,7 +214,7 @@ async fn test_diagnose_e2b_sandbox() {
 
     // Ensure VNC running
     println!("Ensuring VNC is running...");
-    if let Err(e) = flock_tools::daytona::ensure_vnc_running_in_sandbox(&db, &sandbox_id).await {
+    if let Err(e) = flock_tools::sandbox_core::daytona::ensure_vnc_running_in_sandbox(&db, &sandbox_id).await {
         println!("ensure_vnc_running_in_sandbox error: {}", e);
     }
 

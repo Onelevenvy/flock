@@ -1,6 +1,6 @@
 use serde::{Deserialize, Serialize};
 use flock_core::db::DbManager;
-use crate::daytona::config::get_sandbox_config;
+use crate::sandbox_core::daytona::config::get_sandbox_config;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct DaytonaSandboxResponse {

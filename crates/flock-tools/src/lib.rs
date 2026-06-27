@@ -4,11 +4,7 @@ pub mod adapter;
 pub mod file_cache;
 pub mod tool_executor;
 
-pub mod daytona;
-pub mod e2b;
-pub mod sandbox_manager;
-pub mod sandbox_provider;
-pub mod local_provider;
+pub mod sandbox_core;
 pub mod registry;
 pub mod tools;
 

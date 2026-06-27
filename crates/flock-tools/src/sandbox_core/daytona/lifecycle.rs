@@ -1,7 +1,7 @@
 use flock_core::db::DbManager;
 use flock_core::config::settings::SandboxConfig;
-use crate::daytona::config::{get_sandbox_config, get_api_base};
-use crate::daytona::volume::get_or_create_volume;
+use crate::sandbox_core::daytona::config::{get_sandbox_config, get_api_base};
+use crate::sandbox_core::daytona::volume::get_or_create_volume;
 
 /// 创建 Daytona 沙盒，等待 started 状态后返回 sandbox_id
 pub async fn create_sandbox(db: &DbManager, cfg: &SandboxConfig) -> anyhow::Result<String> {
@@ -169,7 +169,7 @@ pub async fn create_sandbox(db: &DbManager, cfg: &SandboxConfig) -> anyhow::Resu
 
     // 确保 /workspace 目录存在
     let ensure_workspace_cmd = "mkdir -p /workspace && ls -la /workspace";
-    match crate::daytona::execute_command_in_sandbox(db, &sandbox_id, ensure_workspace_cmd).await {
+    match crate::sandbox_core::daytona::execute_command_in_sandbox(db, &sandbox_id, ensure_workspace_cmd).await {
         Ok((out, code)) => {
             if code != 0 {
                 crate::emit_info(&flock_core::tr(
@@ -188,7 +188,7 @@ pub async fn create_sandbox(db: &DbManager, cfg: &SandboxConfig) -> anyhow::Resu
 
     // Sync up local workspace
     if let Some(ws_path) = crate::get_workspace_dir() {
-        if let Err(e) = crate::daytona::sync::sync_up(db, &sandbox_id, &ws_path).await {
+        if let Err(e) = crate::sandbox_core::daytona::sync::sync_up(db, &sandbox_id, &ws_path).await {
             crate::emit_info(&format!("Sync Up failed: {}", e));
         }
     }

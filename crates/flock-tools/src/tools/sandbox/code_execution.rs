@@ -1,6 +1,6 @@
 use crate::adapter::LangGraphToolAdapter;
 use crate::Tool;
-use crate::sandbox_manager::{get_or_create_active_sandbox, execute_command_in_sandbox};
+use crate::sandbox_core::manager::{get_or_create_active_sandbox, execute_command_in_sandbox};
 use flock_core::ipc_interface::events::ToolCategory;
 use langgraph::tool;
 use std::path::Path;
@@ -45,7 +45,7 @@ pub async fn code_execution(code: String) -> Result<String, String> {
         let db_clone = db.clone();
         let sandbox_id_clone = sandbox_id.clone();
         tokio::spawn(async move {
-            if let Err(e) = crate::daytona::sync::sync_down(&db_clone, &sandbox_id_clone, &ws_path).await {
+            if let Err(e) = crate::sandbox_core::daytona::sync::sync_down(&db_clone, &sandbox_id_clone, &ws_path).await {
                 log::warn!("自动 Sync Down 失败: {}", e);
             }
         });

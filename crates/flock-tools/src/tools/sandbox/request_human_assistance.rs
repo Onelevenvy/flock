@@ -1,7 +1,7 @@
 use crate::adapter::LangGraphToolAdapter;
 use crate::Tool;
-use crate::sandbox_manager::{get_or_create_active_sandbox, get_sandbox_vnc_url};
-use crate::daytona::{
+use crate::sandbox_core::manager::{get_or_create_active_sandbox, get_sandbox_vnc_url};
+use crate::sandbox_core::daytona::{
     start_computer_use_in_sandbox, ensure_vnc_running_in_sandbox
 };
 use flock_core::ipc_interface::events::ToolCategory;
@@ -63,7 +63,7 @@ pub async fn request_human_assistance(
             reason
         );
 
-        crate::daytona::emit_human_takeover(
+        crate::sandbox_core::daytona::emit_human_takeover(
             &cid,
             &mid,
             &display_message,
