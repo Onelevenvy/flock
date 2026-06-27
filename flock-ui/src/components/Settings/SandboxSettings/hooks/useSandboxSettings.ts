@@ -35,7 +35,7 @@ export function useSandboxSettings() {
 
   const fetchSnapshotsList = async () => {
     try {
-      const data = await invoke<any>('list_daytona_snapshots', {
+      const data = await invoke<any>('list_sandbox_templates', {
         provider,
         apiKey: provider === 'e2b' ? e2bApiKey : apiKey,
       });

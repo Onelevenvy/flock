@@ -41,7 +41,7 @@ export function SandboxListSection() {
   const fetchSandboxes = async () => {
     setLoading(true);
     try {
-      const data = await invoke<any>('list_daytona_sandboxes');
+      const data = await invoke<any>('list_sandboxes');
       // 解析 sandboxes 数组
       let list: SandboxItem[] = [];
       if (Array.isArray(data)) {
@@ -103,7 +103,7 @@ export function SandboxListSection() {
   const handleDelete = async (id: string) => {
     setDeletingId(id);
     try {
-      await invoke('delete_daytona_sandbox', { id });
+      await invoke('delete_sandbox', { id });
       notifications.show({
         title: t('common.success'),
         message: t('settings.sandbox.deleteSuccessMsg'),

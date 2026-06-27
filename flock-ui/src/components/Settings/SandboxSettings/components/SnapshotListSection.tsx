@@ -63,7 +63,7 @@ export function SnapshotListSection({
   const fetchSnapshots = async () => {
     setLoading(true);
     try {
-      const data = await invoke<any>('list_daytona_snapshots');
+      const data = await invoke<any>('list_sandbox_templates');
       let list: SnapshotItem[] = [];
       if (Array.isArray(data)) {
         list = data;
@@ -105,7 +105,7 @@ export function SnapshotListSection({
   const handleDelete = async (id: string) => {
     setDeletingId(id);
     try {
-      await invoke('delete_daytona_snapshot', { id });
+      await invoke('delete_sandbox_template', { id });
       notifications.show({
         title: t('common.success'),
         message: t('settings.sandbox.deleteSnapshotSuccess'),

@@ -3,8 +3,8 @@ mod interactive;
 
 use crate::adapter::LangGraphToolAdapter;
 use crate::Tool;
+use crate::sandbox_manager::{get_or_create_active_sandbox, execute_command_in_sandbox};
 use crate::daytona::{
-    get_or_create_active_sandbox, execute_command_in_sandbox,
     ensure_vnc_running_in_sandbox,
     DISPLAY_ID,
 };

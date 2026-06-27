@@ -2,8 +2,9 @@ use crate::daytona::{
     execute_command_in_sandbox,
     start_computer_use_in_sandbox,
     ensure_vnc_running_in_sandbox,
-    DISPLAY_ID, WEBSOCKIFY_PORT,
+    DISPLAY_ID,
 };
+use crate::sandbox_manager::get_sandbox_vnc_url;
 use flock_core::ipc_interface::events::ToolCategory;
 use flock_core::db::DbManager;
 use base64::{Engine as _, engine::general_purpose};
@@ -21,22 +22,14 @@ pub async fn handle_interactive(
     call_id: Option<String>,
     msg_id: Option<String>,
 ) -> Result<String, String> {
-    let proxy_url = match crate::daytona::get_sandbox_vnc_url(db, sandbox_id).await {
+    let proxy_url = match get_sandbox_vnc_url(db, sandbox_id).await {
         Ok(u) => u,
-        Err(_) => {
-            let is_e2b = if let Some(cfg) = crate::daytona::get_sandbox_config(db).await {
-                cfg.provider.as_deref().unwrap_or("e2b") == "e2b"
-            } else {
-                true
-            };
-            if is_e2b {
-                format!("https://6080-{}.e2b.app/vnc.html?autoconnect=true&resize=scale&skip-preview-warning=true&skip_preview_warning=true", sandbox_id)
-            } else {
-                format!(
-                    "https://{}-{}.proxy.app.daytona.io/vnc.html?autoconnect=true&resize=scale",
-                    WEBSOCKIFY_PORT, sandbox_id
-                )
-            }
+        Err(e) => {
+            crate::emit_info(&flock_core::tr(
+                &format!("获取 VNC URL 失败: {}", e),
+                &format!("Failed to get VNC URL: {}", e)
+            ));
+            return Err(format!("无法获取沙盒 VNC 连接地址: {}", e));
         }
     };
 

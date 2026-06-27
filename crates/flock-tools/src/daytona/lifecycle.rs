@@ -1,121 +1,12 @@
 use flock_core::db::DbManager;
 use flock_core::config::settings::SandboxConfig;
-use crate::daytona::state::get_sandbox_id_mutex;
 use crate::daytona::config::{get_sandbox_config, get_api_base};
 use crate::daytona::volume::get_or_create_volume;
 
-/// 销毁当前活跃的沙盒
-pub async fn destroy_active_sandbox(db: &DbManager) -> anyhow::Result<()> {
-    let cfg = match get_sandbox_config(db).await {
-        Some(c) => c,
-        None => return Ok(()),
-    };
+/// 创建 Daytona 沙盒，等待 started 状态后返回 sandbox_id
+pub async fn create_sandbox(db: &DbManager, cfg: &SandboxConfig) -> anyhow::Result<String> {
+    crate::emit_info(&flock_core::tr("正在向云端申请启动 Daytona 沙盒...", "Requesting to start Daytona sandbox from the cloud..."));
 
-    let mutex = get_sandbox_id_mutex();
-    let mut lock = mutex.lock().await;
-
-    let sandbox_id = match lock.as_ref() {
-        Some(id) => id.clone(),
-        None => return Ok(()),
-    };
-
-    let provider = cfg.provider.as_deref().unwrap_or("e2b");
-    if provider == "e2b" {
-        use crate::sandbox_provider::SandboxProvider;
-        let prov = crate::e2b_provider::E2BSandboxProvider;
-        if let Err(e) = prov.destroy_sandbox(&cfg, &sandbox_id).await {
-            crate::emit_info(&flock_core::tr(&format!("销毁 E2B 沙盒请求失败: {}", e), &format!("Destroying E2B sandbox request failed: {}", e)));
-        }
-        *lock = None;
-        return Ok(());
-    } else if provider == "local" {
-        *lock = None;
-        return Ok(());
-    }
-
-    let client = reqwest::Client::new();
-    let base = get_api_base(cfg.api_url.as_ref().unwrap());
-    let api_key = cfg.api_key.as_ref().unwrap();
-
-    if let Some(ws_path) = crate::get_workspace_dir() {
-        if let Err(e) = crate::daytona::sync::sync_down(db, &sandbox_id, &ws_path).await {
-            crate::emit_info(&format!("Sync Down failed: {}", e));
-        }
-    }
-
-    let del_url = format!("{}/api/sandbox/{}", base, sandbox_id);
-    match client.delete(&del_url)
-        .header("Authorization", format!("Bearer {}", api_key))
-        .send()
-        .await
-    {
-        Ok(resp) => {
-            if !resp.status().is_success() {
-                let status = resp.status();
-                let body = resp.text().await.unwrap_or_default();
-                crate::emit_info(&flock_core::tr(&format!("销毁沙盒返回非成功状态 (HTTP {}): {}", status, body), &format!("Destroying sandbox returned non-success status (HTTP {}): {}", status, body)));
-            }
-        }
-        Err(e) => {
-            crate::emit_info(&flock_core::tr(&format!("销毁沙盒请求失败: {}", e), &format!("Destroying sandbox request failed: {}", e)));
-        }
-    }
-
-    *lock = None;
-    Ok(())
-}
-
-/// 获取或创建活跃的沙盒 ID
-pub async fn get_or_create_active_sandbox(db: &DbManager) -> anyhow::Result<String> {
-    let cfg = get_sandbox_config(db).await
-        .ok_or_else(|| anyhow::anyhow!(flock_core::tr("云端 Daytona 沙箱未启用或未配置。请在系统设置中配置有效的 API 地址和密钥。", "Cloud Daytona sandbox not enabled or configured. Please configure a valid API URL and Key in system settings.")))?;
-
-    let mutex = get_sandbox_id_mutex();
-    let mut lock = mutex.lock().await;
-    
-    if let Some(id) = lock.as_ref() {
-        if check_sandbox_alive(&cfg, id).await {
-            let provider = cfg.provider.as_deref().unwrap_or("e2b");
-            if provider == "daytona" {
-                let _ = set_sandbox_public(&cfg, id, true).await;
-            }
-            return Ok(id.clone());
-        }
-        crate::emit_info(&flock_core::tr(&format!("沙盒 {} 已失效，准备重新创建...", id), &format!("Sandbox {} has expired, preparing to recreate...", id)));
-        *lock = None;
-    }
-
-    let provider = cfg.provider.as_deref().unwrap_or("e2b");
-    if provider == "e2b" {
-        use crate::sandbox_provider::SandboxProvider;
-        let prov = crate::e2b_provider::E2BSandboxProvider;
-        let instance_id = prov.get_or_create_sandbox(&cfg).await?;
-        
-        // Prepare /workspace in E2B (E2B standard workspace is usually /home/user or similar, 
-        // but we enforce /workspace to maintain paths compatibility)
-        let ensure_workspace_cmd = "sudo mkdir -p /workspace && sudo chown -R user:user /workspace && mkdir -p /workspace";
-        if let Err(e) = prov.execute_command(&cfg, &instance_id, ensure_workspace_cmd).await {
-            crate::emit_info(&format!("E2B /workspace prep failed: {}", e));
-        }
-
-        *lock = Some(instance_id.clone());
-
-        // Sync local files up
-        if let Some(ws_path) = crate::get_workspace_dir() {
-            if let Err(e) = crate::daytona::sync::sync_up(db, &instance_id, &ws_path).await {
-                crate::emit_info(&format!("Sync Up failed: {}", e));
-            }
-        }
-
-        return Ok(instance_id);
-    } else if provider == "local" {
-        crate::emit_info(&flock_core::tr("正在启动本地 Mock 沙盒 (占位)...", "Starting local mock sandbox (placeholder)..."));
-        *lock = Some("local".to_string());
-        return Ok("local".to_string());
-    }
-
-    crate::emit_info(&flock_core::tr("正在向云端申请启动沙盒...", "Requesting to start sandbox from the cloud..."));
-    
     let client = reqwest::Client::new();
     let base = get_api_base(cfg.api_url.as_ref().unwrap());
     let api_key = cfg.api_key.as_ref().unwrap();
@@ -124,8 +15,7 @@ pub async fn get_or_create_active_sandbox(db: &DbManager) -> anyhow::Result<Stri
         .and_then(|p| p.file_name().map(|n| n.to_string_lossy().to_string()))
         .unwrap_or_else(|| "default".to_string());
 
-    // Create volume
-    let volume_id = match get_or_create_volume(&cfg, &workspace_id).await {
+    let volume_id = match get_or_create_volume(cfg, &workspace_id).await {
         Ok(id) => Some(id),
         Err(e) => {
             crate::emit_info(&format!("未能创建或获取云端 Volume: {} (将使用临时沙盒存储)", e));
@@ -134,7 +24,7 @@ pub async fn get_or_create_active_sandbox(db: &DbManager) -> anyhow::Result<Stri
     };
 
     let mut create_body = serde_json::json!({ "public": true });
-    
+
     if let Some(ref snap_name) = cfg.snapshot {
         if !snap_name.trim().is_empty() {
             create_body["snapshot"] = serde_json::Value::String(snap_name.trim().to_string());
@@ -142,8 +32,6 @@ pub async fn get_or_create_active_sandbox(db: &DbManager) -> anyhow::Result<Stri
     }
 
     if let Some(vid) = volume_id {
-        // Daytona API expects volumes array with mountPath specification
-        // See: https://www.daytona.io/docs/en/volumes
         let mount_path = "/workspace";
         create_body["volumes"] = serde_json::json!([
             {
@@ -155,13 +43,12 @@ pub async fn get_or_create_active_sandbox(db: &DbManager) -> anyhow::Result<Stri
 
     let create_url = format!("{}/api/sandbox", base);
 
-    // 添加重试机制，最多重试3次
     let mut last_error = None;
     let mut res = None;
     for attempt in 1..=3 {
         crate::emit_info(&flock_core::tr(
-            &format!("尝试创建沙盒 (第{}次)...", attempt),
-            &format!("Attempting to create sandbox (attempt {})...", attempt)
+            &format!("尝试创建 Daytona 沙盒 (第{}次)...", attempt),
+            &format!("Attempting to create Daytona sandbox (attempt {})...", attempt)
         ));
 
         match client.post(&create_url)
@@ -187,7 +74,7 @@ pub async fn get_or_create_active_sandbox(db: &DbManager) -> anyhow::Result<Stri
 
     let status = res.status();
     let res_text = res.text().await.unwrap_or_default();
-    
+
     let val: serde_json::Value = match serde_json::from_str(&res_text) {
         Ok(v) => v,
         Err(e) => anyhow::bail!(
@@ -197,7 +84,7 @@ pub async fn get_or_create_active_sandbox(db: &DbManager) -> anyhow::Result<Stri
             )
         ),
     };
-    
+
     let sandbox_id_val = val.get("id")
         .or_else(|| val.get("sandboxId"))
         .or_else(|| val.get("data").and_then(|d| d.get("id")))
@@ -211,10 +98,11 @@ pub async fn get_or_create_active_sandbox(db: &DbManager) -> anyhow::Result<Stri
         )),
     };
 
+    // 等待沙盒 started/running
     let mut started = false;
     let mut last_status = flock_core::tr("未知", "Unknown");
     let mut last_resp_body = String::new();
-    
+
     for i in 1..=90 {
         tokio::time::sleep(tokio::time::Duration::from_secs(1)).await;
         let get_url = format!("{}/api/sandbox/{}", base, sandbox_id);
@@ -246,8 +134,6 @@ pub async fn get_or_create_active_sandbox(db: &DbManager) -> anyhow::Result<Stri
                         } else {
                             last_status = flock_core::tr("非JSON", "Not JSON");
                         }
-                    } else {
-                        last_status = flock_core::tr("读取响应体失败", "Failed to read response body");
                     }
                 } else {
                     last_status = format!("HTTP {}", status_code);
@@ -260,11 +146,11 @@ pub async fn get_or_create_active_sandbox(db: &DbManager) -> anyhow::Result<Stri
                 );
             }
         }
-        
+
         if i % 3 == 0 || (last_status != "creating" && last_status != "pending" && last_status != "Unknown" && last_status != "未知") {
             crate::emit_info(&flock_core::tr(
-                &format!("正在等待沙盒启动 (当前状态: {}, 已等待 {} 秒)...", last_status, i),
-                &format!("Waiting for sandbox startup (current state: {}, waited {} seconds)...", last_status, i)
+                &format!("正在等待 Daytona 沙盒启动 (当前状态: {}, 已等待 {} 秒)...", last_status, i),
+                &format!("Waiting for Daytona sandbox startup (current state: {}, waited {} seconds)...", last_status, i)
             ));
         }
     }
@@ -279,9 +165,9 @@ pub async fn get_or_create_active_sandbox(db: &DbManager) -> anyhow::Result<Stri
     }
 
     crate::emit_info(&flock_core::tr("Daytona 沙盒已就绪。", "Daytona sandbox is ready."));
-    let _ = set_sandbox_public(&cfg, &sandbox_id, true).await;
+    let _ = set_sandbox_public(cfg, &sandbox_id, true).await;
 
-    // Ensure /workspace directory exists (volume may not be mounted if creation failed)
+    // 确保 /workspace 目录存在
     let ensure_workspace_cmd = "mkdir -p /workspace && ls -la /workspace";
     match crate::daytona::execute_command_in_sandbox(db, &sandbox_id, ensure_workspace_cmd).await {
         Ok((out, code)) => {
@@ -300,8 +186,7 @@ pub async fn get_or_create_active_sandbox(db: &DbManager) -> anyhow::Result<Stri
         }
     }
 
-    *lock = Some(sandbox_id.clone());
-
+    // Sync up local workspace
     if let Some(ws_path) = crate::get_workspace_dir() {
         if let Err(e) = crate::daytona::sync::sync_up(db, &sandbox_id, &ws_path).await {
             crate::emit_info(&format!("Sync Up failed: {}", e));
@@ -311,16 +196,40 @@ pub async fn get_or_create_active_sandbox(db: &DbManager) -> anyhow::Result<Stri
     Ok(sandbox_id)
 }
 
-pub async fn check_sandbox_alive(cfg: &SandboxConfig, id: &str) -> bool {
-    let provider = cfg.provider.as_deref().unwrap_or("e2b");
-    if provider == "e2b" {
-        use crate::sandbox_provider::SandboxProvider;
-        let prov = crate::e2b_provider::E2BSandboxProvider;
-        return prov.check_alive(cfg, id).await;
-    } else if provider == "local" {
-        return true;
-    }
+/// 销毁指定 Daytona 沙盒（通过 REST API）
+pub async fn destroy_daytona_sandbox(cfg: &SandboxConfig, sandbox_id: &str) -> anyhow::Result<()> {
+    let client = reqwest::Client::new();
+    let base = get_api_base(cfg.api_url.as_ref().unwrap());
+    let api_key = cfg.api_key.as_ref().unwrap();
 
+    let del_url = format!("{}/api/sandbox/{}", base, sandbox_id);
+    match client.delete(&del_url)
+        .header("Authorization", format!("Bearer {}", api_key))
+        .send()
+        .await
+    {
+        Ok(resp) => {
+            if !resp.status().is_success() {
+                let status = resp.status();
+                let body = resp.text().await.unwrap_or_default();
+                anyhow::bail!(flock_core::tr(
+                    &format!("销毁 Daytona 沙盒返回非成功状态 (HTTP {}): {}", status, body),
+                    &format!("Destroying Daytona sandbox returned non-success status (HTTP {}): {}", status, body)
+                ));
+            }
+        }
+        Err(e) => {
+            anyhow::bail!(flock_core::tr(
+                &format!("销毁 Daytona 沙盒请求失败: {}", e),
+                &format!("Destroying Daytona sandbox request failed: {}", e)
+            ));
+        }
+    }
+    Ok(())
+}
+
+/// 检查 Daytona 沙盒是否存活
+pub async fn check_sandbox_alive(cfg: &SandboxConfig, id: &str) -> bool {
     let client = reqwest::Client::new();
     let base = get_api_base(cfg.api_url.as_ref().unwrap());
     let api_key = cfg.api_key.as_ref().unwrap();
@@ -359,7 +268,7 @@ pub async fn set_sandbox_public(
     let api_key = cfg.api_key.as_ref().unwrap();
 
     let url = format!("{}/api/sandbox/{}/public/{}", base, sandbox_id, is_public);
-    
+
     let res = client.post(&url)
         .header("Authorization", format!("Bearer {}", api_key))
         .send()
@@ -367,10 +276,6 @@ pub async fn set_sandbox_public(
 
     let status = res.status();
     if status.is_success() {
-        // crate::emit_info(&flock_core::tr(
-        //     &format!("Daytona 沙盒 {} 的 public 属性设置成功。", sandbox_id),
-        //     &format!("Daytona sandbox {} public attribute set successfully.", sandbox_id)
-        // ));
         Ok(())
     } else {
         let err_body = res.text().await.unwrap_or_default();

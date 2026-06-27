@@ -1,7 +1,7 @@
 use crate::adapter::LangGraphToolAdapter;
 use crate::Tool;
+use crate::sandbox_manager::{get_or_create_active_sandbox, get_sandbox_vnc_url};
 use crate::daytona::{
-    get_or_create_active_sandbox, get_sandbox_vnc_url,
     start_computer_use_in_sandbox, ensure_vnc_running_in_sandbox
 };
 use flock_core::ipc_interface::events::ToolCategory;
@@ -42,17 +42,12 @@ pub async fn request_human_assistance(
     // 3. 拿到当前的 VNC 控制台 URL 链接
     let proxy_url = match get_sandbox_vnc_url(&db, &sandbox_id).await {
         Ok(u) => u,
-        Err(_) => {
-            let is_e2b = if let Some(cfg) = crate::daytona::get_sandbox_config(&db).await {
-                cfg.provider.as_deref().unwrap_or("e2b") == "e2b"
-            } else {
-                true
-            };
-            if is_e2b {
-                format!("https://6080-{}.e2b.app/vnc.html?autoconnect=true&resize=scale&skip-preview-warning=true&skip_preview_warning=true", sandbox_id)
-            } else {
-                format!("https://6080-{}.proxy.app.daytona.io/vnc.html?autoconnect=true&resize=scale", sandbox_id)
-            }
+        Err(e) => {
+            crate::emit_info(&flock_core::tr(
+                &format!("获取 VNC URL 失败: {}", e),
+                &format!("Failed to get VNC URL: {}", e)
+            ));
+            return Err(format!("无法获取沙盒 VNC 连接地址: {}", e));
         }
     };
 

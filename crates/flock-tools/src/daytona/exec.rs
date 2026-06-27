@@ -22,35 +22,24 @@ struct ExecuteResponse {
     pub exit_code: Option<i32>,
 }
 
-/// 在沙盒中执行指令，带有端点兼容重试机制
+/// 在 Daytona 沙盒中执行指令（通过 Toolbox API），带端点兼容重试机制
 pub async fn execute_command_in_sandbox(
     db: &DbManager,
     sandbox_id: &str,
     command: &str,
 ) -> anyhow::Result<(String, i32)> {
     let cfg = get_sandbox_config(db).await
-        .ok_or_else(|| anyhow::anyhow!("沙箱未配置或未启用"))?;
-
-    let provider = cfg.provider.as_deref().unwrap_or("e2b");
-    if provider == "e2b" {
-        use crate::sandbox_provider::SandboxProvider;
-        let prov = crate::e2b_provider::E2BSandboxProvider;
-        return prov.execute_command(&cfg, sandbox_id, command).await;
-    } else if provider == "local" {
-        return Ok((format!("Local mock execution placeholder: executing '{}'", command), 0));
-    }
+        .ok_or_else(|| anyhow::anyhow!("Daytona 沙箱未配置或未启用"))?;
 
     let api_url = cfg.api_url.as_ref().unwrap().trim_end_matches('/');
     let api_key = cfg.api_key.as_ref().unwrap();
-    
-    // 生成 Toolbox 执行请求 of URL list
+
     let urls = if api_url.contains("app.daytona.io") {
         vec!(
             format!("https://proxy.app.daytona.io/toolbox/{}/toolbox/process/execute", sandbox_id),
             format!("https://proxy.app.daytona.io/toolbox/{}/process/execute", sandbox_id),
         )
     } else {
-        // 自建模式
         let base = api_url.trim_end_matches("/api").trim_end_matches("/");
         vec!(
             format!("{}/toolbox/{}/toolbox/process/execute", base, sandbox_id),
@@ -89,12 +78,10 @@ pub async fn execute_command_in_sandbox(
                             return Err(anyhow::anyhow!("解析执行响应失败。原始响应体: {}", resp_text));
                         }
                     } else if status == reqwest::StatusCode::NOT_FOUND {
-                        // 如果 404，我们尝试下一个候选 endpoint
                         last_error = Some(anyhow::anyhow!("Toolbox API 返回 404: {}", url));
                         continue;
                     } else if status.is_server_error() || status.as_u16() == 502 || status.as_u16() == 503 {
                         last_error = Some(anyhow::anyhow!("Toolbox API 响应服务端错误 ({}): {}", url, status));
-                        // 可能是沙盒内的 agent 还没完全起来，继续重试
                     } else {
                         let err_body = resp.text().await.unwrap_or_default();
                         return Err(anyhow::anyhow!("Toolbox API 响应失败 ({}): {}", url, err_body));
@@ -105,8 +92,7 @@ pub async fn execute_command_in_sandbox(
                 }
             }
         }
-        
-        // 如果不是最后一次尝试，等待一小段时间再重试
+
         if attempt < max_retries {
             tokio::time::sleep(tokio::time::Duration::from_secs(2)).await;
         }

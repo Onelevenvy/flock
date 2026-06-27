@@ -6,7 +6,7 @@ use crate::commands::assistant::SharedAgentState;
 pub async fn destroy_sandbox(
     db: State<'_, crate::SharedDbManager>,
 ) -> Result<(), String> {
-    flock_tools::daytona::destroy_active_sandbox(&*db)
+    flock_tools::sandbox_manager::destroy_active_sandbox(&*db)
         .await
         .map_err(|e| e.to_string())
 }
@@ -79,7 +79,7 @@ pub async fn cleanup_all_sandboxes(
     }
 
     // 清除本地缓存
-    let _ = flock_tools::daytona::destroy_active_sandbox(db_ref).await;
+    let _ = flock_tools::sandbox_manager::destroy_active_sandbox(db_ref).await;
 
     Ok(flock_core::tr(
         &format!("清理完成：已销毁 {} 个沙盒，失败 {} 个。", deleted, failed),
@@ -93,8 +93,8 @@ pub async fn get_active_sandbox_vnc_url(
     _state: State<'_, SharedAgentState>,
     db: State<'_, crate::SharedDbManager>,
 ) -> Result<Option<String>, String> {
-    if let Some(sandbox_id) = flock_tools::daytona::get_active_sandbox_id().await {
-        match flock_tools::daytona::get_sandbox_vnc_url(&*db, &sandbox_id).await {
+    if let Some(sandbox_id) = flock_tools::sandbox_manager::get_active_sandbox_id().await {
+        match flock_tools::sandbox_manager::get_sandbox_vnc_url(&*db, &sandbox_id).await {
             Ok(url) => Ok(Some(url)),
             Err(_) => {
                 let fallback_url = match flock_tools::daytona::get_sandbox_config(&*db).await {

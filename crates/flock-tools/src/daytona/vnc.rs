@@ -215,14 +215,6 @@ pub async fn get_sandbox_vnc_url(
     let cfg = get_sandbox_config(db).await
         .ok_or_else(|| anyhow::anyhow!(flock_core::tr("云端 Daytona 沙箱未配置或未启用", "Cloud Daytona sandbox not configured or enabled")))?;
 
-    let provider = cfg.provider.as_deref().unwrap_or("e2b");
-    if provider == "e2b" {
-        return Ok(format!(
-            "https://6080-{}.e2b.app/vnc.html?autoconnect=true&resize=scale&skip-preview-warning=true&skip_preview_warning=true",
-            sandbox_id
-        ));
-    }
-
     let client = reqwest::Client::new();
     let base = get_api_base(cfg.api_url.as_ref().unwrap());
     let api_key = cfg.api_key.as_ref().unwrap();

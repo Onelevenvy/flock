@@ -1,6 +1,6 @@
 use crate::adapter::LangGraphToolAdapter;
 use crate::Tool;
-use crate::daytona::{get_or_create_active_sandbox, execute_command_in_sandbox};
+use crate::sandbox_manager::{get_or_create_active_sandbox, execute_command_in_sandbox};
 use flock_core::ipc_interface::events::ToolCategory;
 use langgraph::tool;
 use std::path::Path;

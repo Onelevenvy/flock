@@ -161,8 +161,10 @@ impl SandboxProvider for E2BSandboxProvider {
                 if buffer.len() >= 5 + length {
                     let payload_bytes = &buffer[5..5 + length];
 
+                    println!("[DEBUG E2B] flags: {}, length: {}, payload_raw: {:?}", flags, length, String::from_utf8_lossy(payload_bytes));
                     if flags == 0x00 {
                         if let Ok(val) = serde_json::from_slice::<serde_json::Value>(payload_bytes) {
+                            println!("[DEBUG E2B] Parsed JSON: {:?}", val);
                             if let Some(event) = val.get("event") {
                                 if let Some(data) = event.get("data") {
                                     if let Some(stdout_b64) = data.get("stdout").and_then(|v| v.as_str()) {
@@ -204,6 +206,7 @@ impl SandboxProvider for E2BSandboxProvider {
             format!("{}\n{}", stdout_accum, stderr_accum)
         };
 
+        println!("[DEBUG E2B] Result: exit_code={}, combined_output={:?}", exit_code, combined_output);
         Ok((combined_output, exit_code))
     }
 

@@ -120,10 +120,7 @@ pub async fn set_app_config(
         }
         
         // 关键修复：清除旧的活跃沙盒缓存，防止状态穿透
-        let mutex = flock_tools::daytona::get_sandbox_id_mutex();
-        if let Ok(mut lock) = mutex.try_lock() {
-            *lock = None;
-        }
+        let _ = flock_tools::sandbox_manager::clear_active_sandbox_id().await;
     }
 
     Ok(())
@@ -234,9 +231,9 @@ pub async fn create_playwright_snapshot(
     .map_err(|e| e.to_string())
 }
 
-/// 列出所有 Daytona/E2B 沙盒
+/// 列出 Daytona 沙盒实例（E2B 不显示实例列表）
 #[tauri::command]
-pub async fn list_daytona_sandboxes(
+pub async fn list_sandboxes(
     db: State<'_, SharedDbManager>,
 ) -> Result<serde_json::Value, String> {
     use flock_core::db::DbManager;
@@ -248,41 +245,8 @@ pub async fn list_daytona_sandboxes(
     };
 
     let provider = cfg.provider.as_deref().unwrap_or("e2b");
-    if provider == "e2b" {
-        let api_key = cfg.e2b_api_key.as_ref().unwrap();
-        let client = reqwest::Client::new();
-        let url = "https://api.e2b.app/sandboxes";
-        let resp = client.get(url)
-            .header("X-API-Key", api_key)
-            .send()
-            .await
-            .map_err(|e| flock_core::tr(
-                &format!("请求 E2B 沙盒列表失败: {}", e),
-                &format!("Failed to request E2B sandbox list: {}", e)
-            ))?;
-
-        let text = resp.text().await.unwrap_or_default();
-        let list_val: serde_json::Value = serde_json::from_str(&text)
-            .map_err(|e| flock_core::tr(
-                &format!("解析 E2B 沙盒列表失败: {}", e),
-                &format!("Failed to parse E2B sandbox list: {}", e)
-            ))?;
-
-        // 统一字段映射，以匹配前端 Daytona 的渲染格式 (id, status, snapshot)
-        if let Some(arr) = list_val.as_array() {
-            let mapped: Vec<serde_json::Value> = arr.iter().map(|item| {
-                let id = item.get("sandboxID").and_then(|v| v.as_str()).unwrap_or_default();
-                let template_id = item.get("templateID").and_then(|v| v.as_str()).unwrap_or_default();
-                serde_json::json!({
-                    "id": id,
-                    "status": "running",
-                    "snapshot": template_id,
-                })
-            }).collect();
-            return Ok(serde_json::json!(mapped));
-        }
-        return Ok(serde_json::json!([]));
-    } else if provider == "local" {
+    // E2B 不显示 instances，Daytona 会有残留需要手动销毁
+    if provider == "e2b" || provider == "local" {
         return Ok(serde_json::json!([]));
     }
 
@@ -310,9 +274,9 @@ pub async fn list_daytona_sandboxes(
     Ok(val)
 }
 
-/// 删除指定 Daytona/E2B 沙盒
+/// 删除指定 Daytona 沙盒（E2B 不需要此操作）
 #[tauri::command]
-pub async fn delete_daytona_sandbox(
+pub async fn delete_sandbox(
     db: State<'_, SharedDbManager>,
     id: String,
 ) -> Result<(), String> {
@@ -324,33 +288,7 @@ pub async fn delete_daytona_sandbox(
         .ok_or_else(|| flock_core::tr("沙盒未配置或未启用", "Sandbox not configured or enabled"))?;
 
     let provider = cfg.provider.as_deref().unwrap_or("e2b");
-    if provider == "e2b" {
-        let api_key = cfg.e2b_api_key.as_ref().unwrap();
-        let client = reqwest::Client::new();
-        let url = format!("https://api.e2b.app/sandboxes/{}", id);
-        let resp = client.delete(&url)
-            .header("X-API-Key", api_key)
-            .send()
-            .await
-            .map_err(|e| flock_core::tr(
-                &format!("发送删除 E2B 沙盒请求失败: {}", e),
-                &format!("Failed to send delete E2B sandbox request: {}", e)
-            ))?;
-
-        if resp.status().is_success() || resp.status().as_u16() == 204 {
-            if let Some(active_id) = flock_tools::daytona::get_active_sandbox_id().await {
-                if active_id == id {
-                    let _ = flock_tools::daytona::destroy_active_sandbox(db_ref).await;
-                }
-            }
-            return Ok(());
-        } else {
-            return Err(flock_core::tr(
-                &format!("删除 E2B 沙盒失败，HTTP 状态码: {}", resp.status()),
-                &format!("Failed to delete E2B sandbox, HTTP status code: {}", resp.status())
-            ));
-        }
-    } else if provider == "local" {
+    if provider == "e2b" || provider == "local" {
         return Ok(());
     }
 
@@ -370,9 +308,9 @@ pub async fn delete_daytona_sandbox(
 
     if resp.status().is_success() {
         // 如果删除的是当前活跃的沙盒，清理本地缓存
-        if let Some(active_id) = flock_tools::daytona::get_active_sandbox_id().await {
+        if let Some(active_id) = flock_tools::sandbox_manager::get_active_sandbox_id().await {
             if active_id == id {
-                let _ = flock_tools::daytona::destroy_active_sandbox(db_ref).await;
+                flock_tools::sandbox_manager::clear_active_sandbox_id().await;
             }
         }
         Ok(())
@@ -391,14 +329,13 @@ pub async fn reuse_sandbox(
     sandbox_id: String,
 ) -> Result<String, String> {
     use flock_core::db::DbManager;
-    use flock_tools::daytona::{get_sandbox_config, check_sandbox_alive};
 
     let db_ref: &DbManager = &*db;
-    let cfg = get_sandbox_config(db_ref).await
+    let cfg = flock_tools::daytona::get_sandbox_config(db_ref).await
         .ok_or_else(|| flock_core::tr("沙盒未配置或未启用", "Sandbox not configured or enabled"))?;
 
     // 验证沙盒是否存活
-    if !check_sandbox_alive(&cfg, &sandbox_id).await {
+    if !flock_tools::sandbox_manager::check_sandbox_alive(&cfg, &sandbox_id).await {
         return Err(flock_core::tr(
             &format!("沙盒 {} 不存在或已停止", sandbox_id),
             &format!("Sandbox {} does not exist or has stopped", sandbox_id)
@@ -406,7 +343,7 @@ pub async fn reuse_sandbox(
     }
 
     // 设置为活跃沙盒
-    let mutex = flock_tools::daytona::get_sandbox_id_mutex();
+    let mutex = flock_tools::sandbox_manager::get_sandbox_id_mutex();
     let mut lock = mutex.lock().await;
     *lock = Some(sandbox_id.clone());
 
@@ -418,7 +355,7 @@ pub async fn reuse_sandbox(
 
 /// 列出所有 Daytona/E2B 快照/自定义模板
 #[tauri::command]
-pub async fn list_daytona_snapshots(
+pub async fn list_sandbox_templates(
     db: State<'_, SharedDbManager>,
     provider: Option<String>,
     api_key: Option<String>,
@@ -552,9 +489,9 @@ pub async fn list_daytona_snapshots(
     Ok(val)
 }
 
-/// 删除指定 Daytona 快照
+/// 删除指定 Daytona/E2B 快照/模板
 #[tauri::command]
-pub async fn delete_daytona_snapshot(
+pub async fn delete_sandbox_template(
     db: State<'_, SharedDbManager>,
     id: String,
 ) -> Result<(), String> {
