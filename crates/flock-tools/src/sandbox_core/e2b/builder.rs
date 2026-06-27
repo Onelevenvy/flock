@@ -41,9 +41,9 @@ dockerfile = "Dockerfile"
     std::fs::write(&toml_path, toml_content)
         .context("Failed to write e2b.toml")?;
 
-    on_log("环境准备完毕，开始调用 E2B CLI 构建镜像 (可能需要 1-3 分钟)...\n".to_string());
+    on_log("环境准备完毕，开始调用 E2B CLI 构建镜像 (E2B 2.0 在云端构建，不需要本地安装 Docker)...\n".to_string());
     
-    // 3. 执行 npx @e2b/cli template build
+    // 3. 执行 npx @e2b/cli template create
     // 在 Windows 下需要调用 npx.cmd
     let npx_cmd = if cfg!(windows) { "npx.cmd" } else { "npx" };
     
@@ -51,9 +51,10 @@ dockerfile = "Dockerfile"
     cmd.arg("-y")
         .arg("@e2b/cli@latest")
         .arg("template")
-        .arg("build")
-        .arg("-c")
-        .arg("e2b.toml")
+        .arg("create")
+        .arg("-d")
+        .arg("Dockerfile")
+        .arg("flock-enhanced-desktop")
         .env("E2B_API_KEY", api_key)
         .current_dir(&builder_dir)
         .stdout(Stdio::piped())
@@ -104,18 +105,21 @@ dockerfile = "Dockerfile"
 
     on_log("构建成功！正在解析 Template ID...\n".to_string());
 
-    // 解析出 template ID (通常在构建输出中，或者在构建后的 e2b.toml 中)
-    // E2B CLI 构建后，会将 template_id 写入 e2b.toml
-    let updated_toml = std::fs::read_to_string(&toml_path)?;
-    for line in updated_toml.lines() {
-        if line.starts_with("template_id") {
-            let parts: Vec<&str> = line.split('=').collect();
-            if parts.len() == 2 {
-                let id = parts[1].trim().trim_matches('"').to_string();
-                return Ok(id);
-            }
+    // 解析出 template ID
+    let re = regex::Regex::new(r"(?i)\b(?:id|template_id)[:\s]+([a-z0-9]{20})\b").unwrap();
+    if let Some(cap) = re.captures(&full_output) {
+        let id = cap.get(1).unwrap().as_str().to_string();
+        return Ok(id);
+    }
+
+    // 回退解析：寻找任何非 "dockerfile" 的 20 位字母数字组合作为 ID
+    let re_fallback = regex::Regex::new(r"\b([a-z0-9]{20})\b").unwrap();
+    for cap in re_fallback.captures_iter(&full_output) {
+        let matched = cap.get(1).unwrap().as_str();
+        if matched != "dockerfile" && matched != "template" {
+            return Ok(matched.to_string());
         }
     }
 
-    anyhow::bail!("构建成功，但未能在 e2b.toml 中找到生成的 template_id")
+    anyhow::bail!("构建成功，但未能从 E2B CLI 输出日志中提取出生成的 template_id")
 }
