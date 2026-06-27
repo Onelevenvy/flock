@@ -1,5 +1,5 @@
 use flock_core::config::settings::SandboxConfig;
-use crate::sandbox_core::daytona::config::get_api_base;
+use crate::sandbox_core::config::get_api_base;
 use serde_json::Value;
 
 pub async fn get_or_create_volume(cfg: &SandboxConfig, workspace_id: &str) -> anyhow::Result<String> {

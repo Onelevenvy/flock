@@ -1,5 +1,5 @@
 use flock_core::db::DbManager;
-use crate::sandbox_core::daytona::config::{get_sandbox_config, get_api_base};
+use crate::sandbox_core::config::{get_sandbox_config, get_api_base};
 use crate::sandbox_core::daytona::exec::execute_command_in_sandbox;
 use crate::sandbox_core::daytona::{DISPLAY_ID, SCREEN_RESOLUTION, X11VNC_PORT, WEBSOCKIFY_PORT};
 

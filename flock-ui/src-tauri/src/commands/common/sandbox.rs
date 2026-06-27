@@ -17,7 +17,7 @@ pub async fn cleanup_all_sandboxes(
     db: State<'_, crate::SharedDbManager>,
 ) -> Result<String, String> {
     use flock_core::db::DbManager;
-    use flock_tools::sandbox_core::daytona::{get_sandbox_config, get_api_base};
+    use flock_tools::sandbox_core::config::{get_sandbox_config, get_api_base};
 
     let db_ref: &DbManager = &*db;
     let cfg = get_sandbox_config(db_ref).await
@@ -97,7 +97,7 @@ pub async fn get_active_sandbox_vnc_url(
         match flock_tools::sandbox_core::manager::get_sandbox_vnc_url(&*db, &sandbox_id).await {
             Ok(url) => Ok(Some(url)),
             Err(_) => {
-                let fallback_url = match flock_tools::sandbox_core::daytona::get_sandbox_config(&*db).await {
+                let fallback_url = match flock_tools::sandbox_core::config::get_sandbox_config(&*db).await {
                     Some(cfg) if cfg.provider.as_deref().unwrap_or("e2b") == "e2b" => {
                         format!("https://6080-{}.e2b.app/vnc.html?autoconnect=true&resize=scale&skip-preview-warning=true&skip_preview_warning=true", sandbox_id)
                     }

@@ -132,7 +132,7 @@ pub async fn build_e2b_template(
     app: tauri::AppHandle,
     db: State<'_, SharedDbManager>,
 ) -> Result<String, String> {
-    use flock_tools::sandbox_core::daytona::get_sandbox_config;
+    use flock_tools::sandbox_core::config::get_sandbox_config;
     
     let cfg = get_sandbox_config(&db).await
         .ok_or_else(|| "沙盒未配置".to_string())?;
@@ -197,7 +197,7 @@ pub async fn test_sandbox_connection(
     let (url, is_e2b) = if provider == "e2b" {
         ("https://api.e2b.app/sandboxes".to_string(), true)
     } else {
-        let base = flock_tools::sandbox_core::daytona::get_api_base(&api_url);
+        let base = flock_tools::sandbox_core::config::get_api_base(&api_url);
         (format!("{}/api/sandbox", base), false)
     };
 
@@ -275,7 +275,7 @@ pub async fn list_sandboxes(
         return Ok(serde_json::json!([]));
     }
 
-    let base = flock_tools::sandbox_core::daytona::get_api_base(cfg.api_url.as_ref().unwrap());
+    let base = flock_tools::sandbox_core::config::get_api_base(cfg.api_url.as_ref().unwrap());
     let api_key = cfg.api_key.as_ref().unwrap();
 
     let client = reqwest::Client::new();
@@ -306,7 +306,7 @@ pub async fn delete_sandbox(
     id: String,
 ) -> Result<(), String> {
     use flock_core::db::DbManager;
-    use flock_tools::sandbox_core::daytona::get_sandbox_config;
+    use flock_tools::sandbox_core::config::get_sandbox_config;
 
     let db_ref: &DbManager = &*db;
     let cfg = get_sandbox_config(db_ref).await
@@ -317,7 +317,7 @@ pub async fn delete_sandbox(
         return Ok(());
     }
 
-    let base = flock_tools::sandbox_core::daytona::get_api_base(cfg.api_url.as_ref().unwrap());
+    let base = flock_tools::sandbox_core::config::get_api_base(cfg.api_url.as_ref().unwrap());
     let api_key = cfg.api_key.as_ref().unwrap();
 
     let client = reqwest::Client::new();
@@ -356,7 +356,7 @@ pub async fn reuse_sandbox(
     use flock_core::db::DbManager;
 
     let db_ref: &DbManager = &*db;
-    let cfg = flock_tools::sandbox_core::daytona::get_sandbox_config(db_ref).await
+    let cfg = flock_tools::sandbox_core::config::get_sandbox_config(db_ref).await
         .ok_or_else(|| flock_core::tr("沙盒未配置或未启用", "Sandbox not configured or enabled"))?;
 
     // 验证沙盒是否存活
@@ -490,7 +490,7 @@ pub async fn list_sandbox_templates(
         None => return Ok(serde_json::json!([])),
     };
 
-    let base = flock_tools::sandbox_core::daytona::get_api_base(cfg.api_url.as_ref().unwrap());
+    let base = flock_tools::sandbox_core::config::get_api_base(cfg.api_url.as_ref().unwrap());
     let api_key = cfg.api_key.as_ref().unwrap();
 
     let client = reqwest::Client::new();
@@ -552,7 +552,7 @@ pub async fn delete_sandbox_template(
         return Ok(());
     }
 
-    let base = flock_tools::sandbox_core::daytona::get_api_base(cfg.api_url.as_ref().unwrap());
+    let base = flock_tools::sandbox_core::config::get_api_base(cfg.api_url.as_ref().unwrap());
     let api_key = cfg.api_key.as_ref().unwrap();
 
     let client = reqwest::Client::new();

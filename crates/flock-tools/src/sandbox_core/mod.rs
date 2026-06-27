@@ -1,3 +1,4 @@
+pub mod config;
 pub mod daytona;
 pub mod e2b;
 pub mod manager;

@@ -10,7 +10,7 @@ fn should_ignore(path: &Path) -> bool {
 }
 
 pub async fn sync_up(db: &DbManager, sandbox_id: &str, local_workspace: &Path) -> anyhow::Result<()> {
-    if let Some(cfg) = crate::sandbox_core::daytona::config::get_sandbox_config(db).await {
+    if let Some(cfg) = crate::sandbox_core::config::get_sandbox_config(db).await {
         if cfg.provider.as_deref().unwrap_or("e2b") == "local" {
             return Ok(());
         }
@@ -57,7 +57,7 @@ pub async fn sync_up(db: &DbManager, sandbox_id: &str, local_workspace: &Path) -
 }
 
 pub async fn sync_down(db: &DbManager, sandbox_id: &str, local_workspace: &Path) -> anyhow::Result<()> {
-    if let Some(cfg) = crate::sandbox_core::daytona::config::get_sandbox_config(db).await {
+    if let Some(cfg) = crate::sandbox_core::config::get_sandbox_config(db).await {
         if cfg.provider.as_deref().unwrap_or("e2b") == "local" {
             return Ok(());
         }

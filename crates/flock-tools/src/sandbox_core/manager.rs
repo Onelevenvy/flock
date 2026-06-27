@@ -8,7 +8,7 @@
 use std::sync::OnceLock;
 use tokio::sync::Mutex;
 use flock_core::db::DbManager;
-use crate::sandbox_core::daytona::get_sandbox_config;
+use crate::sandbox_core::config::get_sandbox_config;
 use crate::sandbox_core::provider::SandboxProvider;
 
 static ACTIVE_SANDBOX_ID: OnceLock<Mutex<Option<String>>> = OnceLock::new();

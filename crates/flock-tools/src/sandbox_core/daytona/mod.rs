@@ -1,5 +1,4 @@
 mod state;
-mod config;
 mod lifecycle;
 mod exec;
 mod vnc;
@@ -10,7 +9,6 @@ pub mod fs;
 pub mod provider;
 
 pub use state::emit_human_takeover;
-pub use config::{get_sandbox_config, get_api_base};
 pub use lifecycle::{
     create_sandbox, destroy_daytona_sandbox, check_sandbox_alive, set_sandbox_public,
 };
