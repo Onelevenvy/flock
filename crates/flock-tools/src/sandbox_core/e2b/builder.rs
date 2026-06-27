@@ -44,7 +44,7 @@ setsid fluxbox >/tmp/fluxbox.log 2>&1 &
 sleep 1
 setsid x11vnc -display :0 -forever -shared -nopw -rfbport 5900 >/tmp/x11vnc.log 2>&1 &
 sleep 1
-setsid websockify --web /usr/share/novnc 0.0.0.0:6080 localhost:5900 >/tmp/websockify.log 2>&1 &
+setsid websockify --ignore-origin --web /usr/share/novnc 0.0.0.0:6080 127.0.0.1:5900 >/tmp/websockify.log 2>&1 &
 sleep 1
 "#;
     let lf_content = start_script_content.replace("\r\n", "\n");
