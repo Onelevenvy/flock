@@ -237,7 +237,7 @@ export function useSandboxSettings() {
     }
   };
 
-  const handleBuildE2bTemplate = async () => {
+  const handleBuildE2bTemplate = async (name: string) => {
     setBuildingE2b(true);
     setE2bBuildLogs([]);
     let unlisten: (() => void) | undefined;
@@ -248,7 +248,7 @@ export function useSandboxSettings() {
         setE2bBuildLogs((prev) => [...prev, event.payload]);
       });
 
-      const templateId = await invoke<string>('build_e2b_template');
+      const templateId = await invoke<string>('build_e2b_template', { name });
       
       notifications.show({
         title: t('common.success'),

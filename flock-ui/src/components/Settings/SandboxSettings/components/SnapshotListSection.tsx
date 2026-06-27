@@ -47,7 +47,7 @@ interface SnapshotListSectionProps {
   creatingSnapshot: boolean;
   buildingE2b?: boolean;
   e2bBuildLogs?: string[];
-  onBuildE2bTemplate?: () => void;
+  onBuildE2bTemplate?: (name: string) => void;
 }
 
 export function SnapshotListSection({
@@ -200,7 +200,7 @@ export function SnapshotListSection({
               isExistingSnapshot 
                 ? handleCreate 
                 : provider === 'e2b' 
-                ? onBuildE2bTemplate 
+                ? () => onBuildE2bTemplate?.(newSnapshotName.trim() || defaultSnapshotName) 
                 : handleCreate
             }
             loading={isExistingSnapshot ? creatingSnapshot : provider === 'e2b' ? buildingE2b : creatingSnapshot}

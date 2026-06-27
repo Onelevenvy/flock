@@ -131,6 +131,7 @@ pub async fn set_app_config(
 pub async fn build_e2b_template(
     app: tauri::AppHandle,
     db: State<'_, SharedDbManager>,
+    name: String,
 ) -> Result<String, String> {
     use flock_tools::sandbox_core::config::get_sandbox_config;
     
@@ -143,6 +144,7 @@ pub async fn build_e2b_template(
     let template_id = flock_tools::sandbox_core::e2b::builder::build_enhanced_template(
         api_key,
         cfg.e2b_api_url.as_deref(),
+        &name,
         move |log| {
             use tauri::Emitter;
             let _ = app.emit("e2b-build-log", log);
@@ -513,7 +515,7 @@ pub async fn delete_sandbox_template(
         let api_key = cfg.e2b_api_key.as_ref().unwrap();
         let base_url = cfg.e2b_api_url.as_deref().unwrap_or("https://api.e2b.app").trim_end_matches('/');
         let client = reqwest::Client::new();
-        let url = format!("{}/snapshots/{}", base_url, id);
+        let url = format!("{}/templates/{}", base_url, id);
         let resp = client.delete(&url)
             .header("X-API-Key", api_key)
             .send()

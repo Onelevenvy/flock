@@ -7,7 +7,7 @@ use tokio::process::Command;
 
 /// 自动构建 E2B 的专属桌面镜像（自带 VNC 和 Playwright）
 /// 构建日志将通过传入的回调函数 (on_log) 实时推送
-pub async fn build_enhanced_template<F>(api_key: &str, api_url: Option<&str>, on_log: F) -> Result<String>
+pub async fn build_enhanced_template<F>(api_key: &str, api_url: Option<&str>, name: &str, on_log: F) -> Result<String>
 where
     F: Fn(String) + Send + 'static,
 {
@@ -21,25 +21,26 @@ where
     let dockerfile_path = builder_dir.join("Dockerfile");
     let toml_path = builder_dir.join("e2b.toml");
 
+    // 删除残留的 e2b.toml，避免干扰新的构建
+    if toml_path.exists() {
+        let _ = std::fs::remove_file(&toml_path);
+    }
+
     // 1. 写入 Dockerfile
     let dockerfile_content = r#"FROM e2bdev/desktop:latest
+USER root
 # 安装 python3-pip 和相关依赖
-RUN sudo apt-get update && sudo apt-get install -y python3-pip
+RUN apt-get update && apt-get install -y python3-pip
 
 # 安装 Playwright 及浏览器
 RUN pip install playwright && \
     playwright install chromium && \
     playwright install-deps chromium
+
+USER user
 "#;
     std::fs::write(&dockerfile_path, dockerfile_content)
         .context("Failed to write Dockerfile")?;
-
-    // 2. 写入 e2b.toml
-    let toml_content = r#"template_name = "flock-enhanced-desktop"
-dockerfile = "Dockerfile"
-"#;
-    std::fs::write(&toml_path, toml_content)
-        .context("Failed to write e2b.toml")?;
 
     on_log("环境准备完毕，开始调用 E2B CLI 构建镜像 (E2B 2.0 在云端构建，不需要本地安装 Docker)...\n".to_string());
     
@@ -54,7 +55,11 @@ dockerfile = "Dockerfile"
         .arg("create")
         .arg("-d")
         .arg("Dockerfile")
-        .arg("flock-enhanced-desktop")
+        .arg("-c")
+        .arg("/start_command.sh")
+        .arg("--ready-cmd")
+        .arg("python3 -c \"import socket; s = socket.socket(); s.connect(('127.0.0.1', 6080))\"")
+        .arg(name)
         .env("E2B_API_KEY", api_key)
         .current_dir(&builder_dir)
         .stdout(Stdio::piped())
@@ -100,7 +105,7 @@ dockerfile = "Dockerfile"
 
     let status = child.wait().await?;
     if !status.success() {
-        anyhow::bail!("E2B template build failed with exit code: {}", status);
+        anyhow::bail!("E2B template build failed with exit code: {}.\nError details:\n{}", status, full_output);
     }
 
     on_log("构建成功！正在解析 Template ID...\n".to_string());
