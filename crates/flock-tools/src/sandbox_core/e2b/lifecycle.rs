@@ -42,11 +42,11 @@ pub async fn create_sandbox(cfg: &SandboxConfig) -> anyhow::Result<String> {
         .ok_or_else(|| anyhow::anyhow!("E2B API key is missing"))?;
     let base_url = cfg.e2b_api_url.as_deref().unwrap_or("https://api.e2b.app").trim_end_matches('/');
 
-    let template_id = cfg.snapshot.as_deref()
+    let mut template_id = cfg.snapshot.as_deref()
         .unwrap_or("")
         .trim();
     if template_id.is_empty() {
-        anyhow::bail!("E2B template ID is not configured. Please set a default template in Sandbox Settings.");
+        template_id = "jj17rl441iqdc6ea5mkb"; // 使用您发布的公共模版 ID 作为默认兜底
     }
 
     let client = reqwest::Client::new();
