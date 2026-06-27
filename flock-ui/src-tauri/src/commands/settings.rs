@@ -126,6 +126,31 @@ pub async fn set_app_config(
     Ok(())
 }
 
+/// 自动构建 E2B 专属模板
+#[tauri::command]
+pub async fn build_e2b_template(
+    app: tauri::AppHandle,
+    db: State<'_, SharedDbManager>,
+) -> Result<String, String> {
+    use flock_tools::daytona::get_sandbox_config;
+    
+    let cfg = get_sandbox_config(&db).await
+        .ok_or_else(|| "沙盒未配置".to_string())?;
+        
+    let api_key = cfg.e2b_api_key.as_deref().or(cfg.api_key.as_deref())
+        .ok_or_else(|| "E2B API Key 未配置".to_string())?;
+
+    let template_id = flock_tools::e2b::builder::build_enhanced_template(
+        api_key,
+        move |log| {
+            use tauri::Emitter;
+            let _ = app.emit("e2b-build-log", log);
+        }
+    ).await.map_err(|e| e.to_string())?;
+
+    Ok(template_id)
+}
+
 /// 测试云端沙盒（E2B 或 Daytona）的连通性，成功后将 sandbox provider 标记为可用
 #[tauri::command]
 pub async fn test_sandbox_connection(

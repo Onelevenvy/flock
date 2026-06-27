@@ -43,6 +43,9 @@ interface SnapshotListSectionProps {
   onSetDefaultSnapshot: (name: string) => void;
   onCreateSnapshot: (name: string) => Promise<void>;
   creatingSnapshot: boolean;
+  buildingE2b?: boolean;
+  e2bBuildLogs?: string[];
+  onBuildE2bTemplate?: () => void;
 }
 
 export function SnapshotListSection({
@@ -51,6 +54,9 @@ export function SnapshotListSection({
   onSetDefaultSnapshot,
   onCreateSnapshot,
   creatingSnapshot,
+  buildingE2b,
+  e2bBuildLogs,
+  onBuildE2bTemplate,
 }: SnapshotListSectionProps) {
   const { t } = useTranslation();
   const [snapshots, setSnapshots] = useState<SnapshotItem[]>([]);
@@ -226,21 +232,43 @@ export function SnapshotListSection({
 
       {/* 快照列表 */}
       <Box>
-        <Group justify="space-between" mb="lg">
+        <Group justify="space-between" mb="xs">
           <Text fw={700} size="md">
             {t('settings.sandbox.snapshots')}
           </Text>
-          <Button
-            variant="subtle"
-            color="gray"
-            leftSection={loading ? <Loader size="xs" color="gray" /> : <IconRefresh size={15} />}
-            onClick={fetchSnapshots}
-            disabled={loading}
-            size="xs"
-          >
-            {t('common.refresh')}
-          </Button>
+          <Group gap="xs">
+            {provider === 'e2b' && (
+              <Button
+                variant="light"
+                color="blue"
+                size="xs"
+                loading={buildingE2b}
+                onClick={onBuildE2bTemplate}
+              >
+                初始化增强版云端沙盒 (自带VNC和浏览器)
+              </Button>
+            )}
+            <Button
+              variant="subtle"
+              color="gray"
+              leftSection={loading ? <Loader size="xs" color="gray" /> : <IconRefresh size={15} />}
+              onClick={fetchSnapshots}
+              disabled={loading}
+              size="xs"
+            >
+              {t('common.refresh')}
+            </Button>
+          </Group>
         </Group>
+
+        {buildingE2b && (
+          <Box mt="md" mb="md" p="xs" style={{ background: '#1e1e1e', color: '#0f0', fontFamily: 'monospace', fontSize: 12, borderRadius: 8, maxHeight: 200, overflowY: 'auto' }}>
+            <Text size="xs" c="dimmed" mb="xs">Building Custom Template... (this might take a few minutes)</Text>
+            {e2bBuildLogs?.map((log, i) => (
+              <div key={i}>{log}</div>
+            ))}
+          </Box>
+        )}
 
         {loading && snapshots.length === 0 ? (
           <Group justify="center" p="xl">

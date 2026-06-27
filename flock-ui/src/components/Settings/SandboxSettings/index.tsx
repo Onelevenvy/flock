@@ -41,10 +41,13 @@ export default function SandboxSettings() {
     isAvailable,
     activeTab, setActiveTab,
     snapshotsList,
+    buildingE2b,
+    e2bBuildLogs,
     handleTestConnection,
     handleDisable,
     handleCreateSnapshot,
     handleSetDefaultSnapshot,
+    handleBuildE2bTemplate,
   } = useSandboxSettings();
 
   return (
@@ -161,13 +164,18 @@ export default function SandboxSettings() {
 
         {(provider === 'daytona' || provider === 'e2b') && activeTab === 'snapshots' && isAvailable && (
           <Box mt="md">
-            <SnapshotListSection
-              provider={provider}
-              currentDefaultSnapshot={snapshot}
-              onSetDefaultSnapshot={handleSetDefaultSnapshot}
-              onCreateSnapshot={handleCreateSnapshot}
-              creatingSnapshot={creatingSnapshot}
-            />
+            {activeTab === 'snapshots' && (
+              <SnapshotListSection
+                provider={provider}
+                currentDefaultSnapshot={snapshot}
+                onSetDefaultSnapshot={handleSetDefaultSnapshot}
+                onCreateSnapshot={handleCreateSnapshot}
+                creatingSnapshot={creatingSnapshot}
+                buildingE2b={buildingE2b}
+                e2bBuildLogs={e2bBuildLogs}
+                onBuildE2bTemplate={handleBuildE2bTemplate}
+              />
+            )}
           </Box>
         )}
       </Card>

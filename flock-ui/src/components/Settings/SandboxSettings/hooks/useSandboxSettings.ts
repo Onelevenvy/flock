@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { invoke } from '@tauri-apps/api/core';
+import { listen } from '@tauri-apps/api/event';
 import { notifications } from '@mantine/notifications';
 import { useTranslation } from 'react-i18next';
 import { IconCheck, IconAlertCircle, IconPlugConnectedX } from '@tabler/icons-react';
@@ -32,6 +33,8 @@ export function useSandboxSettings() {
   const [isAvailable, setIsAvailable] = useState(false);
   const [activeTab, setActiveTab] = useState<string>('config');
   const [snapshotsList, setSnapshotsList] = useState<{ id: string; name: string }[]>([]);
+  const [buildingE2b, setBuildingE2b] = useState(false);
+  const [e2bBuildLogs, setE2bBuildLogs] = useState<string[]>([]);
 
   const fetchSnapshotsList = async () => {
     try {
@@ -230,6 +233,43 @@ export function useSandboxSettings() {
     }
   };
 
+  const handleBuildE2bTemplate = async () => {
+    setBuildingE2b(true);
+    setE2bBuildLogs([]);
+    let unlisten: (() => void) | undefined;
+    try {
+      await saveConfig(); // Save current API key
+      
+      unlisten = await listen<string>('e2b-build-log', (event) => {
+        setE2bBuildLogs((prev) => [...prev, event.payload]);
+      });
+
+      const templateId = await invoke<string>('build_e2b_template');
+      
+      notifications.show({
+        title: t('common.success'),
+        message: `E2B template ${templateId} built successfully!`,
+        color: 'teal',
+        icon: React.createElement(IconCheck, { size: 18 }),
+      });
+
+      setSnapshot(templateId);
+      await saveConfig({ snapshot: templateId });
+      fetchSnapshotsList();
+    } catch (e) {
+      notifications.show({
+        title: t('common.failed'),
+        message: String(e),
+        color: 'red',
+        icon: React.createElement(IconAlertCircle, { size: 18 }),
+        autoClose: 10000,
+      });
+    } finally {
+      if (unlisten) unlisten();
+      setBuildingE2b(false);
+    }
+  };
+
   return {
     provider, setProvider,
     apiUrl, setApiUrl,
@@ -242,9 +282,12 @@ export function useSandboxSettings() {
     isAvailable,
     activeTab, setActiveTab,
     snapshotsList,
+    buildingE2b,
+    e2bBuildLogs,
     handleTestConnection,
     handleDisable,
     handleCreateSnapshot,
     handleSetDefaultSnapshot,
+    handleBuildE2bTemplate,
   };
 }
