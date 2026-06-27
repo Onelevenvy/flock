@@ -500,6 +500,7 @@ pub async fn list_sandbox_templates(
 pub async fn delete_sandbox_template(
     db: State<'_, SharedDbManager>,
     id: String,
+    provider: Option<String>,
 ) -> Result<(), String> {
     use flock_core::db::DbManager;
 
@@ -507,8 +508,8 @@ pub async fn delete_sandbox_template(
     let cfg = get_sandbox_config_regardless(db_ref).await
         .ok_or_else(|| flock_core::tr("沙盒未配置", "Sandbox not configured"))?;
 
-    let provider = cfg.provider.as_deref().unwrap_or("e2b");
-    if provider == "e2b" {
+    let active_provider = provider.as_deref().unwrap_or(cfg.provider.as_deref().unwrap_or("e2b"));
+    if active_provider == "e2b" {
         let api_key = cfg.e2b_api_key.as_ref().unwrap();
         let base_url = cfg.e2b_api_url.as_deref().unwrap_or("https://api.e2b.app").trim_end_matches('/');
         let client = reqwest::Client::new();
@@ -530,7 +531,7 @@ pub async fn delete_sandbox_template(
                 &format!("Failed to delete E2B snapshot, HTTP status code: {}", resp.status())
             ));
         }
-    } else if provider == "local" {
+    } else if active_provider == "local" {
         return Ok(());
     }
 

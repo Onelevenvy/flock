@@ -113,7 +113,7 @@ export function SnapshotListSection({
   const handleDelete = async (id: string) => {
     setDeletingId(id);
     try {
-      await invoke('delete_sandbox_template', { id });
+      await invoke('delete_sandbox_template', { id, provider });
       notifications.show({
         title: t('common.success'),
         message: t('settings.sandbox.deleteSnapshotSuccess'),
@@ -147,7 +147,7 @@ export function SnapshotListSection({
   };
 
   const renderState = (snap: SnapshotItem) => {
-    const stateStr = (snap.state || snap.snapshotState || 'unknown').toLowerCase();
+    const stateStr = (snap.state || snap.snapshotState || snap.status || 'unknown').toLowerCase();
     let color = 'gray';
     if (stateStr === 'ready' || stateStr === 'active') color = 'teal';
     if (stateStr === 'building' || stateStr === 'creating') color = 'blue';
