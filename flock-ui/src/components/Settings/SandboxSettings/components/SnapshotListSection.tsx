@@ -13,6 +13,7 @@ import {
   Autocomplete,
   Alert,
   Divider,
+  Stack,
 } from '@mantine/core';
 import {
   IconTrash,
@@ -24,6 +25,7 @@ import {
   IconStar,
   IconStarFilled,
   IconInfoCircle,
+  IconCpu,
 } from '@tabler/icons-react';
 import { invoke } from '@tauri-apps/api/core';
 import { notifications } from '@mantine/notifications';
@@ -191,34 +193,32 @@ export function SnapshotListSection({
             style={{ flex: 1 }}
             styles={{ input: { background: 'var(--flock-bg-surface)' } }}
           />
-          {provider === 'e2b' && (
-            <Button
-              variant="filled"
-              color="blue"
-              onClick={onBuildE2bTemplate}
-              loading={buildingE2b}
-            >
-              初始化增强版云端沙盒 (自带VNC和浏览器)
-            </Button>
-          )}
           <Button
             variant="filled"
             color={isExistingSnapshot ? 'teal' : 'blue'}
-            onClick={handleCreate}
-            loading={creatingSnapshot}
+            onClick={
+              isExistingSnapshot 
+                ? handleCreate 
+                : provider === 'e2b' 
+                ? onBuildE2bTemplate 
+                : handleCreate
+            }
+            loading={isExistingSnapshot ? creatingSnapshot : provider === 'e2b' ? buildingE2b : creatingSnapshot}
             leftSection={
               isExistingSnapshot 
                 ? <IconCheck size={15} /> 
-                : (provider === 'e2b' || provider === 'local') 
-                ? <IconStar size={15} /> 
+                : provider === 'e2b'
+                ? <IconCpu size={15} />
+                : provider === 'local'
+                ? <IconStar size={15} />
                 : <IconCamera size={15} />
             }
           >
             {isExistingSnapshot
               ? t('settings.sandbox.useExistingSnapshot')
-              : creatingSnapshot
-              ? t('settings.sandbox.snapshotCreating')
-              : (provider === 'e2b' || provider === 'local')
+              : provider === 'e2b'
+              ? '初始化增强版云端沙盒 (自带VNC和浏览器)'
+              : provider === 'local'
               ? t('settings.sandbox.setAsDefault')
               : t('settings.sandbox.snapshotCreateBtn')}
           </Button>
@@ -233,7 +233,7 @@ export function SnapshotListSection({
           style={{ fontSize: 12 }}
         >
           {provider === 'e2b'
-            ? 'E2B provides a pre-bundled "browser" template with all Playwright dependencies pre-installed. There is no need to manually compile browser dependencies. You can enter any of your custom E2B Template IDs above, click Star to set it as default and use it instantly.'
+            ? 'You can enter a template ID above to build a custom snapshot template, or choose an existing snapshot template from the list below (click the star icon to set as default and reuse it instantly).'
             : t('settings.sandbox.snapshotHint')}
         </Alert>
       </Box>
