@@ -146,6 +146,9 @@ pub async fn build_e2b_template(
         cfg.e2b_api_url.as_deref(),
         &name,
         move |log| {
+            print!("{}", log);
+            use std::io::Write;
+            let _ = std::io::stdout().flush();
             use tauri::Emitter;
             let _ = app.emit("e2b-build-log", log);
         }

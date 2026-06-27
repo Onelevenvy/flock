@@ -256,9 +256,11 @@ export function SnapshotListSection({
           </Group>
         </Group>
 
-        {buildingE2b && (
-          <Box mt="md" mb="md" p="xs" style={{ background: '#1e1e1e', color: '#0f0', fontFamily: 'monospace', fontSize: 12, borderRadius: 8, maxHeight: 200, overflowY: 'auto' }}>
-            <Text size="xs" c="dimmed" mb="xs">Building Custom Template... (this might take a few minutes)</Text>
+        {e2bBuildLogs && e2bBuildLogs.length > 0 && (
+          <Box mt="md" mb="md" p="xs" style={{ background: '#1e1e1e', color: '#0f0', fontFamily: 'monospace', fontSize: 12, borderRadius: 8, maxHeight: 300, overflowY: 'auto' }}>
+            <Text size="xs" c="dimmed" mb="xs">
+              {buildingE2b ? 'Building Custom Template... (this might take a few minutes)' : 'Build Logs / Status:'}
+            </Text>
             {e2bBuildLogs?.map((log, i) => (
               <div key={i}>{log}</div>
             ))}

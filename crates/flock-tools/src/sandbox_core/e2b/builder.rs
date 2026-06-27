@@ -19,6 +19,7 @@ where
     }
 
     let dockerfile_path = builder_dir.join("Dockerfile");
+    let start_script_path = builder_dir.join("start_command.sh");
     let toml_path = builder_dir.join("e2b.toml");
 
     // 删除残留的 e2b.toml，避免干扰新的构建
@@ -26,13 +27,30 @@ where
         let _ = std::fs::remove_file(&toml_path);
     }
 
+    // 写入 start_command.sh 启动脚本
+    let start_script_content = r#"#!/bin/bash
+export DISPLAY=:0
+rm -f /tmp/.X0-lock
+setsid Xvfb :0 -screen 0 1280x800x24 >/tmp/xvfb.log 2>&1 &
+sleep 1
+setsid fluxbox >/tmp/fluxbox.log 2>&1 &
+sleep 1
+setsid x11vnc -display :0 -forever -shared -nopw -rfbport 5900 >/tmp/x11vnc.log 2>&1 &
+sleep 1
+setsid websockify --web /usr/share/novnc 0.0.0.0:6080 localhost:5900 >/tmp/websockify.log 2>&1 &
+sleep 1
+"#;
+    std::fs::write(&start_script_path, start_script_content)
+        .context("Failed to write start_command.sh")?;
+
     // 1. 写入 Dockerfile
     let dockerfile_content = r#"FROM e2bdev/desktop:latest
 USER root
-# 安装 python3-pip 和相关依赖
-RUN apt-get update && apt-get install -y python3-pip
+# 复制启动脚本并赋予执行权限
+COPY start_command.sh /start_command.sh
+RUN chmod +x /start_command.sh
 
-# 安装 Playwright 及浏览器
+# 直接使用已有的 python3 和 pip 安装 Playwright 及其浏览器依赖
 RUN pip install playwright && \
     playwright install chromium && \
     playwright install-deps chromium
