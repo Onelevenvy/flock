@@ -29,6 +29,13 @@ where
 
     // 写入 start_command.sh 启动脚本
     let start_script_content = r#"#!/bin/bash
+echo "=== Debug: Checking installed commands ==="
+which Xvfb || echo "Xvfb missing"
+which fluxbox || echo "fluxbox missing"
+which x11vnc || echo "x11vnc missing"
+which websockify || echo "websockify missing"
+echo "=========================================="
+
 export DISPLAY=:0
 rm -f /tmp/.X0-lock
 setsid Xvfb :0 -screen 0 1280x800x24 >/tmp/xvfb.log 2>&1 &
@@ -40,7 +47,8 @@ sleep 1
 setsid websockify --web /usr/share/novnc 0.0.0.0:6080 localhost:5900 >/tmp/websockify.log 2>&1 &
 sleep 1
 "#;
-    std::fs::write(&start_script_path, start_script_content)
+    let lf_content = start_script_content.replace("\r\n", "\n");
+    std::fs::write(&start_script_path, lf_content)
         .context("Failed to write start_command.sh")?;
 
     // 1. 写入 Dockerfile
@@ -49,6 +57,9 @@ USER root
 # 复制启动脚本并赋予执行权限
 COPY start_command.sh /start_command.sh
 RUN chmod +x /start_command.sh
+
+# 安装缺少的 VNC 窗口管理器和 noVNC 代理组件
+RUN apt-get update && apt-get install -y fluxbox websockify novnc
 
 # 直接使用已有的 python3 和 pip 安装 Playwright 及其浏览器依赖
 RUN pip install playwright && \

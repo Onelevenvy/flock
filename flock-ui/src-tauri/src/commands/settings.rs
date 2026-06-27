@@ -408,7 +408,7 @@ pub async fn list_sandbox_templates(
             cfg.e2b_api_key.clone().unwrap_or_default()
         };
 
-        log::info!("list_daytona_snapshots: active_provider = E2B, key len = {}, key starts with: {}", key.len(), key.chars().take(5).collect::<String>());
+        log::info!("list_sandbox_templates: active_provider = E2B, key len = {}, key starts with: {}", key.len(), key.chars().take(5).collect::<String>());
         if key.is_empty() {
             return Ok(serde_json::json!([]));
         }
@@ -428,7 +428,7 @@ pub async fn list_sandbox_templates(
 
         let status = resp.status();
         let text = resp.text().await.unwrap_or_default();
-        log::info!("list_daytona_snapshots: E2B templates status = {}, text = {}", status, text);
+        log::info!("list_sandbox_templates: E2B templates status = {}, text = {}", status, text);
         if !status.is_success() {
             return Err(flock_core::tr(
                 &format!("E2B API 错误 ({}): {}", status, text),
