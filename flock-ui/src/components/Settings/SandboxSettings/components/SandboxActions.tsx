@@ -9,9 +9,12 @@ import {
 import { useTranslation } from 'react-i18next';
 
 interface SandboxActionsProps {
+  provider: 'e2b' | 'daytona' | 'local';
   isAvailable: boolean;
   apiUrl: string;
   apiKey: string;
+  e2bApiKey: string;
+  e2bApiUrl: string;
   testing: boolean;
   disabling: boolean;
   onTestConnection: () => void;
@@ -19,15 +22,25 @@ interface SandboxActionsProps {
 }
 
 export function SandboxActions({
+  provider,
   isAvailable,
   apiUrl,
   apiKey,
+  e2bApiKey,
+  e2bApiUrl,
   testing,
   disabling,
   onTestConnection,
   onDisable,
 }: SandboxActionsProps) {
   const { t } = useTranslation();
+
+  const isTestDisabled = () => {
+    if (provider === 'e2b') return !e2bApiKey.trim() || !e2bApiUrl.trim();
+    if (provider === 'daytona') return !apiUrl.trim() || !apiKey.trim();
+    return false; // local is never disabled
+  };
+
   return (
     <Group justify="flex-end" gap="md" style={{ width: '100%' }}>
       {/* Test / re-test button */}
@@ -37,7 +50,7 @@ export function SandboxActions({
         leftSection={<IconPlugConnected size={15} />}
         onClick={onTestConnection}
         loading={testing}
-        disabled={!apiUrl.trim() || !apiKey.trim()}
+        disabled={isTestDisabled()}
       >
         {t('settings.sandbox.testBtn')}
       </Button>

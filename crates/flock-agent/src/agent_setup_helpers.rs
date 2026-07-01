@@ -21,7 +21,7 @@ use super::sinks::OutputSink;
 /// when the global sandbox is configured.
 pub async fn filter_sandbox_tools(config: &Config, registry: &mut ToolRegistry) {
     let is_sandbox_configured = if let Some(db) = &config.db_manager {
-        flock_tools::daytona::get_sandbox_config(db).await.is_some()
+        flock_tools::sandbox_core::config::get_sandbox_config(db).await.is_some()
     } else {
         false
     };

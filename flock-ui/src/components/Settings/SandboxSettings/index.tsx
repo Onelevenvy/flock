@@ -15,9 +15,7 @@ import {
   IconInfoCircle,
   IconPlugConnected,
   IconPlugConnectedX,
-  IconSettings,
-  IconCpu,
-  IconCamera,
+ 
 } from '@tabler/icons-react';
 import { useTranslation } from 'react-i18next';
 import { SandboxCredentials } from './components/SandboxCredentials';
@@ -30,18 +28,25 @@ export default function SandboxSettings() {
   const { t } = useTranslation();
 
   const {
+    provider, setProvider,
     apiUrl, setApiUrl,
     apiKey, setApiKey,
+    e2bApiKey, setE2bApiKey,
+    e2bApiUrl, setE2bApiUrl,
     snapshot,
     testing,
     disabling,
     creatingSnapshot,
     isAvailable,
     activeTab, setActiveTab,
+    snapshotsList,
+    buildingE2b,
+    e2bBuildLogs,
     handleTestConnection,
     handleDisable,
     handleCreateSnapshot,
     handleSetDefaultSnapshot,
+    handleBuildE2bTemplate,
   } = useSandboxSettings();
 
   return (
@@ -89,42 +94,62 @@ export default function SandboxSettings() {
           </Alert>
         )}
 
-        <SegmentedControl
-          value={activeTab}
-          onChange={(val) => setActiveTab(val as any)}
-          data={[
-            { value: 'config', label: t('settings.sandbox.tabConfig') },
-            { value: 'instances', label: t('settings.sandbox.tabInstances'), disabled: !isAvailable },
-            { value: 'snapshots', label: t('settings.sandbox.tabSnapshots'), disabled: !isAvailable },
-          ]}
-          size="xs"
-          mb="lg"
-          styles={{
-            root: {
-              background: 'var(--flock-bg-surface)',
-              border: '1px solid var(--flock-border-dim)',
-              padding: 2,
-              borderRadius: 8,
-            },
-            control: {
-              minWidth: 100,
-            }
-          }}
-        />
+        {(() => {
+          const tabs: { value: string; label: string; disabled?: boolean }[] = [
+            { value: 'config', label: t('settings.sandbox.tabConfig') }
+          ];
+          if (provider === 'daytona') {
+            tabs.push({ value: 'instances', label: t('settings.sandbox.tabInstances'), disabled: !isAvailable });
+          }
+          if (provider === 'daytona' || provider === 'e2b') {
+            tabs.push({ value: 'snapshots', label: t('settings.sandbox.tabSnapshots'), disabled: !isAvailable });
+          }
+          if (tabs.length <= 1) return null;
+
+          return (
+            <SegmentedControl
+              value={activeTab}
+              onChange={(val) => setActiveTab(val as any)}
+              data={tabs}
+              size="xs"
+              mb="lg"
+              styles={{
+                root: {
+                  background: 'var(--flock-bg-surface)',
+                  border: '1px solid var(--flock-border-dim)',
+                  padding: 2,
+                  borderRadius: 8,
+                },
+                control: {
+                  minWidth: 100,
+                }
+              }}
+            />
+          );
+        })()}
 
         {activeTab === 'config' && (
           <Stack gap="lg" mt="md">
             <SandboxCredentials
+              provider={provider}
+              onProviderChange={setProvider}
               apiUrl={apiUrl}
               apiKey={apiKey}
+              e2bApiKey={e2bApiKey}
+              e2bApiUrl={e2bApiUrl}
               onApiUrlChange={setApiUrl}
               onApiKeyChange={setApiKey}
+              onE2bApiKeyChange={setE2bApiKey}
+              onE2bApiUrlChange={setE2bApiUrl}
             />
             <Divider color="var(--flock-border-subtle)" mt="md" />
             <SandboxActions
+              provider={provider}
               isAvailable={isAvailable}
               apiUrl={apiUrl}
               apiKey={apiKey}
+              e2bApiKey={e2bApiKey}
+              e2bApiUrl={e2bApiUrl}
               testing={testing}
               disabling={disabling}
               onTestConnection={handleTestConnection}
@@ -133,20 +158,26 @@ export default function SandboxSettings() {
           </Stack>
         )}
 
-        {activeTab === 'instances' && isAvailable && (
+        {provider === 'daytona' && activeTab === 'instances' && isAvailable && (
           <Box mt="md">
             <SandboxListSection />
           </Box>
         )}
 
-        {activeTab === 'snapshots' && isAvailable && (
+        {(provider === 'daytona' || provider === 'e2b') && activeTab === 'snapshots' && isAvailable && (
           <Box mt="md">
-            <SnapshotListSection
-              currentDefaultSnapshot={snapshot}
-              onSetDefaultSnapshot={handleSetDefaultSnapshot}
-              onCreateSnapshot={handleCreateSnapshot}
-              creatingSnapshot={creatingSnapshot}
-            />
+            {activeTab === 'snapshots' && (
+              <SnapshotListSection
+                provider={provider}
+                currentDefaultSnapshot={snapshot}
+                onSetDefaultSnapshot={handleSetDefaultSnapshot}
+                onCreateSnapshot={handleCreateSnapshot}
+                creatingSnapshot={creatingSnapshot}
+                buildingE2b={buildingE2b}
+                e2bBuildLogs={e2bBuildLogs}
+                onBuildE2bTemplate={handleBuildE2bTemplate}
+              />
+            )}
           </Box>
         )}
       </Card>

@@ -1,90 +1,30 @@
 use tauri::State;
 use crate::commands::assistant::SharedAgentState;
 
-/// 手动销毁当前活跃的 Daytona 沙盒（并清除内存缓存）
+/// 手动销毁当前活跃的沙盒（并清除内存缓存）
 #[tauri::command]
 pub async fn destroy_sandbox(
     db: State<'_, crate::SharedDbManager>,
 ) -> Result<(), String> {
-    flock_tools::daytona::destroy_active_sandbox(&*db)
+    flock_tools::sandbox_core::manager::destroy_active_sandbox(&*db)
         .await
         .map_err(|e| e.to_string())
 }
 
-/// 列出并销毁 Daytona 上所有运行中的沙盒（清理历史遗留的僵尸沙盒）
+/// 列出并销毁所有运行中的沙盒（清理历史遗留的僵尸沙盒）
 #[tauri::command]
 pub async fn cleanup_all_sandboxes(
     db: State<'_, crate::SharedDbManager>,
 ) -> Result<String, String> {
-    use flock_core::db::DbManager;
-    use flock_tools::daytona::{get_sandbox_config, get_api_base};
-
-    let db_ref: &DbManager = &*db;
-    let cfg = get_sandbox_config(db_ref).await
-        .ok_or_else(|| flock_core::tr("沙盒未配置或未启用", "Sandbox not configured or enabled"))?;
-
-    let base = get_api_base(cfg.api_url.as_ref().unwrap());
-    let api_key = cfg.api_key.as_ref().unwrap();
-
-    let client = reqwest::Client::new();
-    let list_url = format!("{}/api/sandbox", base);
-    let resp = client.get(&list_url)
-        .header("Authorization", format!("Bearer {}", api_key))
-        .send()
+    let db_ref = &*db;
+    let res = flock_tools::sandbox_core::manager::cleanup_all_sandbox_instances(db_ref)
         .await
-        .map_err(|e| flock_core::tr(
-            &format!("获取沙盒列表失败: {}", e),
-            &format!("Failed to retrieve sandbox list: {}", e)
-        ))?;
-
-    let text = resp.text().await.unwrap_or_default();
-    let val: serde_json::Value = serde_json::from_str(&text)
-        .map_err(|e| flock_core::tr(
-            &format!("解析沙盒列表失败: {}", e),
-            &format!("Failed to parse sandbox list: {}", e)
-        ))?;
-
-    let sandboxes = val.as_array()
-        .cloned()
-        .unwrap_or_else(|| {
-            val.get("items").or_else(|| val.get("data"))
-                .and_then(|v| v.as_array())
-                .cloned()
-                .unwrap_or_default()
-        });
-
-    let mut deleted = 0usize;
-    let mut failed = 0usize;
-
-    for sb in &sandboxes {
-        let id = sb.get("id").and_then(|v| v.as_str()).unwrap_or_default();
-        if id.is_empty() { continue; }
-
-        let state_str = sb.get("state").or_else(|| sb.get("status"))
-            .and_then(|v| v.as_str())
-            .unwrap_or("");
-
-        // 只销毁 started / running / stopped 状态（跳过已删除的）
-        if state_str == "deleted" || state_str == "archived" { continue; }
-
-        let del_url = format!("{}/api/sandbox/{}", base, id);
-        match client.delete(&del_url)
-            .header("Authorization", format!("Bearer {}", api_key))
-            .send()
-            .await
-        {
-            Ok(r) if r.status().is_success() => deleted += 1,
-            _ => failed += 1,
-        }
-    }
+        .map_err(|e| e.to_string())?;
 
     // 清除本地缓存
-    let _ = flock_tools::daytona::destroy_active_sandbox(db_ref).await;
+    let _ = flock_tools::sandbox_core::manager::destroy_active_sandbox(db_ref).await;
 
-    Ok(flock_core::tr(
-        &format!("清理完成：已销毁 {} 个沙盒，失败 {} 个。", deleted, failed),
-        &format!("Cleanup complete: destroyed {} sandboxes, failed {}.", deleted, failed)
-    ))
+    Ok(res)
 }
 
 /// 获取当前活动沙盒的 VNC 代理链接
@@ -93,15 +33,27 @@ pub async fn get_active_sandbox_vnc_url(
     _state: State<'_, SharedAgentState>,
     db: State<'_, crate::SharedDbManager>,
 ) -> Result<Option<String>, String> {
-    if let Some(sandbox_id) = flock_tools::daytona::get_active_sandbox_id().await {
-        match flock_tools::daytona::get_sandbox_vnc_url(&*db, &sandbox_id).await {
+    if let Some(sandbox_id) = flock_tools::sandbox_core::manager::get_active_sandbox_id().await {
+        match flock_tools::sandbox_core::manager::get_sandbox_vnc_url(&*db, &sandbox_id).await {
             Ok(url) => Ok(Some(url)),
-            Err(e) => {
-                log::warn!("{}", flock_core::tr(
-                    &format!("获取动态 VNC URL 失败: {}。使用静态备用 URL...", e),
-                    &format!("Failed to retrieve dynamic VNC URL: {}. Using static fallback URL...", e)
-                ));
-                Ok(Some(format!("https://6080-{}.proxy.app.daytona.io/vnc.html?autoconnect=true&resize=scale", sandbox_id)))
+            Err(_) => {
+                let fallback_url = match flock_tools::sandbox_core::config::get_sandbox_config(&*db).await {
+                    Some(cfg) => {
+                        let provider_name = cfg.provider.as_deref().unwrap_or("e2b");
+                        let provider = flock_tools::sandbox_core::manager::get_provider(provider_name);
+                        provider.get_vnc_url(&*db, &cfg, &sandbox_id).await.unwrap_or_else(|_| {
+                            if provider_name == "e2b" {
+                                format!("https://6080-{}.e2b.app/vnc.html?autoconnect=true&resize=scale&skip-preview-warning=true&skip_preview_warning=true", sandbox_id)
+                            } else {
+                                format!("https://6080-{}.proxy.app.daytona.io/vnc.html?autoconnect=true&resize=scale", sandbox_id)
+                            }
+                        })
+                    }
+                    None => {
+                        format!("https://6080-{}.proxy.app.daytona.io/vnc.html?autoconnect=true&resize=scale", sandbox_id)
+                    }
+                };
+                Ok(Some(fallback_url))
             }
         }
     } else {

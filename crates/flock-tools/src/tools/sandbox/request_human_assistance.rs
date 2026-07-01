@@ -1,7 +1,7 @@
 use crate::adapter::LangGraphToolAdapter;
 use crate::Tool;
-use crate::daytona::{
-    get_or_create_active_sandbox, get_sandbox_vnc_url,
+use crate::sandbox_core::manager::{get_or_create_active_sandbox, get_sandbox_vnc_url};
+use crate::sandbox_core::daytona::{
     start_computer_use_in_sandbox, ensure_vnc_running_in_sandbox
 };
 use flock_core::ipc_interface::events::ToolCategory;
@@ -42,8 +42,12 @@ pub async fn request_human_assistance(
     // 3. 拿到当前的 VNC 控制台 URL 链接
     let proxy_url = match get_sandbox_vnc_url(&db, &sandbox_id).await {
         Ok(u) => u,
-        Err(_) => {
-            format!("https://6080-{}.proxy.app.daytona.io/vnc.html?autoconnect=true&resize=scale", sandbox_id)
+        Err(e) => {
+            crate::emit_info(&flock_core::tr(
+                &format!("获取 VNC URL 失败: {}", e),
+                &format!("Failed to get VNC URL: {}", e)
+            ));
+            return Err(format!("无法获取沙盒 VNC 连接地址: {}", e));
         }
     };
 
@@ -59,7 +63,7 @@ pub async fn request_human_assistance(
             reason
         );
 
-        crate::daytona::emit_human_takeover(
+        crate::sandbox_core::state::emit_human_takeover(
             &cid,
             &mid,
             &display_message,

@@ -1,8 +1,8 @@
 use crate::adapter::LangGraphToolAdapter;
 use crate::Tool;
-use crate::daytona::{
-    get_or_create_active_sandbox, execute_command_in_sandbox,
-    start_computer_use_in_sandbox, check_computer_use_status, ensure_vnc_running_in_sandbox,
+use crate::sandbox_core::manager::{get_or_create_active_sandbox, execute_command_in_sandbox, ensure_vnc_running_in_sandbox, get_sandbox_vnc_url};
+use crate::sandbox_core::daytona::{
+    start_computer_use_in_sandbox, check_computer_use_status,
     DISPLAY_ID,
 };
 use flock_core::db::DbManager;
@@ -211,15 +211,23 @@ pub async fn computer_use(
 
     match act.as_str() {
         "interactive" => {
-            let proxy_url = crate::daytona::get_sandbox_vnc_url(&db, &sandbox_id).await
-                .unwrap_or_else(|_| format!("https://{}-{}.proxy.app.daytona.io/vnc.html?autoconnect=true&resize=scale", crate::daytona::WEBSOCKIFY_PORT, sandbox_id));
+            let proxy_url = match get_sandbox_vnc_url(&db, &sandbox_id).await {
+                Ok(url) => url,
+                Err(e) => {
+                    crate::emit_info(&flock_core::tr(
+                        &format!("获取 VNC URL 失败: {}", e),
+                        &format!("Failed to get VNC URL: {}", e)
+                    ));
+                    return Err(format!("无法获取沙盒 VNC 连接地址: {}", e));
+                }
+            };
             
             if let (Some(cid), Some(mid), Some(app_mgr)) = (call_id.clone(), msg_id, crate::get_global_approval_manager()) {
                 crate::emit_info(&flock_core::tr(
                     &format!("检测到敏感桌面操作（验证码/人工介入），正在通知前端拉起人工接管横幅 (Call ID: {})...", cid),
                     &format!("Sensitive desktop action detected (captcha/human verification), notifying client to display takeover banner (Call ID: {})...", cid)
                 ));
-                crate::daytona::emit_human_takeover(
+                crate::sandbox_core::state::emit_human_takeover(
                     &cid,
                     &mid,
                     "人机协同远程桌面已拉起！检测到当前桌面应用需要人工介入（如滑动拼图验证、扫码登录等），大模型自动执行已暂停。您可以在右侧预览面板中直接操作页面。完成后请点击横幅上的【我已完成操作】按钮以恢复大模型的自动运行。",
@@ -301,11 +309,14 @@ pub async fn computer_use(
 
     let (image_md, _screenshot_saved) = capture_desktop_screenshot(&db, &sandbox_id, &session_id, &name_id).await;
 
-    let proxy_url = match crate::daytona::get_sandbox_vnc_url(&db, &sandbox_id).await {
+    let proxy_url = match get_sandbox_vnc_url(&db, &sandbox_id).await {
         Ok(u) => u,
         Err(e) => {
-            crate::emit_info(&flock_core::tr(&format!("获取动态 VNC URL 失败: {}。使用静态备用 URL...", e), &format!("Failed to retrieve dynamic VNC URL: {}. Falling back to static VNC URL...", e)));
-            format!("https://{}-{}.proxy.app.daytona.io/vnc.html?autoconnect=true&resize=scale", crate::daytona::WEBSOCKIFY_PORT, sandbox_id)
+            crate::emit_info(&flock_core::tr(
+                &format!("获取动态 VNC URL 失败: {}。", e),
+                &format!("Failed to retrieve dynamic VNC URL: {}.", e)
+            ));
+            return Err(format!("无法获取沙盒 VNC 连接地址: {}", e));
         }
     };
 

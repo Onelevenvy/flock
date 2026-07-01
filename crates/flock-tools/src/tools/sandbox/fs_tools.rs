@@ -1,6 +1,6 @@
 use crate::adapter::LangGraphToolAdapter;
 use crate::Tool;
-use crate::daytona::fs::DaytonaFs;
+use crate::sandbox_core::daytona::fs::DaytonaFs;
 use flock_core::ipc_interface::events::ToolCategory;
 use langgraph::tool;
 

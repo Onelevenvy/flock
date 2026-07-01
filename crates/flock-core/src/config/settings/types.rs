@@ -147,12 +147,23 @@ impl Default for SessionConfig {
 pub struct SandboxConfig {
     #[serde(default)]
     pub enabled: bool,
+    #[serde(default = "default_sandbox_provider")]
+    pub provider: Option<String>,
     pub api_url: Option<String>,
     pub api_key: Option<String>,
     pub api_key_encrypted: Option<String>,
     pub api_key_nonce: Option<String>,
+    pub e2b_api_key: Option<String>,
+    pub e2b_api_key_encrypted: Option<String>,
+    pub e2b_api_key_nonce: Option<String>,
+    pub e2b_api_url: Option<String>,
     pub snapshot: Option<String>,
 }
+
+pub fn default_sandbox_provider() -> Option<String> {
+    Some("e2b".to_string())
+}
+
 
 // --- Default value functions ---
 pub fn default_provider() -> String {

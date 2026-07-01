@@ -13,6 +13,7 @@ import {
   Autocomplete,
   Alert,
   Divider,
+  Stack,
 } from '@mantine/core';
 import {
   IconTrash,
@@ -24,6 +25,7 @@ import {
   IconStar,
   IconStarFilled,
   IconInfoCircle,
+  IconCpu,
 } from '@tabler/icons-react';
 import { invoke } from '@tauri-apps/api/core';
 import { notifications } from '@mantine/notifications';
@@ -38,17 +40,25 @@ interface SnapshotItem {
 }
 
 interface SnapshotListSectionProps {
+  provider: 'e2b' | 'daytona' | 'local';
   currentDefaultSnapshot: string;
   onSetDefaultSnapshot: (name: string) => void;
   onCreateSnapshot: (name: string) => Promise<void>;
   creatingSnapshot: boolean;
+  buildingE2b?: boolean;
+  e2bBuildLogs?: string[];
+  onBuildE2bTemplate?: (name: string) => void;
 }
 
 export function SnapshotListSection({
+  provider,
   currentDefaultSnapshot,
   onSetDefaultSnapshot,
   onCreateSnapshot,
   creatingSnapshot,
+  buildingE2b,
+  e2bBuildLogs,
+  onBuildE2bTemplate,
 }: SnapshotListSectionProps) {
   const { t } = useTranslation();
   const [snapshots, setSnapshots] = useState<SnapshotItem[]>([]);
@@ -56,12 +66,12 @@ export function SnapshotListSection({
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [newSnapshotName, setNewSnapshotName] = useState('');
 
-  const defaultSnapshotName = 'flock-playwright';
+  const defaultSnapshotName = provider === 'e2b' ? 'flock-e2b-desktop' : 'flock-daytona-desktop';
 
   const fetchSnapshots = async () => {
     setLoading(true);
     try {
-      const data = await invoke<any>('list_daytona_snapshots');
+      const data = await invoke<any>('list_sandbox_templates', { provider });
       let list: SnapshotItem[] = [];
       if (Array.isArray(data)) {
         list = data;
@@ -71,7 +81,9 @@ export function SnapshotListSection({
         list = data.data;
       }
       // Filter out system-managed templates
-      const userSnapshots = list.filter((snap: any) => !snap.general && !snap.system && !snap.isSystem);
+      const userSnapshots = provider === 'e2b' 
+        ? list 
+        : list.filter((snap: any) => !snap.general && !snap.system && !snap.isSystem);
       setSnapshots(userSnapshots);
     } catch (e) {
       console.error('获取快照列表失败:', e);
@@ -87,7 +99,7 @@ export function SnapshotListSection({
 
   useEffect(() => {
     fetchSnapshots();
-  }, []);
+  }, [provider]);
 
   const handleCopy = (text: string) => {
     navigator.clipboard.writeText(text);
@@ -101,7 +113,7 @@ export function SnapshotListSection({
   const handleDelete = async (id: string) => {
     setDeletingId(id);
     try {
-      await invoke('delete_daytona_snapshot', { id });
+      await invoke('delete_sandbox_template', { id, provider });
       notifications.show({
         title: t('common.success'),
         message: t('settings.sandbox.deleteSnapshotSuccess'),
@@ -122,20 +134,20 @@ export function SnapshotListSection({
   };
 
   const handleCreate = async () => {
-    const name = newSnapshotName.trim() || defaultSnapshotName;
-    const existing = snapshots.find((s) => s.name === name);
+    const nameOrId = newSnapshotName.trim() || defaultSnapshotName;
+    const existing = snapshots.find((s) => s.name === nameOrId || s.id === nameOrId);
     if (existing) {
-      await onSetDefaultSnapshot(name);
+      await onSetDefaultSnapshot(existing.id);
       setNewSnapshotName('');
       return;
     }
-    await onCreateSnapshot(name);
+    await onCreateSnapshot(nameOrId);
     setNewSnapshotName('');
     fetchSnapshots();
   };
 
   const renderState = (snap: SnapshotItem) => {
-    const stateStr = (snap.state || snap.snapshotState || 'unknown').toLowerCase();
+    const stateStr = (snap.state || snap.snapshotState || snap.status || 'unknown').toLowerCase();
     let color = 'gray';
     if (stateStr === 'ready' || stateStr === 'active') color = 'teal';
     if (stateStr === 'building' || stateStr === 'creating') color = 'blue';
@@ -167,7 +179,7 @@ export function SnapshotListSection({
           <Group gap="xs">
             <IconCamera size={20} color="var(--flock-accent)" />
             <Text fw={700} size="md">
-              {t('settings.sandbox.createSnapshotTitle')}
+              {provider === 'e2b' ? 'E2B Custom Sandboxes / Templates' : t('settings.sandbox.createSnapshotTitle')}
             </Text>
           </Group>
         </Group>
@@ -184,14 +196,26 @@ export function SnapshotListSection({
           <Button
             variant="filled"
             color={isExistingSnapshot ? 'teal' : 'blue'}
-            onClick={handleCreate}
-            loading={creatingSnapshot}
-            leftSection={isExistingSnapshot ? <IconCheck size={15} /> : <IconCamera size={15} />}
+            onClick={
+              isExistingSnapshot 
+                ? handleCreate 
+                : provider === 'e2b' 
+                ? () => onBuildE2bTemplate?.(newSnapshotName.trim() || defaultSnapshotName) 
+                : handleCreate
+            }
+            loading={isExistingSnapshot ? creatingSnapshot : provider === 'e2b' ? buildingE2b : creatingSnapshot}
+            leftSection={
+              isExistingSnapshot 
+                ? <IconCheck size={15} /> 
+                : provider === 'local'
+                ? <IconStar size={15} />
+                : <IconCamera size={15} />
+            }
           >
             {isExistingSnapshot
               ? t('settings.sandbox.useExistingSnapshot')
-              : creatingSnapshot
-              ? t('settings.sandbox.snapshotCreating')
+              : provider === 'local'
+              ? t('settings.sandbox.setAsDefault')
               : t('settings.sandbox.snapshotCreateBtn')}
           </Button>
         </Group>
@@ -204,7 +228,9 @@ export function SnapshotListSection({
           mb="lg"
           style={{ fontSize: 12 }}
         >
-          {t('settings.sandbox.snapshotHint')}
+          {provider === 'e2b'
+            ? 'You can enter a template ID above to build a custom snapshot template, or choose an existing snapshot template from the list below (click the star icon to set as default and reuse it instantly).'
+            : t('settings.sandbox.snapshotHint')}
         </Alert>
       </Box>
 
@@ -212,21 +238,34 @@ export function SnapshotListSection({
 
       {/* 快照列表 */}
       <Box>
-        <Group justify="space-between" mb="lg">
+        <Group justify="space-between" mb="xs">
           <Text fw={700} size="md">
             {t('settings.sandbox.snapshots')}
           </Text>
-          <Button
-            variant="subtle"
-            color="gray"
-            leftSection={loading ? <Loader size="xs" color="gray" /> : <IconRefresh size={15} />}
-            onClick={fetchSnapshots}
-            disabled={loading}
-            size="xs"
-          >
-            {t('common.refresh')}
-          </Button>
+          <Group gap="xs">
+            <Button
+              variant="subtle"
+              color="gray"
+              leftSection={loading ? <Loader size="xs" color="gray" /> : <IconRefresh size={15} />}
+              onClick={fetchSnapshots}
+              disabled={loading}
+              size="xs"
+            >
+              {t('common.refresh')}
+            </Button>
+          </Group>
         </Group>
+
+        {e2bBuildLogs && e2bBuildLogs.length > 0 && (
+          <Box mt="md" mb="md" p="xs" style={{ background: '#1e1e1e', color: '#0f0', fontFamily: 'monospace', fontSize: 12, borderRadius: 8, maxHeight: 300, overflowY: 'auto' }}>
+            <Text size="xs" c="dimmed" mb="xs">
+              {buildingE2b ? 'Building Custom Template... (this might take a few minutes)' : 'Build Logs / Status:'}
+            </Text>
+            {e2bBuildLogs?.map((log, i) => (
+              <div key={i}>{log}</div>
+            ))}
+          </Box>
+        )}
 
         {loading && snapshots.length === 0 ? (
           <Group justify="center" p="xl">
@@ -256,7 +295,7 @@ export function SnapshotListSection({
             </Table.Thead>
             <Table.Tbody>
               {snapshots.map((snap) => {
-                const isDefault = currentDefaultSnapshot === snap.name;
+                const isDefault = currentDefaultSnapshot === snap.name || currentDefaultSnapshot === snap.id;
                 return (
                   <Table.Tr key={snap.id} style={{ borderColor: 'var(--flock-border-subtle)' }}>
                     <Table.Td>
@@ -287,7 +326,7 @@ export function SnapshotListSection({
                             variant="subtle"
                             color={isDefault ? 'yellow' : 'gray'}
                             size="sm"
-                            onClick={() => onSetDefaultSnapshot(snap.name)}
+                            onClick={() => onSetDefaultSnapshot(snap.id)}
                           >
                             {isDefault ? <IconStarFilled size={14} /> : <IconStar size={14} />}
                           </ActionIcon>

@@ -30,7 +30,7 @@ flock-agent     = { path = "crates/flock-agent" }
 flock-workflow  = { path = "crates/flock-workflow" }
 
 # LangGraph
-langgraph   = { version = "0.2.4", features = ["prebuilt", "providers", "sqlite"] }
+langgraph   = { version = "0.2.5", features = ["prebuilt", "providers", "sqlite"] }
 
 tokio   = { version = "1", features = ["full"] }
 tokio-stream = "0.1"

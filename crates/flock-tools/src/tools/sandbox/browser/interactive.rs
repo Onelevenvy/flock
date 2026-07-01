@@ -1,8 +1,11 @@
-use crate::daytona::{
-    execute_command_in_sandbox,
+use crate::sandbox_core::daytona::{
     start_computer_use_in_sandbox,
+    DISPLAY_ID,
+};
+use crate::sandbox_core::manager::{
+    execute_command_in_sandbox,
+    get_sandbox_vnc_url,
     ensure_vnc_running_in_sandbox,
-    DISPLAY_ID, WEBSOCKIFY_PORT,
 };
 use flock_core::ipc_interface::events::ToolCategory;
 use flock_core::db::DbManager;
@@ -21,17 +24,14 @@ pub async fn handle_interactive(
     call_id: Option<String>,
     msg_id: Option<String>,
 ) -> Result<String, String> {
-    let proxy_url = match crate::daytona::get_sandbox_vnc_url(db, sandbox_id).await {
+    let proxy_url = match get_sandbox_vnc_url(db, sandbox_id).await {
         Ok(u) => u,
         Err(e) => {
             crate::emit_info(&flock_core::tr(
-                &format!("获取动态 VNC URL 失败: {}。使用静态备用 URL...", e),
-                &format!("Failed to retrieve dynamic VNC URL: {}. Falling back to static VNC URL...", e),
+                &format!("获取 VNC URL 失败: {}", e),
+                &format!("Failed to get VNC URL: {}", e)
             ));
-            format!(
-                "https://{}-{}.proxy.app.daytona.io/vnc.html?autoconnect=true&resize=scale",
-                WEBSOCKIFY_PORT, sandbox_id
-            )
+            return Err(format!("无法获取沙盒 VNC 连接地址: {}", e));
         }
     };
 
@@ -105,7 +105,7 @@ pub async fn handle_interactive(
             &format!("检测到敏感网页元素（密码输入框/验证码），正在通知前端拉起人工接管横幅 (Call ID: {})...", cid),
             &format!("Sensitive page element detected (password input/captcha), notifying client to display takeover banner (Call ID: {})...", cid),
         ));
-        crate::daytona::emit_human_takeover(
+        crate::sandbox_core::state::emit_human_takeover(
             &cid,
             &mid,
             "人机协同远程桌面已拉起！检测到当前操作需要人工介入（如输入密码、手动验证码、安全登录等），大模型自动执行已暂停。您可以在右侧预览面板中直接操作页面。完成后请点击横幅上的【我已完成操作】按钮以恢复大模型的自动运行。",

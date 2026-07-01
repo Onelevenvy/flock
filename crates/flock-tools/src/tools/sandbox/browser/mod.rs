@@ -3,11 +3,8 @@ mod interactive;
 
 use crate::adapter::LangGraphToolAdapter;
 use crate::Tool;
-use crate::daytona::{
-    get_or_create_active_sandbox, execute_command_in_sandbox,
-    ensure_vnc_running_in_sandbox,
-    DISPLAY_ID,
-};
+use crate::sandbox_core::manager::{get_or_create_active_sandbox, execute_command_in_sandbox, ensure_vnc_running_in_sandbox};
+use crate::sandbox_core::daytona::DISPLAY_ID;
 use flock_core::ipc_interface::events::ToolCategory;
 use langgraph::tool;
 use base64::{Engine as _, engine::general_purpose};
