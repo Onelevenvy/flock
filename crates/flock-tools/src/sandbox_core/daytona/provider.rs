@@ -66,9 +66,10 @@ impl SandboxProvider for DaytonaProvider {
             .send()
             .await?;
 
-        if !resp.status().is_success() {
+        let status = resp.status();
+        if !status.is_success() {
             let err_body = resp.text().await.unwrap_or_default();
-            anyhow::bail!("Failed to delete Daytona snapshot: {} - {}", resp.status(), err_body);
+            anyhow::bail!("Failed to delete Daytona snapshot: {} - {}", status, err_body);
         }
         Ok(())
     }

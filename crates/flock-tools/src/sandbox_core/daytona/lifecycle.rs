@@ -186,9 +186,8 @@ pub async fn create_sandbox(db: &DbManager, cfg: &SandboxConfig) -> anyhow::Resu
         }
     }
 
-    // Sync up local workspace
     if let Some(ws_path) = crate::get_workspace_dir() {
-        if let Err(e) = crate::sandbox_core::daytona::sync::sync_up(db, &sandbox_id, &ws_path).await {
+        if let Err(e) = crate::sandbox_core::sync::sync_up(db, &sandbox_id, &ws_path).await {
             crate::emit_info(&format!("Sync Up failed: {}", e));
         }
     }

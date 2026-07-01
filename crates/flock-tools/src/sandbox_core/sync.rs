@@ -10,14 +10,14 @@ fn should_ignore(path: &Path) -> bool {
 }
 
 pub async fn sync_up(db: &DbManager, sandbox_id: &str, local_workspace: &Path) -> anyhow::Result<()> {
-    let mut ws_dir = "/workspace";
+    let mut ws_dir = "/workspace".to_string();
     if let Some(cfg) = crate::sandbox_core::config::get_sandbox_config(db).await {
         if cfg.provider.as_deref().unwrap_or("e2b") == "local" {
             return Ok(());
         }
         let provider_name = cfg.provider.as_deref().unwrap_or("e2b");
         let provider = crate::sandbox_core::manager::get_provider(provider_name);
-        ws_dir = provider.get_workspace_dir();
+        ws_dir = provider.get_workspace_dir().to_string();
     }
 
     if ws_dir.is_empty() {
@@ -66,14 +66,14 @@ pub async fn sync_up(db: &DbManager, sandbox_id: &str, local_workspace: &Path) -
 }
 
 pub async fn sync_down(db: &DbManager, sandbox_id: &str, local_workspace: &Path) -> anyhow::Result<()> {
-    let mut ws_dir = "/workspace";
+    let mut ws_dir = "/workspace".to_string();
     if let Some(cfg) = crate::sandbox_core::config::get_sandbox_config(db).await {
         if cfg.provider.as_deref().unwrap_or("e2b") == "local" {
             return Ok(());
         }
         let provider_name = cfg.provider.as_deref().unwrap_or("e2b");
         let provider = crate::sandbox_core::manager::get_provider(provider_name);
-        ws_dir = provider.get_workspace_dir();
+        ws_dir = provider.get_workspace_dir().to_string();
     }
 
     if ws_dir.is_empty() {
