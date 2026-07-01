@@ -2562,9 +2562,9 @@ dependencies = [
 
 [[package]]
 name = "langgraph"
-version = "0.2.4"
+version = "0.2.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "b925fdc6a07842f54e4426e33185e8f7d16c80574df819ceb4d6f8bee8111615"
+checksum = "1ad5fb1669d00eccb11533ac6f89ba17d1f9e256a2f4f49fe016d7367e281e33"
 dependencies = [
  "async-trait",
  "dotenvy",
