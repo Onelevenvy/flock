@@ -63,7 +63,7 @@ pub async fn request_human_assistance(
             reason
         );
 
-        crate::sandbox_core::daytona::emit_human_takeover(
+        crate::sandbox_core::state::emit_human_takeover(
             &cid,
             &mid,
             &display_message,

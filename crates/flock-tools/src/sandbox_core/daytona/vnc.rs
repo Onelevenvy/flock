@@ -162,48 +162,7 @@ pub async fn check_computer_use_status(
 
 /// 确保沙盒中 VNC 桌面相关进程正在后台运行，具有自愈拉起和 setsid/nohup 防进程清理机制。
 pub async fn ensure_vnc_running_in_sandbox(db: &DbManager, sandbox_id: &str) -> anyhow::Result<()> {
-    // 检查 websockify 是否已经在运行且在指定端口监听
-    let check_cmd = format!("python3 -c \"import socket; s = socket.socket(); s.connect(('127.0.0.1', {}))\"", WEBSOCKIFY_PORT);
-    let (_, exit_code) = execute_command_in_sandbox(db, sandbox_id, &check_cmd).await.unwrap_or(("-1".to_string(), -1));
-    if exit_code == 0 {
-        crate::emit_info(&flock_core::tr("检测到 VNC 桌面服务已经在运行。", "Detected VNC desktop service is already running."));
-        return Ok(());
-    }
-
-    crate::emit_info(&flock_core::tr("检测到 VNC 服务未运行，手动拉起 Xvfb, VNC, noVNC...", "Detected VNC service not running, manually starting Xvfb, VNC, noVNC..."));
-    let launch_cmd = format!("sh -c '\
-        if command -v start-vnc >/dev/null 2>&1; then \
-            setsid nohup start-vnc >/tmp/vnc_start.log 2>&1 & \
-            sleep 2; \
-        else \
-            export DISPLAY={display} && \
-            rm -f /tmp/.X0-lock && \
-            setsid nohup Xvfb {display} -screen 0 {res} >/tmp/xvfb.log 2>&1 & \
-            sleep 1 && \
-            setsid nohup fluxbox >/tmp/fluxbox.log 2>&1 & \
-            sleep 1 && \
-            setsid nohup x11vnc -display {display} -forever -shared -nopw -rfbport {vnc_port} >/tmp/x11vnc.log 2>&1 & \
-            sleep 1 && \
-            setsid nohup websockify --web /usr/share/novnc 0.0.0.0:{web_port} localhost:{vnc_port} >/tmp/websockify.log 2>&1 & \
-            sleep 1; \
-        fi'",
-        display = DISPLAY_ID,
-        res = SCREEN_RESOLUTION,
-        vnc_port = X11VNC_PORT,
-        web_port = WEBSOCKIFY_PORT
-    );
-    
-    let (out, code) = execute_command_in_sandbox(db, sandbox_id, &launch_cmd).await?;
-    if code != 0 {
-        crate::emit_info(&flock_core::tr(
-            &format!("手动拉起桌面服务进程失败 (退出码 {}): {}", code, out),
-            &format!("Failed to manually start desktop service process (exit code {}): {}", code, out)
-        ));
-    } else {
-        crate::emit_info(&flock_core::tr("手动拉起桌面服务进程指令已发送。", "Manual start desktop service process command sent."));
-    }
-    
-    Ok(())
+    crate::sandbox_core::vnc_helper::ensure_vnc_running_in_sandbox(db, sandbox_id).await
 }
 
 /// 获取沙盒 6080 端口 of Preview URL，并自动转化为 noVNC 控制台 URL。

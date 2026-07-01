@@ -227,7 +227,7 @@ pub async fn computer_use(
                     &format!("检测到敏感桌面操作（验证码/人工介入），正在通知前端拉起人工接管横幅 (Call ID: {})...", cid),
                     &format!("Sensitive desktop action detected (captcha/human verification), notifying client to display takeover banner (Call ID: {})...", cid)
                 ));
-                crate::sandbox_core::daytona::emit_human_takeover(
+                crate::sandbox_core::state::emit_human_takeover(
                     &cid,
                     &mid,
                     "人机协同远程桌面已拉起！检测到当前桌面应用需要人工介入（如滑动拼图验证、扫码登录等），大模型自动执行已暂停。您可以在右侧预览面板中直接操作页面。完成后请点击横幅上的【我已完成操作】按钮以恢复大模型的自动运行。",

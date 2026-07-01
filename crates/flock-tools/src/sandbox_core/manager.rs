@@ -152,3 +152,30 @@ pub async fn ensure_vnc_running_in_sandbox(db: &DbManager, sandbox_id: &str) -> 
     
     provider.ensure_vnc_running(db, &cfg, sandbox_id).await
 }
+
+pub async fn list_sandbox_templates(db: &DbManager) -> anyhow::Result<serde_json::Value> {
+    let cfg = get_sandbox_config(db).await
+        .ok_or_else(|| anyhow::anyhow!("沙盒未配置"))?;
+
+    let provider_name = cfg.provider.as_deref().unwrap_or("e2b");
+    let provider = get_provider(provider_name);
+    provider.list_templates(db, &cfg).await
+}
+
+pub async fn delete_sandbox_template(db: &DbManager, id: &str) -> anyhow::Result<()> {
+    let cfg = get_sandbox_config(db).await
+        .ok_or_else(|| anyhow::anyhow!("沙盒未配置"))?;
+
+    let provider_name = cfg.provider.as_deref().unwrap_or("e2b");
+    let provider = get_provider(provider_name);
+    provider.delete_template(db, &cfg, id).await
+}
+
+pub async fn cleanup_all_sandbox_instances(db: &DbManager) -> anyhow::Result<String> {
+    let cfg = get_sandbox_config(db).await
+        .ok_or_else(|| anyhow::anyhow!("沙盒未配置"))?;
+
+    let provider_name = cfg.provider.as_deref().unwrap_or("e2b");
+    let provider = get_provider(provider_name);
+    provider.cleanup_all_instances(db, &cfg).await
+}

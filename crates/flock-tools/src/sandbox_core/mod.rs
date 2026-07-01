@@ -4,3 +4,6 @@ pub mod e2b;
 pub mod manager;
 pub mod provider;
 pub mod local_provider;
+pub mod state;
+pub mod sync;
+pub mod vnc_helper;

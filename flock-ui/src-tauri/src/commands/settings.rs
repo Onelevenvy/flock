@@ -394,110 +394,26 @@ pub async fn list_sandbox_templates(
 ) -> Result<serde_json::Value, String> {
     use flock_core::db::DbManager;
 
-    let active_provider = provider.unwrap_or_else(|| "e2b".to_string());
-    if active_provider == "e2b" {
-        let db_ref: &DbManager = &*db;
-        let cfg = get_sandbox_config_regardless(db_ref).await.unwrap_or_default();
-        let key = if let Some(ref k) = api_key {
-            if k.is_empty() || k.contains('•') {
-                cfg.e2b_api_key.clone().unwrap_or_default()
+    let db_ref: &DbManager = &*db;
+    let mut cfg = get_sandbox_config_regardless(db_ref).await.unwrap_or_default();
+    if let Some(p) = provider {
+        cfg.provider = Some(p);
+    }
+    if let Some(k) = api_key {
+        if !k.is_empty() && !k.contains('•') {
+            if cfg.provider.as_deref().unwrap_or("e2b") == "e2b" {
+                cfg.e2b_api_key = Some(k);
             } else {
-                k.clone()
-            }
-        } else {
-            cfg.e2b_api_key.clone().unwrap_or_default()
-        };
-
-        log::info!("list_sandbox_templates: active_provider = E2B, key len = {}, key starts with: {}", key.len(), key.chars().take(5).collect::<String>());
-        if key.is_empty() {
-            return Ok(serde_json::json!([]));
-        }
-
-        let base_url = cfg.e2b_api_url.as_deref().unwrap_or("https://api.e2b.app").trim_end_matches('/');
-
-        let client = reqwest::Client::new();
-        let url = format!("{}/templates", base_url);
-        let resp = client.get(&url)
-            .header("X-API-Key", key)
-            .send()
-            .await
-            .map_err(|e| flock_core::tr(
-                &format!("请求 E2B 模板列表失败: {}", e),
-                &format!("Failed to request E2B template list: {}", e)
-            ))?;
-
-        let status = resp.status();
-        let text = resp.text().await.unwrap_or_default();
-        log::info!("list_sandbox_templates: E2B templates status = {}, text = {}", status, text);
-        if !status.is_success() {
-            return Err(flock_core::tr(
-                &format!("E2B API 错误 ({}): {}", status, text),
-                &format!("E2B API error ({}): {}", status, text)
-            ));
-        }
-
-        let mut mapped: Vec<serde_json::Value> = vec![];
-
-        let list_val: serde_json::Value = serde_json::from_str(&text)
-            .map_err(|e| flock_core::tr(
-                &format!("解析 E2B 模板列表失败: {}", e),
-                &format!("Failed to parse E2B template list: {}", e)
-            ))?;
-
-        if let Some(arr) = list_val.as_array() {
-            for item in arr {
-                let id = item.get("templateID")
-                    .or_else(|| item.get("snapshotID"))
-                    .or_else(|| item.get("id"))
-                    .and_then(|v| v.as_str())
-                    .unwrap_or_default();
-                let name = item.get("aliases")
-                    .and_then(|a| a.as_array())
-                    .and_then(|arr| arr.first())
-                    .and_then(|v| v.as_str())
-                    .unwrap_or(id);
-                if !id.is_empty() && !mapped.iter().any(|m| m.get("id").and_then(|v| v.as_str()) == Some(id)) {
-                    mapped.push(serde_json::json!({
-                        "id": id,
-                        "name": name,
-                        "status": "active"
-                    }));
-                }
+                cfg.api_key = Some(k);
             }
         }
-        return Ok(serde_json::json!(mapped));
-    } else if active_provider == "local" {
-        return Ok(serde_json::json!([]));
     }
 
-    let db_ref: &DbManager = &*db;
-    let cfg = match get_sandbox_config_regardless(db_ref).await {
-        Some(c) => c,
-        None => return Ok(serde_json::json!([])),
-    };
-
-    let base = flock_tools::sandbox_core::config::get_api_base(cfg.api_url.as_ref().unwrap());
-    let api_key = cfg.api_key.as_ref().unwrap();
-
-    let client = reqwest::Client::new();
-    let url = format!("{}/api/snapshots", base);
-    let resp = client.get(&url)
-        .header("Authorization", format!("Bearer {}", api_key))
-        .send()
+    let provider_name = cfg.provider.as_deref().unwrap_or("e2b");
+    let provider_impl = flock_tools::sandbox_core::manager::get_provider(provider_name);
+    provider_impl.list_templates(db_ref, &cfg)
         .await
-        .map_err(|e| flock_core::tr(
-            &format!("请求快照列表失败: {}", e),
-            &format!("Failed to request snapshot list: {}", e)
-        ))?;
-
-    let text = resp.text().await.unwrap_or_default();
-    let val: serde_json::Value = serde_json::from_str(&text)
-        .map_err(|e| flock_core::tr(
-            &format!("解析快照列表失败: {}", e),
-            &format!("Failed to parse snapshot list: {}", e)
-        ))?;
-
-    Ok(val)
+        .map_err(|e| e.to_string())
 }
 
 /// 删除指定 Daytona/E2B 快照/模板
@@ -510,58 +426,17 @@ pub async fn delete_sandbox_template(
     use flock_core::db::DbManager;
 
     let db_ref: &DbManager = &*db;
-    let cfg = get_sandbox_config_regardless(db_ref).await
+    let mut cfg = get_sandbox_config_regardless(db_ref).await
         .ok_or_else(|| flock_core::tr("沙盒未配置", "Sandbox not configured"))?;
-
-    let active_provider = provider.as_deref().unwrap_or(cfg.provider.as_deref().unwrap_or("e2b"));
-    if active_provider == "e2b" {
-        let api_key = cfg.e2b_api_key.as_ref().unwrap();
-        let base_url = cfg.e2b_api_url.as_deref().unwrap_or("https://api.e2b.app").trim_end_matches('/');
-        let client = reqwest::Client::new();
-        let url = format!("{}/templates/{}", base_url, id);
-        let resp = client.delete(&url)
-            .header("X-API-Key", api_key)
-            .send()
-            .await
-            .map_err(|e| flock_core::tr(
-                &format!("发送删除 E2B 快照请求失败: {}", e),
-                &format!("Failed to send delete E2B snapshot request: {}", e)
-            ))?;
-
-        if resp.status().is_success() || resp.status().as_u16() == 204 {
-            return Ok(());
-        } else {
-            return Err(flock_core::tr(
-                &format!("删除 E2B 快照失败，HTTP 状态码: {}", resp.status()),
-                &format!("Failed to delete E2B snapshot, HTTP status code: {}", resp.status())
-            ));
-        }
-    } else if active_provider == "local" {
-        return Ok(());
+    if let Some(p) = provider {
+        cfg.provider = Some(p);
     }
 
-    let base = flock_tools::sandbox_core::config::get_api_base(cfg.api_url.as_ref().unwrap());
-    let api_key = cfg.api_key.as_ref().unwrap();
-
-    let client = reqwest::Client::new();
-    let url = format!("{}/api/snapshots/{}", base, id);
-    let resp = client.delete(&url)
-        .header("Authorization", format!("Bearer {}", api_key))
-        .send()
+    let provider_name = cfg.provider.as_deref().unwrap_or("e2b");
+    let provider_impl = flock_tools::sandbox_core::manager::get_provider(provider_name);
+    provider_impl.delete_template(db_ref, &cfg, &id)
         .await
-        .map_err(|e| flock_core::tr(
-            &format!("发送删除快照请求失败: {}", e),
-            &format!("Failed to send delete snapshot request: {}", e)
-        ))?;
-
-    if resp.status().is_success() {
-        Ok(())
-    } else {
-        Err(flock_core::tr(
-            &format!("删除快照失败，HTTP 状态码: {}", resp.status()),
-            &format!("Failed to delete snapshot, HTTP status code: {}", resp.status())
-        ))
-    }
+        .map_err(|e| e.to_string())
 }
 
 #[tauri::command]

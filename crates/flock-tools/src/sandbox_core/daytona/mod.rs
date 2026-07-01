@@ -1,4 +1,3 @@
-mod state;
 mod lifecycle;
 mod exec;
 mod vnc;
@@ -8,7 +7,6 @@ pub mod volume;
 pub mod fs;
 pub mod provider;
 
-pub use state::emit_human_takeover;
 pub use lifecycle::{
     create_sandbox, destroy_daytona_sandbox, check_sandbox_alive, set_sandbox_public,
 };
@@ -19,5 +17,3 @@ pub use vnc::{
 };
 pub use snapshot::create_playwright_snapshot;
 pub use constants::*;
-
-pub mod sync;

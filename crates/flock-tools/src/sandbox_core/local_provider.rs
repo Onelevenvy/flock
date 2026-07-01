@@ -34,4 +34,16 @@ impl SandboxProvider for LocalSandboxProvider {
     async fn sync_down(&self, _db: &DbManager, _sandbox_id: &str, _ws_path: &Path) -> anyhow::Result<()> {
         Ok(())
     }
+    fn get_workspace_dir(&self) -> &str {
+        ""
+    }
+    async fn list_templates(&self, _db: &DbManager, _cfg: &SandboxConfig) -> anyhow::Result<serde_json::Value> {
+        Ok(serde_json::json!([]))
+    }
+    async fn delete_template(&self, _db: &DbManager, _cfg: &SandboxConfig, _id: &str) -> anyhow::Result<()> {
+        Ok(())
+    }
+    async fn cleanup_all_instances(&self, _db: &DbManager, _cfg: &SandboxConfig) -> anyhow::Result<String> {
+        Ok("Local provider does not support cleanup".to_string())
+    }
 }
