@@ -5,6 +5,8 @@ use serde::{Deserialize, Serialize};
 pub struct E2BCreateSandboxRequest {
     #[serde(rename = "templateID")]
     pub template_id: String,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub timeout: Option<u32>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -52,6 +54,7 @@ pub async fn create_sandbox(cfg: &SandboxConfig) -> anyhow::Result<String> {
     let client = reqwest::Client::new();
     let payload = E2BCreateSandboxRequest {
         template_id: template_id.to_string(),
+        timeout: Some(3600), // 1 hour sandbox lifetime
     };
 
     crate::emit_info(&flock_core::tr(

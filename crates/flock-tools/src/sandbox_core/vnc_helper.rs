@@ -33,9 +33,9 @@ pub async fn ensure_vnc_running_in_sandbox(db: &DbManager, sandbox_id: &str) -> 
             rm -f /tmp/.X0-lock && \
             setsid nohup Xvfb {display} -screen 0 {res} >/tmp/xvfb.log 2>&1 & \
             sleep 1 && \
-            setsid nohup fluxbox >/tmp/fluxbox.log 2>&1 & \
+            setsid nohup env DISPLAY={display} fluxbox >/tmp/fluxbox.log 2>&1 & \
             sleep 1 && \
-            setsid nohup x11vnc -display {display} -forever -shared -nopw -rfbport {vnc_port} >/tmp/x11vnc.log 2>&1 & \
+            setsid nohup env DISPLAY={display} x11vnc -display {display} -forever -shared -nopw -rfbport {vnc_port} >/tmp/x11vnc.log 2>&1 & \
             sleep 1 && \
             setsid nohup websockify --web /usr/share/novnc 0.0.0.0:{web_port} localhost:{vnc_port} >/tmp/websockify.log 2>&1 & \
             sleep 1; \
