@@ -36,18 +36,13 @@ pub async fn execute_command(
     };
 
     let body_str = serde_json::to_string(&payload)?;
-    let payload_bytes = body_str.as_bytes();
-    let mut enveloped = Vec::with_capacity(5 + payload_bytes.len());
-    enveloped.push(0x00); // flags
-    enveloped.extend_from_slice(&(payload_bytes.len() as u32).to_be_bytes()); // length
-    enveloped.extend_from_slice(payload_bytes);
 
     let resp = client.post(&url)
         .header("X-API-Key", api_key)
         .header("Connect-Protocol-Version", "1")
         .header("Content-Type", "application/connect+json")
         .header(reqwest::header::USER_AGENT, "flock-agent")
-        .body(enveloped)
+        .body(body_str)
         .send()
         .await?;
 
