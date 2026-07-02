@@ -9,29 +9,41 @@ async fn test_diagnose_e2b() {
         .expect("No active sandbox config");
 
     let api_key = cfg.e2b_api_key.as_ref().expect("E2B API key is missing");
-    let base_url = cfg.e2b_api_url.as_deref().unwrap_or("https://api.e2b.app").trim_end_matches('/');
+    println!("API Key found: {}", api_key);
 
-    let client = reqwest::Client::new();
-    let url = format!("{}/sandboxes", base_url);
-    let resp = client.get(&url)
-        .header("X-API-Key", api_key)
-        .send()
-        .await
-        .expect("Failed to get E2B sandboxes");
-
-    let text = resp.text().await.unwrap_or_default();
-    println!("Running E2B Sandboxes: {}", text);
-
-    let val: serde_json::Value = serde_json::from_str(&text).expect("Failed to parse JSON");
-    if let Some(arr) = val.as_array() {
-        for sb in arr {
-            if let Some(sandbox_id) = sb.get("sandboxID").or_else(|| sb.get("sandbox_id")).and_then(|v| v.as_str()) {
-                println!("Diagnosing E2B Sandbox: {}", sandbox_id);
-                let diag_cmd = "echo '--- websockify.log ---'; cat /tmp/websockify.log; echo '--- x11vnc.log ---'; cat /tmp/x11vnc.log";
-                if let Ok((stdout, _exit_code)) = flock_tools::sandbox_core::e2b::exec::execute_command(&cfg, sandbox_id, diag_cmd).await {
-                    println!("Diagnostics output:\n{}", stdout);
-                }
-            }
+    // Create a new sandbox for testing
+    println!("Creating a new E2B sandbox...");
+    let sandbox_id = match flock_tools::sandbox_core::e2b::lifecycle::create_sandbox(&cfg).await {
+        Ok(id) => id,
+        Err(e) => {
+            println!("Failed to create sandbox: {:?}", e);
+            return;
         }
+    };
+    println!("Created sandbox ID: {}", sandbox_id);
+
+    // Wait a few seconds for VNC processes to fully initialize
+    println!("Waiting for processes to initialize...");
+    tokio::time::sleep(tokio::time::Duration::from_secs(5)).await;
+
+    // Check logs and processes using execute_command helper
+    println!("--- Process status ---");
+    let check_ps = "ps aux | grep -E 'Xvfb|fluxbox|x11vnc|websockify'";
+    match flock_tools::sandbox_core::e2b::exec::execute_command(&cfg, &sandbox_id, check_ps).await {
+        Ok((stdout, code)) => println!("Exit code: {}\nStdout:\n{}", code, stdout),
+        Err(e) => println!("Error running ps check: {:?}", e),
     }
+
+    // Check logs
+    let diag_cmd = "echo '=== xvfb.log ==='; cat /tmp/xvfb.log; echo '=== fluxbox.log ==='; cat /tmp/x11vnc.log; echo '=== websockify.log ==='; cat /tmp/websockify.log";
+    println!("--- Logs ---");
+    match flock_tools::sandbox_core::e2b::exec::execute_command(&cfg, &sandbox_id, diag_cmd).await {
+        Ok((stdout, code)) => println!("Exit code: {}\nStdout:\n{}", code, stdout),
+        Err(e) => println!("Error running logs check: {:?}", e),
+    }
+
+    // Destroy the sandbox
+    println!("Destroying sandbox {}...", sandbox_id);
+    let _ = flock_tools::sandbox_core::e2b::lifecycle::destroy_sandbox(&cfg, &sandbox_id).await;
+    println!("Done.");
 }

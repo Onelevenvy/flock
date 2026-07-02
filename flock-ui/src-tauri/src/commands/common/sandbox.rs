@@ -43,7 +43,7 @@ pub async fn get_active_sandbox_vnc_url(
                         let provider = flock_tools::sandbox_core::manager::get_provider(provider_name);
                         provider.get_vnc_url(&*db, &cfg, &sandbox_id).await.unwrap_or_else(|_| {
                             if provider_name == "e2b" {
-                                format!("https://6080-{}.e2b.app/vnc.html?autoconnect=true&resize=scale&skip-preview-warning=true&skip_preview_warning=true", sandbox_id)
+                                format!("https://6080-{}.e2b.app/vnc.html?autoconnect=true&resize=scale&skip-preview-warning=true&skip_preview_warning=true&path=", sandbox_id)
                             } else {
                                 format!("https://6080-{}.proxy.app.daytona.io/vnc.html?autoconnect=true&resize=scale", sandbox_id)
                             }

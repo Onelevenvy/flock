@@ -46,7 +46,7 @@ pub async fn create_sandbox(cfg: &SandboxConfig) -> anyhow::Result<String> {
         .unwrap_or("")
         .trim();
     if template_id.is_empty() {
-        template_id = "v4xxy6d1lhj8296ejotm"; // 使用您发布的公共模版 ID 作为默认兜底
+        template_id = "p6x9dn3ltcjj83nxhz6w"; // 使用您发布的公共模版 ID 作为默认兜底
     }
 
     let client = reqwest::Client::new();
