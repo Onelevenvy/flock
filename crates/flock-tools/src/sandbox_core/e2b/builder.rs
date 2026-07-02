@@ -71,7 +71,7 @@ USER user
     std::fs::write(&dockerfile_path, dockerfile_content)
         .context("Failed to write Dockerfile")?;
 
-    on_log("环境准备完毕，开始调用 E2B CLI 构建镜像 (E2B 2.0 在云端构建，不需要本地安装 Docker)...\n".to_string());
+    on_log("Environment setup complete. Invoking E2B CLI to build the image (E2B 2.0 builds in the cloud; no local Docker installation is required)...\n".to_string());
     
     // 3. 执行 npx @e2b/cli template create
     // 在 Windows 下需要调用 npx.cmd
@@ -137,23 +137,15 @@ USER user
         anyhow::bail!("E2B template build failed with exit code: {}.\nError details:\n{}", status, full_output);
     }
 
-    on_log("构建成功！正在解析 Template ID...\n".to_string());
+    on_log("Build succeeded! Parsing Template ID...\n".to_string());
 
     // 解析出 template ID
     let re = regex::Regex::new(r"(?i)\b(?:id|template_id)[:\s]+([a-z0-9]{20})\b").unwrap();
     if let Some(cap) = re.captures(&full_output) {
         let id = cap.get(1).unwrap().as_str().to_string();
+        on_log(format!("Template ID successfully parsed: {}\n", id));
         return Ok(id);
     }
 
-    // 回退解析：寻找任何非 "dockerfile" 的 20 位字母数字组合作为 ID
-    let re_fallback = regex::Regex::new(r"\b([a-z0-9]{20})\b").unwrap();
-    for cap in re_fallback.captures_iter(&full_output) {
-        let matched = cap.get(1).unwrap().as_str();
-        if matched != "dockerfile" && matched != "template" {
-            return Ok(matched.to_string());
-        }
-    }
-
-    anyhow::bail!("构建成功，但未能从 E2B CLI 输出日志中提取出生成的 template_id")
+    anyhow::bail!("Template build succeeded, but failed to extract the generated templateID from E2B CLI logs")
 }
