@@ -121,7 +121,7 @@ pub async fn execute_command(
 /// 直接返回固定格式 URL，不检查端口，不拉起任何进程。
 pub fn get_vnc_url(sandbox_id: &str) -> String {
     format!(
-        "https://6080-{}.e2b.app/vnc.html?autoconnect=true&resize=scale&skip-preview-warning=true&skip_preview_warning=true&path=",
+        "https://6080-{}.e2b.app/vnc.html?autoconnect=true&resize=scale&path=websockify",
         sandbox_id
     )
 }

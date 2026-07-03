@@ -152,11 +152,11 @@ async fn execute_regular_action(
          if ! python3 -c 'import socket; s = socket.socket(); s.connect((\"127.0.0.1\", 9222))' >/dev/null 2>&1; then \
              echo 'Starting headful chromium with remote debugging on DISPLAY={display}...' && \
              if command -v chromium >/dev/null 2>&1; then \
-                 setsid nohup env DISPLAY={display} chromium --no-sandbox --remote-debugging-port=9222 --disable-gpu --disable-software-rasterizer --disable-dev-shm-usage >/tmp/headless_chrome.log 2>&1 & \
+                 setsid nohup env DISPLAY={display} chromium --no-sandbox --remote-debugging-port=9222 --disable-gpu --disable-dev-shm-usage --window-size=1280,1024 >/tmp/headless_chrome.log 2>&1 & \
              elif command -v chromium-browser >/dev/null 2>&1; then \
-                 setsid nohup env DISPLAY={display} chromium-browser --no-sandbox --remote-debugging-port=9222 --disable-gpu --disable-software-rasterizer --disable-dev-shm-usage >/tmp/headless_chrome.log 2>&1 & \
+                 setsid nohup env DISPLAY={display} chromium-browser --no-sandbox --remote-debugging-port=9222 --disable-gpu --disable-dev-shm-usage --window-size=1280,1024 >/tmp/headless_chrome.log 2>&1 & \
              elif command -v google-chrome >/dev/null 2>&1; then \
-                 setsid nohup env DISPLAY={display} google-chrome --no-sandbox --remote-debugging-port=9222 --disable-gpu --disable-software-rasterizer --disable-dev-shm-usage >/tmp/headless_chrome.log 2>&1 & \
+                 setsid nohup env DISPLAY={display} google-chrome --no-sandbox --remote-debugging-port=9222 --disable-gpu --disable-dev-shm-usage --window-size=1280,1024 >/tmp/headless_chrome.log 2>&1 & \
              fi && \
              sleep 3; \
          fi; \

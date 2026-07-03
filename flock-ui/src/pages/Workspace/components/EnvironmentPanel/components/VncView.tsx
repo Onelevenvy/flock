@@ -1,3 +1,4 @@
+import { memo } from 'react';
 import { Box } from '@mantine/core';
 import { ImageView } from '@/pages/Workspace/components/EnvironmentPanel/ImageView';
 import { useWorkspaceStore } from '@/store/workspaceStore';
@@ -121,21 +122,7 @@ export function VncView({
 
         {!isPlaybackMode && activeTab === 'vnc' && !isOfflineMode && (
           <Box style={{ width: '100%', height: '100%' }}>
-            <iframe
-              id="flock-vnc-iframe"
-              key={formattedVncUrl}
-              src={formattedVncUrl}
-              style={{
-                width: '100%',
-                height: 'calc(100vh - 380px)',
-                border: '1px solid var(--flock-border-dim)',
-                background: 'var(--flock-bg-deep)',
-                borderRadius: 12,
-                boxShadow: '0 8px 24px rgba(0,0,0,0.2)',
-                display: 'block',
-              }}
-              allow="fullscreen; clipboard-read; clipboard-write; autoplay"
-            />
+            <StableVncIframe vncUrl={formattedVncUrl} />
           </Box>
         )}
       </Box>
@@ -153,3 +140,27 @@ export function VncView({
     </Box>
   );
 }
+
+/**
+ * Memoized iframe that only remounts when vncUrl changes.
+ * Prevents noVNC WebSocket from being disconnected by parent re-renders
+ * caused by screenshot polling (refreshTrigger).
+ */
+const StableVncIframe = memo(function StableVncIframe({ vncUrl }: { vncUrl: string }) {
+  return (
+    <iframe
+      id="flock-vnc-iframe"
+      src={vncUrl}
+      style={{
+        width: '100%',
+        height: 'calc(100vh - 380px)',
+        border: '1px solid var(--flock-border-dim)',
+        background: 'var(--flock-bg-deep)',
+        borderRadius: 12,
+        boxShadow: '0 8px 24px rgba(0,0,0,0.2)',
+        display: 'block',
+      }}
+      allow="fullscreen; clipboard-read; clipboard-write; autoplay"
+    />
+  );
+});

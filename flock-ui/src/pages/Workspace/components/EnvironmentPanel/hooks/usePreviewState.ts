@@ -24,11 +24,20 @@ export function useVncUrl(rawPath: string | undefined): string {
         if (!u.searchParams.has('resize')) {
           u.searchParams.set('resize', 'scale');
         }
-        if (!u.searchParams.has('skip-preview-warning')) {
-          u.searchParams.set('skip-preview-warning', 'true');
-        }
-        if (!u.searchParams.has('skip_preview_warning')) {
-          u.searchParams.set('skip_preview_warning', 'true');
+        // E2B sandboxes use websockify with `path=websockify`
+        // Daytona sandboxes need skip-preview-warning headers instead
+        const isE2b = u.hostname.endsWith('.e2b.app');
+        if (isE2b) {
+          if (!u.searchParams.has('path')) {
+            u.searchParams.set('path', 'websockify');
+          }
+        } else {
+          if (!u.searchParams.has('skip-preview-warning')) {
+            u.searchParams.set('skip-preview-warning', 'true');
+          }
+          if (!u.searchParams.has('skip_preview_warning')) {
+            u.searchParams.set('skip_preview_warning', 'true');
+          }
         }
         return u.toString();
       } catch {
@@ -38,6 +47,7 @@ export function useVncUrl(rawPath: string | undefined): string {
     return url;
   })();
 }
+
 
 /**
  * Manage preview file absolute path, screenshot path, and auto-refresh trigger.
