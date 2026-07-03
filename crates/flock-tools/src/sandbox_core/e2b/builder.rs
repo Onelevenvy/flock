@@ -53,32 +53,72 @@ sleep 1
     std::fs::write(&start_script_path, lf_content)
         .context("Failed to write start_command.sh")?;
 
+    // 写入 setup_chromium.sh：将复杂逻辑放进独立脚本，避免 E2B 构建时剥掉 Dockerfile RUN 里的反斜杠
+    let setup_chromium_path = builder_dir.join("setup_chromium.sh");
+    let setup_chromium_content = "#!/bin/sh\n\
+set -e\n\
+echo '=== Looking for Playwright chromium binary ==='\n\
+ls /opt/playwright-browsers/ 2>/dev/null || echo 'playwright-browsers dir not found'\n\
+\n\
+# 优先找完整浏览器（排除 headless-shell，它没有可视 GUI 窗口）\n\
+CHROME_BIN=$(find /opt/playwright-browsers -name 'chrome' -type f 2>/dev/null | grep -v headless | head -1)\n\
+\n\
+# 如果找不到完整浏览器，fallback 到 headless-shell（至少 CDP 能用）\n\
+if [ -z \"$CHROME_BIN\" ]; then\n\
+    CHROME_BIN=$(find /opt/playwright-browsers -name 'chrome' -type f 2>/dev/null | head -1)\n\
+fi\n\
+\n\
+# 再 fallback 到 chrome-headless-shell 二进制名\n\
+if [ -z \"$CHROME_BIN\" ]; then\n\
+    CHROME_BIN=$(find /opt/playwright-browsers -name 'chrome-headless-shell' -type f 2>/dev/null | head -1)\n\
+fi\n\
+\n\
+if [ -z \"$CHROME_BIN\" ]; then\n\
+    echo 'ERROR: No chromium binary found under /opt/playwright-browsers'\n\
+    find /opt/playwright-browsers 2>/dev/null\n\
+    exit 1\n\
+fi\n\
+\n\
+echo \"Found: $CHROME_BIN\"\n\
+\n\
+# 写 wrapper 脚本（用 echo 逐行写，避免 printf 换行符问题）\n\
+echo '#!/bin/sh' > /usr/local/bin/chromium\n\
+echo \"exec \\\"$CHROME_BIN\\\" \\\"\\$@\\\"\" >> /usr/local/bin/chromium\n\
+chmod +x /usr/local/bin/chromium\n\
+echo '=== Created /usr/local/bin/chromium ==='\n\
+cat /usr/local/bin/chromium\n\
+";
+    let lf_setup = setup_chromium_content.replace("\r\n", "\n");
+    std::fs::write(&setup_chromium_path, lf_setup)
+        .context("Failed to write setup_chromium.sh")?;
+
     // 1. 写入 Dockerfile
-    let dockerfile_content = r#"FROM e2bdev/desktop:latest
-USER root
-
-# 复制启动脚本并赋予执行权限
-COPY start_command.sh /start_command.sh
-RUN chmod +x /start_command.sh
-
-# 安装 VNC 桌面组件、系统级 Chromium 和 CJK 字体
-# 系统级 chromium 是关键：browser/mod.rs 用 command -v chromium 检测并在 X11 DISPLAY 上启动可视窗口
-RUN apt-get update && apt-get install -y --no-install-recommends \
-    fluxbox websockify novnc \
-    chromium chromium-sandbox \
-    xterm \
-    fonts-wqy-zenhei fonts-wqy-microhei fonts-noto-cjk \
-    && rm -rf /var/lib/apt/lists/*
-
-# 安装 Playwright 及其 Chromium，路径统一到 /opt/playwright-browsers（与 Daytona 一致）
-RUN mkdir -p /opt/playwright-browsers && chmod 777 /opt/playwright-browsers
-ENV PLAYWRIGHT_BROWSERS_PATH=/opt/playwright-browsers
-RUN pip3 install --break-system-packages playwright && \
-    PLAYWRIGHT_BROWSERS_PATH=/opt/playwright-browsers python3 -m playwright install-deps chromium && \
-    PLAYWRIGHT_BROWSERS_PATH=/opt/playwright-browsers python3 -m playwright install chromium
-
-USER user
-"#;
+    // e2bdev/desktop:latest 基于精简 Debian，apt 源可能没有 chromium 包
+    // 方案：先装 Playwright chromium，再通过 COPY+RUN 独立脚本创建 /usr/local/bin/chromium wrapper
+    let dockerfile_content = "FROM e2bdev/desktop:latest\n\
+USER root\n\
+\n\
+# 复制启动脚本并赋予执行权限\n\
+COPY start_command.sh /start_command.sh\n\
+COPY setup_chromium.sh /setup_chromium.sh\n\
+RUN chmod +x /start_command.sh /setup_chromium.sh\n\
+\n\
+# 安装 VNC 桌面组件（不用 apt 装 chromium，E2B apt 源缺包）\n\
+RUN apt-get update && apt-get install -y --no-install-recommends fluxbox websockify novnc xterm && rm -rf /var/lib/apt/lists/*\n\
+\n\
+# CJK 字体（可选）\n\
+RUN apt-get update && apt-get install -y --no-install-recommends fonts-wqy-zenhei fonts-wqy-microhei 2>/dev/null; apt-get install -y --no-install-recommends fonts-noto-cjk 2>/dev/null; rm -rf /var/lib/apt/lists/*; true\n\
+\n\
+# 安装 Playwright 及其 Chromium\n\
+RUN mkdir -p /opt/playwright-browsers && chmod 777 /opt/playwright-browsers\n\
+ENV PLAYWRIGHT_BROWSERS_PATH=/opt/playwright-browsers\n\
+RUN pip3 install playwright && PLAYWRIGHT_BROWSERS_PATH=/opt/playwright-browsers python3 -m playwright install-deps chromium && PLAYWRIGHT_BROWSERS_PATH=/opt/playwright-browsers python3 -m playwright install chromium\n\
+\n\
+# 通过独立脚本创建 /usr/local/bin/chromium wrapper（避免 Dockerfile RUN 反斜杠被剥掉）\n\
+RUN /setup_chromium.sh\n\
+\n\
+USER user\n\
+";
     std::fs::write(&dockerfile_path, dockerfile_content)
         .context("Failed to write Dockerfile")?;
 
