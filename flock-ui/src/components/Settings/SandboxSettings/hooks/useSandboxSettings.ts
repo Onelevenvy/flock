@@ -63,6 +63,17 @@ export function useSandboxSettings() {
     loadAll();
   }, []);
 
+  const handleProviderChange = (newProvider: 'e2b' | 'daytona' | 'local') => {
+    if (newProvider !== provider) {
+      // 切换 provider 时清空 snapshot，避免将上一个 provider 的 snapshot ID 错误地
+      // 传给新 provider（如把 Daytona workspace UUID 当 E2B template ID 使用）
+      setSnapshot('');
+      // 同时在后台销毁旧沙盒，清除内存中的 ACTIVE_SANDBOX_ID
+      invoke('destroy_sandbox').catch(() => {});
+    }
+    setProvider(newProvider);
+  };
+
   useEffect(() => {
     fetchSnapshotsList();
   }, [provider, e2bApiKey]);
@@ -275,7 +286,7 @@ export function useSandboxSettings() {
   };
 
   return {
-    provider, setProvider,
+    provider, setProvider: handleProviderChange,
     apiUrl, setApiUrl,
     apiKey, setApiKey,
     e2bApiKey, setE2bApiKey,

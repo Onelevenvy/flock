@@ -149,6 +149,12 @@ async fn execute_regular_action(
         "export PLAYWRIGHT_BROWSERS_PATH=/opt/playwright-browsers && \
          export DISPLAY={display} && \
          mkdir -p /tmp && echo '{}' | base64 -d > /tmp/run_browser.py && \
+         if python3 -c 'import socket; s = socket.socket(); s.connect((\"127.0.0.1\", 9222))' >/dev/null 2>&1; then \
+             if ps aux 2>/dev/null | grep -v grep | grep -q 'disable-software-rasterizer'; then \
+                 echo 'Detected old chromium with --disable-software-rasterizer, restarting with correct flags...' && \
+                 pkill -f 'remote-debugging-port=9222' 2>/dev/null; sleep 1; \
+             fi; \
+         fi; \
          if ! python3 -c 'import socket; s = socket.socket(); s.connect((\"127.0.0.1\", 9222))' >/dev/null 2>&1; then \
              echo 'Starting headful chromium with remote debugging on DISPLAY={display}...' && \
              if command -v chromium >/dev/null 2>&1; then \
