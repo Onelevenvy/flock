@@ -55,33 +55,31 @@ sleep 1
 
     // 写入 setup_chromium.sh：将复杂逻辑放进独立脚本，避免 E2B 构建时剥掉 Dockerfile RUN 里的反斜杠
     let setup_chromium_path = builder_dir.join("setup_chromium.sh");
+    // 注意：根据安全准则“严禁自动兜底、凡事显式报错”，我们不为 headless-shell 做任何自动回退。
+    // 如果找不到完整 GUI 浏览器，直接报错退出。
     let setup_chromium_content = "#!/bin/sh\n\
 set -e\n\
 echo '=== Looking for Playwright chromium binary ==='\n\
 ls /opt/playwright-browsers/ 2>/dev/null || echo 'playwright-browsers dir not found'\n\
 \n\
-# 优先找完整浏览器（排除 headless-shell，它没有可视 GUI 窗口）\n\
-CHROME_BIN=$(find /opt/playwright-browsers -name 'chrome' -type f 2>/dev/null | grep -v headless | head -1)\n\
+# 寻找完整 GUI 浏览器（路径含 chromium-XXXX，不含 headless_shell）\n\
+CHROME_BIN=$(find /opt/playwright-browsers -name 'chrome' -type f 2>/dev/null | grep -v headless_shell | head -1)\n\
 \n\
-# 如果找不到完整浏览器，fallback 到 headless-shell（至少 CDP 能用）\n\
 if [ -z \"$CHROME_BIN\" ]; then\n\
-    CHROME_BIN=$(find /opt/playwright-browsers -name 'chrome' -type f 2>/dev/null | head -1)\n\
-fi\n\
-\n\
-# 再 fallback 到 chrome-headless-shell 二进制名\n\
-if [ -z \"$CHROME_BIN\" ]; then\n\
-    CHROME_BIN=$(find /opt/playwright-browsers -name 'chrome-headless-shell' -type f 2>/dev/null | head -1)\n\
+    # 检查以 chromium 为文件名的完整 GUI 浏览器\n\
+    CHROME_BIN=$(find /opt/playwright-browsers -name 'chromium' -type f 2>/dev/null | grep -v headless_shell | head -1)\n\
 fi\n\
 \n\
 if [ -z \"$CHROME_BIN\" ]; then\n\
-    echo 'ERROR: No chromium binary found under /opt/playwright-browsers'\n\
+    echo 'ERROR: Full GUI chromium binary not found under /opt/playwright-browsers!'\n\
+    echo 'Fallback is forbidden by security rules.'\n\
     find /opt/playwright-browsers 2>/dev/null\n\
     exit 1\n\
 fi\n\
 \n\
 echo \"Found: $CHROME_BIN\"\n\
 \n\
-# 写 wrapper 脚本（用 echo 逐行写，避免 printf 换行符问题）\n\
+# 写 wrapper 脚本\n\
 echo '#!/bin/sh' > /usr/local/bin/chromium\n\
 echo \"exec \\\"$CHROME_BIN\\\" \\\"\\$@\\\"\" >> /usr/local/bin/chromium\n\
 chmod +x /usr/local/bin/chromium\n\
@@ -98,23 +96,25 @@ cat /usr/local/bin/chromium\n\
     let dockerfile_content = "FROM e2bdev/desktop:latest\n\
 USER root\n\
 \n\
-# 复制启动脚本并赋予执行权限\n\
+# 复制启动脚本\n\
 COPY start_command.sh /start_command.sh\n\
 COPY setup_chromium.sh /setup_chromium.sh\n\
 RUN chmod +x /start_command.sh /setup_chromium.sh\n\
 \n\
-# 安装 VNC 桌面组件（不用 apt 装 chromium，E2B apt 源缺包）\n\
+# 安装 VNC 桌面组件\n\
 RUN apt-get update && apt-get install -y --no-install-recommends fluxbox websockify novnc xterm && rm -rf /var/lib/apt/lists/*\n\
 \n\
 # CJK 字体（可选）\n\
 RUN apt-get update && apt-get install -y --no-install-recommends fonts-wqy-zenhei fonts-wqy-microhei 2>/dev/null; apt-get install -y --no-install-recommends fonts-noto-cjk 2>/dev/null; rm -rf /var/lib/apt/lists/*; true\n\
 \n\
-# 安装 Playwright 及其 Chromium\n\
+# 安装 Playwright 依赖和完整 Chromium 浏览器（含 GUI）\n\
+# playwright install chromium 安装的是 chromium-headless-shell（无 X11 GUI）\n\
+# playwright install chrome 安装的是完整 Chromium 浏览器（有 GUI，可在 VNC 中显示）\n\
 RUN mkdir -p /opt/playwright-browsers && chmod 777 /opt/playwright-browsers\n\
 ENV PLAYWRIGHT_BROWSERS_PATH=/opt/playwright-browsers\n\
 RUN pip3 install playwright && PLAYWRIGHT_BROWSERS_PATH=/opt/playwright-browsers python3 -m playwright install-deps chromium && PLAYWRIGHT_BROWSERS_PATH=/opt/playwright-browsers python3 -m playwright install chromium\n\
 \n\
-# 通过独立脚本创建 /usr/local/bin/chromium wrapper（避免 Dockerfile RUN 反斜杠被剥掉）\n\
+# 通过独立脚本创建 /usr/local/bin/chromium wrapper\n\
 RUN /setup_chromium.sh\n\
 \n\
 USER user\n\

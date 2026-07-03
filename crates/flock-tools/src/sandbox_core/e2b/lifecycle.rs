@@ -54,7 +54,7 @@ pub async fn create_sandbox(cfg: &SandboxConfig) -> anyhow::Result<String> {
     let client = reqwest::Client::new();
     let payload = E2BCreateSandboxRequest {
         template_id: template_id.to_string(),
-        timeout: Some(3600), // 1 hour sandbox lifetime
+        timeout: Some(300),
     };
 
     crate::emit_info(&flock_core::tr(
