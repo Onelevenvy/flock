@@ -34,15 +34,17 @@ which Xvfb || echo "Xvfb missing"
 which fluxbox || echo "fluxbox missing"
 which x11vnc || echo "x11vnc missing"
 which websockify || echo "websockify missing"
+which chromium || echo "chromium (system) missing"
 echo "=========================================="
 
 export DISPLAY=:0
+export PLAYWRIGHT_BROWSERS_PATH=/opt/playwright-browsers
 rm -f /tmp/.X0-lock
-setsid Xvfb :0 -screen 0 1280x800x24 >/tmp/xvfb.log 2>&1 &
+setsid Xvfb :0 -screen 0 1280x800x24 -ac +extension GLX +render -noreset >/tmp/xvfb.log 2>&1 &
 sleep 1
 setsid fluxbox >/tmp/fluxbox.log 2>&1 &
-sleep 1
-setsid x11vnc -display :0 -forever -shared -nopw -rfbport 5900 >/tmp/x11vnc.log 2>&1 &
+sleep 2
+setsid x11vnc -display :0 -forever -shared -nopw -rfbport 5900 -noxrecord -noxfixes -noxdamage >/tmp/x11vnc.log 2>&1 &
 sleep 1
 setsid websockify --web /usr/share/novnc 0.0.0.0:6080 127.0.0.1:5900 >/tmp/websockify.log 2>&1 &
 sleep 1
@@ -54,17 +56,26 @@ sleep 1
     // 1. 写入 Dockerfile
     let dockerfile_content = r#"FROM e2bdev/desktop:latest
 USER root
+
 # 复制启动脚本并赋予执行权限
 COPY start_command.sh /start_command.sh
 RUN chmod +x /start_command.sh
 
-# 安装缺少的 VNC 窗口管理器和 noVNC 代理组件
-RUN apt-get update && apt-get install -y fluxbox websockify novnc
+# 安装 VNC 桌面组件、系统级 Chromium 和 CJK 字体
+# 系统级 chromium 是关键：browser/mod.rs 用 command -v chromium 检测并在 X11 DISPLAY 上启动可视窗口
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    fluxbox websockify novnc \
+    chromium chromium-sandbox \
+    xterm \
+    fonts-wqy-zenhei fonts-wqy-microhei fonts-noto-cjk \
+    && rm -rf /var/lib/apt/lists/*
 
-# 直接使用已有的 python3 和 pip 安装 Playwright 及其浏览器依赖
-RUN pip install playwright && \
-    playwright install chromium && \
-    playwright install-deps chromium
+# 安装 Playwright 及其 Chromium，路径统一到 /opt/playwright-browsers（与 Daytona 一致）
+RUN mkdir -p /opt/playwright-browsers && chmod 777 /opt/playwright-browsers
+ENV PLAYWRIGHT_BROWSERS_PATH=/opt/playwright-browsers
+RUN pip3 install --break-system-packages playwright && \
+    PLAYWRIGHT_BROWSERS_PATH=/opt/playwright-browsers python3 -m playwright install-deps chromium && \
+    PLAYWRIGHT_BROWSERS_PATH=/opt/playwright-browsers python3 -m playwright install chromium
 
 USER user
 "#;
