@@ -35,10 +35,15 @@ which fluxbox || echo "fluxbox missing"
 which x11vnc || echo "x11vnc missing"
 which websockify || echo "websockify missing"
 which chromium || echo "chromium (system) missing"
+which google-chrome || echo "google-chrome missing"
+which google-chrome-stable || echo "google-chrome-stable missing"
+
+echo "=== Debug: Testing Chrome Execution & Shared Libraries ==="
+google-chrome-stable --version 2>&1 || echo "Chrome version check failed"
+ldd /usr/bin/google-chrome-stable | grep "not found" || echo "All shared library dependencies satisfied"
 echo "=========================================="
 
 export DISPLAY=:0
-export PLAYWRIGHT_BROWSERS_PATH=/opt/playwright-browsers
 rm -f /tmp/.X0-lock
 setsid Xvfb :0 -screen 0 1280x800x24 -ac +extension GLX +render -noreset >/tmp/xvfb.log 2>&1 &
 sleep 1
@@ -53,69 +58,37 @@ sleep 1
     std::fs::write(&start_script_path, lf_content)
         .context("Failed to write start_command.sh")?;
 
-    // 写入 setup_chromium.sh：将复杂逻辑放进独立脚本，避免 E2B 构建时剥掉 Dockerfile RUN 里的反斜杠
-    let setup_chromium_path = builder_dir.join("setup_chromium.sh");
-    // 注意：根据安全准则“严禁自动兜底、凡事显式报错”，我们不为 headless-shell 做任何自动回退。
-    // 如果找不到完整 GUI 浏览器，直接报错退出。
-    let setup_chromium_content = "#!/bin/sh\n\
-set -e\n\
-echo '=== Looking for Playwright chromium binary ==='\n\
-ls /opt/playwright-browsers/ 2>/dev/null || echo 'playwright-browsers dir not found'\n\
-\n\
-# 寻找完整 GUI 浏览器（路径含 chromium-XXXX，不含 headless_shell）\n\
-CHROME_BIN=$(find /opt/playwright-browsers -name 'chrome' -type f 2>/dev/null | grep -v headless_shell | head -1)\n\
-\n\
-if [ -z \"$CHROME_BIN\" ]; then\n\
-    # 检查以 chromium 为文件名的完整 GUI 浏览器\n\
-    CHROME_BIN=$(find /opt/playwright-browsers -name 'chromium' -type f 2>/dev/null | grep -v headless_shell | head -1)\n\
-fi\n\
-\n\
-if [ -z \"$CHROME_BIN\" ]; then\n\
-    echo 'ERROR: Full GUI chromium binary not found under /opt/playwright-browsers!'\n\
-    echo 'Fallback is forbidden by security rules.'\n\
-    find /opt/playwright-browsers 2>/dev/null\n\
-    exit 1\n\
-fi\n\
-\n\
-echo \"Found: $CHROME_BIN\"\n\
-\n\
-# 写 wrapper 脚本\n\
-echo '#!/bin/sh' > /usr/local/bin/chromium\n\
-echo \"exec \\\"$CHROME_BIN\\\" \\\"\\$@\\\"\" >> /usr/local/bin/chromium\n\
-chmod +x /usr/local/bin/chromium\n\
-echo '=== Created /usr/local/bin/chromium ==='\n\
-cat /usr/local/bin/chromium\n\
-";
-    let lf_setup = setup_chromium_content.replace("\r\n", "\n");
-    std::fs::write(&setup_chromium_path, lf_setup)
-        .context("Failed to write setup_chromium.sh")?;
-
-    // 1. 写入 Dockerfile
-    // e2bdev/desktop:latest 基于精简 Debian，apt 源可能没有 chromium 包
-    // 方案：先装 Playwright chromium，再通过 COPY+RUN 独立脚本创建 /usr/local/bin/chromium wrapper
+    // 写入 Dockerfile
+    // 策略：使用官方 deb 包安装 Google Chrome Stable（完整 GUI，原生 X11 支持，VNC 可见）
+    // 绕过 Debian 下 apt 直接装 chromium 不存在的问题，同时也避免了 playwright install 软连接失效问题。
     let dockerfile_content = "FROM e2bdev/desktop:latest\n\
 USER root\n\
 \n\
 # 复制启动脚本\n\
 COPY start_command.sh /start_command.sh\n\
-COPY setup_chromium.sh /setup_chromium.sh\n\
-RUN chmod +x /start_command.sh /setup_chromium.sh\n\
+RUN chmod +x /start_command.sh\n\
 \n\
 # 安装 VNC 桌面组件\n\
-RUN apt-get update && apt-get install -y --no-install-recommends fluxbox websockify novnc xterm && rm -rf /var/lib/apt/lists/*\n\
+RUN apt-get update && apt-get install -y --no-install-recommends fluxbox websockify novnc xterm wget gnupg && rm -rf /var/lib/apt/lists/*\n\
 \n\
 # CJK 字体（可选）\n\
 RUN apt-get update && apt-get install -y --no-install-recommends fonts-wqy-zenhei fonts-wqy-microhei 2>/dev/null; apt-get install -y --no-install-recommends fonts-noto-cjk 2>/dev/null; rm -rf /var/lib/apt/lists/*; true\n\
 \n\
-# 安装 Playwright 依赖和完整 Chromium 浏览器（含 GUI）\n\
-# playwright install chromium 安装的是 chromium-headless-shell（无 X11 GUI）\n\
-# playwright install chrome 安装的是完整 Chromium 浏览器（有 GUI，可在 VNC 中显示）\n\
-RUN mkdir -p /opt/playwright-browsers && chmod 777 /opt/playwright-browsers\n\
-ENV PLAYWRIGHT_BROWSERS_PATH=/opt/playwright-browsers\n\
-RUN pip3 install playwright && PLAYWRIGHT_BROWSERS_PATH=/opt/playwright-browsers python3 -m playwright install-deps chromium && PLAYWRIGHT_BROWSERS_PATH=/opt/playwright-browsers python3 -m playwright install chromium\n\
+# 安装 Google Chrome 稳定版（含完整 GUI，支持 X11，VNC 中可见）\n\
+RUN wget -q -O - https://dl-ssl.google.com/linux/linux_signing_key.pub | apt-key add - \\\n\
+&& echo \"deb [arch=amd64] http://dl.google.com/linux/chrome/deb/ stable main\" >> /etc/apt/sources.list.d/google.list \\\n\
+&& apt-get update \\\n\
+&& apt-get install -y --no-install-recommends google-chrome-stable \\\n\
+&& rm -rf /var/lib/apt/lists/*\n\
 \n\
-# 通过独立脚本创建 /usr/local/bin/chromium wrapper\n\
-RUN /setup_chromium.sh\n\
+# 创建 chromium 软链接，使得支持 chromium 命令的工具能自动调用它\n\
+RUN ln -sf /usr/bin/google-chrome-stable /usr/local/bin/chromium \\\n\
+&& ln -sf /usr/bin/google-chrome-stable /usr/local/bin/google-chrome\n\
+\n\
+# 安装 Playwright Python 库（仅库本身，不下载 playwright 浏览器）\n\
+# 运行时由 PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH 指向 google-chrome-stable\n\
+RUN pip3 install playwright\n\
+ENV PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH=/usr/bin/google-chrome-stable\n\
 \n\
 USER user\n\
 ";
@@ -195,7 +168,7 @@ USER user\n\
     on_log("Build succeeded! Parsing Template ID...\n".to_string());
 
     // 解析出 template ID
-    let re = regex::Regex::new(r"(?i)\b(?:id|template_id)[:\s]+([a-z0-9]{20})\b").unwrap();
+    let re = regex::Regex::new(r"(?i)\b(?:id|template_id)[\s:]+([a-z0-9]{20})\b").unwrap();
     if let Some(cap) = re.captures(&full_output) {
         let id = cap.get(1).unwrap().as_str().to_string();
         on_log(format!("Template ID successfully parsed: {}\n", id));

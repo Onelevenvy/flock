@@ -37,12 +37,18 @@ pub async fn execute_command(
 
     let body_str = serde_json::to_string(&payload)?;
 
+    // 拼接 5 字节的 Connect 协议信封头部 (1 字节 flag + 4 字节大端序长度)
+    let mut req_body = Vec::new();
+    req_body.push(0x00);
+    req_body.extend_from_slice(&(body_str.len() as u32).to_be_bytes());
+    req_body.extend_from_slice(body_str.as_bytes());
+
     let resp = client.post(&url)
         .header("X-API-Key", api_key)
         .header("Connect-Protocol-Version", "1")
         .header("Content-Type", "application/connect+json")
         .header(reqwest::header::USER_AGENT, "flock-agent")
-        .body(body_str)
+        .body(req_body)
         .send()
         .await?;
 

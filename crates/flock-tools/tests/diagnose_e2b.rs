@@ -4,23 +4,17 @@ use flock_core::config::settings::SandboxConfig;
 #[tokio::test]
 async fn test_diagnose_e2b() {
     let db = DbManager::init().await.expect("Failed to init DB");
-    // Get E2B config
     let cfg = flock_tools::sandbox_core::config::get_sandbox_config(&db).await
         .expect("No active sandbox config");
 
     let api_key = cfg.e2b_api_key.as_ref().expect("E2B API key is missing");
-    println!("API Key found: {}", api_key);
+    println!("API Key: {}", api_key);
 
-    // Create a new sandbox for testing
-    println!("Creating a new E2B sandbox...");
-    let sandbox_id = match flock_tools::sandbox_core::e2b::lifecycle::create_sandbox(&cfg).await {
-        Ok(id) => id,
-        Err(e) => {
-            println!("Failed to create sandbox: {:?}", e);
-            return;
-        }
-    };
-    println!("Created sandbox ID: {}", sandbox_id);
+    // 1. 创建沙盒
+    println!("Creating sandbox...");
+    let sandbox_id = flock_tools::sandbox_core::e2b::lifecycle::create_sandbox(&cfg).await
+        .expect("Failed to create sandbox");
+    println!("Sandbox ID: {}", sandbox_id);
 
     // Wait a few seconds for VNC processes to fully initialize
     println!("Waiting for processes to initialize...");
