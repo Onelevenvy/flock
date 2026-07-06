@@ -62,53 +62,48 @@ pub async fn execute_command(
     let mut stderr_accum = String::new();
     let mut exit_code = 0;
 
-    use futures::StreamExt;
-    let mut body = resp.bytes_stream();
-    let mut buffer = Vec::new();
+    let response_bytes = resp.bytes().await?;
+    let mut buffer = response_bytes.to_vec();
+    let mut idx = 0;
 
-    while let Some(chunk_res) = body.next().await {
-        let chunk = chunk_res?;
-        buffer.extend_from_slice(&chunk);
+    while idx + 5 <= buffer.len() {
+        let flags = buffer[idx];
+        let length = u32::from_be_bytes([buffer[idx+1], buffer[idx+2], buffer[idx+3], buffer[idx+4]]) as usize;
 
-        while buffer.len() >= 5 {
-            let flags = buffer[0];
-            let length = u32::from_be_bytes([buffer[1], buffer[2], buffer[3], buffer[4]]) as usize;
+        if idx + 5 + length <= buffer.len() {
+            let payload_bytes = &buffer[idx+5..idx+5+length];
 
-            if buffer.len() >= 5 + length {
-                let payload_bytes = &buffer[5..5 + length];
-
-                if flags == 0x00 {
-                    if let Ok(val) = serde_json::from_slice::<serde_json::Value>(payload_bytes) {
-                        if let Some(event) = val.get("event") {
-                            if let Some(data) = event.get("data") {
-                                if let Some(stdout_b64) = data.get("stdout").and_then(|v| v.as_str()) {
-                                    if let Ok(decoded) = base64::Engine::decode(&base64::engine::general_purpose::STANDARD, stdout_b64) {
-                                        if let Ok(s) = String::from_utf8(decoded) {
-                                            stdout_accum.push_str(&s);
-                                        }
-                                    }
-                                }
-                                if let Some(stderr_b64) = data.get("stderr").and_then(|v| v.as_str()) {
-                                    if let Ok(decoded) = base64::Engine::decode(&base64::engine::general_purpose::STANDARD, stderr_b64) {
-                                        if let Ok(s) = String::from_utf8(decoded) {
-                                            stderr_accum.push_str(&s);
-                                        }
+            if flags == 0x00 {
+                if let Ok(val) = serde_json::from_slice::<serde_json::Value>(payload_bytes) {
+                    if let Some(event) = val.get("event") {
+                        if let Some(data) = event.get("data") {
+                            if let Some(stdout_b64) = data.get("stdout").and_then(|v| v.as_str()) {
+                                if let Ok(decoded) = base64::Engine::decode(&base64::engine::general_purpose::STANDARD, stdout_b64) {
+                                    if let Ok(s) = String::from_utf8(decoded) {
+                                        stdout_accum.push_str(&s);
                                     }
                                 }
                             }
-                            if let Some(end) = event.get("end") {
-                                if let Some(code) = end.get("exitCode").or_else(|| end.get("exit_code")).and_then(|v| v.as_i64()) {
-                                    exit_code = code as i32;
+                            if let Some(stderr_b64) = data.get("stderr").and_then(|v| v.as_str()) {
+                                if let Ok(decoded) = base64::Engine::decode(&base64::engine::general_purpose::STANDARD, stderr_b64) {
+                                    if let Ok(s) = String::from_utf8(decoded) {
+                                        stderr_accum.push_str(&s);
+                                    }
                                 }
+                            }
+                        }
+                        if let Some(end) = event.get("end") {
+                            if let Some(code) = end.get("exitCode").or_else(|| end.get("exit_code")).and_then(|v| v.as_i64()) {
+                                exit_code = code as i32;
                             }
                         }
                     }
                 }
-
-                buffer.drain(0..5 + length);
-            } else {
-                break;
             }
+
+            idx += 5 + length;
+        } else {
+            break;
         }
     }
 

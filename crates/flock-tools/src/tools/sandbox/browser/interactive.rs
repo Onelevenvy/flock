@@ -58,11 +58,11 @@ pub async fn handle_interactive(
          if ! python3 -c 'import socket; s = socket.socket(); s.connect((\"127.0.0.1\", 9222))' >/dev/null 2>&1; then \
              echo 'Starting chromium exposing 9222 debugger port on DISPLAY={display}...' && \
              if command -v chromium >/dev/null 2>&1; then \
-                 setsid nohup chromium --no-sandbox --remote-debugging-port=9222 --disable-gpu --disable-dev-shm-usage --window-size=1280,1024 >/tmp/interactive_chrome.log 2>&1 & \
+                 setsid nohup chromium --no-sandbox --remote-debugging-port=9222 --disable-gpu --disable-dev-shm-usage --no-first-run --no-default-browser-check --window-size=1280,1024 >/tmp/interactive_chrome.log 2>&1 & \
              elif command -v chromium-browser >/dev/null 2>&1; then \
-                 setsid nohup chromium-browser --no-sandbox --remote-debugging-port=9222 --disable-gpu --disable-dev-shm-usage --window-size=1280,1024 >/tmp/interactive_chrome.log 2>&1 & \
+                 setsid nohup chromium-browser --no-sandbox --remote-debugging-port=9222 --disable-gpu --disable-dev-shm-usage --no-first-run --no-default-browser-check --window-size=1280,1024 >/tmp/interactive_chrome.log 2>&1 & \
              elif command -v google-chrome >/dev/null 2>&1; then \
-                 setsid nohup google-chrome --no-sandbox --remote-debugging-port=9222 --disable-gpu --disable-dev-shm-usage --window-size=1280,1024 >/tmp/interactive_chrome.log 2>&1 & \
+                 setsid nohup google-chrome --no-sandbox --remote-debugging-port=9222 --disable-gpu --disable-dev-shm-usage --no-first-run --no-default-browser-check --window-size=1280,1024 >/tmp/interactive_chrome.log 2>&1 & \
              fi && \
              sleep 3; \
          fi",
