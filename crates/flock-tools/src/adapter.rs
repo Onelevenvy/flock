@@ -6,6 +6,7 @@ use flock_core::types::tool::{JsonSchema, ToolResult};
 use langgraph::prebuilt::BaseTool;
 
 use crate::Tool;
+use crate::ToolContext;
 
 pub struct LangGraphToolAdapter {
     inner: Box<dyn BaseTool>,
@@ -63,7 +64,7 @@ impl Tool for LangGraphToolAdapter {
         true
     }
 
-    async fn execute(&self, input: Value) -> ToolResult {
+    async fn execute(&self, input: Value, _ctx: &ToolContext) -> ToolResult {
         let config = langgraph::checkpoint::config::RunnableConfig::new();
         match self.inner.ainvoke(&input, &config).await {
             Ok(content) => ToolResult {

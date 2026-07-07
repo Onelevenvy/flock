@@ -15,6 +15,7 @@ pub struct Session {
     pub cwd: String,
     pub total_usage: TokenUsage,
     pub messages: Vec<Message>,
+    pub sandbox_id: Option<String>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -90,6 +91,7 @@ impl SessionManager {
             cwd: cwd.to_string(),
             total_usage: TokenUsage::default(),
             messages: Vec::new(),
+            sandbox_id: None,
         })
     }
 
@@ -140,14 +142,15 @@ impl SessionManager {
 
         let result = sqlx::query(
             "UPDATE session_metadata
-             SET messages = ?1, msg_count = ?2, updated_at = ?3, summary = ?4, model = ?5
-             WHERE thread_id = ?6",
+             SET messages = ?1, msg_count = ?2, updated_at = ?3, summary = ?4, model = ?5, sandbox_id = ?6
+             WHERE thread_id = ?7",
         )
         .bind(&messages_json)
         .bind(msg_count as i64)
         .bind(&updated_at)
         .bind(&final_summary)
         .bind(&session.model)
+        .bind(&session.sandbox_id)
         .bind(&session.id)
         .execute(&self.pool)
         .await
@@ -156,8 +159,8 @@ impl SessionManager {
         if result.rows_affected() == 0 && msg_count > 0 {
             sqlx::query(
                 "INSERT INTO session_metadata
-                 (thread_id, provider, cwd, model, summary, messages, msg_count, created_at, updated_at, workspace_id)
-                 VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, '')",
+                 (thread_id, provider, cwd, model, summary, messages, msg_count, created_at, updated_at, workspace_id, sandbox_id)
+                 VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, '', ?10)",
             )
             .bind(&session.id)
             .bind(&session.provider)
@@ -168,6 +171,7 @@ impl SessionManager {
             .bind(msg_count as i64)
             .bind(session.created_at.to_rfc3339())
             .bind(&updated_at)
+            .bind(&session.sandbox_id)
             .execute(&self.pool)
             .await
             .map_err(|e| anyhow::anyhow!("Failed to insert session metadata: {}", e))?;
@@ -219,7 +223,7 @@ impl SessionManager {
     pub async fn load(&self, id_or_latest: &str) -> anyhow::Result<Session> {
         let row = if id_or_latest == "latest" {
             sqlx::query(
-                "SELECT thread_id, provider, cwd, model, messages, created_at, updated_at
+                "SELECT thread_id, provider, cwd, model, messages, created_at, updated_at, sandbox_id
                  FROM session_metadata
                  ORDER BY updated_at DESC
                  LIMIT 1",
@@ -228,15 +232,15 @@ impl SessionManager {
             .await
         } else {
             sqlx::query(
-                "SELECT thread_id, provider, cwd, model, messages, created_at, updated_at
+                "SELECT thread_id, provider, cwd, model, messages, created_at, updated_at, sandbox_id
                  FROM session_metadata
                  WHERE thread_id = ?1",
             )
             .bind(id_or_latest)
             .fetch_optional(&self.pool)
             .await
-        }
-        .map_err(|e| anyhow::anyhow!("Failed to load session: {}", e))?;
+        };
+        let row = row.map_err(|e| anyhow::anyhow!("Failed to load session: {}", e))?;
 
         let row = row.ok_or_else(|| anyhow::anyhow!("Session '{}' not found", id_or_latest))?;
 
@@ -247,6 +251,7 @@ impl SessionManager {
         let messages_json: String = row.get("messages");
         let created_at_str: String = row.get("created_at");
         let updated_at_str: String = row.get("updated_at");
+        let sandbox_id: Option<String> = row.try_get("sandbox_id").ok();
 
         let messages: Vec<Message> = serde_json::from_str(&messages_json).unwrap_or_default();
         let created_at = DateTime::parse_from_rfc3339(&created_at_str)
@@ -267,6 +272,7 @@ impl SessionManager {
             cwd,
             total_usage,
             messages,
+            sandbox_id,
         })
     }
 

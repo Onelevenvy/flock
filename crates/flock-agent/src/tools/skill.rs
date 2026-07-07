@@ -132,7 +132,7 @@ impl Tool for SkillTool {
         false
     }
 
-    async fn execute(&self, input: Value) -> ToolResult {
+    async fn execute(&self, input: Value, _ctx: &flock_tools::ToolContext) -> ToolResult {
         let Some(skill_name) = input["skill"].as_str() else {
             return ToolResult {
                 content: "Missing required parameter: skill".to_string(),

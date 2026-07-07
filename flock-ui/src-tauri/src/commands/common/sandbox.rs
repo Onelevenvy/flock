@@ -6,7 +6,7 @@ use crate::commands::assistant::SharedAgentState;
 pub async fn destroy_sandbox(
     db: State<'_, crate::SharedDbManager>,
 ) -> Result<(), String> {
-    flock_tools::sandbox_core::manager::destroy_active_sandbox(&*db)
+    flock_tools::sandbox_core::manager::destroy_active_sandbox(&*db, None)
         .await
         .map_err(|e| e.to_string())
 }
@@ -22,7 +22,7 @@ pub async fn cleanup_all_sandboxes(
         .map_err(|e| e.to_string())?;
 
     // 清除本地缓存
-    let _ = flock_tools::sandbox_core::manager::destroy_active_sandbox(db_ref).await;
+    let _ = flock_tools::sandbox_core::manager::destroy_active_sandbox(db_ref, None).await;
 
     Ok(res)
 }

@@ -31,7 +31,7 @@ pub async fn start_computer_use_in_sandbox(
     let mut last_error = None;
 
     for url in urls {
-        crate::emit_info(&flock_core::tr(
+        eprintln!("{}", flock_core::tr(
             &format!("正在请求 Daytona 桌面启动端点: {}...", url),
             &format!("Requesting Daytona desktop start endpoint: {}...", url)
         ));
@@ -45,7 +45,7 @@ pub async fn start_computer_use_in_sandbox(
             Ok(resp) => {
                 let status = resp.status();
                 if status.is_success() {
-                    crate::emit_info(&flock_core::tr("Daytona 桌面拉起请求已发送。", "Daytona desktop launch request sent."));
+                    eprintln!("{}", flock_core::tr("Daytona 桌面拉起请求已发送。", "Daytona desktop launch request sent."));
                     return Ok(());
                 } else if status == reqwest::StatusCode::NOT_FOUND {
                     last_error = Some(anyhow::anyhow!(flock_core::tr(
@@ -118,7 +118,7 @@ pub async fn check_computer_use_status(
                 let status = resp.status();
                 if status.is_success() {
                     let text = resp.text().await.unwrap_or_default();
-                    crate::emit_info(&flock_core::tr(
+                    eprintln!("{}", flock_core::tr(
                         &format!("[VNC Status] 接口返回: {}", text),
                         &format!("[VNC Status] API returned: {}", text)
                     ));

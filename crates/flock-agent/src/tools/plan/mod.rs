@@ -62,7 +62,7 @@ impl Tool for EnterPlanModeTool {
         true
     }
 
-    async fn execute(&self, _input: Value) -> ToolResult {
+    async fn execute(&self, _input: Value, _ctx: &flock_tools::ToolContext) -> ToolResult {
         if self.plan_active.load(Ordering::Acquire) {
             return ToolResult {
                 content: "Already in plan mode. Use ExitPlanMode to exit first.".to_string(),
@@ -147,7 +147,7 @@ impl Tool for ExitPlanModeTool {
         true
     }
 
-    async fn execute(&self, input: Value) -> ToolResult {
+    async fn execute(&self, input: Value, _ctx: &flock_tools::ToolContext) -> ToolResult {
         if !self.plan_active.load(Ordering::Acquire) {
             return ToolResult {
                 content: "Not in plan mode. Use EnterPlanMode to enter plan mode first."

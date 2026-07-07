@@ -29,7 +29,7 @@ pub async fn request_human_assistance(
         .ok_or_else(|| "数据库管理器未初始化，无法读取沙箱配置。".to_string())?;
 
     // 1. 获取或拉起沙盒环境
-    let sandbox_id = get_or_create_active_sandbox(&db).await
+    let sandbox_id = get_or_create_active_sandbox(&db, None).await
         .map_err(|e| format!("沙盒环境启动失败: {}", e))?;
 
     // 2. 确保 VNC 等图形控制台及代理处于开启保活状态

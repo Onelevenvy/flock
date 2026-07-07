@@ -12,7 +12,7 @@ impl SandboxProvider for DaytonaProvider {
         crate::sandbox_core::daytona::check_sandbox_alive(cfg, sandbox_id).await
     }
     async fn create_sandbox(&self, db: &DbManager, cfg: &SandboxConfig) -> anyhow::Result<String> {
-        crate::sandbox_core::daytona::create_sandbox(db, cfg).await
+        crate::sandbox_core::daytona::create_sandbox(db, cfg, None).await
     }
     async fn destroy_sandbox(&self, _db: &DbManager, cfg: &SandboxConfig, sandbox_id: &str) -> anyhow::Result<()> {
         crate::sandbox_core::daytona::destroy_daytona_sandbox(cfg, sandbox_id).await

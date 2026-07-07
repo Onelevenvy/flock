@@ -72,6 +72,15 @@ use crate::file_cache::FileStateCache;
 use flock_core::db::DbManager;
 use std::sync::{Arc, OnceLock, RwLock};
 
+pub struct ToolContext {
+    pub session_id: String,
+    pub workspace_dir: std::path::PathBuf,
+    pub db_manager: Option<Arc<flock_core::db::DbManager>>,
+    pub file_cache: Option<Arc<std::sync::RwLock<FileStateCache>>>,
+    pub protocol_emitter: Option<Arc<dyn flock_core::ipc_interface::writer::ProtocolEmitter>>,
+    pub approval_manager: Option<Arc<flock_core::ipc_interface::approval::ToolApprovalManager>>,
+}
+
 static GLOBAL_FILE_CACHE: OnceLock<Arc<RwLock<FileStateCache>>> = OnceLock::new();
 
 /// Initialize the global file cache for tools.
@@ -108,156 +117,6 @@ pub fn get_db_manager() -> Option<Arc<DbManager>> {
     GLOBAL_DB_MANAGER.get().cloned()
 }
 
-static EMITTER_REGISTRY: std::sync::LazyLock<std::sync::RwLock<std::collections::HashMap<String, Arc<dyn flock_core::ipc_interface::writer::ProtocolEmitter + Send + Sync>>>> =
-    std::sync::LazyLock::new(|| std::sync::RwLock::new(std::collections::HashMap::new()));
-
-static APPROVAL_REGISTRY: std::sync::LazyLock<std::sync::RwLock<std::collections::HashMap<String, Arc<flock_core::ipc_interface::approval::ToolApprovalManager>>>> =
-    std::sync::LazyLock::new(|| std::sync::RwLock::new(std::collections::HashMap::new()));
-
-static WORKSPACE_REGISTRY: std::sync::LazyLock<std::sync::RwLock<std::collections::HashMap<String, PathBuf>>> =
-    std::sync::LazyLock::new(|| std::sync::RwLock::new(std::collections::HashMap::new()));
-
-/// Initialize the global emitter for a specific session/thread.
-pub fn init_global_emitter(session_id: &str, emitter: Arc<dyn flock_core::ipc_interface::writer::ProtocolEmitter + Send + Sync>) {
-    if let Ok(mut map) = EMITTER_REGISTRY.write() {
-        map.insert(session_id.to_string(), emitter);
-    }
-}
-
-pub fn unregister_global_emitter(session_id: &str) {
-    if let Ok(mut map) = EMITTER_REGISTRY.write() {
-        map.remove(session_id);
-    }
-}
-
-/// Get the global emitter for the current session context.
-pub fn get_global_emitter() -> Option<Arc<dyn flock_core::ipc_interface::writer::ProtocolEmitter + Send + Sync>> {
-    // 1. Try task-local session ID
-    if let Ok(session_id) = flock_core::CURRENT_SESSION_ID.try_with(|id| id.clone()) {
-        if let Ok(map) = EMITTER_REGISTRY.read() {
-            if let Some(emitter) = map.get(&session_id) {
-                return Some(emitter.clone());
-            }
-        }
-    }
-    // 2. Fallback: if task-local not set or not found, return the first available emitter in the registry
-    if let Ok(map) = EMITTER_REGISTRY.read() {
-        if let Some(emitter) = map.values().next() {
-            return Some(emitter.clone());
-        }
-    }
-    None
-}
-
-/// Initialize the global approval manager for a specific session/thread.
-pub fn init_global_approval_manager(session_id: &str, mgr: Arc<flock_core::ipc_interface::approval::ToolApprovalManager>) {
-    if let Ok(mut map) = APPROVAL_REGISTRY.write() {
-        map.insert(session_id.to_string(), mgr);
-    }
-}
-
-pub fn unregister_global_approval_manager(session_id: &str) {
-    if let Ok(mut map) = APPROVAL_REGISTRY.write() {
-        map.remove(session_id);
-    }
-}
-
-/// Get the global approval manager for the current session context.
-pub fn get_global_approval_manager() -> Option<Arc<flock_core::ipc_interface::approval::ToolApprovalManager>> {
-    // 1. Try task-local session ID
-    if let Ok(session_id) = flock_core::CURRENT_SESSION_ID.try_with(|id| id.clone()) {
-        if let Ok(map) = APPROVAL_REGISTRY.read() {
-            if let Some(mgr) = map.get(&session_id) {
-                return Some(mgr.clone());
-            }
-        }
-    }
-    // 2. Fallback: return first available approval manager
-    if let Ok(map) = APPROVAL_REGISTRY.read() {
-        if let Some(mgr) = map.values().next() {
-            return Some(mgr.clone());
-        }
-    }
-    None
-}
-
-/// Approve a tool call across all registered approval managers.
-/// Returns true if the call_id was found and resolved.
-pub fn approve_by_global_registry(
-    call_id: &str,
-    scope: flock_core::ipc_interface::approval::ApprovalScope,
-    feedback: Option<String>,
-) -> bool {
-    if let Ok(map) = APPROVAL_REGISTRY.read() {
-        for mgr in map.values() {
-            if mgr.has_pending(call_id) {
-                mgr.approve(call_id, scope, feedback);
-                return true;
-            }
-        }
-    }
-    false
-}
-
-/// Deny a tool call across all registered approval managers.
-/// Returns true if the call_id was found and resolved.
-pub fn deny_by_global_registry(
-    call_id: &str,
-    result: flock_core::ipc_interface::approval::ToolApprovalResult,
-) -> bool {
-    if let Ok(map) = APPROVAL_REGISTRY.read() {
-        for mgr in map.values() {
-            if mgr.has_pending(call_id) {
-                mgr.resolve(call_id, result);
-                return true;
-            }
-        }
-    }
-    false
-}
-
-/// Initialize the active workspace directory for a specific session/thread.
-pub fn init_workspace_dir(session_id: &str, dir: PathBuf) {
-    if let Ok(mut map) = WORKSPACE_REGISTRY.write() {
-        map.insert(session_id.to_string(), dir);
-    }
-}
-
-pub fn unregister_workspace_dir(session_id: &str) {
-    if let Ok(mut map) = WORKSPACE_REGISTRY.write() {
-        map.remove(session_id);
-    }
-}
-
-/// Get the active workspace directory for the current session context.
-pub fn get_workspace_dir() -> Option<PathBuf> {
-    // 1. Try task-local session ID
-    if let Ok(session_id) = flock_core::CURRENT_SESSION_ID.try_with(|id| id.clone()) {
-        if let Ok(map) = WORKSPACE_REGISTRY.read() {
-            if let Some(dir) = map.get(&session_id) {
-                return Some(dir.clone());
-            }
-        }
-    }
-    // 2. Fallback: return first available workspace dir
-    if let Ok(map) = WORKSPACE_REGISTRY.read() {
-        if let Some(dir) = map.values().next() {
-            return Some(dir.clone());
-        }
-    }
-    None
-}
-
-/// Send an info message to the client.
-pub fn emit_info(message: &str) {
-    if let Some(emitter) = get_global_emitter() {
-        let _ = emitter.emit(&flock_core::ipc_interface::events::ProtocolEvent::Info {
-            msg_id: String::new(),
-            message: message.to_string(),
-        });
-    }
-}
-
 /// Resolve decrypted credentials for a tool provider by its ID.
 /// Returns `None` if provider not found or has no credentials.
 pub async fn resolve_provider_credentials(provider_id: &str) -> Option<String> {
@@ -265,6 +124,48 @@ pub async fn resolve_provider_credentials(provider_id: &str) -> Option<String> {
     let providers = db.list_tool_providers().await.ok()?;
     let provider = providers.iter().find(|p| p.id == provider_id)?;
     provider.credentials.clone()
+}
+
+/// Emit an informational log message (stderr, for internal sandbox status logs).
+/// Tool modules that have not yet been migrated to `ToolContext` still call this directly.
+/// Production telemetry is sent via `ProtocolEmitter` in `ToolContext.protocol_emitter`.
+pub fn emit_info(msg: &str) {
+    eprintln!("[flock-tools] {}", msg);
+}
+
+/// Returns `None` — workspace directory is now passed explicitly via `ToolContext.workspace_dir`.
+/// This stub exists for sandbox internal modules not yet migrated to `ToolContext`.
+#[deprecated(note = "Use `ToolContext.workspace_dir` instead")]
+pub fn get_workspace_dir() -> Option<std::path::PathBuf> {
+    None
+}
+
+// --- Global emitter and approval manager for tools using #[tool()] macro adapters ---
+// These tools cannot receive ToolContext via trait method because their execute fn is generated.
+// They use these global singletons until migrated to explicit context passing.
+
+static GLOBAL_EMITTER: OnceLock<Arc<dyn flock_core::ipc_interface::writer::ProtocolEmitter>> = OnceLock::new();
+
+/// Initialize the global protocol emitter (used by sandbox tool adapters).
+pub fn init_global_emitter(emitter: Arc<dyn flock_core::ipc_interface::writer::ProtocolEmitter>) {
+    let _ = GLOBAL_EMITTER.set(emitter);
+}
+
+/// Get the global protocol emitter if initialized.
+pub fn get_global_emitter() -> Option<Arc<dyn flock_core::ipc_interface::writer::ProtocolEmitter>> {
+    GLOBAL_EMITTER.get().cloned()
+}
+
+static GLOBAL_APPROVAL_MANAGER: OnceLock<Arc<flock_core::ipc_interface::approval::ToolApprovalManager>> = OnceLock::new();
+
+/// Initialize the global approval manager (used by sandbox tool adapters).
+pub fn init_global_approval_manager(mgr: Arc<flock_core::ipc_interface::approval::ToolApprovalManager>) {
+    let _ = GLOBAL_APPROVAL_MANAGER.set(mgr);
+}
+
+/// Get the global approval manager if initialized.
+pub fn get_global_approval_manager() -> Option<Arc<flock_core::ipc_interface::approval::ToolApprovalManager>> {
+    GLOBAL_APPROVAL_MANAGER.get().cloned()
 }
 
 #[derive(serde::Deserialize)]
@@ -342,7 +243,7 @@ pub trait Tool: Send + Sync {
     fn is_concurrency_safe(&self, input: &Value) -> bool;
 
     /// Execute the tool
-    async fn execute(&self, input: Value) -> ToolResult;
+    async fn execute(&self, input: Value, ctx: &ToolContext) -> ToolResult;
 
     /// Return an optional context modifier based on the tool input.
     /// Called after execute() to collect any engine-level overrides.
