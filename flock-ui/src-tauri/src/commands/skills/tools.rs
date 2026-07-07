@@ -61,7 +61,15 @@ pub async fn test_tool_provider(
         .ok_or_else(|| format!("Provider '{}' 没有关联的工具", provider_id))?;
 
     // Execute the actual tool with test input
-    let result = tool.execute(test_input).await;
+    let dummy_ctx = flock_tools::ToolContext {
+        session_id: "test".to_string(),
+        workspace_dir: std::env::current_dir().unwrap_or_default(),
+        db_manager: Some(db.inner().clone()),
+        file_cache: None,
+        protocol_emitter: None,
+        approval_manager: None,
+    };
+    let result = tool.execute(test_input, &dummy_ctx).await;
 
     // Update availability based on test result
     db.set_tool_provider_available(&provider_id, !result.is_error).await.map_err(|e| e.to_string())?;

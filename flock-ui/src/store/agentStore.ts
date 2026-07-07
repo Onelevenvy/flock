@@ -53,7 +53,24 @@ const getActiveSessionId = () => {
   return useWorkspaceStore.getState().activeConversationId || 'default';
 };
 
-const getSessionState = (state: any, sessId: string): SessionState => {
+const syncActiveSessionToRoot = (sessId: string, updatedSession: SessionState) => {
+  const currentActiveId = getActiveSessionId();
+  if (sessId === currentActiveId) {
+    return {
+      status: updatedSession.status,
+      capabilities: updatedSession.capabilities,
+      workdir: updatedSession.workdir,
+      errorMessage: updatedSession.errorMessage,
+      messages: updatedSession.messages,
+      pendingApprovals: updatedSession.pendingApprovals,
+      humanTakeover: updatedSession.humanTakeover,
+      playbackIndex: updatedSession.playbackIndex,
+    };
+  }
+  return {};
+};
+
+const getSessionState = (state: { sessions: Record<string, SessionState> }, sessId: string): SessionState => {
   return state.sessions[sessId] || {
     status: 'disconnected',
     capabilities: null,
@@ -71,30 +88,16 @@ export const useAgentStore = create<AgentStore>((set, get) => {
     sessId: string,
     updater: Partial<SessionState> | ((prev: SessionState) => Partial<SessionState>)
   ) => {
-    set((state: any) => {
+    set((state: { sessions: Record<string, SessionState> }) => {
       const prevSession = getSessionState(state, sessId);
       const partialUpdate = typeof updater === 'function' ? updater(prevSession) : updater;
       const updatedSession = { ...prevSession, ...partialUpdate };
       const nextSessions = { ...state.sessions, [sessId]: updatedSession };
       
-      const currentActiveId = getActiveSessionId();
-      if (sessId === currentActiveId) {
-        return {
-          sessions: nextSessions,
-          status: updatedSession.status,
-          capabilities: updatedSession.capabilities,
-          workdir: updatedSession.workdir,
-          errorMessage: updatedSession.errorMessage,
-          messages: updatedSession.messages,
-          pendingApprovals: updatedSession.pendingApprovals,
-          humanTakeover: updatedSession.humanTakeover,
-          playbackIndex: updatedSession.playbackIndex,
-        };
-      } else {
-        return {
-          sessions: nextSessions,
-        };
-      }
+      return {
+        sessions: nextSessions,
+        ...syncActiveSessionToRoot(sessId, updatedSession),
+      };
     });
   };
 
@@ -153,7 +156,7 @@ export const useAgentStore = create<AgentStore>((set, get) => {
       };
 
       const customSet = (updater: any) => {
-        set((state: any) => {
+        set((state: { sessions: Record<string, SessionState> }) => {
           const prevSession = getSessionState(state, eventSessionId);
           const update = typeof updater === 'function' ? updater({ ...state, ...prevSession }) : updater;
           
@@ -171,27 +174,12 @@ export const useAgentStore = create<AgentStore>((set, get) => {
           
           const updatedSession = { ...prevSession, ...sessionUpdate };
           const nextSessions = { ...state.sessions, [eventSessionId]: updatedSession };
-          const currentActiveId = getActiveSessionId();
 
-          if (eventSessionId === currentActiveId) {
-            return {
-              ...globalUpdate,
-              sessions: nextSessions,
-              status: updatedSession.status,
-              capabilities: updatedSession.capabilities,
-              workdir: updatedSession.workdir,
-              errorMessage: updatedSession.errorMessage,
-              messages: updatedSession.messages,
-              pendingApprovals: updatedSession.pendingApprovals,
-              humanTakeover: updatedSession.humanTakeover,
-              playbackIndex: updatedSession.playbackIndex,
-            };
-          } else {
-            return {
-              ...globalUpdate,
-              sessions: nextSessions,
-            };
-          }
+          return {
+            ...globalUpdate,
+            sessions: nextSessions,
+            ...syncActiveSessionToRoot(eventSessionId, updatedSession),
+          };
         });
       };
 
@@ -208,7 +196,7 @@ export const useAgentStore = create<AgentStore>((set, get) => {
       }
 
       const customSet = (updater: any) => {
-        set((state: any) => {
+        set((state: { sessions: Record<string, SessionState> }) => {
           const prevSession = getSessionState(state, convId);
           const update = typeof updater === 'function' ? updater({ ...state, ...prevSession }) : updater;
           
@@ -226,27 +214,12 @@ export const useAgentStore = create<AgentStore>((set, get) => {
           
           const updatedSession = { ...prevSession, ...sessionUpdate };
           const nextSessions = { ...state.sessions, [convId]: updatedSession };
-          const currentActiveId = getActiveSessionId();
           
-          if (convId === currentActiveId) {
-            return {
-              ...globalUpdate,
-              sessions: nextSessions,
-              status: updatedSession.status,
-              capabilities: updatedSession.capabilities,
-              workdir: updatedSession.workdir,
-              errorMessage: updatedSession.errorMessage,
-              messages: updatedSession.messages,
-              pendingApprovals: updatedSession.pendingApprovals,
-              humanTakeover: updatedSession.humanTakeover,
-              playbackIndex: updatedSession.playbackIndex,
-            };
-          } else {
-            return {
-              ...globalUpdate,
-              sessions: nextSessions,
-            };
-          }
+          return {
+            ...globalUpdate,
+            sessions: nextSessions,
+            ...syncActiveSessionToRoot(convId, updatedSession),
+          };
         });
       };
 

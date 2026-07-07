@@ -123,7 +123,6 @@ pub async fn resolve_workspace_env(
     };
 
     if workdir.exists() {
-        flock_tools::init_workspace_dir(thread_id, workdir.clone());
         if let Err(e) = std::env::set_current_dir(&workdir) {
             log::warn!("Failed to set current dir to {:?}: {}", workdir, e);
         } else {

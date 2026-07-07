@@ -126,8 +126,8 @@ async fn build_session_engine(
     );
 
     let sid = session_id.clone().unwrap_or_else(|| "default".to_string());
-    flock_tools::init_global_emitter(&sid, protocol_emitter.clone());
-    flock_tools::init_global_approval_manager(&sid, approval_manager.clone());
+    flock_tools::init_global_emitter(protocol_emitter.clone());
+    flock_tools::init_global_approval_manager(approval_manager.clone());
 
     let mut bootstrap = AgentBuilder::new(config.clone(), workdir.to_string_lossy(), output.clone());
 
@@ -373,9 +373,6 @@ pub async fn send_message_to_engine(
             tokio::spawn(async move {
                 let _s = state.lock().await;
                 execution_manager.unregister_task(&session_id).await;
-                flock_tools::unregister_global_emitter(&session_id);
-                flock_tools::unregister_global_approval_manager(&session_id);
-                flock_tools::unregister_workspace_dir(&session_id);
                 if cancel_flag.load(Ordering::SeqCst) {
                     let _ = emitter.emit(&flock_core::ipc_interface::events::ProtocolEvent::StreamEnd {
                         msg_id,
@@ -440,11 +437,6 @@ pub async fn approve_tool_call(
         _ => ApprovalScope::Once,
     };
 
-    // First, try to approve using the global registry (e.g. for workflows)
-    if flock_tools::approve_by_global_registry(&call_id, scope_enum.clone(), feedback.clone()) {
-        return Ok(());
-    }
-
     let s = state.lock().await;
     s.approval_manager.approve(&call_id, scope_enum, feedback);
     Ok(())
@@ -459,11 +451,6 @@ pub async fn deny_tool_call(
     let denied_result = ToolApprovalResult::Denied {
         reason: reason.unwrap_or_else(|| "User denied".to_string()),
     };
-
-    // First, try to deny using the global registry (e.g. for workflows)
-    if flock_tools::deny_by_global_registry(&call_id, denied_result.clone()) {
-        return Ok(());
-    }
 
     let s = state.lock().await;
     s.approval_manager.resolve(&call_id, denied_result);

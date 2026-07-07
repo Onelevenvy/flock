@@ -276,6 +276,17 @@ impl SessionManager {
         })
     }
 
+    /// Update the sandbox ID associated with a session.
+    pub async fn update_sandbox_id(&self, session_id: &str, sandbox_id: Option<&str>) -> anyhow::Result<()> {
+        sqlx::query("UPDATE session_metadata SET sandbox_id = ?1 WHERE thread_id = ?2")
+            .bind(sandbox_id)
+            .bind(session_id)
+            .execute(&self.pool)
+            .await
+            .map_err(|e| anyhow::anyhow!("Failed to update session sandbox_id: {}", e))?;
+        Ok(())
+    }
+
     /// Delete a session's metadata.
     pub async fn delete(&self, session_id: &str) -> anyhow::Result<()> {
         sqlx::query("DELETE FROM session_metadata WHERE thread_id = ?1")

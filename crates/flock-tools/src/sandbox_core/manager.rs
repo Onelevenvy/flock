@@ -48,27 +48,41 @@ pub async fn get_or_create_active_sandbox(
     db: &DbManager,
     workspace_dir: Option<&std::path::Path>,
 ) -> anyhow::Result<String> {
+    let session_id = flock_core::get_current_session_id();
+    get_or_create_sandbox_for_session(db, &session_id, workspace_dir).await
+}
+
+pub async fn get_or_create_sandbox_for_session(
+    db: &DbManager,
+    session_id: &str,
+    workspace_dir: Option<&std::path::Path>,
+) -> anyhow::Result<String> {
     let cfg = get_sandbox_config(db).await
         .ok_or_else(|| anyhow::anyhow!(flock_core::tr(
             "沙盒未启用或未配置。请在系统设置中配置有效的 API Key。",
             "Sandbox not enabled or configured. Please configure a valid API Key in system settings."
         )))?;
 
-    let mutex = get_sandbox_id_mutex();
-    let mut lock = mutex.lock().await;
+    // Query session_metadata to see if there is an existing sandbox_id
+    let session_mgr = db.session_manager(100);
+    let session_res = session_mgr.load(session_id).await;
+    let mut existing_id = None;
+    if let Ok(sess) = session_res {
+        existing_id = sess.sandbox_id;
+    }
 
-    if let Some(id) = lock.as_ref() {
-        if check_sandbox_alive(&cfg, id).await {
+    if let Some(id) = existing_id {
+        if check_sandbox_alive(&cfg, &id).await {
             if cfg.provider.as_deref().unwrap_or("e2b") == "daytona" {
-                let _ = crate::sandbox_core::daytona::set_sandbox_public(&cfg, id, true).await;
+                let _ = crate::sandbox_core::daytona::set_sandbox_public(&cfg, &id, true).await;
             }
-            return Ok(id.clone());
+            return Ok(id);
         }
         eprintln!("{}", flock_core::tr(
             &format!("沙盒 {} 已失效，准备重新创建...", id),
             &format!("Sandbox {} has expired, preparing to recreate...", id)
         ));
-        *lock = None;
+        let _ = session_mgr.update_sandbox_id(session_id, None).await;
     }
 
     let provider_name = cfg.provider.as_deref().unwrap_or("e2b");
@@ -82,7 +96,7 @@ pub async fn get_or_create_active_sandbox(
         }
     }
 
-    *lock = Some(sandbox_id.clone());
+    let _ = session_mgr.update_sandbox_id(session_id, Some(&sandbox_id)).await;
     Ok(sandbox_id)
 }
 
@@ -90,17 +104,27 @@ pub async fn destroy_active_sandbox(
     db: &DbManager,
     workspace_dir: Option<&std::path::Path>,
 ) -> anyhow::Result<()> {
+    let session_id = flock_core::get_current_session_id();
+    destroy_sandbox_for_session(db, &session_id, workspace_dir).await
+}
+
+pub async fn destroy_sandbox_for_session(
+    db: &DbManager,
+    session_id: &str,
+    workspace_dir: Option<&std::path::Path>,
+) -> anyhow::Result<()> {
     let cfg = match get_sandbox_config(db).await {
         Some(c) => c,
         None => return Ok(()),
     };
 
-    let mutex = get_sandbox_id_mutex();
-    let mut lock = mutex.lock().await;
-
-    let sandbox_id = match lock.as_ref() {
-        Some(id) => id.clone(),
-        None => return Ok(()),
+    let session_mgr = db.session_manager(100);
+    let sandbox_id = match session_mgr.load(session_id).await {
+        Ok(sess) => match sess.sandbox_id {
+            Some(id) => id,
+            None => return Ok(()),
+        },
+        Err(_) => return Ok(()),
     };
 
     let provider_name = cfg.provider.as_deref().unwrap_or("e2b");
@@ -116,7 +140,7 @@ pub async fn destroy_active_sandbox(
         eprintln!("Destroying sandbox request failed: {}", e);
     }
 
-    *lock = None;
+    let _ = session_mgr.update_sandbox_id(session_id, None).await;
     Ok(())
 }
 

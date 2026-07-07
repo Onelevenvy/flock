@@ -609,8 +609,8 @@ pub async fn run_workflow(
     });
 
     let workflow_emitter = Arc::new(crate::ipc::emitter::TauriProtocolEmitter::new(app.clone(), thread_id_val.clone()));
-    flock_tools::init_global_emitter(&thread_id_val, workflow_emitter.clone());
-    flock_tools::init_global_approval_manager(&thread_id_val, ctx.approval_manager.clone());
+    flock_tools::init_global_emitter(workflow_emitter.clone());
+    flock_tools::init_global_approval_manager(ctx.approval_manager.clone());
 
     // 6. 构建 Graph
     let graph = build_workflow_graph(config_to_run, ctx.clone(), checkpointer)
@@ -962,8 +962,6 @@ pub async fn run_workflow(
             });
         }
 
-        flock_tools::unregister_global_emitter(&thread_id_val_clone);
-        flock_tools::unregister_global_approval_manager(&thread_id_val_clone);
         execution_manager_clone.unregister_task(&workflow_id_clone).await;
     });
 

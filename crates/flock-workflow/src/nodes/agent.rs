@@ -303,6 +303,15 @@ pub fn make_agent_workflow_node(
                         });
                         let emitter_dyn: Arc<dyn ProtocolEmitter> = emitter;
 
+                        let tool_ctx = flock_tools::ToolContext {
+                            session_id: ctx.workflow_id.clone(),
+                            workspace_dir: std::env::current_dir().unwrap_or_default(),
+                            db_manager: Some(ctx.db.clone()),
+                            file_cache: None,
+                            protocol_emitter: Some(emitter_dyn.clone()),
+                            approval_manager: Some(ctx.approval_manager.clone()),
+                        };
+
                         // Call execute_tool_calls_with_approval
                         let outcome = flock_tools::tool_executor::execute_tool_calls_with_approval(
                             &ctx.tools,
@@ -315,6 +324,7 @@ pub fn make_agent_workflow_node(
                             None,
                             flock_core::context_compression::CompressionLevel::Safe,
                             false,
+                            &tool_ctx,
                         ).await;
 
                         match outcome {
