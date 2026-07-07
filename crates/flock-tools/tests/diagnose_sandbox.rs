@@ -2,6 +2,7 @@ use std::path::PathBuf;
 use flock_core::db::DbManager;
 use flock_tools::sandbox_core::config::{get_sandbox_config, get_api_base};
 use flock_tools::sandbox_core::daytona::execute_command_in_sandbox;
+use flock_core::config::settings::SandboxProviderConfig;
 
 #[tokio::test]
 async fn test_diagnose_sandbox() {
@@ -24,8 +25,8 @@ async fn test_diagnose_sandbox() {
         }
     };
 
-    let api_url = cfg.api_url.as_ref().unwrap();
-    let api_key = cfg.api_key.as_ref().unwrap();
+    let api_url = cfg.api_url().unwrap();
+    let api_key = cfg.api_key().unwrap();
     let base = get_api_base(api_url);
     println!("Daytona API URL: {}", base);
 
@@ -140,16 +141,18 @@ async fn test_diagnose_e2b_templates() {
     };
 
     // Load sandbox config (enabled or not)
-    let mut cfg: flock_core::config::settings::SandboxConfig = db.get_config("sandbox").await.unwrap();
-    if let (Some(ct), Some(n)) = (&cfg.e2b_api_key_encrypted, &cfg.e2b_api_key_nonce) {
-        if let Ok(salt) = db.get_or_create_salt().await {
-            if let Ok(decrypted) = flock_core::crypto::decrypt_value(ct, n, &salt) {
-                cfg.e2b_api_key = Some(decrypted);
+    let mut cfg: flock_core::config::settings::SandboxConfig = db.get_config("sandbox").await.unwrap_or_default();
+    if let Ok(salt) = db.get_or_create_salt().await {
+        if let SandboxProviderConfig::E2b { api_key, api_key_encrypted, api_key_nonce, .. } = &mut cfg.provider {
+            if let (Some(ct), Some(n)) = (api_key_encrypted, api_key_nonce) {
+                if let Ok(decrypted) = flock_core::crypto::decrypt_value(ct, n, &salt) {
+                    *api_key = Some(decrypted);
+                }
             }
         }
     }
 
-    let key = cfg.e2b_api_key.unwrap_or_default();
+    let key = cfg.api_key().unwrap_or_default().to_string();
     println!("Retrieved E2B Key length: {}", key.len());
     if key.is_empty() {
         println!("E2B API Key is empty in database!");
@@ -188,11 +191,13 @@ async fn test_diagnose_e2b_sandbox() {
         }
     };
 
-    let mut cfg: flock_core::config::settings::SandboxConfig = db.get_config("sandbox").await.unwrap();
-    if let (Some(ct), Some(n)) = (&cfg.e2b_api_key_encrypted, &cfg.e2b_api_key_nonce) {
-        if let Ok(salt) = db.get_or_create_salt().await {
-            if let Ok(decrypted) = flock_core::crypto::decrypt_value(ct, n, &salt) {
-                cfg.e2b_api_key = Some(decrypted);
+    let mut cfg: flock_core::config::settings::SandboxConfig = db.get_config("sandbox").await.unwrap_or_default();
+    if let Ok(salt) = db.get_or_create_salt().await {
+        if let SandboxProviderConfig::E2b { api_key, api_key_encrypted, api_key_nonce, .. } = &mut cfg.provider {
+            if let (Some(ct), Some(n)) = (api_key_encrypted, api_key_nonce) {
+                if let Ok(decrypted) = flock_core::crypto::decrypt_value(ct, n, &salt) {
+                    *api_key = Some(decrypted);
+                }
             }
         }
     }

@@ -170,14 +170,11 @@ impl AgentBuilder {
             None
         };
 
-        if let Some(ref cache) = file_cache {
-            flock_tools::init_file_cache(Arc::clone(cache));
-        }
+
 
         let sid = self.resume_session.as_ref()
             .map(|s| s.id.clone())
             .unwrap_or_else(|| "default".to_string());
-        flock_tools::init_workspace_dir(&sid, cwd_path.to_path_buf());
         let tool_set = flock_tools::all_tools();
         let mut registry = tool_set.registry;
         let provider_infos = tool_set.provider_infos;

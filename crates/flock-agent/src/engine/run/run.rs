@@ -238,6 +238,25 @@ impl AgentEngine {
     pub async fn run(&mut self, user_input: &str, msg_id: &str) -> Result<AgentResult, AgentError> {
         let (initial_json, config) = prepare_run(self, user_input, msg_id).await?;
 
+        let cwd_path = self.current_session.as_ref()
+            .map(|s| PathBuf::from(&s.cwd))
+            .unwrap_or_else(|| std::env::current_dir().unwrap_or_default());
+
+        let tool_ctx = flock_tools::ToolContext {
+            session_id: self.current_session.as_ref().map(|s| s.id.clone()).unwrap_or_else(|| self.thread_id.clone()),
+            workspace_dir: cwd_path,
+            db_manager: self.db_manager.clone(),
+            file_cache: self.file_cache.clone(),
+            protocol_emitter: self.protocol_writer.clone(),
+            approval_manager: self.approval_manager.clone(),
+        };
+
+        flock_tools::ACTIVE_TOOL_CONTEXT.scope(tool_ctx, async {
+            self.run_internal(initial_json, config, msg_id).await
+        }).await
+    }
+
+    async fn run_internal(&mut self, initial_json: JsonValue, config: RunnableConfig, msg_id: &str) -> Result<AgentResult, AgentError> {
         // ── 批量 token 缓冲 ──────────────────────────────────────────────────
         // 每积累 BATCH_SIZE 个 token 才统一 emit 一次，减少 IPC 调用开销。
         // 值越小越流畅但 IPC 越频繁，值越大越节省 IPC 但打字机延迟增大。

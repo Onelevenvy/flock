@@ -58,7 +58,7 @@ impl DaytonaFs {
     }
 
     async fn run_cmd(db: &DbManager, cmd: &str) -> anyhow::Result<String> {
-        let sandbox_id = get_or_create_active_sandbox(db).await?;
+        let sandbox_id = get_or_create_active_sandbox(db, None).await?;
         let (out, code) = execute_command_in_sandbox(db, &sandbox_id, cmd).await?;
         if code != 0 {
             anyhow::bail!("Command failed with code {}: {}", code, out);

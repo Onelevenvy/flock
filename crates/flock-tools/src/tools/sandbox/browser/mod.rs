@@ -59,7 +59,7 @@ pub async fn browser(
 
     let session_id = flock_core::get_current_session_id();
 
-    let sandbox_id = get_or_create_active_sandbox(&db).await
+    let sandbox_id = get_or_create_active_sandbox(&db, None).await
         .map_err(|e| format!("沙盒环境启动失败: {}", e))?;
 
     let mut act = action.unwrap_or_else(|| "goto".to_string()).to_lowercase();

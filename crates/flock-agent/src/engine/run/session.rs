@@ -26,6 +26,7 @@ impl AgentEngine {
                         cwd: cwd.to_string(),
                         total_usage: TokenUsage::default(),
                         messages: Vec::new(),
+                        sandbox_id: None,
                     });
                     self.thread_id = sid.to_string(); // 🚀 Keep thread_id in sync!
                 }
@@ -41,6 +42,7 @@ impl AgentEngine {
                         cwd: cwd.to_string(),
                         total_usage: TokenUsage::default(),
                         messages: Vec::new(),
+                        sandbox_id: None,
                     });
                     self.thread_id = sid; // 🚀 Keep thread_id in sync!
                 }

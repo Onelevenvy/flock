@@ -7,6 +7,7 @@ use serde_json::Value;
 use super::manager::McpManager;
 use super::mcp_config::McpServerConfig;
 use crate::Tool;
+use crate::ToolContext;
 use flock_core::ipc_interface::events::ToolCategory;
 use flock_core::types::tool::{JsonSchema, ToolResult};
 
@@ -78,7 +79,7 @@ impl Tool for McpToolProxy {
         self.deferred
     }
 
-    async fn execute(&self, input: Value) -> ToolResult {
+    async fn execute(&self, input: Value, _ctx: &ToolContext) -> ToolResult {
         match self
             .manager
             .call_tool(&self.server_name, &self.tool_name, input)

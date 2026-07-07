@@ -140,7 +140,7 @@ pub async fn computer_use(
     let name_id = call_id.clone().unwrap_or_else(|| now_ms.to_string());
 
     // 1. 获取或创建沙盒环境
-    let sandbox_id = get_or_create_active_sandbox(&db).await
+    let sandbox_id = get_or_create_active_sandbox(&db, None).await
         .map_err(|e| format!("沙盒环境启动失败: {}", e))?;
 
     // 2. 根据 action 决定是否需要启动 VNC 桌面

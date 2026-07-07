@@ -15,35 +15,20 @@ type GetFn = () => any;
 
 function isCommandLineTool(toolName: string): boolean {
   const lower = toolName.toLowerCase();
-  return (
-    lower.includes('sandboxexec') ||
-    lower.includes('sandbox_exec') ||
-    lower.includes('bash') ||
-    lower.includes('python') ||
-    lower.includes('code_execution')
-  );
+  return lower === 'sandboxexec' || lower === 'bash' || lower === 'codeexecution';
 }
 
 function isBrowserOrDesktopTool(toolName: string): boolean {
   const lower = toolName.toLowerCase();
-  return (
-    lower.includes('browser') ||
-    lower.includes('computer_use') ||
-    lower.includes('computeruse')
-  );
+  return lower === 'browser' || lower === 'computeruse';
 }
 
 function isToolRequiringPreview(toolName: string): boolean {
-  const lower = toolName.toLowerCase();
-  return (
-    isBrowserOrDesktopTool(lower) ||
-    isCommandLineTool(lower)
-  );
+  return isBrowserOrDesktopTool(toolName) || isCommandLineTool(toolName);
 }
 
 function isComputerUseTool(toolName: string): boolean {
-  const lower = toolName.toLowerCase();
-  return lower.includes('computer_use') || lower.includes('computeruse');
+  return toolName.toLowerCase() === 'computeruse';
 }
 
 // ─── Find Tool Args Helper ───

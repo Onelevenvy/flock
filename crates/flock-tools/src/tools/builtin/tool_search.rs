@@ -1,6 +1,7 @@
 use async_trait::async_trait;
 use serde_json::{json, Value};
 use crate::Tool;
+use crate::ToolContext;
 use flock_core::ipc_interface::events::ToolCategory;
 use flock_core::types::tool::{JsonSchema, ToolResult};
 use flock_core::types::skill_types::ContextModifier;
@@ -40,7 +41,7 @@ impl Tool for ToolSearchTool {
         true
     }
 
-    async fn execute(&self, input: Value) -> ToolResult {
+    async fn execute(&self, input: Value, _ctx: &ToolContext) -> ToolResult {
         let query = input.get("query").and_then(|v| v.as_str()).unwrap_or("");
         if query.is_empty() {
             return ToolResult {

@@ -21,6 +21,7 @@ pub async fn run_tools(
     compaction_level: flock_core::context_compression::CompressionLevel,
     toon_enabled: bool,
     msg_id: &str,
+    ctx: &crate::ToolContext,
 ) -> Result<ToolCallOutcome, ExecutionControl> {
     let mut results = Vec::new();
     let mut modifiers = Vec::new();
@@ -32,7 +33,7 @@ pub async fn run_tools(
             let futures: Vec<_> = batch.calls
                 .iter()
                 .map(|call| {
-                    execute_single(registry, call, hooks_shared, compaction_level, toon_enabled, msg_id, None)
+                    execute_single(registry, call, hooks_shared, compaction_level, toon_enabled, msg_id, None, ctx)
                 })
                 .collect();
             let batch_results = futures::future::join_all(futures).await;
@@ -55,6 +56,7 @@ pub async fn run_tools(
                         toon_enabled,
                         msg_id,
                         None,
+                        ctx,
                     )
                     .await;
                 }
@@ -81,6 +83,7 @@ pub async fn execute_single(
     toon_enabled: bool,
     msg_id: &str,
     feedback: Option<String>,
+    ctx: &crate::ToolContext,
 ) -> (Vec<ContentBlock>, Option<ContextModifier>) {
     let ContentBlock::ToolUse { id, name, input } = call else {
         unreachable!("execute_single called with non-ToolUse block")
@@ -111,7 +114,7 @@ pub async fn execute_single(
                     obj.insert("feedback".to_string(), serde_json::Value::String(fb.clone()));
                 }
             }
-            let r = tool.execute(input_val).await;
+            let r = tool.execute(input_val, ctx).await;
             let modifier = if r.is_error {
                 None
             } else {
@@ -175,6 +178,7 @@ pub async fn execute_tool_calls_with_approval(
     mut hooks: Option<&mut HookEngine>,
     compaction_level: flock_core::context_compression::CompressionLevel,
     toon_enabled: bool,
+    ctx: &crate::ToolContext,
 ) -> Result<ToolCallOutcome, ExecutionControl> {
     let mut results = Vec::new();
     let mut modifiers = Vec::new();
@@ -256,7 +260,7 @@ pub async fn execute_tool_calls_with_approval(
                         _ => String::new(),
                     };
                     let fb = feedbacks.get(&call_id).cloned();
-                    execute_single(registry, call, hooks_shared, compaction_level, toon_enabled, msg_id, fb)
+                    execute_single(registry, call, hooks_shared, compaction_level, toon_enabled, msg_id, fb, ctx)
                 })
                 .collect();
 
@@ -341,7 +345,7 @@ pub async fn execute_tool_calls_with_approval(
                 let modifier;
                 {
                     let hooks_shared: Option<&HookEngine> = hooks.as_deref();
-                    (blocks, modifier) = execute_single(registry, call, hooks_shared, compaction_level, toon_enabled, msg_id, current_feedback).await;
+                    (blocks, modifier) = execute_single(registry, call, hooks_shared, compaction_level, toon_enabled, msg_id, current_feedback, ctx).await;
                 }
 
                 if let Some(ContentBlock::ToolResult { content, is_error, .. }) = blocks.first() {

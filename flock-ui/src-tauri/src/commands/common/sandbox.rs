@@ -6,7 +6,7 @@ use crate::commands::assistant::SharedAgentState;
 pub async fn destroy_sandbox(
     db: State<'_, crate::SharedDbManager>,
 ) -> Result<(), String> {
-    flock_tools::sandbox_core::manager::destroy_active_sandbox(&*db)
+    flock_tools::sandbox_core::manager::destroy_active_sandbox(&*db, None)
         .await
         .map_err(|e| e.to_string())
 }
@@ -22,7 +22,7 @@ pub async fn cleanup_all_sandboxes(
         .map_err(|e| e.to_string())?;
 
     // 清除本地缓存
-    let _ = flock_tools::sandbox_core::manager::destroy_active_sandbox(db_ref).await;
+    let _ = flock_tools::sandbox_core::manager::destroy_active_sandbox(db_ref, None).await;
 
     Ok(res)
 }
@@ -39,7 +39,7 @@ pub async fn get_active_sandbox_vnc_url(
             Err(_) => {
                 let fallback_url = match flock_tools::sandbox_core::config::get_sandbox_config(&*db).await {
                     Some(cfg) => {
-                        let provider_name = cfg.provider.as_deref().unwrap_or("e2b");
+                        let provider_name = cfg.provider.name();
                         let provider = flock_tools::sandbox_core::manager::get_provider(provider_name);
                         provider.get_vnc_url(&*db, &cfg, &sandbox_id).await.unwrap_or_else(|_| {
                             if provider_name == "e2b" {

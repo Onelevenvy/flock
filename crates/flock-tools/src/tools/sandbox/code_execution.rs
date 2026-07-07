@@ -27,7 +27,7 @@ pub async fn code_execution(code: String) -> Result<String, String> {
         .ok_or_else(|| "数据库管理器未初始化，无法读取沙箱配置。".to_string())?;
 
     // 1. 获取或创建沙盒环境
-    let sandbox_id = get_or_create_active_sandbox(&db).await
+    let sandbox_id = get_or_create_active_sandbox(&db, None).await
         .map_err(|e| format!("沙盒环境启动失败: {}", e))?;
 
     // 2. 将代码通过 Base64 编码，避免 shell 转义引发的问题，并写入沙盒执行

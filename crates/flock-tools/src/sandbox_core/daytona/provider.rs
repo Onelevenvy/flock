@@ -12,7 +12,7 @@ impl SandboxProvider for DaytonaProvider {
         crate::sandbox_core::daytona::check_sandbox_alive(cfg, sandbox_id).await
     }
     async fn create_sandbox(&self, db: &DbManager, cfg: &SandboxConfig) -> anyhow::Result<String> {
-        crate::sandbox_core::daytona::create_sandbox(db, cfg).await
+        crate::sandbox_core::daytona::create_sandbox(db, cfg, None).await
     }
     async fn destroy_sandbox(&self, _db: &DbManager, cfg: &SandboxConfig, sandbox_id: &str) -> anyhow::Result<()> {
         crate::sandbox_core::daytona::destroy_daytona_sandbox(cfg, sandbox_id).await
@@ -36,8 +36,8 @@ impl SandboxProvider for DaytonaProvider {
         "/workspace"
     }
     async fn list_templates(&self, _db: &DbManager, cfg: &SandboxConfig) -> anyhow::Result<serde_json::Value> {
-        let base = crate::sandbox_core::config::get_api_base(cfg.api_url.as_ref().unwrap());
-        let api_key = cfg.api_key.as_ref().unwrap();
+        let base = crate::sandbox_core::config::get_api_base(cfg.api_url().unwrap_or(""));
+        let api_key = cfg.api_key().unwrap_or("");
 
         let client = reqwest::Client::new();
         let url = format!("{}/api/snapshots", base);
@@ -56,8 +56,8 @@ impl SandboxProvider for DaytonaProvider {
         Ok(val)
     }
     async fn delete_template(&self, _db: &DbManager, cfg: &SandboxConfig, id: &str) -> anyhow::Result<()> {
-        let base = crate::sandbox_core::config::get_api_base(cfg.api_url.as_ref().unwrap());
-        let api_key = cfg.api_key.as_ref().unwrap();
+        let base = crate::sandbox_core::config::get_api_base(cfg.api_url().unwrap_or(""));
+        let api_key = cfg.api_key().unwrap_or("");
 
         let client = reqwest::Client::new();
         let url = format!("{}/api/snapshots/{}", base, id);
@@ -74,8 +74,8 @@ impl SandboxProvider for DaytonaProvider {
         Ok(())
     }
     async fn cleanup_all_instances(&self, _db: &DbManager, cfg: &SandboxConfig) -> anyhow::Result<String> {
-        let base = crate::sandbox_core::config::get_api_base(cfg.api_url.as_ref().unwrap());
-        let api_key = cfg.api_key.as_ref().unwrap();
+        let base = crate::sandbox_core::config::get_api_base(cfg.api_url().unwrap_or(""));
+        let api_key = cfg.api_key().unwrap_or("");
 
         let client = reqwest::Client::new();
         let list_url = format!("{}/api/sandbox", base);

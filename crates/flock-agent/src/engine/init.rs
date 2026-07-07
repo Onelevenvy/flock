@@ -15,23 +15,12 @@ use crate::sinks::OutputSink;
 use crate::tools::plan::state::PlanState;
 
 impl AgentEngine {
-    pub async fn new(config: Config, tools: ToolRegistry, output: Arc<dyn OutputSink>) -> Self {
-        let provider = Arc::new(OpenAIModel::new(OpenAIModelConfig {
-            model: config.model.clone(),
-            api_key: config.api_key.clone(),
-            api_base: if config.base_url.is_empty() { None } else { Some(config.base_url.clone()) },
-            ..Default::default()
-        }));
-        let provider_label = config.provider_label.clone();
-        Self::new_with_provider(provider, config, tools, output).await
-    }
-
-    /// Create an engine with an externally-provided provider (for sub-agent sharing)
-    pub async fn new_with_provider(
+    async fn create_engine_internal(
         provider: Arc<dyn BaseChatModel>,
         config: Config,
         tools: ToolRegistry,
         output: Arc<dyn OutputSink>,
+        session: Option<Session>,
     ) -> Self {
         let system_prompt = config.system_prompt.clone().unwrap_or_default();
         let auto_approve = config.tools.auto_approve;
@@ -39,9 +28,8 @@ impl AgentEngine {
         // Use the main flock.db for checkpoints and sessions (single DB file)
         let db_path_str = config.db_path.to_string_lossy().to_string();
 
-        // Initialise the SQLite checkpointer. Fall back to InMemory on error.
-        let checkpointer: Arc<dyn BaseCheckpointSaver> =
-            Self::init_checkpointer(&output, &db_path_str).await;
+        // Initialise the SQLite checkpointer
+        let checkpointer = Self::init_checkpointer(&output, &db_path_str).await;
 
         let session_manager = if config.session.enabled {
             match &config.db_manager {
@@ -58,21 +46,36 @@ impl AgentEngine {
         let allow_list = config.tools.allow_list.clone();
         let compact_config = config.compact.clone();
 
+        let thread_id = match &session {
+            Some(s) => s.id.clone(),
+            None => uuid::Uuid::new_v4().to_string(),
+        };
+
+        let messages = match &session {
+            Some(s) => s.messages.clone(),
+            None => Vec::new(),
+        };
+
+        let total_usage = match &session {
+            Some(s) => s.total_usage.clone(),
+            None => TokenUsage::default(),
+        };
+
         Self {
             provider,
             tools: Arc::new(tools),
-            messages: Vec::new(),
+            messages,
             system_prompt,
-            model: config.model,
+            model: config.model.clone(),
             max_tokens: config.max_tokens,
             max_turns: config.max_turns,
-            total_usage: TokenUsage::default(),
+            total_usage,
             thinking: config.thinking,
             compat: config.compat.clone(),
             auto_approve,
             hooks: Some(HookEngine::new(config.hooks.clone())),
             session_manager,
-            current_session: None,
+            current_session: session,
             output,
             current_msg_id: String::new(),
             approval_manager: None,
@@ -90,7 +93,7 @@ impl AgentEngine {
             turns: 0,
             checkpointer,
             graph: None,
-            thread_id: uuid::Uuid::new_v4().to_string(),
+            thread_id,
             debug_mode: false,
             provider_label: config.provider_label.clone(),
             db_manager: config.db_manager.clone(),
@@ -99,7 +102,34 @@ impl AgentEngine {
             promoted_tools: Vec::new(),
             dynamic_context_reminder: config.dynamic_context_reminder.clone(),
             graph_dynamic_context_reminder: Arc::new(std::sync::RwLock::new(config.dynamic_context_reminder.clone())),
+            file_cache: if config.file_cache.enabled {
+                Some(Arc::new(std::sync::RwLock::new(
+                    flock_tools::file_cache::FileStateCache::new(&config.file_cache),
+                )))
+            } else {
+                None
+            },
         }
+    }
+
+    pub async fn new(config: Config, tools: ToolRegistry, output: Arc<dyn OutputSink>) -> Self {
+        let provider = Arc::new(OpenAIModel::new(OpenAIModelConfig {
+            model: config.model.clone(),
+            api_key: config.api_key.clone(),
+            api_base: if config.base_url.is_empty() { None } else { Some(config.base_url.clone()) },
+            ..Default::default()
+        }));
+        Self::new_with_provider(provider, config, tools, output).await
+    }
+
+    /// Create an engine with an externally-provided provider (for sub-agent sharing)
+    pub async fn new_with_provider(
+        provider: Arc<dyn BaseChatModel>,
+        config: Config,
+        tools: ToolRegistry,
+        output: Arc<dyn OutputSink>,
+    ) -> Self {
+        Self::create_engine_internal(provider, config, tools, output, None).await
     }
 
     /// Initialise a SQLite-backed checkpointer, emitting a warning and falling
@@ -156,78 +186,6 @@ impl AgentEngine {
         output: Arc<dyn OutputSink>,
         session: Session,
     ) -> Self {
-        let system_prompt = config.system_prompt.clone().unwrap_or_default();
-        let auto_approve = config.tools.auto_approve;
-
-        // Use the session ID as the thread_id so LangGraph checkpointer
-        // correctly links this run to the existing conversation history.
-        let thread_id = session.id.clone();
-
-        // Use the main flock.db for checkpoints and sessions (single DB file)
-        let db_path_str = config.db_path.to_string_lossy().to_string();
-
-        // Initialise the SQLite checkpointer (same DB as new sessions).
-        let checkpointer: Arc<dyn BaseCheckpointSaver> =
-            Self::init_checkpointer(&output, &db_path_str).await;
-
-        let session_manager = if config.session.enabled {
-            match &config.db_manager {
-                Some(db) => Some(db.session_manager(config.session.max_sessions)),
-                None => {
-                    output.emit_error("[session] No DbManager available for SessionManager");
-                    None
-                }
-            }
-        } else {
-            None
-        };
-
-        let allow_list = config.tools.allow_list.clone();
-        let compact_config = config.compact.clone();
-
-        Self {
-            provider,
-            tools: Arc::new(tools),
-            // Keep local message cache for session saving; graph history comes
-            // from the checkpointer.
-            messages: session.messages.clone(),
-            system_prompt,
-            model: config.model.clone(),
-            max_tokens: config.max_tokens,
-            max_turns: config.max_turns,
-            total_usage: session.total_usage.clone(),
-            thinking: config.thinking,
-            compat: config.compat.clone(),
-            auto_approve,
-            hooks: Some(HookEngine::new(config.hooks.clone())),
-            session_manager,
-            current_session: Some(session),
-            output,
-            current_msg_id: String::new(),
-            approval_manager: None,
-            protocol_writer: None,
-            allow_list,
-            current_reasoning_effort: None,
-            compact_config,
-            plan_config: config.plan.clone(),
-            compact_state: CompactState::new(),
-            plan_state: PlanState::default(),
-            plan_active_flag: None,
-            compaction_level: config.compact.compaction,
-            toon_enabled: config.compact.toon,
-            graph_msg_id: Arc::new(std::sync::RwLock::new(String::new())),
-            turns: 0,
-            checkpointer,
-            graph: None,
-            thread_id,
-            debug_mode: false,
-            provider_label: config.provider_label.clone(),
-            db_manager: config.db_manager.clone(),
-            cancel_flag: Arc::new(std::sync::atomic::AtomicBool::new(false)),
-            has_error: Arc::new(Mutex::new(None)),
-            promoted_tools: Vec::new(),
-            dynamic_context_reminder: config.dynamic_context_reminder.clone(),
-            graph_dynamic_context_reminder: Arc::new(std::sync::RwLock::new(config.dynamic_context_reminder.clone())),
-        }
+        Self::create_engine_internal(provider, config, tools, output, Some(session)).await
     }
 }

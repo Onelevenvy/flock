@@ -74,7 +74,7 @@ impl Tool for SpawnTool {
         true
     }
 
-    async fn execute(&self, input: Value) -> ToolResult {
+    async fn execute(&self, input: Value, _ctx: &flock_tools::ToolContext) -> ToolResult {
         let tasks = match parse_tasks(&input) {
             Ok(tasks) => tasks,
             Err(e) => {

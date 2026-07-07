@@ -48,7 +48,16 @@ pub fn make_plugin_node(
                 }
             };
 
-            let res = tool.execute(tool_args_json).await;
+            let tool_ctx = flock_tools::ToolContext {
+                session_id: ctx.workflow_id.clone(),
+                workspace_dir: std::env::current_dir().unwrap_or_default(),
+                db_manager: Some(ctx.db.clone()),
+                file_cache: None,
+                protocol_emitter: None,
+                approval_manager: Some(ctx.approval_manager.clone()),
+            };
+
+            let res = tool.execute(tool_args_json, &tool_ctx).await;
 
             ctx.sink.emit_text_delta(&node_id, &format!("\nTool `{}` returned result:\n{}\n", tool_name, res.content));
 

@@ -4,21 +4,25 @@ use crate::sandbox_core::config::{get_sandbox_config, get_api_base};
 use crate::sandbox_core::daytona::volume::get_or_create_volume;
 
 /// 创建 Daytona 沙盒，等待 started 状态后返回 sandbox_id
-pub async fn create_sandbox(db: &DbManager, cfg: &SandboxConfig) -> anyhow::Result<String> {
-    crate::emit_info(&flock_core::tr("正在向云端申请启动 Daytona 沙盒...", "Requesting to start Daytona sandbox from the cloud..."));
+pub async fn create_sandbox(
+    db: &DbManager,
+    cfg: &SandboxConfig,
+    workspace_dir: Option<&std::path::Path>,
+) -> anyhow::Result<String> {
+    eprintln!("{}", flock_core::tr("正在向云端申请启动 Daytona 沙盒...", "Requesting to start Daytona sandbox from the cloud..."));
 
     let client = reqwest::Client::new();
-    let base = get_api_base(cfg.api_url.as_ref().unwrap());
-    let api_key = cfg.api_key.as_ref().unwrap();
+    let base = get_api_base(cfg.api_url().unwrap_or(""));
+    let api_key = cfg.api_key().unwrap_or("");
 
-    let workspace_id = crate::get_workspace_dir()
+    let workspace_id = workspace_dir
         .and_then(|p| p.file_name().map(|n| n.to_string_lossy().to_string()))
         .unwrap_or_else(|| "default".to_string());
 
     let volume_id = match get_or_create_volume(cfg, &workspace_id).await {
         Ok(id) => Some(id),
         Err(e) => {
-            crate::emit_info(&format!("未能创建或获取云端 Volume: {} (将使用临时沙盒存储)", e));
+            eprintln!("未能创建或获取云端 Volume: {} (将使用临时沙盒存储)", e);
             None
         }
     };
@@ -46,7 +50,7 @@ pub async fn create_sandbox(db: &DbManager, cfg: &SandboxConfig) -> anyhow::Resu
     let mut last_error = None;
     let mut res = None;
     for attempt in 1..=3 {
-        crate::emit_info(&flock_core::tr(
+        eprintln!("{}", flock_core::tr(
             &format!("尝试创建 Daytona 沙盒 (第{}次)...", attempt),
             &format!("Attempting to create Daytona sandbox (attempt {})...", attempt)
         ));
@@ -148,7 +152,7 @@ pub async fn create_sandbox(db: &DbManager, cfg: &SandboxConfig) -> anyhow::Resu
         }
 
         if i % 3 == 0 || (last_status != "creating" && last_status != "pending" && last_status != "Unknown" && last_status != "未知") {
-            crate::emit_info(&flock_core::tr(
+            eprintln!("{}", flock_core::tr(
                 &format!("正在等待 Daytona 沙盒启动 (当前状态: {}, 已等待 {} 秒)...", last_status, i),
                 &format!("Waiting for Daytona sandbox startup (current state: {}, waited {} seconds)...", last_status, i)
             ));
@@ -164,7 +168,7 @@ pub async fn create_sandbox(db: &DbManager, cfg: &SandboxConfig) -> anyhow::Resu
         );
     }
 
-    crate::emit_info(&flock_core::tr("Daytona 沙盒已就绪。", "Daytona sandbox is ready."));
+    eprintln!("{}", flock_core::tr("Daytona 沙盒已就绪。", "Daytona sandbox is ready."));
     let _ = set_sandbox_public(cfg, &sandbox_id, true).await;
 
     // 确保 /workspace 目录存在
@@ -172,23 +176,23 @@ pub async fn create_sandbox(db: &DbManager, cfg: &SandboxConfig) -> anyhow::Resu
     match crate::sandbox_core::daytona::execute_command_in_sandbox(db, &sandbox_id, ensure_workspace_cmd).await {
         Ok((out, code)) => {
             if code != 0 {
-                crate::emit_info(&flock_core::tr(
+                eprintln!("{}", flock_core::tr(
                     &format!("创建 /workspace 目录失败 (退出码 {}): {}", code, out),
                     &format!("Failed to create /workspace directory (exit code {}): {}", code, out)
                 ));
             }
         }
         Err(e) => {
-            crate::emit_info(&flock_core::tr(
+            eprintln!("{}", flock_core::tr(
                 &format!("检查 /workspace 目录失败: {}", e),
                 &format!("Failed to check /workspace directory: {}", e)
             ));
         }
     }
 
-    if let Some(ws_path) = crate::get_workspace_dir() {
-        if let Err(e) = crate::sandbox_core::sync::sync_up(db, &sandbox_id, &ws_path).await {
-            crate::emit_info(&format!("Sync Up failed: {}", e));
+    if let Some(ws_path) = workspace_dir {
+        if let Err(e) = crate::sandbox_core::sync::sync_up(db, &sandbox_id, ws_path).await {
+            eprintln!("Sync Up failed: {}", e);
         }
     }
 
@@ -198,8 +202,8 @@ pub async fn create_sandbox(db: &DbManager, cfg: &SandboxConfig) -> anyhow::Resu
 /// 销毁指定 Daytona 沙盒（通过 REST API）
 pub async fn destroy_daytona_sandbox(cfg: &SandboxConfig, sandbox_id: &str) -> anyhow::Result<()> {
     let client = reqwest::Client::new();
-    let base = get_api_base(cfg.api_url.as_ref().unwrap());
-    let api_key = cfg.api_key.as_ref().unwrap();
+    let base = get_api_base(cfg.api_url().unwrap_or(""));
+    let api_key = cfg.api_key().unwrap_or("");
 
     let del_url = format!("{}/api/sandbox/{}", base, sandbox_id);
     match client.delete(&del_url)
@@ -230,8 +234,8 @@ pub async fn destroy_daytona_sandbox(cfg: &SandboxConfig, sandbox_id: &str) -> a
 /// 检查 Daytona 沙盒是否存活
 pub async fn check_sandbox_alive(cfg: &SandboxConfig, id: &str) -> bool {
     let client = reqwest::Client::new();
-    let base = get_api_base(cfg.api_url.as_ref().unwrap());
-    let api_key = cfg.api_key.as_ref().unwrap();
+    let base = get_api_base(cfg.api_url().unwrap_or(""));
+    let api_key = cfg.api_key().unwrap_or("");
     let get_url = format!("{}/api/sandbox/{}", base, id);
 
     let res = client.get(&get_url)
@@ -263,8 +267,8 @@ pub async fn set_sandbox_public(
     is_public: bool,
 ) -> anyhow::Result<()> {
     let client = reqwest::Client::new();
-    let base = get_api_base(cfg.api_url.as_ref().unwrap());
-    let api_key = cfg.api_key.as_ref().unwrap();
+    let base = get_api_base(cfg.api_url().unwrap_or(""));
+    let api_key = cfg.api_key().unwrap_or("");
 
     let url = format!("{}/api/sandbox/{}/public/{}", base, sandbox_id, is_public);
 
@@ -278,7 +282,7 @@ pub async fn set_sandbox_public(
         Ok(())
     } else {
         let err_body = res.text().await.unwrap_or_default();
-        crate::emit_info(&flock_core::tr(
+        eprintln!("{}", flock_core::tr(
             &format!("设置沙盒 public 属性失败 (HTTP {}): {}", status, err_body),
             &format!("Failed to set sandbox public attribute (HTTP {}): {}", status, err_body)
         ));

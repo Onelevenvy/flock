@@ -1,5 +1,6 @@
 use tauri::State;
 use crate::SharedDbManager;
+use flock_core::config::settings::SandboxProviderConfig;
 
 /// 获取指定 Key 的 app_config 配置
 #[tauri::command]
@@ -11,22 +12,27 @@ pub async fn get_app_config(
     if key == "sandbox" {
         if let Some(ref mut val) = config {
             if let Ok(mut sandbox_cfg) = serde_json::from_value::<flock_core::config::settings::SandboxConfig>(val.clone()) {
-                if sandbox_cfg.api_key_encrypted.is_some() {
-                    sandbox_cfg.api_key = Some("••••••••".to_string());
-                } else {
-                    sandbox_cfg.api_key = None;
+                match &mut sandbox_cfg.provider {
+                    SandboxProviderConfig::E2b { api_key, api_key_encrypted, api_key_nonce, .. } => {
+                        if api_key_encrypted.is_some() {
+                            *api_key = Some("••••••••".to_string());
+                        } else {
+                            *api_key = None;
+                        }
+                        *api_key_encrypted = None;
+                        *api_key_nonce = None;
+                    }
+                    SandboxProviderConfig::Daytona { api_key, api_key_encrypted, api_key_nonce, .. } => {
+                        if api_key_encrypted.is_some() {
+                            *api_key = Some("••••••••".to_string());
+                        } else {
+                            *api_key = None;
+                        }
+                        *api_key_encrypted = None;
+                        *api_key_nonce = None;
+                    }
+                    _ => {}
                 }
-                sandbox_cfg.api_key_encrypted = None;
-                sandbox_cfg.api_key_nonce = None;
-
-                if sandbox_cfg.e2b_api_key_encrypted.is_some() {
-                    sandbox_cfg.e2b_api_key = Some("••••••••".to_string());
-                } else {
-                    sandbox_cfg.e2b_api_key = None;
-                }
-                sandbox_cfg.e2b_api_key_encrypted = None;
-                sandbox_cfg.e2b_api_key_nonce = None;
-
                 *val = serde_json::to_value(&sandbox_cfg).unwrap_or_default();
             }
         }
@@ -48,58 +54,76 @@ pub async fn set_app_config(
             let db_inner = db.inner().clone();
             let old_sandbox: Option<flock_core::config::settings::SandboxConfig> = db_inner.get_config("sandbox").await;
             
-            // Daytona api key
-            let resolved_api_key = sandbox_cfg.api_key.clone();
-            if let Some(ref key_str) = resolved_api_key {
-                if key_str == "••••••••" {
-                    if let Some(ref old) = old_sandbox {
-                        sandbox_cfg.api_key_encrypted = old.api_key_encrypted.clone();
-                        sandbox_cfg.api_key_nonce = old.api_key_nonce.clone();
-                    }
-                    sandbox_cfg.api_key = None;
-                } else if key_str.is_empty() {
-                    sandbox_cfg.api_key_encrypted = None;
-                    sandbox_cfg.api_key_nonce = None;
-                    sandbox_cfg.api_key = None;
-                } else {
-                    if let Ok(salt) = db_inner.get_or_create_salt().await {
-                        if let Ok((ct, n)) = flock_core::crypto::encrypt_value(key_str, &salt) {
-                            sandbox_cfg.api_key_encrypted = Some(ct);
-                            sandbox_cfg.api_key_nonce = Some(n);
-                            sandbox_cfg.api_key = None;
-                        }
-                    }
-                }
-            } else {
-                sandbox_cfg.api_key_encrypted = None;
-                sandbox_cfg.api_key_nonce = None;
-            }
+            let salt = db_inner.get_or_create_salt().await.map_err(|e| e.to_string())?;
 
-            // E2B api key
-            let resolved_e2b_key = sandbox_cfg.e2b_api_key.clone();
-            if let Some(ref key_str) = resolved_e2b_key {
-                if key_str == "••••••••" {
-                    if let Some(ref old) = old_sandbox {
-                        sandbox_cfg.e2b_api_key_encrypted = old.e2b_api_key_encrypted.clone();
-                        sandbox_cfg.e2b_api_key_nonce = old.e2b_api_key_nonce.clone();
-                    }
-                    sandbox_cfg.e2b_api_key = None;
-                } else if key_str.is_empty() {
-                    sandbox_cfg.e2b_api_key_encrypted = None;
-                    sandbox_cfg.e2b_api_key_nonce = None;
-                    sandbox_cfg.e2b_api_key = None;
-                } else {
-                    if let Ok(salt) = db_inner.get_or_create_salt().await {
-                        if let Ok((ct, n)) = flock_core::crypto::encrypt_value(key_str, &salt) {
-                            sandbox_cfg.e2b_api_key_encrypted = Some(ct);
-                            sandbox_cfg.e2b_api_key_nonce = Some(n);
-                            sandbox_cfg.e2b_api_key = None;
+            match &mut sandbox_cfg.provider {
+                SandboxProviderConfig::E2b { api_key, api_key_encrypted, api_key_nonce, .. } => {
+                    let old_keys = old_sandbox.as_ref().and_then(|old| {
+                        match &old.provider {
+                            SandboxProviderConfig::E2b { api_key_encrypted: ae, api_key_nonce: an, .. } => {
+                                Some((ae.clone(), an.clone()))
+                            }
+                            _ => None,
                         }
+                    });
+
+                    if let Some(key_str) = api_key.clone() {
+                        if key_str == "••••••••" {
+                            if let Some((ae, an)) = old_keys {
+                                *api_key_encrypted = ae;
+                                *api_key_nonce = an;
+                            }
+                            *api_key = None;
+                        } else if key_str.is_empty() {
+                            *api_key_encrypted = None;
+                            *api_key_nonce = None;
+                            *api_key = None;
+                        } else {
+                            if let Ok((ct, n)) = flock_core::crypto::encrypt_value(&key_str, &salt) {
+                                *api_key_encrypted = Some(ct);
+                                *api_key_nonce = Some(n);
+                                *api_key = None;
+                            }
+                        }
+                    } else {
+                        *api_key_encrypted = None;
+                        *api_key_nonce = None;
                     }
                 }
-            } else {
-                sandbox_cfg.e2b_api_key_encrypted = None;
-                sandbox_cfg.e2b_api_key_nonce = None;
+                SandboxProviderConfig::Daytona { api_key, api_key_encrypted, api_key_nonce, .. } => {
+                    let old_keys = old_sandbox.as_ref().and_then(|old| {
+                        match &old.provider {
+                            SandboxProviderConfig::Daytona { api_key_encrypted: ae, api_key_nonce: an, .. } => {
+                                Some((ae.clone(), an.clone()))
+                            }
+                            _ => None,
+                        }
+                    });
+
+                    if let Some(key_str) = api_key.clone() {
+                        if key_str == "••••••••" {
+                            if let Some((ae, an)) = old_keys {
+                                *api_key_encrypted = ae;
+                                *api_key_nonce = an;
+                            }
+                            *api_key = None;
+                        } else if key_str.is_empty() {
+                            *api_key_encrypted = None;
+                            *api_key_nonce = None;
+                            *api_key = None;
+                        } else {
+                            if let Ok((ct, n)) = flock_core::crypto::encrypt_value(&key_str, &salt) {
+                                *api_key_encrypted = Some(ct);
+                                *api_key_nonce = Some(n);
+                                *api_key = None;
+                            }
+                        }
+                    } else {
+                        *api_key_encrypted = None;
+                        *api_key_nonce = None;
+                    }
+                }
+                _ => {}
             }
             
             final_value = serde_json::to_value(&sandbox_cfg).unwrap_or(final_value);
@@ -112,14 +136,12 @@ pub async fn set_app_config(
             &format!("Failed to save config '{}': {}", key, e)
         ))?;
 
-    // 当 sandbox 被禁用时，将其 provider 标记为不可用。同时，清空当前活跃沙盒的内存缓存。
     if key == "sandbox" {
         let enabled = final_value.get("enabled").and_then(|v| v.as_bool()).unwrap_or(false);
         if !enabled {
             let _ = db.set_tool_provider_available("sandbox", false).await;
         }
         
-        // 关键修复：清除旧的活跃沙盒缓存，防止状态穿透
         let _ = flock_tools::sandbox_core::manager::clear_active_sandbox_id().await;
     }
 
@@ -138,12 +160,12 @@ pub async fn build_e2b_template(
     let cfg = get_sandbox_config(&db).await
         .ok_or_else(|| "沙盒未配置".to_string())?;
         
-    let api_key = cfg.e2b_api_key.as_deref().or(cfg.api_key.as_deref())
+    let api_key = cfg.api_key()
         .ok_or_else(|| "E2B API Key 未配置".to_string())?;
 
     let template_id = flock_tools::sandbox_core::e2b::builder::build_enhanced_template(
         api_key,
-        cfg.e2b_api_url.as_deref(),
+        cfg.api_url(),
         &name,
         move |log| {
             print!("{}", log);
@@ -168,26 +190,39 @@ pub async fn test_sandbox_connection(
     if api_key == "••••••••" {
         let old_sandbox: Option<flock_core::config::settings::SandboxConfig> = db.get_config("sandbox").await;
         if let Some(cfg) = old_sandbox {
-            if provider == "e2b" {
-                if let (Some(ct), Some(n)) = (cfg.e2b_api_key_encrypted, cfg.e2b_api_key_nonce) {
-                    if let Ok(salt) = db.get_or_create_salt().await {
-                        if let Ok(decrypted) = flock_core::crypto::decrypt_value(&ct, &n, &salt) {
-                            api_key = decrypted;
+            let old_key = if provider == "e2b" {
+                match &cfg.provider {
+                    SandboxProviderConfig::E2b { api_key: ak, api_key_encrypted: ae, api_key_nonce: an, .. } => {
+                        if let (Some(ct), Some(n)) = (ae, an) {
+                            if let Ok(salt) = db.get_or_create_salt().await {
+                                flock_core::crypto::decrypt_value(ct, n, &salt).ok()
+                            } else {
+                                None
+                            }
+                        } else {
+                            ak.clone()
                         }
                     }
-                } else if let Some(key) = cfg.e2b_api_key {
-                    api_key = key;
+                    _ => None,
                 }
             } else {
-                if let (Some(ct), Some(n)) = (cfg.api_key_encrypted, cfg.api_key_nonce) {
-                    if let Ok(salt) = db.get_or_create_salt().await {
-                        if let Ok(decrypted) = flock_core::crypto::decrypt_value(&ct, &n, &salt) {
-                            api_key = decrypted;
+                match &cfg.provider {
+                    SandboxProviderConfig::Daytona { api_key: ak, api_key_encrypted: ae, api_key_nonce: an, .. } => {
+                        if let (Some(ct), Some(n)) = (ae, an) {
+                            if let Ok(salt) = db.get_or_create_salt().await {
+                                flock_core::crypto::decrypt_value(ct, n, &salt).ok()
+                            } else {
+                                None
+                            }
+                        } else {
+                            ak.clone()
                         }
                     }
-                } else if let Some(key) = cfg.api_key {
-                    api_key = key;
+                    _ => None,
                 }
+            };
+            if let Some(k) = old_key {
+                api_key = k;
             }
         }
     }
@@ -276,14 +311,14 @@ pub async fn list_sandboxes(
         None => return Ok(serde_json::json!([])),
     };
 
-    let provider = cfg.provider.as_deref().unwrap_or("e2b");
+    let provider = cfg.provider.name();
     // E2B 不显示 instances，Daytona 会有残留需要手动销毁
     if provider == "e2b" || provider == "local" {
         return Ok(serde_json::json!([]));
     }
 
-    let base = flock_tools::sandbox_core::config::get_api_base(cfg.api_url.as_ref().unwrap());
-    let api_key = cfg.api_key.as_ref().unwrap();
+    let base = flock_tools::sandbox_core::config::get_api_base(cfg.api_url().unwrap_or(""));
+    let api_key = cfg.api_key().unwrap_or("");
 
     let client = reqwest::Client::new();
     let url = format!("{}/api/sandbox", base);
@@ -319,13 +354,13 @@ pub async fn delete_sandbox(
     let cfg = get_sandbox_config(db_ref).await
         .ok_or_else(|| flock_core::tr("沙盒未配置或未启用", "Sandbox not configured or enabled"))?;
 
-    let provider = cfg.provider.as_deref().unwrap_or("e2b");
+    let provider = cfg.provider.name();
     if provider == "e2b" || provider == "local" {
         return Ok(());
     }
 
-    let base = flock_tools::sandbox_core::config::get_api_base(cfg.api_url.as_ref().unwrap());
-    let api_key = cfg.api_key.as_ref().unwrap();
+    let base = flock_tools::sandbox_core::config::get_api_base(cfg.api_url().unwrap_or(""));
+    let api_key = cfg.api_key().unwrap_or("");
 
     let client = reqwest::Client::new();
     let url = format!("{}/api/sandbox/{}", base, id);
@@ -385,7 +420,7 @@ pub async fn reuse_sandbox(
     ))
 }
 
-/// 列出所有 Daytona/E2B 快照/自定义模板
+// List all templates
 #[tauri::command]
 pub async fn list_sandbox_templates(
     db: State<'_, SharedDbManager>,
@@ -397,26 +432,46 @@ pub async fn list_sandbox_templates(
     let db_ref: &DbManager = &*db;
     let mut cfg = get_sandbox_config_regardless(db_ref).await.unwrap_or_default();
     if let Some(p) = provider {
-        cfg.provider = Some(p);
+        if p == "e2b" {
+            cfg.provider = SandboxProviderConfig::E2b {
+                api_key: None,
+                api_key_encrypted: None,
+                api_key_nonce: None,
+                api_url: None,
+            };
+        } else if p == "daytona" {
+            cfg.provider = SandboxProviderConfig::Daytona {
+                api_url: None,
+                api_key: None,
+                api_key_encrypted: None,
+                api_key_nonce: None,
+            };
+        } else {
+            cfg.provider = SandboxProviderConfig::Local;
+        }
     }
     if let Some(k) = api_key {
-        if !k.is_empty() && !k.contains('•') {
-            if cfg.provider.as_deref().unwrap_or("e2b") == "e2b" {
-                cfg.e2b_api_key = Some(k);
-            } else {
-                cfg.api_key = Some(k);
+        if !k.is_empty() && !k.contains('*') && !k.contains('•') {
+            match &mut cfg.provider {
+                SandboxProviderConfig::E2b { api_key: ak, .. } => {
+                    *ak = Some(k);
+                }
+                SandboxProviderConfig::Daytona { api_key: ak, .. } => {
+                    *ak = Some(k);
+                }
+                _ => {}
             }
         }
     }
 
-    let provider_name = cfg.provider.as_deref().unwrap_or("e2b");
+    let provider_name = cfg.provider.name();
     let provider_impl = flock_tools::sandbox_core::manager::get_provider(provider_name);
     provider_impl.list_templates(db_ref, &cfg)
         .await
         .map_err(|e| e.to_string())
 }
 
-/// 删除指定 Daytona/E2B 快照/模板
+// Delete specified Daytona/E2B snapshot/template
 #[tauri::command]
 pub async fn delete_sandbox_template(
     db: State<'_, SharedDbManager>,
@@ -427,12 +482,28 @@ pub async fn delete_sandbox_template(
 
     let db_ref: &DbManager = &*db;
     let mut cfg = get_sandbox_config_regardless(db_ref).await
-        .ok_or_else(|| flock_core::tr("沙盒未配置", "Sandbox not configured"))?;
+        .ok_or_else(|| flock_core::tr("Sandbox not configured", "Sandbox not configured"))?;
     if let Some(p) = provider {
-        cfg.provider = Some(p);
+        if p == "e2b" {
+            cfg.provider = SandboxProviderConfig::E2b {
+                api_key: None,
+                api_key_encrypted: None,
+                api_key_nonce: None,
+                api_url: None,
+            };
+        } else if p == "daytona" {
+            cfg.provider = SandboxProviderConfig::Daytona {
+                api_url: None,
+                api_key: None,
+                api_key_encrypted: None,
+                api_key_nonce: None,
+            };
+        } else {
+            cfg.provider = SandboxProviderConfig::Local;
+        }
     }
 
-    let provider_name = cfg.provider.as_deref().unwrap_or("e2b");
+    let provider_name = cfg.provider.name();
     let provider_impl = flock_tools::sandbox_core::manager::get_provider(provider_name);
     provider_impl.delete_template(db_ref, &cfg, &id)
         .await
@@ -447,21 +518,23 @@ pub fn set_locale(locale: String) {
 async fn get_sandbox_config_regardless(db: &flock_core::db::DbManager) -> Option<flock_core::config::settings::SandboxConfig> {
     let mut cfg: flock_core::config::settings::SandboxConfig = db.get_config("sandbox").await?;
     
-    // Decrypt Daytona key
-    if let (Some(ct), Some(n)) = (&cfg.api_key_encrypted, &cfg.api_key_nonce) {
-        if let Ok(salt) = db.get_or_create_salt().await {
-            if let Ok(decrypted) = flock_core::crypto::decrypt_value(ct, n, &salt) {
-                cfg.api_key = Some(decrypted);
+    if let Ok(salt) = db.get_or_create_salt().await {
+        match &mut cfg.provider {
+            SandboxProviderConfig::E2b { api_key, api_key_encrypted, api_key_nonce, .. } => {
+                if let (Some(ct), Some(n)) = (api_key_encrypted, api_key_nonce) {
+                    if let Ok(decrypted) = flock_core::crypto::decrypt_value(ct, n, &salt) {
+                        *api_key = Some(decrypted);
+                    }
+                }
             }
-        }
-    }
-    
-    // Decrypt E2B key
-    if let (Some(ct), Some(n)) = (&cfg.e2b_api_key_encrypted, &cfg.e2b_api_key_nonce) {
-        if let Ok(salt) = db.get_or_create_salt().await {
-            if let Ok(decrypted) = flock_core::crypto::decrypt_value(ct, n, &salt) {
-                cfg.e2b_api_key = Some(decrypted);
+            SandboxProviderConfig::Daytona { api_key, api_key_encrypted, api_key_nonce, .. } => {
+                if let (Some(ct), Some(n)) = (api_key_encrypted, api_key_nonce) {
+                    if let Ok(decrypted) = flock_core::crypto::decrypt_value(ct, n, &salt) {
+                        *api_key = Some(decrypted);
+                    }
+                }
             }
+            _ => {}
         }
     }
     

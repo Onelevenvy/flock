@@ -183,4 +183,9 @@ pub const MIGRATIONS: &[(i64, &str, &str)] = &[
         "add_assistant_input_config",
         "ALTER TABLE assistant ADD COLUMN input_config TEXT NOT NULL DEFAULT '{}';",
     ),
+    (
+        3,
+        "add_session_sandbox_id",
+        "ALTER TABLE session_metadata ADD COLUMN sandbox_id TEXT;",
+    ),
 ];

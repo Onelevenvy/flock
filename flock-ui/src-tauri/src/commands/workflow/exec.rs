@@ -608,9 +608,7 @@ pub async fn run_workflow(
         has_error: Arc::new(std::sync::Mutex::new(None)),
     });
 
-    let workflow_emitter = Arc::new(crate::ipc::emitter::TauriProtocolEmitter::new(app.clone(), thread_id_val.clone()));
-    flock_tools::init_global_emitter(&thread_id_val, workflow_emitter.clone());
-    flock_tools::init_global_approval_manager(&thread_id_val, ctx.approval_manager.clone());
+    let _workflow_emitter = Arc::new(crate::ipc::emitter::TauriProtocolEmitter::new(app.clone(), thread_id_val.clone()));
 
     // 6. 构建 Graph
     let graph = build_workflow_graph(config_to_run, ctx.clone(), checkpointer)
@@ -729,17 +727,35 @@ pub async fn run_workflow(
         }));
 
         let thread_id_val_for_scope = thread_id_val_clone.clone();
+        let debug_dir = flock_core::config::db_path::workspace_root().join("debug");
+        let workdir = if debug_dir.exists() { debug_dir } else { std::env::current_dir().unwrap_or_default() };
+        let approval_manager = Arc::new(flock_core::ipc_interface::approval::ToolApprovalManager::new());
+        let protocol_emitter: Arc<dyn flock_core::ipc_interface::writer::ProtocolEmitter> = Arc::new(
+            crate::ipc::emitter::TauriProtocolEmitter::new(app_clone.clone(), thread_id_val_for_scope.clone()),
+        );
+
+        let tool_ctx = flock_tools::ToolContext {
+            session_id: thread_id_val_clone.clone(),
+            workspace_dir: workdir,
+            db_manager: Some(db_for_task.clone()),
+            file_cache: None, // No file cache for workflow execution
+            protocol_emitter: Some(protocol_emitter),
+            approval_manager: Some(approval_manager),
+        };
+
         let _ = flock_core::CURRENT_SESSION_ID.scope(thread_id_val_for_scope, async {
-            let mut astream = graph.astream(&initial_input, &config, vec![StreamMode::Updates]);
-            // Drive the stream to completion. We intentionally do NOT emit a workflow_progress
-            // event for every update — on macOS, each app.emit() must dispatch to the main thread
-            // via mach port, and emitting every single graph step floods the run loop, causing
-            // IMKCFRunLoopWakeUpReliable errors that freeze the entire UI.
-            // Fine-grained events (node_start, node_done, text_delta, etc.) are emitted by the
-            // WorkflowSink callbacks, which are already throttled.
-            while let Some(_part) = astream.next().await {
-                // intentionally empty — sink callbacks handle all UI events
-            }
+            flock_tools::ACTIVE_TOOL_CONTEXT.scope(tool_ctx, async {
+                let mut astream = graph.astream(&initial_input, &config, vec![StreamMode::Updates]);
+                // Drive the stream to completion. We intentionally do NOT emit a workflow_progress
+                // event for every update — on macOS, each app.emit() must dispatch to the main thread
+                // via mach port, and emitting every single graph step floods the run loop, causing
+                // IMKCFRunLoopWakeUpReliable errors that freeze the entire UI.
+                // Fine-grained events (node_start, node_done, text_delta, etc.) are emitted by the
+                // WorkflowSink callbacks, which are already throttled.
+                while let Some(_part) = astream.next().await {
+                    // intentionally empty — sink callbacks handle all UI events
+                }
+            }).await
         }).await;
 
         // astream 结束，查看当前的最新的 snapshot 以确定状态
@@ -962,8 +978,6 @@ pub async fn run_workflow(
             });
         }
 
-        flock_tools::unregister_global_emitter(&thread_id_val_clone);
-        flock_tools::unregister_global_approval_manager(&thread_id_val_clone);
         execution_manager_clone.unregister_task(&workflow_id_clone).await;
     });
 

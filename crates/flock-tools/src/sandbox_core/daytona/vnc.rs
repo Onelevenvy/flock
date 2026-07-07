@@ -11,8 +11,8 @@ pub async fn start_computer_use_in_sandbox(
     let cfg = get_sandbox_config(db).await
         .ok_or_else(|| anyhow::anyhow!(flock_core::tr("云端 Daytona 沙箱未配置或未启用", "Cloud Daytona sandbox not configured or enabled")))?;
 
-    let api_url = cfg.api_url.as_ref().unwrap().trim_end_matches('/');
-    let api_key = cfg.api_key.as_ref().unwrap();
+    let api_url = cfg.api_url().unwrap_or("").trim_end_matches('/');
+    let api_key = cfg.api_key().unwrap_or("");
 
     let urls = if api_url.contains("app.daytona.io") {
         vec![
@@ -31,7 +31,7 @@ pub async fn start_computer_use_in_sandbox(
     let mut last_error = None;
 
     for url in urls {
-        crate::emit_info(&flock_core::tr(
+        eprintln!("{}", flock_core::tr(
             &format!("正在请求 Daytona 桌面启动端点: {}...", url),
             &format!("Requesting Daytona desktop start endpoint: {}...", url)
         ));
@@ -45,7 +45,7 @@ pub async fn start_computer_use_in_sandbox(
             Ok(resp) => {
                 let status = resp.status();
                 if status.is_success() {
-                    crate::emit_info(&flock_core::tr("Daytona 桌面拉起请求已发送。", "Daytona desktop launch request sent."));
+                    eprintln!("{}", flock_core::tr("Daytona 桌面拉起请求已发送。", "Daytona desktop launch request sent."));
                     return Ok(());
                 } else if status == reqwest::StatusCode::NOT_FOUND {
                     last_error = Some(anyhow::anyhow!(flock_core::tr(
@@ -88,8 +88,8 @@ pub async fn check_computer_use_status(
     let cfg = get_sandbox_config(db).await
         .ok_or_else(|| anyhow::anyhow!(flock_core::tr("云端 Daytona 沙箱未配置或未启用", "Cloud Daytona sandbox not configured or enabled")))?;
 
-    let api_url = cfg.api_url.as_ref().unwrap().trim_end_matches('/');
-    let api_key = cfg.api_key.as_ref().unwrap();
+    let api_url = cfg.api_url().unwrap_or("").trim_end_matches('/');
+    let api_key = cfg.api_key().unwrap_or("");
 
     let urls = if api_url.contains("app.daytona.io") {
         vec![
@@ -118,7 +118,7 @@ pub async fn check_computer_use_status(
                 let status = resp.status();
                 if status.is_success() {
                     let text = resp.text().await.unwrap_or_default();
-                    crate::emit_info(&flock_core::tr(
+                    eprintln!("{}", flock_core::tr(
                         &format!("[VNC Status] 接口返回: {}", text),
                         &format!("[VNC Status] API returned: {}", text)
                     ));
@@ -175,8 +175,8 @@ pub async fn get_sandbox_vnc_url(
         .ok_or_else(|| anyhow::anyhow!(flock_core::tr("云端 Daytona 沙箱未配置或未启用", "Cloud Daytona sandbox not configured or enabled")))?;
 
     let client = reqwest::Client::new();
-    let base = get_api_base(cfg.api_url.as_ref().unwrap());
-    let api_key = cfg.api_key.as_ref().unwrap();
+    let base = get_api_base(cfg.api_url().unwrap_or(""));
+    let api_key = cfg.api_key().unwrap_or("");
 
     let url = format!("{}/api/sandbox/{}/ports/{}/preview-url", base, sandbox_id, WEBSOCKIFY_PORT);
     let resp = client.get(&url)

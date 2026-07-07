@@ -39,80 +39,108 @@ pub fn get_provider(provider_name: &str) -> Box<dyn SandboxProvider> {
 }
 
 pub async fn check_sandbox_alive(cfg: &flock_core::config::settings::SandboxConfig, id: &str) -> bool {
-    let provider_name = cfg.provider.as_deref().unwrap_or("e2b");
+    let provider_name = cfg.provider.name();
     let provider = get_provider(provider_name);
     provider.check_alive(cfg, id).await
 }
 
-pub async fn get_or_create_active_sandbox(db: &DbManager) -> anyhow::Result<String> {
+pub async fn get_or_create_active_sandbox(
+    db: &DbManager,
+    workspace_dir: Option<&std::path::Path>,
+) -> anyhow::Result<String> {
+    let session_id = flock_core::get_current_session_id();
+    get_or_create_sandbox_for_session(db, &session_id, workspace_dir).await
+}
+
+pub async fn get_or_create_sandbox_for_session(
+    db: &DbManager,
+    session_id: &str,
+    workspace_dir: Option<&std::path::Path>,
+) -> anyhow::Result<String> {
     let cfg = get_sandbox_config(db).await
         .ok_or_else(|| anyhow::anyhow!(flock_core::tr(
             "沙盒未启用或未配置。请在系统设置中配置有效的 API Key。",
             "Sandbox not enabled or configured. Please configure a valid API Key in system settings."
         )))?;
 
-    let mutex = get_sandbox_id_mutex();
-    let mut lock = mutex.lock().await;
+    // Query session_metadata to see if there is an existing sandbox_id
+    let session_mgr = db.session_manager(100);
+    let session_res = session_mgr.load(session_id).await;
+    let mut existing_id = None;
+    if let Ok(sess) = session_res {
+        existing_id = sess.sandbox_id;
+    }
 
-    if let Some(id) = lock.as_ref() {
-        if check_sandbox_alive(&cfg, id).await {
-            // Daytona 需要额外 set_public（这个也可以封装到 check_alive 或独立方法中，但为了兼容暂时保留这里，
-            // 更好的做法是将其放在 create_sandbox 内部，不过目前我们在检测到复用时也可能需要）
-            if cfg.provider.as_deref().unwrap_or("e2b") == "daytona" {
-                let _ = crate::sandbox_core::daytona::set_sandbox_public(&cfg, id, true).await;
+    if let Some(id) = existing_id {
+        if check_sandbox_alive(&cfg, &id).await {
+            if cfg.provider.name() == "daytona" {
+                let _ = crate::sandbox_core::daytona::set_sandbox_public(&cfg, &id, true).await;
             }
-            return Ok(id.clone());
+            return Ok(id);
         }
-        crate::emit_info(&flock_core::tr(
+        eprintln!("{}", flock_core::tr(
             &format!("沙盒 {} 已失效，准备重新创建...", id),
             &format!("Sandbox {} has expired, preparing to recreate...", id)
         ));
-        *lock = None;
+        let _ = session_mgr.update_sandbox_id(session_id, None).await;
     }
 
-    let provider_name = cfg.provider.as_deref().unwrap_or("e2b");
+    let provider_name = cfg.provider.name();
     let provider = get_provider(provider_name);
-    
+
     let sandbox_id = provider.create_sandbox(db, &cfg).await?;
-    
-    if let Some(ws_path) = crate::get_workspace_dir() {
-        if let Err(e) = provider.sync_up(db, &sandbox_id, &ws_path).await {
-            crate::emit_info(&format!("Sync Up failed: {}", e));
+
+    if let Some(ws_path) = workspace_dir {
+        if let Err(e) = provider.sync_up(db, &sandbox_id, ws_path).await {
+            eprintln!("Sync Up failed: {}", e);
         }
     }
 
-    *lock = Some(sandbox_id.clone());
+    let _ = session_mgr.update_sandbox_id(session_id, Some(&sandbox_id)).await;
     Ok(sandbox_id)
 }
 
-pub async fn destroy_active_sandbox(db: &DbManager) -> anyhow::Result<()> {
+pub async fn destroy_active_sandbox(
+    db: &DbManager,
+    workspace_dir: Option<&std::path::Path>,
+) -> anyhow::Result<()> {
+    let session_id = flock_core::get_current_session_id();
+    destroy_sandbox_for_session(db, &session_id, workspace_dir).await
+}
+
+pub async fn destroy_sandbox_for_session(
+    db: &DbManager,
+    session_id: &str,
+    workspace_dir: Option<&std::path::Path>,
+) -> anyhow::Result<()> {
     let cfg = match get_sandbox_config(db).await {
         Some(c) => c,
         None => return Ok(()),
     };
 
-    let mutex = get_sandbox_id_mutex();
-    let mut lock = mutex.lock().await;
-
-    let sandbox_id = match lock.as_ref() {
-        Some(id) => id.clone(),
-        None => return Ok(()),
+    let session_mgr = db.session_manager(100);
+    let sandbox_id = match session_mgr.load(session_id).await {
+        Ok(sess) => match sess.sandbox_id {
+            Some(id) => id,
+            None => return Ok(()),
+        },
+        Err(_) => return Ok(()),
     };
 
-    let provider_name = cfg.provider.as_deref().unwrap_or("e2b");
+    let provider_name = cfg.provider.name();
     let provider = get_provider(provider_name);
 
-    if let Some(ws_path) = crate::get_workspace_dir() {
-        if let Err(e) = provider.sync_down(db, &sandbox_id, &ws_path).await {
-            crate::emit_info(&format!("Sync Down failed: {}", e));
+    if let Some(ws_path) = workspace_dir {
+        if let Err(e) = provider.sync_down(db, &sandbox_id, ws_path).await {
+            eprintln!("Sync Down failed: {}", e);
         }
     }
 
     if let Err(e) = provider.destroy_sandbox(db, &cfg, &sandbox_id).await {
-        crate::emit_info(&format!("Destroying sandbox request failed: {}", e));
+        eprintln!("Destroying sandbox request failed: {}", e);
     }
 
-    *lock = None;
+    let _ = session_mgr.update_sandbox_id(session_id, None).await;
     Ok(())
 }
 
@@ -124,7 +152,7 @@ pub async fn execute_command_in_sandbox(
     let cfg = get_sandbox_config(db).await
         .ok_or_else(|| anyhow::anyhow!("沙箱未配置或未启用"))?;
 
-    let provider_name = cfg.provider.as_deref().unwrap_or("e2b");
+    let provider_name = cfg.provider.name();
     let provider = get_provider(provider_name);
     
     provider.execute_command(db, &cfg, sandbox_id, command).await
@@ -137,7 +165,7 @@ pub async fn get_sandbox_vnc_url(db: &DbManager, sandbox_id: &str) -> anyhow::Re
             "Sandbox not configured or enabled"
         )))?;
 
-    let provider_name = cfg.provider.as_deref().unwrap_or("e2b");
+    let provider_name = cfg.provider.name();
     let provider = get_provider(provider_name);
     
     provider.get_vnc_url(db, &cfg, sandbox_id).await
@@ -147,7 +175,7 @@ pub async fn ensure_vnc_running_in_sandbox(db: &DbManager, sandbox_id: &str) -> 
     let cfg = get_sandbox_config(db).await
         .ok_or_else(|| anyhow::anyhow!("沙盒未配置"))?;
 
-    let provider_name = cfg.provider.as_deref().unwrap_or("e2b");
+    let provider_name = cfg.provider.name();
     let provider = get_provider(provider_name);
     
     provider.ensure_vnc_running(db, &cfg, sandbox_id).await
@@ -157,7 +185,7 @@ pub async fn list_sandbox_templates(db: &DbManager) -> anyhow::Result<serde_json
     let cfg = get_sandbox_config(db).await
         .ok_or_else(|| anyhow::anyhow!("沙盒未配置"))?;
 
-    let provider_name = cfg.provider.as_deref().unwrap_or("e2b");
+    let provider_name = cfg.provider.name();
     let provider = get_provider(provider_name);
     provider.list_templates(db, &cfg).await
 }
@@ -166,7 +194,7 @@ pub async fn delete_sandbox_template(db: &DbManager, id: &str) -> anyhow::Result
     let cfg = get_sandbox_config(db).await
         .ok_or_else(|| anyhow::anyhow!("沙盒未配置"))?;
 
-    let provider_name = cfg.provider.as_deref().unwrap_or("e2b");
+    let provider_name = cfg.provider.name();
     let provider = get_provider(provider_name);
     provider.delete_template(db, &cfg, id).await
 }
@@ -175,7 +203,7 @@ pub async fn cleanup_all_sandbox_instances(db: &DbManager) -> anyhow::Result<Str
     let cfg = get_sandbox_config(db).await
         .ok_or_else(|| anyhow::anyhow!("沙盒未配置"))?;
 
-    let provider_name = cfg.provider.as_deref().unwrap_or("e2b");
+    let provider_name = cfg.provider.name();
     let provider = get_provider(provider_name);
     provider.cleanup_all_instances(db, &cfg).await
 }

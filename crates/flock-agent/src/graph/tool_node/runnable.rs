@@ -53,6 +53,24 @@ pub async fn ainvoke_impl(
         use flock_tools::tool_executor::execute_tool_calls_with_approval;
         use flock_tools::tool_executor::ExecutionControl;
 
+        let tool_ctx = flock_tools::ToolContext {
+            session_id: node.ctx.session_id.clone().unwrap_or_default(),
+            workspace_dir: node.ctx.session_id.as_ref()
+                .and_then(|sid| {
+                    if let Some(ref sm) = node.ctx.tools.tools_iter().next() {
+                        // Just an arbitrary fallback directory if missing
+                        Some(std::path::PathBuf::from("."))
+                    } else {
+                        None
+                    }
+                })
+                .unwrap_or_else(|| std::path::PathBuf::from(".")), // populated workspace dir
+            db_manager: flock_tools::get_db_manager(),
+            file_cache: flock_tools::get_file_cache(),
+            protocol_emitter: node.ctx.protocol_writer.clone(),
+            approval_manager: node.ctx.approval_manager.clone(),
+        };
+
         let outcome_res = tokio::select! {
             _ = async {
                 loop {
@@ -86,6 +104,7 @@ pub async fn ainvoke_impl(
                 None, // No plugins/hooks at graph node execution stage
                 node.ctx.compaction_level,
                 node.ctx.toon_enabled,
+                &tool_ctx,
             ) => {
                 res.map_err(|_| ExecutionControl::Quit)
             }
@@ -248,6 +267,22 @@ pub async fn ainvoke_impl(
         tool_calls.len()
     ));
     let msg_id = node.ctx.msg_id.read().unwrap().clone();
+    let tool_ctx = flock_tools::ToolContext {
+        session_id: node.ctx.session_id.clone().unwrap_or_default(),
+        workspace_dir: node.ctx.session_id.as_ref()
+            .and_then(|sid| {
+                if let Some(ref sm) = node.ctx.tools.tools_iter().next() {
+                    Some(std::path::PathBuf::from("."))
+                } else {
+                    None
+                }
+            })
+            .unwrap_or_else(|| std::path::PathBuf::from(".")),
+        db_manager: flock_tools::get_db_manager(),
+        file_cache: flock_tools::get_file_cache(),
+        protocol_emitter: node.ctx.protocol_writer.clone(),
+        approval_manager: node.ctx.approval_manager.clone(),
+    };
     let mut outcome = match run_tools(
         &node.ctx.tools,
         &tool_calls,
@@ -255,6 +290,7 @@ pub async fn ainvoke_impl(
         node.ctx.compaction_level,
         node.ctx.toon_enabled,
         &msg_id,
+        &tool_ctx,
     )
     .await
     {

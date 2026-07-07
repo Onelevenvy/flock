@@ -10,7 +10,7 @@ use crate::config::plan::PlanConfig;
 use crate::db::DbManager;
 use crate::config::settings::types::{
     Config, ProviderType, ProviderConfig, BedrockConfig, VertexConfig, McpConfig,
-    DefaultConfig, ToolsConfig, SessionConfig, SandboxConfig,
+    DefaultConfig, ToolsConfig, SessionConfig, SandboxConfig, SandboxProviderConfig,
 };
 use crate::config::settings::cli::{CliArgs, resolve_api_key};
 
@@ -131,11 +131,23 @@ impl Config {
         let bedrock: Option<BedrockConfig> = db.get_config("bedrock").await;
         let vertex: Option<VertexConfig> = db.get_config("vertex").await;
         let mut sandbox: SandboxConfig = db.get_config("sandbox").await.unwrap_or_default();
-        if let (Some(ct), Some(n)) = (&sandbox.api_key_encrypted, &sandbox.api_key_nonce) {
-            if let Ok(salt) = db.get_or_create_salt().await {
-                if let Ok(decrypted) = crate::crypto::decrypt_value(ct, n, &salt) {
-                    sandbox.api_key = Some(decrypted);
+        if let Ok(salt) = db.get_or_create_salt().await {
+            match &mut sandbox.provider {
+                SandboxProviderConfig::E2b { api_key, api_key_encrypted, api_key_nonce, .. } => {
+                    if let (Some(ct), Some(n)) = (api_key_encrypted, api_key_nonce) {
+                        if let Ok(decrypted) = crate::crypto::decrypt_value(ct, n, &salt) {
+                            *api_key = Some(decrypted);
+                        }
+                    }
                 }
+                SandboxProviderConfig::Daytona { api_key, api_key_encrypted, api_key_nonce, .. } => {
+                    if let (Some(ct), Some(n)) = (api_key_encrypted, api_key_nonce) {
+                        if let Ok(decrypted) = crate::crypto::decrypt_value(ct, n, &salt) {
+                            *api_key = Some(decrypted);
+                        }
+                    }
+                }
+                _ => {}
             }
         }
 
