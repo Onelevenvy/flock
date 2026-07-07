@@ -149,16 +149,10 @@ pub fn get_global_emitter() -> Option<Arc<dyn flock_core::ipc_interface::writer:
     try_with_active_context(|ctx| ctx.protocol_emitter.clone()).flatten()
 }
 
-/// Dummy function kept for backward compatibility with Tauri commands
-pub fn init_global_emitter(_emitter: Arc<dyn flock_core::ipc_interface::writer::ProtocolEmitter>) {}
-
 /// Get the global approval manager if initialized (now fetched from task-local).
 pub fn get_global_approval_manager() -> Option<Arc<flock_core::ipc_interface::approval::ToolApprovalManager>> {
     try_with_active_context(|ctx| ctx.approval_manager.clone()).flatten()
 }
-
-/// Dummy function kept for backward compatibility with Tauri commands
-pub fn init_global_approval_manager(_mgr: Arc<flock_core::ipc_interface::approval::ToolApprovalManager>) {}
 
 #[derive(serde::Deserialize)]
 struct YamlProviderInfo {

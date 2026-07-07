@@ -608,9 +608,7 @@ pub async fn run_workflow(
         has_error: Arc::new(std::sync::Mutex::new(None)),
     });
 
-    let workflow_emitter = Arc::new(crate::ipc::emitter::TauriProtocolEmitter::new(app.clone(), thread_id_val.clone()));
-    flock_tools::init_global_emitter(workflow_emitter.clone());
-    flock_tools::init_global_approval_manager(ctx.approval_manager.clone());
+    let _workflow_emitter = Arc::new(crate::ipc::emitter::TauriProtocolEmitter::new(app.clone(), thread_id_val.clone()));
 
     // 6. 构建 Graph
     let graph = build_workflow_graph(config_to_run, ctx.clone(), checkpointer)
