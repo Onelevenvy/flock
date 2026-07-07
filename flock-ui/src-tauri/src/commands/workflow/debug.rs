@@ -190,11 +190,15 @@ pub async fn debug_node(
             "node_id": node_id,
         }));
 
-        let mut astream = graph.astream(&initial_input, &config, vec![StreamMode::Updates]);
-        // Do NOT emit debug_progress for every step — same macOS mach port flood issue
-        while let Some(_part) = astream.next().await {
-            // sink callbacks handle fine-grained events
-        }
+        let debug_dir = flock_core::config::db_path::workspace_root().join("debug");
+        let workdir = if debug_dir.exists() { debug_dir } else { std::env::current_dir().unwrap_or_default() };
+        flock_tools::ACTIVE_WORKSPACE_DIR.scope(workdir, async {
+            let mut astream = graph.astream(&initial_input, &config, vec![StreamMode::Updates]);
+            // Do NOT emit debug_progress for every step — same macOS mach port flood issue
+            while let Some(_part) = astream.next().await {
+                // sink callbacks handle fine-grained events
+            }
+        }).await;
 
         match graph.get_state(&config) {
             Ok(snapshot) => {

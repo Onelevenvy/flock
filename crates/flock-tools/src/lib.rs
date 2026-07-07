@@ -133,11 +133,13 @@ pub fn emit_info(msg: &str) {
     eprintln!("[flock-tools] {}", msg);
 }
 
-/// Returns `None` — workspace directory is now passed explicitly via `ToolContext.workspace_dir`.
-/// This stub exists for sandbox internal modules not yet migrated to `ToolContext`.
-#[deprecated(note = "Use `ToolContext.workspace_dir` instead")]
+tokio::task_local! {
+    pub static ACTIVE_WORKSPACE_DIR: std::path::PathBuf;
+}
+
+/// Returns the current thread/task-local workspace directory.
 pub fn get_workspace_dir() -> Option<std::path::PathBuf> {
-    None
+    ACTIVE_WORKSPACE_DIR.try_with(|path| path.clone()).ok()
 }
 
 // --- Global emitter and approval manager for tools using #[tool()] macro adapters ---

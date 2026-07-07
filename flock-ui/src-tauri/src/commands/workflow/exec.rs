@@ -729,17 +729,21 @@ pub async fn run_workflow(
         }));
 
         let thread_id_val_for_scope = thread_id_val_clone.clone();
+        let debug_dir = flock_core::config::db_path::workspace_root().join("debug");
+        let workdir = if debug_dir.exists() { debug_dir } else { std::env::current_dir().unwrap_or_default() };
         let _ = flock_core::CURRENT_SESSION_ID.scope(thread_id_val_for_scope, async {
-            let mut astream = graph.astream(&initial_input, &config, vec![StreamMode::Updates]);
-            // Drive the stream to completion. We intentionally do NOT emit a workflow_progress
-            // event for every update — on macOS, each app.emit() must dispatch to the main thread
-            // via mach port, and emitting every single graph step floods the run loop, causing
-            // IMKCFRunLoopWakeUpReliable errors that freeze the entire UI.
-            // Fine-grained events (node_start, node_done, text_delta, etc.) are emitted by the
-            // WorkflowSink callbacks, which are already throttled.
-            while let Some(_part) = astream.next().await {
-                // intentionally empty — sink callbacks handle all UI events
-            }
+            flock_tools::ACTIVE_WORKSPACE_DIR.scope(workdir, async {
+                let mut astream = graph.astream(&initial_input, &config, vec![StreamMode::Updates]);
+                // Drive the stream to completion. We intentionally do NOT emit a workflow_progress
+                // event for every update — on macOS, each app.emit() must dispatch to the main thread
+                // via mach port, and emitting every single graph step floods the run loop, causing
+                // IMKCFRunLoopWakeUpReliable errors that freeze the entire UI.
+                // Fine-grained events (node_start, node_done, text_delta, etc.) are emitted by the
+                // WorkflowSink callbacks, which are already throttled.
+                while let Some(_part) = astream.next().await {
+                    // intentionally empty — sink callbacks handle all UI events
+                }
+            }).await
         }).await;
 
         // astream 结束，查看当前的最新的 snapshot 以确定状态

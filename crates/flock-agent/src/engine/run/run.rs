@@ -238,6 +238,16 @@ impl AgentEngine {
     pub async fn run(&mut self, user_input: &str, msg_id: &str) -> Result<AgentResult, AgentError> {
         let (initial_json, config) = prepare_run(self, user_input, msg_id).await?;
 
+        let cwd_path = self.current_session.as_ref()
+            .map(|s| PathBuf::from(&s.cwd))
+            .unwrap_or_else(|| std::env::current_dir().unwrap_or_default());
+
+        flock_tools::ACTIVE_WORKSPACE_DIR.scope(cwd_path, async {
+            self.run_internal(initial_json, config, msg_id).await
+        }).await
+    }
+
+    async fn run_internal(&mut self, initial_json: JsonValue, config: RunnableConfig, msg_id: &str) -> Result<AgentResult, AgentError> {
         // ── 批量 token 缓冲 ──────────────────────────────────────────────────
         // 每积累 BATCH_SIZE 个 token 才统一 emit 一次，减少 IPC 调用开销。
         // 值越小越流畅但 IPC 越频繁，值越大越节省 IPC 但打字机延迟增大。
