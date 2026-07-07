@@ -7,7 +7,7 @@ pub async fn execute_command(
     sandbox_id: &str,
     command: &str,
 ) -> anyhow::Result<(String, i32)> {
-    let api_key = cfg.e2b_api_key.as_ref()
+    let api_key = cfg.api_key()
         .ok_or_else(|| anyhow::anyhow!("E2B API key is missing"))?;
 
     let client = reqwest::Client::new();

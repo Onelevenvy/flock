@@ -4,8 +4,8 @@ use serde_json::Value;
 
 pub async fn get_or_create_volume(cfg: &SandboxConfig, workspace_id: &str) -> anyhow::Result<String> {
     let client = reqwest::Client::new();
-    let base = get_api_base(cfg.api_url.as_ref().unwrap());
-    let api_key = cfg.api_key.as_ref().unwrap();
+    let base = get_api_base(cfg.api_url().unwrap_or(""));
+    let api_key = cfg.api_key().unwrap_or("");
     let vol_name = format!("flock-vol-{}", workspace_id);
 
     let get_url = format!("{}/api/volumes", base);

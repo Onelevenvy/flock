@@ -78,6 +78,7 @@ pub struct AgentEngine {
     pub(crate) promoted_tools: Vec<String>,
     pub(crate) dynamic_context_reminder: Option<String>,
     pub(crate) graph_dynamic_context_reminder: Arc<std::sync::RwLock<Option<String>>>,
+    pub(crate) file_cache: Option<Arc<std::sync::RwLock<flock_tools::file_cache::FileStateCache>>>,
 }
 
 #[derive(Debug)]

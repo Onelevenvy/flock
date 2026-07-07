@@ -81,18 +81,6 @@ pub struct ToolContext {
     pub approval_manager: Option<Arc<flock_core::ipc_interface::approval::ToolApprovalManager>>,
 }
 
-static GLOBAL_FILE_CACHE: OnceLock<Arc<RwLock<FileStateCache>>> = OnceLock::new();
-
-/// Initialize the global file cache for tools.
-pub fn init_file_cache(cache: Arc<RwLock<FileStateCache>>) {
-    let _ = GLOBAL_FILE_CACHE.set(cache);
-}
-
-/// Get the global file cache if initialized.
-pub fn get_file_cache() -> Option<Arc<RwLock<FileStateCache>>> {
-    GLOBAL_FILE_CACHE.get().cloned()
-}
-
 static GLOBAL_TOOL_DEFS: OnceLock<Vec<flock_core::types::tool::ToolDef>> = OnceLock::new();
 
 /// Initialize the global tool defs for ToolSearch.
@@ -105,16 +93,36 @@ pub fn get_tool_defs() -> Option<Vec<flock_core::types::tool::ToolDef>> {
     GLOBAL_TOOL_DEFS.get().cloned()
 }
 
-static GLOBAL_DB_MANAGER: OnceLock<Arc<DbManager>> = OnceLock::new();
-
-/// Initialize the global DB manager for tool credential resolution.
-pub fn init_db_manager(db: Arc<DbManager>) {
-    let _ = GLOBAL_DB_MANAGER.set(db);
+tokio::task_local! {
+    pub static ACTIVE_TOOL_CONTEXT: ToolContext;
 }
 
-/// Get the global DB manager if initialized.
+/// Helper function to retrieve the active task-local ToolContext.
+pub fn with_active_context<F, R>(f: F) -> R
+where
+    F: FnOnce(&ToolContext) -> R,
+{
+    ACTIVE_TOOL_CONTEXT.try_with(|ctx| f(ctx)).unwrap_or_else(|_| {
+        panic!("ACTIVE_TOOL_CONTEXT is not set in the current task environment! Please run inside the task-local scope.");
+    })
+}
+
+/// Helper function to safely try getting the ACTIVE_TOOL_CONTEXT.
+pub fn try_with_active_context<F, R>(f: F) -> Option<R>
+where
+    F: FnOnce(&ToolContext) -> R,
+{
+    ACTIVE_TOOL_CONTEXT.try_with(|ctx| f(ctx)).ok()
+}
+
+/// Get the active file cache from the task-local context.
+pub fn get_file_cache() -> Option<Arc<RwLock<FileStateCache>>> {
+    try_with_active_context(|ctx| ctx.file_cache.clone()).flatten()
+}
+
+/// Get the active DB manager from the task-local context.
 pub fn get_db_manager() -> Option<Arc<DbManager>> {
-    GLOBAL_DB_MANAGER.get().cloned()
+    try_with_active_context(|ctx| ctx.db_manager.clone()).flatten()
 }
 
 /// Resolve decrypted credentials for a tool provider by its ID.
@@ -127,48 +135,30 @@ pub async fn resolve_provider_credentials(provider_id: &str) -> Option<String> {
 }
 
 /// Emit an informational log message (stderr, for internal sandbox status logs).
-/// Tool modules that have not yet been migrated to `ToolContext` still call this directly.
-/// Production telemetry is sent via `ProtocolEmitter` in `ToolContext.protocol_emitter`.
 pub fn emit_info(msg: &str) {
     eprintln!("[flock-tools] {}", msg);
 }
 
-tokio::task_local! {
-    pub static ACTIVE_WORKSPACE_DIR: std::path::PathBuf;
-}
-
 /// Returns the current thread/task-local workspace directory.
 pub fn get_workspace_dir() -> Option<std::path::PathBuf> {
-    ACTIVE_WORKSPACE_DIR.try_with(|path| path.clone()).ok()
+    try_with_active_context(|ctx| ctx.workspace_dir.clone())
 }
 
-// --- Global emitter and approval manager for tools using #[tool()] macro adapters ---
-// These tools cannot receive ToolContext via trait method because their execute fn is generated.
-// They use these global singletons until migrated to explicit context passing.
-
-static GLOBAL_EMITTER: OnceLock<Arc<dyn flock_core::ipc_interface::writer::ProtocolEmitter>> = OnceLock::new();
-
-/// Initialize the global protocol emitter (used by sandbox tool adapters).
-pub fn init_global_emitter(emitter: Arc<dyn flock_core::ipc_interface::writer::ProtocolEmitter>) {
-    let _ = GLOBAL_EMITTER.set(emitter);
-}
-
-/// Get the global protocol emitter if initialized.
+/// Get the global protocol emitter if initialized (now fetched from task-local).
 pub fn get_global_emitter() -> Option<Arc<dyn flock_core::ipc_interface::writer::ProtocolEmitter>> {
-    GLOBAL_EMITTER.get().cloned()
+    try_with_active_context(|ctx| ctx.protocol_emitter.clone()).flatten()
 }
 
-static GLOBAL_APPROVAL_MANAGER: OnceLock<Arc<flock_core::ipc_interface::approval::ToolApprovalManager>> = OnceLock::new();
+/// Dummy function kept for backward compatibility with Tauri commands
+pub fn init_global_emitter(_emitter: Arc<dyn flock_core::ipc_interface::writer::ProtocolEmitter>) {}
 
-/// Initialize the global approval manager (used by sandbox tool adapters).
-pub fn init_global_approval_manager(mgr: Arc<flock_core::ipc_interface::approval::ToolApprovalManager>) {
-    let _ = GLOBAL_APPROVAL_MANAGER.set(mgr);
-}
-
-/// Get the global approval manager if initialized.
+/// Get the global approval manager if initialized (now fetched from task-local).
 pub fn get_global_approval_manager() -> Option<Arc<flock_core::ipc_interface::approval::ToolApprovalManager>> {
-    GLOBAL_APPROVAL_MANAGER.get().cloned()
+    try_with_active_context(|ctx| ctx.approval_manager.clone()).flatten()
 }
+
+/// Dummy function kept for backward compatibility with Tauri commands
+pub fn init_global_approval_manager(_mgr: Arc<flock_core::ipc_interface::approval::ToolApprovalManager>) {}
 
 #[derive(serde::Deserialize)]
 struct YamlProviderInfo {

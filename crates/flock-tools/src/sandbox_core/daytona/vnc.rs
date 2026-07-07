@@ -11,8 +11,8 @@ pub async fn start_computer_use_in_sandbox(
     let cfg = get_sandbox_config(db).await
         .ok_or_else(|| anyhow::anyhow!(flock_core::tr("云端 Daytona 沙箱未配置或未启用", "Cloud Daytona sandbox not configured or enabled")))?;
 
-    let api_url = cfg.api_url.as_ref().unwrap().trim_end_matches('/');
-    let api_key = cfg.api_key.as_ref().unwrap();
+    let api_url = cfg.api_url().unwrap_or("").trim_end_matches('/');
+    let api_key = cfg.api_key().unwrap_or("");
 
     let urls = if api_url.contains("app.daytona.io") {
         vec![
@@ -88,8 +88,8 @@ pub async fn check_computer_use_status(
     let cfg = get_sandbox_config(db).await
         .ok_or_else(|| anyhow::anyhow!(flock_core::tr("云端 Daytona 沙箱未配置或未启用", "Cloud Daytona sandbox not configured or enabled")))?;
 
-    let api_url = cfg.api_url.as_ref().unwrap().trim_end_matches('/');
-    let api_key = cfg.api_key.as_ref().unwrap();
+    let api_url = cfg.api_url().unwrap_or("").trim_end_matches('/');
+    let api_key = cfg.api_key().unwrap_or("");
 
     let urls = if api_url.contains("app.daytona.io") {
         vec![
@@ -175,8 +175,8 @@ pub async fn get_sandbox_vnc_url(
         .ok_or_else(|| anyhow::anyhow!(flock_core::tr("云端 Daytona 沙箱未配置或未启用", "Cloud Daytona sandbox not configured or enabled")))?;
 
     let client = reqwest::Client::new();
-    let base = get_api_base(cfg.api_url.as_ref().unwrap());
-    let api_key = cfg.api_key.as_ref().unwrap();
+    let base = get_api_base(cfg.api_url().unwrap_or(""));
+    let api_key = cfg.api_key().unwrap_or("");
 
     let url = format!("{}/api/sandbox/{}/ports/{}/preview-url", base, sandbox_id, WEBSOCKIFY_PORT);
     let resp = client.get(&url)

@@ -143,25 +143,70 @@ impl Default for SessionConfig {
     }
 }
 
+#[derive(Debug, Clone, Deserialize, Serialize)]
+#[serde(tag = "type", rename_all = "kebab-case")]
+pub enum SandboxProviderConfig {
+    E2b {
+        api_key: Option<String>,
+        api_key_encrypted: Option<String>,
+        api_key_nonce: Option<String>,
+        api_url: Option<String>,
+    },
+    Daytona {
+        api_url: Option<String>,
+        api_key: Option<String>,
+        api_key_encrypted: Option<String>,
+        api_key_nonce: Option<String>,
+    },
+    Local,
+}
+
+impl Default for SandboxProviderConfig {
+    fn default() -> Self {
+        SandboxProviderConfig::E2b {
+            api_key: None,
+            api_key_encrypted: None,
+            api_key_nonce: None,
+            api_url: None,
+        }
+    }
+}
+
+impl SandboxProviderConfig {
+    pub fn name(&self) -> &'static str {
+        match self {
+            SandboxProviderConfig::E2b { .. } => "e2b",
+            SandboxProviderConfig::Daytona { .. } => "daytona",
+            SandboxProviderConfig::Local => "local",
+        }
+    }
+}
+
 #[derive(Debug, Clone, Deserialize, Serialize, Default)]
 pub struct SandboxConfig {
     #[serde(default)]
     pub enabled: bool,
-    #[serde(default = "default_sandbox_provider")]
-    pub provider: Option<String>,
-    pub api_url: Option<String>,
-    pub api_key: Option<String>,
-    pub api_key_encrypted: Option<String>,
-    pub api_key_nonce: Option<String>,
-    pub e2b_api_key: Option<String>,
-    pub e2b_api_key_encrypted: Option<String>,
-    pub e2b_api_key_nonce: Option<String>,
-    pub e2b_api_url: Option<String>,
+    #[serde(default)]
+    pub provider: SandboxProviderConfig,
     pub snapshot: Option<String>,
 }
 
-pub fn default_sandbox_provider() -> Option<String> {
-    Some("e2b".to_string())
+impl SandboxConfig {
+    pub fn api_url(&self) -> Option<&str> {
+        match &self.provider {
+            SandboxProviderConfig::E2b { api_url, .. } => api_url.as_deref(),
+            SandboxProviderConfig::Daytona { api_url, .. } => api_url.as_deref(),
+            SandboxProviderConfig::Local => None,
+        }
+    }
+
+    pub fn api_key(&self) -> Option<&str> {
+        match &self.provider {
+            SandboxProviderConfig::E2b { api_key, .. } => api_key.as_deref(),
+            SandboxProviderConfig::Daytona { api_key, .. } => api_key.as_deref(),
+            SandboxProviderConfig::Local => None,
+        }
+    }
 }
 
 

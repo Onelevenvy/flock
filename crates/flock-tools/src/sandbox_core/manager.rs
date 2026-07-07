@@ -39,7 +39,7 @@ pub fn get_provider(provider_name: &str) -> Box<dyn SandboxProvider> {
 }
 
 pub async fn check_sandbox_alive(cfg: &flock_core::config::settings::SandboxConfig, id: &str) -> bool {
-    let provider_name = cfg.provider.as_deref().unwrap_or("e2b");
+    let provider_name = cfg.provider.name();
     let provider = get_provider(provider_name);
     provider.check_alive(cfg, id).await
 }
@@ -73,7 +73,7 @@ pub async fn get_or_create_sandbox_for_session(
 
     if let Some(id) = existing_id {
         if check_sandbox_alive(&cfg, &id).await {
-            if cfg.provider.as_deref().unwrap_or("e2b") == "daytona" {
+            if cfg.provider.name() == "daytona" {
                 let _ = crate::sandbox_core::daytona::set_sandbox_public(&cfg, &id, true).await;
             }
             return Ok(id);
@@ -85,7 +85,7 @@ pub async fn get_or_create_sandbox_for_session(
         let _ = session_mgr.update_sandbox_id(session_id, None).await;
     }
 
-    let provider_name = cfg.provider.as_deref().unwrap_or("e2b");
+    let provider_name = cfg.provider.name();
     let provider = get_provider(provider_name);
 
     let sandbox_id = provider.create_sandbox(db, &cfg).await?;
@@ -127,7 +127,7 @@ pub async fn destroy_sandbox_for_session(
         Err(_) => return Ok(()),
     };
 
-    let provider_name = cfg.provider.as_deref().unwrap_or("e2b");
+    let provider_name = cfg.provider.name();
     let provider = get_provider(provider_name);
 
     if let Some(ws_path) = workspace_dir {
@@ -152,7 +152,7 @@ pub async fn execute_command_in_sandbox(
     let cfg = get_sandbox_config(db).await
         .ok_or_else(|| anyhow::anyhow!("沙箱未配置或未启用"))?;
 
-    let provider_name = cfg.provider.as_deref().unwrap_or("e2b");
+    let provider_name = cfg.provider.name();
     let provider = get_provider(provider_name);
     
     provider.execute_command(db, &cfg, sandbox_id, command).await
@@ -165,7 +165,7 @@ pub async fn get_sandbox_vnc_url(db: &DbManager, sandbox_id: &str) -> anyhow::Re
             "Sandbox not configured or enabled"
         )))?;
 
-    let provider_name = cfg.provider.as_deref().unwrap_or("e2b");
+    let provider_name = cfg.provider.name();
     let provider = get_provider(provider_name);
     
     provider.get_vnc_url(db, &cfg, sandbox_id).await
@@ -175,7 +175,7 @@ pub async fn ensure_vnc_running_in_sandbox(db: &DbManager, sandbox_id: &str) -> 
     let cfg = get_sandbox_config(db).await
         .ok_or_else(|| anyhow::anyhow!("沙盒未配置"))?;
 
-    let provider_name = cfg.provider.as_deref().unwrap_or("e2b");
+    let provider_name = cfg.provider.name();
     let provider = get_provider(provider_name);
     
     provider.ensure_vnc_running(db, &cfg, sandbox_id).await
@@ -185,7 +185,7 @@ pub async fn list_sandbox_templates(db: &DbManager) -> anyhow::Result<serde_json
     let cfg = get_sandbox_config(db).await
         .ok_or_else(|| anyhow::anyhow!("沙盒未配置"))?;
 
-    let provider_name = cfg.provider.as_deref().unwrap_or("e2b");
+    let provider_name = cfg.provider.name();
     let provider = get_provider(provider_name);
     provider.list_templates(db, &cfg).await
 }
@@ -194,7 +194,7 @@ pub async fn delete_sandbox_template(db: &DbManager, id: &str) -> anyhow::Result
     let cfg = get_sandbox_config(db).await
         .ok_or_else(|| anyhow::anyhow!("沙盒未配置"))?;
 
-    let provider_name = cfg.provider.as_deref().unwrap_or("e2b");
+    let provider_name = cfg.provider.name();
     let provider = get_provider(provider_name);
     provider.delete_template(db, &cfg, id).await
 }
@@ -203,7 +203,7 @@ pub async fn cleanup_all_sandbox_instances(db: &DbManager) -> anyhow::Result<Str
     let cfg = get_sandbox_config(db).await
         .ok_or_else(|| anyhow::anyhow!("沙盒未配置"))?;
 
-    let provider_name = cfg.provider.as_deref().unwrap_or("e2b");
+    let provider_name = cfg.provider.name();
     let provider = get_provider(provider_name);
     provider.cleanup_all_instances(db, &cfg).await
 }

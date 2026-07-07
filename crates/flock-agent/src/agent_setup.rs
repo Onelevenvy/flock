@@ -170,9 +170,7 @@ impl AgentBuilder {
             None
         };
 
-        if let Some(ref cache) = file_cache {
-            flock_tools::init_file_cache(Arc::clone(cache));
-        }
+
 
         let sid = self.resume_session.as_ref()
             .map(|s| s.id.clone())

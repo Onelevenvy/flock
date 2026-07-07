@@ -12,8 +12,8 @@ pub async fn create_sandbox(
     eprintln!("{}", flock_core::tr("正在向云端申请启动 Daytona 沙盒...", "Requesting to start Daytona sandbox from the cloud..."));
 
     let client = reqwest::Client::new();
-    let base = get_api_base(cfg.api_url.as_ref().unwrap());
-    let api_key = cfg.api_key.as_ref().unwrap();
+    let base = get_api_base(cfg.api_url().unwrap_or(""));
+    let api_key = cfg.api_key().unwrap_or("");
 
     let workspace_id = workspace_dir
         .and_then(|p| p.file_name().map(|n| n.to_string_lossy().to_string()))
@@ -202,8 +202,8 @@ pub async fn create_sandbox(
 /// 销毁指定 Daytona 沙盒（通过 REST API）
 pub async fn destroy_daytona_sandbox(cfg: &SandboxConfig, sandbox_id: &str) -> anyhow::Result<()> {
     let client = reqwest::Client::new();
-    let base = get_api_base(cfg.api_url.as_ref().unwrap());
-    let api_key = cfg.api_key.as_ref().unwrap();
+    let base = get_api_base(cfg.api_url().unwrap_or(""));
+    let api_key = cfg.api_key().unwrap_or("");
 
     let del_url = format!("{}/api/sandbox/{}", base, sandbox_id);
     match client.delete(&del_url)
@@ -234,8 +234,8 @@ pub async fn destroy_daytona_sandbox(cfg: &SandboxConfig, sandbox_id: &str) -> a
 /// 检查 Daytona 沙盒是否存活
 pub async fn check_sandbox_alive(cfg: &SandboxConfig, id: &str) -> bool {
     let client = reqwest::Client::new();
-    let base = get_api_base(cfg.api_url.as_ref().unwrap());
-    let api_key = cfg.api_key.as_ref().unwrap();
+    let base = get_api_base(cfg.api_url().unwrap_or(""));
+    let api_key = cfg.api_key().unwrap_or("");
     let get_url = format!("{}/api/sandbox/{}", base, id);
 
     let res = client.get(&get_url)
@@ -267,8 +267,8 @@ pub async fn set_sandbox_public(
     is_public: bool,
 ) -> anyhow::Result<()> {
     let client = reqwest::Client::new();
-    let base = get_api_base(cfg.api_url.as_ref().unwrap());
-    let api_key = cfg.api_key.as_ref().unwrap();
+    let base = get_api_base(cfg.api_url().unwrap_or(""));
+    let api_key = cfg.api_key().unwrap_or("");
 
     let url = format!("{}/api/sandbox/{}/public/{}", base, sandbox_id, is_public);
 

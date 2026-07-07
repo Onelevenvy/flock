@@ -125,7 +125,7 @@ async fn build_session_engine(
         config.base_url
     );
 
-    let sid = session_id.clone().unwrap_or_else(|| "default".to_string());
+    let _sid = session_id.clone().unwrap_or_else(|| "default".to_string());
     flock_tools::init_global_emitter(protocol_emitter.clone());
     flock_tools::init_global_approval_manager(approval_manager.clone());
 

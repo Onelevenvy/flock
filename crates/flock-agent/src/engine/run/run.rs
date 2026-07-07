@@ -242,7 +242,16 @@ impl AgentEngine {
             .map(|s| PathBuf::from(&s.cwd))
             .unwrap_or_else(|| std::env::current_dir().unwrap_or_default());
 
-        flock_tools::ACTIVE_WORKSPACE_DIR.scope(cwd_path, async {
+        let tool_ctx = flock_tools::ToolContext {
+            session_id: self.current_session.as_ref().map(|s| s.id.clone()).unwrap_or_else(|| self.thread_id.clone()),
+            workspace_dir: cwd_path,
+            db_manager: self.db_manager.clone(),
+            file_cache: self.file_cache.clone(),
+            protocol_emitter: self.protocol_writer.clone(),
+            approval_manager: self.approval_manager.clone(),
+        };
+
+        flock_tools::ACTIVE_TOOL_CONTEXT.scope(tool_ctx, async {
             self.run_internal(initial_json, config, msg_id).await
         }).await
     }

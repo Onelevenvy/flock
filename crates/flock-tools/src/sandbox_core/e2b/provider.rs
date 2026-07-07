@@ -36,11 +36,11 @@ impl SandboxProvider for E2bProvider {
         "/home/user"
     }
     async fn list_templates(&self, _db: &DbManager, cfg: &SandboxConfig) -> anyhow::Result<serde_json::Value> {
-        let key = cfg.e2b_api_key.clone().unwrap_or_default();
+        let key = cfg.api_key().unwrap_or_default().to_string();
         if key.is_empty() {
             return Ok(serde_json::json!([]));
         }
-        let base_url = cfg.e2b_api_url.as_deref().unwrap_or("https://api.e2b.app").trim_end_matches('/');
+        let base_url = cfg.api_url().unwrap_or("https://api.e2b.app").trim_end_matches('/');
         let client = reqwest::Client::new();
         let url = format!("{}/templates", base_url);
         let resp = client.get(&url)
@@ -81,8 +81,8 @@ impl SandboxProvider for E2bProvider {
         Ok(serde_json::json!(mapped))
     }
     async fn delete_template(&self, _db: &DbManager, cfg: &SandboxConfig, id: &str) -> anyhow::Result<()> {
-        let api_key = cfg.e2b_api_key.as_ref().ok_or_else(|| anyhow::anyhow!("E2B API key missing"))?;
-        let base_url = cfg.e2b_api_url.as_deref().unwrap_or("https://api.e2b.app").trim_end_matches('/');
+        let api_key = cfg.api_key().ok_or_else(|| anyhow::anyhow!("E2B API key missing"))?;
+        let base_url = cfg.api_url().unwrap_or("https://api.e2b.app").trim_end_matches('/');
         let client = reqwest::Client::new();
         let url = format!("{}/templates/{}", base_url, id);
         let resp = client.delete(&url)

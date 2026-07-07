@@ -182,6 +182,7 @@ pub async fn debug_node(
     }
 
     let app_clone = app.clone();
+    let db_manager_clone = db.inner().clone();
 
     tokio::spawn(async move {
         let _ = app_clone.emit("workflow-event", serde_json::json!({
@@ -192,7 +193,22 @@ pub async fn debug_node(
 
         let debug_dir = flock_core::config::db_path::workspace_root().join("debug");
         let workdir = if debug_dir.exists() { debug_dir } else { std::env::current_dir().unwrap_or_default() };
-        flock_tools::ACTIVE_WORKSPACE_DIR.scope(workdir, async {
+        let approval_manager = Arc::new(flock_core::ipc_interface::approval::ToolApprovalManager::new());
+        let session_id = format!("debug:{}:{}", workflow_id, node_id);
+        let protocol_emitter: Arc<dyn flock_core::ipc_interface::writer::ProtocolEmitter> = Arc::new(
+            crate::ipc::emitter::TauriProtocolEmitter::new(app_clone.clone(), session_id.clone()),
+        );
+
+        let tool_ctx = flock_tools::ToolContext {
+            session_id: format!("debug:{}:{}", workflow_id, node_id),
+            workspace_dir: workdir,
+            db_manager: Some(db_manager_clone),
+            file_cache: None,
+            protocol_emitter: Some(protocol_emitter),
+            approval_manager: Some(approval_manager),
+        };
+
+        flock_tools::ACTIVE_TOOL_CONTEXT.scope(tool_ctx, async {
             let mut astream = graph.astream(&initial_input, &config, vec![StreamMode::Updates]);
             // Do NOT emit debug_progress for every step — same macOS mach port flood issue
             while let Some(_part) = astream.next().await {

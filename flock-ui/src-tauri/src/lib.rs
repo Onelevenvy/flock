@@ -48,8 +48,6 @@ pub fn run() {
             });
 
             let db_arc = Arc::new(db_manager) as SharedDbManager;
-            // Make DB available to tools for credential resolution.
-            flock_tools::init_db_manager(db_arc.clone());
             app.manage(db_arc.clone());
 
             // 启动后台定时任务调度引擎

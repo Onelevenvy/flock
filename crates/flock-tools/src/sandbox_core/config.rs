@@ -1,50 +1,50 @@
 use flock_core::db::DbManager;
-use flock_core::config::settings::SandboxConfig;
+use flock_core::config::settings::{SandboxConfig, SandboxProviderConfig};
 
 /// 获取当前启用的沙盒配置。若未启用或未配置，则返回 None。
 pub async fn get_sandbox_config(db: &DbManager) -> Option<SandboxConfig> {
     let mut cfg: SandboxConfig = db.get_config("sandbox").await?;
     
-    // Decrypt Daytona key
-    if let (Some(ct), Some(n)) = (&cfg.api_key_encrypted, &cfg.api_key_nonce) {
-        if let Ok(salt) = db.get_or_create_salt().await {
-            if let Ok(decrypted) = flock_core::crypto::decrypt_value(ct, n, &salt) {
-                cfg.api_key = Some(decrypted);
-            }
-        }
-    }
-    
-    // Decrypt E2B key
-    if let (Some(ct), Some(n)) = (&cfg.e2b_api_key_encrypted, &cfg.e2b_api_key_nonce) {
-        if let Ok(salt) = db.get_or_create_salt().await {
-            if let Ok(decrypted) = flock_core::crypto::decrypt_value(ct, n, &salt) {
-                cfg.e2b_api_key = Some(decrypted);
-            }
-        }
-    }
-
     if !cfg.enabled {
         return None;
     }
 
-    let provider = cfg.provider.as_deref().unwrap_or("e2b");
-    match provider {
-        "e2b" => {
-            if cfg.e2b_api_key.is_some() {
+    if let Ok(salt) = db.get_or_create_salt().await {
+        match &mut cfg.provider {
+            SandboxProviderConfig::E2b { api_key, api_key_encrypted, api_key_nonce, .. } => {
+                if let (Some(ct), Some(n)) = (api_key_encrypted, api_key_nonce) {
+                    if let Ok(decrypted) = flock_core::crypto::decrypt_value(ct, n, &salt) {
+                        *api_key = Some(decrypted);
+                    }
+                }
+            }
+            SandboxProviderConfig::Daytona { api_key, api_key_encrypted, api_key_nonce, .. } => {
+                if let (Some(ct), Some(n)) = (api_key_encrypted, api_key_nonce) {
+                    if let Ok(decrypted) = flock_core::crypto::decrypt_value(ct, n, &salt) {
+                        *api_key = Some(decrypted);
+                    }
+                }
+            }
+            _ => {}
+        }
+    }
+
+    match &cfg.provider {
+        SandboxProviderConfig::E2b { api_key, .. } => {
+            if api_key.is_some() {
                 Some(cfg)
             } else {
                 None
             }
         }
-        "daytona" => {
-            if cfg.api_url.is_some() && cfg.api_key.is_some() {
+        SandboxProviderConfig::Daytona { api_url, api_key, .. } => {
+            if api_url.is_some() && api_key.is_some() {
                 Some(cfg)
             } else {
                 None
             }
         }
-        "local" => Some(cfg),
-        _ => None,
+        SandboxProviderConfig::Local => Some(cfg),
     }
 }
 

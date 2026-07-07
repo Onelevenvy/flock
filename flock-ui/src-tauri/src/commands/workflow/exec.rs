@@ -731,8 +731,22 @@ pub async fn run_workflow(
         let thread_id_val_for_scope = thread_id_val_clone.clone();
         let debug_dir = flock_core::config::db_path::workspace_root().join("debug");
         let workdir = if debug_dir.exists() { debug_dir } else { std::env::current_dir().unwrap_or_default() };
+        let approval_manager = Arc::new(flock_core::ipc_interface::approval::ToolApprovalManager::new());
+        let protocol_emitter: Arc<dyn flock_core::ipc_interface::writer::ProtocolEmitter> = Arc::new(
+            crate::ipc::emitter::TauriProtocolEmitter::new(app_clone.clone(), thread_id_val_for_scope.clone()),
+        );
+
+        let tool_ctx = flock_tools::ToolContext {
+            session_id: thread_id_val_clone.clone(),
+            workspace_dir: workdir,
+            db_manager: Some(db_for_task.clone()),
+            file_cache: None, // No file cache for workflow execution
+            protocol_emitter: Some(protocol_emitter),
+            approval_manager: Some(approval_manager),
+        };
+
         let _ = flock_core::CURRENT_SESSION_ID.scope(thread_id_val_for_scope, async {
-            flock_tools::ACTIVE_WORKSPACE_DIR.scope(workdir, async {
+            flock_tools::ACTIVE_TOOL_CONTEXT.scope(tool_ctx, async {
                 let mut astream = graph.astream(&initial_input, &config, vec![StreamMode::Updates]);
                 // Drive the stream to completion. We intentionally do NOT emit a workflow_progress
                 // event for every update — on macOS, each app.emit() must dispatch to the main thread

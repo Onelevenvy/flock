@@ -102,6 +102,13 @@ impl AgentEngine {
             promoted_tools: Vec::new(),
             dynamic_context_reminder: config.dynamic_context_reminder.clone(),
             graph_dynamic_context_reminder: Arc::new(std::sync::RwLock::new(config.dynamic_context_reminder.clone())),
+            file_cache: if config.file_cache.enabled {
+                Some(Arc::new(std::sync::RwLock::new(
+                    flock_tools::file_cache::FileStateCache::new(&config.file_cache),
+                )))
+            } else {
+                None
+            },
         }
     }
 
